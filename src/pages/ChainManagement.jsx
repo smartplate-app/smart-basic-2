@@ -225,17 +225,22 @@ export default function ChainManagementPage() {
           setLoading(true);
           setViewingStore(store);
 
-          // Load chain suppliers (from head store)
-          const [headSuppliers, headItems, localSuppliers, localItems] = await Promise.all([
+          // Load chain suppliers (from head store) + local suppliers (created_by OR store_owner_email)
+          const [headSuppliers, headItems, localSuppliersByCreatedBy, localSuppliersByStoreOwner, localItems] = await Promise.all([
             base44.entities.Supplier.filter({ created_by: chain.head_store_user_email }),
             base44.entities.Item.filter({ created_by: chain.head_store_user_email }),
             base44.entities.Supplier.filter({ created_by: store.user_email }),
+            base44.entities.Supplier.filter({ store_owner_email: store.user_email }),
             base44.entities.Item.filter({ created_by: store.user_email })
           ]);
 
+          // Combine local suppliers and remove duplicates
+          const allLocalSuppliers = [...localSuppliersByCreatedBy, ...localSuppliersByStoreOwner];
+          const uniqueLocalSuppliers = allLocalSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+
           setChainSuppliers(headSuppliers);
           setChainItems(headItems);
-          setStoreSuppliers(localSuppliers);
+          setStoreSuppliers(uniqueLocalSuppliers);
           setStoreItems(localItems);
         } catch (error) {
           console.error("Error loading store data:", error);
