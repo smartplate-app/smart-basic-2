@@ -535,7 +535,7 @@ export default function ChainManagementPage() {
                     </DialogTrigger>
                     <DialogContent dir={isRTL ? 'rtl' : 'ltr'}>
                       <DialogHeader>
-                        <DialogTitle className={isRTL ? 'text-right' : ''}>{t.addStore}</DialogTitle>
+                        <DialogTitle className={isRTL ? 'text-right' : ''}>{editingStore ? (language === 'he' ? 'עריכת סניף' : 'Edit Store') : t.addStore}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
                         <div>
@@ -568,9 +568,15 @@ export default function ChainManagementPage() {
                           <Button onClick={handleAddStore} disabled={saving} className="bg-gray-900 hover:bg-gray-800">
                             {saving ? <Loader className="w-4 h-4 animate-spin" /> : t.save}
                           </Button>
-                          <Button variant="outline" onClick={() => setShowAddStore(false)}>
-                            {t.cancel}
-                          </Button>
+                          <Button variant="outline" onClick={() => {
+                                                        setShowAddStore(false);
+                                                        setEditingStore(null);
+                                                        setStoreName("");
+                                                        setStoreAddress("");
+                                                        setStoreUserEmail("");
+                                                      }}>
+                                                        {t.cancel}
+                                                      </Button>
                         </div>
                       </div>
                     </DialogContent>
@@ -604,35 +610,43 @@ export default function ChainManagementPage() {
                             )}
                           </div>
                           {!store.is_head_store && (
-                                                            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                                              <Button 
-                                                                                                    variant="default" 
-                                                                                                    size="sm"
-                                                                                                    onClick={() => switchToStore(store)}
-                                                                                                    className="bg-orange-500 hover:bg-orange-600 text-white"
-                                                                                                  >
-                                                                                                    <Store className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                                                                    {t.switchTo}
-                                                                                                  </Button>
-                                                                                                  <Button 
-                                                                                                    variant="outline" 
-                                                                                                    size="sm"
-                                                                                                    onClick={() => viewStoreAs(store)}
-                                                                                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                                                                  >
-                                                                                                    <Eye className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                                                                    {t.viewAs}
-                                                                                                  </Button>
-                                                              <Button 
-                                                                variant="ghost" 
-                                                                size="icon"
-                                                                onClick={() => handleDeleteStore(store.id)}
-                                                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                              >
-                                                                <Trash2 className="w-4 h-4" />
-                                                              </Button>
-                                                            </div>
-                                                          )}
+                                                                                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                                                          <Button 
+                                                                                                                                variant="default" 
+                                                                                                                                size="sm"
+                                                                                                                                onClick={() => switchToStore(store)}
+                                                                                                                                className="bg-orange-500 hover:bg-orange-600 text-white"
+                                                                                                                              >
+                                                                                                                                <Store className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                                                                                                {t.switchTo}
+                                                                                                                              </Button>
+                                                                                                                              <Button 
+                                                                                                                                variant="outline" 
+                                                                                                                                size="sm"
+                                                                                                                                onClick={() => viewStoreAs(store)}
+                                                                                                                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                                                                              >
+                                                                                                                                <Eye className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                                                                                                {t.viewAs}
+                                                                                                                              </Button>
+                                                                                          <Button 
+                                                                                            variant="ghost" 
+                                                                                            size="icon"
+                                                                                            onClick={() => handleEditStore(store)}
+                                                                                            className="text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                                                                          >
+                                                                                            <Pencil className="w-4 h-4" />
+                                                                                          </Button>
+                                                                                          <Button 
+                                                                                            variant="ghost" 
+                                                                                            size="icon"
+                                                                                            onClick={() => handleDeleteStore(store.id)}
+                                                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                                                          >
+                                                                                            <Trash2 className="w-4 h-4" />
+                                                                                          </Button>
+                                                                                        </div>
+                                                                                      )}
                         </div>
                       ))}
                     </div>
