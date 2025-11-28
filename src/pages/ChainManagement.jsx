@@ -188,6 +188,8 @@ export default function ChainManagementPage() {
         try {
           setSaving(true);
 
+          const emailChanged = editingStore && editingStore.user_email !== storeUserEmail;
+
           if (editingStore) {
             // Update existing store
             await base44.entities.ChainStore.update(editingStore.id, {
@@ -195,6 +197,23 @@ export default function ChainManagementPage() {
               store_address: storeAddress,
               user_email: storeUserEmail
             });
+
+            // Send invite if email was changed
+            if (emailChanged) {
+              try {
+                await base44.integrations.Core.SendEmail({
+                  to: storeUserEmail,
+                  subject: language === 'he' ? `הזמנה לנהל סניף ברשת ${chain.name}` : `Invitation to manage branch in ${chain.name}`,
+                  body: language === 'he' 
+                    ? `שלום,\n\nהוזמנת לנהל את הסניף "${storeName}" ברשת "${chain.name}".\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
+                    : `Hello,\n\nYou have been invited to manage the branch "${storeName}" in the chain "${chain.name}".\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
+                });
+                alert(language === 'he' ? 'הסניף עודכן והזמנה נשלחה למייל החדש' : 'Store updated and invite sent to new email');
+              } catch (emailError) {
+                console.error("Error sending invite:", emailError);
+                alert(language === 'he' ? 'הסניף עודכן אך שליחת ההזמנה נכשלה' : 'Store updated but invite failed to send');
+              }
+            }
           } else {
             // Create new store
             await base44.entities.ChainStore.create({
@@ -205,6 +224,21 @@ export default function ChainManagementPage() {
               user_email: storeUserEmail,
               is_head_store: false
             });
+
+            // Send invite to new store manager
+            try {
+              await base44.integrations.Core.SendEmail({
+                to: storeUserEmail,
+                subject: language === 'he' ? `הזמנה לנהל סניף ברשת ${chain.name}` : `Invitation to manage branch in ${chain.name}`,
+                body: language === 'he' 
+                  ? `שלום,\n\nהוזמנת לנהל את הסניף "${storeName}" ברשת "${chain.name}".\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
+                  : `Hello,\n\nYou have been invited to manage the branch "${storeName}" in the chain "${chain.name}".\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
+              });
+              alert(language === 'he' ? 'הסניף נוסף והזמנה נשלחה' : 'Store added and invite sent');
+            } catch (emailError) {
+              console.error("Error sending invite:", emailError);
+              alert(language === 'he' ? 'הסניף נוסף אך שליחת ההזמנה נכשלה' : 'Store added but invite failed to send');
+            }
           }
 
           setShowAddStore(false);
