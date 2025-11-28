@@ -21,8 +21,8 @@ Deno.serve(async (req) => {
 
     const appUrl = req.headers.get('origin') || 'https://app.base44.com';
 
-    // Use service role to send email to any address
-    await base44.asServiceRole.integrations.Core.SendEmail({
+    // Send email using integrations
+    await base44.integrations.Core.SendEmail({
       to: userEmail,
       subject: language === 'he' ? `הזמנה להצטרף ל${storeName}` : `Invitation to join ${storeName}`,
       body: language === 'he' 
