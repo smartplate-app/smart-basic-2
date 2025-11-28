@@ -39,7 +39,7 @@ export default function StoreUsersPage() {
       noUsers: "אין משתמשים עדיין",
       delete: "מחק",
       inviteSent: "המשתמש נוסף בהצלחה!",
-      inviteFailed: "המשתמש נוסף אך שליחת ההזמנה נכשלה",
+      inviteFailed: "המשתמש נוסף! לא ניתן לשלוח מייל אוטומטית.",
       currentStore: "החנות הנוכחית שלך",
       managerDesc: "יכול לראות הכל ולנהל את החנות",
       workerDesc: "יכול ליצור הזמנות, לקבל אספקה ולבצע ספירות"
@@ -58,7 +58,7 @@ export default function StoreUsersPage() {
       noUsers: "No users yet",
       delete: "Delete",
       inviteSent: "User added successfully!",
-      inviteFailed: "User added but invite failed to send",
+      inviteFailed: "User added! Email couldn't be sent automatically.",
       currentStore: "Your Current Store",
       managerDesc: "Can see everything and manage the store",
       workerDesc: "Can create orders, receive supplies and do counts"
@@ -106,9 +106,22 @@ export default function StoreUsersPage() {
         is_active: true
       });
 
-      // Show success with link to share
-      const appLink = window.location.origin;
-      alert(t.inviteSent + "\n\n" + (language === 'he' ? `שתף קישור זה עם המשתמש:\n${appLink}` : `Share this link with the user:\n${appLink}`));
+      // Try to send invite email
+      try {
+        await base44.integrations.Core.SendEmail({
+          to: userEmail,
+          subject: language === 'he' ? `הזמנה להצטרף ל${storeName}` : `Invitation to join ${storeName}`,
+          body: language === 'he' 
+            ? `שלום ${userName},\n\nהוזמנת להצטרף ל${storeName} כ${userRole === 'manager' ? 'מנהל' : 'עובד'}.\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
+            : `Hello ${userName},\n\nYou have been invited to join ${storeName} as a ${userRole === 'manager' ? 'Manager' : 'Worker'}.\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
+        });
+        alert(t.inviteSent);
+      } catch (emailError) {
+        console.error("Error sending invite:", emailError);
+        // User was added, just email failed - show link to share
+        const appLink = window.location.origin;
+        alert(t.inviteFailed + "\n\n" + (language === 'he' ? `שתף קישור זה עם המשתמש:\n${appLink}` : `Share this link with the user:\n${appLink}`));
+      }
 
       setShowAddUser(false);
       setUserName("");
