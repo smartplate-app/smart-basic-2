@@ -1,0 +1,132 @@
+
+import React from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { X } from "lucide-react";
+import { useLanguage } from "../LanguageProvider";
+
+export default function SupplierForm({ supplier, onSubmit, onCancel }) {
+  const { t } = useLanguage();
+  const [formData, setFormData] = React.useState(supplier || {
+    name: "",
+    email: "",
+    phone: "",
+    contact_person: "",
+    supplier_type: "simple"
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.phone) {
+      alert(t('supplier_name_phone_required'));
+      return;
+    }
+    onSubmit(formData);
+  };
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="mb-8"
+    >
+      <Card className="shadow-lg border-0">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <CardTitle className="text-xl font-bold">
+            {supplier ? t('edit_supplier') : t('add_new_supplier')}
+          </CardTitle>
+          <Button variant="ghost" size="icon" onClick={onCancel}>
+            <X className="w-4 h-4" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">{t('company_name')} *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+                placeholder={t('company_name')}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="phone">{t('phone')} *</Label>
+              <Input
+                id="phone"
+                type="tel" // Changed to 'tel' for numeric keyboard on mobile
+                inputMode="tel" // Added to force numeric keyboard on iPhones
+                value={formData.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
+                placeholder={t('phone')}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                placeholder={t('email')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contact_person">{t('contact_person')}</Label>
+              <Input
+                id="contact_person"
+                value={formData.contact_person}
+                onChange={(e) => handleChange("contact_person", e.target.value)}
+                placeholder={t('contact_person')}
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="supplier_type">{t('supplier_type')}</Label>
+              <Select
+                value={formData.supplier_type}
+                onValueChange={(value) => handleChange("supplier_type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="simple">{t('simple_supplier')}</SelectItem>
+                  <SelectItem value="catalogic">{t('catalogic_supplier')}</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.supplier_type === "catalogic" && (
+                <p className="text-sm text-gray-600 mt-1">
+                  {t('catalogic_supplier_note')}
+                </p>
+              )}
+            </div>
+
+            <div className="md:col-span-2 flex gap-3 justify-end">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                {t('cancel')}
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                {supplier ? t('update_supplier') : t('save_supplier')}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
