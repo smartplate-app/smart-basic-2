@@ -114,6 +114,7 @@ export default function StoreUsersPage() {
           
         await base44.integrations.Core.SendEmail({
           to: userEmail,
+          from_name: "Smart Plate",
           subject: language === 'he' ? `הזמנה להצטרף ל-${storeName}` : `Invitation to join ${storeName}`,
           body: language === 'he' 
             ? `שלום ${userName},\n\nהוזמנת להצטרף ל-${storeName} כ${roleText}.\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
@@ -122,6 +123,7 @@ export default function StoreUsersPage() {
         alert(t.inviteSent);
       } catch (emailError) {
         console.error("Error sending invite:", emailError);
+        // Still show success since user was added
         alert(t.inviteFailed);
       }
 
