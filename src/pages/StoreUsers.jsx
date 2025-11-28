@@ -88,16 +88,17 @@ export default function StoreUsersPage() {
 
   const handleAddUser = async () => {
     if (!userName.trim() || !userEmail.trim()) return;
-    
+
     try {
       setSaving(true);
-      
+
       const ownerEmail = user.acting_as_store_email || user.email;
       const storeName = user.acting_as_store_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
-      
+      const storeId = user.acting_as_store_id || "main";
+
       // Create store user
       await base44.entities.StoreUser.create({
-        store_id: user.acting_as_store_id || "main",
+        store_id: storeId,
         store_name: storeName,
         user_email: userEmail,
         user_name: userName,
@@ -106,22 +107,39 @@ export default function StoreUsersPage() {
         is_active: true
       });
 
-      // Try to send invite email
-      try {
-        await base44.integrations.Core.SendEmail({
-          to: userEmail,
-          subject: language === 'he' ? `הזמנה להצטרף ל${storeName}` : `Invitation to join ${storeName}`,
-          body: language === 'he' 
-            ? `שלום ${userName},\n\nהוזמנת להצטרף ל${storeName} כ${userRole === 'manager' ? 'מנהל' : 'עובד'}.\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
-            : `Hello ${userName},\n\nYou have been invited to join ${storeName} as a ${userRole === 'manager' ? 'Manager' : 'Worker'}.\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
-        });
-        alert(t.inviteSent);
-      } catch (emailError) {
-        console.error("Error sending invite:", emailError);
-        // User was added, just email failed - show link to share
-        const appLink = window.location.origin;
-        alert(t.inviteFailed + "\n\n" + (language === 'he' ? `שתף קישור זה עם המשתמש:\n${appLink}` : `Share this link with the user:\n${appLink}`));
-      }
+      // Generate unique invite token
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+
+      // Create invite record
+      await base44.entities.UserInvite.create({
+        token: token,
+        email: userEmail,
+        full_name: userName,
+        invite_type: "store_user",
+        store_id: storeId,
+        store_name: storeName,
+        role: userRole,
+        inviter_email: ownerEmail,
+        inviter_name: user.full_name,
+        expires_at: expiresAt.toISOString(),
+        used: false
+      });
+
+      // Generate unique invite link
+      const inviteLink = `${window.location.origin}/pages/Register?invite=${token}`;
+
+      // Show success with the unique link
+      const roleText = userRole === 'manager' 
+        ? (language === 'he' ? 'מנהל' : 'Manager') 
+        : (language === 'he' ? 'עובד' : 'Worker');
+
+      alert(
+        (language === 'he' 
+          ? `${userName} נוסף בהצלחה כ${roleText}!\n\nשתף את הקישור הזה:\n${inviteLink}`
+          : `${userName} added successfully as ${roleText}!\n\nShare this link:\n${inviteLink}`)
+      );
 
       setShowAddUser(false);
       setUserName("");

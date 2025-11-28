@@ -190,6 +190,11 @@ export default function ChainManagementPage() {
 
           const emailChanged = editingStore && editingStore.user_email !== storeUserEmail;
 
+          // Generate unique invite token
+          const token = crypto.randomUUID();
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+
           if (editingStore) {
             // Update existing store
             await base44.entities.ChainStore.update(editingStore.id, {
@@ -198,21 +203,30 @@ export default function ChainManagementPage() {
               user_email: storeUserEmail
             });
 
-            // Send invite if email was changed
+            // Create new invite if email was changed
             if (emailChanged) {
-              try {
-                await base44.integrations.Core.SendEmail({
-                  to: storeUserEmail,
-                  subject: language === 'he' ? `הזמנה לנהל סניף ברשת ${chain.name}` : `Invitation to manage branch in ${chain.name}`,
-                  body: language === 'he' 
-                    ? `שלום,\n\nהוזמנת לנהל את הסניף "${storeName}" ברשת "${chain.name}".\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
-                    : `Hello,\n\nYou have been invited to manage the branch "${storeName}" in the chain "${chain.name}".\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
-                });
-                alert(language === 'he' ? 'הסניף עודכן והזמנה נשלחה למייל החדש' : 'Store updated and invite sent to new email');
-              } catch (emailError) {
-                console.error("Error sending invite:", emailError);
-                alert(language === 'he' ? 'הסניף עודכן אך שליחת ההזמנה נכשלה' : 'Store updated but invite failed to send');
-              }
+              await base44.entities.UserInvite.create({
+                token: token,
+                email: storeUserEmail,
+                full_name: storeName,
+                invite_type: "chain_store",
+                chain_id: chain.id,
+                chain_name: chain.name,
+                store_name: storeName,
+                inviter_email: user.email,
+                inviter_name: user.full_name,
+                expires_at: expiresAt.toISOString(),
+                used: false
+              });
+
+              const inviteLink = `${window.location.origin}/pages/Register?invite=${token}`;
+              alert(
+                (language === 'he' 
+                  ? `הסניף עודכן!\n\nשתף את הקישור הזה עם מנהל הסניף החדש:\n${inviteLink}`
+                  : `Store updated!\n\nShare this link with the new store manager:\n${inviteLink}`)
+              );
+            } else {
+              alert(language === 'he' ? 'הסניף עודכן בהצלחה' : 'Store updated successfully');
             }
           } else {
             // Create new store
@@ -225,20 +239,27 @@ export default function ChainManagementPage() {
               is_head_store: false
             });
 
-            // Send invite to new store manager
-            try {
-              await base44.integrations.Core.SendEmail({
-                to: storeUserEmail,
-                subject: language === 'he' ? `הזמנה לנהל סניף ברשת ${chain.name}` : `Invitation to manage branch in ${chain.name}`,
-                body: language === 'he' 
-                  ? `שלום,\n\nהוזמנת לנהל את הסניף "${storeName}" ברשת "${chain.name}".\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
-                  : `Hello,\n\nYou have been invited to manage the branch "${storeName}" in the chain "${chain.name}".\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
-              });
-              alert(language === 'he' ? 'הסניף נוסף והזמנה נשלחה' : 'Store added and invite sent');
-            } catch (emailError) {
-              console.error("Error sending invite:", emailError);
-              alert(language === 'he' ? 'הסניף נוסף אך שליחת ההזמנה נכשלה' : 'Store added but invite failed to send');
-            }
+            // Create invite for new store manager
+            await base44.entities.UserInvite.create({
+              token: token,
+              email: storeUserEmail,
+              full_name: storeName,
+              invite_type: "chain_store",
+              chain_id: chain.id,
+              chain_name: chain.name,
+              store_name: storeName,
+              inviter_email: user.email,
+              inviter_name: user.full_name,
+              expires_at: expiresAt.toISOString(),
+              used: false
+            });
+
+            const inviteLink = `${window.location.origin}/pages/Register?invite=${token}`;
+            alert(
+              (language === 'he' 
+                ? `הסניף "${storeName}" נוסף בהצלחה!\n\nשתף את הקישור הזה עם מנהל הסניף:\n${inviteLink}`
+                : `Store "${storeName}" added successfully!\n\nShare this link with the store manager:\n${inviteLink}`)
+            );
           }
 
           setShowAddStore(false);
