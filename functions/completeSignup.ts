@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 // Use Web Crypto API for password hashing (built-in to Deno)
 async function hashPassword(password) {
@@ -12,7 +12,7 @@ async function hashPassword(password) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { invite_token, username, password } = await req.json();
+    const { invite_token, username, password, invite_type, chain_id, store_id, store_name, role, inviter_email } = await req.json();
 
     if (!invite_token || !username || !password) {
       return Response.json({ 
@@ -59,15 +59,32 @@ Deno.serve(async (req) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user account with hashed password
-    await base44.asServiceRole.entities.User.create({
+    // Build user data based on invite type
+    const userData = {
       email: invite.email,
       full_name: invite.full_name,
       username: username.trim(),
       password: hashedPassword,
       phone: invite.phone || '',
       role: 'user'
-    });
+    };
+
+    // Add chain/store specific data based on invite type
+    const inviteTypeToUse = invite_type || invite.invite_type;
+    
+    if (inviteTypeToUse === 'chain_store') {
+      // Chain store manager - gets their own store in the chain
+      userData.chain_id = chain_id || invite.chain_id;
+      userData.is_chain_head = false;
+    } else if (inviteTypeToUse === 'store_user') {
+      // Store user (worker/manager) - works within someone else's store
+      userData.store_user_role = role || invite.role;
+      userData.store_user_owner_email = inviter_email || invite.inviter_email;
+      userData.store_user_store_name = store_name || invite.store_name;
+    }
+
+    // Create user account
+    await base44.asServiceRole.entities.User.create(userData);
 
     // Mark invite as used
     await base44.asServiceRole.entities.UserInvite.update(invite.id, {
@@ -77,7 +94,8 @@ Deno.serve(async (req) => {
 
     return Response.json({ 
       success: true,
-      message: 'Account created successfully'
+      message: 'Account created successfully',
+      invite_type: inviteTypeToUse
     });
 
   } catch (error) {
