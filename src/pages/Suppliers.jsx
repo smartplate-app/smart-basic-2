@@ -159,8 +159,15 @@ export default function SuppliersPage() {
     };
   }, []);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleSubmit = async (supplierData) => {
+        // Prevent double submission
+        if (isSaving) return;
+
         try {
+          setIsSaving(true);
+
           if (editingSupplier) {
             await base44.entities.Supplier.update(editingSupplier.id, supplierData);
           } else {
@@ -182,6 +189,8 @@ export default function SuppliersPage() {
         } catch (error) {
           console.error("Error saving supplier:", error);
           alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
+        } finally {
+          setIsSaving(false);
         }
       };
 
