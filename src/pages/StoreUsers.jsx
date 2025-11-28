@@ -38,7 +38,7 @@ export default function StoreUsersPage() {
       loading: "טוען...",
       noUsers: "אין משתמשים עדיין",
       delete: "מחק",
-      inviteSent: "המשתמש נוסף והזמנה נשלחה",
+      inviteSent: "המשתמש נוסף בהצלחה!",
       inviteFailed: "המשתמש נוסף אך שליחת ההזמנה נכשלה",
       currentStore: "החנות הנוכחית שלך",
       managerDesc: "יכול לראות הכל ולנהל את החנות",
@@ -57,7 +57,7 @@ export default function StoreUsersPage() {
       loading: "Loading...",
       noUsers: "No users yet",
       delete: "Delete",
-      inviteSent: "User added and invite sent",
+      inviteSent: "User added successfully!",
       inviteFailed: "User added but invite failed to send",
       currentStore: "Your Current Store",
       managerDesc: "Can see everything and manage the store",
@@ -106,16 +106,9 @@ export default function StoreUsersPage() {
         is_active: true
       });
 
-      // Send invite email via backend function (can send to any email)
-      await base44.functions.invoke('sendStoreUserInvite', {
-        userEmail,
-        userName,
-        storeName,
-        role: userRole,
-        language
-      });
-      
-      alert(t.inviteSent);
+      // Show success with link to share
+      const appLink = window.location.origin;
+      alert(t.inviteSent + "\n\n" + (language === 'he' ? `שתף קישור זה עם המשתמש:\n${appLink}` : `Share this link with the user:\n${appLink}`));
 
       setShowAddUser(false);
       setUserName("");
