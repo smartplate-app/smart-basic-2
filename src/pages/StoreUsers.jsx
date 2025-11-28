@@ -106,20 +106,15 @@ export default function StoreUsersPage() {
         is_active: true
       });
 
-      // Send invite email
-      const roleText = userRole === 'manager' 
-        ? (language === 'he' ? 'מנהל' : 'Manager')
-        : (language === 'he' ? 'עובד' : 'Worker');
-        
-      const emailResult = await base44.integrations.Core.SendEmail({
-        to: userEmail,
-        subject: language === 'he' ? `הזמנה להצטרף ל${storeName}` : `Invitation to join ${storeName}`,
-        body: language === 'he' 
-          ? `שלום ${userName},\n\nהוזמנת להצטרף ל${storeName} כ${roleText}.\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
-          : `Hello ${userName},\n\nYou have been invited to join ${storeName} as a ${roleText}.\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
+      // Send invite email via backend function (can send to any email)
+      await base44.functions.invoke('sendStoreUserInvite', {
+        userEmail,
+        userName,
+        storeName,
+        role: userRole,
+        language
       });
       
-      console.log("Email sent:", emailResult);
       alert(t.inviteSent);
 
       setShowAddUser(false);
