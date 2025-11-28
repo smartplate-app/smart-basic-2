@@ -25,7 +25,7 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
+      const token = urlParams.get('invite') || urlParams.get('token'); // Support both formats
 
       if (!token) {
         setError('No invitation token found. Please check your invitation link.');
@@ -33,6 +33,30 @@ export default function RegisterPage() {
         return;
       }
 
+      // First try to find in UserInvite entity directly
+      try {
+        const invites = await base44.entities.UserInvite.filter({ token: token, used: false });
+        
+        if (invites.length > 0) {
+          const invite = invites[0];
+          
+          // Check if expired
+          if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+            setError('This invitation has expired. Please request a new one.');
+            setLoading(false);
+            return;
+          }
+          
+          setInviteData(invite);
+          setUsername(invite.email.split('@')[0] || '');
+          setLoading(false);
+          return;
+        }
+      } catch (entityErr) {
+        console.log('Falling back to function verification');
+      }
+
+      // Fallback to old function-based verification
       const response = await base44.functions.invoke('verifyInviteToken', { token });
 
       if (response.data.success) {
@@ -70,12 +94,26 @@ export default function RegisterPage() {
     try {
       setSubmitting(true);
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
+      const token = urlParams.get('invite') || urlParams.get('token');
+
+      // If we have invite data from entity, mark it as used
+      if (inviteData?.id) {
+        await base44.entities.UserInvite.update(inviteData.id, {
+          used: true,
+          used_at: new Date().toISOString()
+        });
+      }
 
       const response = await base44.functions.invoke('completeSignup', {
         invite_token: token,
         username: username.trim(),
-        password: password
+        password: password,
+        invite_type: inviteData?.invite_type,
+        chain_id: inviteData?.chain_id,
+        store_id: inviteData?.store_id,
+        store_name: inviteData?.store_name,
+        role: inviteData?.role,
+        inviter_email: inviteData?.inviter_email
       });
 
       if (response.data.success) {
@@ -169,6 +207,16 @@ export default function RegisterPage() {
           <p className="text-center text-gray-600 mt-2">
             Welcome, {inviteData?.full_name}!
           </p>
+          {inviteData?.invite_type === 'chain_store' && (
+            <p className="text-center text-blue-600 text-sm mt-1">
+              You're joining as store manager for: {inviteData?.store_name}
+            </p>
+          )}
+          {inviteData?.invite_type === 'store_user' && (
+            <p className="text-center text-green-600 text-sm mt-1">
+              You're joining {inviteData?.store_name} as {inviteData?.role === 'manager' ? 'Manager' : 'Worker'}
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
