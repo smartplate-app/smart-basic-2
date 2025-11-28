@@ -107,25 +107,20 @@ export default function StoreUsersPage() {
       });
 
       // Send invite email
-      try {
-        const roleText = userRole === 'manager' 
-          ? (language === 'he' ? 'מנהל' : 'Manager')
-          : (language === 'he' ? 'עובד' : 'Worker');
-          
-        await base44.integrations.Core.SendEmail({
-          to: userEmail,
-          from_name: "Smart Plate",
-          subject: language === 'he' ? `הזמנה להצטרף ל-${storeName}` : `Invitation to join ${storeName}`,
-          body: language === 'he' 
-            ? `שלום ${userName},\n\nהוזמנת להצטרף ל-${storeName} כ${roleText}.\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
-            : `Hello ${userName},\n\nYou have been invited to join ${storeName} as a ${roleText}.\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
-        });
-        alert(t.inviteSent);
-      } catch (emailError) {
-        console.error("Error sending invite:", emailError);
-        // Still show success since user was added
-        alert(t.inviteFailed);
-      }
+      const roleText = userRole === 'manager' 
+        ? (language === 'he' ? 'מנהל' : 'Manager')
+        : (language === 'he' ? 'עובד' : 'Worker');
+        
+      const emailResult = await base44.integrations.Core.SendEmail({
+        to: userEmail,
+        subject: language === 'he' ? `הזמנה להצטרף ל${storeName}` : `Invitation to join ${storeName}`,
+        body: language === 'he' 
+          ? `שלום ${userName},\n\nהוזמנת להצטרף ל${storeName} כ${roleText}.\n\nלהתחברות למערכת: ${window.location.origin}\n\nבברכה,\n${user.full_name}`
+          : `Hello ${userName},\n\nYou have been invited to join ${storeName} as a ${roleText}.\n\nTo login: ${window.location.origin}\n\nBest regards,\n${user.full_name}`
+      });
+      
+      console.log("Email sent:", emailResult);
+      alert(t.inviteSent);
 
       setShowAddUser(false);
       setUserName("");
