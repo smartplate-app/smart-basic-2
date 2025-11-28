@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, Plus, Store, Crown, Loader, Trash2, Users, Eye, ArrowLeft } from "lucide-react";
+import { Building2, Plus, Store, Crown, Loader, Trash2, Users, Eye, ArrowLeft, Pencil } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function ChainManagementPage() {
@@ -31,6 +31,7 @@ export default function ChainManagementPage() {
   const [storeName, setStoreName] = useState("");
   const [storeAddress, setStoreAddress] = useState("");
   const [storeUserEmail, setStoreUserEmail] = useState("");
+  const [editingStore, setEditingStore] = useState(null);
 
   const t = {
     he: {
@@ -182,32 +183,51 @@ export default function ChainManagementPage() {
   };
 
   const handleAddStore = async () => {
-    if (!storeName.trim() || !storeUserEmail.trim()) return;
-    
-    try {
-      setSaving(true);
-      
-      await base44.entities.ChainStore.create({
-        chain_id: chain.id,
-        chain_name: chain.name,
-        store_name: storeName,
-        store_address: storeAddress,
-        user_email: storeUserEmail,
-        is_head_store: false
-      });
+        if (!storeName.trim() || !storeUserEmail.trim()) return;
 
-      setShowAddStore(false);
-      setStoreName("");
-      setStoreAddress("");
-      setStoreUserEmail("");
-      await loadData();
-    } catch (error) {
-      console.error("Error adding store:", error);
-      alert(error.message);
-    } finally {
-      setSaving(false);
-    }
-  };
+        try {
+          setSaving(true);
+
+          if (editingStore) {
+            // Update existing store
+            await base44.entities.ChainStore.update(editingStore.id, {
+              store_name: storeName,
+              store_address: storeAddress,
+              user_email: storeUserEmail
+            });
+          } else {
+            // Create new store
+            await base44.entities.ChainStore.create({
+              chain_id: chain.id,
+              chain_name: chain.name,
+              store_name: storeName,
+              store_address: storeAddress,
+              user_email: storeUserEmail,
+              is_head_store: false
+            });
+          }
+
+          setShowAddStore(false);
+          setEditingStore(null);
+          setStoreName("");
+          setStoreAddress("");
+          setStoreUserEmail("");
+          await loadData();
+        } catch (error) {
+          console.error("Error saving store:", error);
+          alert(error.message);
+        } finally {
+          setSaving(false);
+        }
+      };
+
+      const handleEditStore = (store) => {
+        setEditingStore(store);
+        setStoreName(store.store_name);
+        setStoreAddress(store.store_address || "");
+        setStoreUserEmail(store.user_email);
+        setShowAddStore(true);
+      };
 
   const handleDeleteStore = async (storeId) => {
         if (!confirm(language === 'he' ? 'למחוק סניף זה?' : 'Delete this store?')) return;
