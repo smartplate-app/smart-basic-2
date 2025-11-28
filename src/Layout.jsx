@@ -19,23 +19,25 @@ const AppLayout = ({ children, currentPageName }) => {
   const [authLoading, setAuthLoading] = React.useState(true);
   const [showWorkerInvite, setShowWorkerInvite] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const [retryCount, setRetryCount] = React.useState(0);
-  const { t, language } = useLanguage();
+      const [retryCount, setRetryCount] = React.useState(0);
+      const [storeUserRole, setStoreUserRole] = React.useState(null); // null = owner, 'manager', or 'worker'
+      const { t, language } = useLanguage();
 
   const navigationItems = [
-            { title: t('labor_cost_management'), url: createPageUrl("LaborCost"), icon: Users, adminOnly: false },
-            { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false },
-            { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false },
-            { title: t('nav_receipts'), url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false },
-            { title: t('nav_suppliers'), url: createPageUrl("Suppliers"), icon: Users, adminOnly: false },
-            { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false },
-            { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false },
-            { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false },
-            { title: language === 'he' ? 'ניהול רשת' : 'Chain Management', url: createPageUrl("ChainManagement"), icon: TrendingUp, adminOnly: false },
-            { title: language === 'he' ? 'דוח הזמנות ספקים' : 'Supplier Orders Report', url: createPageUrl("Reports"), icon: BarChart2, adminOnly: false },
-            { title: t('user_profile'), url: createPageUrl("UserProfile"), icon: UserCircle, adminOnly: false },
-            { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true },
-            { title: language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard', url: createPageUrl("AdminDashboard"), icon: Shield, adminOnly: true }
+            { title: t('labor_cost_management'), url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
+            { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
+            { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
+            { title: t('nav_receipts'), url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false, workerHidden: false },
+            { title: t('nav_suppliers'), url: createPageUrl("Suppliers"), icon: Users, adminOnly: false, workerHidden: true },
+            { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
+            { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
+            { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false, workerHidden: false },
+            { title: language === 'he' ? 'ניהול רשת' : 'Chain Management', url: createPageUrl("ChainManagement"), icon: TrendingUp, adminOnly: false, workerHidden: true },
+            { title: language === 'he' ? 'משתמשי החנות' : 'Store Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
+            { title: language === 'he' ? 'דוח הזמנות ספקים' : 'Supplier Orders Report', url: createPageUrl("Reports"), icon: BarChart2, adminOnly: false, workerHidden: true },
+            { title: t('user_profile'), url: createPageUrl("UserProfile"), icon: UserCircle, adminOnly: false, workerHidden: false },
+            { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
+            { title: language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard', url: createPageUrl("AdminDashboard"), icon: Shield, adminOnly: true, workerHidden: true }
           ];
 
   React.useEffect(() => {
@@ -81,10 +83,29 @@ const AppLayout = ({ children, currentPageName }) => {
           const currentUser = await base44.auth.me();
       
       setUser(currentUser);
-      setError(null);
-      setRetryCount(0);
-      
-      const currentPath = location.pathname;
+                  setError(null);
+                  setRetryCount(0);
+
+                  // Check if user is a store user (worker/manager) for someone else's store
+                  try {
+                    const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+                    if (storeUserRecords.length > 0) {
+                      const storeUserRecord = storeUserRecords[0];
+                      setStoreUserRole(storeUserRecord.role);
+                      // Save store info to user context
+                      if (!currentUser.store_user_role) {
+                        await base44.auth.updateMe({
+                          store_user_role: storeUserRecord.role,
+                          store_user_owner_email: storeUserRecord.owner_email,
+                          store_user_store_name: storeUserRecord.store_name
+                        });
+                      }
+                    }
+                  } catch (storeUserError) {
+                    console.log("No store user record found");
+                  }
+
+                  const currentPath = location.pathname;
       if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
         console.log("[Layout] Redirecting to Dashboard page");
         window.location.href = createPageUrl("Dashboard");
@@ -125,9 +146,15 @@ const AppLayout = ({ children, currentPageName }) => {
     }
   };
 
-  const visibleNavigationItems = user && user.role === 'admin' 
-    ? navigationItems 
-    : navigationItems.filter(item => !item.adminOnly);
+  const isWorker = storeUserRole === 'worker' || user?.store_user_role === 'worker';
+
+      const visibleNavigationItems = navigationItems.filter(item => {
+        // Admin-only items
+        if (item.adminOnly && user?.role !== 'admin') return false;
+        // Worker-hidden items
+        if (item.workerHidden && isWorker) return false;
+        return true;
+      });
 
   const isRTL = language === 'he' || language === 'ar';
 

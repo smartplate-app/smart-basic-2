@@ -16,6 +16,7 @@ import Users from './pages/Users';
 import Register from './pages/Register';
 import SalesPrediction from './pages/SalesPrediction';
 import ChainManagement from './pages/ChainManagement';
+import StoreUsers from './pages/StoreUsers';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "Register": Register,
     "SalesPrediction": SalesPrediction,
     "ChainManagement": ChainManagement,
+    "StoreUsers": StoreUsers,
 }
 
 export const pagesConfig = {
