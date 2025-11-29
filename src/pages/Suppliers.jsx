@@ -43,9 +43,20 @@ export default function SuppliersPage() {
                   // Determine which email to use (acting as store or own)
                   const workingEmail = currentUser.acting_as_store_email || currentUser.email;
                   const isActingAsStore = !!currentUser.acting_as_store_email;
+                  
+                  // Check if user is a store_user (worker/manager invited to someone else's store)
+                  const isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
+                  const storeOwnerEmail = currentUser.store_user_owner_email;
 
-                  // Check if user belongs to a chain or is acting as a branch
-                  if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore) {
+                  if (isStoreUser && storeOwnerEmail) {
+                    // Store user - load suppliers from the store owner
+                    const [ownerSuppliers, ownerItems] = await Promise.all([
+                      base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, '-created_date'),
+                      base44.entities.Item.filter({ created_by: storeOwnerEmail })
+                    ]);
+                    suppliersData = ownerSuppliers;
+                    itemsData = ownerItems;
+                  } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore) {
                     // Branch store - get suppliers from chain head + own
                     const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
                     if (chain.length > 0) {
