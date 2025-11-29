@@ -87,22 +87,26 @@ const AppLayout = ({ children, currentPageName }) => {
                   setRetryCount(0);
 
                   // Check if user is a store user (worker/manager) for someone else's store
-                  try {
-                    const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
-                    if (storeUserRecords.length > 0) {
-                      const storeUserRecord = storeUserRecords[0];
-                      setStoreUserRole(storeUserRecord.role);
-                      // Save store info to user context
-                      if (!currentUser.store_user_role) {
+                  // First check if already saved on user profile (from signup)
+                  if (currentUser.store_user_role && currentUser.store_user_owner_email) {
+                    setStoreUserRole(currentUser.store_user_role);
+                  } else {
+                    // Fallback: check StoreUser entity
+                    try {
+                      const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+                      if (storeUserRecords.length > 0) {
+                        const storeUserRecord = storeUserRecords[0];
+                        setStoreUserRole(storeUserRecord.role);
+                        // Save store info to user context
                         await base44.auth.updateMe({
                           store_user_role: storeUserRecord.role,
                           store_user_owner_email: storeUserRecord.owner_email,
                           store_user_store_name: storeUserRecord.store_name
                         });
                       }
+                    } catch (storeUserError) {
+                      console.log("No store user record found");
                     }
-                  } catch (storeUserError) {
-                    console.log("No store user record found");
                   }
 
                   const currentPath = location.pathname;
