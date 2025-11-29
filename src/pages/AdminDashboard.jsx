@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown } from "lucide-react";
+import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import AppHelpChat from "../components/AppHelpChat";
 
@@ -460,15 +460,25 @@ export default function AdminDashboard() {
                   {language === 'he' ? 'צפה ונהל את כל המשתמשים והנתונים' : 'View and manage all users and data'}
                 </p>
               </div>
-              <Button
-                onClick={() => setShowChainsView(!showChainsView)}
-                variant={showChainsView ? "default" : "outline"}
-                className="flex items-center gap-2"
-              >
-                <Building2 className="w-4 h-4" />
-                {language === 'he' ? 'ניהול רשתות' : 'Chain Management'}
-                {chains.length > 0 && <Badge variant="secondary">{chains.length}</Badge>}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => window.location.href = '/pages/TestInvites'}
+                  variant="outline"
+                  className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  <TestTube className="w-4 h-4" />
+                  {language === 'he' ? 'בדיקת הזמנות' : 'Test Invites'}
+                </Button>
+                <Button
+                  onClick={() => setShowChainsView(!showChainsView)}
+                  variant={showChainsView ? "default" : "outline"}
+                  className="flex items-center gap-2"
+                >
+                  <Building2 className="w-4 h-4" />
+                  {language === 'he' ? 'ניהול רשתות' : 'Chain Management'}
+                  {chains.length > 0 && <Badge variant="secondary">{chains.length}</Badge>}
+                </Button>
+              </div>
             </div>
 
             {showChainsView && (
