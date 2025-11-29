@@ -484,10 +484,20 @@ export default function AdminDashboard() {
             {showChainsView && (
               <Card className="mb-6">
                 <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5" />
-                    {language === 'he' ? 'רשתות במערכת' : 'Chains in System'}
-                  </CardTitle>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5" />
+                      {language === 'he' ? 'רשתות במערכת' : 'Chains in System'}
+                    </CardTitle>
+                    <Button
+                      onClick={() => window.location.href = '/pages/TestInvites'}
+                      variant="secondary"
+                      className="flex items-center gap-2 bg-white text-purple-700 hover:bg-purple-100"
+                    >
+                      <TestTube className="w-4 h-4" />
+                      {language === 'he' ? '🧪 בדיקת קישורי הזמנה' : '🧪 Test Invite Links'}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-4">
                   {chains.length === 0 ? (
