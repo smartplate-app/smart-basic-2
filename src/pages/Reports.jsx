@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { base44 } from "@/api/base44Client";
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Loader, Printer, AlertTriangle, ShoppingCart, Package, Scale } from 'lucide-react';
+import { Loader, Printer, AlertTriangle, ShoppingCart, Package, Scale, Building2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { he, enUS, de, ru } from 'date-fns/locale';
 import { useLanguage } from '@/components/LanguageProvider';
@@ -21,6 +20,7 @@ export default function ReportsPage() {
     const [reportData, setReportData] = useState(null);
     const [aggregatedData, setAggregatedData] = useState(null);
     const [comparisonData, setComparisonData] = useState(null);
+    const [supplierSummary, setSupplierSummary] = useState(null);
     const [activeTab, setActiveTab] = useState('by-orders');
     const { t, language } = useLanguage();
     
@@ -54,6 +54,7 @@ export default function ReportsPage() {
         setReportData(null);
         setAggregatedData(null);
         setComparisonData(null);
+        setSupplierSummary(null);
         try {
             const allOrders = await base44.entities.Order.filter({ created_by: user.email });
             const allReceipts = await base44.entities.SupplyReceipt.filter({ created_by: user.email });
@@ -219,6 +220,55 @@ export default function ReportsPage() {
                 itemsWithDiscrepancies: comparisonItems.filter(i => i.has_discrepancy).length
             });
 
+            // NEW: Supplier Summary (macro view)
+            const supplierOrderedMap = new Map();
+            const supplierReceivedMap = new Map();
+
+            filteredOrders.forEach(order => {
+                const supplierName = order.supplier_name || 'Unknown';
+                const current = supplierOrderedMap.get(supplierName) || { name: supplierName, cost: 0, orders: 0 };
+                current.cost += order.total_cost || 0;
+                current.orders += 1;
+                supplierOrderedMap.set(supplierName, current);
+            });
+
+            filteredReceipts.forEach(receipt => {
+                const supplierName = receipt.supplier_name || 'Unknown';
+                const current = supplierReceivedMap.get(supplierName) || { name: supplierName, cost: 0, receipts: 0 };
+                current.cost += receipt.calculated_total || receipt.invoice_total || 0;
+                current.receipts += 1;
+                supplierReceivedMap.set(supplierName, current);
+            });
+
+            const allSupplierNames = new Set([...supplierOrderedMap.keys(), ...supplierReceivedMap.keys()]);
+            const supplierRows = [];
+
+            allSupplierNames.forEach(name => {
+                const ordered = supplierOrderedMap.get(name) || { cost: 0, orders: 0 };
+                const received = supplierReceivedMap.get(name) || { cost: 0, receipts: 0 };
+                const diff = received.cost - ordered.cost;
+                supplierRows.push({
+                    name,
+                    orderedCost: ordered.cost,
+                    ordersCount: ordered.orders,
+                    receivedCost: received.cost,
+                    receiptsCount: received.receipts,
+                    difference: diff
+                });
+            });
+
+            supplierRows.sort((a, b) => b.orderedCost - a.orderedCost);
+
+            const totalSupplierOrdered = supplierRows.reduce((sum, s) => sum + s.orderedCost, 0);
+            const totalSupplierReceived = supplierRows.reduce((sum, s) => sum + s.receivedCost, 0);
+
+            setSupplierSummary({
+                suppliers: supplierRows,
+                totalOrdered: totalSupplierOrdered,
+                totalReceived: totalSupplierReceived,
+                totalDifference: totalSupplierReceived - totalSupplierOrdered
+            });
+
         } catch (error) {
             console.error("Error generating report:", error);
         } finally {
@@ -311,7 +361,7 @@ export default function ReportsPage() {
                     </div>
                 )}
 
-                {(reportData || aggregatedData || comparisonData) && (
+                {(reportData || aggregatedData || comparisonData || supplierSummary) && (
                     <div id="print-section" className="mt-8">
                         <Card>
                             <CardHeader className="flex flex-row justify-between items-start">
@@ -331,7 +381,11 @@ export default function ReportsPage() {
                             </CardHeader>
                             <CardContent>
                                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                                    <TabsList className="grid w-full grid-cols-4 mb-6">
+                                        <TabsTrigger value="supplier-summary" className="flex items-center gap-2">
+                                            <Building2 className="w-4 h-4" />
+                                            {language === 'he' ? 'סיכום ספקים' : 'Supplier Summary'}
+                                        </TabsTrigger>
                                         <TabsTrigger value="by-orders" className="flex items-center gap-2">
                                             <ShoppingCart className="w-4 h-4" />
                                             {language === 'he' ? 'לפי הזמנות' : 'By Orders'}
@@ -345,6 +399,83 @@ export default function ReportsPage() {
                                             {language === 'he' ? 'הזמנות מול אספקה' : 'Orders vs Supply'}
                                         </TabsTrigger>
                                     </TabsList>
+
+                                    <TabsContent value="supplier-summary">
+                                        {supplierSummary && (
+                                            <>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                                    <Card className="bg-blue-50 border-blue-200">
+                                                        <CardContent className="pt-6">
+                                                            <div className="text-sm text-blue-700">{language === 'he' ? 'סה"כ הוזמן' : 'Total Ordered'}</div>
+                                                            <div className="text-3xl font-bold text-blue-600">₪{supplierSummary.totalOrdered.toFixed(0)}</div>
+                                                        </CardContent>
+                                                    </Card>
+                                                    <Card className="bg-green-50 border-green-200">
+                                                        <CardContent className="pt-6">
+                                                            <div className="text-sm text-green-700">{language === 'he' ? 'סה"כ התקבל' : 'Total Received'}</div>
+                                                            <div className="text-3xl font-bold text-green-600">₪{supplierSummary.totalReceived.toFixed(0)}</div>
+                                                        </CardContent>
+                                                    </Card>
+                                                    <Card className={supplierSummary.totalDifference >= 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}>
+                                                        <CardContent className="pt-6">
+                                                            <div className="text-sm text-gray-700">{language === 'he' ? 'הפרש כולל' : 'Total Difference'}</div>
+                                                            <div className={`text-3xl font-bold ${supplierSummary.totalDifference >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                                {supplierSummary.totalDifference >= 0 ? '+' : ''}₪{supplierSummary.totalDifference.toFixed(0)}
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                </div>
+
+                                                {supplierSummary.suppliers.length > 0 ? (
+                                                    <div className="border rounded-lg overflow-hidden">
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow className="bg-gray-100">
+                                                                    <TableHead className="font-bold text-lg">{language === 'he' ? 'ספק' : 'Supplier'}</TableHead>
+                                                                    <TableHead className="text-center font-bold">{language === 'he' ? 'הוזמן (₪)' : 'Ordered (₪)'}</TableHead>
+                                                                    <TableHead className="text-center font-bold">{language === 'he' ? 'הזמנות' : 'Orders'}</TableHead>
+                                                                    <TableHead className="text-center font-bold">{language === 'he' ? 'התקבל (₪)' : 'Received (₪)'}</TableHead>
+                                                                    <TableHead className="text-center font-bold">{language === 'he' ? 'קבלות' : 'Receipts'}</TableHead>
+                                                                    <TableHead className="text-center font-bold">{language === 'he' ? 'הפרש (₪)' : 'Diff (₪)'}</TableHead>
+                                                                </TableRow>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {supplierSummary.suppliers.map((supplier, idx) => (
+                                                                    <TableRow key={idx} className={supplier.difference > 0 ? 'bg-red-50' : supplier.difference < 0 ? 'bg-green-50' : ''}>
+                                                                        <TableCell className="font-semibold text-lg">{supplier.name}</TableCell>
+                                                                        <TableCell className="text-center text-blue-600 font-bold text-lg">₪{supplier.orderedCost.toFixed(0)}</TableCell>
+                                                                        <TableCell className="text-center text-gray-600">{supplier.ordersCount}</TableCell>
+                                                                        <TableCell className="text-center text-green-600 font-bold text-lg">₪{supplier.receivedCost.toFixed(0)}</TableCell>
+                                                                        <TableCell className="text-center text-gray-600">{supplier.receiptsCount}</TableCell>
+                                                                        <TableCell className={`text-center font-bold text-lg ${supplier.difference > 0 ? 'text-red-600' : supplier.difference < 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                                                                            {supplier.difference > 0 ? '+' : ''}₪{supplier.difference.toFixed(0)}
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ))}
+                                                                <TableRow className="bg-gray-200 font-bold">
+                                                                    <TableCell className="text-lg">{language === 'he' ? 'סה"כ' : 'TOTAL'}</TableCell>
+                                                                    <TableCell className="text-center text-blue-700 text-xl">₪{supplierSummary.totalOrdered.toFixed(0)}</TableCell>
+                                                                    <TableCell className="text-center"></TableCell>
+                                                                    <TableCell className="text-center text-green-700 text-xl">₪{supplierSummary.totalReceived.toFixed(0)}</TableCell>
+                                                                    <TableCell className="text-center"></TableCell>
+                                                                    <TableCell className={`text-center text-xl ${supplierSummary.totalDifference >= 0 ? 'text-red-700' : 'text-green-700'}`}>
+                                                                        {supplierSummary.totalDifference >= 0 ? '+' : ''}₪{supplierSummary.totalDifference.toFixed(0)}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            </TableBody>
+                                                        </Table>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center py-12">
+                                                        <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
+                                                        <h3 className="mt-2 text-lg font-medium">
+                                                            {language === 'he' ? 'אין נתונים' : 'No Data'}
+                                                        </h3>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                    </TabsContent>
 
                                     <TabsContent value="by-orders">
                                         {reportData && (
