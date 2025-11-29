@@ -17,6 +17,7 @@ import Register from './pages/Register';
 import SalesPrediction from './pages/SalesPrediction';
 import ChainManagement from './pages/ChainManagement';
 import StoreUsers from './pages/StoreUsers';
+import TestInvites from './pages/TestInvites';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "SalesPrediction": SalesPrediction,
     "ChainManagement": ChainManagement,
     "StoreUsers": StoreUsers,
+    "TestInvites": TestInvites,
 }
 
 export const pagesConfig = {
