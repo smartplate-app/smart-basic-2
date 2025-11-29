@@ -463,11 +463,10 @@ export default function AdminDashboard() {
               <div className="flex gap-2">
                 <Button
                   onClick={() => window.location.href = '/pages/TestInvites'}
-                  variant="outline"
-                  className="flex items-center gap-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
                 >
-                  <TestTube className="w-4 h-4" />
-                  {language === 'he' ? 'בדיקת הזמנות' : 'Test Invites'}
+                  <TestTube className="w-5 h-5" />
+                  🧪 {language === 'he' ? 'בדיקת קישורי הזמנה' : 'Test Invite Links'}
                 </Button>
                 <Button
                   onClick={() => setShowChainsView(!showChainsView)}
