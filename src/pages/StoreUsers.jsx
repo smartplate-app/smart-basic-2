@@ -26,7 +26,7 @@ export default function StoreUsersPage() {
 
   const t = {
     he: {
-      title: "משתמשי החנות",
+      title: "משתמשי המסעדה",
       addUser: "הוסף משתמש",
       userName: "שם מלא",
       userEmail: "אימייל",
@@ -40,12 +40,12 @@ export default function StoreUsersPage() {
       delete: "מחק",
       inviteSent: "המשתמש נוסף בהצלחה!",
       inviteFailed: "המשתמש נוסף! לא ניתן לשלוח מייל אוטומטית.",
-      currentStore: "החנות הנוכחית שלך",
-      managerDesc: "יכול לראות הכל ולנהל את החנות",
+      currentRestaurant: "המסעדה הנוכחית שלך",
+      managerDesc: "יכול לראות הכל ולנהל את המסעדה",
       workerDesc: "יכול ליצור הזמנות, לקבל אספקה ולבצע ספירות"
     },
     en: {
-      title: "Store Users",
+      title: "Restaurant Users",
       addUser: "Add User",
       userName: "Full Name",
       userEmail: "Email",
@@ -59,8 +59,8 @@ export default function StoreUsersPage() {
       delete: "Delete",
       inviteSent: "User added successfully!",
       inviteFailed: "User added! Email couldn't be sent automatically.",
-      currentStore: "Your Current Store",
-      managerDesc: "Can see everything and manage the store",
+      currentRestaurant: "Your Current Restaurant",
+      managerDesc: "Can see everything and manage the restaurant",
       workerDesc: "Can create orders, receive supplies and do counts"
     }
   }[language] || {};

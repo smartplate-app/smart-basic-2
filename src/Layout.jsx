@@ -33,7 +33,7 @@ const AppLayout = ({ children, currentPageName }) => {
             { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
             { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false, workerHidden: false },
             { title: language === 'he' ? 'ניהול רשת' : 'Chain Management', url: createPageUrl("ChainManagement"), icon: TrendingUp, adminOnly: false, workerHidden: true },
-            { title: language === 'he' ? 'משתמשי החנות' : 'Store Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
+            { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
             { title: language === 'he' ? 'דוח הזמנות ספקים' : 'Supplier Orders Report', url: createPageUrl("Reports"), icon: BarChart2, adminOnly: false, workerHidden: true },
             { title: t('user_profile'), url: createPageUrl("UserProfile"), icon: UserCircle, adminOnly: false, workerHidden: false },
             { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
