@@ -45,9 +45,23 @@ export default function ItemsPage() {
       let itemsData = [];
       let suppliersData = [];
       let warehousesData = [];
+      
+      // Check if user is a store_user (worker/manager invited to someone else's store)
+      const isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
+      const storeOwnerEmail = currentUser.store_user_owner_email;
 
-      // Check if user belongs to a chain (branch store)
-      if (currentUser.chain_id && !currentUser.is_chain_head) {
+      if (isStoreUser && storeOwnerEmail) {
+        // Store user - load data from the store owner
+        const [ownerItems, ownerSuppliers, ownerWarehouses] = await Promise.all([
+          base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date"),
+          base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
+          base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name")
+        ]);
+        itemsData = ownerItems;
+        suppliersData = ownerSuppliers;
+        warehousesData = ownerWarehouses;
+      } else if (currentUser.chain_id && !currentUser.is_chain_head) {
+        // Branch store in chain
         const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
         if (chain.length > 0) {
           const headEmail = chain[0].head_store_user_email;
