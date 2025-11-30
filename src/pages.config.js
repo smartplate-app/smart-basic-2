@@ -2,7 +2,6 @@ import Suppliers from './pages/Suppliers';
 import Items from './pages/Items';
 import Orders from './pages/Orders';
 import OrderDetails from './pages/OrderDetails';
-import Reports from './pages/Reports';
 import SupplyReceipts from './pages/SupplyReceipts';
 import MonthlyCount from './pages/MonthlyCount';
 import Warehouses from './pages/Warehouses';
@@ -26,7 +25,6 @@ export const PAGES = {
     "Items": Items,
     "Orders": Orders,
     "OrderDetails": OrderDetails,
-    "Reports": Reports,
     "SupplyReceipts": SupplyReceipts,
     "MonthlyCount": MonthlyCount,
     "Warehouses": Warehouses,
