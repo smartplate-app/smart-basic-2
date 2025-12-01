@@ -59,25 +59,10 @@ const AppLayout = ({ children, currentPageName }) => {
           setError(null);
           setRetryCount(attemptNumber);
 
-          // Check if online before attempting
-          if (!navigator.onLine) {
-            throw new Error('No internet connection - please check your network');
-          }
-
-          // Reduced initial wait for faster mobile loading
-          if (attemptNumber === 0) {
-            await new Promise(resolve => setTimeout(resolve, 300));
-          }
-
-          // Add exponential backoff delay for retries
+          // Add delay only for retries
           if (attemptNumber > 0) {
-            const delay = Math.min(1000 * Math.pow(2, attemptNumber - 1), 8000);
+            const delay = Math.min(1000 * Math.pow(2, attemptNumber - 1), 5000);
             await new Promise(resolve => setTimeout(resolve, delay));
-          }
-
-          // Additional check before attempting auth
-          if (!navigator.onLine) {
-            throw new Error('Connection lost - please check your network');
           }
 
           const currentUser = await base44.auth.me();
