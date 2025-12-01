@@ -122,10 +122,9 @@ const AppLayout = ({ children, currentPageName }) => {
         err.response?.status === 0 ||
         !navigator.onLine;
       
-      if (isNetworkError && attemptNumber < 4) { // Reduced to 4 retries
-        console.log(`[Layout] Will retry authentication... (${attemptNumber + 1}/4)`);
-        const retryDelay = Math.min(3000 * Math.pow(2, attemptNumber), 20000);
-        setTimeout(() => loadAuth(attemptNumber + 1), retryDelay);
+      if (isNetworkError && attemptNumber < 2) {
+        console.log(`[Layout] Will retry authentication... (${attemptNumber + 1}/2)`);
+        setTimeout(() => loadAuth(attemptNumber + 1), 2000);
         return;
       }
       
