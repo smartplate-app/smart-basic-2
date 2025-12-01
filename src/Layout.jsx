@@ -82,26 +82,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
           const currentUser = await base44.auth.me();
 
-          // Check if user is authorized (admin, has chain, is store user, or was invited)
-          const isAdmin = currentUser.role === 'admin';
-          const hasChain = currentUser.chain_id || currentUser.is_chain_head;
-          const isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
-          const isAuthorized = currentUser.is_authorized;
-
-          if (!isAdmin && !hasChain && !isStoreUser && !isAuthorized) {
-            // Check if there's an invite for this user
-            const invites = await base44.entities.UserInvite.filter({ email: currentUser.email, used: true });
-            if (invites.length === 0) {
-              // No valid invite found - block access
-              await base44.auth.logout();
-              window.location.href = '/unauthorized';
-              return;
-            }
-            // Mark user as authorized
-            await base44.auth.updateMe({ is_authorized: true });
-          }
-
-      setUser(currentUser);
+          setUser(currentUser);
                   setError(null);
                   setRetryCount(0);
 
