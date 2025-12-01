@@ -17,7 +17,6 @@ import SalesPrediction from './pages/SalesPrediction';
 import ChainManagement from './pages/ChainManagement';
 import StoreUsers from './pages/StoreUsers';
 import TestInvites from './pages/TestInvites';
-import Unauthorized from './pages/Unauthorized';
 import __Layout from './Layout.jsx';
 
 
@@ -41,7 +40,6 @@ export const PAGES = {
     "ChainManagement": ChainManagement,
     "StoreUsers": StoreUsers,
     "TestInvites": TestInvites,
-    "Unauthorized": Unauthorized,
 }
 
 export const pagesConfig = {
