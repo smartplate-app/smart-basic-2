@@ -229,6 +229,32 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Show Restaurant Info for Store Users (read-only) */}
+            {inviteData?.invite_type === 'store_user' && (inviteData?.restaurant_name || inviteData?.store_name) && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-xs text-blue-600">Restaurant Name</Label>
+                    <Input
+                      value={inviteData?.restaurant_name || inviteData?.store_name || ''}
+                      disabled
+                      className="bg-white border-blue-200 font-semibold"
+                    />
+                  </div>
+                  {inviteData?.restaurant_address && (
+                    <div>
+                      <Label className="text-xs text-blue-600">Restaurant Address</Label>
+                      <Input
+                        value={inviteData?.restaurant_address || ''}
+                        disabled
+                        className="bg-white border-blue-200"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
