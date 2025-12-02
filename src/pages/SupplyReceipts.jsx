@@ -30,7 +30,7 @@ export default function SupplyReceiptsPage() {
   const [networkError, setNetworkError] = useState(false);
   const { t } = useLanguage();
 
-  const loadData = async (userEmail, retryCount = 0) => {
+  const loadData = async (userEmail, storeOwnerEmail = null, retryCount = 0) => {
     try {
       setLoading(true);
       setNetworkError(false);
@@ -38,21 +38,26 @@ export default function SupplyReceiptsPage() {
       // Artificial delay for demonstration/testing, remove in production if not needed
       await new Promise(resolve => setTimeout(resolve, 100));
 
+      // If store user, load suppliers from owner but receipts/orders from working email
+      const suppliersEmail = storeOwnerEmail || userEmail;
+      
       const [receiptsData, ordersData, suppliersData] = await Promise.all([
-        base44.entities.SupplyReceipt.filter({ created_by: userEmail }, "-received_date"),
-        base44.entities.Order.filter({ created_by: userEmail }, "-created_date"),
-        base44.entities.Supplier.filter({ created_by: userEmail }, "name")
+        base44.entities.SupplyReceipt.filter({ created_by: suppliersEmail }, "-received_date"),
+        base44.entities.Order.filter({ created_by: suppliersEmail }, "-created_date"),
+        base44.entities.Supplier.filter({ created_by: suppliersEmail }, "name")
       ]);
       setReceipts(receiptsData);
       setOrders(ordersData);
       setSuppliers(suppliersData);
+      
+      console.log(`[SupplyReceipts] Loaded ${suppliersData.length} suppliers from ${suppliersEmail}`);
     } catch (error) {
       console.error("Error loading data:", error);
 
       if ((error.message === 'Network Error' || error.code === 'ERR_NETWORK') && retryCount < 3) {
         console.log(`Retrying data load... attempt ${retryCount + 1}`);
         await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1))); // Exponential backoff
-        return loadData(userEmail, retryCount + 1);
+        return loadData(userEmail, storeOwnerEmail, retryCount + 1);
       }
 
       setNetworkError(true);
