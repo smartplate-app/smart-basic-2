@@ -120,7 +120,7 @@ export default function StoreUsersPage() {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
 
-      // Create invite record
+      // Create invite record with restaurant details
       await base44.entities.UserInvite.create({
         token: token,
         email: userEmail,
@@ -132,7 +132,10 @@ export default function StoreUsersPage() {
         inviter_email: ownerEmail,
         inviter_name: user.full_name,
         expires_at: expiresAt.toISOString(),
-        used: false
+        used: false,
+        // Include restaurant details for the worker
+        restaurant_name: user.business_name || user.acting_as_store_name || storeName,
+        restaurant_address: user.business_address || ""
       });
 
       // Generate unique invite link
