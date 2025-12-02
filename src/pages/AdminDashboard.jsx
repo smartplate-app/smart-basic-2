@@ -653,6 +653,19 @@ export default function AdminDashboard() {
                         <TableCell className="text-sm text-gray-500">
                           {new Date(user.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              switchToUser(user);
+                            }}
+                            className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1"
+                          >
+                            <LogIn className="w-3 h-3" />
+                            {language === 'he' ? 'שלוט' : 'Control'}
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
