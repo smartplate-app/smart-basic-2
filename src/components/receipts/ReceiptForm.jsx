@@ -376,12 +376,54 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
       <Card>
         <CardHeader>
           <CardTitle>{receipt ? (language === 'he' ? 'עריכת קבלה' : 'Edit Receipt') : t('create_new_receipt')}</CardTitle>
-          {receipt && (
-            <p className="text-sm text-gray-500">
-              {language === 'he' ? 'ספק:' : 'Supplier:'} {formData.supplier_name} | {language === 'he' ? 'תאריך:' : 'Date:'} {formData.received_date}
-            </p>
-          )}
         </CardHeader>
+        {/* Edit mode - show editable invoice details at top */}
+        {receipt && (
+          <div className="px-6 pb-4 space-y-4 bg-blue-50 mx-4 rounded-lg border border-blue-200">
+            <p className="text-sm font-semibold text-blue-800 pt-4">
+              {language === 'he' ? 'פרטי חשבונית - ' : 'Invoice Details - '}{formData.supplier_name}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{language === 'he' ? 'תאריך קבלה' : 'Received Date'}</Label>
+                <Input
+                  type="date"
+                  value={formData.received_date}
+                  onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'he' ? 'תאריך חשבונית' : 'Invoice Date'}</Label>
+                <Input
+                  type="date"
+                  value={formData.invoice_date || ''}
+                  onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{language === 'he' ? 'מספר חשבונית' : 'Invoice Number'}</Label>
+                <Input
+                  type="text"
+                  value={formData.invoice_number || ''}
+                  onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
+                  placeholder={language === 'he' ? 'הזן מספר חשבונית' : 'Enter invoice number'}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{language === 'he' ? 'סה"כ חשבונית (כולל מע"מ)' : 'Invoice Total (incl. VAT)'}</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.invoice_total || ''}
+                  onChange={(e) => setFormData({ ...formData, invoice_total: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+          </div>
+        )}
         <CardContent className="space-y-4">
           {/* Mode Toggle - only show when creating new receipt */}
           {!receipt && (
@@ -497,50 +539,15 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
 
           
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="received_date">{t('received_date')}</Label>
-              <Input
-                id="received_date"
-                type="date"
-                value={formData.received_date}
-                onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="invoice_date">{language === 'he' ? 'תאריך חשבונית' : 'Invoice Date'}</Label>
-              <Input
-                id="invoice_date"
-                type="date"
-                value={formData.invoice_date || ''}
-                onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="invoice_number">{language === 'he' ? 'מספר חשבונית' : 'Invoice Number'}</Label>
-              <Input
-                id="invoice_number"
-                type="text"
-                value={formData.invoice_number || ''}
-                onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
-                placeholder={language === 'he' ? 'הזן מספר חשבונית' : 'Enter invoice number'}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="invoice_total">{language === 'he' ? 'סה"כ חשבונית (כולל מע"מ)' : 'Invoice Total (incl. VAT)'}</Label>
-              <Input
-                id="invoice_total"
-                type="number"
-                step="0.01"
-                value={formData.invoice_total || ''}
-                onChange={(e) => setFormData({ ...formData, invoice_total: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="received_date">{t('received_date')}</Label>
+            <Input
+              id="received_date"
+              type="date"
+              value={formData.received_date}
+              onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
+              required
+            />
           </div>
 
           <div className="space-y-2">
