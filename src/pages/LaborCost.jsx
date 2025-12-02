@@ -31,10 +31,12 @@ export default function LaborCostPage() {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const user = await base44.auth.me();
+      // Use acting_as_store_email if admin is controlling a user
+      const workingEmail = user.acting_as_store_email || user.email;
       const [positionsData, workersData, schedulesData] = await Promise.all([
-        base44.entities.JobPosition.filter({ created_by: user.email }, "name"),
-        base44.entities.Worker.filter({ created_by: user.email }, "full_name"),
-        base44.entities.WeeklySchedule.filter({ created_by: user.email }, "-week_start_date")
+        base44.entities.JobPosition.filter({ created_by: workingEmail }, "name"),
+        base44.entities.Worker.filter({ created_by: workingEmail }, "full_name"),
+        base44.entities.WeeklySchedule.filter({ created_by: workingEmail }, "-week_start_date")
       ]);
       setPositions(positionsData);
       setWorkers(workersData);
