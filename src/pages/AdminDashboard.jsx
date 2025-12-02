@@ -631,6 +631,7 @@ export default function AdminDashboard() {
                       <TableHead>{language === 'he' ? 'טלפון' : 'Phone'}</TableHead>
                       <TableHead>{language === 'he' ? 'תפקיד' : 'Role'}</TableHead>
                       <TableHead>{language === 'he' ? 'תאריך הצטרפות' : 'Joined'}</TableHead>
+                      <TableHead>{language === 'he' ? 'פעולות' : 'Actions'}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
