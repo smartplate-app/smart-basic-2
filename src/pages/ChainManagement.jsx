@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Building2, Plus, Store, Crown, Loader, Trash2, Users, Eye, ArrowLeft, Pencil } from "lucide-react";
+import { Building2, Plus, Store, Crown, Loader, Trash2, Users, Eye, ArrowLeft, Pencil, Copy, Check } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function ChainManagementPage() {
@@ -32,6 +32,8 @@ export default function ChainManagementPage() {
   const [storeAddress, setStoreAddress] = useState("");
   const [storeUserEmail, setStoreUserEmail] = useState("");
   const [editingStore, setEditingStore] = useState(null);
+  const [generatedLink, setGeneratedLink] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const t = {
     he: {
@@ -67,7 +69,11 @@ export default function ChainManagementPage() {
                               totalItems: "פריטים",
                               switchedTo: "אתה עובד כעת כסניף",
                               switchBack: "חזור לסניף הראשי",
-                              workingAs: "עובד כסניף"
+                              workingAs: "עובד כסניף",
+      copyLink: "העתק קישור",
+      copied: "הועתק!",
+      shareLink: "שתף את הקישור הזה עם מנהל הסניף:",
+      inviteSent: "הסניף נוסף בהצלחה!"
                 },
     en: {
       title: "Chain Management",
@@ -102,7 +108,11 @@ export default function ChainManagementPage() {
                               totalItems: "items",
                               switchedTo: "You are now working as branch",
                               switchBack: "Switch back to Head Store",
-                              workingAs: "Working as branch"
+                              workingAs: "Working as branch",
+      copyLink: "Copy Link",
+      copied: "Copied!",
+      shareLink: "Share this link with the store manager:",
+      inviteSent: "Store added successfully!"
                 }
   }[language] || {};
 
@@ -220,13 +230,15 @@ export default function ChainManagementPage() {
               });
 
               const inviteLink = `${window.location.origin}/pages/Register?invite=${token}`;
-              alert(
-                (language === 'he' 
-                  ? `הסניף עודכן!\n\nשתף את הקישור הזה עם מנהל הסניף החדש:\n${inviteLink}`
-                  : `Store updated!\n\nShare this link with the new store manager:\n${inviteLink}`)
-              );
+              setGeneratedLink(inviteLink);
+              setLinkCopied(false);
             } else {
               alert(language === 'he' ? 'הסניף עודכן בהצלחה' : 'Store updated successfully');
+              setShowAddStore(false);
+              setEditingStore(null);
+              setStoreName("");
+              setStoreAddress("");
+              setStoreUserEmail("");
             }
           } else {
             // Create new store
@@ -255,18 +267,10 @@ export default function ChainManagementPage() {
             });
 
             const inviteLink = `${window.location.origin}/pages/Register?invite=${token}`;
-            alert(
-              (language === 'he' 
-                ? `הסניף "${storeName}" נוסף בהצלחה!\n\nשתף את הקישור הזה עם מנהל הסניף:\n${inviteLink}`
-                : `Store "${storeName}" added successfully!\n\nShare this link with the store manager:\n${inviteLink}`)
-            );
+            setGeneratedLink(inviteLink);
+            setLinkCopied(false);
           }
 
-          setShowAddStore(false);
-          setEditingStore(null);
-          setStoreName("");
-          setStoreAddress("");
-          setStoreUserEmail("");
           await loadData();
         } catch (error) {
           console.error("Error saving store:", error);
@@ -619,20 +623,67 @@ export default function ChainManagementPage() {
                             className={isRTL ? 'text-right' : ''}
                           />
                         </div>
-                        <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <Button onClick={handleAddStore} disabled={saving} className="bg-gray-900 hover:bg-gray-800">
-                            {saving ? <Loader className="w-4 h-4 animate-spin" /> : t.save}
-                          </Button>
-                          <Button variant="outline" onClick={() => {
-                                                        setShowAddStore(false);
-                                                        setEditingStore(null);
-                                                        setStoreName("");
-                                                        setStoreAddress("");
-                                                        setStoreUserEmail("");
-                                                      }}>
-                                                        {t.cancel}
-                                                      </Button>
-                        </div>
+                        {!generatedLink ? (
+                          <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Button onClick={handleAddStore} disabled={saving} className="bg-gray-900 hover:bg-gray-800">
+                              {saving ? <Loader className="w-4 h-4 animate-spin" /> : t.save}
+                            </Button>
+                            <Button variant="outline" onClick={() => {
+                              setShowAddStore(false);
+                              setEditingStore(null);
+                              setStoreName("");
+                              setStoreAddress("");
+                              setStoreUserEmail("");
+                            }}>
+                              {t.cancel}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                              <p className={`text-green-800 font-semibold mb-2 ${isRTL ? 'text-right' : ''}`}>
+                                ✅ {t.inviteSent}
+                              </p>
+                              <p className={`text-sm text-green-700 mb-2 ${isRTL ? 'text-right' : ''}`}>
+                                {t.shareLink}
+                              </p>
+                              <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <Input 
+                                  value={generatedLink} 
+                                  readOnly 
+                                  className="text-xs bg-white"
+                                />
+                                <Button
+                                  onClick={async () => {
+                                    await navigator.clipboard.writeText(generatedLink);
+                                    setLinkCopied(true);
+                                    setTimeout(() => setLinkCopied(false), 2000);
+                                  }}
+                                  className={linkCopied ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}
+                                >
+                                  {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                  <span className={`${isRTL ? 'mr-1' : 'ml-1'}`}>
+                                    {linkCopied ? t.copied : t.copyLink}
+                                  </span>
+                                </Button>
+                              </div>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={() => {
+                                setShowAddStore(false);
+                                setGeneratedLink("");
+                                setEditingStore(null);
+                                setStoreName("");
+                                setStoreAddress("");
+                                setStoreUserEmail("");
+                              }}
+                            >
+                              {t.cancel}
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </DialogContent>
                   </Dialog>
