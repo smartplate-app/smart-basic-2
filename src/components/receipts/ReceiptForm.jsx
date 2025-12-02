@@ -518,8 +518,8 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
 
           {/* When editing, allow adding more items */}
           {receipt && formData.supplier_id && supplierItems.length > 0 && (
-            <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <Label className="text-blue-800">{language === 'he' ? 'הוסף פריטים נוספים' : 'Add More Items'}</Label>
+            <div className="space-y-2 p-3 bg-green-50 rounded-lg border border-green-200">
+              <Label className="text-green-800">{language === 'he' ? 'הוסף פריטים נוספים' : 'Add More Items'}</Label>
               <Select onValueChange={addManualItem}>
                 <SelectTrigger>
                   <SelectValue placeholder={language === 'he' ? 'בחר פריט להוספה' : 'Select item to add'} />
@@ -537,18 +537,19 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
             </div>
           )}
 
-          
-
-          <div className="space-y-2">
-            <Label htmlFor="received_date">{t('received_date')}</Label>
-            <Input
-              id="received_date"
-              type="date"
-              value={formData.received_date}
-              onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
-              required
-            />
-          </div>
+          {/* Only show received date when creating new receipt */}
+          {!receipt && (
+            <div className="space-y-2">
+              <Label htmlFor="received_date">{t('received_date')}</Label>
+              <Input
+                id="received_date"
+                type="date"
+                value={formData.received_date}
+                onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
+                required
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>{t('receipt_images')}</Label>
