@@ -254,13 +254,12 @@ export default function DashboardPage() {
               {t('dashboard_greeting', { name: user.full_name })}
             </p>
           </div>
-          <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`} style={{ position: 'relative', zIndex: 50 }}>
-            <Input
+          <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-40 cursor-pointer"
-              style={{ cursor: 'pointer', position: 'relative', zIndex: 50 }}
+              className="w-40 cursor-pointer px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {!editMode ? (
               <Button onClick={() => setEditMode(true)} variant="outline" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
