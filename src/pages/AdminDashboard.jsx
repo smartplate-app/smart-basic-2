@@ -612,9 +612,12 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 space-y-2">
                 <p className="text-sm text-blue-800">
                   👁️ {language === 'he' ? 'לחץ פעמיים על משתמש לצפייה חיה בכל הנתונים שלו' : 'Double-click on a user to view their live data'}
+                </p>
+                <p className="text-sm text-purple-800">
+                  🎮 {language === 'he' ? 'לחץ על כפתור "שלוט" כדי לעבוד בתור המשתמש הזה (כל הפעולות יתבצעו בשמו)' : 'Click "Control" button to work as this user (all actions will be performed as them)'}
                 </p>
               </div>
               
