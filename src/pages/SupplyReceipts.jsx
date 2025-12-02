@@ -102,12 +102,8 @@ export default function SupplyReceiptsPage() {
             }
           }
           
-          // If store user, load data from owner's email
-          if (storeOwnerEmail) {
-            workingEmail = storeOwnerEmail;
-          }
-          
-          await loadData(workingEmail);
+          // Pass store owner email separately so we can load suppliers from owner
+          await loadData(workingEmail, storeOwnerEmail);
         }
       } catch (error) {
         console.error("Authentication failed:", error);
