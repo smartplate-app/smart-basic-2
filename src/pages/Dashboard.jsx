@@ -50,6 +50,9 @@ export default function DashboardPage() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
+      // Use acting_as_store_email if admin is controlling a user, otherwise use own email
+      const workingEmail = currentUser.acting_as_store_email || currentUser.email;
+
       // Load all data in parallel for faster loading
       const monthStart = moment(selectedMonth).startOf('month');
       const today = moment();
@@ -57,9 +60,9 @@ export default function DashboardPage() {
       const endDate = today.isBefore(monthEnd) && today.isAfter(monthStart) ? today : monthEnd;
 
       const [allDashboardData, allSchedules, allReceipts] = await Promise.all([
-        base44.entities.MonthlyDashboardData.filter({ created_by: currentUser.email, month: selectedMonth }),
-        base44.entities.WeeklySchedule.filter({ created_by: currentUser.email }),
-        base44.entities.SupplyReceipt.filter({ created_by: currentUser.email })
+        base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: selectedMonth }),
+        base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
+        base44.entities.SupplyReceipt.filter({ created_by: workingEmail })
       ]);
 
       // Process dashboard data
