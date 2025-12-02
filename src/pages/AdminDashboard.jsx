@@ -127,6 +127,26 @@ export default function AdminDashboard() {
     setActiveSection("dashboard");
   };
 
+  // Switch to control a user's account (impersonate)
+  const switchToUser = async (user) => {
+    try {
+      // Save admin's original email for returning
+      await base44.auth.updateMe({
+        admin_original_email: currentUser.email,
+        acting_as_user_email: user.email,
+        acting_as_user_name: user.full_name || user.email,
+        acting_as_store_email: user.email,
+        acting_as_store_name: user.business_name || user.full_name || user.email
+      });
+
+      // Redirect to dashboard as that user
+      window.location.href = '/pages/Dashboard';
+    } catch (error) {
+      console.error("Error switching to user:", error);
+      alert(language === 'he' ? 'שגיאה במעבר למשתמש' : 'Error switching to user');
+    }
+  };
+
   const filteredUsers = allUsers.filter(user => 
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
