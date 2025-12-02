@@ -201,6 +201,45 @@ const AppLayout = ({ children, currentPageName }) => {
     );
   }
 
+  // Check if user's store access was revoked
+  if (user?.store_user_revoked) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50 p-4">
+        <Card className="max-w-md w-full shadow-xl">
+          <CardHeader className="bg-orange-50 border-b">
+            <CardTitle className="text-orange-700 flex items-center justify-center gap-2">
+              <AlertCircle className="w-6 h-6" />
+              {language === 'he' ? 'הגישה הוסרה' : 'Access Revoked'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <div className="text-center">
+              <p className="text-lg text-gray-700 mb-4">
+                {language === 'he' 
+                  ? 'אין לך יותר גישה למסעדה הזו.' 
+                  : 'You no longer have access to this restaurant.'}
+              </p>
+              <p className="text-gray-500 mb-6">
+                {language === 'he' 
+                  ? 'בהצלחה בהמשך הדרך! 🙏' 
+                  : 'Good luck on your journey! 🙏'}
+              </p>
+              <Button 
+                onClick={async () => {
+                  await base44.auth.updateMe({ store_user_revoked: false });
+                  await base44.auth.logout();
+                }} 
+                className="w-full bg-gray-900 hover:bg-gray-800"
+              >
+                {language === 'he' ? 'התנתק' : 'Logout'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50 p-4">
