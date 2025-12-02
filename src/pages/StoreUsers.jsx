@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store } from "lucide-react";
+import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Copy, Check } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function StoreUsersPage() {
@@ -23,6 +23,8 @@ export default function StoreUsersPage() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState("worker");
+  const [generatedLink, setGeneratedLink] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const t = {
     he: {
@@ -40,6 +42,9 @@ export default function StoreUsersPage() {
       delete: "מחק",
       inviteSent: "המשתמש נוסף בהצלחה!",
       inviteFailed: "המשתמש נוסף! לא ניתן לשלוח מייל אוטומטית.",
+      copyLink: "העתק קישור",
+      copied: "הועתק!",
+      shareLink: "שתף את הקישור הזה עם המשתמש:",
       currentRestaurant: "המסעדה הנוכחית שלך",
       managerDesc: "יכול לראות הכל ולנהל את המסעדה",
       workerDesc: "יכול ליצור הזמנות, לקבל אספקה ולבצע ספירות"
@@ -59,6 +64,9 @@ export default function StoreUsersPage() {
       delete: "Delete",
       inviteSent: "User added successfully!",
       inviteFailed: "User added! Email couldn't be sent automatically.",
+      copyLink: "Copy Link",
+      copied: "Copied!",
+      shareLink: "Share this link with the user:",
       currentRestaurant: "Your Current Restaurant",
       managerDesc: "Can see everything and manage the restaurant",
       workerDesc: "Can create orders, receive supplies and do counts"
@@ -130,21 +138,9 @@ export default function StoreUsersPage() {
       // Generate unique invite link
       const inviteLink = `${window.location.origin}/pages/Register?invite=${token}`;
 
-      // Show success with the unique link
-      const roleText = userRole === 'manager' 
-        ? (language === 'he' ? 'מנהל' : 'Manager') 
-        : (language === 'he' ? 'עובד' : 'Worker');
-
-      alert(
-        (language === 'he' 
-          ? `${userName} נוסף בהצלחה כ${roleText}!\n\nשתף את הקישור הזה:\n${inviteLink}`
-          : `${userName} added successfully as ${roleText}!\n\nShare this link:\n${inviteLink}`)
-      );
-
-      setShowAddUser(false);
-      setUserName("");
-      setUserEmail("");
-      setUserRole("worker");
+      // Show the link for copying instead of alert
+      setGeneratedLink(inviteLink);
+      setLinkCopied(false);
       await loadData();
     } catch (error) {
       console.error("Error adding user:", error);
@@ -246,14 +242,60 @@ export default function StoreUsersPage() {
                     {userRole === 'manager' ? t.managerDesc : t.workerDesc}
                   </p>
                 </div>
-                <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Button onClick={handleAddUser} disabled={saving} className="bg-gray-900 hover:bg-gray-800">
-                    {saving ? <Loader className="w-4 h-4 animate-spin" /> : t.save}
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowAddUser(false)}>
-                    {t.cancel}
-                  </Button>
-                </div>
+                {!generatedLink ? (
+                  <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Button onClick={handleAddUser} disabled={saving} className="bg-gray-900 hover:bg-gray-800">
+                      {saving ? <Loader className="w-4 h-4 animate-spin" /> : t.save}
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowAddUser(false)}>
+                      {t.cancel}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className={`text-green-800 font-semibold mb-2 ${isRTL ? 'text-right' : ''}`}>
+                        ✅ {t.inviteSent}
+                      </p>
+                      <p className={`text-sm text-green-700 mb-2 ${isRTL ? 'text-right' : ''}`}>
+                        {t.shareLink}
+                      </p>
+                      <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Input 
+                          value={generatedLink} 
+                          readOnly 
+                          className="text-xs bg-white"
+                        />
+                        <Button
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(generatedLink);
+                            setLinkCopied(true);
+                            setTimeout(() => setLinkCopied(false), 2000);
+                          }}
+                          className={linkCopied ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}
+                        >
+                          {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          <span className={`${isRTL ? 'mr-1' : 'ml-1'}`}>
+                            {linkCopied ? t.copied : t.copyLink}
+                          </span>
+                        </Button>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        setShowAddUser(false);
+                        setGeneratedLink("");
+                        setUserName("");
+                        setUserEmail("");
+                        setUserRole("worker");
+                      }}
+                    >
+                      {t.cancel}
+                    </Button>
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
