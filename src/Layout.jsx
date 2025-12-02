@@ -160,52 +160,7 @@ const AppLayout = ({ children, currentPageName }) => {
         return <>{children}</>;
       }
 
-      // Show message for users who are logged in but have no access
-              if (user && !storeUserRole && !user.is_chain_head && !user.chain_id && user.role !== 'admin') {
-                // Check if user has any StoreUser record or ChainStore access
-                const hasNoAccess = !user.acting_as_store_email && !user.store_user_owner_email;
 
-                if (hasNoAccess) {
-          return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-              <Card className="max-w-md w-full shadow-xl text-center">
-                <CardHeader className="bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-t-lg">
-                  <img 
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
-                    alt="Smart Plate"
-                    className="h-16 object-contain mx-auto mb-2"
-                  />
-                  <CardTitle>
-                    {language === 'he' ? 'אין לך גישה למערכת' : 'No Access'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <p className={`text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' 
-                      ? 'נראה שאין לך הרשאה לגשת למערכת זו. אנא פנה למנהל המערכת לקבלת גישה.'
-                      : 'It looks like you don\'t have permission to access this system. Please contact the administrator for access.'}
-                  </p>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-blue-800 font-semibold">
-                      {language === 'he' ? 'ליצירת קשר:' : 'Contact:'}
-                    </p>
-                    <a href="mailto:admin@smartplate.org" className="text-blue-600 hover:underline text-lg">
-                      admin@smartplate.org
-                    </a>
-                  </div>
-                  <Button 
-                    onClick={() => base44.auth.logout()} 
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {language === 'he' ? 'התנתק' : 'Logout'}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          );
-        }
-      }
   
   if (authLoading) {
     return (
