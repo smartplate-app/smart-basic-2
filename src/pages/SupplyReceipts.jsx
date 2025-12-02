@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -82,7 +81,9 @@ export default function SupplyReceiptsPage() {
 
         if (isMounted) {
           setUser(currentUser);
-          await loadData(currentUser.email);
+          // Use acting_as_store_email if admin is controlling a user
+          const workingEmail = currentUser.acting_as_store_email || currentUser.email;
+          await loadData(workingEmail);
         }
       } catch (error) {
         console.error("Authentication failed:", error);
