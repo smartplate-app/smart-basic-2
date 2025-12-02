@@ -255,12 +255,20 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <input
-              type="month"
+            <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-40 cursor-pointer px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              className="w-40 cursor-pointer px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              {Array.from({ length: 12 }, (_, i) => {
+                const date = moment().subtract(i, 'months');
+                return (
+                  <option key={date.format('YYYY-MM')} value={date.format('YYYY-MM')}>
+                    {date.format('YYYY-MM')}
+                  </option>
+                );
+              })}
+            </select>
             {!editMode ? (
               <Button onClick={() => setEditMode(true)} variant="outline" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Edit2 className="w-4 h-4" />
