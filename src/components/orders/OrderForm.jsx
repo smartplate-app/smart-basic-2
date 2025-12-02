@@ -202,11 +202,17 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
                 <SelectValue placeholder={t('select_supplier')} />
               </SelectTrigger>
               <SelectContent>
-                {suppliers.map(supplier => (
-                  <SelectItem key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </SelectItem>
-                ))}
+                {suppliers && suppliers.length > 0 ? (
+                  suppliers.map(supplier => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-4 text-center text-gray-500 text-sm">
+                    {t('no_suppliers_available') || 'אין ספקים זמינים'}
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>
