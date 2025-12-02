@@ -437,7 +437,7 @@ Return JSON:
                 </Select>
               </div>
 
-              {formData.supplier_id && (
+              {(formData.supplier_id || receipt) && (
                 <>
                   <div className="space-y-2">
                     <Label>{t('received_date')} *</Label>
