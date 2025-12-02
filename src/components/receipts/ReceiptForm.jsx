@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingDown, TrendingUp } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingDown, TrendingUp, Plus, Trash2 } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -29,18 +28,76 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
   });
 
   const [orders, setOrders] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [supplierItems, setSupplierItems] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const { t } = useLanguage();
+  const [manualMode, setManualMode] = useState(false);
+  const { t, language } = useLanguage();
 
   useEffect(() => {
-    loadOrders();
+    loadData();
   }, []);
 
-  const loadOrders = async () => {
-    // Load ALL orders regardless of status
-    const allOrders = await base44.entities.Order.list("-created_date");
+  const loadData = async () => {
+    const [allOrders, allSuppliers] = await Promise.all([
+      base44.entities.Order.list("-created_date"),
+      base44.entities.Supplier.list("-created_date")
+    ]);
     setOrders(allOrders);
+    setSuppliers(allSuppliers);
+  };
+
+  const handleSupplierSelect = async (supplierId) => {
+    const supplier = suppliers.find(s => s.id === supplierId);
+    if (supplier) {
+      const items = await base44.entities.Item.filter({ supplier_id: supplierId });
+      setSupplierItems(items);
+      setFormData({
+        ...formData,
+        supplier_id: supplierId,
+        supplier_name: supplier.name,
+        supplier_email: supplier.email || "",
+        order_id: "",
+        order_number: language === 'he' ? 'קבלה ידנית' : 'Manual Receipt',
+        verified_items: []
+      });
+    }
+  };
+
+  const addManualItem = (itemId) => {
+    const item = supplierItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // Check if already added
+    if (formData.verified_items.some(vi => vi.item_id === itemId)) return;
+
+    const newItem = {
+      item_id: item.id,
+      item_name: item.name,
+      ordered_quantity: 0,
+      certificate_quantity: 0,
+      received_quantity: 0,
+      unit: item.unit,
+      catalog_price: item.price || 0,
+      catalog_discount: item.discount || 0,
+      actual_price: item.price || 0,
+      actual_discount: item.discount || 0,
+      price_changed: false,
+      discount_changed: false,
+      has_issue: false,
+      issue_note: ""
+    };
+
+    setFormData({
+      ...formData,
+      verified_items: [...formData.verified_items, newItem]
+    });
+  };
+
+  const removeManualItem = (index) => {
+    const updated = formData.verified_items.filter((_, i) => i !== index);
+    setFormData({ ...formData, verified_items: updated });
   };
 
   const handleOrderSelect = async (orderId) => {
@@ -306,31 +363,94 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
           <CardTitle>{receipt ? t('edit_receipt') : t('create_new_receipt')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="order">{t('select_order')}</Label>
-            <Select
-              value={formData.order_id}
-              onValueChange={handleOrderSelect}
+          {/* Mode Toggle */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              type="button"
+              variant={!manualMode ? "default" : "outline"}
+              onClick={() => setManualMode(false)}
+              className={!manualMode ? "bg-gray-900" : ""}
             >
-              <SelectTrigger>
-                <SelectValue placeholder={t('select_order')} />
-              </SelectTrigger>
-              <SelectContent>
-                {orders.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
-                    <p>{t('no_confirmed_orders')}</p>
-                    <p className="text-xs mt-2">{t('no_confirmed_orders_description')}</p>
-                  </div>
-                ) : (
-                  orders.map(order => (
-                    <SelectItem key={order.id} value={order.id}>
-                      {order.order_number} - {order.supplier_name} ({new Date(order.created_date).toLocaleDateString()})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+              {language === 'he' ? 'מהזמנה קיימת' : 'From Order'}
+            </Button>
+            <Button
+              type="button"
+              variant={manualMode ? "default" : "outline"}
+              onClick={() => setManualMode(true)}
+              className={manualMode ? "bg-gray-900" : ""}
+            >
+              {language === 'he' ? 'קבלה ידנית (ללא הזמנה)' : 'Manual Receipt (No Order)'}
+            </Button>
           </div>
+
+          {!manualMode ? (
+            <div className="space-y-2">
+              <Label htmlFor="order">{t('select_order')}</Label>
+              <Select
+                value={formData.order_id}
+                onValueChange={handleOrderSelect}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('select_order')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {orders.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      <p>{t('no_confirmed_orders')}</p>
+                      <p className="text-xs mt-2">{t('no_confirmed_orders_description')}</p>
+                    </div>
+                  ) : (
+                    orders.map(order => (
+                      <SelectItem key={order.id} value={order.id}>
+                        {order.order_number} - {order.supplier_name} ({new Date(order.created_date).toLocaleDateString()})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{language === 'he' ? 'בחר ספק' : 'Select Supplier'}</Label>
+                <Select
+                  value={formData.supplier_id}
+                  onValueChange={handleSupplierSelect}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'he' ? 'בחר ספק' : 'Select Supplier'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {suppliers.map(supplier => (
+                      <SelectItem key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.supplier_id && supplierItems.length > 0 && (
+                <div className="space-y-2">
+                  <Label>{language === 'he' ? 'הוסף פריטים' : 'Add Items'}</Label>
+                  <Select onValueChange={addManualItem}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={language === 'he' ? 'בחר פריט להוספה' : 'Select item to add'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supplierItems
+                        .filter(item => !formData.verified_items.some(vi => vi.item_id === item.id))
+                        .map(item => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.name} - ₪{item.price}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="received_date">{t('received_date')}</Label>
@@ -502,12 +622,25 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-lg">{item.item_name}</h4>
-                    {(item.price_changed || item.discount_changed) && (
-                      <Badge variant="destructive" className="gap-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        {t('price_changed') || 'מחיר השתנה'}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {(item.price_changed || item.discount_changed) && (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          {t('price_changed') || 'מחיר השתנה'}
+                        </Badge>
+                      )}
+                      {manualMode && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeManualItem(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
@@ -533,10 +666,17 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                       <Label className="text-xs">{t('received')}</Label>
                       <Input
                         type="number"
+                        step="any"
                         value={item.received_quantity}
-                        onChange={(e) => updateVerifiedItem(index, 'received_quantity', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateVerifiedItem(index, 'received_quantity', parseFloat(e.target.value))}
                         className="mt-1"
+                        placeholder={language === 'he' ? 'ניתן להזין מינוס' : 'Can be negative'}
                       />
+                      {item.received_quantity < 0 && (
+                        <p className="text-xs text-orange-600 mt-1">
+                          {language === 'he' ? 'כמות שלילית (זיכוי/החזרה)' : 'Negative qty (credit/return)'}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-xs">{t('unit')}</Label>
