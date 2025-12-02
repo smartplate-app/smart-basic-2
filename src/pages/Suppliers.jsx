@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Scan, Loader, FileSpreadsheet, Store, ArrowLeft } from "lucide-react";
+import { Plus, Search, Scan, Loader, FileSpreadsheet, Store, ArrowLeft, Download } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
@@ -297,6 +297,39 @@ export default function SuppliersPage() {
                           <p className="text-gray-600 mt-2">{t('suppliers_greeting', { name: user.acting_as_store_name || user.full_name })}</p>
                         </div>
           <div className="flex gap-3 flex-wrap">
+            <Button
+              onClick={() => {
+                // Generate Excel template for items
+                const headers = language === 'he' 
+                  ? ['שם הפריט', 'מק"ט', 'יחידה (kg/liter/unit/case)', 'מחיר', 'הנחה %', 'כמות באריזה']
+                  : ['Item Name', 'Catalog Number', 'Unit (kg/liter/unit/case)', 'Price', 'Discount %', 'Units Per Package'];
+                
+                const exampleRow = language === 'he'
+                  ? ['עגבניות', 'TOM-001', 'kg', '5.90', '10', '1']
+                  : ['Tomatoes', 'TOM-001', 'kg', '5.90', '10', '1'];
+                
+                const csvContent = [
+                  headers.join(','),
+                  exampleRow.join(',')
+                ].join('\n');
+                
+                const BOM = '\uFEFF';
+                const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = language === 'he' ? 'תבנית_פריטים.csv' : 'items_template.csv';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+              variant="outline"
+              className="border-green-600 text-green-600 hover:bg-green-50"
+            >
+              <Download className="w-5 h-5 mr-2" />
+              {language === 'he' ? 'הורד תבנית אקסל' : 'Download Template'}
+            </Button>
             <Button
               onClick={() => {
                 setShowExcelPanel(!showExcelPanel);
