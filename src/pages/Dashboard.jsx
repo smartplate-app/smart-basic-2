@@ -94,12 +94,15 @@ export default function DashboardPage() {
       });
       setCalculatedLaborCost(totalLaborCost);
 
-      // Calculate food cost
+      // Calculate food cost (remove VAT from receipts since invoice_total includes VAT)
+      const VAT_RATE = 1.17;
       let totalFoodCost = 0;
       allReceipts.forEach(receipt => {
         const receiptDate = moment(receipt.received_date);
         if (receiptDate.isSameOrAfter(monthStart) && receiptDate.isSameOrBefore(endDate)) {
-          totalFoodCost += receipt.invoice_total || receipt.calculated_total || 0;
+          const receiptTotal = receipt.invoice_total || receipt.calculated_total || 0;
+          // Remove VAT from receipt total
+          totalFoodCost += receiptTotal / VAT_RATE;
         }
       });
       setCalculatedFoodCost(totalFoodCost);
