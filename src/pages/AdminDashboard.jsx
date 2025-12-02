@@ -472,33 +472,26 @@ export default function AdminDashboard() {
         ) : (
           <>
             <div className="mb-8 flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard'}
-                </h1>
-                <p className="text-gray-600 mt-2">
-                  {language === 'he' ? 'צפה ונהל את כל המשתמשים והנתונים' : 'View and manage all users and data'}
-                </p>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    {language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard'}
+                  </h1>
+                  <p className="text-gray-600 mt-2">
+                    {language === 'he' ? 'צפה ונהל את כל המשתמשים והנתונים' : 'View and manage all users and data'}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowChainsView(!showChainsView)}
+                    variant={showChainsView ? "default" : "outline"}
+                    className="flex items-center gap-2"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    {language === 'he' ? 'ניהול רשתות' : 'Chain Management'}
+                    {chains.length > 0 && <Badge variant="secondary">{chains.length}</Badge>}
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => window.location.href = '/pages/TestInvites'}
-                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  <TestTube className="w-5 h-5" />
-                  🧪 {language === 'he' ? 'בדיקת קישורי הזמנה' : 'Test Invite Links'}
-                </Button>
-                <Button
-                  onClick={() => setShowChainsView(!showChainsView)}
-                  variant={showChainsView ? "default" : "outline"}
-                  className="flex items-center gap-2"
-                >
-                  <Building2 className="w-4 h-4" />
-                  {language === 'he' ? 'ניהול רשתות' : 'Chain Management'}
-                  {chains.length > 0 && <Badge variant="secondary">{chains.length}</Badge>}
-                </Button>
-              </div>
-            </div>
 
             {showChainsView && (
               <Card className="mb-6">
