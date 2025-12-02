@@ -65,7 +65,30 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
   const loadSupplierItems = async (supplierId) => {
     setLoadingItems(true);
     try {
-      const items = await base44.entities.Item.filter({ supplier_id: supplierId }, "name");
+      // Get current user to check if they're a store user
+      const user = await base44.auth.me();
+      let ownerEmail = user.store_user_owner_email;
+      
+      // If not saved on user, check StoreUser entity
+      if (!ownerEmail) {
+        try {
+          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+          if (storeUserRecords.length > 0) {
+            ownerEmail = storeUserRecords[0].owner_email;
+          }
+        } catch (e) {
+          console.log("Could not fetch store user records");
+        }
+      }
+      
+      // If store user, load items from owner
+      let items;
+      if (ownerEmail) {
+        items = await base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, "name");
+      } else {
+        items = await base44.entities.Item.filter({ supplier_id: supplierId }, "name");
+      }
+      
       setAvailableItems(items);
     } catch (error) {
       console.error("Error loading items:", error);
