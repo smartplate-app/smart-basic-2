@@ -261,8 +261,27 @@ const AppLayout = ({ children, currentPageName }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className={`bg-white border-b px-4 py-3 flex items-center justify-between md:hidden sticky top-0 z-30 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="min-h-screen bg-gray-50">
+          {/* Admin Control Banner */}
+          {isAdminControllingUser && (
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-50">
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <span className="text-lg">🎮</span>
+                <span className="font-bold">
+                  {language === 'he' ? 'שולט כעת ב:' : 'Controlling:'} {user.acting_as_user_name}
+                </span>
+                <span className="text-purple-200 text-sm">({user.acting_as_user_email})</span>
+              </div>
+              <button
+                onClick={exitAdminControl}
+                className="bg-white text-purple-700 px-4 py-1 rounded-lg font-bold hover:bg-purple-100 transition-colors"
+              >
+                {language === 'he' ? '🔙 חזור לאדמין' : '🔙 Back to Admin'}
+              </button>
+            </div>
+          )}
+
+          <header className={`bg-white border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''}`}>
         <button 
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-2 rounded-lg hover:bg-gray-100"
