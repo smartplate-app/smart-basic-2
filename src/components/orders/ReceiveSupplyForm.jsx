@@ -69,11 +69,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (!noOrderMode) {
-          const allOrders = await base44.entities.Order.list("-created_date");
-          setOrders(allOrders);
-        }
-        
         const allItems = await base44.entities.Item.list();
         setItems(allItems);
         
@@ -91,7 +86,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       }
     };
     loadData();
-  }, [noOrderMode]);
+  }, []);
 
   const handleSupplierSelect = (supplierId) => {
     const supplier = suppliers.find(s => s.id === supplierId);
