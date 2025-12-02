@@ -139,8 +139,9 @@ export default function AdminDashboard() {
         acting_as_store_name: user.business_name || user.full_name || user.email
       });
 
-      // Redirect to dashboard as that user
-      window.location.href = '/pages/Dashboard';
+      // Small delay to ensure data is saved, then force full page reload
+      await new Promise(resolve => setTimeout(resolve, 300));
+      window.location.replace('/pages/Dashboard');
     } catch (error) {
       console.error("Error switching to user:", error);
       alert(language === 'he' ? 'שגיאה במעבר למשתמש' : 'Error switching to user');
