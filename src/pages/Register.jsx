@@ -33,6 +33,15 @@ export default function RegisterPage() {
         return;
       }
 
+      // Check if user is already authenticated
+      const isAuthenticated = await base44.auth.isAuthenticated();
+      if (!isAuthenticated) {
+        // Save the current URL and redirect to login
+        // After login, user will return to this page with the token
+        base44.auth.redirectToLogin(window.location.href);
+        return;
+      }
+
       // First try to find in UserInvite entity directly
       try {
         const invites = await base44.entities.UserInvite.filter({ token: token, used: false });
