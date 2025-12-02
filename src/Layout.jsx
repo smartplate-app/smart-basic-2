@@ -65,6 +65,14 @@ const AppLayout = ({ children, currentPageName }) => {
             await new Promise(resolve => setTimeout(resolve, delay));
           }
 
+          // Check if user is authenticated first
+          const isAuthenticated = await base44.auth.isAuthenticated();
+          if (!isAuthenticated) {
+            // Redirect to login immediately instead of showing 404
+            base44.auth.redirectToLogin(window.location.href);
+            return;
+          }
+
           const currentUser = await base44.auth.me();
 
           setUser(currentUser);
