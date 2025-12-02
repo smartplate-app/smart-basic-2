@@ -39,9 +39,9 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
     loadData();
   }, []);
 
-  // When editing, load supplier items if in manual mode
+  // When editing, always load supplier items
   useEffect(() => {
-    if (receipt && receipt.supplier_id && manualMode) {
+    if (receipt && receipt.supplier_id) {
       loadSupplierItems(receipt.supplier_id);
     }
   }, [receipt]);
@@ -475,7 +475,7 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
           ) : null}
 
           {/* When editing, allow adding more items */}
-          {receipt && formData.supplier_id && (
+          {receipt && formData.supplier_id && supplierItems.length > 0 && (
             <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <Label className="text-blue-800">{language === 'he' ? 'הוסף פריטים נוספים' : 'Add More Items'}</Label>
               <Select onValueChange={addManualItem}>
@@ -492,6 +492,20 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                     ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {/* Manual invoice total input for manual receipts */}
+          {(manualMode || (receipt && !receipt.order_id)) && formData.verified_items.length > 0 && (
+            <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
+              <Label>{language === 'he' ? 'סה"כ חשבונית (כולל מע"מ)' : 'Invoice Total (incl. VAT)'}</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.invoice_total || 0}
+                onChange={(e) => setFormData({ ...formData, invoice_total: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
+              />
             </div>
           )}
 
