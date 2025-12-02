@@ -55,8 +55,23 @@ export default function OrdersPage() {
       const isAdminControlling = !!currentUser.acting_as_store_email;
 
       // Check if user is a store_user (worker/manager invited to someone else's store)
-      const isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
-      const storeOwnerEmail = currentUser.store_user_owner_email;
+      // First check if saved on user object, then try to fetch from StoreUser entity
+      let isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
+      let storeOwnerEmail = currentUser.store_user_owner_email;
+      
+      if (!isStoreUser) {
+        // Check StoreUser entity for this user
+        try {
+          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+          if (storeUserRecords.length > 0) {
+            const record = storeUserRecords[0];
+            isStoreUser = true;
+            storeOwnerEmail = record.owner_email;
+          }
+        } catch (e) {
+          console.log("Could not fetch store user records");
+        }
+      }
 
       if (isAdminControlling) {
         // Admin controlling a user - load that user's data
