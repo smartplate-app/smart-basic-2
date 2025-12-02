@@ -145,14 +145,30 @@ const AppLayout = ({ children, currentPageName }) => {
   };
 
   const isWorker = storeUserRole === 'worker' || user?.store_user_role === 'worker';
+    const isAdminControllingUser = user?.admin_original_email && user?.acting_as_user_email;
 
-      const visibleNavigationItems = navigationItems.filter(item => {
-        // Admin-only items
-        if (item.adminOnly && user?.role !== 'admin') return false;
-        // Worker-hidden items
-        if (item.workerHidden && isWorker) return false;
-        return true;
-      });
+              const visibleNavigationItems = navigationItems.filter(item => {
+                // Admin-only items
+                if (item.adminOnly && user?.role !== 'admin') return false;
+                // Worker-hidden items
+                if (item.workerHidden && isWorker) return false;
+                return true;
+              });
+
+    const exitAdminControl = async () => {
+      try {
+        await base44.auth.updateMe({
+          admin_original_email: null,
+          acting_as_user_email: null,
+          acting_as_user_name: null,
+          acting_as_store_email: null,
+          acting_as_store_name: null
+        });
+        window.location.href = '/pages/AdminDashboard';
+      } catch (error) {
+        console.error("Error exiting admin control:", error);
+      }
+    };
 
   const isRTL = language === 'he' || language === 'ar';
 
