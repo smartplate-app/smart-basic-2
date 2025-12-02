@@ -32,12 +32,24 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
   const [supplierItems, setSupplierItems] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
+  const [manualMode, setManualMode] = useState(receipt && !receipt.order_id ? true : false);
   const { t, language } = useLanguage();
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // When editing, load supplier items if in manual mode
+  useEffect(() => {
+    if (receipt && receipt.supplier_id && manualMode) {
+      loadSupplierItems(receipt.supplier_id);
+    }
+  }, [receipt]);
+
+  const loadSupplierItems = async (supplierId) => {
+    const items = await base44.entities.Item.filter({ supplier_id: supplierId });
+    setSupplierItems(items);
+  };
 
   const loadData = async () => {
     const [allOrders, allSuppliers] = await Promise.all([
@@ -53,15 +65,18 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
     if (supplier) {
       const items = await base44.entities.Item.filter({ supplier_id: supplierId });
       setSupplierItems(items);
-      setFormData({
-        ...formData,
-        supplier_id: supplierId,
-        supplier_name: supplier.name,
-        supplier_email: supplier.email || "",
-        order_id: "",
-        order_number: language === 'he' ? 'קבלה ידנית' : 'Manual Receipt',
-        verified_items: []
-      });
+      // Only reset items if changing supplier (not when editing)
+      if (!receipt || receipt.supplier_id !== supplierId) {
+        setFormData({
+          ...formData,
+          supplier_id: supplierId,
+          supplier_name: supplier.name,
+          supplier_email: supplier.email || "",
+          order_id: "",
+          order_number: language === 'he' ? 'קבלה ידנית' : 'Manual Receipt',
+          verified_items: []
+        });
+      }
     }
   };
 
@@ -360,30 +375,37 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{receipt ? t('edit_receipt') : t('create_new_receipt')}</CardTitle>
+          <CardTitle>{receipt ? (language === 'he' ? 'עריכת קבלה' : 'Edit Receipt') : t('create_new_receipt')}</CardTitle>
+          {receipt && (
+            <p className="text-sm text-gray-500">
+              {language === 'he' ? 'ספק:' : 'Supplier:'} {formData.supplier_name} | {language === 'he' ? 'תאריך:' : 'Date:'} {formData.received_date}
+            </p>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Mode Toggle */}
-          <div className="flex gap-2 mb-4">
-            <Button
-              type="button"
-              variant={!manualMode ? "default" : "outline"}
-              onClick={() => setManualMode(false)}
-              className={!manualMode ? "bg-gray-900" : ""}
-            >
-              {language === 'he' ? 'מהזמנה קיימת' : 'From Order'}
-            </Button>
-            <Button
-              type="button"
-              variant={manualMode ? "default" : "outline"}
-              onClick={() => setManualMode(true)}
-              className={manualMode ? "bg-gray-900" : ""}
-            >
-              {language === 'he' ? 'קבלה ידנית (ללא הזמנה)' : 'Manual Receipt (No Order)'}
-            </Button>
-          </div>
+          {/* Mode Toggle - only show when creating new receipt */}
+          {!receipt && (
+            <div className="flex gap-2 mb-4">
+              <Button
+                type="button"
+                variant={!manualMode ? "default" : "outline"}
+                onClick={() => setManualMode(false)}
+                className={!manualMode ? "bg-gray-900" : ""}
+              >
+                {language === 'he' ? 'מהזמנה קיימת' : 'From Order'}
+              </Button>
+              <Button
+                type="button"
+                variant={manualMode ? "default" : "outline"}
+                onClick={() => setManualMode(true)}
+                className={manualMode ? "bg-gray-900" : ""}
+              >
+                {language === 'he' ? 'קבלה ידנית (ללא הזמנה)' : 'Manual Receipt (No Order)'}
+              </Button>
+            </div>
+          )}
 
-          {!manualMode ? (
+          {!manualMode && !receipt ? (
             <div className="space-y-2">
               <Label htmlFor="order">{t('select_order')}</Label>
               <Select
@@ -409,7 +431,7 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                 </SelectContent>
               </Select>
             </div>
-          ) : (
+          ) : manualMode && !receipt ? (
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>{language === 'he' ? 'בחר ספק' : 'Select Supplier'}</Label>
@@ -449,6 +471,27 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                   </Select>
                 </div>
               )}
+            </div>
+          ) : null}
+
+          {/* When editing, allow adding more items */}
+          {receipt && formData.supplier_id && (
+            <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <Label className="text-blue-800">{language === 'he' ? 'הוסף פריטים נוספים' : 'Add More Items'}</Label>
+              <Select onValueChange={addManualItem}>
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'he' ? 'בחר פריט להוספה' : 'Select item to add'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {supplierItems
+                    .filter(item => !formData.verified_items.some(vi => vi.item_id === item.id))
+                    .map(item => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name} - ₪{item.price}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
@@ -629,7 +672,7 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                           {t('price_changed') || 'מחיר השתנה'}
                         </Badge>
                       )}
-                      {manualMode && (
+                      {(manualMode || receipt) && (
                         <Button
                           type="button"
                           variant="ghost"
