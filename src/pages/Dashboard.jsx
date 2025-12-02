@@ -337,7 +337,7 @@ export default function DashboardPage() {
               <Card className="bg-gradient-to-br from-gray-600 to-gray-700 text-white">
                 <CardHeader>
                   <CardTitle className={`text-white text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'עלות מזון (מקבלות)' : 'Food Cost (from Receipts)'}
+                    {language === 'he' ? 'קבלות אספקה (ללא מע"מ)' : 'Supply Receipts (excl. VAT)'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -345,10 +345,10 @@ export default function DashboardPage() {
                     {formatCurrency(calculatedFoodCost)}
                   </div>
                   <div className={`text-gray-200 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {actualFoodPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות' : 'of sales'}
+                    {actualFoodPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות (ללא מע"מ)' : 'of sales (excl. VAT)'}
                   </div>
                   <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'מחושב מקבלות אספקה עד היום' : 'Calculated from supply receipts to date'}
+                    {language === 'he' ? 'סה"כ קבלות אספקה מתחילת החודש' : 'Total supply receipts from month start'}
                   </div>
                 </CardContent>
               </Card>
