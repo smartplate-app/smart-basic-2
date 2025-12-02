@@ -216,80 +216,31 @@ export default function SupplyReceiptsPage() {
         </div>
 
         <AnimatePresence>
-          {/* Manual Receipt Creation/Editing Form (controlled by showForm state) */}
-          {showForm && (
+          {/* Editing Form */}
+          {showForm && editingReceipt && (
             <ReceiveSupplyForm
-              order={null} // For manual creation, no order linked initially
-              receipt={editingReceipt} // Pass for editing an existing receipt
+              order={null}
+              receipt={editingReceipt}
               suppliers={suppliers}
+              noOrderMode={true}
               onSubmit={handleReceiptSubmit}
               onCancel={() => {
-                setShowForm(false); // Close the manual form
-                setEditingReceipt(null); // Clear editing state
+                setShowForm(false);
+                setEditingReceipt(null);
               }}
             />
           )}
 
-          {/* Supply Without Order Form (controlled by showNoOrderForm state) */}
+          {/* Supply Without Order Form */}
           {showNoOrderForm && (
             <ReceiveSupplyForm
               order={null}
               receipt={null}
               suppliers={suppliers}
-              noOrderMode={true} // New prop to indicate no associated order
+              noOrderMode={true}
               onSubmit={handleReceiptSubmit}
               onCancel={() => {
-                setShowNoOrderForm(false); // Close the no-order form
-              }}
-            />
-          )}
-
-          {/* Order Selection List (controlled by showReceiveForm AND no order selected yet) */}
-          {showReceiveForm && !selectedOrder && (
-            <div className="mb-8">
-              <div className="bg-white rounded-xl p-6 shadow-lg border-0 mb-4">
-                <h3 className="text-lg font-bold mb-4">{t('select_order')}</h3>
-                <div className="grid gap-3">
-                  {orders.length === 0 ? (
-                    <p className="text-gray-500">{t('no_orders_available')}</p>
-                  ) : (
-                    orders.map(order => (
-                      <button
-                        key={order.id}
-                        onClick={() => setSelectedOrder(order)} // Select order, then the form for that order will appear
-                        className="w-full text-left p-4 border-2 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-bold">{t('order_number')}: {order.order_number}</div>
-                            <div className="text-sm text-gray-600">{t('supplier')}: {order.supplier_name}</div>
-                            <div className="text-sm text-gray-600">
-                              {order.items?.length || 0} {t('items')}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm text-gray-500">
-                              {new Date(order.delivery_date || order.created_date).toLocaleDateString('he-IL')}
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Order-based Receipt Creation Form (controlled by selectedOrder) */}
-          {selectedOrder && (
-            <ReceiveSupplyForm
-              order={selectedOrder} // Pass the selected order
-              receipt={null} // Always creating a NEW receipt when an order is selected here
-              suppliers={suppliers}
-              onSubmit={handleReceiptSubmit}
-              onCancel={() => {
-                setSelectedOrder(null); // Go back to the order selection list, do not close the entire 'receive' flow
+                setShowNoOrderForm(false);
               }}
             />
           )}
