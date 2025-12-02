@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Scan, Loader, FileSpreadsheet, Store, ArrowLeft, Download } from "lucide-react";
+import { Plus, Search, Scan, Loader, FileSpreadsheet, Store, ArrowLeft, Download, BarChart3 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
@@ -24,6 +24,9 @@ export default function SuppliersPage() {
   const [networkError, setNetworkError] = useState(null);
   const [showExcelPanel, setShowExcelPanel] = useState(false);
   const [allItems, setAllItems] = useState([]);
+  const [showReport, setShowReport] = useState(false);
+  const [reportData, setReportData] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(false);
   const { t, language } = useLanguage();
 
   const loadData = async (currentUser, retryCount = 0) => {
@@ -231,6 +234,66 @@ export default function SuppliersPage() {
     supplier.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const generateReport = async () => {
+    try {
+      setLoadingReport(true);
+      setShowReport(true);
+      
+      const workingEmail = user.acting_as_store_email || user.email;
+      
+      // Fetch orders and receipts
+      const [orders, receipts] = await Promise.all([
+        base44.entities.Order.filter({ created_by: workingEmail }),
+        base44.entities.SupplyReceipt.filter({ created_by: workingEmail })
+      ]);
+      
+      // Group by supplier
+      const supplierStats = {};
+      
+      // Process orders (already without VAT)
+      orders.forEach(order => {
+        const supplierId = order.supplier_id;
+        const supplierName = order.supplier_name;
+        
+        if (!supplierStats[supplierId]) {
+          supplierStats[supplierId] = {
+            name: supplierName,
+            totalOrdered: 0,
+            totalReceived: 0
+          };
+        }
+        
+        supplierStats[supplierId].totalOrdered += (order.total_cost || 0);
+      });
+      
+      // Process receipts (invoice_total includes VAT, need to remove it)
+      const VAT_RATE = 1.17; // 17% VAT in Israel
+      receipts.forEach(receipt => {
+        const supplierId = receipt.supplier_id;
+        const supplierName = receipt.supplier_name;
+        
+        if (!supplierStats[supplierId]) {
+          supplierStats[supplierId] = {
+            name: supplierName,
+            totalOrdered: 0,
+            totalReceived: 0
+          };
+        }
+        
+        // Remove VAT from invoice total
+        const totalWithoutVat = (receipt.invoice_total || 0) / VAT_RATE;
+        supplierStats[supplierId].totalReceived += totalWithoutVat;
+      });
+      
+      setReportData(supplierStats);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      alert(language === 'he' ? 'שגיאה בהפקת הדוח' : 'Error generating report');
+    } finally {
+      setLoadingReport(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -297,6 +360,14 @@ export default function SuppliersPage() {
                           <p className="text-gray-600 mt-2">{t('suppliers_greeting', { name: user.acting_as_store_name || user.full_name })}</p>
                         </div>
           <div className="flex gap-3 flex-wrap">
+            <Button
+              onClick={generateReport}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              <BarChart3 className="w-5 h-5 mr-2" />
+              {language === 'he' ? 'דוח הזמנות מול קבלות' : 'Orders vs Receipts Report'}
+            </Button>
             <Button
               onClick={() => {
                 // Generate Excel template for items
@@ -365,6 +436,74 @@ export default function SuppliersPage() {
             </Button>
           </div>
         </div>
+
+        {/* Orders vs Receipts Report */}
+        {showReport && (
+          <div className="mb-6 bg-white border rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                {language === 'he' ? 'דוח הזמנות מול קבלות (ללא מע"מ)' : 'Orders vs Receipts Report (excl. VAT)'}
+              </h2>
+              <Button variant="ghost" onClick={() => setShowReport(false)}>✕</Button>
+            </div>
+            
+            {loadingReport ? (
+              <div className="text-center py-8">
+                <Loader className="w-8 h-8 animate-spin mx-auto text-gray-600" />
+                <p className="mt-2 text-gray-600">{language === 'he' ? 'טוען...' : 'Loading...'}</p>
+              </div>
+            ) : reportData && Object.keys(reportData).length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border p-3 text-right">{language === 'he' ? 'ספק' : 'Supplier'}</th>
+                      <th className="border p-3 text-right">{language === 'he' ? 'סה"כ הוזמן' : 'Total Ordered'}</th>
+                      <th className="border p-3 text-right">{language === 'he' ? 'סה"כ התקבל' : 'Total Received'}</th>
+                      <th className="border p-3 text-right">{language === 'he' ? 'הפרש' : 'Difference'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(reportData).map(([supplierId, data]) => {
+                      const diff = data.totalOrdered - data.totalReceived;
+                      return (
+                        <tr key={supplierId} className="hover:bg-gray-50">
+                          <td className="border p-3 font-medium">{data.name}</td>
+                          <td className="border p-3 text-right">₪{data.totalOrdered.toFixed(2)}</td>
+                          <td className="border p-3 text-right">₪{data.totalReceived.toFixed(2)}</td>
+                          <td className={`border p-3 text-right font-bold ${diff > 0 ? 'text-red-600' : diff < 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                            {diff > 0 ? '+' : ''}₪{diff.toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="bg-gray-200 font-bold">
+                      <td className="border p-3">{language === 'he' ? 'סה"כ' : 'Total'}</td>
+                      <td className="border p-3 text-right">
+                        ₪{Object.values(reportData).reduce((sum, d) => sum + d.totalOrdered, 0).toFixed(2)}
+                      </td>
+                      <td className="border p-3 text-right">
+                        ₪{Object.values(reportData).reduce((sum, d) => sum + d.totalReceived, 0).toFixed(2)}
+                      </td>
+                      <td className="border p-3 text-right">
+                        ₪{(Object.values(reportData).reduce((sum, d) => sum + d.totalOrdered, 0) - Object.values(reportData).reduce((sum, d) => sum + d.totalReceived, 0)).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="text-sm text-gray-500 mt-3">
+                  {language === 'he' 
+                    ? '* הזמנות ללא מע"מ, קבלות מחושבות ללא מע"מ (17%)'
+                    : '* Orders excl. VAT, receipts calculated excl. VAT (17%)'}
+                </p>
+              </div>
+            ) : (
+              <p className="text-center text-gray-500 py-8">
+                {language === 'he' ? 'אין נתונים להצגה' : 'No data to display'}
+              </p>
+            )}
+          </div>
+        )}
 
         <AnimatePresence>
           {showExcelPanel && (
