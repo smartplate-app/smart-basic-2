@@ -161,11 +161,11 @@ const AppLayout = ({ children, currentPageName }) => {
       }
 
       // Show message for users who are logged in but have no access
-      if (user && !storeUserRole && !user.is_chain_head && !user.chain_id && user.role !== 'admin') {
-        // Check if user has any StoreUser record or ChainStore access
-        const hasNoAccess = !user.acting_as_store_email && !user.store_user_owner_email;
+              if (user && !storeUserRole && !user.is_chain_head && !user.chain_id && user.role !== 'admin') {
+                // Check if user has any StoreUser record or ChainStore access
+                const hasNoAccess = !user.acting_as_store_email && !user.store_user_owner_email;
 
-        if (hasNoAccess) {
+                if (hasNoAccess) {
           return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
               <Card className="max-w-md w-full shadow-xl text-center">
