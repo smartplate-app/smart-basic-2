@@ -30,7 +30,7 @@ export default function SupplierItemsExcel({ suppliers, items, onItemsAdded, onC
       downloadReady: "הקובץ מוכן להורדה",
       back: "חזור",
       close: "סגור",
-      instructions: "הקובץ צריך לכלול עמודות: שם, מספר קטלוג, יחידה (kg/liter/unit/case), מחיר, הנחה",
+      instructions: "הקובץ צריך לכלול: שם (חובה), מק\"ט (אופציונלי), יחידה (kg/liter/unit/case), מחיר, הנחה",
       allSuppliers: "כל הספקים",
       noItems: "אין פריטים להורדה"
     },
@@ -63,7 +63,7 @@ export default function SupplierItemsExcel({ suppliers, items, onItemsAdded, onC
       downloadReady: "הקובץ מוכן להורדה",
       back: "חזור",
       close: "סגור",
-      instructions: "הקובץ צריך לכלול עמודות: שם, מספר קטלוג, יחידה (kg/liter/unit/case), מחיר, הנחה",
+      instructions: "הקובץ צריך לכלול: שם (חובה), מק\"ט (אופציונלי), יחידה (kg/liter/unit/case), מחיר, הנחה",
       allSuppliers: "כל הספקים",
       noItems: "אין פריטים להורדה"
     }
