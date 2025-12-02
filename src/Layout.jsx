@@ -95,10 +95,10 @@ const AppLayout = ({ children, currentPageName }) => {
                   }
 
                   const currentPath = location.pathname;
-      if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-        console.log("[Layout] Redirecting to Dashboard page");
-        window.location.href = createPageUrl("Dashboard");
-      }
+                              if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/' || currentPath.includes('/404')) {
+                                console.log("[Layout] Redirecting to Dashboard page");
+                                window.location.href = createPageUrl("Dashboard");
+                              }
       
       setAuthLoading(false);
     } catch (err) {
