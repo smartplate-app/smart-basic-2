@@ -101,50 +101,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     }
   };
 
-  const handleOrderSelect = (orderId) => {
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      setSelectedOrder(order);
-      
-      const verifiedItems = order.items.map(orderItem => {
-        const catalogItem = catalogItems[orderItem.item_id] || {};
-        
-        return {
-          item_id: orderItem.item_id,
-          item_name: orderItem.item_name,
-          ordered_quantity: orderItem.quantity,
-          certificate_quantity: orderItem.quantity,
-          received_quantity: orderItem.quantity,
-          unit: orderItem.unit,
-          catalog_price: catalogItem.price || orderItem.price || 0,
-          catalog_discount: catalogItem.discount || 0,
-          actual_price: orderItem.price || 0,
-          actual_discount: 0,
-          price_changed: false,
-          discount_changed: false,
-          has_issue: false,
-          issue_note: "",
-          units_per_package: 1, // Default
-          price_after_discount: orderItem.price || 0 // Default
-        };
-      });
 
-      setFormData(prev => {
-        const newFormData = {
-          ...prev,
-          order_id: order.id,
-          order_number: order.order_number,
-          supplier_name: order.supplier_name,
-          supplier_id: order.supplier_id,
-          supplier_email: order.supplier_email,
-          verified_items: verifiedItems
-        };
-        // Recalculate totals based on newly selected order's items
-        const { calculatedTotal, totalsMatch } = recalculateTotals(verifiedItems, newFormData.invoice_total);
-        return { ...newFormData, calculated_total: calculatedTotal, totals_match: totalsMatch };
-      });
-    }
-  };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
