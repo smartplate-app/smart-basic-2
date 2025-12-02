@@ -264,7 +264,7 @@ const AppLayout = ({ children, currentPageName }) => {
         <div className="min-h-screen bg-gray-50">
           {/* Admin Control Banner */}
           {isAdminControllingUser && (
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-50">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-40">
               <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <span className="text-lg">🎮</span>
                 <span className="font-bold">
