@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -154,7 +153,28 @@ export default function MonthlyCountPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         if (mounted) {
-          await loadData(currentUser.email);
+          // Determine the working email based on user type
+          let workingEmail = currentUser.acting_as_store_email || currentUser.email;
+          
+          // Check if user is a store user (worker/manager)
+          let storeOwnerEmail = currentUser.store_user_owner_email;
+          if (!storeOwnerEmail) {
+            try {
+              const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+              if (storeUserRecords.length > 0) {
+                storeOwnerEmail = storeUserRecords[0].owner_email;
+              }
+            } catch (e) {
+              console.log("Could not fetch store user records");
+            }
+          }
+          
+          // If store user, load data from owner's email
+          if (storeOwnerEmail) {
+            workingEmail = storeOwnerEmail;
+          }
+          
+          await loadData(workingEmail);
         }
       } catch (error) {
         console.error(`[MonthlyCount] Authentication error (attempt ${retryAttempt + 1}):`, error);
