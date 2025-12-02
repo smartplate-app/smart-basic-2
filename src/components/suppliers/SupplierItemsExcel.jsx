@@ -46,7 +46,7 @@ export default function SupplierItemsExcel({ suppliers, items, onItemsAdded, onC
       downloadReady: "File ready for download",
       back: "Back",
       close: "Close",
-      instructions: "File should include columns: Name, Catalog Number, Unit (kg/liter/unit/case), Price, Discount",
+      instructions: "File should include: Name (required), Catalog Number (optional), Unit (kg/liter/unit/case), Price, Discount",
       allSuppliers: "All Suppliers",
       noItems: "No items to download"
     }

@@ -372,12 +372,12 @@ export default function SuppliersPage() {
               onClick={() => {
                 // Generate Excel template for items
                 const headers = language === 'he' 
-                  ? ['שם הפריט', 'מק"ט', 'יחידה (kg/liter/unit/case)', 'מחיר', 'הנחה %', 'כמות באריזה']
-                  : ['Item Name', 'Catalog Number', 'Unit (kg/liter/unit/case)', 'Price', 'Discount %', 'Units Per Package'];
+                  ? ['שם הפריט (חובה)', 'מק"ט (אופציונלי)', 'יחידה (kg/liter/unit/case)', 'מחיר', 'הנחה %', 'כמות באריזה']
+                  : ['Item Name (required)', 'Catalog Number (optional)', 'Unit (kg/liter/unit/case)', 'Price', 'Discount %', 'Units Per Package'];
                 
                 const exampleRow = language === 'he'
-                  ? ['עגבניות', 'TOM-001', 'kg', '5.90', '10', '1']
-                  : ['Tomatoes', 'TOM-001', 'kg', '5.90', '10', '1'];
+                  ? ['עגבניות', '', 'kg', '5.90', '10', '1']
+                  : ['Tomatoes', '', 'kg', '5.90', '10', '1'];
                 
                 const csvContent = [
                   headers.join(','),
