@@ -10,47 +10,56 @@ import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
-export default function ReceiveSupplyForm({ order, suppliers, onSubmit, onCancel, noOrderMode = false }) {
-  const [selectedOrder, setSelectedOrder] = useState(order);
-  const [orders, setOrders] = useState([]);
+export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, noOrderMode = false }) {
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
-  const [formData, setFormData] = useState({
-    order_id: order?.id || "",
-    order_number: order?.order_number || "",
-    supplier_name: order?.supplier_name || "",
-    supplier_id: order?.supplier_id || "",
-    supplier_email: order?.supplier_email || "",
-    received_date: new Date().toISOString().split('T')[0],
-    receipt_images: [],
-    verified_items: order?.items?.map(item => ({
-      item_id: item.item_id,
-      item_name: item.item_name,
-      ordered_quantity: item.quantity,
-      certificate_quantity: item.quantity,
-      received_quantity: item.quantity,
-      unit: item.unit,
-      catalog_price: item.price || 0,
-      catalog_discount: 0,
-      actual_price: item.price || 0,
-      actual_discount: 0,
-      price_changed: false,
-      discount_changed: false,
-      has_issue: false,
-      issue_note: "",
-      units_per_package: 1, // Default to 1 unit per package
-      price_after_discount: item.price || 0 // Default to catalog price
-    })) || [],
-    price_changes_summary: [],
-    has_price_changes: false,
-    invoice_number: "",
-    invoice_date: "",
-    invoice_total: 0,
-    calculated_total: 0,
-    totals_match: false,
-    notes: "",
-    status: "pending",
-    manual_entry_mode: false // Added this flag for noOrderMode manual entry
+  
+  // Initialize form data from receipt (for editing) or empty (for new)
+  const [formData, setFormData] = useState(() => {
+    if (receipt) {
+      // Editing existing receipt
+      return {
+        order_id: receipt.order_id || "",
+        order_number: receipt.order_number || "",
+        supplier_name: receipt.supplier_name || "",
+        supplier_id: receipt.supplier_id || "",
+        supplier_email: receipt.supplier_email || "",
+        received_date: receipt.received_date || new Date().toISOString().split('T')[0],
+        receipt_images: receipt.receipt_images || [],
+        verified_items: receipt.verified_items || [],
+        price_changes_summary: receipt.price_changes_summary || [],
+        has_price_changes: receipt.has_price_changes || false,
+        invoice_number: receipt.invoice_number || "",
+        invoice_date: receipt.invoice_date || "",
+        invoice_total: receipt.invoice_total || 0,
+        calculated_total: receipt.calculated_total || 0,
+        totals_match: receipt.totals_match || false,
+        notes: receipt.notes || "",
+        status: receipt.status || "pending",
+        manual_entry_mode: true // Already has data, show edit mode
+      };
+    }
+    // New receipt
+    return {
+      order_id: "",
+      order_number: "",
+      supplier_name: "",
+      supplier_id: "",
+      supplier_email: "",
+      received_date: new Date().toISOString().split('T')[0],
+      receipt_images: [],
+      verified_items: [],
+      price_changes_summary: [],
+      has_price_changes: false,
+      invoice_number: "",
+      invoice_date: "",
+      invoice_total: 0,
+      calculated_total: 0,
+      totals_match: false,
+      notes: "",
+      status: "pending",
+      manual_entry_mode: false
+    };
   });
 
   const [uploading, setUploading] = useState(false);
