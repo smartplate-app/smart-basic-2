@@ -495,29 +495,52 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
             </div>
           )}
 
-          {/* Manual invoice total input for manual receipts */}
-          {(manualMode || (receipt && !receipt.order_id)) && formData.verified_items.length > 0 && (
-            <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
-              <Label>{language === 'he' ? 'סה"כ חשבונית (כולל מע"מ)' : 'Invoice Total (incl. VAT)'}</Label>
+          
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="received_date">{t('received_date')}</Label>
               <Input
+                id="received_date"
+                type="date"
+                value={formData.received_date}
+                onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invoice_date">{language === 'he' ? 'תאריך חשבונית' : 'Invoice Date'}</Label>
+              <Input
+                id="invoice_date"
+                type="date"
+                value={formData.invoice_date || ''}
+                onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="invoice_number">{language === 'he' ? 'מספר חשבונית' : 'Invoice Number'}</Label>
+              <Input
+                id="invoice_number"
+                type="text"
+                value={formData.invoice_number || ''}
+                onChange={(e) => setFormData({ ...formData, invoice_number: e.target.value })}
+                placeholder={language === 'he' ? 'הזן מספר חשבונית' : 'Enter invoice number'}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invoice_total">{language === 'he' ? 'סה"כ חשבונית (כולל מע"מ)' : 'Invoice Total (incl. VAT)'}</Label>
+              <Input
+                id="invoice_total"
                 type="number"
                 step="0.01"
-                value={formData.invoice_total || 0}
+                value={formData.invoice_total || ''}
                 onChange={(e) => setFormData({ ...formData, invoice_total: parseFloat(e.target.value) || 0 })}
                 placeholder="0.00"
               />
             </div>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="received_date">{t('received_date')}</Label>
-            <Input
-              id="received_date"
-              type="date"
-              value={formData.received_date}
-              onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
-              required
-            />
           </div>
 
           <div className="space-y-2">
@@ -585,33 +608,7 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
             )}
           </div>
 
-          {formData.invoice_number && (
-            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <p className="text-sm text-gray-600">{t('invoice_number')}</p>
-                <p className="font-medium">{formData.invoice_number}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">{t('invoice_date')}</p>
-                <p className="font-medium">{new Date(formData.invoice_date).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">{t('invoice_total')}</p>
-                <p className="font-medium">{formData.invoice_total.toFixed(2)} {t('currency')}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">{t('calculated_total')}</p>
-                <p className="font-medium">{formData.calculated_total.toFixed(2)} {t('currency')}</p>
-              </div>
-              {formData.invoice_total > 0 && (
-                <div className="col-span-2">
-                  <Badge variant={formData.totals_match ? "default" : "destructive"}>
-                    {formData.totals_match ? t('totals_match') : t('totals_mismatch')}
-                  </Badge>
-                </div>
-              )}
-            </div>
-          )}
+          
 
           {formData.has_price_changes && (
             <Alert className="border-orange-300 bg-orange-50">
