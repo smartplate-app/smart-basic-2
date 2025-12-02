@@ -212,20 +212,6 @@ export default function SupplyReceiptsPage() {
               <PackageCheck className="w-5 h-5 ml-2" />
               {t('supply_without_order')}
             </Button>
-            <Button
-              onClick={() => {
-                setShowReceiveForm(true); // Open the order selection list
-                setShowForm(false); // Close the manual receipt form if open
-                setShowNoOrderForm(false); // Close the no-order form if open
-                setEditingReceipt(null); // Clear editing state
-                setSelectedOrder(null); // Ensure no order is pre-selected for the form yet
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white"
-              disabled={orders.length === 0} // Disable if no orders are fetched to select from
-            >
-              <PackageCheck className="w-5 h-5 ml-2" />
-              {t('receive')}
-            </Button>
           </div>
         </div>
 
