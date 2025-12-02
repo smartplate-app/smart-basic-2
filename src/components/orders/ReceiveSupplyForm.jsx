@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -533,7 +532,7 @@ Return JSON:
                       </div>
                     )}
 
-                    {formData.receipt_images.length > 0 && !formData.manual_entry_mode && (
+                    {formData.receipt_images.length > 0 && (
                       <div className="flex gap-2">
                         <Button
                           type="button"
@@ -549,38 +548,27 @@ Return JSON:
                           ) : (
                             <>
                               <Scan className="w-4 h-4 ml-2" />
-                              {t('auto_scan')}
+                              {formData.manual_entry_mode ? (t('re_scan_header') || 'סרוק מחדש') : t('auto_scan')}
                             </>
                           )}
                         </Button>
                         
-                        <Button
-                          type="button"
-                          onClick={handleSkipScanAndEnterManually}
-                          variant="outline"
-                          className="flex-1"
-                        >
-                          <Plus className="w-4 h-4 ml-2" />
-                          {t('enter_manually') || 'הזן ידנית'}
-                        </Button>
+                        {!formData.manual_entry_mode && (
+                          <Button
+                            type="button"
+                            onClick={handleSkipScanAndEnterManually}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            <Plus className="w-4 h-4 ml-2" />
+                            {t('enter_manually') || 'הזן ידנית'}
+                          </Button>
+                        )}
                       </div>
-                    )}
-
-                    {formData.receipt_images.length > 0 && formData.manual_entry_mode && (
-                      <Button
-                        type="button"
-                        onClick={handleAutoScan}
-                        disabled={scanning}
-                        variant="outline"
-                        className="w-full flex items-center justify-center gap-2"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                        {t('re_scan_header') || 'סרוק כותרת מחדש'}
-                      </Button>
                     )}
                   </div>
 
-                  {(formData.verified_items.length > 0 || formData.manual_entry_mode) && (
+                  {(formData.receipt_images.length > 0) && (
                     <>
                       <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
@@ -757,29 +745,9 @@ Return JSON:
                 </>
               )}
             </>
-          ) : ( // noOrderMode is false, original order-based flow
+          ) : ( // noOrderMode is false, order-based flow - but we removed order selection
             <>
-              <div className="space-y-2">
-                <Label>{t('select_order')} *</Label>
-                <Select onValueChange={handleOrderSelect} value={formData.order_id}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('select_order')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {orders.length === 0 ? (
-                      <SelectItem value="none" disabled>{t('no_orders_available')}</SelectItem>
-                    ) : (
-                      orders.map(order => (
-                        <SelectItem key={order.id} value={order.id}>
-                          {order.order_number} - {order.supplier_name} ({new Date(order.created_date).toLocaleDateString()})
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedOrder && (
+              {order && (
                 <>
                   <div className="space-y-2">
                     <Label>{t('received_date')} *</Label>
