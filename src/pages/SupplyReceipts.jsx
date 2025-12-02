@@ -81,8 +81,27 @@ export default function SupplyReceiptsPage() {
 
         if (isMounted) {
           setUser(currentUser);
-          // Use acting_as_store_email if admin is controlling a user
-          const workingEmail = currentUser.acting_as_store_email || currentUser.email;
+          // Determine the working email based on user type
+          let workingEmail = currentUser.acting_as_store_email || currentUser.email;
+          
+          // Check if user is a store user (worker/manager)
+          let storeOwnerEmail = currentUser.store_user_owner_email;
+          if (!storeOwnerEmail) {
+            try {
+              const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+              if (storeUserRecords.length > 0) {
+                storeOwnerEmail = storeUserRecords[0].owner_email;
+              }
+            } catch (e) {
+              console.log("Could not fetch store user records");
+            }
+          }
+          
+          // If store user, load data from owner's email
+          if (storeOwnerEmail) {
+            workingEmail = storeOwnerEmail;
+          }
+          
           await loadData(workingEmail);
         }
       } catch (error) {
