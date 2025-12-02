@@ -50,11 +50,23 @@ export default function OrdersPage() {
       let ordersData = [];
       let suppliersData = [];
       
+      // Use acting_as_store_email if admin is controlling a user
+      const workingEmail = currentUser.acting_as_store_email || currentUser.email;
+      const isAdminControlling = !!currentUser.acting_as_store_email;
+
       // Check if user is a store_user (worker/manager invited to someone else's store)
       const isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
       const storeOwnerEmail = currentUser.store_user_owner_email;
 
-      if (isStoreUser && storeOwnerEmail) {
+      if (isAdminControlling) {
+        // Admin controlling a user - load that user's data
+        const [userOrders, userSuppliers] = await Promise.all([
+          base44.entities.Order.filter({ created_by: workingEmail }, "-created_date"),
+          base44.entities.Supplier.filter({ created_by: workingEmail }, "name")
+        ]);
+        ordersData = userOrders;
+        suppliersData = userSuppliers;
+      } else if (isStoreUser && storeOwnerEmail) {
         // Store user - load suppliers and orders from the store owner
         const [ownerSuppliers, ownerOrders] = await Promise.all([
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
