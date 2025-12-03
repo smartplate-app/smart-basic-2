@@ -146,12 +146,19 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         if (dashboardData.length > 0) {
           const data = dashboardData[0];
           const predictedSalesExVAT = (data.predicted_sales || 0) / 1.17;
-          const laborGoalAmount = predictedSalesExVAT * ((data.labor_goal_percent || 25) / 100);
-          const shiftWorkersGoal = Math.max(0, laborGoalAmount - (data.management_salary || 0));
-          // Weekly goal = monthly goal / 4.2
+          const totalLaborGoalAmount = predictedSalesExVAT * ((data.labor_goal_percent || 25) / 100);
+          const managementSalary = data.management_salary || 0;
+          // Monthly shift workers goal = total labor goal minus management salary
+          const monthlyShiftWorkersGoal = Math.max(0, totalLaborGoalAmount - managementSalary);
+          // Calculate weeks in this month
+          const weeksInMonth = moment(currentMonth).daysInMonth() / 7;
+          // Weekly goal = monthly shift workers goal / weeks in month
+          const weeklyShiftWorkersGoal = monthlyShiftWorkersGoal / weeksInMonth;
+          
           setLaborGoals({
-            shiftWorkersGoalWeekly: shiftWorkersGoal / 4.2,
-            managementSalary: data.management_salary || 0,
+            shiftWorkersGoalWeekly: weeklyShiftWorkersGoal,
+            monthlyShiftWorkersGoal: monthlyShiftWorkersGoal,
+            managementSalary: managementSalary,
             laborGoalPercent: data.labor_goal_percent || 25
           });
         }
