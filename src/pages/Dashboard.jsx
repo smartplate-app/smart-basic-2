@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [predictedSales, setPredictedSales] = useState(0);
   const [laborGoalPercent, setLaborGoalPercent] = useState(25);
   const [foodGoalPercent, setFoodGoalPercent] = useState(30);
+  const [managementSalary, setManagementSalary] = useState(0);
 
   // Actual Performance fields
   const [actualSales, setActualSales] = useState(0);
@@ -72,12 +73,14 @@ export default function DashboardPage() {
         setPredictedSales(existingData.predicted_sales || existingData.total_sales || 0);
         setLaborGoalPercent(existingData.labor_goal_percent || 25);
         setFoodGoalPercent(existingData.food_goal_percent || 30);
+        setManagementSalary(existingData.management_salary || 0);
         setActualSales(existingData.total_sales || 0);
       } else {
         setDashboardData(null);
         setPredictedSales(0);
         setLaborGoalPercent(25);
         setFoodGoalPercent(30);
+        setManagementSalary(0);
         setActualSales(0);
       }
 
@@ -140,6 +143,7 @@ export default function DashboardPage() {
         predicted_sales: parseFloat(predictedSales) || 0,
         labor_goal_percent: parseFloat(laborGoalPercent) || 25,
         food_goal_percent: parseFloat(foodGoalPercent) || 30,
+        management_salary: parseFloat(managementSalary) || 0,
         total_sales: parseFloat(actualSales) || 0,
         manual_labor_cost: calculatedLaborCost,
         manual_food_cost: calculatedFoodCost
@@ -284,7 +288,7 @@ export default function DashboardPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
@@ -292,6 +296,10 @@ export default function DashboardPage() {
             <TabsTrigger value="goals" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
               {language === 'he' ? 'הגדרת יעדים' : 'Goal Setting'}
+            </TabsTrigger>
+            <TabsTrigger value="labor" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              {language === 'he' ? 'יעד עבודה' : 'Labor Goals'}
             </TabsTrigger>
           </TabsList>
 
@@ -595,6 +603,157 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Labor Goals Tab */}
+          <TabsContent value="labor" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                  {language === 'he' ? 'יעד עלות עבודה - פירוט' : 'Labor Cost Goal - Breakdown'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Management/Owner Salary */}
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="space-y-2">
+                    <Label className={`text-lg font-semibold text-purple-800 ${isRTL ? 'text-right block' : 'text-left block'}`}>
+                      {language === 'he' ? 'משכורת הנהלה/בעלים (חודשי)' : 'Management/Owner Salary (Monthly)'}
+                    </Label>
+                    <Input
+                      type="number"
+                      value={managementSalary}
+                      onChange={(e) => setManagementSalary(parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className={`max-w-xs text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
+                      disabled={!editMode}
+                    />
+                    <p className={`text-sm text-purple-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {language === 'he' ? 'עלות קבועה שאינה תלויה במשמרות' : 'Fixed cost not dependent on shifts'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Labor Goal Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-100 rounded-lg p-4">
+                    <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
+                      {language === 'he' ? 'יעד הכנסות (ללא מע"מ)' : 'Income Goal (excl. VAT)'}
+                    </Label>
+                    <div className={`text-2xl font-bold text-gray-900 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {formatCurrency(predictedSalesExVAT)}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-100 rounded-lg p-4">
+                    <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
+                      {language === 'he' ? 'יעד עלות עבודה כולל' : 'Total Labor Cost Goal'}
+                    </Label>
+                    <div className={`text-2xl font-bold text-gray-900 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {formatCurrency(laborGoalAmount)}
+                    </div>
+                    <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {laborGoalPercent}% {language === 'he' ? 'מהמכירות' : 'of sales'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Breakdown Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                    <CardHeader className="pb-2">
+                      <CardTitle className={`text-white text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'משכורת הנהלה/בעלים' : 'Management/Owner Salary'}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {formatCurrency(managementSalary)}
+                      </div>
+                      <div className={`text-purple-200 text-xs mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {predictedSalesExVAT > 0 ? `${((managementSalary / predictedSalesExVAT) * 100).toFixed(1)}%` : '0%'} {language === 'he' ? 'מהמכירות' : 'of sales'}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                    <CardHeader className="pb-2">
+                      <CardTitle className={`text-white text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'יעד עלות עובדי משמרות' : 'Shift Workers Labor Goal'}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {formatCurrency(Math.max(0, laborGoalAmount - managementSalary))}
+                      </div>
+                      <div className={`text-blue-200 text-xs mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'יעד עבודה כולל פחות הנהלה' : 'Total labor goal minus management'}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className={`bg-gradient-to-br ${laborGoalAmount - managementSalary < 0 ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} text-white`}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className={`text-white text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'אחוז יעד לעובדי משמרות' : 'Shift Workers Goal %'}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {predictedSalesExVAT > 0 ? (((laborGoalAmount - managementSalary) / predictedSalesExVAT) * 100).toFixed(1) : '0'}%
+                      </div>
+                      <div className={`text-white/80 text-xs mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'מתוך המכירות (ללא מע"מ)' : 'of sales (excl. VAT)'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Warning if management salary exceeds labor goal */}
+                {managementSalary > laborGoalAmount && (
+                  <div className="bg-red-100 border-2 border-red-300 rounded-lg p-4">
+                    <div className={`flex items-center gap-2 text-red-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <AlertCircle className="w-5 h-5" />
+                      <span className="font-semibold">
+                        {language === 'he' 
+                          ? '⚠️ משכורת ההנהלה גבוהה מיעד עלות העבודה הכולל!' 
+                          : '⚠️ Management salary exceeds total labor cost goal!'}
+                      </span>
+                    </div>
+                    <p className={`text-sm text-red-600 mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {language === 'he' 
+                        ? 'יש להגדיל את יעד אחוז עלות העבודה או להקטין את משכורת ההנהלה'
+                        : 'Consider increasing labor cost goal % or reducing management salary'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Summary Table */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className={`font-semibold mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {language === 'he' ? 'סיכום יעדי עלות עבודה' : 'Labor Cost Goals Summary'}
+                  </h4>
+                  <div className="space-y-2">
+                    <div className={`flex justify-between items-center py-2 border-b ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-gray-600">{language === 'he' ? 'יעד הכנסות (ללא מע"מ):' : 'Income Goal (excl. VAT):'}</span>
+                      <span className="font-bold">{formatCurrency(predictedSalesExVAT)}</span>
+                    </div>
+                    <div className={`flex justify-between items-center py-2 border-b ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-gray-600">{language === 'he' ? 'יעד עלות עבודה כולל:' : 'Total Labor Goal:'}</span>
+                      <span className="font-bold">{formatCurrency(laborGoalAmount)} ({laborGoalPercent}%)</span>
+                    </div>
+                    <div className={`flex justify-between items-center py-2 border-b text-purple-700 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <span>{language === 'he' ? 'פחות: משכורת הנהלה/בעלים:' : 'Less: Management/Owner Salary:'}</span>
+                      <span className="font-bold">- {formatCurrency(managementSalary)}</span>
+                    </div>
+                    <div className={`flex justify-between items-center py-2 bg-blue-100 rounded px-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <span className="font-semibold text-blue-800">{language === 'he' ? 'יעד עובדי משמרות:' : 'Shift Workers Goal:'}</span>
+                      <span className="font-bold text-blue-800">{formatCurrency(Math.max(0, laborGoalAmount - managementSalary))}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
