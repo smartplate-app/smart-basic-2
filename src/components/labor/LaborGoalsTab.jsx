@@ -69,11 +69,13 @@ export default function LaborGoalsTab() {
 
       if (dashboardData && dashboardData.id) {
         await base44.entities.MonthlyDashboardData.update(dashboardData.id, dataToSave);
+        // Update local state immediately instead of reloading
+        setDashboardData({ ...dashboardData, ...dataToSave });
       } else {
-        await base44.entities.MonthlyDashboardData.create(dataToSave);
+        const newData = await base44.entities.MonthlyDashboardData.create(dataToSave);
+        setDashboardData(newData);
       }
 
-      await loadData();
       alert(language === 'he' ? 'נשמר בהצלחה!' : 'Saved successfully!');
     } catch (error) {
       console.error("Error saving labor goals:", error);
