@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -63,24 +62,30 @@ export default function UsersPage() {
   const generateInviteHTML = () => {
     const appUrl = window.location.origin;
     const senderName = currentUser.email_sender_name || currentUser.business_name || currentUser.full_name || 'Smart Plate';
+    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg';
 
     return `<!DOCTYPE html>
 <html dir="${language === 'he' ? 'rtl' : 'ltr'}">
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; direction: ${language === 'he' ? 'rtl' : 'ltr'}; }
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; direction: ${language === 'he' ? 'rtl' : 'ltr'}; background: #f9fafb; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-    .content { background: white; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px; }
-    .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-    .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+    .header { background: #1f2937; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .logo { max-height: 60px; margin-bottom: 15px; }
+    .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+    .button { display: inline-block; background: #1f2937; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+    .button:hover { background: #374151; }
+    .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 20px; }
+    ul { color: #374151; }
+    li { margin-bottom: 8px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>${language === 'he' ? 'הזמנה למערכת Smart Plate' : 'Invitation to Smart Plate'}</h1>
+      <img src="${logoUrl}" alt="Smart Plate" class="logo" />
+      <h1 style="margin: 0; font-size: 24px;">${language === 'he' ? 'הזמנה למערכת Smart Plate' : 'Invitation to Smart Plate'}</h1>
     </div>
     <div class="content">
       <p>${language === 'he' ? `שלום ${inviteData.full_name},` : `Hello ${inviteData.full_name},`}</p>
@@ -90,7 +95,7 @@ export default function UsersPage() {
         : `You've been invited by ${currentUser.full_name} to join Smart Plate - Food & Labor Cost Management System.`
       }</p>
       
-      <p>${language === 'he'
+      <p style="font-weight: bold; color: #1f2937;">${language === 'he'
         ? 'המערכת מאפשרת לך לנהל:'
         : 'The system allows you to manage:'
       }</p>
@@ -103,8 +108,8 @@ export default function UsersPage() {
       </ul>
       
       ${inviteData.message ? `
-      <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 0; font-style: italic;">${inviteData.message}</p>
+      <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1f2937;">
+        <p style="margin: 0; font-style: italic; color: #374151;">${inviteData.message}</p>
       </div>
       ` : ''}
       
@@ -114,7 +119,7 @@ export default function UsersPage() {
         </a>
       </div>
       
-      <p style="font-size: 12px; color: #666; text-align: center; margin-top: 20px;">
+      <p style="font-size: 12px; color: #6b7280; text-align: center; margin-top: 20px;">
         ${language === 'he' 
           ? 'תתבקש להתחבר עם חשבון Google או Microsoft שלך'
           : 'You will be asked to login with your Google or Microsoft account'
