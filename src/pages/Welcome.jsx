@@ -21,9 +21,14 @@ import {
 } from "lucide-react";
 
 export default function WelcomePage() {
-  const [activeTab, setActiveTab] = useState("login");
+  // Check if user was redirected because they're not invited
+  const urlParams = new URLSearchParams(window.location.search);
+  const notInvited = urlParams.get('error') === 'not_invited';
+  
+  const [activeTab, setActiveTab] = useState(notInvited ? "signup" : "login");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [showNotInvitedMessage, setShowNotInvitedMessage] = useState(notInvited);
   const [formData, setFormData] = useState({
     businessName: "",
     contactName: "",
