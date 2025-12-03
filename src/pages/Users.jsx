@@ -85,7 +85,7 @@ export default function UsersPage() {
   <div class="container">
     <div class="header">
       <img src="${logoUrl}" alt="Smart Plate" class="logo" />
-      <h1 style="margin: 0; font-size: 24px;">${language === 'he' ? 'הזמנה למערכת Smart Plate' : 'Invitation to Smart Plate'}</h1>
+      <h1 style="margin: 0; font-size: 24px;">${language === 'he' ? 'הוזמנת ל-Smart Plate' : 'You are invited to Smart Plate'}</h1>
     </div>
     <div class="content">
       <p>${language === 'he' ? `שלום ${inviteData.full_name},` : `Hello ${inviteData.full_name},`}</p>
