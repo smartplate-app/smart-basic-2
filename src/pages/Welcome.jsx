@@ -166,6 +166,27 @@ export default function WelcomePage() {
 
               <TabsContent value="login" className="space-y-4">
                 <div className="text-center space-y-3">
+                  {showNotInvitedMessage && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+                      <p className="text-orange-700 text-sm font-medium">
+                        😕 המשתמש שלך לא רשום במערכת
+                      </p>
+                      <p className="text-orange-600 text-xs mt-1">
+                        כדי להשתמש ב-Smart Plate יש לקבל הזמנה מבעל עסק קיים או לשלוח בקשת הרשמה
+                      </p>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 text-orange-700 border-orange-300 hover:bg-orange-100"
+                        onClick={() => {
+                          setActiveTab("signup");
+                          setShowNotInvitedMessage(false);
+                        }}
+                      >
+                        שלח בקשת הרשמה
+                      </Button>
+                    </div>
+                  )}
                   <p className="text-gray-600 text-sm">
                     משתמש קיים? התחבר עם החשבון שלך
                   </p>
