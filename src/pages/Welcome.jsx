@@ -1,7 +1,6 @@
 import React from "react";
 
 export default function WelcomePage() {
-  // Redirect to login immediately
   React.useEffect(() => {
     window.location.href = '/login';
   }, []);
