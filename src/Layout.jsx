@@ -442,9 +442,10 @@ const AppLayout = ({ children, currentPageName }) => {
 }
 
 export default function Layout({ children, currentPageName }) {
-  // Public pages bypass the entire layout
-  if (currentPageName === 'Welcome' || currentPageName === 'Register' || currentPageName === 'OrderDetails' || currentPageName === 'WorkerPortal') {
-    return <>{children}</>;
+  // Public pages bypass the entire layout completely - no providers, no auth
+  const publicPages = ['Welcome', 'Register', 'OrderDetails', 'WorkerPortal'];
+  if (publicPages.includes(currentPageName)) {
+    return children;
   }
   
   return (
