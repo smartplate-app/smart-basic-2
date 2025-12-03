@@ -10,6 +10,7 @@ import moment from "moment";
 import JobPositionsList from "../components/labor/JobPositionsList";
 import WorkersList from "../components/labor/WorkersList";
 import WeeklyScheduleView from "../components/labor/WeeklyScheduleView";
+import LaborGoalsTab from "../components/labor/LaborGoalsTab";
 
 export default function LaborCostPage() {
   const [positions, setPositions] = useState([]);
@@ -164,8 +165,9 @@ export default function LaborCostPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-xl">
             <TabsTrigger value="schedule">{t('schedule')}</TabsTrigger>
+            <TabsTrigger value="goals">{language === 'he' ? 'יעד עבודה' : 'Labor Goals'}</TabsTrigger>
             <TabsTrigger value="positions">{t('positions')}</TabsTrigger>
             <TabsTrigger value="workers">{t('workers')}</TabsTrigger>
           </TabsList>
@@ -219,6 +221,10 @@ export default function LaborCostPage() {
               onScheduleSaved={loadData}
               loading={loading}
             />
+          </TabsContent>
+
+          <TabsContent value="goals" className="space-y-6">
+            <LaborGoalsTab />
           </TabsContent>
 
           <TabsContent value="positions" className="space-y-6">
