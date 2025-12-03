@@ -375,8 +375,17 @@ export default function DashboardPage() {
                       <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
                         {language === 'he' ? 'עלות עבודה צפויה עד היום' : 'Predicted Labor Cost to Date'}
                       </Label>
-                      <div className={`text-2xl font-bold text-indigo-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {formatCurrency(predictedLaborToDate)}
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                        <span className={`text-2xl font-bold text-indigo-700`}>
+                          {formatCurrency(predictedLaborToDate)}
+                        </span>
+                        <span className={`text-sm px-2 py-0.5 rounded ${
+                          calculatedLaborCost <= predictedLaborToDate 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {language === 'he' ? 'בפועל:' : 'Actual:'} {formatCurrency(calculatedLaborCost)}
+                        </span>
                       </div>
                       <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                         {language === 'he' ? 'מבוסס על עלות שבועית / 7 × ימים שעברו' : 'Based on weekly cost / 7 × days passed'}
