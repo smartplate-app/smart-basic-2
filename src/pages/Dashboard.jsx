@@ -105,6 +105,57 @@ export default function DashboardPage() {
       });
       setCalculatedLaborCost(totalLaborCost);
 
+      // Calculate predicted labor and sales to date based on weekly schedules
+      // Find schedules that have total_cost and predicted_weekly_sales
+      const schedulesWithData = allSchedules.filter(s => 
+        s.total_cost > 0 || s.predicted_weekly_sales > 0
+      );
+      
+      if (schedulesWithData.length > 0) {
+        setHasScheduleData(true);
+        
+        // Calculate days passed from beginning of month
+        const daysPassed = today.isBefore(monthEnd) && today.isAfter(monthStart) 
+          ? today.diff(monthStart, 'days') + 1 
+          : moment(selectedMonth).daysInMonth();
+        
+        // Sum up weekly totals and predictions from schedules in this month
+        let totalWeeklyLaborCost = 0;
+        let totalWeeklySalesPrediction = 0;
+        let weeksCount = 0;
+        
+        allSchedules.forEach(schedule => {
+          const weekStart = moment(schedule.week_start_date);
+          const weekEnd = moment(schedule.week_start_date).add(6, 'days');
+          
+          // Check if this week overlaps with the selected month
+          if (weekEnd.isSameOrAfter(monthStart) && weekStart.isSameOrBefore(monthEnd)) {
+            if (schedule.total_cost > 0) {
+              totalWeeklyLaborCost += schedule.total_cost;
+              weeksCount++;
+            }
+            if (schedule.predicted_weekly_sales > 0) {
+              totalWeeklySalesPrediction += schedule.predicted_weekly_sales;
+            }
+          }
+        });
+        
+        if (weeksCount > 0) {
+          // Average daily labor cost = total weekly costs / (weeks * 7)
+          const avgDailyLaborCost = totalWeeklyLaborCost / (weeksCount * 7);
+          // Average daily sales = total weekly sales / (weeks * 7)
+          const avgDailySales = totalWeeklySalesPrediction / (weeksCount * 7);
+          
+          // Predicted to date = daily average * days passed
+          setPredictedLaborToDate(avgDailyLaborCost * daysPassed);
+          setPredictedSalesToDate(avgDailySales * daysPassed);
+        }
+      } else {
+        setHasScheduleData(false);
+        setPredictedLaborToDate(0);
+        setPredictedSalesToDate(0);
+      }
+
       // Calculate food cost (remove VAT from receipts since invoice_total includes VAT)
       const VAT_RATE = 1.17;
       let totalFoodCost = 0;
