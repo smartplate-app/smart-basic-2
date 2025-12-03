@@ -41,12 +41,12 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   React.useEffect(() => {
-    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register') {
-      loadAuth();
-    } else {
-      setAuthLoading(false);
-    }
-  }, [currentPageName]);
+        if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'Welcome') {
+          loadAuth();
+        } else {
+          setAuthLoading(false);
+        }
+      }, [currentPageName]);
   
   React.useEffect(() => {
     document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
@@ -65,7 +65,13 @@ const AppLayout = ({ children, currentPageName }) => {
             await new Promise(resolve => setTimeout(resolve, delay));
           }
 
-
+          // Check if user is authenticated first
+          const isAuthenticated = await base44.auth.isAuthenticated();
+          if (!isAuthenticated) {
+            // Redirect to Welcome page if not authenticated
+            window.location.href = createPageUrl("Welcome");
+            return;
+          }
 
           const currentUser = await base44.auth.me();
 
@@ -170,7 +176,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register') {
+  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'Welcome') {
         return <>{children}</>;
       }
 
