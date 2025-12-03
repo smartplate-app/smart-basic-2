@@ -33,6 +33,11 @@ export default function DashboardPage() {
   const [actualSales, setActualSales] = useState(0);
   const [calculatedLaborCost, setCalculatedLaborCost] = useState(0);
   const [calculatedFoodCost, setCalculatedFoodCost] = useState(0);
+  
+  // Predicted values based on weekly schedules
+  const [predictedLaborToDate, setPredictedLaborToDate] = useState(0);
+  const [predictedSalesToDate, setPredictedSalesToDate] = useState(0);
+  const [hasScheduleData, setHasScheduleData] = useState(false);
 
   useEffect(() => {
     loadData();
