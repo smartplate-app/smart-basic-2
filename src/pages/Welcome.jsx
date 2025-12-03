@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,10 +33,8 @@ export default function WelcomePage() {
     reason: ""
   });
 
-  // No auth check needed - this is a public page
-
   const handleLogin = () => {
-    base44.auth.redirectToLogin('/pages/Orders');
+    window.location.href = '/login';
   };
 
   const handleSignupRequest = async (e) => {
@@ -72,8 +70,7 @@ export default function WelcomePage() {
         </div>
       `;
 
-      // For public page, we'll show success and let admin check submissions
-      // Email sending requires auth, so we just confirm the submission visually
+      // Show success - form data logged for now
       console.log("Signup request:", formData);
       setSent(true);
     } catch (error) {
