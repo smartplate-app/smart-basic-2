@@ -78,7 +78,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
   const calculatePayment = (worker, hoursWorked, overtimeRate) => {
     if (!worker) {
-      return { basePayment: 0, totalPayment: 0 };
+      return { basePayment: 0, totalPayment: 0, totalWithEmployerCost: 0 };
     }
 
     let basePaymentAmount = 0;
@@ -96,24 +96,35 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     if (overtimeRate === '125') {
       paymentForShift = basePaymentAmount * 1.25;
     }
-    // Removed 150% option
 
-    return { basePayment: basePaymentAmount, totalPayment: paymentForShift };
+    // Calculate total cost including employer cost percentage (default 25%)
+    const employerCostPercent = worker.employer_cost_percentage || 25;
+    const totalWithEmployerCost = paymentForShift * (1 + employerCostPercent / 100);
+
+    return { basePayment: basePaymentAmount, totalPayment: paymentForShift, totalWithEmployerCost };
   };
 
   const calculateTotals = () => {
     const shifts = schedule?.shifts || [];
     const totalHours = shifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
-    const totalCost = shifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
+    const totalBaseCost = shifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
+    
+    // Calculate total cost including employer costs for each shift
+    const totalCostWithEmployer = shifts.reduce((sum, s) => {
+      const worker = workers.find(w => w.id === s.worker_id);
+      const employerCostPercent = worker?.employer_cost_percentage || 25;
+      const shiftPayment = s.payment_for_shift || 0;
+      return sum + (shiftPayment * (1 + employerCostPercent / 100));
+    }, 0);
     
     // Calculate weekly predicted sales from monthly (divide by 4.2 weeks)
     const weeklyPredictedSalesWithVAT = monthlyPredictedSales > 0 ? monthlyPredictedSales / 4.2 : 0;
     const weeklyPredictedSalesWithoutVAT = weeklyPredictedSalesWithVAT / 1.17;
     
-    // Labor percentage is based on weekly sales excluding VAT
-    const laborPercentage = weeklyPredictedSalesWithoutVAT > 0 ? (totalCost / weeklyPredictedSalesWithoutVAT) * 100 : 0;
+    // Labor percentage is based on weekly sales excluding VAT - using total cost WITH employer costs
+    const laborPercentage = weeklyPredictedSalesWithoutVAT > 0 ? (totalCostWithEmployer / weeklyPredictedSalesWithoutVAT) * 100 : 0;
 
-    return { totalHours, totalCost, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT };
+    return { totalHours, totalBaseCost, totalCostWithEmployer, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT };
   };
 
   useEffect(() => {
@@ -460,7 +471,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         predicted_weekly_sales: monthlyPredictedSales / 4.2, // Store weekly predicted sales (monthly / 4.2)
         shifts: schedule?.shifts || [],
         total_hours: totalHours,
-        total_cost: totalCost,
+        total_cost: totalCostWithEmployer, // Save total cost WITH employer costs
         labor_cost_percentage: laborPercentage,
         status: 'published' 
       };
@@ -937,7 +948,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     );
   }
 
-  const { totalHours, totalCost, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT } = calculateTotals();
+  const { totalHours, totalBaseCost, totalCostWithEmployer, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT } = calculateTotals();
 
   return (
     <div className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -1086,8 +1097,11 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 {t('total_labor_cost')}
               </Label>
               <div className={`text-2xl font-bold text-blue-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {formatCurrency(totalCost)}
+                {formatCurrency(totalCostWithEmployer)}
               </div>
+              <p className={`text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {language === 'he' ? `שכר בסיס: ${formatCurrency(totalBaseCost)} + עלויות מעסיק` : `Base: ${formatCurrency(totalBaseCost)} + employer costs`}
+              </p>
             </div>
 
             <div className="space-y-1">
