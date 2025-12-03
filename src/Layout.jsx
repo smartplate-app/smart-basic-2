@@ -41,12 +41,12 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   React.useEffect(() => {
-        if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'Welcome') {
-          loadAuth();
-        } else {
-          setAuthLoading(false);
-        }
-      }, [currentPageName]);
+    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register') {
+      loadAuth();
+    } else {
+      setAuthLoading(false);
+    }
+  }, [currentPageName]);
   
   React.useEffect(() => {
     document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
@@ -170,7 +170,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'Welcome') {
+  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register') {
         return <>{children}</>;
       }
 
@@ -442,12 +442,6 @@ const AppLayout = ({ children, currentPageName }) => {
 }
 
 export default function Layout({ children, currentPageName }) {
-  // Public pages bypass the entire layout completely - no providers, no auth
-  const publicPages = ['Welcome', 'Register', 'OrderDetails', 'WorkerPortal'];
-  if (publicPages.includes(currentPageName)) {
-    return children;
-  }
-  
   return (
     <LanguageProvider>
       <AppLayout currentPageName={currentPageName}>{children}</AppLayout>
