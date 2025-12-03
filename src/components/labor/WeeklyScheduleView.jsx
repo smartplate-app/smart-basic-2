@@ -43,6 +43,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [currentUser, setCurrentUser] = useState(null);
   const [showDoubleShiftWarning, setShowDoubleShiftWarning] = useState(false);
   const [pendingShiftSave, setPendingShiftSave] = useState(null);
+  const [laborGoals, setLaborGoals] = useState({ shiftWorkersGoal: 0, managementSalary: 0, laborGoalPercent: 25 });
 
   const days = [
     { key: 'monday', label: t('monday') },
@@ -133,6 +134,27 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       try {
         const user = await base44.auth.me();
         setCurrentUser(user);
+        const workingEmail = user.acting_as_store_email || user.email;
+
+        // Load labor goals for the month
+        const currentMonth = moment(weekStartDate).format('YYYY-MM');
+        const dashboardData = await base44.entities.MonthlyDashboardData.filter({
+          created_by: workingEmail,
+          month: currentMonth
+        });
+        
+        if (dashboardData.length > 0) {
+          const data = dashboardData[0];
+          const predictedSalesExVAT = (data.predicted_sales || 0) / 1.17;
+          const laborGoalAmount = predictedSalesExVAT * ((data.labor_goal_percent || 25) / 100);
+          const shiftWorkersGoal = Math.max(0, laborGoalAmount - (data.management_salary || 0));
+          // Weekly goal = monthly goal / 4.2
+          setLaborGoals({
+            shiftWorkersGoalWeekly: shiftWorkersGoal / 4.2,
+            managementSalary: data.management_salary || 0,
+            laborGoalPercent: data.labor_goal_percent || 25
+          });
+        }
 
         const weekNumber = moment(weekStartDate).isoWeek();
         const year = moment(weekStartDate).isoWeekYear();
@@ -1116,6 +1138,63 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               </p>
             </div>
           </div>
+
+          {/* Goal Comparison */}
+          {laborGoals.shiftWorkersGoalWeekly > 0 && (
+            <div className={`p-4 rounded-lg border-2 ${
+              totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly 
+                ? 'bg-green-50 border-green-300' 
+                : 'bg-red-50 border-red-300'
+            }`}>
+              <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                <div>
+                  <div className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {language === 'he' ? 'יעד שבועי לעובדי משמרות:' : 'Weekly Shift Workers Goal:'}
+                  </div>
+                  <div className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {formatCurrency(laborGoals.shiftWorkersGoalWeekly)}
+                  </div>
+                </div>
+                <div className={`text-center px-6 py-3 rounded-lg ${
+                  totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly 
+                    ? 'bg-green-100' 
+                    : 'bg-red-100'
+                }`}>
+                  {totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly ? (
+                    <>
+                      <div className="text-green-700 font-bold text-lg">
+                        ✓ {language === 'he' ? 'בתוך היעד!' : 'Within Goal!'}
+                      </div>
+                      <div className="text-green-600 text-sm">
+                        {language === 'he' ? 'חסכון:' : 'Savings:'} {formatCurrency(laborGoals.shiftWorkersGoalWeekly - totalCostWithEmployer)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-red-700 font-bold text-lg">
+                        ⚠️ {language === 'he' ? 'מעל היעד!' : 'Over Goal!'}
+                      </div>
+                      <div className="text-red-600 text-sm">
+                        {language === 'he' ? 'חריגה:' : 'Overage:'} {formatCurrency(totalCostWithEmployer - laborGoals.shiftWorkersGoalWeekly)}
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className={isRTL ? 'text-left' : 'text-right'}>
+                  <div className="text-gray-600 text-sm">
+                    {language === 'he' ? 'עלות בפועל:' : 'Actual Cost:'}
+                  </div>
+                  <div className={`text-2xl font-bold ${
+                    totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly 
+                      ? 'text-green-700' 
+                      : 'text-red-700'
+                  }`}>
+                    {formatCurrency(totalCostWithEmployer)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className={`flex gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
