@@ -442,6 +442,11 @@ const AppLayout = ({ children, currentPageName }) => {
 }
 
 export default function Layout({ children, currentPageName }) {
+  // Public pages bypass the entire layout
+  if (currentPageName === 'Welcome' || currentPageName === 'Register' || currentPageName === 'OrderDetails' || currentPageName === 'WorkerPortal') {
+    return <>{children}</>;
+  }
+  
   return (
     <LanguageProvider>
       <AppLayout currentPageName={currentPageName}>{children}</AppLayout>
