@@ -370,7 +370,7 @@ export default function DashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white rounded-lg p-4 shadow-sm">
                       <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
                         {language === 'he' ? 'עלות עבודה צפויה עד היום' : 'Predicted Labor Cost to Date'}
@@ -400,6 +400,24 @@ export default function DashboardPage() {
                       </div>
                       <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                         {language === 'he' ? 'מבוסס על תחזית שבועית / 7 × ימים שעברו' : 'Based on weekly prediction / 7 × days passed'}
+                      </p>
+                    </div>
+                    {/* Big Predicted Labor % */}
+                    <div className={`bg-gradient-to-br ${
+                      predictedSalesToDate > 0 && (predictedLaborToDate / (predictedSalesToDate / 1.17) * 100) <= laborGoalPercent
+                        ? 'from-green-500 to-green-600' 
+                        : 'from-orange-500 to-orange-600'
+                    } rounded-lg p-4 shadow-sm flex flex-col items-center justify-center text-white`}>
+                      <Label className="text-sm text-white/80 text-center">
+                        {language === 'he' ? '% עלות עבודה צפויה' : 'Predicted Labor %'}
+                      </Label>
+                      <div className="text-5xl font-black my-2">
+                        {predictedSalesToDate > 0 
+                          ? ((predictedLaborToDate / (predictedSalesToDate / 1.17)) * 100).toFixed(1)
+                          : '0'}%
+                      </div>
+                      <p className="text-xs text-white/70 text-center">
+                        {language === 'he' ? `יעד: ${laborGoalPercent}%` : `Goal: ${laborGoalPercent}%`}
                       </p>
                     </div>
                   </div>
