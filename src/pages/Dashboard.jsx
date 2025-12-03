@@ -361,6 +361,43 @@ export default function DashboardPage() {
 
           {/* Actual Performance Tab */}
           <TabsContent value="actual" className="space-y-6">
+            {/* Predicted Values from Schedules */}
+            {hasScheduleData && (
+              <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+                <CardHeader>
+                  <CardTitle className={`text-indigo-800 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {language === 'he' ? '📊 תחזית מלו"ז עד היום' : '📊 Forecast from Schedules to Date'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                      <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
+                        {language === 'he' ? 'עלות עבודה צפויה עד היום' : 'Predicted Labor Cost to Date'}
+                      </Label>
+                      <div className={`text-2xl font-bold text-indigo-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {formatCurrency(predictedLaborToDate)}
+                      </div>
+                      <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'מבוסס על עלות שבועית / 7 × ימים שעברו' : 'Based on weekly cost / 7 × days passed'}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                      <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
+                        {language === 'he' ? 'מכירות צפויות עד היום' : 'Predicted Sales to Date'}
+                      </Label>
+                      <div className={`text-2xl font-bold text-purple-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {formatCurrency(predictedSalesToDate)}
+                      </div>
+                      <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'מבוסס על תחזית שבועית / 7 × ימים שעברו' : 'Based on weekly prediction / 7 × days passed'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Sales Input */}
             <Card>
               <CardHeader>
