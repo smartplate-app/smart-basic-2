@@ -38,7 +38,7 @@ export default function WelcomePage() {
       try {
         const isAuthenticated = await base44.auth.isAuthenticated();
         if (isAuthenticated) {
-          window.location.href = '/pages/Dashboard';
+          window.location.href = '/pages/Orders';
         }
       } catch (e) {
         // Not authenticated, stay on welcome page
@@ -48,7 +48,7 @@ export default function WelcomePage() {
   }, []);
 
   const handleLogin = () => {
-    base44.auth.redirectToLogin('/pages/Dashboard');
+    base44.auth.redirectToLogin('/pages/Orders');
   };
 
   const handleSignupRequest = async (e) => {

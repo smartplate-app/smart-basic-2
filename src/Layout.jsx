@@ -65,13 +65,7 @@ const AppLayout = ({ children, currentPageName }) => {
             await new Promise(resolve => setTimeout(resolve, delay));
           }
 
-          // Check if user is authenticated first
-          const isAuthenticated = await base44.auth.isAuthenticated();
-          if (!isAuthenticated) {
-            // Redirect to Welcome page if not authenticated
-            window.location.href = createPageUrl("Welcome");
-            return;
-          }
+
 
           const currentUser = await base44.auth.me();
 
