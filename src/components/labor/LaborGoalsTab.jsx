@@ -108,6 +108,8 @@ export default function LaborGoalsTab() {
   const shiftWorkersGoal = Math.max(0, laborGoalAmount - managementSalary);
   const shiftWorkersGoalPercent = predictedSalesExVAT > 0 ? (shiftWorkersGoal / predictedSalesExVAT) * 100 : 0;
   const managementPercent = predictedSalesExVAT > 0 ? (managementSalary / predictedSalesExVAT) * 100 : 0;
+  // Weekly goal (monthly / 4.2 weeks)
+  const weeklyShiftWorkersGoal = shiftWorkersGoal / 4.2;
 
   return (
     <div className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -290,9 +292,16 @@ export default function LaborGoalsTab() {
                 <span className="font-bold">- {formatCurrency(managementSalary)}</span>
               </div>
               <div className={`flex justify-between items-center py-2 bg-blue-100 rounded px-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <span className="font-semibold text-blue-800">{language === 'he' ? 'יעד עובדי משמרות:' : 'Shift Workers Goal:'}</span>
+                <span className="font-semibold text-blue-800">{language === 'he' ? 'יעד עובדי משמרות (חודשי):' : 'Shift Workers Goal (Monthly):'}</span>
                 <span className="font-bold text-blue-800">{formatCurrency(shiftWorkersGoal)}</span>
               </div>
+              <div className={`flex justify-between items-center py-2 bg-green-100 rounded px-2 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <span className="font-semibold text-green-800">{language === 'he' ? 'יעד עובדי משמרות (שבועי):' : 'Shift Workers Goal (Weekly):'}</span>
+                <span className="font-bold text-green-800">{formatCurrency(weeklyShiftWorkersGoal)}</span>
+              </div>
+              <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {language === 'he' ? 'יעד שבועי = יעד חודשי / 4.2 שבועות' : 'Weekly goal = Monthly goal / 4.2 weeks'}
+              </p>
             </div>
           </div>
         </CardContent>
