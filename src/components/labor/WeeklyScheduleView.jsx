@@ -501,17 +501,19 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       const weekNumber = moment(weekStartDate).isoWeek();
       const year = moment(weekStartDate).isoWeekYear();
 
+      const { totalHours, totalCostWithEmployer, laborPercentage } = calculateTotals();
+      
       const scheduleData = {
-      week_start_date: moment(weekStartDate).format('YYYY-MM-DD'),
-      week_number: String(weekNumber), // Convert to string
-      year: String(year), // Convert to string
-      predicted_weekly_sales: monthlyPredictedSales / 4.2, // Store weekly predicted sales (monthly / 4.2)
-      shifts: schedule?.shifts || [],
-      total_hours: totalHours,
-      total_cost: totalCostWithEmployer, // Save total cost WITH employer costs
-      labor_cost_percentage: laborPercentage,
-      position_order: positionOrder, // Save position order
-      status: 'published' 
+        week_start_date: moment(weekStartDate).format('YYYY-MM-DD'),
+        week_number: String(weekNumber), // Convert to string
+        year: String(year), // Convert to string
+        predicted_weekly_sales: monthlyPredictedSales / 4.2, // Store weekly predicted sales (monthly / 4.2)
+        shifts: schedule?.shifts || [],
+        total_hours: totalHours,
+        total_cost: totalCostWithEmployer, // Save total cost WITH employer costs
+        labor_cost_percentage: laborPercentage,
+        position_order: positionOrder, // Save position order
+        status: 'published' 
       };
 
       console.log("Saving schedule:", scheduleData);
