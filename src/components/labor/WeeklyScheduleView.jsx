@@ -497,10 +497,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const handleSaveSchedule = async () => {
     setSaving(true);
     try {
-      const { totalHours, totalCost, laborPercentage } = calculateTotals();
       const weekNumber = moment(weekStartDate).isoWeek();
       const year = moment(weekStartDate).isoWeekYear();
-
       const { totalHours, totalCostWithEmployer, laborPercentage } = calculateTotals();
       
       const scheduleData = {
