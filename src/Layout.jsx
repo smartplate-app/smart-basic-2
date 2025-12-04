@@ -8,6 +8,7 @@ import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 import WorkerInvite from "./components/WorkerInvite";
 import AppHelpChat from "./components/AppHelpChat";
+import OfflineNotification from "./components/OfflineNotification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw, WifiOff } from "lucide-react";
