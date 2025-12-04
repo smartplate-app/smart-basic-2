@@ -1299,12 +1299,32 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                       })}
                   </tr>
                 </thead>
-                <tbody>
-                  {positions.map(position => (
-                    <tr key={position.id}>
-                      <td className={`border p-2 font-medium bg-gray-50 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {position.name}
-                      </td>
+                <Droppable droppableId="positions-list" type="POSITION">
+                  {(provided) => (
+                    <tbody ref={provided.innerRef} {...provided.droppableProps}>
+                      {(positionOrder.length > 0 ? positionOrder : positions.map(p => p.id))
+                        .map((positionId, posIndex) => {
+                          const position = positions.find(p => p.id === positionId);
+                          if (!position) return null;
+                          return (
+                            <Draggable key={position.id} draggableId={`position-${position.id}`} index={posIndex}>
+                              {(provided, snapshot) => (
+                                <tr 
+                                  ref={provided.innerRef} 
+                                  {...provided.draggableProps}
+                                  className={snapshot.isDragging ? 'bg-purple-50' : ''}
+                                >
+                                  <td className={`border p-2 font-medium bg-gray-50 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                      <div 
+                                        {...provided.dragHandleProps}
+                                        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                                      >
+                                        <GripVertical className="h-4 w-4" />
+                                      </div>
+                                      <span>{position.name}</span>
+                                    </div>
+                                  </td>
                       {days.map(day => {
                         const dateStr = moment(weekStartDate).isoWeekday(days.indexOf(day) + 1).format('YYYY-MM-DD');
                         const droppableId = `${day.key}|${position.id}`;
