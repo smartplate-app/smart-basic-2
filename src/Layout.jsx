@@ -342,7 +342,7 @@ const AppLayout = ({ children, currentPageName }) => {
                                 alt="Smart Plate"
                                 className="h-16 object-contain flex-shrink-0"
                               />
-                              <span className="text-xs text-gray-400 mt-1">basic</span>
+                              <span className="text-lg font-bold text-gray-500 mt-2 tracking-wide">BASIC</span>
                             </div>
                           </div>
           
