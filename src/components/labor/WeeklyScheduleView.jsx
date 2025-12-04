@@ -1338,7 +1338,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                             className={`border p-1 ${isRTL ? 'text-right' : 'text-left'}`}
                             onDoubleClick={() => handleCellDoubleClick(day.key, dateStr, position.id)}
                           >
-                            <Droppable droppableId={droppableId}>
+                            <Droppable droppableId={droppableId} type="SHIFT">
                               {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
@@ -1408,9 +1408,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                           </td>
                         );
                       })}
-                    </tr>
-                  ))}
-                </tbody>
+                                </tr>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                      {provided.placeholder}
+                    </tbody>
+                  )}
+                </Droppable>
               </table>
             </div>
           </DragDropContext>
