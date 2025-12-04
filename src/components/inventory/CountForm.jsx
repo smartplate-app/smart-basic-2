@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -9,12 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Trash2, Save } from "lucide-react";
+import { X, Plus, Trash2, Save, WifiOff, Upload } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Item } from "@/entities/Item";
 
+const LOCAL_STORAGE_KEY = 'offline_count_draft';
+
 export default function CountForm({ count, warehouses, items, onSubmit, onCancel, onWarehouseCatalogSaved }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [formData, setFormData] = useState(count || {
     warehouse_id: "",
     warehouse_name: "",
@@ -29,6 +30,53 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const [selectedItemId, setSelectedItemId] = useState("");
   const [savingCatalog, setSavingCatalog] = useState(false);
   const [filteredAvailableItems, setFilteredAvailableItems] = useState([]);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Check for existing draft on load
+  useEffect(() => {
+    const draft = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (draft) {
+      setHasDraft(true);
+    }
+  }, []);
+
+  const saveToLocalStorage = () => {
+    const dataToSave = {
+      ...formData,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+    setHasDraft(true);
+    alert(language === 'he' ? '✓ הנתונים נשמרו מקומית בהצלחה!' : '✓ Data saved locally!');
+  };
+
+  const loadFromLocalStorage = () => {
+    const draft = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (draft) {
+      const parsed = JSON.parse(draft);
+      const { savedAt, ...draftData } = parsed;
+      setFormData(draftData);
+      alert(language === 'he' ? `✓ נטען טיוטה מ-${new Date(savedAt).toLocaleString('he-IL')}` : `✓ Loaded draft from ${new Date(savedAt).toLocaleString()}`);
+    }
+  };
+
+  const clearLocalStorage = () => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    setHasDraft(false);
+  };
 
   // Recalculate total whenever items change
   useEffect(() => {
@@ -199,6 +247,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Clear local storage after successful submit
+    clearLocalStorage();
     onSubmit(formData);
   };
 
@@ -214,9 +264,17 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
           <CardTitle className="text-xl font-bold">
             {count ? t('edit_count') : t('new_count')}
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={onCancel}>
-            <X className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {isOffline && (
+              <span className="flex items-center gap-1 text-orange-600 text-sm font-medium animate-pulse">
+                <WifiOff className="w-4 h-4" />
+                {language === 'he' ? 'אופליין' : 'Offline'}
+              </span>
+            )}
+            <Button variant="ghost" size="icon" onClick={onCancel}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -450,11 +508,77 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
               />
             </div>
 
+            {/* Offline save banner */}
+            {(isOffline || hasDraft) && (
+              <div className={`${isOffline ? 'bg-orange-50 border-orange-300' : 'bg-green-50 border-green-300'} border-2 rounded-lg p-4 mb-4`}>
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    {isOffline ? (
+                      <>
+                        <WifiOff className="w-5 h-5 text-orange-600" />
+                        <div>
+                          <p className="font-semibold text-orange-800">
+                            {language === 'he' ? 'אין חיבור לאינטרנט' : 'No Internet Connection'}
+                          </p>
+                          <p className="text-sm text-orange-700">
+                            {language === 'he' ? 'שמור את הספירה מקומית עד שהחיבור יחזור' : 'Save your count locally until connection is restored'}
+                          </p>
+                        </div>
+                      </>
+                    ) : hasDraft && (
+                      <>
+                        <Save className="w-5 h-5 text-green-600" />
+                        <div>
+                          <p className="font-semibold text-green-800">
+                            {language === 'he' ? 'יש טיוטה שמורה' : 'Draft Available'}
+                          </p>
+                          <p className="text-sm text-green-700">
+                            {language === 'he' ? 'ניתן לטעון את הטיוטה או למחוק אותה' : 'You can load the draft or delete it'}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    {hasDraft && !isOffline && (
+                      <>
+                        <Button
+                          type="button"
+                          onClick={loadFromLocalStorage}
+                          className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none"
+                        >
+                          <Upload className="w-4 h-4 mr-1" />
+                          {language === 'he' ? 'טען טיוטה' : 'Load Draft'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={clearLocalStorage}
+                          className="border-red-300 text-red-600 hover:bg-red-50 flex-1 md:flex-none"
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          {language === 'he' ? 'מחק' : 'Delete'}
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      type="button"
+                      onClick={saveToLocalStorage}
+                      className={`${isOffline ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600 hover:bg-gray-700'} flex-1 md:flex-none`}
+                    >
+                      <Save className="w-4 h-4 mr-1" />
+                      {language === 'he' ? 'שמור מקומית' : 'Save Locally'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col md:flex-row gap-3 justify-end">
               <Button type="button" variant="outline" onClick={onCancel} className="w-full md:w-auto">
                 {t('cancel')}
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto" disabled={isOffline}>
                 {count ? t('update_count') : t('save_count')}
               </Button>
             </div>
