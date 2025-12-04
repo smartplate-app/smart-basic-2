@@ -178,9 +178,16 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                     setSchedule(fetchedSchedule);
                     // Convert stored weekly sales back to monthly (multiply by 4.2)
                     setMonthlyPredictedSales((fetchedSchedule.predicted_weekly_sales || 0) * 4.2);
+                    // Load saved position order if exists
+                    if (fetchedSchedule.position_order && fetchedSchedule.position_order.length > 0) {
+                      setPositionOrder(fetchedSchedule.position_order);
+                    } else {
+                      setPositionOrder(positions.map(p => p.id));
+                    }
                   } else {
                     setSchedule(null);
                     setMonthlyPredictedSales(0);
+                    setPositionOrder(positions.map(p => p.id));
                     loadDefaultTemplate();
                   }
       } catch (error) {
