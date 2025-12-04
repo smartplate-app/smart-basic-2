@@ -116,6 +116,24 @@ export default function ItemEditModal({ item, isOpen, onClose, onSave }) {
             </div>
           </div>
 
+          <div className="space-y-2 bg-orange-50 border border-orange-200 rounded-lg p-3">
+            <Label htmlFor="minimum_stock" className="text-orange-800 font-semibold">
+              {t('minimum_stock') || 'מלאי מינימום'} 📦
+            </Label>
+            <Input
+              id="minimum_stock"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.minimum_stock || 0}
+              onChange={(e) => handleChange('minimum_stock', parseFloat(e.target.value) || 0)}
+              placeholder="0"
+            />
+            <p className="text-xs text-orange-600">
+              {t('minimum_stock_help') || 'השאר 0 אם לא רלוונטי. כשמוגדר - בהזמנה תקבל הצעה חכמה כמה להזמין'}
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="description">{t('description')}</Label>
             <Input
