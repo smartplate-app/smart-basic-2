@@ -44,6 +44,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [showDoubleShiftWarning, setShowDoubleShiftWarning] = useState(false);
   const [pendingShiftSave, setPendingShiftSave] = useState(null);
   const [laborGoals, setLaborGoals] = useState({ shiftWorkersGoal: 0, managementSalary: 0, laborGoalPercent: 25 });
+  const [positionOrder, setPositionOrder] = useState([]);
 
   const days = [
     { key: 'monday', label: t('monday') },
