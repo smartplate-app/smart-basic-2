@@ -876,7 +876,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const handleDragEnd = (result) => {
-    const { source, destination, draggableId } = result;
+    const { source, destination, draggableId, type } = result;
 
     // Dropped outside a valid droppable
     if (!destination) return;
@@ -884,6 +884,17 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     // Dropped in the same place
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
+    // Handle position row reordering
+    if (type === 'POSITION') {
+      const newOrder = Array.from(positionOrder);
+      const [movedPositionId] = newOrder.splice(source.index, 1);
+      newOrder.splice(destination.index, 0, movedPositionId);
+      setPositionOrder(newOrder);
+      toast.success(language === 'he' ? 'סדר התפקידים עודכן' : 'Position order updated');
+      return;
+    }
+
+    // Handle shift reordering (existing logic)
     // Parse the droppable IDs to get day and position
     const [sourceDay, sourcePositionId] = source.droppableId.split('|');
     const [destDay, destPositionId] = destination.droppableId.split('|');
