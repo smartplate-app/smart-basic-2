@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,8 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     unit: "unit",
     units_per_package: 1,
     price: 0,
-    discount: 0
+    discount: 0,
+    minimum_stock: 0
   });
 
   const [showWarehouseForm, setShowWarehouseForm] = useState(false);
@@ -106,7 +106,8 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
       warehouse_name: selectedWarehouse?.name || "",
       units_per_package: currentItem.units_per_package || 1,
       price: currentItem.price || 0,
-      discount: currentItem.discount || 0
+      discount: currentItem.discount || 0,
+      minimum_stock: currentItem.minimum_stock || 0
     };
     
     onSubmit(completeData);
@@ -282,17 +283,35 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="discount">{t('discount')} (%)</Label>
-          <Input
-            id="discount"
-            type="number"
-            value={currentItem.discount || ''}
-            onChange={(e) => setCurrentItem({...currentItem, discount: parseFloat(e.target.value) || 0})}
-            min="0"
-            max="100"
-            step="0.1"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="discount">{t('discount')} (%)</Label>
+            <Input
+              id="discount"
+              type="number"
+              value={currentItem.discount || ''}
+              onChange={(e) => setCurrentItem({...currentItem, discount: parseFloat(e.target.value) || 0})}
+              min="0"
+              max="100"
+              step="0.1"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="minimum_stock">{t('minimum_stock') || 'מלאי מינימום'}</Label>
+            <Input
+              id="minimum_stock"
+              type="number"
+              value={currentItem.minimum_stock || ''}
+              onChange={(e) => setCurrentItem({...currentItem, minimum_stock: parseFloat(e.target.value) || 0})}
+              min="0"
+              step="0.01"
+              placeholder="0"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {t('minimum_stock_help') || 'כמות מינימלית שחייבת להיות במלאי - תעזור להזמנות חכמות'}
+            </p>
+          </div>
         </div>
 
         <div className="flex gap-3 justify-end">

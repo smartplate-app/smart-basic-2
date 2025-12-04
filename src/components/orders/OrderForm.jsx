@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader, X } from "lucide-react";
+import { Loader, X, AlertCircle, Check, Package } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../LanguageProvider";
+import { Badge } from "@/components/ui/badge";
 
 export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
   const { t } = useLanguage();
@@ -27,6 +28,8 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
   const [availableItems, setAvailableItems] = React.useState([]);
   const [loadingItems, setLoadingItems] = React.useState(false);
   const [itemQuantities, setItemQuantities] = React.useState({});
+  const [currentStock, setCurrentStock] = React.useState({}); // Track current stock per item
+  const { language } = useLanguage();
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -110,6 +113,40 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
         items: []
       });
       setItemQuantities({});
+      setCurrentStock({});
+    }
+  };
+
+  const handleCurrentStockChange = (itemId, stock) => {
+    const stockValue = parseFloat(stock) || 0;
+    setCurrentStock(prev => ({
+      ...prev,
+      [itemId]: stockValue
+    }));
+    
+    // Auto-calculate suggested order quantity
+    const item = availableItems.find(i => i.id === itemId);
+    if (item && item.minimum_stock > 0) {
+      const needed = Math.max(0, item.minimum_stock - stockValue);
+      // Only auto-fill if user hasn't manually set a quantity
+      if (!itemQuantities[itemId] || itemQuantities[itemId] === 0) {
+        setItemQuantities(prev => ({
+          ...prev,
+          [itemId]: needed
+        }));
+      }
+    }
+  };
+
+  const applySuggestedQuantity = (itemId) => {
+    const item = availableItems.find(i => i.id === itemId);
+    const stock = currentStock[itemId] || 0;
+    if (item && item.minimum_stock > 0) {
+      const needed = Math.max(0, item.minimum_stock - stock);
+      setItemQuantities(prev => ({
+        ...prev,
+        [itemId]: needed
+      }));
     }
   };
 
@@ -265,57 +302,121 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
                 {t('no_available_items')}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto border rounded-lg p-4 bg-gray-50">
+              <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto border rounded-lg p-4 bg-gray-50">
                 {availableItems.map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
+                  const stock = currentStock[item.id] || 0;
                   const itemTotal = quantity * (item.price || 0);
                   const discountedTotal = item.discount ? itemTotal * (1 - item.discount / 100) : itemTotal;
+                  const hasMinStock = item.minimum_stock > 0;
+                  const suggestedQty = hasMinStock ? Math.max(0, item.minimum_stock - stock) : 0;
+                  const isLowStock = hasMinStock && stock < item.minimum_stock;
                   
                   return (
                     <div 
                       key={item.id} 
-                      className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                      className={`p-4 rounded-lg border-2 transition-all ${
                         quantity > 0 
                           ? 'bg-purple-50 border-purple-300 shadow-sm' 
-                          : 'bg-white border-gray-200 hover:border-gray-300'
+                          : isLowStock 
+                            ? 'bg-orange-50 border-orange-200'
+                            : 'bg-white border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">{item.name}</div>
-                        <div className="text-sm text-gray-600">
-                          {item.unit}
-                          {item.price > 0 && (
-                            <span className="mr-2">
-                              {' • '}₪{item.price.toFixed(2)}
-                              {item.discount > 0 && (
-                                <span className="text-green-600"> (-{item.discount}%)</span>
-                              )}
-                            </span>
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-gray-900">{item.name}</span>
+                            {hasMinStock && (
+                              <Badge variant="outline" className="text-xs">
+                                <Package className="w-3 h-3 mr-1" />
+                                {language === 'he' ? 'מינימום:' : 'Min:'} {item.minimum_stock}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {item.unit}
+                            {item.price > 0 && (
+                              <span className="mr-2">
+                                {' • '}₪{item.price.toFixed(2)}
+                                {item.discount > 0 && (
+                                  <span className="text-green-600"> (-{item.discount}%)</span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          {item.catalog_number && (
+                            <div className="text-xs text-gray-500">
+                              {t('catalog_number')}: {item.catalog_number}
+                            </div>
                           )}
                         </div>
-                        {item.catalog_number && (
-                          <div className="text-xs text-gray-500">
-                            {t('catalog_number')}: {item.catalog_number}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          value={quantity || ''}
-                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                          className="w-24 text-center"
-                          placeholder="0"
-                          min="0"
-                          step="0.01"
-                        />
                         
-                        {quantity > 0 && item.price > 0 && (
-                          <div className="text-sm font-semibold text-purple-700 w-24 text-left">
-                            ₪{discountedTotal.toFixed(2)}
+                        <div className="flex flex-col gap-2">
+                          {/* Current Stock + Order Quantity row */}
+                          <div className="flex items-center gap-2">
+                            {hasMinStock && (
+                              <div className="flex flex-col items-center">
+                                <Label className="text-xs text-gray-500 mb-1">
+                                  {language === 'he' ? 'במלאי כרגע' : 'Current Stock'}
+                                </Label>
+                                <Input
+                                  type="number"
+                                  value={stock || ''}
+                                  onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
+                                  className={`w-20 text-center ${isLowStock ? 'border-orange-400 bg-orange-50' : ''}`}
+                                  placeholder="0"
+                                  min="0"
+                                  step="0.01"
+                                />
+                              </div>
+                            )}
+                            
+                            <div className="flex flex-col items-center">
+                              <Label className="text-xs text-gray-500 mb-1">
+                                {language === 'he' ? 'להזמנה' : 'Order Qty'}
+                              </Label>
+                              <Input
+                                type="number"
+                                value={quantity || ''}
+                                onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                                className="w-20 text-center"
+                                placeholder="0"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                            
+                            {quantity > 0 && item.price > 0 && (
+                              <div className="text-sm font-semibold text-purple-700 w-20 text-center mt-5">
+                                ₪{discountedTotal.toFixed(2)}
+                              </div>
+                            )}
                           </div>
-                        )}
+                          
+                          {/* Smart suggestion */}
+                          {hasMinStock && stock > 0 && suggestedQty > 0 && quantity !== suggestedQty && (
+                            <button
+                              type="button"
+                              onClick={() => applySuggestedQuantity(item.id)}
+                              className="flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full hover:bg-green-200 transition-colors self-end"
+                            >
+                              <Check className="w-3 h-3" />
+                              {language === 'he' 
+                                ? `הזמן ${suggestedQty} להשלמה` 
+                                : `Order ${suggestedQty} to reach minimum`}
+                            </button>
+                          )}
+                          
+                          {hasMinStock && isLowStock && stock > 0 && (
+                            <div className="flex items-center gap-1 text-xs text-orange-600 self-end">
+                              <AlertCircle className="w-3 h-3" />
+                              {language === 'he' 
+                                ? `חסרים ${suggestedQty} להגעה למינימום` 
+                                : `Need ${suggestedQty} more to reach minimum`}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
