@@ -319,19 +319,22 @@ const AppLayout = ({ children, currentPageName }) => {
           )}
 
           <header className={`bg-white border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <button 
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg hover:bg-gray-100"
-        >
-          <Menu className="w-5 h-5 text-gray-900" />
-        </button>
-        <img 
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
-          alt="Smart Plate"
-          className="h-10 object-contain"
-        />
-        <div style={{ width: '40px' }}></div>
-      </header>
+                        <button 
+                          onClick={() => setSidebarOpen(!sidebarOpen)}
+                          className="p-2 rounded-lg hover:bg-gray-100"
+                        >
+                          <Menu className="w-5 h-5 text-gray-900" />
+                        </button>
+                        <div className="flex flex-col items-center">
+                          <img 
+                            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                            alt="Smart Plate"
+                            className="h-10 object-contain"
+                          />
+                          <span className="text-sm font-bold text-gray-500 tracking-wide">BASIC</span>
+                        </div>
+                        <div style={{ width: '40px' }}></div>
+                      </header>
 
       <div className="flex">
         <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full' : '-translate-x-full')}`}>
