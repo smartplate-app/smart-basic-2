@@ -462,9 +462,12 @@ const AppLayout = ({ children, currentPageName }) => {
         </main>
 
         {/* Global Help Chat - except on Suppliers and AdminDashboard which have their own */}
-        {currentPageName !== 'Suppliers' && currentPageName !== 'AdminDashboard' && (
-          <AppHelpChat currentPage={currentPageName} />
-        )}
+                      {currentPageName !== 'Suppliers' && currentPageName !== 'AdminDashboard' && (
+                        <AppHelpChat currentPage={currentPageName} />
+                      )}
+
+                      {/* Offline notification for data-sensitive pages */}
+                      <OfflineNotification pageName={currentPageName} />
       </div>
     </div>
   );
