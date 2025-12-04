@@ -326,11 +326,23 @@ const AppLayout = ({ children, currentPageName }) => {
                           <Menu className="w-5 h-5 text-gray-900" />
                         </button>
                         <div className="flex flex-col items-center">
-                          <img 
-                            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
-                            alt="Smart Plate"
-                            className="h-10 object-contain"
-                          />
+                          <div className="flex items-center gap-2">
+                            <img 
+                              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                              alt="Smart Plate"
+                              className="h-10 object-contain"
+                            />
+                            {user?.restaurant_logo && (
+                              <>
+                                <span className="text-gray-300 text-lg">+</span>
+                                <img 
+                                  src={user.restaurant_logo} 
+                                  alt="Restaurant Logo"
+                                  className="h-10 w-10 object-contain rounded-lg"
+                                />
+                              </>
+                            )}
+                          </div>
                           <span className="text-sm font-bold text-gray-500 tracking-wide">BASIC</span>
                         </div>
                         <div style={{ width: '40px' }}></div>
@@ -340,11 +352,23 @@ const AppLayout = ({ children, currentPageName }) => {
         <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full' : '-translate-x-full')}`}>
           <div className="p-4 border-b border-gray-200 hidden md:block">
                             <div className={`flex flex-col items-center justify-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
-                              <img 
-                                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
-                                alt="Smart Plate"
-                                className="h-16 object-contain flex-shrink-0"
-                              />
+                              <div className="flex items-center gap-3">
+                                <img 
+                                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                                  alt="Smart Plate"
+                                  className="h-14 object-contain flex-shrink-0"
+                                />
+                                {user?.restaurant_logo && (
+                                  <>
+                                    <span className="text-gray-300 text-2xl">+</span>
+                                    <img 
+                                      src={user.restaurant_logo} 
+                                      alt="Restaurant Logo"
+                                      className="h-14 w-14 object-contain rounded-lg"
+                                    />
+                                  </>
+                                )}
+                              </div>
                               <span className="text-lg font-bold text-gray-500 mt-2 tracking-wide">BASIC</span>
                             </div>
                           </div>

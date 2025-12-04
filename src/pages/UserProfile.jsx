@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Save } from "lucide-react";
+import { Loader, Save, Upload, X } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function UserProfilePage() {
@@ -21,8 +22,10 @@ export default function UserProfilePage() {
     supply_receiving_contact: "",
     supply_receiving_phone: "",
     email_sender_name: "",
-    reply_to_email: ""
+    reply_to_email: "",
+    restaurant_logo: ""
   });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -42,7 +45,8 @@ export default function UserProfilePage() {
         supply_receiving_contact: currentUser.supply_receiving_contact || "",
         supply_receiving_phone: currentUser.supply_receiving_phone || "",
         email_sender_name: currentUser.email_sender_name || "",
-        reply_to_email: currentUser.reply_to_email || ""
+        reply_to_email: currentUser.reply_to_email || "",
+        restaurant_logo: currentUser.restaurant_logo || ""
       });
     } catch (error) {
       console.error("Error loading user data:", error);
@@ -64,7 +68,8 @@ export default function UserProfilePage() {
         supply_receiving_contact: formData.supply_receiving_contact,
         supply_receiving_phone: formData.supply_receiving_phone,
         email_sender_name: formData.email_sender_name,
-        reply_to_email: formData.reply_to_email
+        reply_to_email: formData.reply_to_email,
+        restaurant_logo: formData.restaurant_logo
       });
 
       alert(t('save_success') || 'Settings saved successfully!');
@@ -149,6 +154,75 @@ export default function UserProfilePage() {
                     onChange={(e) => setFormData({...formData, business_name: e.target.value})}
                     placeholder={t('business_name')}
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label>
+                    {language === 'he' ? 'לוגו המסעדה' : 'Restaurant Logo'}
+                  </Label>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {language === 'he'
+                      ? 'העלה את הלוגו של המסעדה שלך - יופיע בסיידבר ליד לוגו האפליקציה'
+                      : 'Upload your restaurant logo - it will appear in the sidebar next to the app logo'}
+                  </p>
+                  <div className="flex items-center gap-4">
+                    {formData.restaurant_logo ? (
+                      <div className="relative">
+                        <img 
+                          src={formData.restaurant_logo} 
+                          alt="Restaurant Logo" 
+                          className="h-16 w-16 object-contain rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({...formData, restaurant_logo: ""})}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="h-16 w-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">
+                        <Upload className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div>
+                      <input
+                        type="file"
+                        id="logo-upload"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          
+                          setUploadingLogo(true);
+                          try {
+                            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                            setFormData({...formData, restaurant_logo: file_url});
+                          } catch (error) {
+                            console.error("Error uploading logo:", error);
+                            alert(language === 'he' ? 'שגיאה בהעלאת הלוגו' : 'Error uploading logo');
+                          } finally {
+                            setUploadingLogo(false);
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('logo-upload').click()}
+                        disabled={uploadingLogo}
+                      >
+                        {uploadingLogo ? (
+                          <Loader className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="w-4 h-4 mr-2" />
+                        )}
+                        {language === 'he' ? 'העלה לוגו' : 'Upload Logo'}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="md:col-span-2">
