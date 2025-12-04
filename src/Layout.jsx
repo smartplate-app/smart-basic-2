@@ -336,14 +336,15 @@ const AppLayout = ({ children, currentPageName }) => {
       <div className="flex">
         <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full' : '-translate-x-full')}`}>
           <div className="p-4 border-b border-gray-200 hidden md:block">
-            <div className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
-                alt="Smart Plate"
-                className="h-16 object-contain flex-shrink-0"
-              />
-            </div>
-          </div>
+                            <div className={`flex flex-col items-center justify-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                              <img 
+                                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                                alt="Smart Plate"
+                                className="h-16 object-contain flex-shrink-0"
+                              />
+                              <span className="text-xs text-gray-400 mt-1">basic</span>
+                            </div>
+                          </div>
           
           <div className="p-4 border-b border-gray-200">
             {user && (
