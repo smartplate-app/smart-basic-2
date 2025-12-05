@@ -141,7 +141,8 @@ export default function OrderDetailsPage() {
                 console.log('[OrderDetails] Fetching order via public function:', orderId);
 
                 // Fetch order via direct fetch to backend function (truly public, no SDK/auth required)
-                const functionUrl = `${window.location.origin}/api/getPublicOrder`;
+                const appId = 'smartplatebasic';
+                const functionUrl = `https://app.base44.com/api/apps/${appId}/functions/getPublicOrder`;
                 const response = await fetch(functionUrl, {
                     method: 'POST',
                     headers: {
