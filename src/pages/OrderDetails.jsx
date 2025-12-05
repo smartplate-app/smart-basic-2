@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Building, MapPin, Calendar, ClipboardList, Book, Loader, AlertCircle, Printer, Globe } from 'lucide-react';
 
 const translations = {
