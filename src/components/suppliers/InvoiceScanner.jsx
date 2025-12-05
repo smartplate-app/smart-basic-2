@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Loader, CheckCircle, X, Scan, Edit2, RefreshCw, AlertCircle } from "lucide-react";
+import { Upload, Loader, CheckCircle, X, ImagePlus, Edit2, RefreshCw, AlertCircle } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 
 export default function InvoiceScanner({ supplier, onImportComplete }) {
@@ -26,42 +26,40 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
       
       setScanning(true);
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `חלץ קטלוג פריטים מהתמונה הזו בעברית עבור הספק: ${supplier.name}
+        prompt: `חלץ רשימת פריטים מהתמונה/צילום מסך הזו בעברית עבור הספק: ${supplier.name}
+        
+        זוהי רשימת פריטים (טבלה) עם עמודות כמו: שם פריט, יחידה, מחיר, הנחה %.
         
         חשוב מאוד - חלץ את כל הפריטים עם השדות הבאים:
-        1. שם הפריט - **אם אתה לא בטוח בשם או לא מצליח לקרוא אותו, השאר ריק ""**
-        2. מספר קטלוג (מק"ט / קוד מוצר)
-        3. סוג יחידה - אפשרויות: kg, liter, unit, case
-        4. מחיר ליחידה (מחיר / מחיר ליחידה)
-        5. **אחוז הנחה** - חשוב מאוד!
-           - חפש סימן % ליד הפריט
-           - חפש מילים כמו "הנחה", "discount", "%"
-           - אם רואה "10%" או "הנחה 10%" זה אומר discount = 10
-           - אם אין הנחה מוצג, השתמש ב-0
-        
-        טיפים לקריאת OCR בעברית:
-        - שים לב לאותיות דומות: ס vs ע, ה vs ח, כ vs ב, ר vs ד
-        - **אם אתה לא בטוח בשם, השאר אותו ריק במקום להמציא**
+        1. שם הפריט - קרא את השם מהטבלה
+        2. מספר קטלוג (מק"ט / קוד מוצר) - אם יש
+        3. סוג יחידה - המר לאחד מהאפשרויות: kg, liter, unit, case
+           - "יחידה" או "unit" = unit
+           - 'ק"ג' או "קילו" = kg
+           - "ליטר" = liter
+           - "קרטון" או "ארגז" = case
+        4. מחיר - קרא את המחיר (מספר בלבד, בלי סימן מטבע)
+        5. אחוז הנחה - קרא את אחוז ההנחה (מספר בלבד, בלי סימן %)
         
         החזר JSON תקין בלבד:
         {
           "items": [
             {
-              "name": "שם מדויק בעברית או ריק אם לא בטוח",
-              "catalog_number": "מספר קטלוג או קוד",
-              "unit": "kg או liter או unit או case",
-              "price": 0,
+              "name": "שם הפריט",
+              "catalog_number": "",
+              "unit": "unit",
+              "price": 12.00,
               "discount": 0
             }
           ]
         }
         
         ברירות מחדל אם חסר:
-        - name: "" (ריק אם לא בטוח!)
+        - name: "" (ריק אם לא ברור)
         - catalog_number: ""
         - unit: "unit"
         - price: 0
-        - discount: 0 (רק אם אין הנחה מוצגת)`,
+        - discount: 0`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -185,26 +183,26 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
     return units[unit] || unit;
   };
 
+  const { language } = useLanguage();
+  
   return (
     <Card className="mb-6">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
-          <Scan className="w-5 h-5" />
-          {t('scan_invoice_import')} - {supplier.name}
+          <ImagePlus className="w-5 h-5" />
+          {language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import Items from Image'} - {supplier.name}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
           <div className="flex items-start gap-2">
-            <RefreshCw className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <ImagePlus className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <div>
-              {t('invoice_scan_instructions') || 'העלה תמונה של קטלוג הספק. המערכת תחלץ שמות, מק"ט, מחירים והנחות.'}
+              {language === 'he' 
+                ? 'העלה צילום מסך או תמונה של רשימת פריטים (טבלה עם שם, מחיר, יחידה, הנחה). המערכת תחלץ את הפריטים אוטומטית.'
+                : 'Upload a screenshot or image of an items list (table with name, price, unit, discount). The system will extract items automatically.'}
               <p className="mt-2 font-semibold">
-                {t('rescan_updates') || '💡 סריקה חוזרת תעדכן את הפריטים הקיימים (כולל הנחות!)'}
-              </p>
-              <p className="mt-2 text-xs bg-yellow-50 border border-yellow-200 rounded p-2">
-                <AlertCircle className="w-3 h-3 inline mr-1" />
-                אם המערכת לא מבינה שם פריט, היא תשאיר אותו ריק ותעלה את שאר המידע. תוכל לערוך ולהשלים.
+                💡 {language === 'he' ? 'ייבוא חוזר יעדכן פריטים קיימים לפי שם' : 'Re-importing will update existing items by name'}
               </p>
             </div>
           </div>
@@ -227,14 +225,20 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
               {uploading || scanning ? (
                 <>
                   <Loader className="w-12 h-12 text-gray-400 animate-spin" />
-                  <p className="text-gray-600">{t('scanning_invoice')}</p>
+                  <p className="text-gray-600">
+                    {language === 'he' ? 'מעבד תמונה...' : 'Processing image...'}
+                  </p>
                 </>
               ) : (
                 <>
-                  <Upload className="w-12 h-12 text-gray-400" />
+                  <ImagePlus className="w-12 h-12 text-gray-400" />
                   <div>
-                    <p className="font-medium text-gray-700">{t('click_to_upload_invoice')}</p>
-                    <p className="text-sm text-gray-500 mt-1">{t('supports_images_pdf')}</p>
+                    <p className="font-medium text-gray-700">
+                      {language === 'he' ? 'לחץ להעלאת צילום מסך או תמונה' : 'Click to upload screenshot or image'}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {language === 'he' ? 'תמונות של רשימות פריטים / טבלאות' : 'Images of item lists / tables'}
+                    </p>
                   </div>
                 </>
               )}
