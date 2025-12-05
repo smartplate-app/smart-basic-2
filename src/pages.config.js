@@ -17,6 +17,7 @@ import SalesPrediction from './pages/SalesPrediction';
 import ChainManagement from './pages/ChainManagement';
 import StoreUsers from './pages/StoreUsers';
 import TestInvites from './pages/TestInvites';
+import PublicOrder from './pages/PublicOrder';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "ChainManagement": ChainManagement,
     "StoreUsers": StoreUsers,
     "TestInvites": TestInvites,
+    "PublicOrder": PublicOrder,
 }
 
 export const pagesConfig = {

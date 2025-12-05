@@ -12,19 +12,22 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   
   if (!isOpen || !order) return null;
 
-  // Encode full order data in URL for true public access (no login required)
-  const orderData = encodeURIComponent(JSON.stringify({
-    order_number: order.order_number,
-    supplier_name: order.supplier_name,
-    restaurant_name: order.restaurant_name,
-    restaurant_address: order.restaurant_address,
-    delivery_date: order.delivery_date,
-    status: order.status,
-    items: order.items,
-    notes: order.notes,
-    created_date: order.created_date
-  }));
-  const orderUrl = `${window.location.origin}${createPageUrl(`OrderDetails?data=${orderData}`)}`;
+  // Encode minimal order data in URL for true public access (no login required)
+  const minimalOrder = {
+    n: order.order_number,
+    s: order.supplier_name,
+    r: order.restaurant_name,
+    a: order.restaurant_address,
+    d: order.delivery_date,
+    i: (order.items || []).map(item => ({
+      n: item.item_name,
+      q: item.quantity,
+      u: item.unit
+    })),
+    t: order.notes
+  };
+  const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
+  const orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
 
   const handleCopyLink = async () => {
     try {
