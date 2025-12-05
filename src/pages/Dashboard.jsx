@@ -427,24 +427,47 @@ export default function DashboardPage() {
 
             {/* Sales Input */}
             <Card>
-              <CardHeader>
+              <CardHeader className={`flex flex-row items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
                   {language === 'he' ? 'מכירות בפועל' : 'Actual Sales'}
                 </CardTitle>
+                {!editMode && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setEditMode(true)}
+                    className="flex items-center gap-1"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    {language === 'he' ? 'ערוך' : 'Edit'}
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <Label className={isRTL ? 'text-right block' : 'text-left block'}>
                     {language === 'he' ? 'סה"כ מכירות (כולל מע"מ)' : 'Total Sales (incl. VAT)'}
                   </Label>
-                  <Input
-                    type="number"
-                    value={actualSales}
-                    onChange={(e) => setActualSales(parseFloat(e.target.value) || 0)}
-                    placeholder="0"
-                    className={`max-w-xs text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
-                    disabled={!editMode}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={actualSales}
+                      onChange={(e) => setActualSales(parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className={`max-w-xs text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
+                      disabled={!editMode}
+                    />
+                    {editMode && (
+                      <Button 
+                        onClick={handleSave} 
+                        disabled={saving}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      </Button>
+                    )}
+                  </div>
                   <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {language === 'he' ? 'ללא מע"מ:' : 'Excl. VAT:'} {formatCurrency(actualSalesExVAT)}
                   </p>
