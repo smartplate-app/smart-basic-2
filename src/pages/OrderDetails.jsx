@@ -130,8 +130,30 @@ export default function OrderDetailsPage() {
         const fetchOrder = async () => {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
-                const orderId = urlParams.get('id');
 
+                // Try to get order data directly from URL (no server needed!)
+                const orderData = urlParams.get('data');
+
+                if (orderData) {
+                    // Order data is embedded in URL - fully public, no login needed
+                    try {
+                        const parsedOrder = JSON.parse(decodeURIComponent(orderData));
+                        console.log('[OrderDetails] Order loaded from URL data');
+                        setOrder(parsedOrder);
+                        document.body.style.margin = '0';
+                        document.body.style.padding = '0';
+                        setLoading(false);
+                        return;
+                    } catch (parseError) {
+                        console.error('[OrderDetails] Error parsing order data:', parseError);
+                        setErrorType('orderNotAccessible');
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                // Fallback: try old method with order ID
+                const orderId = urlParams.get('id');
                 if (!orderId) {
                     setErrorType('orderNotFound');
                     setLoading(false);
@@ -140,7 +162,6 @@ export default function OrderDetailsPage() {
 
                 console.log('[OrderDetails] Fetching order via public function:', orderId);
 
-                // Fetch order via direct fetch to backend function (truly public, no SDK/auth required)
                 const appId = 'smartplatebasic';
                 const functionUrl = `https://app.base44.com/api/apps/${appId}/functions/getPublicOrder`;
                 const response = await fetch(functionUrl, {
@@ -150,9 +171,9 @@ export default function OrderDetailsPage() {
                     },
                     body: JSON.stringify({ orderId })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (!response.ok || !data.order) {
                     setErrorType('orderNotAccessible');
                     setLoading(false);
@@ -163,7 +184,7 @@ export default function OrderDetailsPage() {
                 setOrder(data.order);
                 document.body.style.margin = '0';
                 document.body.style.padding = '0';
-                
+
             } catch (err) {
                 console.error("[OrderDetails] Error fetching order:", err);
                 setErrorType('orderNotAccessible');
