@@ -129,7 +129,7 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
                   size="icon" 
                   onClick={() => setShowScanner(true)}
                   className="text-gray-400 hover:text-green-600"
-                  title={t('scan_invoice_import')}
+                  title={language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import items from image'}
                 >
                   <Camera className="w-4 h-4" />
                 </Button>
@@ -196,7 +196,7 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
       <Dialog open={showScanner} onOpenChange={setShowScanner}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t('scan_invoice_import')}</DialogTitle>
+            <DialogTitle>{language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import Items from Image'}</DialogTitle>
           </DialogHeader>
           <InvoiceScanner 
             supplier={supplier}
