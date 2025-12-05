@@ -141,17 +141,26 @@ export default function OrderDetailsPage() {
 
                 console.log('[OrderDetails] Fetching order via public function:', orderId);
 
-                // Fetch order via backend function (public access, no login required)
-                const response = await base44.functions.invoke('getPublicOrder', { orderId });
+                // Fetch order via direct fetch to backend function (truly public, no SDK/auth required)
+                const functionUrl = `${window.location.origin}/api/getPublicOrder`;
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ orderId })
+                });
                 
-                if (!response.data || !response.data.order) {
+                const data = await response.json();
+                
+                if (!response.ok || !data.order) {
                     setErrorType('orderNotAccessible');
                     setLoading(false);
                     return;
                 }
 
                 console.log('[OrderDetails] Order loaded successfully');
-                setOrder(response.data.order);
+                setOrder(data.order);
                 document.body.style.margin = '0';
                 document.body.style.padding = '0';
                 
