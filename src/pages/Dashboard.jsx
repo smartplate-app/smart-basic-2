@@ -470,6 +470,16 @@ export default function DashboardPage() {
                   <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {language === 'he' ? 'מחושב מלו"ז משמרות עד היום' : 'Calculated from shift schedules to date'}
                   </div>
+                  {hasScheduleData && predictedLaborToDate > 0 && (
+                    <div className={`mt-3 pt-3 border-t border-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <div className="text-gray-400 text-xs">
+                        {language === 'he' ? 'עלות צפויה (מלו"ז אחרון):' : 'Predicted (from schedule):'}
+                      </div>
+                      <div className="text-xl font-bold text-blue-300">
+                        {formatCurrency(predictedLaborToDate)}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
