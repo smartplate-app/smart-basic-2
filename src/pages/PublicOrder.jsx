@@ -17,7 +17,23 @@ export default function PublicOrderPage() {
             
             const decoded = decodeURIComponent(orderData);
             const parsed = JSON.parse(decoded);
-            setOrder(parsed);
+            
+            // Convert minified data back to full format
+            const fullOrder = {
+                order_number: parsed.n,
+                supplier_name: parsed.s,
+                restaurant_name: parsed.r,
+                restaurant_address: parsed.a,
+                delivery_date: parsed.d,
+                items: (parsed.i || []).map(item => ({
+                    item_name: item.n,
+                    quantity: item.q,
+                    unit: item.u
+                })),
+                notes: parsed.t
+            };
+            
+            setOrder(fullOrder);
         } catch (err) {
             console.error('Parse error:', err);
             setError('Invalid order data');
