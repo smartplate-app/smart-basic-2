@@ -1,17 +1,28 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { X, Smartphone, Monitor } from 'lucide-react';
+import { X, Smartphone, Monitor, Copy, Check } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 
 export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [viewMode, setViewMode] = useState('mobile');
+  const [copied, setCopied] = useState(false);
   
   if (!isOpen || !order) return null;
 
   const orderUrl = `${window.location.origin}${createPageUrl(`OrderDetails?id=${order.id}`)}`;
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(orderUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -67,9 +78,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           <Button
             onClick={onClose}
             variant="outline"
-            className="flex-1"
           >
             {t('close')}
+          </Button>
+          <Button
+            onClick={handleCopyLink}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+            {copied 
+              ? (language === 'he' ? 'הועתק!' : 'Copied!') 
+              : (language === 'he' ? 'העתק קישור' : 'Copy Link')}
           </Button>
           <Button
             onClick={onSend}
