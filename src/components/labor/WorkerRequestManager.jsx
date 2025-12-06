@@ -10,6 +10,13 @@ import { Loader, Plus, Trash2, Sparkles, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import moment from 'moment';
 
+// Set week to start on Sunday (Israel standard)
+moment.updateLocale('en', {
+  week: {
+    dow: 0, // Sunday is the first day of the week
+  }
+});
+
 export default function WorkerRequestManager({ weekStartDate, workers, positions }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
