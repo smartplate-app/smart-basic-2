@@ -102,6 +102,109 @@ export default function WorkerRequestManager({ weekStartDate, workers, positions
     }
   };
 
+  const handleProcessExistingRequests = async () => {
+    if (requests.length === 0) {
+      alert(language === 'he' ? 'אין בקשות לעיבוד' : 'No requests to process');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      language === 'he' 
+        ? `להוסיף ${requests.length} בקשות ללוח השבועי?`
+        : `Add ${requests.length} requests to weekly schedule?`
+    );
+    
+    if (!confirmed) return;
+
+    setAiProcessing(true);
+    try {
+      const user = await base44.auth.me();
+      const workingEmail = user.acting_as_store_email || user.email;
+      const existingSchedules = await base44.entities.WeeklySchedule.filter({
+        created_by: workingEmail,
+        week_start_date: weekStartDate
+      });
+      
+      let schedule = existingSchedules[0];
+      const weekMoment = moment(weekStartDate);
+      const weekNumber = weekMoment.isoWeek().toString();
+      const year = weekMoment.year().toString();
+      
+      const newShifts = [];
+      for (const req of requests) {
+        const worker = workers.find(w => w.id === req.worker_id || w.full_name === req.worker_name);
+        const position = positions.find(p => p.id === req.job_position_id || p.name === req.job_position_name);
+        
+        const hours = req.hours || parseFloat(calculateHours(req.start_time, req.end_time));
+        const shiftDate = moment(weekStartDate).day(req.day_of_week === 'sunday' ? 0 : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(req.day_of_week) + 1).format('YYYY-MM-DD');
+        
+        let payment = 0;
+        if (worker) {
+          if (worker.payment_type === 'hourly') {
+            payment = hours * worker.payment_amount;
+          } else if (worker.payment_type === 'daily') {
+            payment = worker.payment_amount;
+          } else {
+            payment = (worker.payment_amount / 30) * (hours / 8);
+          }
+        }
+        
+        newShifts.push({
+          day: req.day_of_week,
+          date: shiftDate,
+          job_position_id: req.job_position_id || '',
+          job_position: req.job_position_name,
+          department: position?.section || 'other',
+          position_type: position?.name || req.job_position_name,
+          worker_id: req.worker_id || '',
+          worker_name: req.worker_name,
+          start_time: req.start_time,
+          end_time: req.end_time,
+          hours_worked: hours,
+          overtime_rate: 'regular',
+          base_payment: payment,
+          payment_for_shift: payment,
+          notes: req.notes
+        });
+      }
+      
+      if (schedule) {
+        const updatedShifts = [...(schedule.shifts || []), ...newShifts];
+        const totalHours = updatedShifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
+        const totalCost = updatedShifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
+        
+        await base44.entities.WeeklySchedule.update(schedule.id, {
+          shifts: updatedShifts,
+          total_hours: totalHours,
+          total_cost: totalCost
+        });
+      } else {
+        const totalHours = newShifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
+        const totalCost = newShifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
+        
+        await base44.entities.WeeklySchedule.create({
+          week_start_date: weekStartDate,
+          week_number: weekNumber,
+          year: year,
+          shifts: newShifts,
+          total_hours: totalHours,
+          total_cost: totalCost,
+          status: 'draft'
+        });
+      }
+
+      alert(language === 'he' 
+        ? `✅ נוספו ${newShifts.length} משמרות ללוח!`
+        : `✅ Added ${newShifts.length} shifts to schedule!`
+      );
+    } catch (error) {
+      console.error('Error processing requests:', error);
+      alert(language === 'he' ? 'שגיאה בעיבוד הבקשות' : 'Error processing requests');
+    } finally {
+      setAiProcessing(false);
+    }
+  };
+
   const handleAIRequest = async () => {
     if (!aiRequest.trim()) return;
     
