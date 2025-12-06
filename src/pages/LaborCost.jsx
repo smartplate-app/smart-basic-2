@@ -7,6 +7,13 @@ import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import moment from "moment";
 
+// Set week to start on Sunday (Israel standard)
+moment.updateLocale('en', {
+  week: {
+    dow: 0, // Sunday is the first day of the week
+  }
+});
+
 import JobPositionsList from "../components/labor/JobPositionsList";
 import WorkersList from "../components/labor/WorkersList";
 import WeeklyScheduleView from "../components/labor/WeeklyScheduleView";
