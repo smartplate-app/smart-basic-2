@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader, Plus, Trash2, Sparkles } from 'lucide-react';
+import { Loader, Plus, Trash2, Sparkles, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import moment from 'moment';
 
@@ -410,6 +410,16 @@ Example output:
             <Plus className="w-4 h-4 mr-2" />
             {language === 'he' ? 'הוסף ידנית' : 'Add Manual'}
           </Button>
+          {requests.length > 0 && (
+            <Button
+              onClick={handleProcessExistingRequests}
+              disabled={aiProcessing}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {aiProcessing ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <ArrowRight className="w-4 h-4 mr-2" />}
+              {language === 'he' ? 'העבר ללוח' : 'Move to Schedule'}
+            </Button>
+          )}
         </div>
       </div>
 
