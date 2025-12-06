@@ -154,30 +154,94 @@ Example output:
 
       const parsedRequests = response.requests || [];
       
-      // Create all requests
+      // Load or create WeeklySchedule for this week
+      const user = await base44.auth.me();
+      const workingEmail = user.acting_as_store_email || user.email;
+      const existingSchedules = await base44.entities.WeeklySchedule.filter({
+        created_by: workingEmail,
+        week_start_date: weekStartDate
+      });
+      
+      let schedule = existingSchedules[0];
+      const weekMoment = moment(weekStartDate);
+      const weekNumber = weekMoment.isoWeek().toString();
+      const year = weekMoment.year().toString();
+      
+      // Create new shifts from AI requests
+      const newShifts = [];
       for (const req of parsedRequests) {
         const worker = workers.find(w => w.full_name.toLowerCase() === req.worker_name.toLowerCase());
         const position = positions.find(p => p.name.toLowerCase() === req.position_name.toLowerCase());
         
-        const hours = calculateHours(req.start_time, req.end_time);
+        const hours = parseFloat(calculateHours(req.start_time, req.end_time));
+        const shiftDate = moment(weekStartDate).day(req.day === 'sunday' ? 0 : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(req.day) + 1).format('YYYY-MM-DD');
         
-        await base44.entities.WorkerRequest.create({
+        // Calculate payment
+        let payment = 0;
+        if (worker) {
+          if (worker.payment_type === 'hourly') {
+            payment = hours * worker.payment_amount;
+          } else if (worker.payment_type === 'daily') {
+            payment = worker.payment_amount;
+          } else {
+            payment = (worker.payment_amount / 30) * (hours / 8);
+          }
+        }
+        
+        newShifts.push({
+          day: req.day.toLowerCase(),
+          date: shiftDate,
+          job_position_id: position?.id || '',
+          job_position: req.position_name,
+          department: position?.section || 'other',
+          position_type: position?.name || req.position_name,
           worker_id: worker?.id || '',
           worker_name: req.worker_name,
-          job_position_id: position?.id || '',
-          job_position_name: req.position_name,
-          day_of_week: req.day.toLowerCase(),
           start_time: req.start_time,
           end_time: req.end_time,
-          hours: parseFloat(hours),
-          week_start_date: weekStartDate,
+          hours_worked: hours,
+          overtime_rate: 'regular',
+          base_payment: payment,
+          payment_for_shift: payment,
           notes: aiRequest
+        });
+      }
+      
+      if (schedule) {
+        // Add to existing schedule
+        const updatedShifts = [...(schedule.shifts || []), ...newShifts];
+        const totalHours = updatedShifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
+        const totalCost = updatedShifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
+        
+        await base44.entities.WeeklySchedule.update(schedule.id, {
+          shifts: updatedShifts,
+          total_hours: totalHours,
+          total_cost: totalCost
+        });
+      } else {
+        // Create new schedule
+        const totalHours = newShifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
+        const totalCost = newShifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
+        
+        await base44.entities.WeeklySchedule.create({
+          week_start_date: weekStartDate,
+          week_number: weekNumber,
+          year: year,
+          shifts: newShifts,
+          total_hours: totalHours,
+          total_cost: totalCost,
+          status: 'draft'
         });
       }
 
       setAiRequest('');
       setShowAIForm(false);
       await loadRequests();
+      
+      alert(language === 'he' 
+        ? `✅ נוספו ${newShifts.length} משמרות ללוח השבועי!`
+        : `✅ Added ${newShifts.length} shifts to weekly schedule!`
+      );
     } catch (error) {
       console.error('Error processing AI request:', error);
       alert(language === 'he' ? 'שגיאה בעיבוד הבקשה' : 'Error processing request');
