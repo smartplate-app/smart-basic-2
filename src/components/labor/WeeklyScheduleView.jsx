@@ -171,8 +171,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           });
         }
 
-        const weekNumber = moment(weekStartDate).isoWeek();
-        const year = moment(weekStartDate).isoWeekYear();
+        const weekNumber = moment(weekStartDate).week();
+        const year = moment(weekStartDate).year();
         
         const schedulesRes = await base44.entities.WeeklySchedule.filter({ 
           week_number: String(weekNumber), // Ensure week_number is string
@@ -504,8 +504,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const handleSaveSchedule = async () => {
     setSaving(true);
     try {
-      const weekNumber = moment(weekStartDate).isoWeek();
-      const year = moment(weekStartDate).isoWeekYear();
+      const weekNumber = moment(weekStartDate).week();
+      const year = moment(weekStartDate).year();
       const { totalHours, totalCostWithEmployer, laborPercentage } = calculateTotals();
       
       const scheduleData = {
@@ -788,8 +788,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     }
 
     try {
-      const weekNumber = moment(weekStartDate).isoWeek();
-      const year = moment(weekStartDate).isoWeekYear();
+      const weekNumber = moment(weekStartDate).week();
+      const year = moment(weekStartDate).year();
 
       console.log('[WeeklyScheduleView] Clearing schedule for week', weekNumber, year);
       console.log('[WeeklyScheduleView] Week start date:', weekStartDate);
