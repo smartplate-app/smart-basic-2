@@ -154,16 +154,19 @@ Example output:
 
       const parsedRequests = response.requests || [];
       
-      // Load or create WeeklySchedule for this week
+      // Use NEXT WEEK for AI requests
+      const nextWeekStartDate = moment(weekStartDate).add(1, 'week').format('YYYY-MM-DD');
+      
+      // Load or create WeeklySchedule for next week
       const user = await base44.auth.me();
       const workingEmail = user.acting_as_store_email || user.email;
       const existingSchedules = await base44.entities.WeeklySchedule.filter({
         created_by: workingEmail,
-        week_start_date: weekStartDate
+        week_start_date: nextWeekStartDate
       });
       
       let schedule = existingSchedules[0];
-      const weekMoment = moment(weekStartDate);
+      const weekMoment = moment(nextWeekStartDate);
       const weekNumber = weekMoment.isoWeek().toString();
       const year = weekMoment.year().toString();
       
@@ -174,7 +177,7 @@ Example output:
         const position = positions.find(p => p.name.toLowerCase() === req.position_name.toLowerCase());
         
         const hours = parseFloat(calculateHours(req.start_time, req.end_time));
-        const shiftDate = moment(weekStartDate).day(req.day === 'sunday' ? 0 : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(req.day) + 1).format('YYYY-MM-DD');
+        const shiftDate = moment(nextWeekStartDate).day(req.day === 'sunday' ? 0 : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(req.day) + 1).format('YYYY-MM-DD');
         
         // Calculate payment
         let payment = 0;
@@ -224,7 +227,7 @@ Example output:
         const totalCost = newShifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
         
         await base44.entities.WeeklySchedule.create({
-          week_start_date: weekStartDate,
+          week_start_date: nextWeekStartDate,
           week_number: weekNumber,
           year: year,
           shifts: newShifts,
@@ -238,9 +241,10 @@ Example output:
       setShowAIForm(false);
       await loadRequests();
       
+      const nextWeekDisplay = moment(nextWeekStartDate).format('DD/MM');
       alert(language === 'he' 
-        ? `✅ נוספו ${newShifts.length} משמרות ללוח השבועי!`
-        : `✅ Added ${newShifts.length} shifts to weekly schedule!`
+        ? `✅ נוספו ${newShifts.length} משמרות ללוח השבוע הבא (${nextWeekDisplay})!`
+        : `✅ Added ${newShifts.length} shifts to next week's schedule (${nextWeekDisplay})!`
       );
     } catch (error) {
       console.error('Error processing AI request:', error);
