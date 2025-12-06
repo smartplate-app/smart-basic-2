@@ -11,6 +11,7 @@ import JobPositionsList from "../components/labor/JobPositionsList";
 import WorkersList from "../components/labor/WorkersList";
 import WeeklyScheduleView from "../components/labor/WeeklyScheduleView";
 import LaborGoalsTab from "../components/labor/LaborGoalsTab";
+import WorkerRequestManager from "../components/labor/WorkerRequestManager";
 
 export default function LaborCostPage() {
   const [positions, setPositions] = useState([]);
@@ -165,9 +166,10 @@ export default function LaborCostPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-2xl">
             <TabsTrigger value="schedule">{t('schedule')}</TabsTrigger>
-            <TabsTrigger value="goals">{language === 'he' ? 'יעד עבודה' : 'Labor Goals'}</TabsTrigger>
+            <TabsTrigger value="requests">{language === 'he' ? 'בקשות' : 'Requests'}</TabsTrigger>
+            <TabsTrigger value="goals">{language === 'he' ? 'יעדים' : 'Goals'}</TabsTrigger>
             <TabsTrigger value="positions">{t('positions')}</TabsTrigger>
             <TabsTrigger value="workers">{t('workers')}</TabsTrigger>
           </TabsList>
@@ -220,6 +222,14 @@ export default function LaborCostPage() {
               positions={positions}
               onScheduleSaved={loadData}
               loading={loading}
+            />
+          </TabsContent>
+
+          <TabsContent value="requests" className="space-y-6">
+            <WorkerRequestManager
+              weekStartDate={currentWeekStart}
+              workers={workers}
+              positions={positions}
             />
           </TabsContent>
 
