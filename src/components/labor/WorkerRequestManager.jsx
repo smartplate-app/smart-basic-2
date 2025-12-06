@@ -14,6 +14,9 @@ export default function WorkerRequestManager({ weekStartDate, workers, positions
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showAIForm, setShowAIForm] = useState(false);
+  const [aiRequest, setAiRequest] = useState('');
+  const [aiProcessing, setAiProcessing] = useState(false);
   const [formData, setFormData] = useState({
     worker_id: '',
     worker_name: '',
@@ -99,6 +102,90 @@ export default function WorkerRequestManager({ weekStartDate, workers, positions
     }
   };
 
+  const handleAIRequest = async () => {
+    if (!aiRequest.trim()) return;
+    
+    setAiProcessing(true);
+    try {
+      const workerNames = workers.map(w => w.full_name).join(', ');
+      const positionNames = positions.map(p => p.name).join(', ');
+      
+      const prompt = `Parse this worker schedule request and extract the information.
+
+Available workers: ${workerNames}
+Available positions: ${positionNames}
+
+Request: "${aiRequest}"
+
+Return a JSON array of shift requests. Each request should have:
+- worker_name: exact name from available workers (or as written if new)
+- position_name: exact name from available positions
+- day: one of [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+- start_time: HH:mm format (24h)
+- end_time: HH:mm format (24h)
+
+Example output:
+[
+  {"worker_name": "David", "position_name": "Waiter", "day": "monday", "start_time": "09:00", "end_time": "17:00"},
+  {"worker_name": "David", "position_name": "Waiter", "day": "tuesday", "start_time": "09:00", "end_time": "17:00"}
+]`;
+
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            requests: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  worker_name: { type: "string" },
+                  position_name: { type: "string" },
+                  day: { type: "string" },
+                  start_time: { type: "string" },
+                  end_time: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const parsedRequests = response.requests || [];
+      
+      // Create all requests
+      for (const req of parsedRequests) {
+        const worker = workers.find(w => w.full_name.toLowerCase() === req.worker_name.toLowerCase());
+        const position = positions.find(p => p.name.toLowerCase() === req.position_name.toLowerCase());
+        
+        const hours = calculateHours(req.start_time, req.end_time);
+        
+        await base44.entities.WorkerRequest.create({
+          worker_id: worker?.id || '',
+          worker_name: req.worker_name,
+          job_position_id: position?.id || '',
+          job_position_name: req.position_name,
+          day_of_week: req.day.toLowerCase(),
+          start_time: req.start_time,
+          end_time: req.end_time,
+          hours: parseFloat(hours),
+          week_start_date: weekStartDate,
+          notes: aiRequest
+        });
+      }
+
+      setAiRequest('');
+      setShowAIForm(false);
+      await loadRequests();
+    } catch (error) {
+      console.error('Error processing AI request:', error);
+      alert(language === 'he' ? 'שגיאה בעיבוד הבקשה' : 'Error processing request');
+    } finally {
+      setAiProcessing(false);
+    }
+  };
+
   // Generate schedule from requests
   const generateSchedule = () => {
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -146,11 +233,76 @@ export default function WorkerRequestManager({ weekStartDate, workers, positions
             {language === 'he' ? 'הזן בקשות ובנה לוח משמרות אוטומטי' : 'Enter requests and build automatic schedule'}
           </p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="w-4 h-4 mr-2" />
-          {language === 'he' ? 'הוסף בקשה' : 'Add Request'}
-        </Button>
+        <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Button onClick={() => setShowAIForm(!showAIForm)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+            <Sparkles className="w-4 h-4 mr-2" />
+            {language === 'he' ? 'AI - הזן בשפה חופשית' : 'AI - Free Text'}
+          </Button>
+          <Button onClick={() => setShowForm(!showForm)} variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            {language === 'he' ? 'הוסף ידנית' : 'Add Manual'}
+          </Button>
+        </div>
       </div>
+
+      {/* AI Form */}
+      {showAIForm && (
+        <Card className="border-pink-200 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50">
+          <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+            <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+              <Sparkles className="w-5 h-5" />
+              {language === 'he' ? 'הזן בקשה בשפה חופשית' : 'Enter Request in Free Text'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            <div>
+              <Label className={`text-base font-semibold mb-2 block ${isRTL ? 'text-right' : 'text-left'}`}>
+                {language === 'he' ? 'תאר את הבקשה' : 'Describe the request'}
+              </Label>
+              <Textarea
+                value={aiRequest}
+                onChange={(e) => setAiRequest(e.target.value)}
+                placeholder={language === 'he' 
+                  ? 'לדוגמה: "דוד רוצה לעבוד ימים א-ה, משמרות בוקר 9:00-17:00 כמלצר"\nאו: "שרה ביקשה שלישי ורביעי ערב 17:00-23:00 בבר"'
+                  : 'Example: "David wants to work Sun-Thu, morning shifts 9:00-17:00 as waiter"\nOr: "Sarah requested Tuesday and Wednesday evening 17:00-23:00 at the bar"'
+                }
+                rows={5}
+                className={`text-base ${isRTL ? 'text-right' : 'text-left'}`}
+                disabled={aiProcessing}
+              />
+              <p className={`text-xs text-gray-500 mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {language === 'he' 
+                  ? '💡 כתוב בשפה חופשית - AI יפרק את הבקשה ויצור את כל המשמרות אוטומטית'
+                  : '💡 Write in free text - AI will parse the request and create all shifts automatically'
+                }
+              </p>
+            </div>
+
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button 
+                onClick={handleAIRequest} 
+                disabled={aiProcessing || !aiRequest.trim()}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                {aiProcessing ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2 animate-spin" />
+                    {language === 'he' ? 'מעבד...' : 'Processing...'}
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    {language === 'he' ? 'צור משמרות' : 'Create Shifts'}
+                  </>
+                )}
+              </Button>
+              <Button onClick={() => setShowAIForm(false)} variant="outline" disabled={aiProcessing}>
+                {language === 'he' ? 'ביטול' : 'Cancel'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Form */}
       {showForm && (
