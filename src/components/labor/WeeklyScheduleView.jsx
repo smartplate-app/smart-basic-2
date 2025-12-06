@@ -21,6 +21,13 @@ import { toast } from "sonner";
 import moment from "moment";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
+// Set week to start on Sunday (Israel standard)
+moment.updateLocale('en', {
+  week: {
+    dow: 0, // Sunday is the first day of the week
+  }
+});
+
 export default function WeeklyScheduleView({ weekStartDate, positions, workers, onScheduleSaved }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he';
@@ -47,13 +54,13 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [positionOrder, setPositionOrder] = useState([]);
 
   const days = [
+    { key: 'sunday', label: t('sunday') },
     { key: 'monday', label: t('monday') },
     { key: 'tuesday', label: t('tuesday') },
     { key: 'wednesday', label: t('wednesday') },
     { key: 'thursday', label: t('thursday') },
     { key: 'friday', label: t('friday') },
-    { key: 'saturday', label: t('saturday') },
-    { key: 'sunday', label: t('sunday') }
+    { key: 'saturday', label: t('saturday') }
   ];
 
   const formatCurrency = (amount) => {
@@ -234,7 +241,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const applyTemplateShifts = (template) => {
     const loadedShifts = template.shifts.map(s => {
       const dayIndex = days.findIndex(d => d.key === s.day);
-      const shiftDate = moment(weekStartDate).isoWeekday(dayIndex + 1).format('YYYY-MM-DD');
+      const shiftDate = moment(weekStartDate).day(dayIndex).format('YYYY-MM-DD');
       return {
         ...s,
         date: shiftDate,
@@ -549,9 +556,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
     setSaving(true);
     try {
-      const nextWeekStart = moment(weekStartDate).add(1, 'week').startOf('isoWeek');
-      const nextWeekNumber = nextWeekStart.isoWeek();
-      const nextWeekYear = nextWeekStart.isoWeekYear();
+      const nextWeekStart = moment(weekStartDate).add(1, 'week').startOf('week');
+      const nextWeekNumber = nextWeekStart.week();
+      const nextWeekYear = nextWeekStart.year();
 
       const existingNextWeekSchedule = await base44.entities.WeeklySchedule.filter({
         week_number: String(nextWeekNumber), // Convert to string
@@ -852,7 +859,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const newShifts = [];
     
     days.forEach(day => {
-      const dayDate = moment(weekStartDate).isoWeekday(days.indexOf(day) + 1).format('YYYY-MM-DD');
+      const dayDate = moment(weekStartDate).day(days.indexOf(day)).format('YYYY-MM-DD');
       
       // For each shift in source day, create a copy for this day
       sourceDayShifts.forEach(sourceShift => {
@@ -910,7 +917,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
     // Get the destination position info
     const destPosition = positions.find(p => p.id === destPositionId);
-    const destDateStr = moment(weekStartDate).isoWeekday(days.findIndex(d => d.key === destDay) + 1).format('YYYY-MM-DD');
+    const destDateStr = moment(weekStartDate).day(days.findIndex(d => d.key === destDay)).format('YYYY-MM-DD');
 
     // Create updated shift with new day, position, and date
     const updatedShift = {
@@ -1271,7 +1278,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                       {t('position')}
                     </th>
                     {days.map(day => {
-                        const dayDate = moment(weekStartDate).isoWeekday(days.indexOf(day) + 1);
+                        const dayDate = moment(weekStartDate).day(days.indexOf(day));
                         const dayShiftsCount = (schedule?.shifts || []).filter(s => s.day === day.key).length;
                         
                         return (
@@ -1326,7 +1333,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                     </div>
                                   </td>
                       {days.map(day => {
-                        const dateStr = moment(weekStartDate).isoWeekday(days.indexOf(day) + 1).format('YYYY-MM-DD');
+                        const dateStr = moment(weekStartDate).day(days.indexOf(day)).format('YYYY-MM-DD');
                         const droppableId = `${day.key}|${position.id}`;
                         const shiftsForCell = schedule?.shifts?.filter(
                           s => s.day === day.key && s.job_position_id === position.id

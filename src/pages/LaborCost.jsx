@@ -21,7 +21,7 @@ export default function LaborCostPage() {
   const [activeTab, setActiveTab] = useState("schedule");
   const [networkError, setNetworkError] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    return moment().startOf('isoWeek').format('YYYY-MM-DD');
+    return moment().startOf('week').format('YYYY-MM-DD');
   });
   const { t, language } = useLanguage();
 
@@ -73,7 +73,7 @@ export default function LaborCostPage() {
   };
 
   const handleToday = () => {
-    setCurrentWeekStart(moment().startOf('isoWeek').format('YYYY-MM-DD'));
+    setCurrentWeekStart(moment().startOf('week').format('YYYY-MM-DD'));
   };
 
   const handleAddPosition = async (positionData) => {
