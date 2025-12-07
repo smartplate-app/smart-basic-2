@@ -140,8 +140,26 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       // Remove temp container
       document.body.removeChild(tempContainer);
 
-      // Download the image
+      // Convert to blob and share
       canvas.toBlob(async (blob) => {
+        const file = new File([blob], `order-${order.order_number}.png`, { type: 'image/png' });
+
+        // Try Web Share API first (works on mobile)
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}`,
+              text: `${order.restaurant_name}\n${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}`
+            });
+            setDownloading(false);
+            return;
+          } catch (shareErr) {
+            console.log('Share cancelled or failed:', shareErr);
+          }
+        }
+
+        // Fallback: regular download
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -151,9 +169,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         setDownloading(false);
-
-        // Auto-trigger WhatsApp send
-        handleSendWhatsAppImage();
       }, 'image/png', 1.0);
 
     } catch (err) {
