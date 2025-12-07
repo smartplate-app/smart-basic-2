@@ -651,6 +651,93 @@ Example output:
           )}
         </CardContent>
       </Card>
+
+      {/* Theoretical Schedule Grid - Shows gaps in coverage */}
+      {requests.length > 0 && (
+        <Card className="border-orange-300 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-orange-500 to-red-500 text-white">
+            <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+              <Sparkles className="w-5 h-5" />
+              {language === 'he' ? 'לוח תיאורטי - מבוסס בקשות בלבד' : 'Theoretical Schedule - Based on Requests Only'}
+            </CardTitle>
+            <p className={`text-sm text-orange-100 mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {language === 'he' ? 'חורים בלוח מסמנים תפקידים שאף אחד לא ביקש לעבוד בהם' : 'Gaps show positions where nobody requested to work'}
+            </p>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className={`border p-2 text-sm font-semibold ${isRTL ? 'text-right' : 'text-left'} w-32`}>
+                      {language === 'he' ? 'תפקיד' : 'Position'}
+                    </th>
+                    {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map(day => (
+                      <th key={day} className="border p-2 text-sm font-semibold min-w-[120px]">
+                        <div className="flex flex-col gap-1">
+                          <div>{dayLabels[day]}</div>
+                          <div className="text-xs text-gray-500 font-normal">
+                            {moment(weekStartDate).day(day === 'sunday' ? 0 : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(day) + 1).format('DD/MM')}
+                          </div>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {positions.map(position => {
+                    const positionRequests = requests.filter(r => r.job_position_id === position.id || r.job_position_name === position.name);
+                    
+                    if (positionRequests.length === 0) return null;
+                    
+                    return (
+                      <tr key={position.id}>
+                        <td className={`border p-2 font-medium bg-gray-50 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {position.name}
+                        </td>
+                        {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map(day => {
+                          const dayRequests = positionRequests.filter(r => r.day_of_week === day);
+                          
+                          return (
+                            <td key={`${position.id}-${day}`} className="border p-1">
+                              {dayRequests.length === 0 ? (
+                                <div className="bg-red-100 border-2 border-red-300 rounded p-2 text-center">
+                                  <span className="text-red-700 font-bold text-xs">
+                                    {language === 'he' ? '⚠️ חור בכיסוי!' : '⚠️ Gap!'}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="space-y-1">
+                                  {dayRequests.map((req, idx) => (
+                                    <div key={idx} className="bg-green-100 p-2 rounded text-xs border border-green-300">
+                                      <div className="font-semibold text-gray-900">{req.worker_name}</div>
+                                      <div className="text-xs text-gray-600">
+                                        {req.start_time} - {req.end_time}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className={`mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+              <p className="text-sm text-orange-800 font-medium">
+                {language === 'he' 
+                  ? '💡 חורים אדומים מסמנים תפקידים וימים שבהם לא התקבלה אף בקשה - שימו לב למקומות אלו!' 
+                  : '💡 Red gaps indicate positions and days where no requests were received - pay attention to these spots!'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
