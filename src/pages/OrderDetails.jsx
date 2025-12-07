@@ -86,6 +86,9 @@ const translations = {
         systemName: 'Lieferanten-Management-System',
         print: 'Drucken',
         printTitle: 'Bestellung drucken',
+        download: 'Als Bild herunterladen',
+        downloadTitle: 'Bestellung als Bild herunterladen',
+        downloading: 'Wird heruntergeladen...',
         sent: 'Gesendet',
         confirmed: 'Bestätigt',
         delivered: 'Geliefert'
@@ -114,6 +117,9 @@ const translations = {
         systemName: 'Система управления поставщиками',
         print: 'Печать',
         printTitle: 'Распечатать заказ',
+        download: 'Скачать как изображение',
+        downloadTitle: 'Скачать заказ как изображение',
+        downloading: 'Загрузка...',
         sent: 'Отправлено',
         confirmed: 'Подтверждено',
         delivered: 'Доставлено'
