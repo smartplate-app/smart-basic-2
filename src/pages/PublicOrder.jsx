@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import html2canvas from 'html2canvas';
 
 export default function PublicOrderPage() {
     const [order, setOrder] = useState(null);
     const [error, setError] = useState(null);
     const [language, setLanguage] = useState('he');
+    const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
         try {
@@ -41,6 +43,36 @@ export default function PublicOrderPage() {
     }, []);
 
     const isRTL = language === 'he';
+
+    const handleDownloadImage = async () => {
+        try {
+            setDownloading(true);
+            const element = document.getElementById('order-content');
+            
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                windowWidth: 800,
+                logging: false,
+                useCORS: true
+            });
+            
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `order-${order.order_number}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                setDownloading(false);
+            }, 'image/png', 1.0);
+        } catch (error) {
+            console.error('Error downloading image:', error);
+            setDownloading(false);
+        }
+    };
 
     if (error) {
         return (
@@ -84,35 +116,63 @@ export default function PublicOrderPage() {
     }
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-            padding: '16px',
-            fontFamily: 'system-ui, sans-serif',
-            direction: isRTL ? 'rtl' : 'ltr'
-        }}>
-            {/* Language Toggle */}
-            <button
-                onClick={() => setLanguage(language === 'he' ? 'en' : 'he')}
-                style={{
-                    position: 'fixed',
-                    top: '16px',
-                    left: '16px',
-                    background: '#dc2626',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '44px',
-                    height: '44px',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    zIndex: 100
-                }}
-            >
-                🌐
-            </button>
-
+        <>
+            <style>{`
+                @media print {
+                    @page {
+                        size: A4;
+                        margin: 0;
+                    }
+                    body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                    #order-content {
+                        box-shadow: none !important;
+                        border-radius: 0 !important;
+                        max-width: 100% !important;
+                    }
+                }
+                
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
+            
             <div style={{
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                padding: '16px',
+                fontFamily: 'system-ui, sans-serif',
+                direction: isRTL ? 'rtl' : 'ltr'
+            }}>
+                {/* Language Toggle */}
+                <button
+                    onClick={() => setLanguage(language === 'he' ? 'en' : 'he')}
+                    className="no-print"
+                    style={{
+                        position: 'fixed',
+                        top: '16px',
+                        left: '16px',
+                        background: '#dc2626',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '44px',
+                        height: '44px',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        zIndex: 100
+                    }}
+                >
+                    🌐
+                </button>
+
+                <div id="order-content" style={{
                 maxWidth: '800px',
                 margin: '0 auto',
                 backgroundColor: 'white',
@@ -239,12 +299,41 @@ export default function PublicOrderPage() {
                 </div>
             </div>
 
-            {/* Print Button */}
+            {/* Download as Image Button */}
             <button
-                onClick={() => window.print()}
+                onClick={handleDownloadImage}
+                disabled={downloading}
+                className="no-print"
                 style={{
                     position: 'fixed',
                     bottom: '20px',
+                    right: '20px',
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50px',
+                    padding: '14px 24px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    cursor: downloading ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    opacity: downloading ? 0.7 : 1,
+                    zIndex: 100
+                }}
+            >
+                {downloading ? '⏳' : '📥'} {downloading ? (language === 'he' ? 'מוריד...' : 'Downloading...') : (language === 'he' ? 'הורד תמונה' : 'Download Image')}
+            </button>
+
+            {/* Print Button */}
+            <button
+                onClick={() => window.print()}
+                className="no-print"
+                style={{
+                    position: 'fixed',
+                    bottom: '85px',
                     right: '20px',
                     background: '#2563eb',
                     color: 'white',
@@ -257,11 +346,13 @@ export default function PublicOrderPage() {
                     boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '8px',
+                    zIndex: 100
                 }}
             >
-                🖨️ {language === 'he' ? 'הדפס' : 'Print'}
+                🖨️ {language === 'he' ? 'הדפס/שמור PDF' : 'Print/Save PDF'}
             </button>
-        </div>
+            </div>
+        </>
     );
 }
