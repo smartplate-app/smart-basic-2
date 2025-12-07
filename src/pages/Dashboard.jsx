@@ -102,51 +102,37 @@ export default function DashboardPage() {
       });
       setCalculatedLaborCost(totalLaborCost);
 
-      // Calculate predicted labor and sales to date based on weekly schedules
-      // Find schedules that have total_cost and predicted_weekly_sales
-      const schedulesWithData = allSchedules.filter(s => 
-        s.total_cost > 0 || s.predicted_weekly_sales > 0
-      );
+      // Calculate predicted labor based on the latest schedule with data
+      // Find the most recent schedule that has total_cost (includes employer costs)
+      const schedulesWithData = allSchedules
+        .filter(s => s.total_cost > 0)
+        .sort((a, b) => moment(b.week_start_date).valueOf() - moment(a.week_start_date).valueOf());
       
       if (schedulesWithData.length > 0) {
         setHasScheduleData(true);
         
-        // Calculate days passed from beginning of month
+        // Take the latest schedule
+        const latestSchedule = schedulesWithData[0];
+        const weeklyLaborCost = latestSchedule.total_cost; // Already includes employer costs
+        const weeklySales = latestSchedule.predicted_weekly_sales || 0;
+        
+        // Calculate monthly prediction: weekly * 4.2 weeks
+        const monthlyPredictedLabor = weeklyLaborCost * 4.2;
+        const monthlyPredictedSales = weeklySales * 4.2;
+        
+        // Calculate days passed from beginning of month to today
         const daysPassed = today.isBefore(monthEnd) && today.isAfter(monthStart) 
           ? today.diff(monthStart, 'days') + 1 
           : moment(selectedMonth).daysInMonth();
         
-        // Sum up weekly totals and predictions from schedules in this month
-        let totalWeeklyLaborCost = 0;
-        let totalWeeklySalesPrediction = 0;
-        let weeksCount = 0;
+        // Calculate average daily costs from monthly prediction
+        const daysInMonth = moment(selectedMonth).daysInMonth();
+        const avgDailyLaborCost = monthlyPredictedLabor / daysInMonth;
+        const avgDailySales = monthlyPredictedSales / daysInMonth;
         
-        allSchedules.forEach(schedule => {
-          const weekStart = moment(schedule.week_start_date);
-          const weekEnd = moment(schedule.week_start_date).add(6, 'days');
-          
-          // Check if this week overlaps with the selected month
-          if (weekEnd.isSameOrAfter(monthStart) && weekStart.isSameOrBefore(monthEnd)) {
-            if (schedule.total_cost > 0) {
-              totalWeeklyLaborCost += schedule.total_cost;
-              weeksCount++;
-            }
-            if (schedule.predicted_weekly_sales > 0) {
-              totalWeeklySalesPrediction += schedule.predicted_weekly_sales;
-            }
-          }
-        });
-        
-        if (weeksCount > 0) {
-          // Average daily labor cost = total weekly costs / (weeks * 7)
-          const avgDailyLaborCost = totalWeeklyLaborCost / (weeksCount * 7);
-          // Average daily sales = total weekly sales / (weeks * 7)
-          const avgDailySales = totalWeeklySalesPrediction / (weeksCount * 7);
-          
-          // Predicted to date = daily average * days passed
-          setPredictedLaborToDate(avgDailyLaborCost * daysPassed);
-          setPredictedSalesToDate(avgDailySales * daysPassed);
-        }
+        // Predicted to date = daily average * days passed
+        setPredictedLaborToDate(avgDailyLaborCost * daysPassed);
+        setPredictedSalesToDate(avgDailySales * daysPassed);
       } else {
         setHasScheduleData(false);
         setPredictedLaborToDate(0);
