@@ -46,7 +46,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const handleDownloadImage = async () => {
     try {
       setDownloading(true);
-      
+
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
@@ -57,7 +57,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       tempContainer.style.padding = '40px';
       tempContainer.style.fontFamily = 'system-ui, sans-serif';
       tempContainer.style.direction = language === 'he' ? 'rtl' : 'ltr';
-      
+
       // Build the order HTML
       tempContainer.innerHTML = `
         <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 32px; text-align: center; border-radius: 16px 16px 0 0; margin: -40px -40px 20px -40px;">
@@ -68,7 +68,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             ${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}
           </p>
         </div>
-        
+
         <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e2e8f0;">
           <h2 style="font-size: 18px; font-weight: bold; color: #1e293b; margin: 0 0 12px 0;">
             ${language === 'he' ? 'פרטי העסק' : 'Business Details'}
@@ -76,7 +76,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           <p style="margin: 8px 0; font-size: 16px;"><strong>🏢 ${order.restaurant_name}</strong></p>
           ${order.restaurant_address ? `<p style="margin: 8px 0; font-size: 14px; color: #64748b;">📍 ${order.restaurant_address}</p>` : ''}
         </div>
-        
+
         ${order.delivery_date ? `
         <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #fbbf24; text-align: center;">
           <p style="margin: 0; font-size: 16px; font-weight: 600; color: #92400e;">
@@ -84,7 +84,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </p>
         </div>
         ` : ''}
-        
+
         <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #22c55e;">
           <h2 style="font-size: 18px; font-weight: bold; color: #15803d; margin: 0 0 16px 0;">
             📋 ${language === 'he' ? 'רשימת מוצרים' : 'Items List'}
@@ -112,7 +112,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             </table>
           </div>
         </div>
-        
+
         ${order.notes ? `
         <div style="background: #fef7cd; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #f59e0b;">
           <h3 style="font-size: 16px; font-weight: bold; color: #92400e; margin: 0 0 8px 0;">
@@ -121,14 +121,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           <p style="margin: 0; color: #78350f;">${order.notes}</p>
         </div>
         ` : ''}
-        
+
         <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
           <p style="font-size: 12px; margin: 0;">Smart Plate - ${language === 'he' ? 'מערכת ניהול ספקים' : 'Supplier Management'}</p>
         </div>
       `;
-      
+
       document.body.appendChild(tempContainer);
-      
+
       // Capture the element
       const canvas = await html2canvas(tempContainer, {
         scale: 2,
@@ -136,12 +136,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         logging: false,
         useCORS: true
       });
-      
+
       // Remove temp container
       document.body.removeChild(tempContainer);
-      
+
       // Download the image
-      canvas.toBlob((blob) => {
+      canvas.toBlob(async (blob) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -151,8 +151,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         setDownloading(false);
+
+        // Auto-trigger WhatsApp send
+        handleSendWhatsAppImage();
       }, 'image/png', 1.0);
-      
+
     } catch (err) {
       console.error('Failed to download image:', err);
       setDownloading(false);
