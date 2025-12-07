@@ -187,7 +187,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                     setMonthlyPredictedSales((fetchedSchedule.predicted_weekly_sales || 0) * 4.2);
                     // Load saved position order if exists
                     if (fetchedSchedule.position_order && fetchedSchedule.position_order.length > 0) {
-                      setPositionOrder(fetchedSchedule.position_order);
+                      // Merge saved order with any new positions
+                      const newPositionIds = positions.map(p => p.id).filter(id => !fetchedSchedule.position_order.includes(id));
+                      setPositionOrder([...fetchedSchedule.position_order, ...newPositionIds]);
                     } else {
                       setPositionOrder(positions.map(p => p.id));
                     }
