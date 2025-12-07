@@ -89,18 +89,15 @@ export default function DashboardPage() {
         setActualSales(0);
       }
 
-      // Calculate labor cost
+      // Calculate labor cost from all schedules in the month (always use latest schedules)
       let totalLaborCost = 0;
       allSchedules.forEach(schedule => {
         const weekStart = moment(schedule.week_start_date);
         const weekEnd = moment(schedule.week_start_date).add(6, 'days');
-        if (weekEnd.isSameOrAfter(monthStart) && weekStart.isSameOrBefore(endDate)) {
-          (schedule.shifts || []).forEach(shift => {
-            const shiftDate = moment(shift.date);
-            if (shiftDate.isSameOrAfter(monthStart) && shiftDate.isSameOrBefore(endDate)) {
-              totalLaborCost += shift.payment_for_shift || 0;
-            }
-          });
+        // Check if week overlaps with the selected month
+        if (weekEnd.isSameOrAfter(monthStart) && weekStart.isSameOrBefore(monthEnd)) {
+          // Use total_cost from schedule which includes employer costs
+          totalLaborCost += schedule.total_cost || 0;
         }
       });
       setCalculatedLaborCost(totalLaborCost);
