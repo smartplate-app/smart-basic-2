@@ -174,7 +174,7 @@ export default function LaborCostPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 max-w-2xl">
-            <TabsTrigger value="schedule">{t('schedule')}</TabsTrigger>
+            <TabsTrigger value="schedule">{language === 'he' ? 'סידור עבודה' : 'Schedule'}</TabsTrigger>
             <TabsTrigger value="requests">{language === 'he' ? 'בקשות' : 'Requests'}</TabsTrigger>
             <TabsTrigger value="goals">{language === 'he' ? 'יעדים' : 'Goals'}</TabsTrigger>
             <TabsTrigger value="positions">{t('positions')}</TabsTrigger>
