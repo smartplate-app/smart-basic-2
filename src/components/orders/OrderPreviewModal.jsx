@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { X, Smartphone, Monitor, Copy, Check, Download, Send, Mail } from 'lucide-react';
+import { X, Smartphone, Monitor, Copy, Check, Download, Send, FileText } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
+import { jsPDF } from 'jspdf';
 
 export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const { t, language } = useLanguage();
   const [viewMode, setViewMode] = useState('mobile');
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
   
   if (!isOpen || !order) return null;
 
@@ -210,30 +210,104 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     }
   };
 
-  const handleSendEmail = async () => {
-    if (!order.supplier_email) {
-      alert(language === 'he' ? 'לספק אין כתובת אימייל' : 'Supplier has no email address');
-      return;
-    }
-
+  const handleDownloadPDF = async () => {
     try {
-      setSendingEmail(true);
-
-      const response = await base44.functions.invoke('sendOrderEmail', {
-        order: order,
-        language: language
-      });
-
-      if (response.data.success) {
-        alert(language === 'he' ? '✅ האימייל נשלח בהצלחה עם PDF!' : '✅ Email sent successfully with PDF!');
-      } else {
-        throw new Error('Failed to send email');
+      setDownloadingPDF(true);
+      
+      const doc = new jsPDF();
+      const isRTL = language === 'he';
+      
+      doc.setFont('helvetica');
+      
+      // Header
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.text(`${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}`, 105, 20, { align: 'center' });
+      doc.setFontSize(14);
+      doc.text(`${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}`, 105, 32, { align: 'center' });
+      
+      doc.setTextColor(0, 0, 0);
+      let y = 55;
+      
+      // Business Details
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(language === 'he' ? 'פרטי העסק' : 'Business Details', 20, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${order.restaurant_name}`, 20, y);
+      if (order.restaurant_address) {
+        y += 7;
+        doc.text(`${order.restaurant_address}`, 20, y);
       }
-      setSendingEmail(false);
-    } catch (error) {
-      console.error('Failed to send email:', error);
-      alert(language === 'he' ? '❌ שגיאה בשליחת האימייל' : '❌ Failed to send email');
-      setSendingEmail(false);
+      
+      y += 15;
+      
+      // Delivery Date
+      if (order.delivery_date) {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}`, 20, y);
+        y += 15;
+      }
+      
+      // Items List
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(language === 'he' ? 'רשימת מוצרים' : 'Items List', 20, y);
+      y += 10;
+      
+      // Table headers
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('#', 20, y);
+      doc.text(language === 'he' ? 'מוצר' : 'Item', 35, y);
+      doc.text(language === 'he' ? 'כמות' : 'Qty', 120, y);
+      doc.text(language === 'he' ? 'יחידה' : 'Unit', 150, y);
+      y += 7;
+      
+      // Table content
+      doc.setFont('helvetica', 'normal');
+      (order.items || []).forEach((item, index) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`${index + 1}`, 20, y);
+        doc.text(item.item_name, 35, y);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${item.quantity}`, 120, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(item.unit, 150, y);
+        y += 7;
+      });
+      
+      // Notes
+      if (order.notes) {
+        y += 10;
+        doc.setFont('helvetica', 'bold');
+        doc.text(language === 'he' ? 'הערות' : 'Notes', 20, y);
+        y += 7;
+        doc.setFont('helvetica', 'normal');
+        const splitNotes = doc.splitTextToSize(order.notes, 170);
+        doc.text(splitNotes, 20, y);
+      }
+      
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(128, 128, 128);
+      doc.text('Smart Plate', 105, 285, { align: 'center' });
+      
+      // Download
+      doc.save(`order-${order.order_number}.pdf`);
+      
+      setDownloadingPDF(false);
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+      setDownloadingPDF(false);
     }
   };
 
@@ -294,18 +368,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           >
             {t('close')}
           </Button>
-          {order.supplier_email && (
-            <Button
-              onClick={handleSendEmail}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
-              disabled={sendingEmail}
-            >
-              <Mail className="w-5 h-5 mr-2" />
-              {sendingEmail 
-                ? (language === 'he' ? 'שולח אימייל...' : 'Sending Email...') 
-                : (language === 'he' ? 'שלח אימייל' : 'Send Email')}
-            </Button>
-          )}
+          <Button
+            onClick={handleDownloadPDF}
+            className="bg-red-600 hover:bg-red-700 text-white font-medium shadow-sm"
+            disabled={downloadingPDF}
+          >
+            <FileText className="w-5 h-5 mr-2" />
+            {downloadingPDF 
+              ? (language === 'he' ? 'יוצר PDF...' : 'Creating PDF...') 
+              : (language === 'he' ? 'הורד PDF' : 'Download PDF')}
+          </Button>
           <Button
             onClick={handleDownloadImage}
             className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium shadow-sm"
