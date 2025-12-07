@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, GripVertical } from "lucide-react";
+import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, GripVertical, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,8 @@ import { useLanguage } from "../LanguageProvider";
 import { toast } from "sonner";
 import moment from "moment";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import html2canvas from "html2canvas";
+import { useRef } from "react";
 
 // Set week to start on Sunday (Israel standard)
 moment.updateLocale('en', {
@@ -52,6 +54,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [pendingShiftSave, setPendingShiftSave] = useState(null);
   const [laborGoals, setLaborGoals] = useState({ shiftWorkersGoal: 0, managementSalary: 0, laborGoalPercent: 25 });
   const [positionOrder, setPositionOrder] = useState([]);
+  const scheduleTableRef = useRef(null);
 
   const days = [
     { key: 'sunday', label: t('sunday') },
@@ -952,49 +955,30 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     toast.success(language === 'he' ? 'המשמרת הועברה בהצלחה' : 'Shift moved successfully');
   };
 
-  const handleSendEmail = async () => {
-    setSendingEmail(true);
+  const handleDownloadJPG = async () => {
     try {
-      // First save the schedule
-      let savedSchedule = schedule;
-      if (!savedSchedule || !savedSchedule.id) {
-        toast.info(language === 'he' ? 'שומר לוח משמרות...' : 'Saving schedule...');
-        savedSchedule = await handleSaveSchedule();
-      }
-
-      if (!savedSchedule || !savedSchedule.id) {
-        toast.error(language === 'he' ? 'שגיאה בשמירת לוח משמרות' : 'Error saving schedule');
-        return;
-      }
-
-      console.log("Calling sendScheduleEmail with:", {
-        scheduleId: savedSchedule.id,
-        additionalEmail: additionalEmail.trim() || undefined,
-        language: language
+      toast.info(language === 'he' ? 'מכין תמונה...' : 'Preparing image...');
+      
+      const element = scheduleTableRef.current;
+      if (!element) return;
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        windowWidth: 1920,
+        windowHeight: 1080
       });
-
-      const response = await base44.functions.invoke('sendScheduleEmail', {
-        scheduleId: savedSchedule.id,
-        additionalEmail: additionalEmail.trim() || undefined,
-        language: language
-      });
-
-      console.log("Email response:", response);
-
-      if (response && response.data && response.data.success) {
-        const emailsSent = response.data.sentTo.join(', ');
-        toast.success(`${language === 'he' ? 'לוח משמרות נשלח בהצלחה' : 'Schedule sent successfully'}\n${language === 'he' ? 'נשלח אל' : 'Sent to'}: ${emailsSent}`);
-        setShowEmailDialog(false);
-        setAdditionalEmail("");
-      } else {
-        throw new Error(response.data?.error || 'Failed to send email');
-      }
-
+      
+      const image = canvas.toDataURL('image/jpeg', 0.95);
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `schedule_${moment(weekStartDate).format('DD-MM-YYYY')}.jpg`;
+      link.click();
+      
+      toast.success(language === 'he' ? 'הלוח הורד בהצלחה' : 'Schedule downloaded successfully');
     } catch (error) {
-      console.error("Error sending email:", error);
-      toast.error(`${language === 'he' ? 'שגיאה בשליחת אימייל' : 'Error sending email'}: ${error.message || 'Unknown error'}`);
-    } finally {
-      setSendingEmail(false);
+      console.error('Error downloading JPG:', error);
+      toast.error(language === 'he' ? 'שגיאה בהורדת התמונה' : 'Error downloading image');
     }
   };
 
@@ -1019,76 +1003,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </CardTitle>
             
             <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {/* Email Dialog Button */}
-              <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t('send_email')}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
-                  <DialogHeader>
-                    <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
-                      {t('send_schedule_email')}
-                    </DialogTitle>
-                    <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
-                      {t('schedule_will_be_emailed_to')} {currentUser?.email}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="additional-email" className={isRTL ? 'text-right block' : 'text-left block'}>
-                        {t('additional_email')} ({t('optional')})
-                      </Label>
-                      <Input
-                        id="additional-email"
-                        type="email"
-                        value={additionalEmail}
-                        onChange={(e) => setAdditionalEmail(e.target.value)}
-                        placeholder={t('email')}
-                        className={isRTL ? 'text-right' : 'text-left'}
-                        dir="ltr"
-                      />
-                      <p className={`text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {t('leave_empty_to_send_only_to_yourself')}
-                      </p>
-                    </div>
-                    <DialogFooter className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 justify-end`}>
-                      <Button
-                        onClick={() => setShowEmailDialog(false)}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        {t('cancel')}
-                      </Button>
-                      <Button
-                        onClick={handleSendEmail}
-                        disabled={sendingEmail || saving}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2"
-                      >
-                        {sendingEmail ? (
-                          <Loader className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Send className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                            {t('send')}
-                          </>
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
               <Button
-                onClick={handleSendWhatsApp}
+                onClick={handleDownloadJPG}
                 variant="outline"
-                className={`text-sm bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-                disabled={sending || !schedule?.shifts?.length}
+                size="sm"
+                className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white ${isRTL ? 'flex-row-reverse' : ''}`}
+                disabled={!schedule?.shifts?.length}
               >
-                {sending ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Send className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
-                {t('send_schedule_whatsapp')}
+                <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                {language === 'he' ? 'הורד כתמונה' : 'Download as Image'}
               </Button>
             </div>
           </div>
@@ -1272,7 +1195,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
           {/* Schedule Table with Drag & Drop */}
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="overflow-x-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+            <div ref={scheduleTableRef} className="overflow-x-auto bg-white p-4 rounded-lg" dir={isRTL ? 'rtl' : 'ltr'}>
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-50">
