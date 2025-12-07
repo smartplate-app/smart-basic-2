@@ -37,6 +37,7 @@ export default function DashboardPage() {
   // Predicted values based on weekly schedules
   const [predictedLaborToDate, setPredictedLaborToDate] = useState(0);
   const [predictedSalesToDate, setPredictedSalesToDate] = useState(0);
+  const [predictedMonthlyLabor, setPredictedMonthlyLabor] = useState(0);
   const [hasScheduleData, setHasScheduleData] = useState(false);
 
   useEffect(() => {
@@ -120,6 +121,9 @@ export default function DashboardPage() {
         const monthlyPredictedLabor = weeklyLaborCost * 4.2;
         const monthlyPredictedSales = weeklySales * 4.2;
         
+        // Store monthly prediction
+        setPredictedMonthlyLabor(monthlyPredictedLabor);
+        
         // Calculate days passed from beginning of month to today
         const daysPassed = today.isBefore(monthEnd) && today.isAfter(monthStart) 
           ? today.diff(monthStart, 'days') + 1 
@@ -137,6 +141,7 @@ export default function DashboardPage() {
         setHasScheduleData(false);
         setPredictedLaborToDate(0);
         setPredictedSalesToDate(0);
+        setPredictedMonthlyLabor(0);
       }
 
       // Calculate food cost (remove VAT from receipts since invoice_total includes VAT)
@@ -468,24 +473,14 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className={`text-3xl font-bold mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {formatCurrency(calculatedLaborCost)}
+                    {formatCurrency(predictedMonthlyLabor)}
                   </div>
                   <div className={`text-gray-300 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {actualLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות' : 'of sales'}
+                    {actualSalesExVAT > 0 ? ((predictedMonthlyLabor / actualSalesExVAT) * 100).toFixed(1) : '0.0'}% {language === 'he' ? 'מהמכירות' : 'of sales'}
                   </div>
                   <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'מחושב מלו"ז משמרות עד היום' : 'Calculated from shift schedules to date'}
+                    {language === 'he' ? 'עלות צפויה (מלו"ז אחרון) × 4.2 שבועות' : 'Predicted cost (latest schedule) × 4.2 weeks'}
                   </div>
-                  {hasScheduleData && predictedLaborToDate > 0 && (
-                    <div className={`mt-3 pt-3 border-t border-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      <div className="text-gray-400 text-xs">
-                        {language === 'he' ? 'עלות צפויה (מלו"ז אחרון):' : 'Predicted (from schedule):'}
-                      </div>
-                      <div className="text-xl font-bold text-blue-300">
-                        {formatCurrency(predictedLaborToDate)}
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
