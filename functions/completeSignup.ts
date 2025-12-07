@@ -86,6 +86,19 @@ Deno.serve(async (req) => {
     // Create user account
     await base44.asServiceRole.entities.User.create(userData);
 
+    // If this is a store_user invite, also create StoreUser record
+    if (inviteTypeToUse === 'store_user') {
+      await base44.asServiceRole.entities.StoreUser.create({
+        store_id: store_id || invite.store_id || '',
+        store_name: store_name || invite.store_name || '',
+        user_email: invite.email,
+        user_name: invite.full_name,
+        role: role || invite.role || 'worker',
+        owner_email: inviter_email || invite.inviter_email || '',
+        is_active: true
+      });
+    }
+
     // Mark invite as used
     await base44.asServiceRole.entities.UserInvite.update(invite.id, {
       used: true,

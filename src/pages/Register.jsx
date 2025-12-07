@@ -21,6 +21,41 @@ export default function RegisterPage() {
     verifyInvite();
   }, []);
 
+  const autoCompleteOAuthSignup = async (currentUser, invite, token) => {
+    try {
+      console.log('Auto-completing OAuth signup for:', currentUser.email);
+      
+      // Call completeSignup function to create User entity record and StoreUser record
+      const response = await base44.functions.invoke('completeSignup', {
+        invite_token: token,
+        username: currentUser.email.split('@')[0], // Use email prefix as username
+        password: 'oauth-' + Math.random().toString(36).substring(7), // Random password (won't be used)
+        invite_type: invite.invite_type,
+        chain_id: invite.chain_id,
+        store_id: invite.store_id,
+        store_name: invite.store_name,
+        role: invite.role,
+        inviter_email: invite.inviter_email
+      });
+
+      if (response.data.success) {
+        console.log('OAuth signup completed successfully');
+        setSuccess(true);
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+      } else {
+        console.error('Failed to auto-complete OAuth signup:', response.data.error);
+        setError('Failed to complete registration. Please contact support.');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Error in autoCompleteOAuthSignup:', err);
+      setError('Failed to complete registration. Please contact support.');
+      setLoading(false);
+    }
+  };
+
   const verifyInvite = async () => {
     try {
       setLoading(true);
@@ -42,6 +77,14 @@ export default function RegisterPage() {
         return;
       }
 
+      // If authenticated, get current user and auto-complete signup for OAuth users
+      const currentUser = await base44.auth.me();
+      
+      // Check if this is an OAuth user (Google login) who doesn't have a User entity record yet
+      const existingUserRecords = await base44.entities.User.filter({ email: currentUser.email });
+      if (existingUserRecords.length === 0) {
+        console.log('OAuth user detected - auto-completing signup');
+
       // First try to find in UserInvite entity directly
       try {
         const invites = await base44.entities.UserInvite.filter({ token: token, used: false });
@@ -53,6 +96,12 @@ export default function RegisterPage() {
           if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
             setError('This invitation has expired. Please request a new one.');
             setLoading(false);
+            return;
+          }
+          
+          // For OAuth users, auto-complete registration immediately
+          if (existingUserRecords.length === 0) {
+            await autoCompleteOAuthSignup(currentUser, invite, token);
             return;
           }
           
