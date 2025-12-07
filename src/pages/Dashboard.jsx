@@ -809,7 +809,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Breakdown Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
                     <CardHeader className="pb-2">
                       <CardTitle className={`text-white text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -829,7 +829,7 @@ export default function DashboardPage() {
                   <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                     <CardHeader className="pb-2">
                       <CardTitle className={`text-white text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {language === 'he' ? 'יעד עלות עובדי משמרות' : 'Shift Workers Labor Goal'}
+                        {language === 'he' ? 'יעד עלות עובדי משמרות (חודשי)' : 'Shift Workers Goal (Monthly)'}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -838,6 +838,22 @@ export default function DashboardPage() {
                       </div>
                       <div className={`text-blue-200 text-xs mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                         {language === 'he' ? 'יעד עבודה כולל פחות הנהלה' : 'Total labor goal minus management'}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
+                    <CardHeader className="pb-2">
+                      <CardTitle className={`text-white text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'יעד שבועי לעובדי משמרות' : 'Weekly Shift Workers Goal'}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {formatCurrency(Math.max(0, (laborGoalAmount - managementSalary) / 4.2))}
+                      </div>
+                      <div className={`text-cyan-200 text-xs mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'יעד חודשי / 4.2 שבועות' : 'Monthly goal / 4.2 weeks'}
                       </div>
                     </CardContent>
                   </Card>
