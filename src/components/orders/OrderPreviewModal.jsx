@@ -250,24 +250,53 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       
       canvas.toBlob(async (blob) => {
         try {
-          const { file_url } = await base44.integrations.Core.UploadFile({ file: blob });
+          const file = new File([blob], `order-${order.order_number}.png`, { type: 'image/png' });
           
-          let phone = order.supplier_phone || '';
-          phone = phone.replace(/\D/g, '');
-          if (phone.startsWith('0')) {
-            phone = '972' + phone.substring(1);
-          } else if (!phone.startsWith('972')) {
-            phone = '972' + phone;
-          }
+          // Try Web Share API if available
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            let phone = order.supplier_phone || '';
+            phone = phone.replace(/\D/g, '');
+            if (phone.startsWith('0')) {
+              phone = '972' + phone.substring(1);
+            }
+            
+            await navigator.share({
+              files: [file],
+              title: `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}`,
+              text: `${order.restaurant_name}\n${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}`
+            });
+            setSending(false);
+          } else {
+            // Fallback: download image and open WhatsApp
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `order-${order.order_number}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            // Open WhatsApp
+            setTimeout(() => {
+              let phone = order.supplier_phone || '';
+              phone = phone.replace(/\D/g, '');
+              if (phone.startsWith('0')) {
+                phone = '972' + phone.substring(1);
+              } else if (!phone.startsWith('972')) {
+                phone = '972' + phone;
+              }
 
-          const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${order.restaurant_name}\n\n${file_url}`;
-          const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-          
-          window.open(whatsappUrl, '_blank');
-          setSending(false);
+              const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${order.restaurant_name}`;
+              const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+              
+              window.open(whatsappUrl, '_blank');
+              setSending(false);
+            }, 500);
+          }
         } catch (err) {
-          console.error('Error uploading image:', err);
-          alert(language === 'he' ? 'שגיאה בשליחת התמונה' : 'Error sending image');
+          console.error('Error sending:', err);
+          alert(language === 'he' ? 'שגיאה בשליחה. נסה להוריד את התמונה ולשלוח ידנית.' : 'Error sending. Try downloading and sending manually.');
           setSending(false);
         }
       }, 'image/png', 1.0);
