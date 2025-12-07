@@ -140,16 +140,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       // Remove temp container
       document.body.removeChild(tempContainer);
 
-      // Download the image first
+      // Try to share directly to WhatsApp with image
       canvas.toBlob(async (blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `order-${order.order_number}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        const file = new File([blob], `order-${order.order_number}.jpg`, { type: 'image/jpeg' });
 
         // Format phone for WhatsApp
         let phone = order.supplier_phone || '';
@@ -160,14 +153,38 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           phone = '972' + phone;
         }
 
-        // Open WhatsApp after a short delay
+        const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`;
+        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+        // Try Web Share API for mobile (shares image directly)
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              text: message
+            });
+            setDownloading(false);
+            return;
+          } catch (shareErr) {
+            console.log('Share cancelled, opening WhatsApp instead');
+          }
+        }
+
+        // Fallback: Download image and open WhatsApp
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `order-${order.order_number}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
         setTimeout(() => {
-          const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${order.restaurant_name}`;
-          const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
           window.open(whatsappUrl, '_blank');
           setDownloading(false);
         }, 500);
-      }, 'image/png', 1.0);
+      }, 'image/jpeg', 0.95);
 
     } catch (err) {
       console.error('Failed to download image:', err);
