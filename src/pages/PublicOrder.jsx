@@ -300,33 +300,7 @@ export default function PublicOrderPage() {
                 </div>
             </div>
 
-            {/* Download as Image Button */}
-            <button
-                onClick={handleDownloadImage}
-                disabled={downloading}
-                className="no-print"
-                style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    right: '20px',
-                    background: '#059669',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50px',
-                    padding: '14px 24px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    cursor: downloading ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    opacity: downloading ? 0.7 : 1,
-                    zIndex: 100
-                }}
-            >
-                {downloading ? '⏳' : '📥'} {downloading ? (language === 'he' ? 'מוריד...' : 'Downloading...') : (language === 'he' ? 'הורד תמונה' : 'Download Image')}
-            </button>
+
 
 
             </div>
