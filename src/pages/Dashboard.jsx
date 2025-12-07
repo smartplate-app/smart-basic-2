@@ -417,7 +417,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader className={`flex flex-row items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
-                  {language === 'he' ? 'מכירות בפועל' : 'Actual Sales'}
+                  {language === 'he' ? 'מכירות בפועל החודש עד היום' : 'Actual Sales This Month to Date'}
                 </CardTitle>
                 {!editMode && (
                   <Button 
