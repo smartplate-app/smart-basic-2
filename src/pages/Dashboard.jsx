@@ -473,13 +473,13 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className={`text-3xl font-bold mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {formatCurrency(predictedMonthlyLabor)}
+                    {formatCurrency(calculatedLaborCost)}
                   </div>
                   <div className={`text-gray-300 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {actualSalesExVAT > 0 ? ((predictedMonthlyLabor / actualSalesExVAT) * 100).toFixed(1) : '0.0'}% {language === 'he' ? 'מהמכירות' : 'of sales'}
+                    {actualLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות' : 'of sales'}
                   </div>
                   <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'עלות צפויה (מלו"ז אחרון) × 4.2 שבועות' : 'Predicted cost (latest schedule) × 4.2 weeks'}
+                    {language === 'he' ? 'סה"כ עלות עבודה כולל עלויות מעסיק עד היום' : 'Total labor cost incl. employer costs to date'}
                   </div>
                 </CardContent>
               </Card>
