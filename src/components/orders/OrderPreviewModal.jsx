@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { X, Smartphone, Monitor, Copy, Check } from 'lucide-react';
+import { X, Smartphone, Monitor, Copy, Check, Download } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
+import html2canvas from 'html2canvas';
 
 export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const { t, language } = useLanguage();
@@ -43,11 +44,115 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const handleDownloadImage = async () => {
     try {
       setDownloading(true);
-      // Open the public URL in a new tab so user can download from there
-      window.open(orderUrl, '_blank');
-      setTimeout(() => setDownloading(false), 1000);
+      
+      // Create a temporary container with the order content
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'fixed';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.width = '800px';
+      tempContainer.style.background = 'white';
+      tempContainer.style.padding = '40px';
+      tempContainer.style.fontFamily = 'system-ui, sans-serif';
+      tempContainer.style.direction = language === 'he' ? 'rtl' : 'ltr';
+      
+      // Build the order HTML
+      tempContainer.innerHTML = `
+        <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 32px; text-align: center; border-radius: 16px 16px 0 0; margin: -40px -40px 20px -40px;">
+          <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0;">
+            ${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}
+          </h1>
+          <p style="font-size: 16px; opacity: 0.9; margin: 0;">
+            ${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}
+          </p>
+        </div>
+        
+        <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e2e8f0;">
+          <h2 style="font-size: 18px; font-weight: bold; color: #1e293b; margin: 0 0 12px 0;">
+            ${language === 'he' ? 'פרטי העסק' : 'Business Details'}
+          </h2>
+          <p style="margin: 8px 0; font-size: 16px;"><strong>🏢 ${order.restaurant_name}</strong></p>
+          ${order.restaurant_address ? `<p style="margin: 8px 0; font-size: 14px; color: #64748b;">📍 ${order.restaurant_address}</p>` : ''}
+        </div>
+        
+        ${order.delivery_date ? `
+        <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #fbbf24; text-align: center;">
+          <p style="margin: 0; font-size: 16px; font-weight: 600; color: #92400e;">
+            📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+          </p>
+        </div>
+        ` : ''}
+        
+        <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #22c55e;">
+          <h2 style="font-size: 18px; font-weight: bold; color: #15803d; margin: 0 0 16px 0;">
+            📋 ${language === 'he' ? 'רשימת מוצרים' : 'Items List'}
+          </h2>
+          <div style="background: white; border-radius: 8px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #f9fafb;">
+                  <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">#</th>
+                  <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'מוצר' : 'Item'}</th>
+                  <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'כמות' : 'Qty'}</th>
+                  <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'יחידה' : 'Unit'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(order.items || []).map((item, index) => `
+                  <tr style="background: ${index % 2 === 0 ? 'white' : '#f9fafb'};">
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
+                    <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">${item.item_name}</td>
+                    <td style="padding: 12px; font-weight: 600; color: #059669; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.unit}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        ${order.notes ? `
+        <div style="background: #fef7cd; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #f59e0b;">
+          <h3 style="font-size: 16px; font-weight: bold; color: #92400e; margin: 0 0 8px 0;">
+            📝 ${language === 'he' ? 'הערות' : 'Notes'}
+          </h3>
+          <p style="margin: 0; color: #78350f;">${order.notes}</p>
+        </div>
+        ` : ''}
+        
+        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+          <p style="font-size: 12px; margin: 0;">Smart Plate - ${language === 'he' ? 'מערכת ניהול ספקים' : 'Supplier Management'}</p>
+        </div>
+      `;
+      
+      document.body.appendChild(tempContainer);
+      
+      // Capture the element
+      const canvas = await html2canvas(tempContainer, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true
+      });
+      
+      // Remove temp container
+      document.body.removeChild(tempContainer);
+      
+      // Download the image
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `order-${order.order_number}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setDownloading(false);
+      }, 'image/png', 1.0);
+      
     } catch (err) {
-      console.error('Failed to open download page:', err);
+      console.error('Failed to download image:', err);
       setDownloading(false);
     }
   };
@@ -115,9 +220,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200"
             disabled={downloading}
           >
-            {downloading ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-green-600" />}
+            {downloading ? <Download className="w-4 h-4 text-green-600 animate-bounce" /> : <Download className="w-4 h-4 text-green-600" />}
             {downloading 
-              ? (language === 'he' ? 'נפתח...' : 'Opening...') 
+              ? (language === 'he' ? 'מוריד...' : 'Downloading...') 
               : (language === 'he' ? 'הורד תמונה' : 'Download Image')}
           </Button>
           <Button
