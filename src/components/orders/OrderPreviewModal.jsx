@@ -157,6 +157,73 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`;
         const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
+        // Generate PDF in parallel for download option
+        const pdfPromise = (async () => {
+          const doc = new jsPDF();
+          doc.setFont('helvetica');
+          doc.setFillColor(37, 99, 235);
+          doc.rect(0, 0, 210, 40, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(24);
+          doc.text(`${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}`, 105, 20, { align: 'center' });
+          doc.setFontSize(14);
+          doc.text(`${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}`, 105, 32, { align: 'center' });
+          doc.setTextColor(0, 0, 0);
+          let y = 55;
+          doc.setFontSize(16);
+          doc.setFont('helvetica', 'bold');
+          doc.text(language === 'he' ? 'פרטי העסק' : 'Business Details', 20, y);
+          y += 10;
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${order.restaurant_name}`, 20, y);
+          if (order.restaurant_address) {
+            y += 7;
+            doc.text(`${order.restaurant_address}`, 20, y);
+          }
+          y += 15;
+          if (order.delivery_date) {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}`, 20, y);
+            y += 15;
+          }
+          doc.setFontSize(16);
+          doc.setFont('helvetica', 'bold');
+          doc.text(language === 'he' ? 'רשימת מוצרים' : 'Items List', 20, y);
+          y += 10;
+          doc.setFontSize(11);
+          doc.text('#', 20, y);
+          doc.text(language === 'he' ? 'מוצר' : 'Item', 35, y);
+          doc.text(language === 'he' ? 'כמות' : 'Qty', 120, y);
+          doc.text(language === 'he' ? 'יחידה' : 'Unit', 150, y);
+          y += 7;
+          doc.setFont('helvetica', 'normal');
+          (order.items || []).forEach((item, index) => {
+            if (y > 270) {
+              doc.addPage();
+              y = 20;
+            }
+            doc.text(`${index + 1}`, 20, y);
+            doc.text(item.item_name, 35, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${item.quantity}`, 120, y);
+            doc.setFont('helvetica', 'normal');
+            doc.text(item.unit, 150, y);
+            y += 7;
+          });
+          if (order.notes) {
+            y += 10;
+            doc.setFont('helvetica', 'bold');
+            doc.text(language === 'he' ? 'הערות' : 'Notes', 20, y);
+            y += 7;
+            doc.setFont('helvetica', 'normal');
+            const splitNotes = doc.splitTextToSize(order.notes, 170);
+            doc.text(splitNotes, 20, y);
+          }
+          return doc;
+        })();
+
         // Try to copy image to clipboard
         try {
           await navigator.clipboard.write([
@@ -167,8 +234,20 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
           // Open WhatsApp after copying
           window.open(whatsappUrl, '_blank');
+          
+          // Ask if they want PDF too
+          const wantsPDF = window.confirm(
+            language === 'he' 
+              ? 'התמונה הועתקה ל-WhatsApp!\n\nהאם להוריד גם PDF להדפסה?' 
+              : 'Image copied to WhatsApp!\n\nAlso download PDF for printing?'
+          );
+          
+          if (wantsPDF) {
+            const doc = await pdfPromise;
+            doc.save(`order-${order.order_number}.pdf`);
+          }
+          
           setDownloading(false);
-          alert(language === 'he' ? 'התמונה הועתקה! הדבק אותה ב-WhatsApp' : 'Image copied! Paste it in WhatsApp');
           return;
         } catch (clipboardErr) {
           console.log('Clipboard not supported, trying share API');
@@ -181,6 +260,19 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               files: [file],
               text: message
             });
+            
+            // Ask if they want PDF too
+            const wantsPDF = window.confirm(
+              language === 'he' 
+                ? 'האם להוריד גם PDF להדפסה?' 
+                : 'Also download PDF for printing?'
+            );
+            
+            if (wantsPDF) {
+              const doc = await pdfPromise;
+              doc.save(`order-${order.order_number}.pdf`);
+            }
+            
             setDownloading(false);
             return;
           } catch (shareErr) {
@@ -198,8 +290,21 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        setTimeout(() => {
+        setTimeout(async () => {
           window.open(whatsappUrl, '_blank');
+          
+          // Ask if they want PDF too
+          const wantsPDF = window.confirm(
+            language === 'he' 
+              ? 'האם להוריד גם PDF להדפסה?' 
+              : 'Also download PDF for printing?'
+          );
+          
+          if (wantsPDF) {
+            const doc = await pdfPromise;
+            doc.save(`order-${order.order_number}.pdf`);
+          }
+          
           setDownloading(false);
         }, 500);
       }, 'image/jpeg', 0.95);
