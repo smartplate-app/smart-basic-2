@@ -27,6 +27,9 @@ export default function SuppliersPage() {
   const [showReport, setShowReport] = useState(false);
   const [reportData, setReportData] = useState(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [dateRangeType, setDateRangeType] = useState('current_month'); // 'current_month', 'last_month', 'custom'
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const { t, language } = useLanguage();
 
   const loadData = async (currentUser, retryCount = 0) => {
@@ -241,11 +244,39 @@ export default function SuppliersPage() {
       
       const workingEmail = user.acting_as_store_email || user.email;
       
-      // Fetch orders and receipts
-      const [orders, receipts] = await Promise.all([
+      // Calculate date range
+      let filterStartDate, filterEndDate;
+      
+      if (dateRangeType === 'current_month') {
+        const now = new Date();
+        filterStartDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        filterEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+      } else if (dateRangeType === 'last_month') {
+        const now = new Date();
+        filterStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+        filterEndDate = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+      } else if (dateRangeType === 'custom') {
+        filterStartDate = startDate;
+        filterEndDate = endDate;
+      }
+      
+      // Fetch all orders and receipts
+      const [allOrders, allReceipts] = await Promise.all([
         base44.entities.Order.filter({ created_by: workingEmail }),
         base44.entities.SupplyReceipt.filter({ created_by: workingEmail })
       ]);
+      
+      // Filter by date range
+      const orders = allOrders.filter(order => {
+        if (!order.created_date) return false;
+        const orderDate = order.created_date.split('T')[0];
+        return orderDate >= filterStartDate && orderDate <= filterEndDate;
+      });
+      
+      const receipts = allReceipts.filter(receipt => {
+        if (!receipt.received_date) return false;
+        return receipt.received_date >= filterStartDate && receipt.received_date <= filterEndDate;
+      });
       
       // Group by supplier
       const supplierStats = {};
@@ -445,6 +476,60 @@ export default function SuppliersPage() {
                 {language === 'he' ? 'דוח הזמנות מול קבלות (ללא מע"מ)' : 'Orders vs Receipts Report (excl. VAT)'}
               </h2>
               <Button variant="ghost" onClick={() => setShowReport(false)}>✕</Button>
+            </div>
+            
+            {/* Date Range Selector */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-right">
+                    {language === 'he' ? 'בחר תקופה' : 'Select Period'}
+                  </label>
+                  <select
+                    value={dateRangeType}
+                    onChange={(e) => setDateRangeType(e.target.value)}
+                    className="w-full p-2 border rounded-lg text-right"
+                  >
+                    <option value="current_month">{language === 'he' ? 'חודש נוכחי' : 'Current Month'}</option>
+                    <option value="last_month">{language === 'he' ? 'חודש שעבר' : 'Last Month'}</option>
+                    <option value="custom">{language === 'he' ? 'טווח מותאם אישית' : 'Custom Range'}</option>
+                  </select>
+                </div>
+                
+                {dateRangeType === 'custom' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-right">
+                        {language === 'he' ? 'מתאריך' : 'From Date'}
+                      </label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-right">
+                        {language === 'he' ? 'עד תאריך' : 'To Date'}
+                      </label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <Button
+                onClick={generateReport}
+                className="mt-4 bg-blue-600 hover:bg-blue-700"
+              >
+                {language === 'he' ? 'עדכן דוח' : 'Update Report'}
+              </Button>
             </div>
             
             {loadingReport ? (
