@@ -772,6 +772,10 @@ export default function OrderDetailsPage() {
                     onClick={handleDownloadImage}
                     title={t.downloadTitle}
                     disabled={downloading}
+                    style={{
+                        opacity: downloading ? 0.7 : 1,
+                        cursor: downloading ? 'not-allowed' : 'pointer'
+                    }}
                 >
                     {downloading ? (
                         <Loader style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} />
