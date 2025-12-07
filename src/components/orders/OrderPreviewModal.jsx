@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { X, Smartphone, Monitor, Copy, Check, Download, Send } from 'lucide-react';
+import { X, Smartphone, Monitor, Copy, Check, Download, Send, Mail } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
@@ -13,6 +13,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
   
   if (!isOpen || !order) return null;
 
@@ -209,7 +210,85 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     }
   };
 
+  const handleSendEmail = async () => {
+    if (!order.supplier_email) {
+      alert(language === 'he' ? 'לספק אין כתובת אימייל' : 'Supplier has no email address');
+      return;
+    }
 
+    try {
+      setSendingEmail(true);
+
+      const response = await base44.integrations.Core.SendEmail({
+        to: order.supplier_email,
+        subject: `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number} - ${order.restaurant_name}`,
+        body: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; direction: ${language === 'he' ? 'rtl' : 'ltr'};">
+            <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+              <h1 style="margin: 0 0 10px 0; font-size: 28px;">${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}</h1>
+              <p style="margin: 0; font-size: 18px; opacity: 0.9;">${order.restaurant_name}</p>
+            </div>
+            
+            <div style="background: white; padding: 30px; border: 1px solid #e5e7eb;">
+              <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 15px 0; color: #1e293b; font-size: 18px;">${language === 'he' ? 'פרטי העסק' : 'Business Details'}</h2>
+                <p style="margin: 5px 0;"><strong>🏢 ${order.restaurant_name}</strong></p>
+                ${order.restaurant_address ? `<p style="margin: 5px 0; color: #64748b;">📍 ${order.restaurant_address}</p>` : ''}
+              </div>
+
+              ${order.delivery_date ? `
+              <div style="background: #fef3c7; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;">
+                <p style="margin: 0; font-weight: 600; color: #92400e;">📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</p>
+              </div>
+              ` : ''}
+
+              <div style="background: #f0fdf4; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 15px 0; color: #15803d; font-size: 18px;">📋 ${language === 'he' ? 'רשימת מוצרים' : 'Items List'}</h2>
+                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden;">
+                  <thead>
+                    <tr style="background: #f9fafb;">
+                      <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">#</th>
+                      <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'מוצר' : 'Item'}</th>
+                      <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'כמות' : 'Qty'}</th>
+                      <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'יחידה' : 'Unit'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${(order.items || []).map((item, index) => `
+                      <tr style="background: ${index % 2 === 0 ? 'white' : '#f9fafb'};">
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
+                        <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">${item.item_name}</td>
+                        <td style="padding: 12px; font-weight: 600; color: #059669; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.unit}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+
+              ${order.notes ? `
+              <div style="background: #fef7cd; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <h3 style="margin: 0 0 10px 0; color: #92400e; font-size: 16px;">📝 ${language === 'he' ? 'הערות' : 'Notes'}</h3>
+                <p style="margin: 0; color: #78350f;">${order.notes}</p>
+              </div>
+              ` : ''}
+            </div>
+
+            <div style="background: #f9fafb; padding: 20px; text-align: center; border-radius: 0 0 12px 12px;">
+              <p style="margin: 0; color: #6b7280; font-size: 12px;">Smart Plate - ${language === 'he' ? 'מערכת ניהול ספקים' : 'Supplier Management'}</p>
+            </div>
+          </div>
+        `
+      });
+
+      alert(language === 'he' ? '✅ האימייל נשלח בהצלחה!' : '✅ Email sent successfully!');
+      setSendingEmail(false);
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      alert(language === 'he' ? '❌ שגיאה בשליחת האימייל' : '❌ Failed to send email');
+      setSendingEmail(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -268,6 +347,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           >
             {t('close')}
           </Button>
+          {order.supplier_email && (
+            <Button
+              onClick={handleSendEmail}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+              disabled={sendingEmail}
+            >
+              <Mail className="w-5 h-5 mr-2" />
+              {sendingEmail 
+                ? (language === 'he' ? 'שולח אימייל...' : 'Sending Email...') 
+                : (language === 'he' ? 'שלח אימייל' : 'Send Email')}
+            </Button>
+          )}
           <Button
             onClick={handleDownloadImage}
             className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium shadow-sm"
@@ -278,7 +369,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             </svg>
             {downloading 
               ? (language === 'he' ? 'מכין תמונה...' : 'Preparing...') 
-              : (language === 'he' ? 'שתף לספק' : 'Share to Supplier')}
+              : (language === 'he' ? 'שתף ב-WhatsApp' : 'Share to WhatsApp')}
           </Button>
         </div>
       </motion.div>
