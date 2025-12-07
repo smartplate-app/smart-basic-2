@@ -490,16 +490,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             {t('close')}
           </Button>
           <Button
-            onClick={handleDownloadPDF}
-            className="bg-red-600 hover:bg-red-700 text-white font-medium shadow-sm"
-            disabled={downloadingPDF}
-          >
-            <FileText className="w-5 h-5 mr-2" />
-            {downloadingPDF 
-              ? (language === 'he' ? 'יוצר PDF...' : 'Creating PDF...') 
-              : (language === 'he' ? 'הורד PDF' : 'Download PDF')}
-          </Button>
-          <Button
             onClick={handleDownloadImage}
             className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium shadow-sm"
             disabled={downloading}
