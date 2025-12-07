@@ -140,7 +140,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       // Remove temp container
       document.body.removeChild(tempContainer);
 
-      // Try to share directly to WhatsApp with image
+      // Convert to blob and try to copy to clipboard
       canvas.toBlob(async (blob) => {
         const file = new File([blob], `order-${order.order_number}.jpg`, { type: 'image/jpeg' });
 
@@ -156,8 +156,25 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`;
         const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-        // Try Web Share API for mobile (shares image directly)
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        // Try to copy image to clipboard
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'image/jpeg': blob
+            })
+          ]);
+
+          // Open WhatsApp after copying
+          window.open(whatsappUrl, '_blank');
+          setDownloading(false);
+          alert(language === 'he' ? 'התמונה הועתקה! הדבק אותה ב-WhatsApp' : 'Image copied! Paste it in WhatsApp');
+          return;
+        } catch (clipboardErr) {
+          console.log('Clipboard not supported, trying share API');
+        }
+
+        // Try Web Share API for mobile
+        if (navigator.share) {
           try {
             await navigator.share({
               files: [file],
@@ -166,11 +183,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             setDownloading(false);
             return;
           } catch (shareErr) {
-            console.log('Share cancelled, opening WhatsApp instead');
+            console.log('Share cancelled');
           }
         }
 
-        // Fallback: Download image and open WhatsApp
+        // Fallback: Download as JPG
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -187,7 +204,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       }, 'image/jpeg', 0.95);
 
     } catch (err) {
-      console.error('Failed to download image:', err);
+      console.error('Failed to process image:', err);
       setDownloading(false);
     }
   };
