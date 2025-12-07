@@ -140,26 +140,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       // Remove temp container
       document.body.removeChild(tempContainer);
 
-      // Convert to blob and share
+      // Download the image first
       canvas.toBlob(async (blob) => {
-        const file = new File([blob], `order-${order.order_number}.png`, { type: 'image/png' });
-
-        // Try Web Share API first (works on mobile)
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}`,
-              text: `${order.restaurant_name}\n${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}`
-            });
-            setDownloading(false);
-            return;
-          } catch (shareErr) {
-            console.log('Share cancelled or failed:', shareErr);
-          }
-        }
-
-        // Fallback: regular download
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -168,7 +150,23 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        setDownloading(false);
+
+        // Format phone for WhatsApp
+        let phone = order.supplier_phone || '';
+        phone = phone.replace(/\D/g, '');
+        if (phone.startsWith('0')) {
+          phone = '972' + phone.substring(1);
+        } else if (!phone.startsWith('972')) {
+          phone = '972' + phone;
+        }
+
+        // Open WhatsApp after a short delay
+        setTimeout(() => {
+          const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${order.restaurant_name}`;
+          const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+          window.open(whatsappUrl, '_blank');
+          setDownloading(false);
+        }, 500);
       }, 'image/png', 1.0);
 
     } catch (err) {
