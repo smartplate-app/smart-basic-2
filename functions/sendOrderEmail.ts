@@ -10,7 +10,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { order, language } = await req.json();
+    const body = await req.json();
+    const { order, language } = body;
+    
+    console.log('Processing order email:', order.order_number);
 
     if (!order.supplier_email) {
       return Response.json({ error: 'No supplier email' }, { status: 400 });
@@ -110,15 +113,25 @@ Deno.serve(async (req) => {
     const pdfBase64 = doc.output('datauristring').split(',')[1];
     const pdfBlob = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
     
+    console.log('Uploading PDF file...');
+    
     // Upload PDF file
     const uploadResponse = await base44.asServiceRole.integrations.Core.UploadFile({
-      file: new File([pdfBlob], `order-${order.order_number}.pdf`, { type: 'application/pdf' })
+      file: new Blob([pdfBlob], { type: 'application/pdf' })
     });
+    
+    console.log('PDF uploaded:', uploadResponse);
     
     const pdfUrl = uploadResponse.file_url;
     
+    if (!pdfUrl) {
+      throw new Error('Failed to upload PDF');
+    }
+    
+    console.log('Sending email to:', order.supplier_email);
+    
     // Send email with PDF link
-    await base44.asServiceRole.integrations.Core.SendEmail({
+    const emailResponse = await base44.asServiceRole.integrations.Core.SendEmail({
       to: order.supplier_email,
       subject: `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number} - ${order.restaurant_name}`,
       body: `
@@ -153,10 +166,17 @@ Deno.serve(async (req) => {
         </div>
       `
     });
+    
+    console.log('Email sent successfully');
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, pdfUrl });
   } catch (error) {
     console.error('Error sending order email:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Error stack:', error.stack);
+    return Response.json({ 
+      error: error.message,
+      details: error.stack,
+      success: false 
+    }, { status: 500 });
   }
 });
