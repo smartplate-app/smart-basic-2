@@ -237,11 +237,19 @@ export default function RegisterPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 mb-4">
-              Your account has been created successfully. Redirecting to login...
-            </p>
-            <div className="flex justify-center">
-              <Loader className="w-8 h-8 animate-spin text-blue-600" />
+            <div className="text-center space-y-4">
+              <p className="text-xl font-bold text-gray-900">
+                🎉 Welcome to {inviteData?.restaurant_name || inviteData?.store_name}!
+              </p>
+              <p className="text-gray-700">
+                Your account has been created successfully.
+                {inviteData?.role === 'manager' && ' You have manager access to all features.'}
+                {inviteData?.role === 'worker' && ' You have worker access.'}
+              </p>
+              <p className="text-sm text-gray-500">Redirecting...</p>
+              <div className="flex justify-center">
+                <Loader className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
