@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Building, MapPin, Calendar, ClipboardList, Book, Loader, AlertCircle, Printer, Globe } from 'lucide-react';
+import { Building, MapPin, Calendar, ClipboardList, Book, Loader, AlertCircle, Printer, Globe, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 const translations = {
     he: {
@@ -54,6 +55,9 @@ const translations = {
         systemName: 'Supplier Management System',
         print: 'Print',
         printTitle: 'Print Order',
+        download: 'הורד כתמונה',
+        downloadTitle: 'הורד הזמנה כתמונה',
+        downloading: 'מוריד...',
         sent: 'Sent',
         confirmed: 'Confirmed',
         delivered: 'Delivered'
@@ -122,6 +126,7 @@ export default function OrderDetailsPage() {
     const [errorType, setErrorType] = useState(null); 
     const [language, setLanguage] = useState('he');
     const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+    const [downloading, setDownloading] = useState(false);
 
     const t = translations[language];
     const isRTL = language === 'he';
@@ -211,6 +216,39 @@ export default function OrderDetailsPage() {
 
     const handlePrint = () => {
         window.print();
+    };
+
+    const handleDownloadImage = async () => {
+        try {
+            setDownloading(true);
+            const element = document.getElementById('printable-content');
+            
+            // Capture as canvas with high quality
+            const canvas = await html2canvas(element, {
+                scale: 2, // High resolution
+                backgroundColor: '#ffffff',
+                windowWidth: 800, // Fixed width for mobile-friendly size
+                logging: false,
+                useCORS: true
+            });
+            
+            // Convert to blob and download
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `order-${order.order_number}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                setDownloading(false);
+            }, 'image/png', 1.0);
+        } catch (error) {
+            console.error('Error downloading image:', error);
+            alert('Error creating image. Please try again.');
+            setDownloading(false);
+        }
     };
 
     const handleLanguageChange = (newLanguage) => {
@@ -378,12 +416,22 @@ export default function OrderDetailsPage() {
                 }
 
                 .print-button {
-                    bottom: 20px;
+                    bottom: 90px;
                     right: 20px;
                 }
                 
                 .print-button:hover {
                     background: #1d4ed8;
+                }
+
+                .download-button {
+                    bottom: 20px;
+                    right: 20px;
+                    background: #059669;
+                }
+                
+                .download-button:hover {
+                    background: #047857;
                 }
 
                 .language-button {
@@ -440,6 +488,10 @@ export default function OrderDetailsPage() {
                         font-size: 14px;
                     }
                     .print-button {
+                        bottom: 80px;
+                        right: 15px;
+                    }
+                    .download-button {
                         bottom: 15px;
                         right: 15px;
                     }
@@ -673,6 +725,21 @@ export default function OrderDetailsPage() {
                 >
                     <Printer style={{ width: '20px', height: '20px' }} />
                     {t.print}
+                </button>
+
+                {/* Floating Download Button */}
+                <button 
+                    className="floating-button download-button no-print"
+                    onClick={handleDownloadImage}
+                    title={t.downloadTitle}
+                    disabled={downloading}
+                >
+                    {downloading ? (
+                        <Loader style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} />
+                    ) : (
+                        <Download style={{ width: '20px', height: '20px' }} />
+                    )}
+                    {downloading ? t.downloading : t.download}
                 </button>
 
                 {/* Language Switcher */}
