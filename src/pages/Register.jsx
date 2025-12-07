@@ -82,8 +82,6 @@ export default function RegisterPage() {
       
       // Check if this is an OAuth user (Google login) who doesn't have a User entity record yet
       const existingUserRecords = await base44.entities.User.filter({ email: currentUser.email });
-      if (existingUserRecords.length === 0) {
-        console.log('OAuth user detected - auto-completing signup');
 
       // First try to find in UserInvite entity directly
       try {
@@ -101,6 +99,7 @@ export default function RegisterPage() {
           
           // For OAuth users, auto-complete registration immediately
           if (existingUserRecords.length === 0) {
+            console.log('OAuth user detected - auto-completing signup');
             await autoCompleteOAuthSignup(currentUser, invite, token);
             return;
           }
