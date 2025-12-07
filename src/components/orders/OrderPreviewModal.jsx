@@ -43,6 +43,198 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      setDownloading(true);
+
+      // Create HTML content with Hebrew support
+      const htmlContent = `<!DOCTYPE html>
+  <html dir="${language === 'he' ? 'rtl' : 'ltr'}" lang="${language === 'he' ? 'he' : 'en'}">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: white;
+      color: #000;
+      line-height: 1.6;
+      direction: ${language === 'he' ? 'rtl' : 'ltr'};
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    .header p {
+      font-size: 18px;
+    }
+    .section {
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #f9fafb;
+    }
+    .section h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #1e293b;
+    }
+    .business-info {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+    .delivery-date {
+      border-color: #fbbf24;
+      background: #fef3c7;
+      text-align: center;
+    }
+    .items-section {
+      border-color: #22c55e;
+      background: #f0fdf4;
+    }
+    .notes-section {
+      border-color: #f59e0b;
+      background: #fef7cd;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: ${language === 'he' ? 'right' : 'left'};
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f3f4f6;
+      font-weight: bold;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #6b7280;
+      font-size: 14px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 30px;
+    }
+    @media print {
+      .container {
+        padding: 0;
+      }
+    }
+  </style>
+  </head>
+  <body>
+  <div class="container">
+    <div class="header">
+      <h1>${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}</h1>
+      <p>${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}</p>
+    </div>
+
+    <div class="section business-info">
+      <h2>${language === 'he' ? 'פרטי העסק' : 'Business Details'}</h2>
+      <p style="font-size: 18px; margin: 8px 0;"><strong>🏢 ${order.restaurant_name}</strong></p>
+      ${order.restaurant_address ? `<p style="margin: 8px 0;">📍 ${order.restaurant_address}</p>` : ''}
+    </div>
+
+    ${order.delivery_date ? `
+    <div class="section delivery-date">
+      <p style="font-size: 18px; font-weight: bold;">
+        📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+      </p>
+    </div>
+    ` : ''}
+
+    <div class="section items-section">
+      <h2>📋 ${language === 'he' ? 'רשימת מוצרים' : 'Items List'}</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>${language === 'he' ? 'מוצר' : 'Item'}</th>
+            <th>${language === 'he' ? 'כמות' : 'Quantity'}</th>
+            <th>${language === 'he' ? 'יחידה' : 'Unit'}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(order.items || []).map((item, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td style="font-weight: 500;">${item.item_name}</td>
+              <td style="font-weight: bold; color: #059669;">${item.quantity}</td>
+              <td>${item.unit}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    ${order.notes ? `
+    <div class="section notes-section">
+      <h2>📝 ${language === 'he' ? 'הערות' : 'Notes'}</h2>
+      <p>${order.notes}</p>
+    </div>
+    ` : ''}
+
+    <div class="footer">
+      <p>Smart Plate - ${language === 'he' ? 'מערכת ניהול ספקים' : 'Supplier Management System'}</p>
+      <p style="margin-top: 5px; font-size: 12px;">${new Date().toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</p>
+    </div>
+  </div>
+  </body>
+  </html>`;
+
+      // Create blob and download
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `order-${order.order_number}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setDownloading(false);
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+      setDownloading(false);
+    }
+  };
+
   const handleDownloadImage = async () => {
     try {
       setDownloading(true);
@@ -267,6 +459,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             variant="outline"
           >
             {t('close')}
+          </Button>
+          <Button
+            onClick={handleDownloadPDF}
+            variant="outline"
+            className="flex items-center gap-2"
+            disabled={downloading}
+          >
+            <Download className="w-4 h-4" />
+            {language === 'he' ? 'PDF להדפסה' : 'Download PDF'}
           </Button>
           <Button
             onClick={handleDownloadImage}
