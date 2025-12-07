@@ -221,7 +221,23 @@ export default function OrderDetailsPage() {
     }, [language, isRTL, order, errorType, t]);
 
     const handlePrint = () => {
-        window.print();
+        // Ensure print dialog opens even on mobile
+        try {
+            // Hide floating buttons during print
+            const buttons = document.querySelectorAll('.no-print');
+            buttons.forEach(btn => btn.style.display = 'none');
+            
+            // Trigger print (which allows "Save as PDF" on mobile/desktop)
+            window.print();
+            
+            // Restore buttons after print dialog closes
+            setTimeout(() => {
+                buttons.forEach(btn => btn.style.display = 'flex');
+            }, 100);
+        } catch (error) {
+            console.error('Print error:', error);
+            alert(language === 'he' ? 'שגיאה בהדפסה. נסה להוריד כתמונה במקום.' : 'Print error. Try downloading as image instead.');
+        }
     };
 
     const handleDownloadImage = async () => {
@@ -347,22 +363,39 @@ export default function OrderDetailsPage() {
                 }
                 
                 @media print {
+                    @page {
+                        size: A4;
+                        margin: 0;
+                    }
+                    
+                    body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
+                    }
+                    
                     body * {
                         visibility: hidden;
                     }
+                    
                     #printable-content, #printable-content * {
                         visibility: visible;
                     }
+                    
                     #printable-content {
                         position: absolute;
                         left: 0;
                         top: 0;
                         right: 0;
                         width: 100% !important;
+                        max-width: 100% !important;
                         margin: 0 !important;
-                        padding: 20px !important;
+                        padding: 15mm !important;
                         background: white !important;
+                        box-shadow: none !important;
+                        border-radius: 0 !important;
                     }
+                    
                     .no-print {
                         display: none !important;
                     }
