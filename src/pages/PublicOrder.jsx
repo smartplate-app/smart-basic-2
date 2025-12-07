@@ -158,7 +158,7 @@ export default function PublicOrderPage() {
                         position: 'fixed',
                         top: '16px',
                         left: '16px',
-                        background: '#dc2626',
+                        background: '#3b82f6',
                         color: 'white',
                         border: 'none',
                         borderRadius: '50%',
@@ -166,7 +166,8 @@ export default function PublicOrderPage() {
                         height: '44px',
                         cursor: 'pointer',
                         fontSize: '18px',
-                        zIndex: 100
+                        zIndex: 100,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                     }}
                 >
                     🌐

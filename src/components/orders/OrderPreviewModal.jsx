@@ -9,6 +9,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const { t, language } = useLanguage();
   const [viewMode, setViewMode] = useState('mobile');
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   
   if (!isOpen || !order) return null;
 
@@ -36,6 +37,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    try {
+      setDownloading(true);
+      // Open the public URL in a new tab so user can download from there
+      window.open(orderUrl, '_blank');
+      setTimeout(() => setDownloading(false), 1000);
+    } catch (err) {
+      console.error('Failed to open download page:', err);
+      setDownloading(false);
     }
   };
 
@@ -95,6 +108,17 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             variant="outline"
           >
             {t('close')}
+          </Button>
+          <Button
+            onClick={handleDownloadImage}
+            variant="outline"
+            className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border-green-200"
+            disabled={downloading}
+          >
+            {downloading ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-green-600" />}
+            {downloading 
+              ? (language === 'he' ? 'נפתח...' : 'Opening...') 
+              : (language === 'he' ? 'הורד תמונה' : 'Download Image')}
           </Button>
           <Button
             onClick={handleCopyLink}
