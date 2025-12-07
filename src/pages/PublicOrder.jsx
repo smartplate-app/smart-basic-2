@@ -328,31 +328,7 @@ export default function PublicOrderPage() {
                 {downloading ? '⏳' : '📥'} {downloading ? (language === 'he' ? 'מוריד...' : 'Downloading...') : (language === 'he' ? 'הורד תמונה' : 'Download Image')}
             </button>
 
-            {/* Print Button */}
-            <button
-                onClick={() => window.print()}
-                className="no-print"
-                style={{
-                    position: 'fixed',
-                    bottom: '85px',
-                    right: '20px',
-                    background: '#2563eb',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50px',
-                    padding: '14px 24px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    zIndex: 100
-                }}
-            >
-                🖨️ {language === 'he' ? 'הדפס/שמור PDF' : 'Print/Save PDF'}
-            </button>
+
             </div>
         </>
     );
