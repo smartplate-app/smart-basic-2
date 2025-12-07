@@ -81,6 +81,7 @@ const AppLayout = ({ children, currentPageName }) => {
                     const activeRecord = storeUserRecords.find(r => r.is_active === true);
 
                     if (activeRecord) {
+                      console.log('[Layout] Found active StoreUser record:', { role: activeRecord.role, owner: activeRecord.owner_email });
                       setStoreUserRole(activeRecord.role);
                       // Save store info to user context
                       await base44.auth.updateMe({
@@ -89,8 +90,9 @@ const AppLayout = ({ children, currentPageName }) => {
                         store_user_store_name: activeRecord.store_name,
                         store_user_revoked: false
                       });
-                    } else if (storeUserRecords.length > 0 || currentUser.store_user_owner_email) {
-                      // User was a store user but access was revoked (record deleted or deactivated)
+                    } else if (storeUserRecords.length > 0 && storeUserRecords.every(r => !r.is_active)) {
+                      // User has StoreUser records but all are inactive (access revoked)
+                      console.log('[Layout] StoreUser records exist but all inactive - access revoked');
                       await base44.auth.updateMe({
                         store_user_role: null,
                         store_user_owner_email: null,
@@ -98,9 +100,21 @@ const AppLayout = ({ children, currentPageName }) => {
                         store_user_revoked: true
                       });
                       setStoreUserRole(null);
+                    } else if (currentUser.store_user_owner_email && storeUserRecords.length === 0) {
+                      // User was a store user but record was completely deleted
+                      console.log('[Layout] StoreUser record deleted - access revoked');
+                      await base44.auth.updateMe({
+                        store_user_role: null,
+                        store_user_owner_email: null,
+                        store_user_store_name: null,
+                        store_user_revoked: true
+                      });
+                      setStoreUserRole(null);
+                    } else {
+                      console.log('[Layout] No StoreUser record found, user is regular owner');
                     }
                   } catch (storeUserError) {
-                    console.log("Error checking store user record:", storeUserError);
+                    console.error("[Layout] Error checking store user record:", storeUserError);
                   }
 
                   const currentPath = location.pathname;
