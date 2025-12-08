@@ -18,15 +18,21 @@ export default function PublicOrderPage() {
                     return;
                 }
 
-                // Call public function (no auth required)
-                const response = await base44.functions.invoke('getPublicOrderByToken', { token });
+                // Call function directly via fetch (no authentication required)
+                const response = await fetch(`${window.location.origin}/api/functions/getPublicOrderByToken`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
 
-                if (!response.data.success) {
-                    setError(response.data.error || (language === 'he' ? 'שגיאה בטעינת הזמנה' : 'Error loading order'));
+                const data = await response.json();
+
+                if (!data.success) {
+                    setError(data.error || (language === 'he' ? 'שגיאה בטעינת הזמנה' : 'Error loading order'));
                     return;
                 }
 
-                setOrder(response.data.order);
+                setOrder(data.order);
             } catch (err) {
                 console.error('Error loading order:', err);
                 setError(language === 'he' ? 'שגיאה בטעינת הזמנה' : 'Error loading order');
