@@ -62,16 +62,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
   if (!isOpen || !order) return null;
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(orderUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
-
   const handleDownloadImage = async () => {
     try {
       setDownloading(true);
