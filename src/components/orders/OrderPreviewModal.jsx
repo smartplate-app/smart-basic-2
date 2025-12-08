@@ -189,21 +189,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
       const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`;
 
-      // Try Web Share API (works on mobile)
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            text: message
-          });
-          setDownloading(false);
-          return;
-        } catch (shareErr) {
-          console.log('Share cancelled or failed:', shareErr);
-        }
-      }
-
-      // Fallback: Download PDF and open WhatsApp
+      // Download PDF first
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -213,11 +199,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      // Open WhatsApp
-      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message + '\n\n' + (language === 'he' ? 'קובץ PDF הורד למכשיר שלך' : 'PDF file downloaded to your device'))}`;
+      // Open WhatsApp with instructions
+      const whatsappMessage = `${message}\n\n${language === 'he' ? '📎 לחץ על + והצמד את קובץ ה-PDF שהורד (order-' + order.order_number + '.pdf)' : '📎 Click + and attach the downloaded PDF (order-' + order.order_number + '.pdf)'}`;
+      const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(whatsappMessage)}`;
+      
       setTimeout(() => {
         window.open(whatsappUrl, '_blank');
         setDownloading(false);
+        alert(language === 'he' 
+          ? `✅ PDF הורד בהצלחה!\n\nעכשיו:\n1. בחר את קובץ ה-PDF מהתיקייה Downloads\n2. צרף אותו להודעת WhatsApp` 
+          : `✅ PDF downloaded!\n\nNow:\n1. Find the PDF in your Downloads folder\n2. Attach it to the WhatsApp message`);
       }, 500);
 
     } catch (err) {
