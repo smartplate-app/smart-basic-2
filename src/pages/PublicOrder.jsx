@@ -118,30 +118,56 @@ export default function PublicOrderPage() {
     return (
         <>
             <style>{`
-                @media print {
-                    @page {
-                        size: A4;
-                        margin: 0;
+                    @media print {
+                        @page {
+                            size: A4;
+                            margin: 0;
+                        }
+                        body {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            background: white !important;
+                        }
+                        .no-print {
+                            display: none !important;
+                        }
+                        #order-content {
+                            box-shadow: none !important;
+                            border-radius: 0 !important;
+                            max-width: 100% !important;
+                        }
                     }
-                    body {
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        background: white !important;
+
+                    @keyframes spin {
+                        to { transform: rotate(360deg); }
                     }
-                    .no-print {
-                        display: none !important;
+
+                    .print-button {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background: #2563eb;
+                        color: white;
+                        border: none;
+                        border-radius: 50px;
+                        padding: 16px 32px;
+                        font-size: 18px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        z-index: 100;
+                        transition: all 0.2s;
                     }
-                    #order-content {
-                        box-shadow: none !important;
-                        border-radius: 0 !important;
-                        max-width: 100% !important;
+
+                    .print-button:hover {
+                        background: #1d4ed8;
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
                     }
-                }
-                
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
+                `}</style>
             
             <div style={{
                 minHeight: '100vh',
@@ -171,6 +197,14 @@ export default function PublicOrderPage() {
                     }}
                 >
                     🌐
+                </button>
+
+                {/* Print Button */}
+                <button
+                    onClick={() => window.print()}
+                    className="no-print print-button"
+                >
+                    🖨️ {language === 'he' ? 'הדפס / שמור PDF' : 'Print / Save PDF'}
                 </button>
 
                 <div id="order-content" style={{
