@@ -38,8 +38,6 @@ export default function PublicOrderPage() {
 
     const isRTL = language === 'he';
 
-    const [downloading, setDownloading] = React.useState(false);
-
     const handleDownloadImage = async () => {
         try {
             setDownloading(true);
