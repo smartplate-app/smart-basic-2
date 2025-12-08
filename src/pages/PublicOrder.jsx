@@ -18,8 +18,11 @@ export default function PublicOrderPage() {
                     return;
                 }
 
-                // Call function directly via fetch (no authentication required)
-                const response = await fetch(`${window.location.origin}/api/functions/getPublicOrderByToken`, {
+                // Call function using full Base44 API URL (truly public, no auth)
+                const appId = 'smartplatebasic';
+                const functionUrl = `https://app.base44.com/api/apps/${appId}/functions/getPublicOrderByToken`;
+                
+                const response = await fetch(functionUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token })
