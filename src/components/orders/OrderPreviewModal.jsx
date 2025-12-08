@@ -14,6 +14,52 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
   
+  const [orderUrl, setOrderUrl] = React.useState('');
+  const [generatingLink, setGeneratingLink] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isOpen && order && !orderUrl) {
+      generateSecureLink();
+    }
+  }, [isOpen, order]);
+
+  const generateSecureLink = async () => {
+    try {
+      setGeneratingLink(true);
+
+      // Generate a secure token
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+      // Calculate expiration (7 days from now)
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      // Create token record with full order data
+      await base44.entities.OrderShareToken.create({
+        token: token,
+        order_id: order.id,
+        order_data: {
+          order_number: order.order_number,
+          supplier_name: order.supplier_name,
+          restaurant_name: order.restaurant_name,
+          restaurant_address: order.restaurant_address,
+          delivery_date: order.delivery_date,
+          items: order.items,
+          notes: order.notes
+        },
+        expires_at: expiresAt.toISOString(),
+        view_count: 0
+      });
+
+      const secureUrl = `${window.location.origin}${createPageUrl(`PublicOrder?token=${token}`)}`;
+      setOrderUrl(secureUrl);
+    } catch (error) {
+      console.error('Error generating secure link:', error);
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
   if (!isOpen || !order) return null;
 
   // Encode minimal order data in URL for true public access (no login required)

@@ -8,41 +8,37 @@ export default function PublicOrderPage() {
     const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const orderData = urlParams.get('d');
-            
-            if (!orderData) {
-                setError('No order data');
-                return;
+        const loadOrder = async () => {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+
+                if (!token) {
+                    setError(language === 'he' ? 'קישור לא תקין' : 'Invalid link');
+                    return;
+                }
+
+                // Call public function (no auth required)
+                const response = await base44.functions.invoke('getPublicOrderByToken', { token });
+
+                if (!response.data.success) {
+                    setError(response.data.error || (language === 'he' ? 'שגיאה בטעינת הזמנה' : 'Error loading order'));
+                    return;
+                }
+
+                setOrder(response.data.order);
+            } catch (err) {
+                console.error('Error loading order:', err);
+                setError(language === 'he' ? 'שגיאה בטעינת הזמנה' : 'Error loading order');
             }
-            
-            const decoded = decodeURIComponent(orderData);
-            const parsed = JSON.parse(decoded);
-            
-            // Convert minified data back to full format
-            const fullOrder = {
-                order_number: parsed.n,
-                supplier_name: parsed.s,
-                restaurant_name: parsed.r,
-                restaurant_address: parsed.a,
-                delivery_date: parsed.d,
-                items: (parsed.i || []).map(item => ({
-                    item_name: item.n,
-                    quantity: item.q,
-                    unit: item.u
-                })),
-                notes: parsed.t
-            };
-            
-            setOrder(fullOrder);
-        } catch (err) {
-            console.error('Parse error:', err);
-            setError('Invalid order data');
-        }
-    }, []);
+        };
+
+        loadOrder();
+    }, [language]);
 
     const isRTL = language === 'he';
+
+    const [downloading, setDownloading] = React.useState(false);
 
     const handleDownloadImage = async () => {
         try {
