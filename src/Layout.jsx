@@ -42,7 +42,7 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   React.useEffect(() => {
-    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register') {
+    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'PublicOrder') {
       loadAuth();
     } else {
       setAuthLoading(false);
