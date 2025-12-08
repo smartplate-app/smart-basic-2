@@ -62,23 +62,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
   if (!isOpen || !order) return null;
 
-  // Encode minimal order data in URL for true public access (no login required)
-  const minimalOrder = {
-    n: order.order_number,
-    s: order.supplier_name,
-    r: order.restaurant_name,
-    a: order.restaurant_address,
-    d: order.delivery_date,
-    i: (order.items || []).map(item => ({
-      n: item.item_name,
-      q: item.quantity,
-      u: item.unit
-    })),
-    t: order.notes
-  };
-  const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
-  const orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
-
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(orderUrl);
