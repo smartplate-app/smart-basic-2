@@ -8,42 +8,39 @@ export default function PublicOrderPage() {
     const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
-        const loadOrder = async () => {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const token = urlParams.get('token');
-
-                if (!token) {
-                    setError(language === 'he' ? 'קישור לא תקין' : 'Invalid link');
-                    return;
-                }
-
-                // Call function using full Base44 API URL (truly public, no auth)
-                const appId = 'smartplatebasic';
-                const functionUrl = `https://app.base44.com/api/apps/${appId}/functions/getPublicOrderByToken`;
-                
-                const response = await fetch(functionUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token })
-                });
-
-                const data = await response.json();
-
-                if (!data.success) {
-                    setError(data.error || (language === 'he' ? 'שגיאה בטעינת הזמנה' : 'Error loading order'));
-                    return;
-                }
-
-                setOrder(data.order);
-            } catch (err) {
-                console.error('Error loading order:', err);
-                setError(language === 'he' ? 'שגיאה בטעינת הזמנה' : 'Error loading order');
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderData = urlParams.get('d');
+            
+            if (!orderData) {
+                setError('No order data');
+                return;
             }
-        };
-
-        loadOrder();
-    }, [language]);
+            
+            const decoded = decodeURIComponent(orderData);
+            const parsed = JSON.parse(decoded);
+            
+            // Convert minified data back to full format
+            const fullOrder = {
+                order_number: parsed.n,
+                supplier_name: parsed.s,
+                restaurant_name: parsed.r,
+                restaurant_address: parsed.a,
+                delivery_date: parsed.d,
+                items: (parsed.i || []).map(item => ({
+                    item_name: item.n,
+                    quantity: item.q,
+                    unit: item.u
+                })),
+                notes: parsed.t
+            };
+            
+            setOrder(fullOrder);
+        } catch (err) {
+            console.error('Parse error:', err);
+            setError('Invalid order data');
+        }
+    }, []);
 
     const isRTL = language === 'he';
 
@@ -121,56 +118,30 @@ export default function PublicOrderPage() {
     return (
         <>
             <style>{`
-                    @media print {
-                        @page {
-                            size: A4;
-                            margin: 0;
-                        }
-                        body {
-                            margin: 0 !important;
-                            padding: 0 !important;
-                            background: white !important;
-                        }
-                        .no-print {
-                            display: none !important;
-                        }
-                        #order-content {
-                            box-shadow: none !important;
-                            border-radius: 0 !important;
-                            max-width: 100% !important;
-                        }
+                @media print {
+                    @page {
+                        size: A4;
+                        margin: 0;
                     }
-
-                    @keyframes spin {
-                        to { transform: rotate(360deg); }
+                    body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
                     }
-
-                    .print-button {
-                        position: fixed;
-                        bottom: 20px;
-                        right: 20px;
-                        background: #2563eb;
-                        color: white;
-                        border: none;
-                        border-radius: 50px;
-                        padding: 16px 32px;
-                        font-size: 18px;
-                        font-weight: bold;
-                        cursor: pointer;
-                        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        z-index: 100;
-                        transition: all 0.2s;
+                    .no-print {
+                        display: none !important;
                     }
-
-                    .print-button:hover {
-                        background: #1d4ed8;
-                        transform: translateY(-2px);
-                        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+                    #order-content {
+                        box-shadow: none !important;
+                        border-radius: 0 !important;
+                        max-width: 100% !important;
                     }
-                `}</style>
+                }
+                
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
             
             <div style={{
                 minHeight: '100vh',
@@ -200,14 +171,6 @@ export default function PublicOrderPage() {
                     }}
                 >
                     🌐
-                </button>
-
-                {/* Print Button */}
-                <button
-                    onClick={() => window.print()}
-                    className="no-print print-button"
-                >
-                    🖨️ {language === 'he' ? 'הדפס / שמור PDF' : 'Print / Save PDF'}
                 </button>
 
                 <div id="order-content" style={{
@@ -337,7 +300,33 @@ export default function PublicOrderPage() {
                 </div>
             </div>
 
-
+            {/* Download as Image Button */}
+            <button
+                onClick={handleDownloadImage}
+                disabled={downloading}
+                className="no-print"
+                style={{
+                    position: 'fixed',
+                    bottom: '20px',
+                    right: '20px',
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50px',
+                    padding: '14px 24px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    cursor: downloading ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    opacity: downloading ? 0.7 : 1,
+                    zIndex: 100
+                }}
+            >
+                {downloading ? '⏳' : '📥'} {downloading ? (language === 'he' ? 'מוריד...' : 'Downloading...') : (language === 'he' ? 'הורד תמונה' : 'Download Image')}
+            </button>
 
 
             </div>

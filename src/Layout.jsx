@@ -42,7 +42,7 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   React.useEffect(() => {
-    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'PublicOrder') {
+    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register') {
       loadAuth();
     } else {
       setAuthLoading(false);
@@ -185,9 +185,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  // Public pages that don't need Layout or authentication
-      const publicPages = ['WorkerPortal', 'OrderDetails', 'Register', 'PublicOrder'];
-      if (publicPages.includes(currentPageName)) {
+  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register') {
         return <>{children}</>;
       }
 
