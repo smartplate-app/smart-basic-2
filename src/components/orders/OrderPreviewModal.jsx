@@ -27,31 +27,21 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     try {
       setGeneratingLink(true);
 
-      // Generate a secure token
-      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      // Embed order data directly in URL (no database needed, truly public)
+      const orderData = {
+        order_number: order.order_number,
+        supplier_name: order.supplier_name,
+        restaurant_name: order.restaurant_name,
+        restaurant_address: order.restaurant_address,
+        delivery_date: order.delivery_date,
+        items: order.items,
+        notes: order.notes,
+        created_date: order.created_date,
+        status: order.status
+      };
 
-      // Calculate expiration (7 days from now)
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-
-      // Create token record with full order data
-      await base44.entities.OrderShareToken.create({
-        token: token,
-        order_id: order.id,
-        order_data: {
-          order_number: order.order_number,
-          supplier_name: order.supplier_name,
-          restaurant_name: order.restaurant_name,
-          restaurant_address: order.restaurant_address,
-          delivery_date: order.delivery_date,
-          items: order.items,
-          notes: order.notes
-        },
-        expires_at: expiresAt.toISOString(),
-        view_count: 0
-      });
-
-      const secureUrl = `${window.location.origin}${createPageUrl(`PublicOrder?token=${token}`)}`;
+      const encodedData = encodeURIComponent(JSON.stringify(orderData));
+      const secureUrl = `${window.location.origin}${createPageUrl(`OrderDetails?data=${encodedData}`)}`;
       setOrderUrl(secureUrl);
     } catch (error) {
       console.error('Error generating secure link:', error);
