@@ -185,7 +185,9 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'PublicOrder') {
+  // Public pages that don't need Layout or authentication
+      const publicPages = ['WorkerPortal', 'OrderDetails', 'Register', 'PublicOrder'];
+      if (publicPages.includes(currentPageName)) {
         return <>{children}</>;
       }
 
