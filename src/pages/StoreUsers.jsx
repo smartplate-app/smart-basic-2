@@ -292,6 +292,9 @@ export default function StoreUsersPage() {
                       <p className={`text-green-800 font-semibold mb-3 ${isRTL ? 'text-right' : ''}`}>
                         ✅ {t.userAdded}
                       </p>
+                      <div className="bg-white border border-gray-300 rounded-lg p-3 mb-3 break-all text-sm text-gray-700">
+                        {generatedLink}
+                      </div>
                       <Button
                         onClick={async () => {
                           await navigator.clipboard.writeText(generatedLink);
