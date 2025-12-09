@@ -25,7 +25,9 @@ export default function StoreUsersPage() {
   const [userRole, setUserRole] = useState("worker");
   const [personalMessage, setPersonalMessage] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
+  const [generatedHTML, setGeneratedHTML] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
+  const [htmlCopied, setHtmlCopied] = useState(false);
 
   const t = {
     he: {
@@ -128,21 +130,26 @@ export default function StoreUsersPage() {
       });
       console.log('[StoreUsers] StoreUser created successfully');
 
-      // Create long encoded link with restaurant data (no token needed)
-      const restaurantData = {
-        ownerEmail: ownerEmail,
-        restaurantName: user.business_name || user.acting_as_store_name || storeName,
-        restaurantAddress: user.business_address || '',
-        restaurantLogo: user.restaurant_logo || '',
-        inviteeName: userName,
-        inviteeEmail: userEmail,
-        role: userRole
-      };
-
-      // Use Unicode-safe encoding (handles Hebrew and other special characters)
-      const jsonString = JSON.stringify(restaurantData);
-      const encodedData = encodeURIComponent(jsonString);
-      const inviteLink = `${window.location.origin}/pages/JoinRestaurant?data=${encodedData}`;
+      // Create short token-based invite
+      const inviteToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const inviteLink = `${window.location.origin}/pages/Register?invite=${inviteToken}`;
+      
+      // Create UserInvite record with the token
+      await base44.entities.UserInvite.create({
+        token: inviteToken,
+        email: userEmail,
+        full_name: userName,
+        invite_type: 'store_user',
+        store_id: storeId,
+        store_name: storeName,
+        role: userRole,
+        inviter_email: ownerEmail,
+        inviter_name: user.full_name,
+        restaurant_name: user.business_name || user.acting_as_store_name || storeName,
+        restaurant_address: user.business_address || '',
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+        used: false
+      });
       
       console.log('[StoreUsers] Generated invite link:', inviteLink);
 
@@ -151,9 +158,54 @@ export default function StoreUsersPage() {
       await loadData();
       console.log('[StoreUsers] User list updated!');
 
-      // Show the HTML preview immediately (no automatic email)
+      // Generate HTML email with styled button
+      const htmlContent = `
+<!DOCTYPE html>
+<html dir="${language === 'he' ? 'rtl' : 'ltr'}" lang="${language}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f4f4f4; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { color: #1a1a1a; margin-bottom: 20px; }
+    p { margin: 15px 0; }
+    .button { display: inline-block; padding: 15px 30px; background: #2563eb; color: white !important; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; text-align: center; }
+    .button:hover { background: #1d4ed8; }
+    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5; font-size: 14px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>${language === 'he' ? '🎉 הוזמנת להצטרף!' : '🎉 You\'re Invited!'}</h1>
+    <p>${language === 'he' ? 'שלום' : 'Hello'} ${userName},</p>
+    <p>${language === 'he' 
+      ? `הוזמנת על ידי ${user.full_name} להצטרף למסעדה <strong>${user.business_name || storeName}</strong> כ${userRole === 'manager' ? 'מנהל' : 'עובד'}.`
+      : `You've been invited by ${user.full_name} to join <strong>${user.business_name || storeName}</strong> as a ${userRole === 'manager' ? 'Manager' : 'Worker'}.`
+    }</p>
+    ${personalMessage ? `<p style="background: #f0f9ff; padding: 15px; border-radius: 8px; border-right: 4px solid #2563eb;"><strong>${language === 'he' ? 'הודעה אישית:' : 'Personal Message:'}</strong><br>${personalMessage}</p>` : ''}
+    <div style="text-align: center;">
+      <a href="${inviteLink}" class="button">
+        ${language === 'he' ? '👉 לחץ כאן להצטרף' : '👉 Click Here to Join'}
+      </a>
+    </div>
+    <p style="font-size: 14px; color: #666;">
+      ${language === 'he' 
+        ? 'ההזמנה תפוג בעוד 7 ימים. אם יש לך שאלות, צור קשר עם המסעדה.'
+        : 'This invitation expires in 7 days. If you have any questions, contact the restaurant.'
+      }
+    </p>
+    <div class="footer">
+      <p>${language === 'he' ? 'בברכה,' : 'Best regards,'}<br><strong>${user.business_name || storeName}</strong></p>
+    </div>
+  </div>
+</body>
+</html>`;
+
       setGeneratedLink(inviteLink);
+      setGeneratedHTML(htmlContent);
       setLinkCopied(false);
+      setHtmlCopied(false);
       
       console.log('[StoreUsers] All done!');
     } catch (error) {
@@ -207,11 +259,13 @@ export default function StoreUsersPage() {
             if (!open) {
               // Reset form when closing
               setGeneratedLink("");
+              setGeneratedHTML("");
               setUserName("");
               setUserEmail("");
               setUserRole("worker");
               setPersonalMessage("");
               setLinkCopied(false);
+              setHtmlCopied(false);
             }
           }}>
             <DialogTrigger asChild>
@@ -292,20 +346,32 @@ export default function StoreUsersPage() {
                       <p className={`text-green-800 font-semibold mb-3 ${isRTL ? 'text-right' : ''}`}>
                         ✅ {t.userAdded}
                       </p>
-                      <div className="bg-white border border-gray-300 rounded-lg p-3 mb-3 break-all text-sm text-gray-700">
-                        {generatedLink}
+                      
+                      {/* HTML Preview */}
+                      <div className="bg-white border border-gray-300 rounded-lg p-4 mb-3 max-h-64 overflow-y-auto">
+                        <div dangerouslySetInnerHTML={{ __html: generatedHTML }} />
                       </div>
+                      
+                      {/* Copy HTML Button */}
                       <Button
                         onClick={async () => {
-                          await navigator.clipboard.writeText(generatedLink);
-                          setLinkCopied(true);
-                          setTimeout(() => setLinkCopied(false), 2000);
+                          await navigator.clipboard.writeText(generatedHTML);
+                          setHtmlCopied(true);
+                          setTimeout(() => setHtmlCopied(false), 2000);
                         }}
-                        className={linkCopied ? "bg-green-600 hover:bg-green-700 w-full" : "bg-blue-600 hover:bg-blue-700 w-full"}
+                        className={htmlCopied ? "bg-green-600 hover:bg-green-700 w-full mb-2" : "bg-blue-600 hover:bg-blue-700 w-full mb-2"}
                       >
-                        {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                        {linkCopied ? t.copied : t.copyLink}
+                        {htmlCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                        {htmlCopied ? t.copied : t.copyLink}
                       </Button>
+                      
+                      {/* Show short link for reference */}
+                      <div className="text-xs text-gray-500 mt-2">
+                        <p className="mb-1">{language === 'he' ? 'לינק ישיר (לשימוש במסרונים):' : 'Direct link (for SMS):'}</p>
+                        <div className="bg-gray-100 p-2 rounded break-all font-mono text-xs">
+                          {generatedLink}
+                        </div>
+                      </div>
                     </div>
                     <Button 
                       variant="outline" 
@@ -313,6 +379,7 @@ export default function StoreUsersPage() {
                       onClick={() => {
                         setShowAddUser(false);
                         setGeneratedLink("");
+                        setGeneratedHTML("");
                         setUserName("");
                         setUserEmail("");
                         setUserRole("worker");
