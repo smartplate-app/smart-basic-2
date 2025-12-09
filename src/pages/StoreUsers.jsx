@@ -95,15 +95,20 @@ export default function StoreUsersPage() {
   };
 
   const handleAddUser = async () => {
-    if (!userName.trim() || !userEmail.trim()) return;
+    if (!userName.trim() || !userEmail.trim()) {
+      alert(language === 'he' ? 'נא למלא שם ואימייל' : 'Please fill in name and email');
+      return;
+    }
 
     try {
       setSaving(true);
+      console.log('[StoreUsers] Starting user creation...');
 
       const ownerEmail = user.acting_as_store_email || user.email;
-      const storeName = user.acting_as_store_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
+      const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
       const storeId = user.acting_as_store_id || "main";
 
+      console.log('[StoreUsers] Creating StoreUser record...');
       // Create store user
       await base44.entities.StoreUser.create({
         store_id: storeId,
@@ -114,6 +119,7 @@ export default function StoreUsersPage() {
         owner_email: ownerEmail,
         is_active: true
       });
+      console.log('[StoreUsers] StoreUser created successfully');
 
       // Create long encoded link with restaurant data (no token needed)
       const restaurantData = {
@@ -128,14 +134,20 @@ export default function StoreUsersPage() {
 
       const encodedData = btoa(JSON.stringify(restaurantData));
       const inviteLink = `${window.location.origin}/pages/JoinRestaurant?data=${encodedData}`;
+      
+      console.log('[StoreUsers] Generated invite link:', inviteLink);
 
       // Show the link for copying instead of alert
       setGeneratedLink(inviteLink);
       setLinkCopied(false);
+      
+      console.log('[StoreUsers] Loading updated data...');
       await loadData();
+      console.log('[StoreUsers] User added successfully!');
     } catch (error) {
-      console.error("Error adding user:", error);
-      alert(error.message);
+      console.error("[StoreUsers] Error adding user:", error);
+      alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + error.message);
+      setSaving(false);
     } finally {
       setSaving(false);
     }
