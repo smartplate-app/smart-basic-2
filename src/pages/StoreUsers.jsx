@@ -178,14 +178,24 @@ export default function StoreUsersPage() {
             </div>
           </div>
           
-          <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
+          <Dialog open={showAddUser} onOpenChange={(open) => {
+            setShowAddUser(open);
+            if (!open) {
+              // Reset form when closing
+              setGeneratedLink("");
+              setUserName("");
+              setUserEmail("");
+              setUserRole("worker");
+              setLinkCopied(false);
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-gray-900 hover:bg-gray-800">
                 <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t.addUser}
               </Button>
             </DialogTrigger>
-            <DialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+            <DialogContent dir={isRTL ? 'rtl' : 'ltr'} key={generatedLink || 'new'}>
               <DialogHeader>
                 <DialogTitle className={isRTL ? 'text-right' : ''}>{t.addUser}</DialogTitle>
               </DialogHeader>
