@@ -18,6 +18,8 @@ import ChainManagement from './pages/ChainManagement';
 import StoreUsers from './pages/StoreUsers';
 import TestInvites from './pages/TestInvites';
 import PublicOrder from './pages/PublicOrder';
+import InviteUser from './pages/InviteUser';
+import JoinRestaurant from './pages/JoinRestaurant';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +44,8 @@ export const PAGES = {
     "StoreUsers": StoreUsers,
     "TestInvites": TestInvites,
     "PublicOrder": PublicOrder,
+    "InviteUser": InviteUser,
+    "JoinRestaurant": JoinRestaurant,
 }
 
 export const pagesConfig = {
