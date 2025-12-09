@@ -69,22 +69,7 @@ export default function RegisterPage() {
         return;
       }
 
-      // Check if user is already authenticated
-      const isAuthenticated = await base44.auth.isAuthenticated();
-      if (!isAuthenticated) {
-        // Save the current URL and redirect to login
-        // After login, user will return to this page with the token
-        base44.auth.redirectToLogin(window.location.href);
-        return;
-      }
-
-      // If authenticated, get current user and auto-complete signup for OAuth users
-      const currentUser = await base44.auth.me();
-      
-      // Check if this is an OAuth user (Google login) who doesn't have a User entity record yet
-      const existingUserRecords = await base44.entities.User.filter({ email: currentUser.email });
-
-      // First try to find in UserInvite entity directly
+      // Try to find the invite directly (without requiring authentication)
       try {
         const invites = await base44.entities.UserInvite.filter({ token: token, used: false });
         
@@ -98,30 +83,20 @@ export default function RegisterPage() {
             return;
           }
           
-          // For OAuth users, auto-complete registration immediately
-          if (existingUserRecords.length === 0) {
-            console.log('OAuth user detected - auto-completing signup');
-            await autoCompleteOAuthSignup(currentUser, invite, token);
-            return;
-          }
-          
           setInviteData(invite);
           setUsername(invite.email.split('@')[0] || '');
           setLoading(false);
           return;
+        } else {
+          setError('Invalid or expired invitation token.');
+          setLoading(false);
+          return;
         }
       } catch (entityErr) {
-        console.log('Falling back to function verification');
-      }
-
-      // Fallback to old function-based verification
-      const response = await base44.functions.invoke('verifyInviteToken', { token });
-
-      if (response.data.success) {
-        setInviteData(response.data.invite);
-        setUsername(response.data.invite.suggested_username || '');
-      } else {
-        setError(response.data.error || 'Invalid or expired invitation');
+        console.error('Error fetching invite:', entityErr);
+        setError('Failed to verify invitation. Please try again.');
+        setLoading(false);
+        return;
       }
     } catch (err) {
       console.error('Error verifying invite:', err);
@@ -154,14 +129,7 @@ export default function RegisterPage() {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('invite') || urlParams.get('token');
 
-      // If we have invite data from entity, mark it as used
-      if (inviteData?.id) {
-        await base44.entities.UserInvite.update(inviteData.id, {
-          used: true,
-          used_at: new Date().toISOString()
-        });
-      }
-
+      // Call completeSignup - it will mark the invite as used
       const response = await base44.functions.invoke('completeSignup', {
         invite_token: token,
         username: username.trim(),
