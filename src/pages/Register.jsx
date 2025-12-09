@@ -42,7 +42,7 @@ export default function RegisterPage() {
         console.log('OAuth signup completed successfully');
         setSuccess(true);
         setTimeout(() => {
-          window.location.href = '/';
+          window.location.href = '/pages/Orders';
         }, 1500);
       } else {
         console.error('Failed to auto-complete OAuth signup:', response.data.error);
@@ -176,7 +176,7 @@ export default function RegisterPage() {
       if (response.data.success) {
         setSuccess(true);
         setTimeout(() => {
-          window.location.href = '/';
+          window.location.href = '/pages/Orders';
         }, 2000);
       } else {
         alert(response.data.error || 'Failed to create account');
