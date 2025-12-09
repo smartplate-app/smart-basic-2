@@ -23,6 +23,7 @@ export default function StoreUsersPage() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState("worker");
+  const [personalMessage, setPersonalMessage] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -42,12 +43,15 @@ export default function StoreUsersPage() {
       delete: "מחק",
       inviteSent: "המשתמש נוסף בהצלחה!",
       inviteFailed: "המשתמש נוסף! לא ניתן לשלוח מייל אוטומטית.",
-      copyLink: "העתק קישור",
+      copyLink: "העתק הזמנה",
       copied: "הועתק!",
       shareLink: "שתף את הקישור הזה עם המשתמש:",
       currentRestaurant: "המסעדה הנוכחית שלך",
       managerDesc: "יכול לראות הכל ולנהל את המסעדה",
-      workerDesc: "יכול ליצור הזמנות, לקבל אספקה ולבצע ספירות"
+      workerDesc: "יכול ליצור הזמנות, לקבל אספקה ולבצע ספירות",
+      personalMessage: "הודעה אישית (אופציונלי)",
+      personalMessagePlaceholder: "הוסף הודעה אישית...",
+      userAdded: "המשתמש נוסף בהצלחה!"
     },
     en: {
       title: "Restaurant Users",
@@ -64,12 +68,15 @@ export default function StoreUsersPage() {
       delete: "Delete",
       inviteSent: "User added successfully!",
       inviteFailed: "User added! Email couldn't be sent automatically.",
-      copyLink: "Copy Link",
+      copyLink: "Copy Invitation",
       copied: "Copied!",
       shareLink: "Share this link with the user:",
       currentRestaurant: "Your Current Restaurant",
       managerDesc: "Can see everything and manage the restaurant",
-      workerDesc: "Can create orders, receive supplies and do counts"
+      workerDesc: "Can create orders, receive supplies and do counts",
+      personalMessage: "Personal Message (Optional)",
+      personalMessagePlaceholder: "Add a personal message...",
+      userAdded: "User added successfully!"
     }
   }[language] || {};
 
@@ -203,6 +210,7 @@ export default function StoreUsersPage() {
               setUserName("");
               setUserEmail("");
               setUserRole("worker");
+              setPersonalMessage("");
               setLinkCopied(false);
             }
           }}>
@@ -218,6 +226,16 @@ export default function StoreUsersPage() {
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div>
+                  <Label className={isRTL ? 'text-right block' : ''}>{t.userEmail}</Label>
+                  <Input 
+                    type="email"
+                    value={userEmail} 
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder="user@example.com"
+                    className={isRTL ? 'text-right' : ''}
+                  />
+                </div>
+                <div>
                   <Label className={isRTL ? 'text-right block' : ''}>{t.userName}</Label>
                   <Input 
                     value={userName} 
@@ -226,13 +244,12 @@ export default function StoreUsersPage() {
                   />
                 </div>
                 <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>{t.userEmail}</Label>
-                  <Input 
-                    type="email"
-                    value={userEmail} 
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    placeholder="user@example.com"
-                    className={isRTL ? 'text-right' : ''}
+                  <Label className={isRTL ? 'text-right block' : ''}>{t.personalMessage}</Label>
+                  <textarea 
+                    value={personalMessage} 
+                    onChange={(e) => setPersonalMessage(e.target.value)}
+                    placeholder={t.personalMessagePlaceholder}
+                    className={`w-full min-h-[80px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 ${isRTL ? 'text-right' : ''}`}
                   />
                 </div>
                 <div>
@@ -271,38 +288,20 @@ export default function StoreUsersPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className={`text-green-800 font-semibold mb-2 ${isRTL ? 'text-right' : ''}`}>
-                        ✅ {language === 'he' ? 'המשתמש נוסף! אימייל נשלח אוטומטית' : 'User added! Email sent automatically'}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <p className={`text-green-800 font-semibold mb-3 ${isRTL ? 'text-right' : ''}`}>
+                        ✅ {t.userAdded}
                       </p>
-                      <p className={`text-sm text-green-700 mb-2 ${isRTL ? 'text-right' : ''}`}>
-                        {language === 'he' ? 'העתק את קוד ה-HTML למטה אם ברצונך לשלוח מייל נוסף:' : 'Copy HTML code below if you want to send another email:'}
-                      </p>
-                      <div className="bg-white border rounded p-2 mb-3 max-h-48 overflow-auto">
-                        <code className="text-xs whitespace-pre-wrap" id="htmlCode">
-                {`<!DOCTYPE html>
-                <html dir="${language === 'he' ? 'rtl' : 'ltr'}">
-                <head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333}.container{max-width:600px;margin:0 auto;padding:20px}.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;text-align:center;border-radius:10px 10px 0 0}.content{background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px}.button{display:inline-block;background:#667eea;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;margin:20px 0;font-weight:bold}</style></head>
-                <body><div class="container"><div class="header"><h1>${language === 'he' ? '🎉 הזמנה להצטרף למסעדה' : '🎉 Restaurant Invitation'}</h1></div>
-                <div class="content"><p>${language === 'he' ? 'שלום' : 'Hello'} ${userName},</p>
-                <p>${language === 'he' ? `הוזמנת להצטרף למסעדת <strong>${user.business_name || user.full_name}</strong> כ${userRole === 'manager' ? 'מנהל' : 'עובד'}.` : `You've been invited to join <strong>${user.business_name || user.full_name}</strong> as a ${userRole}.`}</p>
-                <p>${language === 'he' ? 'לחץ על הכפתור למטה כדי להצטרף:' : 'Click the button below to join:'}</p>
-                <div style="text-align:center"><a href="${generatedLink}" class="button">${language === 'he' ? '🔗 הצטרף עכשיו' : '🔗 Join Now'}</a></div>
-                <p style="color:#666;font-size:12px">${language === 'he' ? 'או העתק והדבק את הקישור הזה בדפדפן:' : 'Or copy and paste this link:'}</p>
-                <p style="word-break:break-all;background:white;padding:10px;border-radius:5px;font-size:11px">${generatedLink}</p></div></div></body></html>`}
-                        </code>
-                      </div>
                       <Button
                         onClick={async () => {
-                          const htmlCode = document.getElementById('htmlCode').textContent;
-                          await navigator.clipboard.writeText(htmlCode);
+                          await navigator.clipboard.writeText(generatedLink);
                           setLinkCopied(true);
                           setTimeout(() => setLinkCopied(false), 2000);
                         }}
-                        className={linkCopied ? "bg-green-600 hover:bg-green-700 w-full mb-2" : "bg-blue-600 hover:bg-blue-700 w-full mb-2"}
+                        className={linkCopied ? "bg-green-600 hover:bg-green-700 w-full" : "bg-blue-600 hover:bg-blue-700 w-full"}
                       >
                         {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                        {linkCopied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק HTML למייל' : 'Copy HTML for Email')}
+                        {linkCopied ? t.copied : t.copyLink}
                       </Button>
                     </div>
                     <Button 
@@ -314,6 +313,7 @@ export default function StoreUsersPage() {
                         setUserName("");
                         setUserEmail("");
                         setUserRole("worker");
+                        setPersonalMessage("");
                       }}
                     >
                       {language === 'he' ? 'סגור' : 'Close'}
