@@ -139,30 +139,27 @@ export default function StoreUsersPage() {
       
       console.log('[StoreUsers] Generated invite link:', inviteLink);
 
-      // Send email automatically through the system
+      // Show the HTML preview immediately
+      setGeneratedLink(inviteLink);
+      setLinkCopied(false);
+
+      // Send email automatically in the background
       console.log('[StoreUsers] Sending invite email...');
-      try {
-        await base44.functions.invoke('sendStoreUserInvite', {
-          recipient_email: userEmail,
-          recipient_name: userName,
-          store_name: storeName,
-          role: userRole,
-          invite_link: inviteLink,
-          language: language
-        });
+      base44.functions.invoke('sendStoreUserInvite', {
+        recipient_email: userEmail,
+        recipient_name: userName,
+        store_name: storeName,
+        role: userRole,
+        invite_link: inviteLink,
+        language: language
+      }).then(() => {
         console.log('[StoreUsers] Email sent successfully');
-      } catch (emailError) {
+      }).catch(emailError => {
         console.error('[StoreUsers] Failed to send email:', emailError);
-        // Continue anyway - user was created, just email failed
-      }
+      });
       
       console.log('[StoreUsers] Loading updated data...');
       await loadData();
-      
-      // Show success message
-      setGeneratedLink("success");
-      setLinkCopied(false);
-      
       console.log('[StoreUsers] User added successfully!');
     } catch (error) {
       console.error("[StoreUsers] Error adding user:", error);
@@ -286,29 +283,53 @@ export default function StoreUsersPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                      <div className="text-4xl mb-3">✅</div>
-                      <p className="text-green-800 font-bold text-lg mb-2">
-                        {language === 'he' ? 'ההזמנה נשלחה בהצלחה!' : 'Invitation Sent Successfully!'}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className={`text-green-800 font-semibold mb-2 ${isRTL ? 'text-right' : ''}`}>
+                        ✅ {language === 'he' ? 'המשתמש נוסף! אימייל נשלח אוטומטית' : 'User added! Email sent automatically'}
                       </p>
-                      <p className="text-green-700 text-sm mb-4">
-                        {language === 'he' 
-                          ? `אימייל נשלח ל-${userEmail}` 
-                          : `Email sent to ${userEmail}`}
+                      <p className={`text-sm text-green-700 mb-2 ${isRTL ? 'text-right' : ''}`}>
+                        {language === 'he' ? 'העתק את קוד ה-HTML למטה אם ברצונך לשלוח מייל נוסף:' : 'Copy HTML code below if you want to send another email:'}
                       </p>
-                      <Button 
-                        className="w-full bg-gray-900 hover:bg-gray-800"
-                        onClick={() => {
-                          setShowAddUser(false);
-                          setGeneratedLink("");
-                          setUserName("");
-                          setUserEmail("");
-                          setUserRole("worker");
+                      <div className="bg-white border rounded p-2 mb-3 max-h-48 overflow-auto">
+                        <code className="text-xs whitespace-pre-wrap" id="htmlCode">
+                {`<!DOCTYPE html>
+                <html dir="${language === 'he' ? 'rtl' : 'ltr'}">
+                <head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333}.container{max-width:600px;margin:0 auto;padding:20px}.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;text-align:center;border-radius:10px 10px 0 0}.content{background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px}.button{display:inline-block;background:#667eea;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;margin:20px 0;font-weight:bold}</style></head>
+                <body><div class="container"><div class="header"><h1>${language === 'he' ? '🎉 הזמנה להצטרף למסעדה' : '🎉 Restaurant Invitation'}</h1></div>
+                <div class="content"><p>${language === 'he' ? 'שלום' : 'Hello'} ${userName},</p>
+                <p>${language === 'he' ? `הוזמנת להצטרף למסעדת <strong>${user.business_name || user.full_name}</strong> כ${userRole === 'manager' ? 'מנהל' : 'עובד'}.` : `You've been invited to join <strong>${user.business_name || user.full_name}</strong> as a ${userRole}.`}</p>
+                <p>${language === 'he' ? 'לחץ על הכפתור למטה כדי להצטרף:' : 'Click the button below to join:'}</p>
+                <div style="text-align:center"><a href="${generatedLink}" class="button">${language === 'he' ? '🔗 הצטרף עכשיו' : '🔗 Join Now'}</a></div>
+                <p style="color:#666;font-size:12px">${language === 'he' ? 'או העתק והדבק את הקישור הזה בדפדפן:' : 'Or copy and paste this link:'}</p>
+                <p style="word-break:break-all;background:white;padding:10px;border-radius:5px;font-size:11px">${generatedLink}</p></div></div></body></html>`}
+                        </code>
+                      </div>
+                      <Button
+                        onClick={async () => {
+                          const htmlCode = document.getElementById('htmlCode').textContent;
+                          await navigator.clipboard.writeText(htmlCode);
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 2000);
                         }}
+                        className={linkCopied ? "bg-green-600 hover:bg-green-700 w-full mb-2" : "bg-blue-600 hover:bg-blue-700 w-full mb-2"}
                       >
-                        {language === 'he' ? 'סגור' : 'Close'}
+                        {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                        {linkCopied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק HTML למייל' : 'Copy HTML for Email')}
                       </Button>
                     </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        setShowAddUser(false);
+                        setGeneratedLink("");
+                        setUserName("");
+                        setUserEmail("");
+                        setUserRole("worker");
+                      }}
+                    >
+                      {language === 'he' ? 'סגור' : 'Close'}
+                    </Button>
                   </div>
                 )}
               </div>
