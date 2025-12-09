@@ -103,17 +103,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // CRITICAL: First, grant the new user access to this Base44 app
-    // This is what allows them to login to the specific restaurant app
-    try {
-      await base44.asServiceRole.auth.addAppUser(invite.email);
-    } catch (accessError) {
-      console.log('User may already have app access or error:', accessError);
-      // Continue anyway - they might already have access
-    }
-
     // Create user account with restaurant data
     await base44.asServiceRole.entities.User.create(userData);
+    
+    // CRITICAL: Grant the new user access to this Base44 app
+    // This must happen AFTER creating the User entity
+    try {
+      await base44.asServiceRole.auth.addAppUser(invite.email);
+      console.log('Successfully added app access for:', invite.email);
+    } catch (accessError) {
+      console.error('Failed to add app access:', accessError);
+      // This is critical - if it fails, the user won't be able to login
+      throw new Error('Failed to grant app access. Please contact support.');
+    }
 
     // If this is a store_user invite, also create StoreUser record
     if (inviteTypeToUse === 'store_user') {

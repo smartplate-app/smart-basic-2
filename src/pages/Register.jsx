@@ -61,7 +61,7 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('invite') || urlParams.get('token'); // Support both formats
+      const token = urlParams.get('invite') || urlParams.get('token');
 
       if (!token) {
         setError('No invitation token found. Please check your invitation link.');
@@ -69,39 +69,24 @@ export default function RegisterPage() {
         return;
       }
 
-      // Try to find the invite directly (without requiring authentication)
-      try {
-        const invites = await base44.entities.UserInvite.filter({ token: token, used: false });
-        
-        if (invites.length > 0) {
-          const invite = invites[0];
-          
-          // Check if expired
-          if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
-            setError('This invitation has expired. Please request a new one.');
-            setLoading(false);
-            return;
-          }
-          
-          setInviteData(invite);
-          setUsername(invite.email.split('@')[0] || '');
-          setLoading(false);
-          return;
-        } else {
-          setError('Invalid or expired invitation token.');
-          setLoading(false);
-          return;
-        }
-      } catch (entityErr) {
-        console.error('Error fetching invite:', entityErr);
-        setError('Failed to verify invitation. Please try again.');
+      console.log('[Register] Verifying invite token:', token);
+
+      // Use service role to verify invite (no auth required for viewing invite)
+      const response = await base44.functions.invoke('verifyInviteToken', { token });
+
+      if (response.data.success && response.data.invite) {
+        console.log('[Register] Invite verified successfully');
+        setInviteData(response.data.invite);
+        setUsername(response.data.invite.email?.split('@')[0] || '');
         setLoading(false);
-        return;
+      } else {
+        console.error('[Register] Invalid invite:', response.data.error);
+        setError(response.data.error || 'Invalid or expired invitation');
+        setLoading(false);
       }
     } catch (err) {
-      console.error('Error verifying invite:', err);
+      console.error('[Register] Error verifying invite:', err);
       setError('Failed to verify invitation. Please try again or contact support.');
-    } finally {
       setLoading(false);
     }
   };
