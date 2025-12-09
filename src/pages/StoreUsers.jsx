@@ -139,6 +139,11 @@ export default function StoreUsersPage() {
       
       console.log('[StoreUsers] Generated invite link:', inviteLink);
 
+      // Reload the user list first
+      console.log('[StoreUsers] Loading updated data...');
+      await loadData();
+      console.log('[StoreUsers] User list updated!');
+
       // Show the HTML preview immediately
       setGeneratedLink(inviteLink);
       setLinkCopied(false);
@@ -158,9 +163,7 @@ export default function StoreUsersPage() {
         console.error('[StoreUsers] Failed to send email:', emailError);
       });
       
-      console.log('[StoreUsers] Loading updated data...');
-      await loadData();
-      console.log('[StoreUsers] User added successfully!');
+      console.log('[StoreUsers] All done!');
     } catch (error) {
       console.error("[StoreUsers] Error adding user:", error);
       alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + error.message);
