@@ -115,31 +115,19 @@ export default function StoreUsersPage() {
         is_active: true
       });
 
-      // Generate unique invite token
-      const token = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+      // Create long encoded link with restaurant data (no token needed)
+      const restaurantData = {
+        ownerEmail: ownerEmail,
+        restaurantName: user.business_name || user.acting_as_store_name || storeName,
+        restaurantAddress: user.business_address || '',
+        restaurantLogo: user.restaurant_logo || '',
+        inviteeName: userName,
+        inviteeEmail: userEmail,
+        role: userRole
+      };
 
-      // Create invite record with restaurant details
-      await base44.entities.UserInvite.create({
-        token: token,
-        email: userEmail,
-        full_name: userName,
-        invite_type: "store_user",
-        store_id: storeId,
-        store_name: storeName,
-        role: userRole,
-        inviter_email: ownerEmail,
-        inviter_name: user.full_name,
-        expires_at: expiresAt.toISOString(),
-        used: false,
-        // Include restaurant details for the worker
-        restaurant_name: user.business_name || user.acting_as_store_name || storeName,
-        restaurant_address: user.business_address || ""
-      });
-
-      // Generate unique invite link
-      const inviteLink = `${window.location.origin}/pages/Register?invite=${token}`;
+      const encodedData = btoa(JSON.stringify(restaurantData));
+      const inviteLink = `${window.location.origin}/pages/JoinRestaurant?data=${encodedData}`;
 
       // Show the link for copying instead of alert
       setGeneratedLink(inviteLink);
