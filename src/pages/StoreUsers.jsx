@@ -347,31 +347,51 @@ export default function StoreUsersPage() {
                         ✅ {t.userAdded}
                       </p>
                       
-                      {/* HTML Preview */}
-                      <div className="bg-white border border-gray-300 rounded-lg p-4 mb-3 max-h-64 overflow-y-auto">
-                        <div dangerouslySetInnerHTML={{ __html: generatedHTML }} />
+                      {/* Preview iframe to show HTML properly */}
+                      <div className="bg-white border border-gray-300 rounded-lg mb-3 max-h-96 overflow-auto">
+                        <iframe
+                          srcDoc={generatedHTML}
+                          className="w-full h-96 border-0"
+                          title="Email Preview"
+                        />
                       </div>
                       
-                      {/* Copy HTML Button */}
+                      {/* Copy HTML Button - copies formatted HTML for Gmail */}
                       <Button
                         onClick={async () => {
-                          await navigator.clipboard.writeText(generatedHTML);
-                          setHtmlCopied(true);
-                          setTimeout(() => setHtmlCopied(false), 2000);
+                          try {
+                            // Create a blob with HTML content
+                            const blob = new Blob([generatedHTML], { type: 'text/html' });
+                            const clipboardItem = new ClipboardItem({ 'text/html': blob, 'text/plain': new Blob([generatedLink], { type: 'text/plain' }) });
+                            await navigator.clipboard.write([clipboardItem]);
+                            setHtmlCopied(true);
+                            setTimeout(() => setHtmlCopied(false), 2000);
+                          } catch (err) {
+                            // Fallback to plain text if HTML copy fails
+                            await navigator.clipboard.writeText(generatedHTML);
+                            setHtmlCopied(true);
+                            setTimeout(() => setHtmlCopied(false), 2000);
+                          }
                         }}
                         className={htmlCopied ? "bg-green-600 hover:bg-green-700 w-full mb-2" : "bg-blue-600 hover:bg-blue-700 w-full mb-2"}
                       >
                         {htmlCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                        {htmlCopied ? t.copied : t.copyLink}
+                        {htmlCopied ? t.copied : (language === 'he' ? 'העתק הזמנה מעוצבת (Gmail)' : 'Copy Formatted Invitation (Gmail)')}
                       </Button>
                       
-                      {/* Show short link for reference */}
-                      <div className="text-xs text-gray-500 mt-2">
-                        <p className="mb-1">{language === 'he' ? 'לינק ישיר (לשימוש במסרונים):' : 'Direct link (for SMS):'}</p>
-                        <div className="bg-gray-100 p-2 rounded break-all font-mono text-xs">
-                          {generatedLink}
-                        </div>
-                      </div>
+                      {/* Copy short link button */}
+                      <Button
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(generatedLink);
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 2000);
+                        }}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                        {linkCopied ? t.copied : (language === 'he' ? 'העתק לינק בלבד' : 'Copy Link Only')}
+                      </Button>
                     </div>
                     <Button 
                       variant="outline" 
