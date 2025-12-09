@@ -101,7 +101,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create user account
+    // CRITICAL: First, grant the new user access to this Base44 app
+    // This is what allows them to login to the specific restaurant app
+    try {
+      await base44.asServiceRole.auth.addAppUser(invite.email);
+    } catch (accessError) {
+      console.log('User may already have app access or error:', accessError);
+      // Continue anyway - they might already have access
+    }
+
+    // Create user account with restaurant data
     await base44.asServiceRole.entities.User.create(userData);
 
     // If this is a store_user invite, also create StoreUser record
