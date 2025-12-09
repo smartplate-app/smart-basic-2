@@ -139,15 +139,6 @@ export default function StoreUsersPage() {
       
       console.log('[StoreUsers] Generated invite link:', inviteLink);
 
-      // Reload the user list first
-      console.log('[StoreUsers] Loading updated data...');
-      await loadData();
-      console.log('[StoreUsers] User list updated!');
-
-      // Show the HTML preview immediately
-      setGeneratedLink(inviteLink);
-      setLinkCopied(false);
-
       // Send email automatically in the background
       console.log('[StoreUsers] Sending invite email...');
       base44.functions.invoke('sendStoreUserInvite', {
@@ -162,8 +153,17 @@ export default function StoreUsersPage() {
       }).catch(emailError => {
         console.error('[StoreUsers] Failed to send email:', emailError);
       });
+
+      // Close the form
+      setShowAddUser(false);
+      setUserName("");
+      setUserEmail("");
+      setUserRole("worker");
       
-      console.log('[StoreUsers] All done!');
+      // Reload the user list
+      console.log('[StoreUsers] Loading updated data...');
+      await loadData();
+      console.log('[StoreUsers] User list updated! All done!');
     } catch (error) {
       console.error("[StoreUsers] Error adding user:", error);
       alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + error.message);
