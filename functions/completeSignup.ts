@@ -84,20 +84,22 @@ Deno.serve(async (req) => {
       userData.store_user_owner_email = ownerEmail;
       userData.store_user_store_name = store_name || invite.store_name;
       
-      // For managers, automatically set them to "act as" the restaurant owner
-      // This way they see all the restaurant's data (suppliers, items, orders)
-      if ((role || invite.role) === 'manager') {
-        // Get the owner's user record to copy their restaurant details
-        const ownerUsers = await base44.asServiceRole.entities.User.filter({ email: ownerEmail });
-        const owner = ownerUsers && ownerUsers.length > 0 ? ownerUsers[0] : null;
+      // Get the owner's user record to copy their restaurant details
+      const ownerUsers = await base44.asServiceRole.entities.User.filter({ email: ownerEmail });
+      const owner = ownerUsers && ownerUsers.length > 0 ? ownerUsers[0] : null;
+      
+      if (owner) {
+        // CRITICAL: Set the user to automatically view the restaurant owner's data
+        // This makes them see the restaurant's logo, name, suppliers, items, orders
+        userData.acting_as_store_email = ownerEmail;
+        userData.acting_as_store_name = owner.business_name || invite.restaurant_name || store_name || invite.store_name;
+        userData.business_name = owner.business_name || invite.restaurant_name;
+        userData.business_address = owner.business_address || invite.restaurant_address || '';
+        userData.restaurant_logo = owner.restaurant_logo || '';
         
-        if (owner) {
-          userData.acting_as_store_email = ownerEmail;
-          userData.acting_as_store_name = owner.business_name || invite.restaurant_name || store_name || invite.store_name;
-          userData.business_name = owner.business_name || invite.restaurant_name;
-          userData.business_address = owner.business_address || invite.restaurant_address || '';
-          userData.restaurant_logo = owner.restaurant_logo || '';
-        }
+        // Copy all restaurant branding to the new user
+        if (owner.restaurant_phone) userData.restaurant_phone = owner.restaurant_phone;
+        if (owner.business_city) userData.business_city = owner.business_city;
       }
     }
 
