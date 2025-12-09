@@ -132,7 +132,9 @@ export default function StoreUsersPage() {
         role: userRole
       };
 
-      const encodedData = btoa(JSON.stringify(restaurantData));
+      // Use Unicode-safe encoding (handles Hebrew and other special characters)
+      const jsonString = JSON.stringify(restaurantData);
+      const encodedData = encodeURIComponent(jsonString);
       const inviteLink = `${window.location.origin}/pages/JoinRestaurant?data=${encodedData}`;
       
       console.log('[StoreUsers] Generated invite link:', inviteLink);

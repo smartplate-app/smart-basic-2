@@ -31,7 +31,8 @@ export default function JoinRestaurantPage() {
         return;
       }
 
-      const decoded = JSON.parse(atob(encodedData));
+      // Decode using Unicode-safe method (matches encoding in StoreUsers)
+      const decoded = JSON.parse(decodeURIComponent(encodedData));
       setRestaurantData(decoded);
       setUsername(decoded.inviteeEmail.split('@')[0]);
       
