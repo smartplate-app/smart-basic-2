@@ -41,8 +41,9 @@ export default function RegisterPage() {
       if (response.data.success) {
         console.log('OAuth signup completed successfully');
         setSuccess(true);
+        // Force a full reload to Orders to ensure authentication is loaded
         setTimeout(() => {
-          window.location.href = '/pages/Orders';
+          window.location.href = window.location.origin + '/pages/Orders';
         }, 1500);
       } else {
         console.error('Failed to auto-complete OAuth signup:', response.data.error);
@@ -175,8 +176,11 @@ export default function RegisterPage() {
 
       if (response.data.success) {
         setSuccess(true);
+        // User needs to login with their new credentials
+        // Redirect to login with nextUrl parameter to go to Orders after login
         setTimeout(() => {
-          window.location.href = '/pages/Orders';
+          const loginUrl = `/auth/login?next=${encodeURIComponent(window.location.origin + '/pages/Orders')}`;
+          window.location.href = loginUrl;
         }, 2000);
       } else {
         alert(response.data.error || 'Failed to create account');
