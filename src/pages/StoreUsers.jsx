@@ -139,30 +139,14 @@ export default function StoreUsersPage() {
       
       console.log('[StoreUsers] Generated invite link:', inviteLink);
 
-      // Show the HTML preview immediately
+      // Reload the user list
+      console.log('[StoreUsers] Loading updated data...');
+      await loadData();
+      console.log('[StoreUsers] User list updated!');
+
+      // Show the HTML preview immediately (no automatic email)
       setGeneratedLink(inviteLink);
       setLinkCopied(false);
-
-      // Reload the user list in the background
-      console.log('[StoreUsers] Loading updated data...');
-      loadData().then(() => {
-        console.log('[StoreUsers] User list updated!');
-      });
-
-      // Send email automatically in the background
-      console.log('[StoreUsers] Sending invite email...');
-      base44.functions.invoke('sendStoreUserInvite', {
-        recipient_email: userEmail,
-        recipient_name: userName,
-        store_name: storeName,
-        role: userRole,
-        invite_link: inviteLink,
-        language: language
-      }).then(() => {
-        console.log('[StoreUsers] Email sent successfully');
-      }).catch(emailError => {
-        console.error('[StoreUsers] Failed to send email:', emailError);
-      });
       
       console.log('[StoreUsers] All done!');
     } catch (error) {
