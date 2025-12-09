@@ -261,28 +261,37 @@ export default function StoreUsersPage() {
                         ✅ {t.inviteSent}
                       </p>
                       <p className={`text-sm text-green-700 mb-2 ${isRTL ? 'text-right' : ''}`}>
-                        {t.shareLink}
+                        {language === 'he' ? 'העתק את הקוד HTML למטה והדבק במייל Gmail שלך:' : 'Copy the HTML code below and paste in your Gmail:'}
                       </p>
-                      <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <Input 
-                          value={generatedLink} 
-                          readOnly 
-                          className="text-xs bg-white"
-                        />
-                        <Button
-                          onClick={async () => {
-                            await navigator.clipboard.writeText(generatedLink);
-                            setLinkCopied(true);
-                            setTimeout(() => setLinkCopied(false), 2000);
-                          }}
-                          className={linkCopied ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}
-                        >
-                          {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                          <span className={`${isRTL ? 'mr-1' : 'ml-1'}`}>
-                            {linkCopied ? t.copied : t.copyLink}
-                          </span>
-                        </Button>
+                      <div className="bg-white border rounded p-2 mb-3 max-h-48 overflow-auto">
+                        <code className="text-xs whitespace-pre-wrap" id="htmlCode">
+{`<!DOCTYPE html>
+<html dir="${language === 'he' ? 'rtl' : 'ltr'}">
+<head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333}.container{max-width:600px;margin:0 auto;padding:20px}.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:30px;text-align:center;border-radius:10px 10px 0 0}.content{background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px}.button{display:inline-block;background:#667eea;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;margin:20px 0;font-weight:bold}</style></head>
+<body><div class="container"><div class="header"><h1>${language === 'he' ? '🎉 הזמנה להצטרף למסעדה' : '🎉 Restaurant Invitation'}</h1></div>
+<div class="content"><p>${language === 'he' ? 'שלום' : 'Hello'} ${userName},</p>
+<p>${language === 'he' ? `הוזמנת להצטרף למסעדת <strong>${user.business_name || user.full_name}</strong> כ${userRole === 'manager' ? 'מנהל' : 'עובד'}.` : `You've been invited to join <strong>${user.business_name || user.full_name}</strong> as a ${userRole}.`}</p>
+<p>${language === 'he' ? 'לחץ על הכפתור למטה כדי להצטרף:' : 'Click the button below to join:'}</p>
+<div style="text-align:center"><a href="${generatedLink}" class="button">${language === 'he' ? '🔗 הצטרף עכשיו' : '🔗 Join Now'}</a></div>
+<p style="color:#666;font-size:12px">${language === 'he' ? 'או העתק והדבק את הקישור הזה בדפדפן:' : 'Or copy and paste this link:'}</p>
+<p style="word-break:break-all;background:white;padding:10px;border-radius:5px;font-size:11px">${generatedLink}</p></div></div></body></html>`}
+                        </code>
                       </div>
+                      <Button
+                        onClick={async () => {
+                          const htmlCode = document.getElementById('htmlCode').textContent;
+                          await navigator.clipboard.writeText(htmlCode);
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 2000);
+                        }}
+                        className={linkCopied ? "bg-green-600 hover:bg-green-700 w-full mb-2" : "bg-blue-600 hover:bg-blue-700 w-full mb-2"}
+                      >
+                        {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                        {linkCopied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק HTML למייל' : 'Copy HTML for Email')}
+                      </Button>
+                      <p className="text-xs text-gray-600 mb-2">
+                        {language === 'he' ? 'הוראות: פתח Gmail → צור מייל חדש → הדבק (Ctrl+Shift+V) → שלח' : 'Instructions: Open Gmail → Compose → Paste (Ctrl+Shift+V) → Send'}
+                      </p>
                     </div>
                     <Button 
                       variant="outline" 
