@@ -638,17 +638,41 @@ export default function AdminDashboard() {
                           {new Date(user.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              switchToUser(user);
-                            }}
-                            className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1"
-                          >
-                            <LogIn className="w-3 h-3" />
-                            {language === 'he' ? 'שלוט' : 'Control'}
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                switchToUser(user);
+                              }}
+                              className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1"
+                            >
+                              <LogIn className="w-3 h-3" />
+                              {language === 'he' ? 'שלוט' : 'Control'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (confirm(language === 'he' ? `תקן הרשאות עבור ${user.email}?` : `Fix permissions for ${user.email}?`)) {
+                                  try {
+                                    const result = await base44.functions.invoke('fixUserPermissions', { userEmail: user.email });
+                                    if (result.data.success) {
+                                      alert(language === 'he' ? '✅ הרשאות תוקנו בהצלחה! המשתמש צריך להתנתק ולהתחבר מחדש' : '✅ Permissions fixed! User needs to logout and login again');
+                                    } else {
+                                      alert('Error: ' + result.data.error);
+                                    }
+                                  } catch (error) {
+                                    alert('Error: ' + error.message);
+                                  }
+                                }
+                              }}
+                              className="border-green-600 text-green-600 hover:bg-green-50"
+                            >
+                              🔧 {language === 'he' ? 'תקן' : 'Fix'}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
