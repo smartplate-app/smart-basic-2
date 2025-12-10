@@ -22,7 +22,7 @@ export default function ToDoListPage() {
     title: "",
     description: "",
     date: format(new Date(), 'yyyy-MM-dd'),
-    category: "other",
+    category: "food_cost",
     priority: "medium"
   });
 
@@ -53,7 +53,7 @@ export default function ToDoListPage() {
         title: "",
         description: "",
         date: format(new Date(), 'yyyy-MM-dd'),
-        category: "other",
+        category: "food_cost",
         priority: "medium"
       });
     } catch (error) {
@@ -120,11 +120,17 @@ export default function ToDoListPage() {
   };
 
   const categoryColors = {
-    work: "bg-blue-100 text-blue-800",
-    personal: "bg-green-100 text-green-800",
-    meeting: "bg-purple-100 text-purple-800",
-    urgent: "bg-red-100 text-red-800",
-    other: "bg-gray-100 text-gray-800"
+    food_cost: "bg-orange-100 text-orange-800",
+    labor_cost: "bg-blue-100 text-blue-800",
+    buildup: "bg-purple-100 text-purple-800",
+    money_flow: "bg-green-100 text-green-800"
+  };
+
+  const categoryLabels = {
+    food_cost: isRTL ? 'עלות מזון' : 'Food Cost',
+    labor_cost: isRTL ? 'עלות עבודה' : 'Labor Cost',
+    buildup: isRTL ? 'בנייה' : 'Buildup',
+    money_flow: isRTL ? 'תזרים כספי' : 'Money Flow'
   };
 
   const priorityColors = {
@@ -196,11 +202,10 @@ export default function ToDoListPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="work">{isRTL ? 'עבודה' : 'Work'}</SelectItem>
-                      <SelectItem value="personal">{isRTL ? 'אישי' : 'Personal'}</SelectItem>
-                      <SelectItem value="meeting">{isRTL ? 'פגישה' : 'Meeting'}</SelectItem>
-                      <SelectItem value="urgent">{isRTL ? 'דחוף' : 'Urgent'}</SelectItem>
-                      <SelectItem value="other">{isRTL ? 'אחר' : 'Other'}</SelectItem>
+                      <SelectItem value="food_cost">{isRTL ? 'עלות מזון' : 'Food Cost'}</SelectItem>
+                      <SelectItem value="labor_cost">{isRTL ? 'עלות עבודה' : 'Labor Cost'}</SelectItem>
+                      <SelectItem value="buildup">{isRTL ? 'בנייה' : 'Buildup'}</SelectItem>
+                      <SelectItem value="money_flow">{isRTL ? 'תזרים כספי' : 'Money Flow'}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={formData.priority} onValueChange={(v) => setFormData({...formData, priority: v})}>
@@ -286,7 +291,7 @@ export default function ToDoListPage() {
                               {todo.title}
                             </p>
                             <span className={`text-xs px-1 py-0.5 rounded ${categoryColors[todo.category]}`}>
-                              {todo.category}
+                              {categoryLabels[todo.category]}
                             </span>
                           </div>
                           <button
@@ -359,7 +364,7 @@ export default function ToDoListPage() {
                   <CardHeader>
                     <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <span className={`px-3 py-1 rounded ${categoryColors[category]}`}>
-                        {category}
+                        {categoryLabels[category]}
                       </span>
                       <span className="text-sm text-gray-500">
                         ({categoryTodos.length} {isRTL ? 'משימות הושלמו' : 'tasks completed'})
