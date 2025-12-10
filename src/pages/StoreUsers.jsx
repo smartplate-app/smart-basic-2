@@ -125,23 +125,6 @@ export default function StoreUsersPage() {
 
       if (editingUser) {
         // Update existing user
-        console.log('[StoreUsers] Updating user account...');
-        const updateAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
-          username: username,
-          password: password,
-          email: userEmail,
-          full_name: userName,
-          restaurant_name: storeName,
-          restaurant_address: user.business_address || '',
-          role: userRole,
-          owner_email: ownerEmail,
-          update_existing: true
-        });
-
-        if (!updateAccountResponse.data.success) {
-          throw new Error(updateAccountResponse.data.error || 'Failed to update account');
-        }
-
         console.log('[StoreUsers] Updating StoreUser record...');
         await base44.entities.StoreUser.update(editingUser.id, {
           user_name: userName,
@@ -152,23 +135,6 @@ export default function StoreUsersPage() {
         });
         console.log('[StoreUsers] StoreUser updated successfully');
       } else {
-        // Create new user account first
-        console.log('[StoreUsers] Creating user account...');
-        const createAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
-          username: username,
-          password: password,
-          email: userEmail,
-          full_name: userName,
-          restaurant_name: storeName,
-          restaurant_address: user.business_address || '',
-          role: userRole,
-          owner_email: ownerEmail
-        });
-
-        if (!createAccountResponse.data.success) {
-          throw new Error(createAccountResponse.data.error || 'Failed to create account');
-        }
-
         // Create store user record
         console.log('[StoreUsers] Creating StoreUser record...');
         await base44.entities.StoreUser.create({
@@ -394,7 +360,7 @@ export default function StoreUsersPage() {
                           <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
                             <li>{language === 'he' ? 'שלח את הפרטים בווצאפ או במייל' : 'Send credentials via WhatsApp or email'}</li>
                             <li>{language === 'he' ? 'העובד נכנס לאתר: smartplatebasic.com' : 'Worker goes to: smartplatebasic.com'}</li>
-                            <li>{language === 'he' ? 'מתחבר עם שם המשתמש והסיסמה' : 'Logs in with username and password'}</li>
+                            <li>{language === 'he' ? 'מתחבר עם Google/Microsoft באמצעות האימייל שהזנת' : 'Logs in with Google/Microsoft using the email you entered'}</li>
                             <li>{language === 'he' ? 'יקבל גישה אוטומטית למסעדה שלך' : 'Gets automatic access to your restaurant'}</li>
                           </ul>
                         </div>
@@ -403,7 +369,7 @@ export default function StoreUsersPage() {
                       {/* WhatsApp Quick Share Button */}
                       <Button
                         onClick={() => {
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'פרטי הגישה שלך (שמור אותם):' : 'Your access credentials (save them):'}\n\n${generatedLink}\n\n${language === 'he' ? 'איך להתחבר:' : 'How to login:'}\n${language === 'he' ? '1. היכנס ל: smartplatebasic.com' : '1. Go to: smartplatebasic.com'}\n${language === 'he' ? '2. התחבר עם שם המשתמש והסיסמה למעלה' : '2. Login with the username and password above'}\n${language === 'he' ? '3. תקבל גישה אוטומטית למערכת!' : '3. You\'ll get automatic access to the system!'}`;
+                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'פרטי הזיהוי שלך (שמור אותם):' : 'Your identification details (save them):'}\n\n${generatedLink}\n\n${language === 'he' ? 'איך להתחבר:' : 'How to login:'}\n${language === 'he' ? '1. היכנס ל: smartplatebasic.com' : '1. Go to: smartplatebasic.com'}\n${language === 'he' ? '2. לחץ על "Continue with Google" או "Continue with Microsoft"' : '2. Click "Continue with Google" or "Continue with Microsoft"'}\n${language === 'he' ? '3. השתמש באימייל: ' + userEmail : '3. Use your email: ' + userEmail}\n${language === 'he' ? '4. תקבל גישה אוטומטית למערכת!' : '4. You\'ll get automatic access!'}`;
                           const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                           window.open(whatsappUrl, '_blank');
                         }}
