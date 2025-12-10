@@ -10,22 +10,28 @@ export default function JoinRestaurantPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [processed, setProcessed] = useState(false);
 
   useEffect(() => {
+    // Check if we already processed this code
+    const processedKey = 'join_processed';
+    if (sessionStorage.getItem(processedKey)) {
+      sessionStorage.removeItem(processedKey);
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const urlCode = urlParams.get('code');
     
-    if (!urlCode || urlCode.length !== 5 || processed) return;
+    if (!urlCode || urlCode.length !== 5) return;
     
     setCode(urlCode);
     
-    const processCodeDirectly = async () => {
+    const processCode = async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) return; // Let user click button to login
+        if (!isAuth) return;
         
-        setProcessed(true);
+        sessionStorage.setItem(processedKey, 'true');
         setLoading(true);
 
         const currentUser = await base44.auth.me();
@@ -33,6 +39,7 @@ export default function JoinRestaurantPage() {
         
         if (codes.length === 0) {
           setError('קוד לא תקין');
+          setLoading(false);
           return;
         }
 
@@ -40,6 +47,7 @@ export default function JoinRestaurantPage() {
 
         if (new Date(accessCode.expires_at) < new Date()) {
           setError('פג תוקף הקוד');
+          setLoading(false);
           return;
         }
 
@@ -84,8 +92,8 @@ export default function JoinRestaurantPage() {
       }
     };
     
-    processCodeDirectly();
-  }, [processed]);
+    processCode();
+  }, []);
 
   const handleJoin = async (e) => {
     e.preventDefault();
