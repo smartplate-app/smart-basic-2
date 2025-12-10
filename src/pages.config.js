@@ -22,6 +22,7 @@ import InviteUser from './pages/InviteUser';
 import JoinRestaurant from './pages/JoinRestaurant';
 import TestInviteLinks from './pages/TestInviteLinks';
 import RestaurantInvite from './pages/RestaurantInvite';
+import ToDoList from './pages/ToDoList';
 import __Layout from './Layout.jsx';
 
 
@@ -50,6 +51,7 @@ export const PAGES = {
     "JoinRestaurant": JoinRestaurant,
     "TestInviteLinks": TestInviteLinks,
     "RestaurantInvite": RestaurantInvite,
+    "ToDoList": ToDoList,
 }
 
 export const pagesConfig = {
