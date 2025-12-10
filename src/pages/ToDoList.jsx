@@ -18,6 +18,7 @@ export default function ToDoListPage() {
   const [viewMode, setViewMode] = useState("month"); // month, list, schedule
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
+  const [editingTodo, setEditingTodo] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -46,9 +47,14 @@ export default function ToDoListPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await base44.entities.ToDo.create(formData);
+      if (editingTodo) {
+        await base44.entities.ToDo.update(editingTodo.id, formData);
+      } else {
+        await base44.entities.ToDo.create(formData);
+      }
       await loadTodos();
       setShowForm(false);
+      setEditingTodo(null);
       setFormData({
         title: "",
         description: "",
@@ -57,8 +63,20 @@ export default function ToDoListPage() {
         priority: "medium"
       });
     } catch (error) {
-      console.error("Error creating todo:", error);
+      console.error("Error saving todo:", error);
     }
+  };
+
+  const handleEdit = (todo) => {
+    setEditingTodo(todo);
+    setFormData({
+      title: todo.title,
+      description: todo.description || "",
+      date: todo.date,
+      category: todo.category,
+      priority: todo.priority
+    });
+    setShowForm(true);
   };
 
   const toggleComplete = async (todo) => {
@@ -175,7 +193,7 @@ export default function ToDoListPage() {
         {showForm && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>{isRTL ? 'משימה חדשה' : 'New Task'}</CardTitle>
+              <CardTitle>{editingTodo ? (isRTL ? 'עריכת משימה' : 'Edit Task') : (isRTL ? 'משימה חדשה' : 'New Task')}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -220,8 +238,11 @@ export default function ToDoListPage() {
                   </Select>
                 </div>
                 <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Button type="submit">{isRTL ? 'שמור' : 'Save'}</Button>
-                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                  <Button type="submit">{editingTodo ? (isRTL ? 'עדכן' : 'Update') : (isRTL ? 'שמור' : 'Save')}</Button>
+                  <Button type="button" variant="outline" onClick={() => {
+                    setShowForm(false);
+                    setEditingTodo(null);
+                  }}>
                     {isRTL ? 'ביטול' : 'Cancel'}
                   </Button>
                 </div>
@@ -275,6 +296,10 @@ export default function ToDoListPage() {
                         key={todo.id}
                         className={`p-4 rounded border-l-4 ${priorityColors[todo.priority]} bg-white cursor-pointer hover:shadow-md transition-shadow`}
                         onClick={() => toggleComplete(todo)}
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(todo);
+                        }}
                       >
                         <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           {todo.completed ? (
@@ -341,6 +366,10 @@ export default function ToDoListPage() {
                         key={todo.id}
                         className={`text-xs p-1 rounded truncate cursor-pointer ${categoryColors[todo.category]}`}
                         onClick={() => toggleComplete(todo)}
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(todo);
+                        }}
                       >
                         {todo.completed ? '✓ ' : ''}{todo.title}
                       </div>
