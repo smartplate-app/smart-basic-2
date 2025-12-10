@@ -293,11 +293,7 @@ export default function StoreUsersPage() {
             </div>
           </div>
 
-          <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Button onClick={() => setShowCodeGenerator(true)} variant="outline">
-              {language === 'he' ? '🔑 קוד גישה' : '🔑 Access Code'}
-            </Button>
-            <Dialog open={showAddUser} onOpenChange={(open) => {
+          <Dialog open={showAddUser} onOpenChange={(open) => {
             setShowAddUser(open);
             if (!open) {
               // Reset form when closing
@@ -502,134 +498,6 @@ export default function StoreUsersPage() {
           </Card>
         </div>
 
-        {/* Access Codes Section */}
-        {showCodeGenerator && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className={isRTL ? 'text-right' : ''}>
-                {language === 'he' ? 'קודי גישה למסעדה' : 'Restaurant Access Codes'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className={`flex gap-3 items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manager">{language === 'he' ? 'מנהל' : 'Manager'}</SelectItem>
-                      <SelectItem value="worker">{language === 'he' ? 'עובד' : 'Worker'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={generateAccessCode} className="bg-gray-900 hover:bg-gray-800">
-                    {language === 'he' ? 'צור קוד' : 'Generate Code'}
-                  </Button>
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <p className={`text-sm text-blue-800 font-semibold ${isRTL ? 'text-right' : ''}`}>
-                    {language === 'he' ? '📱 איך העובד מצטרף:' : '📱 How worker joins:'}
-                  </p>
-                  <div className="bg-white rounded-lg p-3 border-2 border-blue-400">
-                    <p className={`text-xs text-gray-600 mb-2 ${isRTL ? 'text-right' : ''}`}>
-                      {language === 'he' ? 'שלח לעובד את:' : 'Send worker:'}
-                    </p>
-                    <div className="space-y-2">
-                      <div className="bg-gray-50 rounded p-2">
-                        <p className={`text-xs text-gray-500 ${isRTL ? 'text-right' : ''}`}>
-                          {language === 'he' ? 'קישור:' : 'Link:'}
-                        </p>
-                        <p className="text-sm font-mono text-blue-700 break-all">
-                          smartplatebasic.com/#/pages/JoinRestaurant
-                        </p>
-                      </div>
-                      <div className="bg-yellow-50 rounded p-2 border border-yellow-300">
-                        <p className={`text-xs text-gray-500 ${isRTL ? 'text-right' : ''}`}>
-                          {language === 'he' ? 'קוד להזנה:' : 'Code to enter:'}
-                        </p>
-                        {accessCodes.length > 0 && (
-                          <p className="text-2xl font-bold text-gray-900 text-center my-1">
-                            {accessCodes[0].code}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <ol className={`text-sm text-blue-800 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
-                    <li>{language === 'he' ? '1. העובד נכנס לקישור למעלה' : '1. Worker opens link above'}</li>
-                    <li>{language === 'he' ? '2. מזין את הקוד בן 5 הספרות' : '2. Enters the 5-digit code'}</li>
-                    <li>{language === 'he' ? '3. לוחץ "הצטרף"' : '3. Clicks "Join"'}</li>
-                    <li>{language === 'he' ? '4. מתחבר/נרשם אם צריך' : '4. Logs in/signs up if needed'}</li>
-                    <li>{language === 'he' ? '5. מקבל גישה! ✅' : '5. Gets access! ✅'}</li>
-                  </ol>
-                  <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <Button
-                      onClick={() => {
-                        navigator.clipboard.writeText('smartplatebasic.com/#/pages/JoinRestaurant');
-                        alert(language === 'he' ? 'הקישור הועתק!' : 'Link copied!');
-                      }}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Copy className="w-4 h-4 mr-2" />
-                      {language === 'he' ? 'העתק קישור' : 'Copy Link'}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        const msg = `${language === 'he' ? 'קישור:' : 'Link:'} smartplatebasic.com/#/pages/JoinRestaurant\n${language === 'he' ? 'קוד:' : 'Code:'} ${accessCodes[0]?.code || ''}`;
-                        navigator.clipboard.writeText(msg);
-                        alert(language === 'he' ? 'הועתק!' : 'Copied!');
-                      }}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Copy className="w-4 h-4 mr-2" />
-                      {language === 'he' ? 'קישור + קוד' : 'Link + Code'}
-                    </Button>
-                  </div>
-                </div>
-
-                {accessCodes.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className={`font-semibold ${isRTL ? 'text-right' : ''}`}>
-                      {language === 'he' ? 'קודים פעילים:' : 'Active Codes:'}
-                    </h3>
-                    {accessCodes.map((code) => (
-                      <div key={code.id} className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <span className="text-2xl font-bold text-gray-900">{code.code}</span>
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            code.role === 'manager' 
-                              ? 'bg-blue-100 text-blue-800' 
-                              : 'bg-green-100 text-green-800'
-                          }`}>
-                            {code.role === 'manager' ? (language === 'he' ? 'מנהל' : 'Manager') : (language === 'he' ? 'עובד' : 'Worker')}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {language === 'he' ? 'שימושים: ' : 'Uses: '}{code.uses_count || 0}
-                          </span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => deleteAccessCode(code.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <Button variant="outline" onClick={() => setShowCodeGenerator(false)} className="w-full">
-                  {language === 'he' ? 'סגור' : 'Close'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Users List */}
         <Card>
