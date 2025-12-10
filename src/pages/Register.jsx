@@ -65,13 +65,23 @@ export default function RegisterPage() {
       if (isAuth && currentUser) {
         console.log('[Register] User is authenticated via OAuth');
         
-        // Check if user already completed registration
-        if (currentUser.store_user_owner_email || currentUser.acting_as_store_email) {
-          console.log('[Register] User already registered, redirecting to Orders');
-          sessionStorage.removeItem('register_auth_checked');
+        // Check if this invite was already used by this user (prevent double processing)
+        const inviteProcessedKey = `invite_processed_${token}_${currentUser.email}`;
+        if (sessionStorage.getItem(inviteProcessedKey)) {
+          console.log('[Register] Invite already processed for this user, redirecting to Orders');
           window.location.href = window.location.origin + '/#/pages/Orders';
           return;
         }
+        
+        // Check if user already completed registration
+        if (currentUser.store_user_owner_email || currentUser.acting_as_store_email) {
+          console.log('[Register] User already registered, redirecting to Orders');
+          window.location.href = window.location.origin + '/#/pages/Orders';
+          return;
+        }
+        
+        // Mark invite as being processed
+        sessionStorage.setItem(inviteProcessedKey, 'true');
         
         // User is authenticated but needs to complete registration with invite
         console.log('[Register] Auto-completing signup for OAuth user');
