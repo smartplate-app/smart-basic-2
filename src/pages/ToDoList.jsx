@@ -15,7 +15,7 @@ export default function ToDoListPage() {
   
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState("week"); // week, month, schedule
+  const [viewMode, setViewMode] = useState("month"); // month, list, schedule
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -159,8 +159,8 @@ export default function ToDoListPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="week">{isRTL ? 'שבוע' : 'Week'}</SelectItem>
-                <SelectItem value="month">{isRTL ? 'חודש' : 'Month'}</SelectItem>
+                <SelectItem value="month">{isRTL ? 'לוח שנה' : 'Calendar'}</SelectItem>
+                <SelectItem value="list">{isRTL ? 'רשימה' : 'List'}</SelectItem>
                 <SelectItem value="schedule">{isRTL ? 'סיכום חודשי' : 'Monthly Summary'}</SelectItem>
               </SelectContent>
             </Select>
@@ -231,68 +231,76 @@ export default function ToDoListPage() {
         )}
 
         {/* Navigation */}
-        {viewMode !== 'schedule' && (
+        {viewMode === 'month' && (
           <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Button
               variant="outline"
-              onClick={() => {
-                if (viewMode === 'week') setCurrentDate(subWeeks(currentDate, 1));
-                else setCurrentDate(subMonths(currentDate, 1));
-              }}
+              onClick={() => setCurrentDate(subMonths(currentDate, 1))}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <h2 className="text-xl font-bold">
-              {viewMode === 'week' 
-                ? `${format(startOfWeek(currentDate, { weekStartsOn: 0 }), 'MMM d')} - ${format(endOfWeek(currentDate, { weekStartsOn: 0 }), 'MMM d, yyyy')}`
-                : format(currentDate, 'MMMM yyyy')
-              }
+              {format(currentDate, 'MMMM yyyy')}
             </h2>
             <Button
               variant="outline"
-              onClick={() => {
-                if (viewMode === 'week') setCurrentDate(addWeeks(currentDate, 1));
-                else setCurrentDate(addMonths(currentDate, 1));
-              }}
+              onClick={() => setCurrentDate(addMonths(currentDate, 1))}
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         )}
 
-        {/* Week View */}
-        {viewMode === 'week' && (
-          <div className="grid grid-cols-7 gap-4">
-            {getWeekDays().map(day => {
-              const dayTodos = getTodosForDate(day);
+        {/* List View */}
+        {viewMode === 'list' && (
+          <div className="space-y-4">
+            {['food_cost', 'labor_cost', 'buildup', 'money_flow'].map(category => {
+              const categoryTodos = todos.filter(t => t.category === category);
+              if (categoryTodos.length === 0) return null;
               return (
-                <Card key={day.toISOString()} className="min-h-[200px]">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">
-                      {format(day, 'EEE')}
-                      <div className="text-2xl font-bold">{format(day, 'd')}</div>
+                <Card key={category}>
+                  <CardHeader>
+                    <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <span className={`px-3 py-1 rounded text-sm ${categoryColors[category]}`}>
+                        {categoryLabels[category]}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        ({categoryTodos.filter(t => t.completed).length}/{categoryTodos.length})
+                      </span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {dayTodos.map(todo => (
+                    {categoryTodos.map(todo => (
                       <div
                         key={todo.id}
-                        className={`p-2 rounded border-l-4 ${priorityColors[todo.priority]} bg-white cursor-pointer hover:shadow-md transition-shadow`}
+                        className={`p-4 rounded border-l-4 ${priorityColors[todo.priority]} bg-white cursor-pointer hover:shadow-md transition-shadow`}
                         onClick={() => toggleComplete(todo)}
                       >
-                        <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           {todo.completed ? (
-                            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                           ) : (
-                            <Circle className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                            <Circle className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
                           )}
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium truncate ${todo.completed ? 'line-through text-gray-500' : ''}`}>
+                          <div className="flex-1">
+                            <p className={`font-medium ${todo.completed ? 'line-through text-gray-500' : ''}`}>
                               {todo.title}
                             </p>
-                            <span className={`text-xs px-1 py-0.5 rounded ${categoryColors[todo.category]}`}>
-                              {categoryLabels[todo.category]}
-                            </span>
+                            {todo.description && (
+                              <p className="text-sm text-gray-600 mt-1">{todo.description}</p>
+                            )}
+                            <div className={`flex items-center gap-2 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <span className="text-xs text-gray-500">
+                                {format(new Date(todo.date), 'MMM d, yyyy')}
+                              </span>
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                todo.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                todo.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {todo.priority}
+                              </span>
+                            </div>
                           </div>
                           <button
                             onClick={(e) => {
@@ -301,7 +309,7 @@ export default function ToDoListPage() {
                             }}
                             className="text-red-500 hover:text-red-700"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
