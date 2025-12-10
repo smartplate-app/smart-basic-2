@@ -360,8 +360,25 @@ export default function ToDoListPage() {
               const dayTodos = getTodosForDate(day);
               const completedCount = dayTodos.filter(t => t.completed).length;
               return (
-                <Card key={day.toISOString()} className="min-h-[100px] p-2">
-                  <div className="text-sm font-bold mb-1">{format(day, 'd')}</div>
+                <Card 
+                  key={day.toISOString()} 
+                  className="min-h-[100px] p-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onDoubleClick={(e) => {
+                    // Only trigger if not clicking on a task
+                    if (e.target === e.currentTarget || e.target.closest('.day-number')) {
+                      setFormData({
+                        title: "",
+                        description: "",
+                        date: format(day, 'yyyy-MM-dd'),
+                        category: "food_cost",
+                        priority: "medium"
+                      });
+                      setEditingTodo(null);
+                      setShowForm(true);
+                    }
+                  }}
+                >
+                  <div className="text-sm font-bold mb-1 day-number">{format(day, 'd')}</div>
                   <div className="space-y-1">
                     {dayTodos.slice(0, 3).map(todo => (
                       <div
