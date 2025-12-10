@@ -28,9 +28,6 @@ export default function StoreUsersPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [password, setPassword] = useState("");
   const [editingUser, setEditingUser] = useState(null);
-  const [accessCodes, setAccessCodes] = useState([]);
-  const [showCodeGenerator, setShowCodeGenerator] = useState(false);
-  const [selectedRole, setSelectedRole] = useState("worker");
 
   const t = {
     he: {
@@ -99,10 +96,6 @@ export default function StoreUsersPage() {
       const ownerEmail = currentUser.acting_as_store_email || currentUser.email;
       const users = await base44.entities.StoreUser.filter({ owner_email: ownerEmail });
       setStoreUsers(users);
-
-      // Load access codes
-      const codes = await base44.entities.RestaurantAccessCode.filter({ owner_email: ownerEmail });
-      setAccessCodes(codes);
     } catch (error) {
       console.error("Error loading store users:", error);
     } finally {
@@ -229,44 +222,6 @@ export default function StoreUsersPage() {
     setShowAddUser(true);
   };
 
-  const generateAccessCode = async () => {
-    try {
-      const code = Math.floor(10000 + Math.random() * 90000).toString();
-      const ownerEmail = user.acting_as_store_email || user.email;
-      const restaurantName = user.acting_as_store_name || user.business_name || user.full_name;
-
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
-
-      await base44.entities.RestaurantAccessCode.create({
-        code: code,
-        owner_email: ownerEmail,
-        restaurant_name: restaurantName,
-        role: selectedRole,
-        is_active: true,
-        expires_at: expiresAt.toISOString(),
-        uses_count: 0
-      });
-
-      await loadData();
-      alert((language === 'he' ? 'קוד נוצר: ' : 'Code generated: ') + code);
-    } catch (error) {
-      console.error('Error generating code:', error);
-      alert(language === 'he' ? 'שגיאה ביצירת קוד' : 'Error generating code');
-    }
-  };
-
-  const deleteAccessCode = async (codeId) => {
-    if (!confirm(language === 'he' ? 'למחוק קוד זה?' : 'Delete this code?')) return;
-
-    try {
-      await base44.entities.RestaurantAccessCode.delete(codeId);
-      await loadData();
-    } catch (error) {
-      console.error('Error deleting code:', error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -292,7 +247,7 @@ export default function StoreUsersPage() {
               )}
             </div>
           </div>
-
+          
           <Dialog open={showAddUser} onOpenChange={(open) => {
             setShowAddUser(open);
             if (!open) {
@@ -496,7 +451,6 @@ export default function StoreUsersPage() {
             </CardContent>
           </Card>
         </div>
-
 
         {/* Users List */}
         <Card>

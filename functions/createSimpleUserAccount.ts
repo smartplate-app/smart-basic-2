@@ -24,46 +24,26 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    console.log('[createSimpleUserAccount] Creating account for:', email, 'Role:', role);
+    console.log('[createSimpleUserAccount] Creating account for:', email);
 
-    // Try to create the user account using service role
-    let newUser;
-    try {
-      newUser = await base44.asServiceRole.auth.createUser({
-        email: email,
-        password: password,
-        username: username,
-        user_metadata: {
-          full_name: full_name,
-          business_name: restaurant_name,
-          business_address: restaurant_address,
-          store_user_role: role,
-          store_user_owner_email: owner_email
-        }
-      });
-      console.log('[createSimpleUserAccount] User created successfully:', newUser.id);
-    } catch (createError) {
-      console.log('[createSimpleUserAccount] User might already exist, trying to update...');
-      // User might already exist, try to update instead
-      try {
-        // Update the existing user's metadata
-        await base44.asServiceRole.auth.updateUser(email, {
-          password: password,
-          user_metadata: {
-            full_name: full_name,
-            business_name: restaurant_name,
-            business_address: restaurant_address,
-            store_user_role: role,
-            store_user_owner_email: owner_email
-          }
-        });
-        console.log('[createSimpleUserAccount] User updated successfully:', email);
-        newUser = { id: email, email: email };
-      } catch (updateError) {
-        console.error('[createSimpleUserAccount] Failed to create or update user:', updateError);
-        throw new Error('Failed to create or update user account: ' + (updateError.message || 'Unknown error'));
+    // Hash the password
+    const hashedPassword = await hashPassword(password);
+
+    // Create the user account using service role
+    const newUser = await base44.asServiceRole.auth.createUser({
+      email: email,
+      password: password,
+      username: username,
+      user_metadata: {
+        full_name: full_name,
+        business_name: restaurant_name,
+        business_address: restaurant_address,
+        store_user_role: role,
+        store_user_owner_email: owner_email
       }
-    }
+    });
+
+    console.log('[createSimpleUserAccount] User created successfully:', newUser.id);
 
     return Response.json({ 
       success: true, 
