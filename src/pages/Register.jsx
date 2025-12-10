@@ -23,33 +23,52 @@ export default function RegisterPage() {
 
   const checkAuthAndVerify = async () => {
     try {
-      // First check if user is already authenticated (OAuth flow)
-      const isAuth = await base44.auth.isAuthenticated();
+      setLoading(true);
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('invite') || urlParams.get('token');
+      
+      if (!token) {
+        setError('No invitation token found. Please check your invitation link.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('[Register] Found invite token:', token);
+
+      // Check if user is already authenticated (OAuth flow)
+      let isAuth = false;
+      try {
+        isAuth = await base44.auth.isAuthenticated();
+        console.log('[Register] Authentication check result:', isAuth);
+      } catch (authError) {
+        console.log('[Register] Auth check failed, user not authenticated:', authError.message);
+        isAuth = false;
+      }
       
       if (isAuth) {
-        console.log('[Register] User is authenticated, checking if registration needed');
-        const currentUser = await base44.auth.me();
-        
-        // Check if user already has store_user_owner_email (already registered)
-        if (currentUser.store_user_owner_email) {
-          console.log('[Register] User already registered, redirecting to Orders');
-          window.location.href = window.location.origin + '/#/pages/Orders';
-          return;
-        }
-        
-        // User is authenticated but needs to complete registration with invite
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('invite') || urlParams.get('token');
-        
-        if (token) {
-          console.log('[Register] Authenticated user with invite token, auto-completing signup');
+        console.log('[Register] User is authenticated via OAuth');
+        try {
+          const currentUser = await base44.auth.me();
+          console.log('[Register] Current user:', currentUser.email);
+          
+          // Check if user already has store_user_owner_email (already registered)
+          if (currentUser.store_user_owner_email) {
+            console.log('[Register] User already registered, redirecting to Orders');
+            window.location.href = window.location.origin + '/#/pages/Orders';
+            return;
+          }
+          
+          // User is authenticated but needs to complete registration with invite
+          console.log('[Register] Auto-completing signup for OAuth user');
           await verifyAndAutoComplete(token, currentUser);
-        } else {
-          setError('No invitation token found. Please check your invitation link.');
-          setLoading(false);
+        } catch (userError) {
+          console.error('[Register] Error getting user data:', userError);
+          // If getting user fails, treat as not authenticated
+          await verifyInvite();
         }
       } else {
         // Not authenticated, show registration form
+        console.log('[Register] User not authenticated, showing registration form');
         await verifyInvite();
       }
     } catch (err) {
