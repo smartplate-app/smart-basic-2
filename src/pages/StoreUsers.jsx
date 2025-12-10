@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Copy, Check } from "lucide-react";
+import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Copy, Check, Edit } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function StoreUsersPage() {
@@ -28,6 +28,7 @@ export default function StoreUsersPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [editingUser, setEditingUser] = useState(null);
 
   const t = {
     he: {
@@ -116,26 +117,39 @@ export default function StoreUsersPage() {
 
     try {
       setSaving(true);
-      console.log('[StoreUsers] Starting user creation...');
+      console.log('[StoreUsers] Starting user creation/update...');
 
       const ownerEmail = user.acting_as_store_email || user.email;
       const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
       const storeId = user.acting_as_store_id || "main";
 
-      console.log('[StoreUsers] Creating StoreUser record...');
-      // Create store user record with credentials
-      await base44.entities.StoreUser.create({
-        store_id: storeId,
-        store_name: storeName,
-        user_email: userEmail,
-        user_name: userName,
-        role: userRole,
-        owner_email: ownerEmail,
-        is_active: true,
-        temp_username: username,
-        temp_password: password
-      });
-      console.log('[StoreUsers] StoreUser created successfully');
+      if (editingUser) {
+        // Update existing user
+        console.log('[StoreUsers] Updating StoreUser record...');
+        await base44.entities.StoreUser.update(editingUser.id, {
+          user_name: userName,
+          user_email: userEmail,
+          role: userRole,
+          temp_username: username,
+          temp_password: password
+        });
+        console.log('[StoreUsers] StoreUser updated successfully');
+      } else {
+        // Create new user
+        console.log('[StoreUsers] Creating StoreUser record...');
+        await base44.entities.StoreUser.create({
+          store_id: storeId,
+          store_name: storeName,
+          user_email: userEmail,
+          user_name: userName,
+          role: userRole,
+          owner_email: ownerEmail,
+          is_active: true,
+          temp_username: username,
+          temp_password: password
+        });
+        console.log('[StoreUsers] StoreUser created successfully');
+      }
 
       // Reload the user list
       console.log('[StoreUsers] Loading updated data...');
@@ -148,7 +162,7 @@ export default function StoreUsersPage() {
       
       console.log('[StoreUsers] All done!');
     } catch (error) {
-      console.error("[StoreUsers] Error adding user:", error);
+      console.error("[StoreUsers] Error adding/updating user:", error);
       alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + error.message);
     } finally {
       setSaving(false);
@@ -164,6 +178,16 @@ export default function StoreUsersPage() {
     } catch (error) {
       console.error("Error deleting user:", error);
     }
+  };
+
+  const handleEditUser = (storeUser) => {
+    setEditingUser(storeUser);
+    setUserName(storeUser.user_name);
+    setUserEmail(storeUser.user_email);
+    setUserRole(storeUser.role);
+    setUsername(storeUser.temp_username || '');
+    setPassword(storeUser.temp_password || '');
+    setShowAddUser(true);
   };
 
   if (loading) {
@@ -202,6 +226,9 @@ export default function StoreUsersPage() {
               setUserRole("worker");
               setPersonalMessage("");
               setLinkCopied(false);
+              setUsername("");
+              setPassword("");
+              setEditingUser(null);
             }
           }}>
             <DialogTrigger asChild>
@@ -212,7 +239,9 @@ export default function StoreUsersPage() {
             </DialogTrigger>
             <DialogContent dir={isRTL ? 'rtl' : 'ltr'} key={generatedLink || 'new'}>
               <DialogHeader>
-                <DialogTitle className={isRTL ? 'text-right' : ''}>{t.addUser}</DialogTitle>
+                <DialogTitle className={isRTL ? 'text-right' : ''}>
+                  {editingUser ? (language === 'he' ? 'עריכת משתמש' : 'Edit User') : t.addUser}
+                </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div>
@@ -285,7 +314,7 @@ export default function StoreUsersPage() {
                 {!generatedLink ? (
                   <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Button onClick={handleAddUser} disabled={saving} className="bg-gray-900 hover:bg-gray-800">
-                      {saving ? <Loader className="w-4 h-4 animate-spin" /> : t.save}
+                      {saving ? <Loader className="w-4 h-4 animate-spin" /> : (editingUser ? (language === 'he' ? 'עדכן' : 'Update') : t.save)}
                     </Button>
                     <Button variant="outline" onClick={() => setShowAddUser(false)}>
                       {t.cancel}
@@ -434,15 +463,25 @@ export default function StoreUsersPage() {
                       }`}>
                         {storeUser.role === 'manager' ? (language === 'he' ? 'מנהל' : 'Manager') : (language === 'he' ? 'עובד' : 'Worker')}
                       </span>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleDeleteUser(storeUser.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      </div>
+                      <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleEditUser(storeUser)}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteUser(storeUser.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                      </div>
                   </div>
                 ))}
               </div>
