@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { User } from "@/entities/User";
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu,
@@ -10,34 +10,64 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ChevronDown, LogOut, Users } from "lucide-react";
+import { ChevronDown, LogOut, Users, Store, Building2, Check } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 
 export default function UserSwitcher({ user, onUserChange }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [storeUserRecords, setStoreUserRecords] = useState([]);
+  const [switching, setSwitching] = useState(false);
   const { t, language } = useLanguage();
+  
+  useEffect(() => {
+    loadStoreUserRecords();
+  }, [user?.email]);
+  
+  const loadStoreUserRecords = async () => {
+    try {
+      if (!user?.email) return;
+      const records = await base44.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+      setStoreUserRecords(records);
+    } catch (error) {
+      console.error('[UserSwitcher] Error loading store records:', error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      await User.logout();
-      window.location.reload();
+      await base44.auth.logout();
     } catch (error) {
       console.error("Logout failed:", error);
-    } finally {
       setIsLoggingOut(false);
     }
   };
 
-  const handleSwitchUser = async () => {
+  const handleSwitchToOwnRestaurant = async () => {
     try {
-      setIsLoggingOut(true);
-      await User.logout();
-      await User.login();
+      setSwitching(true);
+      await base44.auth.updateMe({
+        acting_as_store_email: null,
+        acting_as_store_name: null
+      });
+      window.location.reload();
     } catch (error) {
-      console.error("User switch failed:", error);
-    } finally {
-      setIsLoggingOut(false);
+      console.error('[UserSwitcher] Switch to own restaurant failed:', error);
+      setSwitching(false);
+    }
+  };
+  
+  const handleSwitchToWorkerRestaurant = async (storeRecord) => {
+    try {
+      setSwitching(true);
+      await base44.auth.updateMe({
+        acting_as_store_email: storeRecord.owner_email,
+        acting_as_store_name: storeRecord.store_name
+      });
+      window.location.reload();
+    } catch (error) {
+      console.error('[UserSwitcher] Switch to worker restaurant failed:', error);
+      setSwitching(false);
     }
   };
 
@@ -97,16 +127,53 @@ export default function UserSwitcher({ user, onUserChange }) {
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem 
-          onClick={handleSwitchUser}
-          disabled={isLoggingOut}
-          className="cursor-pointer"
-        >
-          <Users className="w-4 h-4 ml-2" />
-          {t('switch_user')}
-        </DropdownMenuItem>
+        {/* Show restaurant switching options if user works at other restaurants */}
+        {storeUserRecords.length > 0 && (
+          <>
+            <DropdownMenuLabel className="text-xs text-gray-500">
+              {language === 'he' ? 'החלף מסעדה' : 'Switch Restaurant'}
+            </DropdownMenuLabel>
+            
+            {/* Own restaurant option - only show if user has business_name when not acting as someone */}
+            {user.business_name && (
+              <DropdownMenuItem 
+                onClick={handleSwitchToOwnRestaurant}
+                disabled={switching}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Building2 className="w-4 h-4" />
+                  <span className="flex-1">{user.business_name}</span>
+                  {!user.acting_as_store_email && <Check className="w-4 h-4 text-green-600" />}
+                </div>
+              </DropdownMenuItem>
+            )}
+            
+            {/* Worker restaurants */}
+            {storeUserRecords.map((record) => (
+              <DropdownMenuItem 
+                key={record.id}
+                onClick={() => handleSwitchToWorkerRestaurant(record)}
+                disabled={switching}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center gap-2 w-full">
+                  <Store className="w-4 h-4" />
+                  <div className="flex-1">
+                    <div>{record.store_name}</div>
+                    <div className="text-xs text-gray-500">
+                      {record.role === 'manager' ? (language === 'he' ? 'מנהל' : 'Manager') : (language === 'he' ? 'עובד' : 'Worker')}
+                    </div>
+                  </div>
+                  {user.acting_as_store_email === record.owner_email && <Check className="w-4 h-4 text-green-600" />}
+                </div>
+              </DropdownMenuItem>
+            ))}
+            
+            <DropdownMenuSeparator />
+          </>
+        )}
         
-        <DropdownMenuSeparator />
         
         <DropdownMenuItem 
           onClick={handleLogout}

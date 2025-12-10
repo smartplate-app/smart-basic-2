@@ -107,23 +107,16 @@ Deno.serve(async (req) => {
       
       console.log('[completeSignup] Found owner:', owner.full_name);
       
-      // CRITICAL: Store user joins the owner's restaurant and sees ALL their data
+      // CRITICAL: Store user joins the owner's restaurant
+      // We DON'T set restaurant data on the User entity permanently
+      // This allows them to still own their own restaurant if they have one
       userData.store_user_role = role || invite.role;
       userData.store_user_owner_email = ownerEmail;
       userData.store_user_store_name = owner.business_name || invite.restaurant_name || store_name || invite.store_name;
       
-      // This makes them see the restaurant's suppliers, items, orders, etc.
-      userData.acting_as_store_email = ownerEmail;
-      userData.acting_as_store_name = owner.business_name || invite.restaurant_name || store_name || invite.store_name;
-      
-      // Copy ALL restaurant branding and details from owner
-      userData.business_name = owner.business_name || invite.restaurant_name;
-      userData.business_address = owner.business_address || invite.restaurant_address || '';
-      userData.business_city = owner.business_city || '';
-      userData.restaurant_logo = owner.restaurant_logo || '';
-      userData.restaurant_phone = owner.restaurant_phone || '';
-      
-      console.log('[completeSignup] User will join restaurant:', userData.business_name);
+      // We'll set acting_as_store_email temporarily after user logs in
+      // This allows UserSwitcher to manage switching between restaurants
+      console.log('[completeSignup] User will join restaurant:', owner.business_name);
     }
 
     // Create or update user account with restaurant data
@@ -146,17 +139,36 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If this is a store_user invite, also create StoreUser record
+    // If this is a store_user invite, create StoreUser record
     if (inviteTypeToUse === 'store_user') {
+      const ownerEmail = inviter_email || invite.inviter_email;
+      
       await base44.asServiceRole.entities.StoreUser.create({
         store_id: store_id || invite.store_id || '',
         store_name: store_name || invite.store_name || '',
         user_email: invite.email,
         user_name: invite.full_name,
         role: role || invite.role || 'worker',
-        owner_email: inviter_email || invite.inviter_email || '',
+        owner_email: ownerEmail,
         is_active: true
       });
+      
+      // Get owner's data to set temporary acting_as context
+      const ownerUsers = await base44.asServiceRole.entities.User.filter({ email: ownerEmail });
+      const owner = ownerUsers && ownerUsers.length > 0 ? ownerUsers[0] : null;
+      
+      if (owner) {
+        // Set temporary context to view this restaurant's data
+        // User can switch back to their own restaurant via UserSwitcher
+        const userId = existingUser ? existingUser.id : (await base44.asServiceRole.entities.User.filter({ email: invite.email }))[0].id;
+        
+        await base44.asServiceRole.entities.User.update(userId, {
+          acting_as_store_email: ownerEmail,
+          acting_as_store_name: owner.business_name || invite.restaurant_name || store_name || invite.store_name
+        });
+        
+        console.log('[completeSignup] Set temporary acting_as context for restaurant:', owner.business_name);
+      }
     }
 
     // Mark invite as used
