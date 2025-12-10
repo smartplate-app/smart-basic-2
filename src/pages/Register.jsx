@@ -18,7 +18,27 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    checkAuthAndVerify();
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('invite') || urlParams.get('token');
+    
+    if (!token) {
+      setError('No invitation token found. Please check your invitation link.');
+      setLoading(false);
+      return;
+    }
+    
+    // Prevent infinite loop by checking if we just came back from login
+    const hasCheckedAuth = sessionStorage.getItem('register_auth_checked');
+    
+    if (hasCheckedAuth) {
+      // We already checked once, proceed directly
+      sessionStorage.removeItem('register_auth_checked');
+      checkAuthAndVerify();
+    } else {
+      // First time - mark that we checked and proceed
+      sessionStorage.setItem('register_auth_checked', 'true');
+      checkAuthAndVerify();
+    }
   }, []);
 
   const checkAuthAndVerify = async () => {
@@ -37,35 +57,36 @@ export default function RegisterPage() {
 
       // Check if user is already authenticated (OAuth flow)
       let isAuth = false;
+      let currentUser = null;
+      
       try {
         isAuth = await base44.auth.isAuthenticated();
         console.log('[Register] Authentication check result:', isAuth);
+        
+        if (isAuth) {
+          currentUser = await base44.auth.me();
+          console.log('[Register] Current user:', currentUser.email);
+        }
       } catch (authError) {
-        console.log('[Register] Auth check failed, user not authenticated:', authError.message);
+        console.log('[Register] Auth check failed:', authError.message);
         isAuth = false;
+        currentUser = null;
       }
       
-      if (isAuth) {
+      if (isAuth && currentUser) {
         console.log('[Register] User is authenticated via OAuth');
-        try {
-          const currentUser = await base44.auth.me();
-          console.log('[Register] Current user:', currentUser.email);
-          
-          // Check if user already has store_user_owner_email (already registered)
-          if (currentUser.store_user_owner_email) {
-            console.log('[Register] User already registered, redirecting to Orders');
-            window.location.href = window.location.origin + '/#/pages/Orders';
-            return;
-          }
-          
-          // User is authenticated but needs to complete registration with invite
-          console.log('[Register] Auto-completing signup for OAuth user');
-          await verifyAndAutoComplete(token, currentUser);
-        } catch (userError) {
-          console.error('[Register] Error getting user data:', userError);
-          // If getting user fails, treat as not authenticated
-          await verifyInvite();
+        
+        // Check if user already completed registration
+        if (currentUser.store_user_owner_email || currentUser.acting_as_store_email) {
+          console.log('[Register] User already registered, redirecting to Orders');
+          sessionStorage.removeItem('register_auth_checked');
+          window.location.href = window.location.origin + '/#/pages/Orders';
+          return;
         }
+        
+        // User is authenticated but needs to complete registration with invite
+        console.log('[Register] Auto-completing signup for OAuth user');
+        await verifyAndAutoComplete(token, currentUser);
       } else {
         // Not authenticated, show registration form
         console.log('[Register] User not authenticated, showing registration form');
@@ -73,7 +94,8 @@ export default function RegisterPage() {
       }
     } catch (err) {
       console.error('[Register] Error in checkAuthAndVerify:', err);
-      await verifyInvite();
+      setError('Failed to load registration page. Please try again.');
+      setLoading(false);
     }
   };
 
