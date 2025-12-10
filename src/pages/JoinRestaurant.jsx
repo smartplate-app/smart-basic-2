@@ -11,20 +11,31 @@ export default function JoinRestaurantPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Auto-submit when returning from login with code in URL
+  // Pre-fill code from URL and auto-submit if user is authenticated
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlCode = urlParams.get('code');
     
-    if (urlCode && urlCode.length === 5 && !loading) {
+    if (urlCode && urlCode.length === 5) {
       setCode(urlCode);
-      // Auto-submit after a brief delay
-      setTimeout(() => {
-        const form = document.querySelector('form');
-        if (form) {
-          form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      
+      // Auto-submit only if user is already authenticated
+      const checkAuthAndSubmit = async () => {
+        try {
+          const isAuth = await base44.auth.isAuthenticated();
+          if (isAuth) {
+            // User is logged in, auto-submit
+            const form = document.querySelector('form');
+            if (form) {
+              form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            }
+          }
+        } catch (err) {
+          console.log('Auth check failed:', err);
         }
-      }, 500);
+      };
+      
+      checkAuthAndSubmit();
     }
   }, []);
 
