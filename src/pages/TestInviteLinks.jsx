@@ -31,10 +31,26 @@ export default function TestInviteLinksPage() {
 
   const extractToken = (link) => {
     try {
-      const url = new URL(link);
-      return url.searchParams.get('invite') || url.searchParams.get('token');
+      // Handle hash-based URLs (e.g., /#/pages/Register?invite=token)
+      let queryString = '';
+      
+      if (link.includes('?')) {
+        queryString = link.split('?')[1];
+      } else {
+        // Try parsing as regular URL
+        const url = new URL(link);
+        queryString = url.search.substring(1);
+      }
+      
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        return params.get('invite') || params.get('token');
+      }
+      
+      // If no query string found, assume it's just the token
+      return link.trim();
     } catch (error) {
-      // If not a valid URL, assume it's just the token
+      // If parsing fails, assume it's just the token
       return link.trim();
     }
   };
