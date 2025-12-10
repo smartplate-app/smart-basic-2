@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,14 +10,10 @@ export default function JoinRestaurantPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
-    // Check if we already processed this code
-    const processedKey = 'join_processed';
-    if (sessionStorage.getItem(processedKey)) {
-      sessionStorage.removeItem(processedKey);
-      return;
-    }
+    if (hasProcessed.current) return;
 
     const urlParams = new URLSearchParams(window.location.search);
     const urlCode = urlParams.get('code');
@@ -31,7 +27,7 @@ export default function JoinRestaurantPage() {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth) return;
         
-        sessionStorage.setItem(processedKey, 'true');
+        hasProcessed.current = true;
         setLoading(true);
 
         const currentUser = await base44.auth.me();
@@ -40,6 +36,7 @@ export default function JoinRestaurantPage() {
         if (codes.length === 0) {
           setError('קוד לא תקין');
           setLoading(false);
+          hasProcessed.current = false;
           return;
         }
 
@@ -48,6 +45,7 @@ export default function JoinRestaurantPage() {
         if (new Date(accessCode.expires_at) < new Date()) {
           setError('פג תוקף הקוד');
           setLoading(false);
+          hasProcessed.current = false;
           return;
         }
 
@@ -58,7 +56,6 @@ export default function JoinRestaurantPage() {
         });
 
         if (existingAccess.length > 0) {
-          alert('כבר יש לך גישה!');
           window.location.href = '/#/pages/Orders';
           return;
         }
@@ -83,12 +80,12 @@ export default function JoinRestaurantPage() {
           store_user_store_name: accessCode.restaurant_name
         });
 
-        alert('הצטרפת בהצלחה! 🎉');
         window.location.href = '/#/pages/Orders';
       } catch (err) {
         console.error('Error:', err);
         setError('שגיאה בהצטרפות');
         setLoading(false);
+        hasProcessed.current = false;
       }
     };
     
