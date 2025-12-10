@@ -11,64 +11,51 @@ async function hashPassword(password) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { email, full_name, username, password, restaurant_data } = await req.json();
-
-    if (!email || !username || !password || !restaurant_data) {
-      return Response.json({ 
-        success: false, 
-        error: 'Missing required fields' 
-      }, { status: 400 });
+    
+    // Verify the requester is authenticated
+    const requester = await base44.auth.me();
+    if (!requester) {
+      return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if username exists
-    const existingUsers = await base44.asServiceRole.entities.User.filter({ username });
-    if (existingUsers && existingUsers.length > 0) {
-      return Response.json({ 
-        success: false, 
-        error: 'Username already taken' 
-      }, { status: 400 });
+    const { username, password, email, full_name, restaurant_name, restaurant_address, role, owner_email } = await req.json();
+
+    if (!username || !password || !email || !full_name) {
+      return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Hash password
+    console.log('[createSimpleUserAccount] Creating account for:', email);
+
+    // Hash the password
     const hashedPassword = await hashPassword(password);
 
-    // CRITICAL: Grant app access first
-    try {
-      await base44.asServiceRole.auth.addAppUser(email);
-    } catch (accessError) {
-      console.log('User may already have app access:', accessError);
-    }
-
-    // Create user with restaurant data
-    const userData = {
-      email,
-      full_name,
-      username: username.trim(),
-      password: hashedPassword,
-      role: 'user',
-      ...restaurant_data
-    };
-
-    await base44.asServiceRole.entities.User.create(userData);
-
-    // Create StoreUser record
-    await base44.asServiceRole.entities.StoreUser.create({
-      store_id: restaurant_data.store_user_owner_email,
-      store_name: restaurant_data.store_user_store_name,
-      user_email: email,
-      user_name: full_name,
-      role: restaurant_data.store_user_role,
-      owner_email: restaurant_data.store_user_owner_email,
-      is_active: true
+    // Create the user account using service role
+    const newUser = await base44.asServiceRole.auth.createUser({
+      email: email,
+      password: password,
+      username: username,
+      user_metadata: {
+        full_name: full_name,
+        business_name: restaurant_name,
+        business_address: restaurant_address,
+        store_user_role: role,
+        store_user_owner_email: owner_email
+      }
     });
 
-    return Response.json({ success: true });
+    console.log('[createSimpleUserAccount] User created successfully:', newUser.id);
+
+    return Response.json({ 
+      success: true, 
+      user_id: newUser.id,
+      username: username
+    });
 
   } catch (error) {
-    console.error('Error creating user account:', error);
+    console.error('[createSimpleUserAccount] Error:', error);
     return Response.json({ 
       success: false, 
-      error: error.message || 'Failed to create account'
+      error: error.message || 'Failed to create account' 
     }, { status: 500 });
   }
 });
