@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Plus, CheckCircle, Circle, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar, Plus, CheckCircle, Circle, Trash2, ChevronLeft, ChevronRight, Edit } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addWeeks, addMonths, subWeeks, subMonths } from "date-fns";
 import { useLanguage } from "../components/LanguageProvider";
 
@@ -19,6 +20,7 @@ export default function ToDoListPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
+  const [viewingTodo, setViewingTodo] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -298,7 +300,7 @@ export default function ToDoListPage() {
                         onClick={() => toggleComplete(todo)}
                         onDoubleClick={(e) => {
                           e.stopPropagation();
-                          handleEdit(todo);
+                          setViewingTodo(todo);
                         }}
                       >
                         <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -368,7 +370,7 @@ export default function ToDoListPage() {
                         onClick={() => toggleComplete(todo)}
                         onDoubleClick={(e) => {
                           e.stopPropagation();
-                          handleEdit(todo);
+                          setViewingTodo(todo);
                         }}
                       >
                         {todo.completed ? '✓ ' : ''}{todo.title}
@@ -440,6 +442,109 @@ export default function ToDoListPage() {
             </div>
           </div>
         )}
+
+        {/* View Todo Modal */}
+        <Dialog open={!!viewingTodo} onOpenChange={(open) => !open && setViewingTodo(null)}>
+          <DialogContent className="max-w-2xl" dir={isRTL ? 'rtl' : 'ltr'}>
+            <DialogHeader>
+              <DialogTitle className={isRTL ? 'text-right' : ''}>{isRTL ? 'פרטי משימה' : 'Task Details'}</DialogTitle>
+            </DialogHeader>
+            {viewingTodo && (
+              <div className="space-y-4">
+                <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="flex-1">
+                    <h3 className={`text-2xl font-bold mb-2 ${isRTL ? 'text-right' : ''}`}>{viewingTodo.title}</h3>
+                    <div className={`flex gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <span className={`px-3 py-1 rounded text-sm ${categoryColors[viewingTodo.category]}`}>
+                        {categoryLabels[viewingTodo.category]}
+                      </span>
+                      <span className={`px-3 py-1 rounded text-sm ${
+                        viewingTodo.priority === 'high' ? 'bg-red-100 text-red-800' :
+                        viewingTodo.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {viewingTodo.priority}
+                      </span>
+                      {viewingTodo.completed && (
+                        <span className="px-3 py-1 rounded text-sm bg-green-100 text-green-800 flex items-center gap-1">
+                          <CheckCircle className="w-4 h-4" />
+                          {isRTL ? 'הושלם' : 'Completed'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      handleEdit(viewingTodo);
+                      setViewingTodo(null);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    {isRTL ? 'ערוך' : 'Edit'}
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className={`text-sm font-semibold text-gray-600 block mb-1 ${isRTL ? 'text-right' : ''}`}>
+                      {isRTL ? 'תיאור' : 'Description'}
+                    </label>
+                    <p className={`text-gray-800 ${isRTL ? 'text-right' : ''}`}>
+                      {viewingTodo.description || (isRTL ? 'אין תיאור' : 'No description')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className={`text-sm font-semibold text-gray-600 block mb-1 ${isRTL ? 'text-right' : ''}`}>
+                      {isRTL ? 'תאריך' : 'Date'}
+                    </label>
+                    <p className={`text-gray-800 ${isRTL ? 'text-right' : ''}`}>
+                      {format(new Date(viewingTodo.date), 'EEEE, MMMM d, yyyy')}
+                    </p>
+                  </div>
+
+                  {viewingTodo.completed && viewingTodo.completed_at && (
+                    <div>
+                      <label className={`text-sm font-semibold text-gray-600 block mb-1 ${isRTL ? 'text-right' : ''}`}>
+                        {isRTL ? 'הושלם בתאריך' : 'Completed On'}
+                      </label>
+                      <p className={`text-gray-800 ${isRTL ? 'text-right' : ''}`}>
+                        {format(new Date(viewingTodo.completed_at), 'EEEE, MMMM d, yyyy h:mm a')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className={`flex gap-3 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Button
+                    onClick={() => {
+                      toggleComplete(viewingTodo);
+                      setViewingTodo(null);
+                    }}
+                    className={viewingTodo.completed ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700'}
+                  >
+                    {viewingTodo.completed ? (isRTL ? 'סמן כלא הושלם' : 'Mark Incomplete') : (isRTL ? 'סמן כהושלם' : 'Mark Complete')}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      deleteTodo(viewingTodo.id);
+                      setViewingTodo(null);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {isRTL ? 'מחק' : 'Delete'}
+                  </Button>
+                  <Button variant="outline" onClick={() => setViewingTodo(null)}>
+                    {isRTL ? 'סגור' : 'Close'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
