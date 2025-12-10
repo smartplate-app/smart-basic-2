@@ -20,6 +20,7 @@ import TestInvites from './pages/TestInvites';
 import PublicOrder from './pages/PublicOrder';
 import InviteUser from './pages/InviteUser';
 import JoinRestaurant from './pages/JoinRestaurant';
+import TestInviteLinks from './pages/TestInviteLinks';
 import __Layout from './Layout.jsx';
 
 
@@ -46,6 +47,7 @@ export const PAGES = {
     "PublicOrder": PublicOrder,
     "InviteUser": InviteUser,
     "JoinRestaurant": JoinRestaurant,
+    "TestInviteLinks": TestInviteLinks,
 }
 
 export const pagesConfig = {
