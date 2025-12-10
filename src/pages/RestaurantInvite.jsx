@@ -98,60 +98,58 @@ export default function RestaurantInvitePage() {
     }
   };
 
-  const handleExistingUserLogin = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
-    // Store token in sessionStorage for after login
-    sessionStorage.setItem('pending_invite_token', token);
-    
-    window.location.href = `/auth/login?next=${encodeURIComponent(window.location.origin + '/#/pages/RestaurantInvite?token=' + token)}`;
-  };
+  const handleExistingUserLogin = async (e) => {
+    e.preventDefault();
 
-  useEffect(() => {
-    // Check if user just logged in with pending invite
-    const checkPendingInvite = async () => {
-      const pendingToken = sessionStorage.getItem('pending_invite_token');
-      if (pendingToken) {
-        try {
-          const isAuth = await base44.auth.isAuthenticated();
-          if (isAuth) {
-            sessionStorage.removeItem('pending_invite_token');
-            const currentUser = await base44.auth.me();
-            
-            // Complete signup for existing user
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token');
-            
-            if (token === pendingToken) {
-              const response = await base44.functions.invoke('completeSignup', {
-                invite_token: token,
-                username: currentUser.email.split('@')[0],
-                password: 'existing-' + Math.random().toString(36).substring(7),
-                invite_type: inviteData?.invite_type,
-                chain_id: inviteData?.chain_id,
-                store_id: inviteData?.store_id,
-                store_name: inviteData?.store_name,
-                role: inviteData?.role,
-                inviter_email: inviteData?.inviter_email,
-                oauth_user_email: currentUser.email
-              });
-
-              if (response.data.success) {
-                window.location.href = window.location.origin + '/#/pages/Orders';
-              }
-            }
-          }
-        } catch (err) {
-          console.error('Error completing signup for existing user:', err);
-        }
-      }
-    };
-
-    if (inviteData && !loading) {
-      checkPendingInvite();
+    if (!username || !password) {
+      alert('נא להזין שם משתמש וסיסמה');
+      return;
     }
-  }, [inviteData, loading]);
+
+    try {
+      setSubmitting(true);
+      
+      // Try to authenticate with base44
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (response.ok) {
+        // Login successful - now complete the invite signup
+        const currentUser = await base44.auth.me();
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        const signupResponse = await base44.functions.invoke('completeSignup', {
+          invite_token: token,
+          username: currentUser.email.split('@')[0],
+          password: 'existing-' + Math.random().toString(36).substring(7),
+          invite_type: inviteData?.invite_type,
+          chain_id: inviteData?.chain_id,
+          store_id: inviteData?.store_id,
+          store_name: inviteData?.store_name,
+          role: inviteData?.role,
+          inviter_email: inviteData?.inviter_email,
+          oauth_user_email: currentUser.email
+        });
+
+        if (signupResponse.data.success) {
+          window.location.href = window.location.origin + '/#/pages/Orders';
+        } else {
+          alert('שגיאה בהצטרפות למסעדה: ' + signupResponse.data.error);
+        }
+      } else {
+        alert('שם משתמש או סיסמה שגויים');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      alert('שגיאה בהתחברות');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -252,7 +250,7 @@ export default function RestaurantInvitePage() {
                   צור חשבון חדש
                 </Button>
                 <Button
-                  onClick={handleExistingUserLogin}
+                  onClick={() => setMode('login')}
                   variant="outline"
                   className="w-full h-12 text-lg"
                 >
@@ -262,6 +260,67 @@ export default function RestaurantInvitePage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Login Form */}
+        {mode === 'login' && (
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle className="text-right">התחברות</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleExistingUserLogin} className="space-y-4">
+                <div>
+                  <Label className="text-right block mb-2">שם משתמש *</Label>
+                  <Input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="הזן שם משתמש"
+                    required
+                    className="text-right"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-right block mb-2">סיסמה *</Label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="הזן סיסמה"
+                      required
+                      className="text-right"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  >
+                    {submitting ? <Loader className="w-4 h-4 animate-spin" /> : 'התחבר והצטרף'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setMode('view')}
+                  >
+                    ביטול
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Registration Form */}
         {mode === 'register' && (
