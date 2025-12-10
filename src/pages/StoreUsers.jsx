@@ -156,54 +156,8 @@ export default function StoreUsersPage() {
       await loadData();
       console.log('[StoreUsers] User list updated!');
 
-      // Generate HTML email with styled button
-      const htmlContent = `
-<!DOCTYPE html>
-<html dir="${language === 'he' ? 'rtl' : 'ltr'}" lang="${language}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: #f4f4f4; padding: 20px; }
-    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    h1 { color: #1a1a1a; margin-bottom: 20px; }
-    p { margin: 15px 0; }
-    .button { display: inline-block; padding: 15px 30px; background: #2563eb; color: white !important; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; text-align: center; }
-    .button:hover { background: #1d4ed8; }
-    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5; font-size: 14px; color: #666; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>${language === 'he' ? '🎉 הוזמנת להצטרף!' : '🎉 You\'re Invited!'}</h1>
-    <p>${language === 'he' ? 'שלום' : 'Hello'} ${userName},</p>
-    <p>${language === 'he' 
-      ? `הוזמנת על ידי ${user.full_name} להצטרף למסעדה <strong>${user.business_name || storeName}</strong> כ${userRole === 'manager' ? 'מנהל' : 'עובד'}.`
-      : `You've been invited by ${user.full_name} to join <strong>${user.business_name || storeName}</strong> as a ${userRole === 'manager' ? 'Manager' : 'Worker'}.`
-    }</p>
-    ${personalMessage ? `<p style="background: #f0f9ff; padding: 15px; border-radius: 8px; border-right: 4px solid #2563eb;"><strong>${language === 'he' ? 'הודעה אישית:' : 'Personal Message:'}</strong><br>${personalMessage}</p>` : ''}
-    <div style="text-align: center;">
-      <a href="${inviteLink}" class="button">
-        ${language === 'he' ? '👉 לחץ כאן להצטרף' : '👉 Click Here to Join'}
-      </a>
-    </div>
-    <p style="font-size: 14px; color: #666;">
-      ${language === 'he' 
-        ? 'ההזמנה תפוג בעוד 7 ימים. אם יש לך שאלות, צור קשר עם המסעדה.'
-        : 'This invitation expires in 7 days. If you have any questions, contact the restaurant.'
-      }
-    </p>
-    <div class="footer">
-      <p>${language === 'he' ? 'בברכה,' : 'Best regards,'}<br><strong>${user.business_name || storeName}</strong></p>
-    </div>
-  </div>
-</body>
-</html>`;
-
       setGeneratedLink(inviteLink);
-      setGeneratedHTML(htmlContent);
       setLinkCopied(false);
-      setHtmlCopied(false);
       
       console.log('[StoreUsers] All done!');
     } catch (error) {
