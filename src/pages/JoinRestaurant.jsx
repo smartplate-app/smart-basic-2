@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,23 @@ export default function JoinRestaurantPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Auto-submit when returning from login with code in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlCode = urlParams.get('code');
+    
+    if (urlCode && urlCode.length === 5 && !loading) {
+      setCode(urlCode);
+      // Auto-submit after a brief delay
+      setTimeout(() => {
+        const form = document.querySelector('form');
+        if (form) {
+          form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
+      }, 500);
+    }
+  }, []);
 
   const handleJoin = async (e) => {
     e.preventDefault();
