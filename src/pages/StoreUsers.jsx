@@ -115,8 +115,31 @@ export default function StoreUsersPage() {
       const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
       const storeId = user.acting_as_store_id || "main";
 
+      // Generate username from email
+      const generatedUsername = userEmail.split('@')[0] + '_' + Math.random().toString(36).substring(2, 7);
+      
+      // Generate random password
+      const generatedPassword = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+
+      console.log('[StoreUsers] Creating user account...');
+      // Create the actual user account via backend function
+      const createAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
+        username: generatedUsername,
+        password: generatedPassword,
+        email: userEmail,
+        full_name: userName,
+        restaurant_name: storeName,
+        restaurant_address: user.business_address || '',
+        role: userRole,
+        owner_email: ownerEmail
+      });
+
+      if (!createAccountResponse.data.success) {
+        throw new Error(createAccountResponse.data.error || 'Failed to create account');
+      }
+
       console.log('[StoreUsers] Creating StoreUser record...');
-      // Create store user
+      // Create store user record
       await base44.entities.StoreUser.create({
         store_id: storeId,
         store_name: storeName,
@@ -128,42 +151,19 @@ export default function StoreUsersPage() {
       });
       console.log('[StoreUsers] StoreUser created successfully');
 
-      // Create short token-based invite
-      const inviteToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const inviteLink = `${window.location.origin}/#/pages/RestaurantInvite?token=${inviteToken}`;
-
-      // Create UserInvite record with the token
-      await base44.entities.UserInvite.create({
-        token: inviteToken,
-        email: userEmail,
-        full_name: userName,
-        invite_type: 'store_user',
-        store_id: storeId,
-        store_name: storeName,
-        role: userRole,
-        inviter_email: ownerEmail,
-        inviter_name: user.full_name,
-        restaurant_name: user.business_name || user.acting_as_store_name || storeName,
-        restaurant_address: user.business_address || '',
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-        used: false
-      });
-      
-      console.log('[StoreUsers] Generated invite link:', inviteLink);
-
       // Reload the user list
       console.log('[StoreUsers] Loading updated data...');
       await loadData();
       console.log('[StoreUsers] User list updated!');
 
-      setGeneratedLink(inviteLink);
+      // Show credentials
+      setGeneratedLink(`${language === 'he' ? 'שם משתמש' : 'Username'}: ${generatedUsername}\n${language === 'he' ? 'סיסמה' : 'Password'}: ${generatedPassword}`);
       setLinkCopied(false);
       
       console.log('[StoreUsers] All done!');
     } catch (error) {
       console.error("[StoreUsers] Error adding user:", error);
       alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + error.message);
-      setSaving(false);
     } finally {
       setSaving(false);
     }
@@ -297,39 +297,40 @@ export default function StoreUsersPage() {
                         ✅ {t.userAdded}
                       </p>
 
-                      {/* Display the invite link prominently */}
+                      {/* Display credentials */}
                       <div className="bg-white border border-blue-200 rounded-lg p-4 mb-3">
                         <Label className={`text-sm font-semibold text-gray-700 mb-2 block ${isRTL ? 'text-right' : ''}`}>
-                          {language === 'he' ? '🔗 לינק הזמנה למסעדה:' : '🔗 Restaurant Invite Link:'}
+                          {language === 'he' ? '🔑 פרטי התחברות:' : '🔑 Login Credentials:'}
                         </Label>
-                        <div className="flex gap-2 mb-3">
-                          <Input 
+                        <div className="mb-3">
+                          <textarea 
                             value={generatedLink} 
                             readOnly 
-                            className="flex-1 text-sm bg-gray-50 font-mono"
+                            className="w-full text-sm bg-gray-50 font-mono p-3 border rounded-md"
+                            rows={2}
                             dir="ltr"
                           />
-                          <Button
-                            onClick={async () => {
-                              await navigator.clipboard.writeText(generatedLink);
-                              setLinkCopied(true);
-                              setTimeout(() => setLinkCopied(false), 2000);
-                            }}
-                            className={linkCopied ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}
-                          >
-                            {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                            <span className="mr-2">{linkCopied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק' : 'Copy')}</span>
-                          </Button>
                         </div>
+                        <Button
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(generatedLink);
+                            setLinkCopied(true);
+                            setTimeout(() => setLinkCopied(false), 2000);
+                          }}
+                          className={`w-full mb-3 ${linkCopied ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}`}
+                        >
+                          {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                          {linkCopied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק פרטים' : 'Copy Credentials')}
+                        </Button>
 
                         <div className="bg-blue-50 rounded-lg p-3">
                           <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
                             <strong>{language === 'he' ? '💡 איך זה עובד:' : '💡 How it works:'}</strong>
                           </p>
                           <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
-                            <li>{language === 'he' ? 'שלח את הלינק בווצאפ או במייל' : 'Send the link via WhatsApp or email'}</li>
-                            <li>{language === 'he' ? 'העובד יראה שם מסעדה ופרטים' : 'Worker sees restaurant name and details'}</li>
-                            <li>{language === 'he' ? 'יכול להצטרף עם Google/Microsoft או סיסמה' : 'Can join with Google/Microsoft or password'}</li>
+                            <li>{language === 'he' ? 'שלח את הפרטים בווצאפ או במייל' : 'Send credentials via WhatsApp or email'}</li>
+                            <li>{language === 'he' ? 'העובד נכנס לאתר הראשי: smartplatebasic.com' : 'Worker goes to: smartplatebasic.com'}</li>
+                            <li>{language === 'he' ? 'מתחבר עם שם המשתמש והסיסמה' : 'Logs in with username and password'}</li>
                             <li>{language === 'he' ? 'אתה יכול לבטל גישה בכל רגע' : 'You can revoke access anytime'}</li>
                           </ul>
                         </div>
@@ -338,7 +339,7 @@ export default function StoreUsersPage() {
                       {/* WhatsApp Quick Share Button */}
                       <Button
                         onClick={() => {
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'לחץ על הלינק להצטרפות:' : 'Click to join:'}\n${generatedLink}`;
+                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'פרטי התחברות שלך:' : 'Your login credentials:'}\n\n${generatedLink}\n\n${language === 'he' ? 'היכנס לאתר: smartplatebasic.com' : 'Login at: smartplatebasic.com'}`;
                           const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                           window.open(whatsappUrl, '_blank');
                         }}
