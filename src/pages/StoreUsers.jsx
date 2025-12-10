@@ -26,6 +26,8 @@ export default function StoreUsersPage() {
   const [personalMessage, setPersonalMessage] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const t = {
     he: {
@@ -102,8 +104,13 @@ export default function StoreUsersPage() {
   };
 
   const handleAddUser = async () => {
-    if (!userName.trim() || !userEmail.trim()) {
-      alert(language === 'he' ? 'נא למלא שם ואימייל' : 'Please fill in name and email');
+    if (!userName.trim() || !userEmail.trim() || !username.trim() || !password.trim()) {
+      alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
+      return;
+    }
+
+    if (password.length < 6) {
+      alert(language === 'he' ? 'הסיסמה חייבת להיות לפחות 6 תווים' : 'Password must be at least 6 characters');
       return;
     }
 
@@ -115,17 +122,11 @@ export default function StoreUsersPage() {
       const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
       const storeId = user.acting_as_store_id || "main";
 
-      // Generate username from email
-      const generatedUsername = userEmail.split('@')[0] + '_' + Math.random().toString(36).substring(2, 7);
-      
-      // Generate random password
-      const generatedPassword = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
-
       console.log('[StoreUsers] Creating user account...');
       // Create the actual user account via backend function
       const createAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
-        username: generatedUsername,
-        password: generatedPassword,
+        username: username,
+        password: password,
         email: userEmail,
         full_name: userName,
         restaurant_name: storeName,
@@ -157,7 +158,7 @@ export default function StoreUsersPage() {
       console.log('[StoreUsers] User list updated!');
 
       // Show credentials
-      setGeneratedLink(`${language === 'he' ? 'שם משתמש' : 'Username'}: ${generatedUsername}\n${language === 'he' ? 'סיסמה' : 'Password'}: ${generatedPassword}`);
+      setGeneratedLink(`${language === 'he' ? 'שם משתמש' : 'Username'}: ${username}\n${language === 'he' ? 'סיסמה' : 'Password'}: ${password}`);
       setLinkCopied(false);
       
       console.log('[StoreUsers] All done!');
@@ -230,6 +231,15 @@ export default function StoreUsersPage() {
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div>
+                  <Label className={isRTL ? 'text-right block' : ''}>{t.userName}</Label>
+                  <Input 
+                    value={userName} 
+                    onChange={(e) => setUserName(e.target.value)}
+                    className={isRTL ? 'text-right' : ''}
+                    placeholder={language === 'he' ? 'שם מלא' : 'Full Name'}
+                  />
+                </div>
+                <div>
                   <Label className={isRTL ? 'text-right block' : ''}>{t.userEmail}</Label>
                   <Input 
                     type="email"
@@ -240,20 +250,26 @@ export default function StoreUsersPage() {
                   />
                 </div>
                 <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>{t.userName}</Label>
+                  <Label className={isRTL ? 'text-right block' : ''}>
+                    {language === 'he' ? 'שם משתמש להתחברות' : 'Login Username'}
+                  </Label>
                   <Input 
-                    value={userName} 
-                    onChange={(e) => setUserName(e.target.value)}
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)}
                     className={isRTL ? 'text-right' : ''}
+                    placeholder={language === 'he' ? 'בחר שם משתמש' : 'Choose username'}
                   />
                 </div>
                 <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>{t.personalMessage}</Label>
-                  <textarea 
-                    value={personalMessage} 
-                    onChange={(e) => setPersonalMessage(e.target.value)}
-                    placeholder={t.personalMessagePlaceholder}
-                    className={`w-full min-h-[80px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 ${isRTL ? 'text-right' : ''}`}
+                  <Label className={isRTL ? 'text-right block' : ''}>
+                    {language === 'he' ? 'סיסמה' : 'Password'}
+                  </Label>
+                  <Input 
+                    type="text"
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={isRTL ? 'text-right' : ''}
+                    placeholder={language === 'he' ? 'לפחות 6 תווים' : 'At least 6 characters'}
                   />
                 </div>
                 <div>
@@ -360,6 +376,8 @@ export default function StoreUsersPage() {
                         setGeneratedLink("");
                         setUserName("");
                         setUserEmail("");
+                        setUsername("");
+                        setPassword("");
                         setUserRole("worker");
                         setPersonalMessage("");
                       }}
