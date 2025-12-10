@@ -116,18 +116,37 @@ export default function RestaurantInvitePage() {
     const urlParams = new URLSearchParams(window.location.search);
     const isOAuth = urlParams.get('oauth');
     
-    if (isOAuth && !loading) {
+    if (isOAuth && !loading && inviteData) {
+      // Prevent multiple executions
+      const oauthProcessed = sessionStorage.getItem('oauth_processing');
+      if (oauthProcessed === 'true') {
+        console.log('[RestaurantInvite] OAuth already being processed, skipping...');
+        return;
+      }
+      
+      sessionStorage.setItem('oauth_processing', 'true');
+      
       const completeOAuth = async () => {
         try {
+          console.log('[RestaurantInvite] Starting OAuth completion...');
           const token = sessionStorage.getItem('oauth_invite_token');
           const savedInviteData = JSON.parse(sessionStorage.getItem('oauth_invite_data') || '{}');
           
-          if (!token) return;
+          if (!token) {
+            console.error('[RestaurantInvite] No token found in session');
+            sessionStorage.removeItem('oauth_processing');
+            return;
+          }
           
           const isAuth = await base44.auth.isAuthenticated();
-          if (!isAuth) return;
+          if (!isAuth) {
+            console.error('[RestaurantInvite] User not authenticated');
+            sessionStorage.removeItem('oauth_processing');
+            return;
+          }
           
           const currentUser = await base44.auth.me();
+          console.log('[RestaurantInvite] User authenticated:', currentUser.email);
           
           // Complete signup
           const response = await base44.functions.invoke('completeSignup', {
@@ -144,20 +163,26 @@ export default function RestaurantInvitePage() {
           });
 
           if (response.data.success) {
+            console.log('[RestaurantInvite] Signup completed, redirecting...');
             sessionStorage.removeItem('oauth_invite_token');
             sessionStorage.removeItem('oauth_invite_data');
+            sessionStorage.removeItem('oauth_processing');
             window.location.href = window.location.origin + '/#/pages/Orders';
           } else {
+            console.error('[RestaurantInvite] Signup failed:', response.data.error);
+            sessionStorage.removeItem('oauth_processing');
             alert('שגיאה: ' + response.data.error);
           }
         } catch (err) {
-          console.error('OAuth completion error:', err);
+          console.error('[RestaurantInvite] OAuth completion error:', err);
+          sessionStorage.removeItem('oauth_processing');
+          alert('שגיאה בהשלמת ההרשמה: ' + err.message);
         }
       };
       
       completeOAuth();
     }
-  }, [loading]);
+  }, [loading, inviteData]);
 
   if (loading) {
     return (
