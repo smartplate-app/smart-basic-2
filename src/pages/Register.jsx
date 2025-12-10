@@ -27,18 +27,7 @@ export default function RegisterPage() {
       return;
     }
     
-    // Prevent infinite loop by checking if we just came back from login
-    const hasCheckedAuth = sessionStorage.getItem('register_auth_checked');
-    
-    if (hasCheckedAuth) {
-      // We already checked once, proceed directly
-      sessionStorage.removeItem('register_auth_checked');
-      checkAuthAndVerify();
-    } else {
-      // First time - mark that we checked and proceed
-      sessionStorage.setItem('register_auth_checked', 'true');
-      checkAuthAndVerify();
-    }
+    checkAuthAndVerify();
   }, []);
 
   const checkAuthAndVerify = async () => {
