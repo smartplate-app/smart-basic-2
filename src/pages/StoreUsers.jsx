@@ -473,6 +473,7 @@ export default function StoreUsersPage() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Role Explanation Cards */}
