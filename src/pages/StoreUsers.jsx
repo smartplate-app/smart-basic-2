@@ -531,35 +531,49 @@ export default function StoreUsersPage() {
                   <p className={`text-sm text-blue-800 font-semibold ${isRTL ? 'text-right' : ''}`}>
                     {language === 'he' ? '📱 איך העובד מצטרף:' : '📱 How worker joins:'}
                   </p>
-                  <ol className={`text-sm text-blue-800 space-y-2 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
-                    <li>{language === 'he' ? '1. העובד נכנס לקישור:' : '1. Worker goes to:'}</li>
+                  <div className="bg-white rounded-lg p-3 border-2 border-blue-400">
+                    <p className={`text-xs text-gray-600 mb-2 ${isRTL ? 'text-right' : ''}`}>
+                      {language === 'he' ? 'שלח לעובד את:' : 'Send worker:'}
+                    </p>
+                    <div className="space-y-2">
+                      <div className="bg-gray-50 rounded p-2">
+                        <p className={`text-xs text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                          {language === 'he' ? 'קישור:' : 'Link:'}
+                        </p>
+                        <p className="text-sm font-mono text-blue-700 break-all">
+                          smartplatebasic.com/#/pages/JoinRestaurant
+                        </p>
+                      </div>
+                      <div className="bg-yellow-50 rounded p-2 border border-yellow-300">
+                        <p className={`text-xs text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                          {language === 'he' ? 'קוד להזנה:' : 'Code to enter:'}
+                        </p>
+                        {accessCodes.length > 0 && (
+                          <p className="text-2xl font-bold text-gray-900 text-center my-1">
+                            {accessCodes[0].code}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <ol className={`text-sm text-blue-800 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
+                    <li>{language === 'he' ? '1. העובד נכנס לקישור למעלה' : '1. Worker opens link above'}</li>
+                    <li>{language === 'he' ? '2. מזין את הקוד בן 5 הספרות' : '2. Enters the 5-digit code'}</li>
+                    <li>{language === 'he' ? '3. לוחץ "הצטרף"' : '3. Clicks "Join"'}</li>
+                    <li>{language === 'he' ? '4. מתחבר/נרשם אם צריך' : '4. Logs in/signs up if needed'}</li>
+                    <li>{language === 'he' ? '5. מקבל גישה! ✅' : '5. Gets access! ✅'}</li>
                   </ol>
-                  <a 
-                    href={`${window.location.origin}/#/pages/JoinRestaurant`}
-                    target="_blank"
-                    className="block text-center bg-white border-2 border-blue-400 text-blue-700 font-bold py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors"
-                  >
-                    {window.location.origin}/#/pages/JoinRestaurant
-                  </a>
-                  <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
-                    {language === 'he' ? '2. מזין את הקוד בן 5 הספרות' : '2. Enters the 5-digit code'}
-                  </p>
-                  <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
-                    {language === 'he' ? '3. מתחבר או נרשם (Google/Microsoft/סיסמה)' : '3. Logs in or signs up (Google/Microsoft/Password)'}
-                  </p>
-                  <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
-                    {language === 'he' ? '4. מקבל גישה אוטומטית למסעדה! ✅' : '4. Gets automatic access to restaurant! ✅'}
-                  </p>
                   <Button
                     onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/#/pages/JoinRestaurant`);
-                      alert(language === 'he' ? 'הקישור הועתק! שלח אותו לעובד' : 'Link copied! Send it to the worker');
+                      const msg = `${language === 'he' ? 'קישור:' : 'Link:'} smartplatebasic.com/#/pages/JoinRestaurant\n${language === 'he' ? 'קוד:' : 'Code:'} ${accessCodes[0]?.code || ''}`;
+                      navigator.clipboard.writeText(msg);
+                      alert(language === 'he' ? 'הקישור והקוד הועתקו!' : 'Link and code copied!');
                     }}
                     variant="outline"
                     className="w-full mt-2"
                   >
                     <Copy className="w-4 h-4 mr-2" />
-                    {language === 'he' ? 'העתק קישור להצטרפות' : 'Copy Join Link'}
+                    {language === 'he' ? 'העתק קישור + קוד' : 'Copy Link + Code'}
                   </Button>
                 </div>
 
