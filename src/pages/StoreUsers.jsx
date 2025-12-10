@@ -28,6 +28,9 @@ export default function StoreUsersPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [password, setPassword] = useState("");
   const [editingUser, setEditingUser] = useState(null);
+  const [accessCodes, setAccessCodes] = useState([]);
+  const [showCodeGenerator, setShowCodeGenerator] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("worker");
 
   const t = {
     he: {
@@ -96,6 +99,10 @@ export default function StoreUsersPage() {
       const ownerEmail = currentUser.acting_as_store_email || currentUser.email;
       const users = await base44.entities.StoreUser.filter({ owner_email: ownerEmail });
       setStoreUsers(users);
+
+      // Load access codes
+      const codes = await base44.entities.RestaurantAccessCode.filter({ owner_email: ownerEmail });
+      setAccessCodes(codes);
     } catch (error) {
       console.error("Error loading store users:", error);
     } finally {
@@ -222,6 +229,44 @@ export default function StoreUsersPage() {
     setShowAddUser(true);
   };
 
+  const generateAccessCode = async () => {
+    try {
+      const code = Math.floor(10000 + Math.random() * 90000).toString();
+      const ownerEmail = user.acting_as_store_email || user.email;
+      const restaurantName = user.acting_as_store_name || user.business_name || user.full_name;
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+
+      await base44.entities.RestaurantAccessCode.create({
+        code: code,
+        owner_email: ownerEmail,
+        restaurant_name: restaurantName,
+        role: selectedRole,
+        is_active: true,
+        expires_at: expiresAt.toISOString(),
+        uses_count: 0
+      });
+
+      await loadData();
+      alert((language === 'he' ? 'קוד נוצר: ' : 'Code generated: ') + code);
+    } catch (error) {
+      console.error('Error generating code:', error);
+      alert(language === 'he' ? 'שגיאה ביצירת קוד' : 'Error generating code');
+    }
+  };
+
+  const deleteAccessCode = async (codeId) => {
+    if (!confirm(language === 'he' ? 'למחוק קוד זה?' : 'Delete this code?')) return;
+
+    try {
+      await base44.entities.RestaurantAccessCode.delete(codeId);
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting code:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -247,8 +292,12 @@ export default function StoreUsersPage() {
               )}
             </div>
           </div>
-          
-          <Dialog open={showAddUser} onOpenChange={(open) => {
+
+          <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Button onClick={() => setShowCodeGenerator(true)} variant="outline">
+              {language === 'he' ? '🔑 קוד גישה' : '🔑 Access Code'}
+            </Button>
+            <Dialog open={showAddUser} onOpenChange={(open) => {
             setShowAddUser(open);
             if (!open) {
               // Reset form when closing
@@ -451,6 +500,80 @@ export default function StoreUsersPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Access Codes Section */}
+        {showCodeGenerator && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className={isRTL ? 'text-right' : ''}>
+                {language === 'he' ? 'קודי גישה למסעדה' : 'Restaurant Access Codes'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className={`flex gap-3 items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manager">{language === 'he' ? 'מנהל' : 'Manager'}</SelectItem>
+                      <SelectItem value="worker">{language === 'he' ? 'עובד' : 'Worker'}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={generateAccessCode} className="bg-gray-900 hover:bg-gray-800">
+                    {language === 'he' ? 'צור קוד' : 'Generate Code'}
+                  </Button>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
+                    {language === 'he' 
+                      ? '💡 העובד נכנס לאתר smartplatebasic.com, לוחץ "הצטרף למסעדה", ומזין את הקוד בן 5 הספרות' 
+                      : '💡 Worker goes to smartplatebasic.com, clicks "Join Restaurant", and enters the 5-digit code'}
+                  </p>
+                </div>
+
+                {accessCodes.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className={`font-semibold ${isRTL ? 'text-right' : ''}`}>
+                      {language === 'he' ? 'קודים פעילים:' : 'Active Codes:'}
+                    </h3>
+                    {accessCodes.map((code) => (
+                      <div key={code.id} className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <span className="text-2xl font-bold text-gray-900">{code.code}</span>
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            code.role === 'manager' 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {code.role === 'manager' ? (language === 'he' ? 'מנהל' : 'Manager') : (language === 'he' ? 'עובד' : 'Worker')}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {language === 'he' ? 'שימושים: ' : 'Uses: '}{code.uses_count || 0}
+                          </span>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => deleteAccessCode(code.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Button variant="outline" onClick={() => setShowCodeGenerator(false)} className="w-full">
+                  {language === 'he' ? 'סגור' : 'Close'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Users List */}
         <Card>
