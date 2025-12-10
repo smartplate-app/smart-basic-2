@@ -125,6 +125,23 @@ export default function StoreUsersPage() {
 
       if (editingUser) {
         // Update existing user
+        console.log('[StoreUsers] Updating user account...');
+        const updateAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
+          username: username,
+          password: password,
+          email: userEmail,
+          full_name: userName,
+          restaurant_name: storeName,
+          restaurant_address: user.business_address || '',
+          role: userRole,
+          owner_email: ownerEmail,
+          update_existing: true
+        });
+
+        if (!updateAccountResponse.data.success) {
+          throw new Error(updateAccountResponse.data.error || 'Failed to update account');
+        }
+
         console.log('[StoreUsers] Updating StoreUser record...');
         await base44.entities.StoreUser.update(editingUser.id, {
           user_name: userName,
@@ -135,7 +152,24 @@ export default function StoreUsersPage() {
         });
         console.log('[StoreUsers] StoreUser updated successfully');
       } else {
-        // Create new user
+        // Create new user account first
+        console.log('[StoreUsers] Creating user account...');
+        const createAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
+          username: username,
+          password: password,
+          email: userEmail,
+          full_name: userName,
+          restaurant_name: storeName,
+          restaurant_address: user.business_address || '',
+          role: userRole,
+          owner_email: ownerEmail
+        });
+
+        if (!createAccountResponse.data.success) {
+          throw new Error(createAccountResponse.data.error || 'Failed to create account');
+        }
+
+        // Create store user record
         console.log('[StoreUsers] Creating StoreUser record...');
         await base44.entities.StoreUser.create({
           store_id: storeId,
