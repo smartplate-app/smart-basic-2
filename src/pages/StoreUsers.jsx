@@ -563,18 +563,31 @@ export default function StoreUsersPage() {
                     <li>{language === 'he' ? '4. מתחבר/נרשם אם צריך' : '4. Logs in/signs up if needed'}</li>
                     <li>{language === 'he' ? '5. מקבל גישה! ✅' : '5. Gets access! ✅'}</li>
                   </ol>
-                  <Button
-                    onClick={() => {
-                      const msg = `${language === 'he' ? 'קישור:' : 'Link:'} smartplatebasic.com/#/pages/JoinRestaurant\n${language === 'he' ? 'קוד:' : 'Code:'} ${accessCodes[0]?.code || ''}`;
-                      navigator.clipboard.writeText(msg);
-                      alert(language === 'he' ? 'הקישור והקוד הועתקו!' : 'Link and code copied!');
-                    }}
-                    variant="outline"
-                    className="w-full mt-2"
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    {language === 'he' ? 'העתק קישור + קוד' : 'Copy Link + Code'}
-                  </Button>
+                  <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText('smartplatebasic.com/#/pages/JoinRestaurant');
+                        alert(language === 'he' ? 'הקישור הועתק!' : 'Link copied!');
+                      }}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      {language === 'he' ? 'העתק קישור' : 'Copy Link'}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const msg = `${language === 'he' ? 'קישור:' : 'Link:'} smartplatebasic.com/#/pages/JoinRestaurant\n${language === 'he' ? 'קוד:' : 'Code:'} ${accessCodes[0]?.code || ''}`;
+                        navigator.clipboard.writeText(msg);
+                        alert(language === 'he' ? 'הועתק!' : 'Copied!');
+                      }}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      {language === 'he' ? 'קישור + קוד' : 'Link + Code'}
+                    </Button>
+                  </div>
                 </div>
 
                 {accessCodes.length > 0 && (
