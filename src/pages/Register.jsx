@@ -35,7 +35,61 @@ export default function RegisterPage() {
 
       console.log('[Register] Verifying invite token:', token);
 
-      // Use service role to verify invite (no auth required for viewing invite)
+      // Check if returning from OAuth
+      const oauthInviteKey = `oauth_invite_${token}`;
+      if (sessionStorage.getItem(oauthInviteKey)) {
+        console.log('[Register] Returning from OAuth, checking authentication...');
+        sessionStorage.removeItem(oauthInviteKey);
+        
+        try {
+          const isAuth = await base44.auth.isAuthenticated();
+          if (isAuth) {
+            const currentUser = await base44.auth.me();
+            console.log('[Register] User authenticated via OAuth:', currentUser.email);
+            
+            // Verify invite first
+            const response = await base44.functions.invoke('verifyInviteToken', { token });
+            if (!response.data.success || !response.data.invite) {
+              setError(response.data.error || 'Invalid or expired invitation');
+              setLoading(false);
+              return;
+            }
+            
+            const invite = response.data.invite;
+            
+            // Complete signup automatically
+            const signupResponse = await base44.functions.invoke('completeSignup', {
+              invite_token: token,
+              username: currentUser.email.split('@')[0],
+              password: 'oauth-' + Math.random().toString(36).substring(7),
+              invite_type: invite.invite_type,
+              chain_id: invite.chain_id,
+              store_id: invite.store_id,
+              store_name: invite.store_name,
+              role: invite.role,
+              inviter_email: invite.inviter_email,
+              oauth_user_email: currentUser.email
+            });
+            
+            if (signupResponse.data.success) {
+              console.log('[Register] OAuth signup completed, redirecting...');
+              setSuccess(true);
+              setTimeout(() => {
+                window.location.href = window.location.origin + '/#/pages/Orders';
+              }, 1500);
+              return;
+            } else {
+              setError('Failed to complete registration: ' + signupResponse.data.error);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (authError) {
+          console.log('[Register] OAuth auth check failed:', authError);
+        }
+      }
+
+      // Regular flow - verify invite and show form
       const response = await base44.functions.invoke('verifyInviteToken', { token });
 
       if (response.data.success && response.data.invite) {
