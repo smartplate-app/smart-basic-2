@@ -26,7 +26,7 @@ export default function JoinRestaurantPage() {
       // Check if user is authenticated
       const isAuth = await base44.auth.isAuthenticated();
       if (!isAuth) {
-        // Redirect to login with return URL
+        // Redirect to login with code in URL
         const returnUrl = encodeURIComponent(`${window.location.origin}/#/pages/JoinRestaurant?code=${code}`);
         window.location.href = `/auth/login?next=${returnUrl}`;
         return;
