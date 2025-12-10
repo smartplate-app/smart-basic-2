@@ -10,34 +10,82 @@ export default function JoinRestaurantPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [processed, setProcessed] = useState(false);
 
-  // Pre-fill code from URL and auto-submit if user is authenticated
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlCode = urlParams.get('code');
     
-    if (urlCode && urlCode.length === 5) {
-      setCode(urlCode);
-      
-      // Auto-submit only if user is already authenticated
-      const checkAuthAndSubmit = async () => {
-        try {
-          const isAuth = await base44.auth.isAuthenticated();
-          if (isAuth) {
-            // User is logged in, auto-submit
-            const form = document.querySelector('form');
-            if (form) {
-              form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-            }
-          }
-        } catch (err) {
-          console.log('Auth check failed:', err);
+    if (!urlCode || urlCode.length !== 5 || processed) return;
+    
+    setCode(urlCode);
+    
+    const processCodeDirectly = async () => {
+      try {
+        const isAuth = await base44.auth.isAuthenticated();
+        if (!isAuth) return; // Let user click button to login
+        
+        setProcessed(true);
+        setLoading(true);
+
+        const currentUser = await base44.auth.me();
+        const codes = await base44.entities.RestaurantAccessCode.filter({ code: urlCode, is_active: true });
+        
+        if (codes.length === 0) {
+          setError('קוד לא תקין');
+          return;
         }
-      };
-      
-      checkAuthAndSubmit();
-    }
-  }, []);
+
+        const accessCode = codes[0];
+
+        if (new Date(accessCode.expires_at) < new Date()) {
+          setError('פג תוקף הקוד');
+          return;
+        }
+
+        const existingAccess = await base44.entities.StoreUser.filter({
+          user_email: currentUser.email,
+          owner_email: accessCode.owner_email,
+          is_active: true
+        });
+
+        if (existingAccess.length > 0) {
+          alert('כבר יש לך גישה!');
+          window.location.href = '/#/pages/Orders';
+          return;
+        }
+
+        await base44.entities.StoreUser.create({
+          store_id: 'main',
+          store_name: accessCode.restaurant_name,
+          user_email: currentUser.email,
+          user_name: currentUser.full_name,
+          role: accessCode.role,
+          owner_email: accessCode.owner_email,
+          is_active: true
+        });
+
+        await base44.entities.RestaurantAccessCode.update(accessCode.id, {
+          uses_count: (accessCode.uses_count || 0) + 1
+        });
+
+        await base44.auth.updateMe({
+          store_user_role: accessCode.role,
+          store_user_owner_email: accessCode.owner_email,
+          store_user_store_name: accessCode.restaurant_name
+        });
+
+        alert('הצטרפת בהצלחה! 🎉');
+        window.location.href = '/#/pages/Orders';
+      } catch (err) {
+        console.error('Error:', err);
+        setError('שגיאה בהצטרפות');
+        setLoading(false);
+      }
+    };
+    
+    processCodeDirectly();
+  }, [processed]);
 
   const handleJoin = async (e) => {
     e.preventDefault();
