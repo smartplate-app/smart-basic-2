@@ -347,6 +347,32 @@ export default function StoreUsersPage() {
                         ✅ {t.userAdded}
                       </p>
                       
+                      {/* Display the invite link prominently */}
+                      <div className="bg-gray-50 border border-gray-300 rounded-lg p-3 mb-3">
+                        <Label className={`text-xs text-gray-600 mb-2 block ${isRTL ? 'text-right' : ''}`}>
+                          {language === 'he' ? 'לינק הזמנה:' : 'Invite Link:'}
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            value={generatedLink} 
+                            readOnly 
+                            className="flex-1 text-sm bg-white"
+                            dir="ltr"
+                          />
+                          <Button
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(generatedLink);
+                              setLinkCopied(true);
+                              setTimeout(() => setLinkCopied(false), 2000);
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      
                       {/* Preview iframe to show HTML properly */}
                       <div className="bg-white border border-gray-300 rounded-lg mb-3 max-h-96 overflow-auto">
                         <iframe
@@ -373,24 +399,10 @@ export default function StoreUsersPage() {
                             setTimeout(() => setHtmlCopied(false), 2000);
                           }
                         }}
-                        className={htmlCopied ? "bg-green-600 hover:bg-green-700 w-full mb-2" : "bg-blue-600 hover:bg-blue-700 w-full mb-2"}
+                        className={htmlCopied ? "bg-green-600 hover:bg-green-700 w-full" : "bg-blue-600 hover:bg-blue-700 w-full"}
                       >
                         {htmlCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                         {htmlCopied ? t.copied : (language === 'he' ? 'העתק הזמנה מעוצבת (Gmail)' : 'Copy Formatted Invitation (Gmail)')}
-                      </Button>
-                      
-                      {/* Copy short link button */}
-                      <Button
-                        onClick={async () => {
-                          await navigator.clipboard.writeText(generatedLink);
-                          setLinkCopied(true);
-                          setTimeout(() => setLinkCopied(false), 2000);
-                        }}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                        {linkCopied ? t.copied : (language === 'he' ? 'העתק לינק בלבד' : 'Copy Link Only')}
                       </Button>
                     </div>
                     <Button 
