@@ -527,12 +527,40 @@ export default function StoreUsersPage() {
                   </Button>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
-                    {language === 'he' 
-                      ? '💡 העובד נכנס לאתר smartplatebasic.com, לוחץ "הצטרף למסעדה", ומזין את הקוד בן 5 הספרות' 
-                      : '💡 Worker goes to smartplatebasic.com, clicks "Join Restaurant", and enters the 5-digit code'}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <p className={`text-sm text-blue-800 font-semibold ${isRTL ? 'text-right' : ''}`}>
+                    {language === 'he' ? '📱 איך העובד מצטרף:' : '📱 How worker joins:'}
                   </p>
+                  <ol className={`text-sm text-blue-800 space-y-2 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
+                    <li>{language === 'he' ? '1. העובד נכנס לקישור:' : '1. Worker goes to:'}</li>
+                  </ol>
+                  <a 
+                    href={`${window.location.origin}/#/pages/JoinRestaurant`}
+                    target="_blank"
+                    className="block text-center bg-white border-2 border-blue-400 text-blue-700 font-bold py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    {window.location.origin}/#/pages/JoinRestaurant
+                  </a>
+                  <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
+                    {language === 'he' ? '2. מזין את הקוד בן 5 הספרות' : '2. Enters the 5-digit code'}
+                  </p>
+                  <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
+                    {language === 'he' ? '3. מתחבר או נרשם (Google/Microsoft/סיסמה)' : '3. Logs in or signs up (Google/Microsoft/Password)'}
+                  </p>
+                  <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
+                    {language === 'he' ? '4. מקבל גישה אוטומטית למסעדה! ✅' : '4. Gets automatic access to restaurant! ✅'}
+                  </p>
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/#/pages/JoinRestaurant`);
+                      alert(language === 'he' ? 'הקישור הועתק! שלח אותו לעובד' : 'Link copied! Send it to the worker');
+                    }}
+                    variant="outline"
+                    className="w-full mt-2"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    {language === 'he' ? 'העתק קישור להצטרפות' : 'Copy Join Link'}
+                  </Button>
                 </div>
 
                 {accessCodes.length > 0 && (
