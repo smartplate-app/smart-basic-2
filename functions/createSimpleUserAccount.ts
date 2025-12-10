@@ -26,27 +26,40 @@ Deno.serve(async (req) => {
 
     console.log('[createSimpleUserAccount] Processing account for:', email, 'update_existing:', update_existing);
 
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
     if (update_existing) {
-      // Update existing user - just update password and metadata
+      // Update existing user
       console.log('[createSimpleUserAccount] Updating existing user');
       
       try {
-        // Try to update the user using admin API
-        const updatedUser = await base44.asServiceRole.auth.updateUser(email, {
-          password: password,
-          user_metadata: {
-            full_name: full_name,
-            business_name: restaurant_name,
-            business_address: restaurant_address,
-            store_user_role: role,
-            store_user_owner_email: owner_email
-          }
+        // Find the user by email
+        const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
+        if (!existingUsers || existingUsers.length === 0) {
+          return Response.json({ 
+            success: false, 
+            error: 'User not found' 
+          }, { status: 404 });
+        }
+
+        const userId = existingUsers[0].id;
+        
+        // Update the user
+        await base44.asServiceRole.entities.User.update(userId, {
+          full_name: full_name,
+          username: username,
+          password: hashedPassword,
+          business_name: restaurant_name,
+          business_address: restaurant_address,
+          store_user_role: role,
+          store_user_owner_email: owner_email
         });
         
         console.log('[createSimpleUserAccount] User updated successfully');
         return Response.json({ 
           success: true, 
-          user_id: updatedUser.id,
+          user_id: userId,
           username: username
         });
       } catch (updateError) {
@@ -57,21 +70,45 @@ Deno.serve(async (req) => {
         }, { status: 500 });
       }
     } else {
-      // Create new user account using service role
+      // Create new user account
       console.log('[createSimpleUserAccount] Creating new user');
       
       try {
-        const newUser = await base44.asServiceRole.auth.createUser({
-          email: email,
-          password: password,
-          username: username,
-          user_metadata: {
+        // Check if user already exists
+        const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
+        if (existingUsers && existingUsers.length > 0) {
+          // User exists, update instead
+          console.log('[createSimpleUserAccount] User already exists, updating...');
+          const userId = existingUsers[0].id;
+          
+          await base44.asServiceRole.entities.User.update(userId, {
             full_name: full_name,
+            username: username,
+            password: hashedPassword,
             business_name: restaurant_name,
             business_address: restaurant_address,
             store_user_role: role,
             store_user_owner_email: owner_email
-          }
+          });
+          
+          return Response.json({ 
+            success: true, 
+            user_id: userId,
+            username: username
+          });
+        }
+
+        // Create new user
+        const newUser = await base44.asServiceRole.entities.User.create({
+          email: email,
+          full_name: full_name,
+          username: username,
+          password: hashedPassword,
+          role: 'user',
+          business_name: restaurant_name,
+          business_address: restaurant_address,
+          store_user_role: role,
+          store_user_owner_email: owner_email
         });
 
         console.log('[createSimpleUserAccount] User created successfully:', newUser.id);
@@ -83,35 +120,6 @@ Deno.serve(async (req) => {
         });
       } catch (createError) {
         console.error('[createSimpleUserAccount] Create error:', createError);
-        
-        // If user already exists, try to update instead
-        if (createError.message?.includes('already exists') || createError.message?.includes('already registered')) {
-          console.log('[createSimpleUserAccount] User exists, attempting update instead');
-          try {
-            const updatedUser = await base44.asServiceRole.auth.updateUser(email, {
-              password: password,
-              user_metadata: {
-                full_name: full_name,
-                business_name: restaurant_name,
-                business_address: restaurant_address,
-                store_user_role: role,
-                store_user_owner_email: owner_email
-              }
-            });
-            
-            return Response.json({ 
-              success: true, 
-              user_id: updatedUser.id,
-              username: username
-            });
-          } catch (fallbackError) {
-            return Response.json({ 
-              success: false, 
-              error: 'User exists but update failed: ' + fallbackError.message 
-            }, { status: 500 });
-          }
-        }
-        
         return Response.json({ 
           success: false, 
           error: createError.message || 'Failed to create account' 
