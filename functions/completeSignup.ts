@@ -12,7 +12,7 @@ async function hashPassword(password) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { invite_token, username, password, invite_type, chain_id, store_id, store_name, role, inviter_email } = await req.json();
+    const { invite_token, username, password, invite_type, chain_id, store_id, store_name, role, inviter_email, oauth_user_email } = await req.json();
 
     if (!invite_token || !username || !password) {
       return Response.json({ 
@@ -47,27 +47,41 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Check if username already exists
-    const existingUsers = await base44.asServiceRole.entities.User.filter({ username });
-    if (existingUsers && existingUsers.length > 0) {
-      return Response.json({ 
-        success: false, 
-        error: 'Username already taken' 
-      }, { status: 400 });
+    // Check if this is OAuth flow (user already authenticated)
+    let existingUser = null;
+    if (oauth_user_email) {
+      const users = await base44.asServiceRole.entities.User.filter({ email: oauth_user_email });
+      existingUser = users && users.length > 0 ? users[0] : null;
+      console.log('[completeSignup] OAuth flow - found existing user:', !!existingUser);
     }
 
-    // Hash password
-    const hashedPassword = await hashPassword(password);
+    // Check if username already exists (skip if OAuth and user exists)
+    if (!existingUser) {
+      const existingUsers = await base44.asServiceRole.entities.User.filter({ username });
+      if (existingUsers && existingUsers.length > 0) {
+        return Response.json({ 
+          success: false, 
+          error: 'Username already taken' 
+        }, { status: 400 });
+      }
+    }
+
+    // Hash password (only needed for non-OAuth flow)
+    const hashedPassword = existingUser ? null : await hashPassword(password);
 
     // Build user data based on invite type
     const userData = {
       email: invite.email,
       full_name: invite.full_name,
-      username: username.trim(),
-      password: hashedPassword,
       phone: invite.phone || '',
       role: 'user'
     };
+
+    // Add username and password only for new users (not OAuth)
+    if (!existingUser) {
+      userData.username = username.trim();
+      userData.password = hashedPassword;
+    }
 
     // Add chain/store specific data based on invite type
     const inviteTypeToUse = invite_type || invite.invite_type;
@@ -103,18 +117,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create user account with restaurant data
-    await base44.asServiceRole.entities.User.create(userData);
-    
-    // CRITICAL: Grant the new user access to this Base44 app
-    // This must happen AFTER creating the User entity
-    try {
-      await base44.asServiceRole.auth.addAppUser(invite.email);
-      console.log('Successfully added app access for:', invite.email);
-    } catch (accessError) {
-      console.error('Failed to add app access:', accessError);
-      // This is critical - if it fails, the user won't be able to login
-      throw new Error('Failed to grant app access. Please contact support.');
+    // Create or update user account with restaurant data
+    if (existingUser) {
+      console.log('[completeSignup] Updating existing OAuth user:', existingUser.id);
+      await base44.asServiceRole.entities.User.update(existingUser.id, userData);
+    } else {
+      console.log('[completeSignup] Creating new user account');
+      await base44.asServiceRole.entities.User.create(userData);
+      
+      // CRITICAL: Grant the new user access to this Base44 app
+      // This must happen AFTER creating the User entity
+      try {
+        await base44.asServiceRole.auth.addAppUser(invite.email);
+        console.log('[completeSignup] Successfully added app access for:', invite.email);
+      } catch (accessError) {
+        console.error('[completeSignup] Failed to add app access:', accessError);
+        // This is critical - if it fails, the user won't be able to login
+        throw new Error('Failed to grant app access. Please contact support.');
+      }
     }
 
     // If this is a store_user invite, also create StoreUser record

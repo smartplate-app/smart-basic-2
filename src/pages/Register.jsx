@@ -18,40 +18,100 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    verifyInvite();
+    checkAuthAndVerify();
   }, []);
+
+  const checkAuthAndVerify = async () => {
+    try {
+      // First check if user is already authenticated (OAuth flow)
+      const isAuth = await base44.auth.isAuthenticated();
+      
+      if (isAuth) {
+        console.log('[Register] User is authenticated, checking if registration needed');
+        const currentUser = await base44.auth.me();
+        
+        // Check if user already has store_user_owner_email (already registered)
+        if (currentUser.store_user_owner_email) {
+          console.log('[Register] User already registered, redirecting to Orders');
+          window.location.href = window.location.origin + '/#/pages/Orders';
+          return;
+        }
+        
+        // User is authenticated but needs to complete registration with invite
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('invite') || urlParams.get('token');
+        
+        if (token) {
+          console.log('[Register] Authenticated user with invite token, auto-completing signup');
+          await verifyAndAutoComplete(token, currentUser);
+        } else {
+          setError('No invitation token found. Please check your invitation link.');
+          setLoading(false);
+        }
+      } else {
+        // Not authenticated, show registration form
+        await verifyInvite();
+      }
+    } catch (err) {
+      console.error('[Register] Error in checkAuthAndVerify:', err);
+      await verifyInvite();
+    }
+  };
+
+  const verifyAndAutoComplete = async (token, currentUser) => {
+    try {
+      // Verify the invite
+      const response = await base44.functions.invoke('verifyInviteToken', { token });
+
+      if (!response.data.success || !response.data.invite) {
+        setError(response.data.error || 'Invalid or expired invitation');
+        setLoading(false);
+        return;
+      }
+
+      const invite = response.data.invite;
+      console.log('[Register] Invite verified, auto-completing for:', currentUser.email);
+
+      // Auto-complete registration
+      await autoCompleteOAuthSignup(currentUser, invite, token);
+    } catch (err) {
+      console.error('[Register] Error in verifyAndAutoComplete:', err);
+      setError('Failed to complete registration. Please contact support.');
+      setLoading(false);
+    }
+  };
 
   const autoCompleteOAuthSignup = async (currentUser, invite, token) => {
     try {
-      console.log('Auto-completing OAuth signup for:', currentUser.email);
+      console.log('[Register] Auto-completing OAuth signup for:', currentUser.email);
       
-      // Call completeSignup function to create User entity record and StoreUser record
+      // Call completeSignup function to create/update User entity and StoreUser record
       const response = await base44.functions.invoke('completeSignup', {
         invite_token: token,
-        username: currentUser.email.split('@')[0], // Use email prefix as username
-        password: 'oauth-' + Math.random().toString(36).substring(7), // Random password (won't be used)
+        username: currentUser.email.split('@')[0],
+        password: 'oauth-' + Math.random().toString(36).substring(7),
         invite_type: invite.invite_type,
         chain_id: invite.chain_id,
         store_id: invite.store_id,
         store_name: invite.store_name,
         role: invite.role,
-        inviter_email: invite.inviter_email
+        inviter_email: invite.inviter_email,
+        oauth_user_email: currentUser.email // Pass OAuth email to identify existing user
       });
 
       if (response.data.success) {
-        console.log('OAuth signup completed successfully');
+        console.log('[Register] OAuth signup completed successfully');
         setSuccess(true);
-        // Force a full reload to Orders to ensure authentication is loaded
         setTimeout(() => {
-          window.location.href = window.location.origin + '/pages/Orders';
+          window.location.href = window.location.origin + '/#/pages/Orders';
         }, 1500);
       } else {
-        console.error('Failed to auto-complete OAuth signup:', response.data.error);
+        console.error('[Register] Failed to auto-complete OAuth signup:', response.data.error);
         setError('Failed to complete registration. Please contact support.');
         setLoading(false);
       }
     } catch (err) {
-      console.error('Error in autoCompleteOAuthSignup:', err);
+      console.error('[Register] Error in autoCompleteOAuthSignup:', err);
       setError('Failed to complete registration. Please contact support.');
       setLoading(false);
     }
