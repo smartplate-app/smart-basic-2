@@ -26,7 +26,6 @@ export default function StoreUsersPage() {
   const [personalMessage, setPersonalMessage] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [editingUser, setEditingUser] = useState(null);
 
@@ -105,7 +104,7 @@ export default function StoreUsersPage() {
   };
 
   const handleAddUser = async () => {
-    if (!userName.trim() || !userEmail.trim() || !username.trim() || !password.trim()) {
+    if (!userName.trim() || !userEmail.trim() || !password.trim()) {
       alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
       return;
     }
@@ -127,7 +126,7 @@ export default function StoreUsersPage() {
         // Update existing user
         console.log('[StoreUsers] Updating user account...');
         const updateAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
-          username: username,
+          username: userEmail,
           password: password,
           email: userEmail,
           full_name: userName,
@@ -147,7 +146,7 @@ export default function StoreUsersPage() {
           user_name: userName,
           user_email: userEmail,
           role: userRole,
-          temp_username: username,
+          temp_username: userEmail,
           temp_password: password
         });
         console.log('[StoreUsers] StoreUser updated successfully');
@@ -155,7 +154,7 @@ export default function StoreUsersPage() {
         // Create new user account first
         console.log('[StoreUsers] Creating user account...');
         const createAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
-          username: username,
+          username: userEmail,
           password: password,
           email: userEmail,
           full_name: userName,
@@ -179,7 +178,7 @@ export default function StoreUsersPage() {
           role: userRole,
           owner_email: ownerEmail,
           is_active: true,
-          temp_username: username,
+          temp_username: userEmail,
           temp_password: password
         });
         console.log('[StoreUsers] StoreUser created successfully');
@@ -191,7 +190,7 @@ export default function StoreUsersPage() {
       console.log('[StoreUsers] User list updated!');
 
       // Show credentials
-      setGeneratedLink(`${language === 'he' ? 'שם משתמש' : 'Username'}: ${username}\n${language === 'he' ? 'סיסמה' : 'Password'}: ${password}`);
+      setGeneratedLink(`${language === 'he' ? 'אימייל' : 'Email'}: ${userEmail}\n${language === 'he' ? 'סיסמה' : 'Password'}: ${password}`);
       setLinkCopied(false);
       
       console.log('[StoreUsers] All done!');
@@ -219,7 +218,6 @@ export default function StoreUsersPage() {
     setUserName(storeUser.user_name);
     setUserEmail(storeUser.user_email);
     setUserRole(storeUser.role);
-    setUsername(storeUser.temp_username || '');
     setPassword(storeUser.temp_password || '');
     setShowAddUser(true);
   };
@@ -260,7 +258,6 @@ export default function StoreUsersPage() {
               setUserRole("worker");
               setPersonalMessage("");
               setLinkCopied(false);
-              setUsername("");
               setPassword("");
               setEditingUser(null);
             }
@@ -299,17 +296,6 @@ export default function StoreUsersPage() {
                 </div>
                 <div>
                   <Label className={isRTL ? 'text-right block' : ''}>
-                    {language === 'he' ? 'שם משתמש להתחברות' : 'Login Username'}
-                  </Label>
-                  <Input 
-                    value={username} 
-                    onChange={(e) => setUsername(e.target.value)}
-                    className={isRTL ? 'text-right' : ''}
-                    placeholder={language === 'he' ? 'בחר שם משתמש' : 'Choose username'}
-                  />
-                </div>
-                <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>
                     {language === 'he' ? 'סיסמה' : 'Password'}
                   </Label>
                   <Input 
@@ -319,6 +305,9 @@ export default function StoreUsersPage() {
                     className={isRTL ? 'text-right' : ''}
                     placeholder={language === 'he' ? 'לפחות 6 תווים' : 'At least 6 characters'}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {language === 'he' ? 'האימייל ישמש כשם משתמש' : 'Email will be used as username'}
+                  </p>
                 </div>
                 <div>
                   <Label className={isRTL ? 'text-right block' : ''}>{t.role}</Label>
@@ -370,9 +359,8 @@ export default function StoreUsersPage() {
                           <textarea 
                             value={generatedLink} 
                             readOnly 
-                            className="w-full text-sm bg-gray-50 font-mono p-3 border rounded-md"
+                            className="w-full text-sm bg-gray-50 font-mono p-3 border rounded-md text-right"
                             rows={2}
-                            dir="ltr"
                           />
                         </div>
                         <Button
@@ -394,7 +382,7 @@ export default function StoreUsersPage() {
                           <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
                             <li>{language === 'he' ? 'שלח את הפרטים בווצאפ או במייל' : 'Send credentials via WhatsApp or email'}</li>
                             <li>{language === 'he' ? 'העובד נכנס לאתר: smartplatebasic.com' : 'Worker goes to: smartplatebasic.com'}</li>
-                            <li>{language === 'he' ? 'מתחבר עם שם המשתמש והסיסמה' : 'Logs in with username and password'}</li>
+                            <li>{language === 'he' ? 'מתחבר עם האימייל והסיסמה' : 'Logs in with email and password'}</li>
                             <li>{language === 'he' ? 'יקבל גישה אוטומטית למסעדה שלך' : 'Gets automatic access to your restaurant'}</li>
                           </ul>
                         </div>
@@ -403,7 +391,7 @@ export default function StoreUsersPage() {
                       {/* WhatsApp Quick Share Button */}
                       <Button
                         onClick={() => {
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'פרטי הגישה שלך (שמור אותם):' : 'Your access credentials (save them):'}\n\n${generatedLink}\n\n${language === 'he' ? 'איך להתחבר:' : 'How to login:'}\n${language === 'he' ? '1. היכנס ל: smartplatebasic.com' : '1. Go to: smartplatebasic.com'}\n${language === 'he' ? '2. התחבר עם שם המשתמש והסיסמה למעלה' : '2. Login with the username and password above'}\n${language === 'he' ? '3. תקבל גישה אוטומטית למערכת!' : '3. You\'ll get automatic access to the system!'}`;
+                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'פרטי הגישה שלך (שמור אותם):' : 'Your access credentials (save them):'}\n\n${generatedLink}\n\n${language === 'he' ? 'איך להתחבר:' : 'How to login:'}\n${language === 'he' ? '1. היכנס ל: smartplatebasic.com' : '1. Go to: smartplatebasic.com'}\n${language === 'he' ? '2. התחבר עם האימייל והסיסמה למעלה' : '2. Login with the email and password above'}\n${language === 'he' ? '3. תקבל גישה אוטומטית למערכת!' : '3. You\'ll get automatic access to the system!'}`;
                           const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                           window.open(whatsappUrl, '_blank');
                         }}
@@ -424,7 +412,6 @@ export default function StoreUsersPage() {
                         setGeneratedLink("");
                         setUserName("");
                         setUserEmail("");
-                        setUsername("");
                         setPassword("");
                         setUserRole("worker");
                         setPersonalMessage("");
