@@ -33,17 +33,37 @@ export default function RestaurantInvitePage() {
         return;
       }
 
-      const response = await base44.functions.invoke('verifyInviteToken', { token });
+      console.log('[RestaurantInvite] Loading invite with token:', token);
 
-      if (response.data.success && response.data.invite) {
-        setInviteData(response.data.invite);
-        setUsername(response.data.invite.email?.split('@')[0] || '');
-      } else {
-        setError(response.data.error || 'הזמנה לא תקפה או שפגה תוקפה');
+      // Fetch invite directly from entity (public access)
+      const invites = await base44.asServiceRole.entities.UserInvite.filter({ token });
+      
+      if (!invites || invites.length === 0) {
+        setError('הזמנה לא נמצאה');
+        setLoading(false);
+        return;
       }
+
+      const invite = invites[0];
+      
+      if (invite.used) {
+        setError('ההזמנה כבר נוצלה');
+        setLoading(false);
+        return;
+      }
+
+      if (new Date(invite.expires_at) < new Date()) {
+        setError('תוקף ההזמנה פג');
+        setLoading(false);
+        return;
+      }
+
+      console.log('[RestaurantInvite] Invite loaded successfully:', invite.restaurant_name);
+      setInviteData(invite);
+      setUsername(invite.email?.split('@')[0] || '');
     } catch (err) {
       console.error('Error loading invite:', err);
-      setError('שגיאה בטעינת ההזמנה');
+      setError('שגיאה בטעינת ההזמנה: ' + err.message);
     } finally {
       setLoading(false);
     }
