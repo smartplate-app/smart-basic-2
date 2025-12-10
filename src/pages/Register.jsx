@@ -211,8 +211,12 @@ export default function RegisterPage() {
               type="button"
               variant="outline"
               className="w-full h-11 bg-white hover:bg-gray-50 border-2"
-              onClick={() => {
+              onClick={async () => {
                 const token = new URLSearchParams(window.location.search).get('invite') || new URLSearchParams(window.location.search).get('token');
+                
+                // Mark that we're starting OAuth flow for this invite
+                sessionStorage.setItem(`oauth_invite_${token}`, 'true');
+                
                 const returnUrl = encodeURIComponent(`${window.location.origin}/#/pages/Register?invite=${token}`);
                 window.location.href = `/auth/login?provider=google&next=${returnUrl}`;
               }}
@@ -230,8 +234,12 @@ export default function RegisterPage() {
               type="button"
               variant="outline"
               className="w-full h-11 bg-white hover:bg-gray-50 border-2"
-              onClick={() => {
+              onClick={async () => {
                 const token = new URLSearchParams(window.location.search).get('invite') || new URLSearchParams(window.location.search).get('token');
+                
+                // Mark that we're starting OAuth flow for this invite
+                sessionStorage.setItem(`oauth_invite_${token}`, 'true');
+                
                 const returnUrl = encodeURIComponent(`${window.location.origin}/#/pages/Register?invite=${token}`);
                 window.location.href = `/auth/login?provider=azure&next=${returnUrl}`;
               }}
