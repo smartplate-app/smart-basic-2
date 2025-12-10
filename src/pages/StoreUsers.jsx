@@ -132,8 +132,8 @@ export default function StoreUsersPage() {
 
       // Create short token-based invite
       const inviteToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      const inviteLink = `${window.location.origin}/pages/Register?invite=${inviteToken}`;
-      
+      const inviteLink = `${window.location.origin}/#/pages/Register?invite=${inviteToken}`;
+
       // Create UserInvite record with the token
       await base44.entities.UserInvite.create({
         token: inviteToken,
