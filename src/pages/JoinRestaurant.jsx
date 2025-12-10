@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,86 +10,13 @@ export default function JoinRestaurantPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const hasProcessed = useRef(false);
 
   useEffect(() => {
-    if (hasProcessed.current) return;
-
     const urlParams = new URLSearchParams(window.location.search);
     const urlCode = urlParams.get('code');
-    
-    if (!urlCode || urlCode.length !== 5) return;
-    
-    setCode(urlCode);
-    
-    const processCode = async () => {
-      try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) return;
-        
-        hasProcessed.current = true;
-        setLoading(true);
-
-        const currentUser = await base44.auth.me();
-        const codes = await base44.entities.RestaurantAccessCode.filter({ code: urlCode, is_active: true });
-        
-        if (codes.length === 0) {
-          setError('קוד לא תקין');
-          setLoading(false);
-          hasProcessed.current = false;
-          return;
-        }
-
-        const accessCode = codes[0];
-
-        if (new Date(accessCode.expires_at) < new Date()) {
-          setError('פג תוקף הקוד');
-          setLoading(false);
-          hasProcessed.current = false;
-          return;
-        }
-
-        const existingAccess = await base44.entities.StoreUser.filter({
-          user_email: currentUser.email,
-          owner_email: accessCode.owner_email,
-          is_active: true
-        });
-
-        if (existingAccess.length > 0) {
-          window.location.href = '/#/pages/Orders';
-          return;
-        }
-
-        await base44.entities.StoreUser.create({
-          store_id: 'main',
-          store_name: accessCode.restaurant_name,
-          user_email: currentUser.email,
-          user_name: currentUser.full_name,
-          role: accessCode.role,
-          owner_email: accessCode.owner_email,
-          is_active: true
-        });
-
-        await base44.entities.RestaurantAccessCode.update(accessCode.id, {
-          uses_count: (accessCode.uses_count || 0) + 1
-        });
-
-        await base44.auth.updateMe({
-          store_user_role: accessCode.role,
-          store_user_owner_email: accessCode.owner_email,
-          store_user_store_name: accessCode.restaurant_name
-        });
-
-        window.location.href = '/#/pages/Orders';
-      } catch (err) {
-        console.error('Error:', err);
-        setError('שגיאה בהצטרפות');
-        setLoading(false);
-        hasProcessed.current = false;
-      }
-    };
-    
-    processCode();
+    if (urlCode && urlCode.length === 5) {
+      setCode(urlCode);
+    }
   }, []);
 
   const handleJoin = async (e) => {
