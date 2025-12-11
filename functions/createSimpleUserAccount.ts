@@ -120,18 +120,42 @@ Deno.serve(async (req) => {
         });
       } catch (createError) {
         console.error('[createSimpleUserAccount] Create error:', createError);
+        console.error('[createSimpleUserAccount] Error details:', {
+          message: createError.message,
+          code: createError.code,
+          status: createError.status,
+          details: createError.details
+        });
+        
+        // Provide user-friendly error messages
+        let errorMessage = createError.message || 'Failed to create account';
+        
+        // Check for common errors
+        if (errorMessage.includes('duplicate') || errorMessage.includes('unique') || errorMessage.includes('already exists')) {
+          errorMessage = 'Email already exists in the system';
+        } else if (errorMessage.includes('permission') || errorMessage.includes('access')) {
+          errorMessage = 'No permission to create user account';
+        } else if (errorMessage.includes('validation')) {
+          errorMessage = 'Invalid user data provided';
+        }
+        
         return Response.json({ 
           success: false, 
-          error: createError.message || 'Failed to create account' 
+          error: errorMessage,
+          details: createError.message
         }, { status: 500 });
       }
     }
 
   } catch (error) {
     console.error('[createSimpleUserAccount] Unexpected error:', error);
+    console.error('[createSimpleUserAccount] Error stack:', error.stack);
+    console.error('[createSimpleUserAccount] Full error object:', JSON.stringify(error, null, 2));
+    
     return Response.json({ 
       success: false, 
-      error: error.message || 'Failed to process account' 
+      error: error.message || 'Server error occurred while processing account',
+      type: 'unexpected_error'
     }, { status: 500 });
   }
 });
