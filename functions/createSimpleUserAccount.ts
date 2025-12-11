@@ -85,14 +85,6 @@ Deno.serve(async (req) => {
       console.log('[createSimpleUserAccount] Creating new user');
       
       try {
-        // Check how many store users this owner already has
-        const existingStoreUsers = await base44.asServiceRole.entities.StoreUser.filter({ 
-          owner_email: owner_email,
-          is_active: true 
-        });
-        
-        console.log('[createSimpleUserAccount] Owner has', existingStoreUsers.length, 'active store users');
-        
         // Check if user already exists
         const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
         if (existingUsers && existingUsers.length > 0) {
