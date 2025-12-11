@@ -479,7 +479,7 @@ export default function DashboardPage() {
                     {actualLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות' : 'of sales'}
                   </div>
                   <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'סה"כ עלות עבודה כולל עלויות מעסיק עד היום' : 'Total labor cost incl. employer costs to date'}
+                    {language === 'he' ? `סה"כ עלות עבודה כולל עלויות מעסיק בתקופה ${selectedMonth}` : `Total labor cost incl. employer costs for ${selectedMonth}`}
                   </div>
                 </CardContent>
               </Card>
