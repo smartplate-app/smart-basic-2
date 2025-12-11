@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
 
     console.log('[createSimpleUserAccount] ✓ Requester:', requester.email);
 
-    const { username, password, email, full_name, restaurant_name, restaurant_address, role, owner_email, update_existing, store_id } = await req.json();
+    const { email, full_name, restaurant_name, role, owner_email, update_existing, store_id } = await req.json();
     
     console.log('[createSimpleUserAccount] Request data:', {
       email,
@@ -32,14 +32,11 @@ Deno.serve(async (req) => {
       update_existing
     });
 
-    if (!username || !password || !email || !full_name) {
+    if (!email || !full_name) {
       return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
-    console.log('[createSimpleUserAccount] Processing account for:', email, 'update_existing:', update_existing);
-
-    // Hash password
-    const hashedPassword = await hashPassword(password);
+    console.log('[createSimpleUserAccount] Processing StoreUser for:', email, 'update_existing:', update_existing);
 
     try {
       // Check if StoreUser record already exists
@@ -59,15 +56,6 @@ Deno.serve(async (req) => {
           is_active: true
         });
         
-        // Update user password if provided
-        const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
-        if (existingUsers.length > 0) {
-          await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
-            username: username,
-            password: hashedPassword
-          });
-        }
-        
         console.log('[createSimpleUserAccount] ✓ StoreUser updated successfully');
         return Response.json({ 
           success: true, 
@@ -76,63 +64,10 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Check if user account exists (User entity)
-      let existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
-      let userId;
-      
-      if (existingUsers.length === 0) {
-        // Create new User account in Base44 platform
-        console.log('[createSimpleUserAccount] Creating new User in Base44 platform');
-        
-        try {
-          // Use Base44's built-in user creation to ensure proper auth setup
-          const newUser = await base44.asServiceRole.entities.User.create({
-            email: email,
-            full_name: full_name,
-            role: 'user'
-          });
-
-          userId = newUser.id;
-          console.log('[createSimpleUserAccount] ✓ User created:', userId);
-          
-          // Update with password and custom fields
-          await base44.asServiceRole.entities.User.update(userId, {
-            username: username,
-            password: hashedPassword,
-            business_name: restaurant_name,
-            business_address: restaurant_address
-          });
-          
-          console.log('[createSimpleUserAccount] ✓ User updated with credentials');
-        } catch (userCreateError) {
-          console.error('[createSimpleUserAccount] Error creating user:', userCreateError);
-          
-          // If user creation failed due to existing email, fetch and update
-          existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
-          if (existingUsers.length > 0) {
-            userId = existingUsers[0].id;
-            await base44.asServiceRole.entities.User.update(userId, {
-              username: username,
-              password: hashedPassword,
-              full_name: full_name
-            });
-            console.log('[createSimpleUserAccount] ✓ Updated existing user with new credentials');
-          } else {
-            throw userCreateError;
-          }
-        }
-      } else {
-        console.log('[createSimpleUserAccount] User account already exists');
-        userId = existingUsers[0].id;
-        
-        // Update password for existing user
-        await base44.asServiceRole.entities.User.update(userId, {
-          username: username,
-          password: hashedPassword,
-          full_name: full_name
-        });
-        console.log('[createSimpleUserAccount] ✓ Updated existing user credentials');
-      }
+      // Note: We don't create User account here anymore
+      // Users will be created automatically when they login via Google/Facebook
+      // The StoreUser record will link their Google/Facebook account to this restaurant
+      console.log('[createSimpleUserAccount] Skipping User entity creation - will be done via Google/Facebook login');
 
       // Create or update StoreUser record
       if (existingStoreUsers.length > 0) {
@@ -160,9 +95,7 @@ Deno.serve(async (req) => {
 
       return Response.json({ 
         success: true, 
-        email: email,
-        username: username,
-        user_id: userId
+        email: email
       });
 
     } catch (error) {

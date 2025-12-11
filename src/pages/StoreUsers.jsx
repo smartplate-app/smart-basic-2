@@ -23,10 +23,8 @@ export default function StoreUsersPage() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState("worker");
-  const [personalMessage, setPersonalMessage] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
-  const [password, setPassword] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [migrating, setMigrating] = useState(false);
   const [migrationResults, setMigrationResults] = useState(null);
@@ -106,100 +104,67 @@ export default function StoreUsersPage() {
   };
 
   const handleAddUser = async () => {
-    if (!userName.trim() || !userEmail.trim() || !password.trim()) {
-      alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
-      return;
-    }
-
-    if (password.length < 6) {
-      alert(language === 'he' ? 'הסיסמה חייבת להיות לפחות 6 תווים' : 'Password must be at least 6 characters');
-      return;
-    }
-
-    try {
-        setSaving(true);
-        console.log('[StoreUsers] Starting user creation/update...');
-
-        const ownerEmail = user.acting_as_store_email || user.email;
-        const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
-        const restaurantAddress = user.business_address || '';
-
-        // Create real User account (for login page)
-        const createResponse = await base44.functions.invoke('createSimpleUserAccount', {
-          username: userEmail,
-          password: password,
-          email: userEmail,
-          full_name: userName,
-          restaurant_name: storeName,
-          restaurant_address: restaurantAddress,
-          role: userRole,
-          owner_email: ownerEmail,
-          store_id: ownerEmail,
-          update_existing: !!editingUser
-        });
-
-        if (!createResponse.data.success) {
-          throw new Error(createResponse.data.error || 'Failed to create user');
-        }
-
-        console.log('[StoreUsers] User created successfully');
-
-      // Reload the user list
-      console.log('[StoreUsers] Loading updated data...');
-      await loadData();
-      console.log('[StoreUsers] User list updated!');
-
-      // Show credentials
-      setGeneratedLink(`${language === 'he' ? 'אימייל' : 'Email'}: ${userEmail}\n${language === 'he' ? 'סיסמה' : 'Password'}: ${password}`);
-      setLinkCopied(false);
-
-      console.log('[StoreUsers] All done!');
-    } catch (error) {
-      console.error("[StoreUsers] Error adding/updating user:", error);
-      console.error("[StoreUsers] Full error details:", {
-        message: error.message,
-        response: error.response,
-        data: error.data,
-        stack: error.stack
-      });
-
-      // Show user-friendly error messages
-      let errorMessage = error.message || 'Unknown error occurred';
-
-      // Add more context to help diagnose
-      let debugInfo = '';
-      if (errorMessage.includes('500') || errorMessage === 'Failed to create account') {
-        debugInfo = '\n\nפרטים נוספים (בדוק את הקונסול):\n';
-        debugInfo += `• אימייל: ${userEmail}\n`;
-        debugInfo += `• שם: ${userName}\n`;
-        debugInfo += `• תפקיד: ${userRole}\n`;
-        debugInfo += '• בדוק את הקונסול (F12) לפרטים מלאים';
+      if (!userName.trim() || !userEmail.trim()) {
+        alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
+        return;
       }
 
-      // Translate common errors to Hebrew if needed
-      if (language === 'he') {
-        if (errorMessage.includes('Email already exists')) {
-          errorMessage = '❌ האימייל כבר קיים במערכת\n\nהמשתמש כבר רשום - אולי רצית לערוך משתמש קיים?';
-        } else if (errorMessage.includes('email') && errorMessage.includes('exist')) {
-          errorMessage = 'האימייל כבר קיים במערכת';
-        } else if (errorMessage.includes('password')) {
-          errorMessage = 'שגיאה בסיסמה - נדרש לפחות 6 תווים';
-        } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('permission')) {
-          errorMessage = 'אין הרשאה לבצע פעולה זו - רק בעלים של המסעדה יכולים להוסיף משתמשים';
-        } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-          errorMessage = 'שגיאת רשת - בדוק את החיבור לאינטרנט';
-        } else if (errorMessage.includes('Server error') || errorMessage.includes('500')) {
-          errorMessage = 'שגיאת שרת - יש בעיה ביצירת המשתמש במערכת' + debugInfo;
-        } else if (errorMessage === 'Failed to create account') {
-          errorMessage = 'שגיאה ביצירת חשבון משתמש\n\nאפשרויות:\n1. האימייל כבר קיים במערכת\n2. בעיית הרשאות\n3. שגיאת שרת\n\nבדוק את הקונסול (F12) לפרטים מלאים';
-        }
-      }
+      try {
+          setSaving(true);
+          console.log('[StoreUsers] Starting user creation/update...');
 
-      alert((language === 'he' ? '❌ שגיאה: ' : '❌ Error: ') + errorMessage);
-    } finally {
-      setSaving(false);
-    }
-  };
+          const ownerEmail = user.acting_as_store_email || user.email;
+          const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
+          const restaurantAddress = user.business_address || '';
+
+          // Create StoreUser record only
+          const createResponse = await base44.functions.invoke('createSimpleUserAccount', {
+            email: userEmail,
+            full_name: userName,
+            restaurant_name: storeName,
+            restaurant_address: restaurantAddress,
+            role: userRole,
+            owner_email: ownerEmail,
+            store_id: ownerEmail,
+            update_existing: !!editingUser
+          });
+
+          if (!createResponse.data.success) {
+            throw new Error(createResponse.data.error || 'Failed to create user');
+          }
+
+          console.log('[StoreUsers] User created successfully');
+
+        // Reload the user list
+        console.log('[StoreUsers] Loading updated data...');
+        await loadData();
+        console.log('[StoreUsers] User list updated!');
+
+        // Show success message
+        setGeneratedLink(userEmail);
+        setLinkCopied(false);
+
+        console.log('[StoreUsers] All done!');
+      } catch (error) {
+        console.error("[StoreUsers] Error adding/updating user:", error);
+
+        let errorMessage = error.message || 'Unknown error occurred';
+
+        if (language === 'he') {
+          if (errorMessage.includes('Email already exists')) {
+            errorMessage = '❌ האימייל כבר קיים במערכת';
+          } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('permission')) {
+            errorMessage = 'אין הרשאה לבצע פעולה זו';
+          } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+            errorMessage = 'שגיאת רשת - בדוק את החיבור לאינטרנט';
+          }
+        }
+
+        alert((language === 'he' ? '❌ שגיאה: ' : '❌ Error: ') + errorMessage);
+      } finally {
+        setSaving(false);
+      }
+    };
 
   const handleDeleteUser = async (userId) => {
     if (!confirm(language === 'he' ? 'למחוק משתמש זה?' : 'Delete this user?')) return;
@@ -213,13 +178,12 @@ export default function StoreUsersPage() {
   };
 
   const handleEditUser = (storeUser) => {
-    setEditingUser(storeUser);
-    setUserName(storeUser.user_name);
-    setUserEmail(storeUser.user_email);
-    setUserRole(storeUser.role);
-    setPassword(storeUser.temp_password || '');
-    setShowAddUser(true);
-  };
+      setEditingUser(storeUser);
+      setUserName(storeUser.user_name);
+      setUserEmail(storeUser.user_email);
+      setUserRole(storeUser.role);
+      setShowAddUser(true);
+    };
 
   const handleMigration = async () => {
     if (!confirm(language === 'he' ? 'להעביר משתמשים קיימים למערכת החדשה?' : 'Migrate existing users to new system?')) {
@@ -290,9 +254,7 @@ export default function StoreUsersPage() {
               setUserName("");
               setUserEmail("");
               setUserRole("worker");
-              setPersonalMessage("");
               setLinkCopied(false);
-              setPassword("");
               setEditingUser(null);
             }
           }}>
@@ -327,20 +289,8 @@ export default function StoreUsersPage() {
                     placeholder="user@example.com"
                     className={isRTL ? 'text-right' : ''}
                   />
-                </div>
-                <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>
-                    {language === 'he' ? 'סיסמה' : 'Password'}
-                  </Label>
-                  <Input 
-                    type="text"
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={isRTL ? 'text-right' : ''}
-                    placeholder={language === 'he' ? 'לפחות 6 תווים' : 'At least 6 characters'}
-                  />
                   <p className="text-xs text-gray-500 mt-1">
-                    {language === 'he' ? 'האימייל ישמש כשם משתמש' : 'Email will be used as username'}
+                    {language === 'he' ? 'המשתמש יתחבר דרך Google/Facebook' : 'User will login via Google/Facebook'}
                   </p>
                 </div>
                 <div>
@@ -386,39 +336,21 @@ export default function StoreUsersPage() {
                         ✅ {t.userAdded}
                       </p>
 
-                      {/* Display credentials */}
+                      {/* Display email */}
                       <div className="bg-white border border-blue-200 rounded-lg p-4 mb-3">
                         <Label className={`text-sm font-semibold text-gray-700 mb-2 block ${isRTL ? 'text-right' : ''}`}>
-                          {language === 'he' ? '🔑 פרטי התחברות:' : '🔑 Login Credentials:'}
+                          {language === 'he' ? '✅ המשתמש נוסף בהצלחה!' : '✅ User added successfully!'}
                         </Label>
-                        <div className="mb-3">
-                          <textarea 
-                            value={generatedLink} 
-                            readOnly 
-                            className="w-full text-sm bg-gray-50 font-mono p-3 border rounded-md text-right"
-                            rows={2}
-                          />
-                        </div>
-                        <Button
-                          onClick={async () => {
-                            await navigator.clipboard.writeText(generatedLink);
-                            setLinkCopied(true);
-                            setTimeout(() => setLinkCopied(false), 2000);
-                          }}
-                          className={`w-full mb-3 ${linkCopied ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}`}
-                        >
-                          {linkCopied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                          {linkCopied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק פרטים' : 'Copy Credentials')}
-                        </Button>
-
                         <div className="bg-blue-50 rounded-lg p-3">
                           <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
+                            <strong>{language === 'he' ? '📧 אימייל:' : '📧 Email:'}</strong> {generatedLink}
+                          </p>
+                          <p className={`text-sm text-blue-700 mt-3 ${isRTL ? 'text-right' : ''}`}>
                             <strong>{language === 'he' ? '💡 איך זה עובד:' : '💡 How it works:'}</strong>
                           </p>
                           <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
-                            <li>{language === 'he' ? 'שלח את הפרטים בווצאפ' : 'Send credentials via WhatsApp'}</li>
-                            <li>{language === 'he' ? 'העובד נכנס ל-smartplatebasic.com' : 'Worker goes to smartplatebasic.com'}</li>
-                            <li>{language === 'he' ? 'מתחבר עם האימייל והסיסמה' : 'Logs in with email and password'}</li>
+                            <li>{language === 'he' ? 'המשתמש נכנס ל-smartplatebasic.com' : 'User goes to smartplatebasic.com'}</li>
+                            <li>{language === 'he' ? 'מתחבר דרך Google או Facebook' : 'Logs in via Google or Facebook'}</li>
                             <li>{language === 'he' ? 'המערכת מזהה אוטומטית למסעדה שלך!' : 'System auto-detects your restaurant!'}</li>
                           </ul>
                         </div>
@@ -427,7 +359,7 @@ export default function StoreUsersPage() {
                       {/* WhatsApp Quick Share Button */}
                       <Button
                         onClick={() => {
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'פרטי הגישה שלך (שמור אותם):' : 'Your access credentials (save them):'}\n\n${generatedLink}\n\n${language === 'he' ? '💡 איך להתחבר:' : '💡 How to login:'}\n${language === 'he' ? '1. היכנס לאתר: smartplatebasic.com' : '1. Go to: smartplatebasic.com'}\n${language === 'he' ? '2. התחבר עם האימייל והסיסמה' : '2. Login with email and password'}\n${language === 'he' ? '3. המערכת תזהה אוטומטית למסעדה שלך!' : '3. System will auto-detect your restaurant!'}`;
+                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || user.full_name}.\n\n${language === 'he' ? '💡 איך להתחבר:' : '💡 How to login:'}\n${language === 'he' ? '1. היכנס ל: smartplatebasic.com' : '1. Go to: smartplatebasic.com'}\n${language === 'he' ? '2. התחבר דרך Google או Facebook' : '2. Login via Google or Facebook'}\n${language === 'he' ? '3. המערכת תזהה אוטומטית למסעדה!' : '3. System will auto-detect your restaurant!'}`;
                           const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                           window.open(whatsappUrl, '_blank');
                         }}
@@ -445,12 +377,10 @@ export default function StoreUsersPage() {
                       className="w-full"
                       onClick={() => {
                         setShowAddUser(false);
-                        setGeneratedLink("");
-                        setUserName("");
-                        setUserEmail("");
-                        setPassword("");
-                        setUserRole("worker");
-                        setPersonalMessage("");
+                          setGeneratedLink("");
+                          setUserName("");
+                          setUserEmail("");
+                          setUserRole("worker");
                       }}
                     >
                       {language === 'he' ? 'סגור' : 'Close'}
