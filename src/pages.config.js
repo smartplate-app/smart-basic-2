@@ -14,7 +14,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import Users from './pages/Users';
 import Register from './pages/Register';
 import SalesPrediction from './pages/SalesPrediction';
-import ChainManagement from './pages/ChainManagement';
 import StoreUsers from './pages/StoreUsers';
 import TestInvites from './pages/TestInvites';
 import PublicOrder from './pages/PublicOrder';
@@ -45,7 +44,6 @@ export const PAGES = {
     "Users": Users,
     "Register": Register,
     "SalesPrediction": SalesPrediction,
-    "ChainManagement": ChainManagement,
     "StoreUsers": StoreUsers,
     "TestInvites": TestInvites,
     "PublicOrder": PublicOrder,
