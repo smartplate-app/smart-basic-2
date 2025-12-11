@@ -165,11 +165,18 @@ export default function StoreUsersPage() {
           owner_email: ownerEmail
         });
 
-        console.log('[StoreUsers] Response:', createAccountResponse);
+        console.log('[StoreUsers] Full Response:', JSON.stringify(createAccountResponse, null, 2));
+        console.log('[StoreUsers] Response data:', createAccountResponse.data);
+        console.log('[StoreUsers] Response status:', createAccountResponse.status);
 
         if (!createAccountResponse.data || !createAccountResponse.data.success) {
-          const errorMsg = createAccountResponse.data?.error || createAccountResponse.error || 'Failed to create account';
+          const errorMsg = createAccountResponse.data?.error || 
+                         createAccountResponse.data?.details ||
+                         createAccountResponse.error?.message ||
+                         createAccountResponse.error || 
+                         (createAccountResponse.status === 500 ? 'Server error - check console logs' : 'Failed to create account');
           console.error('[StoreUsers] Account creation failed:', errorMsg);
+          console.error('[StoreUsers] Full error response:', createAccountResponse);
           throw new Error(errorMsg);
         }
 
@@ -204,24 +211,39 @@ export default function StoreUsersPage() {
       console.error("[StoreUsers] Full error details:", {
         message: error.message,
         response: error.response,
-        data: error.data
+        data: error.data,
+        stack: error.stack
       });
 
       // Show user-friendly error messages
       let errorMessage = error.message || 'Unknown error occurred';
 
+      // Add more context to help diagnose
+      let debugInfo = '';
+      if (errorMessage.includes('500') || errorMessage === 'Failed to create account') {
+        debugInfo = '\n\nפרטים נוספים (בדוק את הקונסול):\n';
+        debugInfo += `• אימייל: ${userEmail}\n`;
+        debugInfo += `• שם: ${userName}\n`;
+        debugInfo += `• תפקיד: ${userRole}\n`;
+        debugInfo += '• בדוק את הקונסול (F12) לפרטים מלאים';
+      }
+
       // Translate common errors to Hebrew if needed
       if (language === 'he') {
-        if (errorMessage.includes('email') && errorMessage.includes('exist')) {
+        if (errorMessage.includes('Email already exists')) {
+          errorMessage = '❌ האימייל כבר קיים במערכת\n\nהמשתמש כבר רשום - אולי רצית לערוך משתמש קיים?';
+        } else if (errorMessage.includes('email') && errorMessage.includes('exist')) {
           errorMessage = 'האימייל כבר קיים במערכת';
         } else if (errorMessage.includes('password')) {
           errorMessage = 'שגיאה בסיסמה - נדרש לפחות 6 תווים';
-        } else if (errorMessage.includes('Unauthorized')) {
-          errorMessage = 'אין הרשאה לבצע פעולה זו';
+        } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('permission')) {
+          errorMessage = 'אין הרשאה לבצע פעולה זו - רק בעלים של המסעדה יכולים להוסיף משתמשים';
         } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
           errorMessage = 'שגיאת רשת - בדוק את החיבור לאינטרנט';
+        } else if (errorMessage.includes('Server error') || errorMessage.includes('500')) {
+          errorMessage = 'שגיאת שרת - יש בעיה ביצירת המשתמש במערכת' + debugInfo;
         } else if (errorMessage === 'Failed to create account') {
-          errorMessage = 'שגיאה ביצירת חשבון משתמש - אנא נסה שוב';
+          errorMessage = 'שגיאה ביצירת חשבון משתמש\n\nאפשרויות:\n1. האימייל כבר קיים במערכת\n2. בעיית הרשאות\n3. שגיאת שרת\n\nבדוק את הקונסול (F12) לפרטים מלאים';
         }
       }
 
