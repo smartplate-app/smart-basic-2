@@ -28,6 +28,8 @@ export default function StoreUsersPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [password, setPassword] = useState("");
   const [editingUser, setEditingUser] = useState(null);
+  const [migrating, setMigrating] = useState(false);
+  const [migrationResults, setMigrationResults] = useState(null);
 
   const t = {
     he: {
@@ -215,6 +217,31 @@ export default function StoreUsersPage() {
     setShowAddUser(true);
   };
 
+  const handleMigration = async () => {
+    if (!confirm(language === 'he' ? 'להעביר משתמשים קיימים למערכת החדשה?' : 'Migrate existing users to new system?')) {
+      return;
+    }
+
+    try {
+      setMigrating(true);
+      const response = await base44.functions.invoke('migrateStoreUsers', {});
+      
+      if (response.data.success) {
+        setMigrationResults(response.data);
+        await loadData();
+        alert((language === 'he' ? 'הועברו בהצלחה: ' : 'Migrated: ') + response.data.migrated + '\n\n' +
+              (language === 'he' ? 'שלח סיסמאות זמניות למשתמשים' : 'Send temporary passwords to users'));
+      } else {
+        alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + response.data.error);
+      }
+    } catch (error) {
+      console.error("Migration error:", error);
+      alert((language === 'he' ? 'שגיאה בהעברה' : 'Migration error'));
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -241,6 +268,16 @@ export default function StoreUsersPage() {
             </div>
           </div>
           
+          {storeUsers.length > 0 && (
+            <Button 
+              variant="outline" 
+              onClick={handleMigration}
+              disabled={migrating}
+              className="border-purple-500 text-purple-700 hover:bg-purple-50"
+            >
+              {migrating ? <Loader className="w-4 h-4 animate-spin" /> : '🔄 העבר משתמשים'}
+            </Button>
+          )}
           <Dialog open={showAddUser} onOpenChange={(open) => {
             setShowAddUser(open);
             if (!open) {
@@ -444,6 +481,28 @@ export default function StoreUsersPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Migration Results */}
+        {migrationResults && (
+          <Card className="mb-6 border-purple-200 bg-purple-50">
+            <CardContent className="p-4">
+              <h3 className="font-bold text-purple-900 mb-2">
+                {language === 'he' ? '✅ הועברו משתמשים' : '✅ Users Migrated'}
+              </h3>
+              <div className="space-y-2">
+                {migrationResults.users.map((u, i) => (
+                  <div key={i} className="bg-white p-2 rounded text-sm">
+                    <div className="font-medium">{u.email}</div>
+                    <div className="text-gray-600">
+                      {language === 'he' ? 'סיסמה זמנית: ' : 'Temp password: '}
+                      <code className="bg-gray-100 px-2 py-1 rounded">{u.temp_password}</code>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Users List */}
         <Card>
