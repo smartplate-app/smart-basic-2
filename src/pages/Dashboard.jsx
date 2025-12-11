@@ -9,6 +9,7 @@ import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, Bar
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
+import MonthlySalaryReport from "../components/labor/MonthlySalaryReport";
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
@@ -332,7 +333,7 @@ export default function DashboardPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-xl">
+          <TabsList className="grid w-full grid-cols-4 max-w-4xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
@@ -344,6 +345,10 @@ export default function DashboardPage() {
             <TabsTrigger value="labor" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
               {language === 'he' ? 'יעד עבודה' : 'Labor Goals'}
+            </TabsTrigger>
+            <TabsTrigger value="salary" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              {language === 'he' ? 'ניהול עלויות עבודה' : 'Labor Cost Management'}
             </TabsTrigger>
           </TabsList>
 
@@ -734,6 +739,15 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Monthly Salary Report Tab */}
+          <TabsContent value="salary" className="space-y-6">
+            <MonthlySalaryReport 
+              selectedMonth={selectedMonth}
+              user={user}
+              language={language}
+            />
           </TabsContent>
 
           {/* Labor Goals Tab */}
