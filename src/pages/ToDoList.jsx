@@ -112,7 +112,13 @@ export default function ToDoListPage() {
   const getMonthDays = () => {
     const start = startOfMonth(currentDate);
     const end = endOfMonth(currentDate);
-    return eachDayOfInterval({ start, end });
+    const days = eachDayOfInterval({ start, end });
+    
+    // Add empty cells before the first day to align with the correct day of week
+    const firstDayOfWeek = start.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const emptyDays = Array(firstDayOfWeek).fill(null);
+    
+    return [...emptyDays, ...days];
   };
 
   const getTodosForDate = (date) => {
@@ -356,7 +362,12 @@ export default function ToDoListPage() {
                 {day}
               </div>
             ))}
-            {getMonthDays().map(day => {
+            {getMonthDays().map((day, index) => {
+              // Empty cell for alignment
+              if (day === null) {
+                return <div key={`empty-${index}`} className="min-h-[100px]" />;
+              }
+              
               const dayTodos = getTodosForDate(day);
               const completedCount = dayTodos.filter(t => t.completed).length;
               return (
