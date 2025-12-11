@@ -21,13 +21,14 @@ Deno.serve(async (req) => {
 
     console.log('[createSimpleUserAccount] ✓ Requester:', requester.email);
 
-    const { username, password, email, full_name, restaurant_name, restaurant_address, role, owner_email, update_existing } = await req.json();
+    const { username, password, email, full_name, restaurant_name, restaurant_address, role, owner_email, update_existing, store_id } = await req.json();
     
     console.log('[createSimpleUserAccount] Request data:', {
       email,
       full_name,
       role,
       owner_email,
+      store_id,
       update_existing
     });
 
@@ -40,96 +41,38 @@ Deno.serve(async (req) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    if (update_existing) {
-      // Update existing user
-      console.log('[createSimpleUserAccount] Updating existing user');
-      
-      try {
-        // Find the user by email
-        const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
-        if (!existingUsers || existingUsers.length === 0) {
-          return Response.json({ 
-            success: false, 
-            error: 'User not found' 
-          }, { status: 404 });
-        }
+    try {
+      // Check if StoreUser record already exists
+      const existingStoreUsers = await base44.asServiceRole.entities.StoreUser.filter({ 
+        user_email: email,
+        owner_email: owner_email
+      });
 
-        const userId = existingUsers[0].id;
+      if (update_existing && existingStoreUsers.length > 0) {
+        // Update existing StoreUser
+        console.log('[createSimpleUserAccount] Updating existing StoreUser');
         
-        // Update the user
-        await base44.asServiceRole.entities.User.update(userId, {
-          full_name: full_name,
-          username: username,
-          password: hashedPassword,
-          business_name: restaurant_name,
-          business_address: restaurant_address,
-          store_user_role: role,
-          store_user_owner_email: owner_email
+        const storeUser = existingStoreUsers[0];
+        await base44.asServiceRole.entities.StoreUser.update(storeUser.id, {
+          user_name: full_name,
+          role: role,
+          is_active: true
         });
         
-        console.log('[createSimpleUserAccount] User updated successfully');
+        console.log('[createSimpleUserAccount] ✓ StoreUser updated successfully');
         return Response.json({ 
           success: true, 
-          user_id: userId,
-          username: username
+          store_user_id: storeUser.id,
+          email: email
         });
-      } catch (updateError) {
-        console.error('[createSimpleUserAccount] Update error:', updateError);
-        return Response.json({ 
-          success: false, 
-          error: 'Failed to update user: ' + updateError.message 
-        }, { status: 500 });
       }
-    } else {
-      // Create new user account
-      console.log('[createSimpleUserAccount] Creating new user');
-      
-      try {
-        // Check if user already exists
-        const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
-        if (existingUsers && existingUsers.length > 0) {
-          // User exists, update instead
-          console.log('[createSimpleUserAccount] User already exists, updating...');
-          const userId = existingUsers[0].id;
-          
-          await base44.asServiceRole.entities.User.update(userId, {
-            full_name: full_name,
-            username: username,
-            password: hashedPassword,
-            business_name: restaurant_name,
-            business_address: restaurant_address,
-            store_user_role: role,
-            store_user_owner_email: owner_email
-          });
-          
-          return Response.json({ 
-            success: true, 
-            user_id: userId,
-            username: username
-          });
-        }
 
-        // Create new user
-        console.log('[createSimpleUserAccount] Attempting to create user with data:', {
-          email,
-          full_name,
-          username,
-          role: 'user',
-          business_name: restaurant_name,
-          store_user_role: role,
-          store_user_owner_email: owner_email
-        });
-        
-        // Create new user
-        console.log('[createSimpleUserAccount] Attempting to create user with data:', {
-          email,
-          full_name,
-          username,
-          role: 'user',
-          business_name: restaurant_name,
-          store_user_role: role,
-          store_user_owner_email: owner_email
-        });
+      // Check if user account exists (User entity)
+      const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
+      
+      if (existingUsers.length === 0) {
+        // Create new User account first
+        console.log('[createSimpleUserAccount] Creating new User account');
         
         const newUser = await base44.asServiceRole.entities.User.create({
           email: email,
@@ -137,57 +80,71 @@ Deno.serve(async (req) => {
           role: 'user'
         });
 
-        console.log('[createSimpleUserAccount] User created with ID:', newUser.id);
+        console.log('[createSimpleUserAccount] ✓ User created:', newUser.id);
         
-        // Update with custom fields
+        // Update with password and custom fields
         await base44.asServiceRole.entities.User.update(newUser.id, {
           username: username,
           password: hashedPassword,
           business_name: restaurant_name,
-          business_address: restaurant_address,
-          store_user_role: role,
-          store_user_owner_email: owner_email
+          business_address: restaurant_address
         });
         
-        console.log('[createSimpleUserAccount] User updated with custom fields');
-
-        console.log('[createSimpleUserAccount] ✓ User created successfully:', newUser.id);
-
-        return Response.json({ 
-          success: true, 
-          user_id: newUser.id,
-          username: username
-        });
-      } catch (createError) {
-        console.error('[createSimpleUserAccount] ❌ Create error:', createError);
-        console.error('[createSimpleUserAccount] Error name:', createError.name);
-        console.error('[createSimpleUserAccount] Error message:', createError.message);
-        console.error('[createSimpleUserAccount] Error stack:', createError.stack);
-        
-        // Provide user-friendly error messages in Hebrew
-        let errorMessage = createError.message || 'Failed to create account';
-        let hebrewError = '';
-        
-        // Check for common errors
-        if (errorMessage.includes('duplicate') || errorMessage.includes('unique') || errorMessage.includes('already exists') || errorMessage.includes('email') && errorMessage.includes('exist')) {
-          hebrewError = 'האימייל כבר קיים במערכת';
-        } else if (errorMessage.includes('permission') || errorMessage.includes('access') || errorMessage.includes('denied')) {
-          hebrewError = 'אין הרשאה ליצור משתמש - פנה למנהל המערכת';
-        } else if (errorMessage.includes('validation') || errorMessage.includes('required')) {
-          hebrewError = 'נתונים לא תקינים - בדוק שכל השדות מולאו';
-        } else if (errorMessage.includes('limit') || errorMessage.includes('quota') || errorMessage.includes('maximum')) {
-          hebrewError = 'הגעת למספר המשתמשים המקסימלי המותר';
-        } else {
-          hebrewError = `שגיאת מערכת: ${errorMessage}`;
-        }
-        
-        return Response.json({ 
-          success: false, 
-          error: hebrewError,
-          details: errorMessage,
-          technical_error: createError.message
-        }, { status: 500 });
+        console.log('[createSimpleUserAccount] ✓ User updated with credentials');
+      } else {
+        console.log('[createSimpleUserAccount] User account already exists, will link to restaurant');
       }
+
+      // Create or update StoreUser record
+      if (existingStoreUsers.length > 0) {
+        // Update existing
+        const storeUser = existingStoreUsers[0];
+        await base44.asServiceRole.entities.StoreUser.update(storeUser.id, {
+          user_name: full_name,
+          role: role,
+          is_active: true
+        });
+        console.log('[createSimpleUserAccount] ✓ StoreUser record updated');
+      } else {
+        // Create new StoreUser record
+        await base44.asServiceRole.entities.StoreUser.create({
+          store_id: store_id || owner_email,
+          store_name: restaurant_name,
+          user_email: email,
+          user_name: full_name,
+          role: role,
+          owner_email: owner_email,
+          is_active: true
+        });
+        console.log('[createSimpleUserAccount] ✓ StoreUser record created');
+      }
+
+      return Response.json({ 
+        success: true, 
+        email: email,
+        username: username
+      });
+
+    } catch (error) {
+      console.error('[createSimpleUserAccount] ❌ Error:', error);
+      console.error('[createSimpleUserAccount] Error details:', error.message);
+      
+      let hebrewError = '';
+      const errorMessage = error.message || 'Failed to create account';
+      
+      if (errorMessage.includes('duplicate') || errorMessage.includes('unique') || errorMessage.includes('already exists')) {
+        hebrewError = 'האימייל כבר קיים במערכת';
+      } else if (errorMessage.includes('permission') || errorMessage.includes('access') || errorMessage.includes('denied')) {
+        hebrewError = 'אין הרשאה ליצור משתמש';
+      } else {
+        hebrewError = `שגיאה: ${errorMessage}`;
+      }
+      
+      return Response.json({ 
+        success: false, 
+        error: hebrewError,
+        technical_error: errorMessage
+      }, { status: 500 });
     }
 
   } catch (error) {

@@ -134,6 +134,7 @@ export default function StoreUsersPage() {
           restaurant_address: restaurantAddress,
           role: userRole,
           owner_email: ownerEmail,
+          store_id: ownerEmail,
           update_existing: !!editingUser
         });
 
