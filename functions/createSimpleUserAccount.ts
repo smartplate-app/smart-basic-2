@@ -85,6 +85,14 @@ Deno.serve(async (req) => {
       console.log('[createSimpleUserAccount] Creating new user');
       
       try {
+        // Check how many store users this owner already has
+        const existingStoreUsers = await base44.asServiceRole.entities.StoreUser.filter({ 
+          owner_email: owner_email,
+          is_active: true 
+        });
+        
+        console.log('[createSimpleUserAccount] Owner has', existingStoreUsers.length, 'active store users');
+        
         // Check if user already exists
         const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
         if (existingUsers && existingUsers.length > 0) {
@@ -140,30 +148,33 @@ Deno.serve(async (req) => {
           username: username
         });
       } catch (createError) {
-        console.error('[createSimpleUserAccount] Create error:', createError);
-        console.error('[createSimpleUserAccount] Error details:', {
-          message: createError.message,
-          code: createError.code,
-          status: createError.status,
-          details: createError.details
-        });
+        console.error('[createSimpleUserAccount] ❌ Create error:', createError);
+        console.error('[createSimpleUserAccount] Error name:', createError.name);
+        console.error('[createSimpleUserAccount] Error message:', createError.message);
+        console.error('[createSimpleUserAccount] Error stack:', createError.stack);
         
-        // Provide user-friendly error messages
+        // Provide user-friendly error messages in Hebrew
         let errorMessage = createError.message || 'Failed to create account';
+        let hebrewError = '';
         
         // Check for common errors
-        if (errorMessage.includes('duplicate') || errorMessage.includes('unique') || errorMessage.includes('already exists')) {
-          errorMessage = 'Email already exists in the system';
-        } else if (errorMessage.includes('permission') || errorMessage.includes('access')) {
-          errorMessage = 'No permission to create user account';
-        } else if (errorMessage.includes('validation')) {
-          errorMessage = 'Invalid user data provided';
+        if (errorMessage.includes('duplicate') || errorMessage.includes('unique') || errorMessage.includes('already exists') || errorMessage.includes('email') && errorMessage.includes('exist')) {
+          hebrewError = 'האימייל כבר קיים במערכת';
+        } else if (errorMessage.includes('permission') || errorMessage.includes('access') || errorMessage.includes('denied')) {
+          hebrewError = 'אין הרשאה ליצור משתמש - פנה למנהל המערכת';
+        } else if (errorMessage.includes('validation') || errorMessage.includes('required')) {
+          hebrewError = 'נתונים לא תקינים - בדוק שכל השדות מולאו';
+        } else if (errorMessage.includes('limit') || errorMessage.includes('quota') || errorMessage.includes('maximum')) {
+          hebrewError = 'הגעת למספר המשתמשים המקסימלי המותר';
+        } else {
+          hebrewError = `שגיאת מערכת: ${errorMessage}`;
         }
         
         return Response.json({ 
           success: false, 
-          error: errorMessage,
-          details: createError.message
+          error: hebrewError,
+          details: errorMessage,
+          technical_error: createError.message
         }, { status: 500 });
       }
     }
