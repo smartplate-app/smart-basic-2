@@ -122,83 +122,21 @@ export default function StoreUsersPage() {
       const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
       const storeId = user.acting_as_store_id || "main";
 
-      if (editingUser) {
-        // Update existing user
-        console.log('[StoreUsers] Updating user account...');
-        const updateAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
-          username: userEmail,
-          password: password,
-          email: userEmail,
-          full_name: userName,
-          restaurant_name: storeName,
-          restaurant_address: user.business_address || '',
-          role: userRole,
-          owner_email: ownerEmail,
-          update_existing: true
-        });
+      // Create user in our custom system
+      const createResponse = await base44.functions.invoke('createRestaurantUser', {
+        email: userEmail,
+        password: password,
+        full_name: userName,
+        store_name: storeName,
+        role: userRole,
+        owner_email: ownerEmail
+      });
 
-        if (!updateAccountResponse.data.success) {
-          const errorMsg = updateAccountResponse.data.error || 'Failed to update account';
-          throw new Error(errorMsg);
-        }
-
-        console.log('[StoreUsers] Updating StoreUser record...');
-        await base44.entities.StoreUser.update(editingUser.id, {
-          user_name: userName,
-          user_email: userEmail,
-          role: userRole,
-          temp_username: userEmail,
-          temp_password: password
-        });
-        console.log('[StoreUsers] StoreUser updated successfully');
-      } else {
-        // Create new user account first
-        console.log('[StoreUsers] Creating user account...');
-        const createAccountResponse = await base44.functions.invoke('createSimpleUserAccount', {
-          username: userEmail,
-          password: password,
-          email: userEmail,
-          full_name: userName,
-          restaurant_name: storeName,
-          restaurant_address: user.business_address || '',
-          role: userRole,
-          owner_email: ownerEmail
-        });
-
-        console.log('[StoreUsers] Full Response:', JSON.stringify(createAccountResponse, null, 2));
-        console.log('[StoreUsers] Response data:', createAccountResponse.data);
-        console.log('[StoreUsers] Response status:', createAccountResponse.status);
-
-        if (!createAccountResponse.data || !createAccountResponse.data.success) {
-        const errorMsg = createAccountResponse.data?.error || 
-                       createAccountResponse.data?.details ||
-                       createAccountResponse.error?.message ||
-                       createAccountResponse.error || 
-                       'שגיאת שרת - לא ניתן ליצור משתמש';
-
-        console.error('[StoreUsers] ❌ Account creation failed:', errorMsg);
-        console.error('[StoreUsers] Full error response:', createAccountResponse);
-
-        // Show alert immediately with actual error
-        alert(`❌ שגיאה ביצירת משתמש:\n\n${errorMsg}\n\nשם: ${userName}\nאימייל: ${userEmail}\nתפקיד: ${userRole}`);
-        throw new Error(errorMsg);
-        }
-
-        // Create store user record
-        console.log('[StoreUsers] Creating StoreUser record...');
-        await base44.entities.StoreUser.create({
-          store_id: storeId,
-          store_name: storeName,
-          user_email: userEmail,
-          user_name: userName,
-          role: userRole,
-          owner_email: ownerEmail,
-          is_active: true,
-          temp_username: userEmail,
-          temp_password: password
-        });
-        console.log('[StoreUsers] StoreUser created successfully');
+      if (!createResponse.data.success) {
+        throw new Error(createResponse.data.error || 'Failed to create user');
       }
+
+      console.log('[StoreUsers] User created successfully');
 
       // Reload the user list
       console.log('[StoreUsers] Loading updated data...');
