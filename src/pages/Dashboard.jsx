@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [actualSales, setActualSales] = useState(0);
   const [calculatedLaborCost, setCalculatedLaborCost] = useState(0);
   const [calculatedFoodCost, setCalculatedFoodCost] = useState(0);
+  const [totalTips, setTotalTips] = useState(0);
   
   // Predicted values based on weekly schedules
   const [predictedLaborToDate, setPredictedLaborToDate] = useState(0);
@@ -84,6 +85,7 @@ export default function DashboardPage() {
         setFoodGoalPercent(existingData.food_goal_percent || 30);
         setManagementSalary(existingData.management_salary || 0);
         setActualSales(existingData.total_sales || 0);
+        setTotalTips(existingData.total_tips || 0);
       } else {
         setDashboardData(null);
         setPredictedSales(0);
@@ -91,6 +93,7 @@ export default function DashboardPage() {
         setFoodGoalPercent(30);
         setManagementSalary(0);
         setActualSales(0);
+        setTotalTips(0);
       }
 
       // Calculate labor cost from all schedules in the month (always use latest schedules)
@@ -192,6 +195,7 @@ export default function DashboardPage() {
         food_goal_percent: parseFloat(foodGoalPercent) || 30,
         management_salary: parseFloat(managementSalary) || 0,
         total_sales: parseFloat(actualSales) || 0,
+        total_tips: parseFloat(totalTips) || 0,
         manual_labor_cost: calculatedLaborCost,
         manual_food_cost: calculatedFoodCost
       };
@@ -410,11 +414,11 @@ export default function DashboardPage() {
               </Button>
             </div>
 
-            {/* Sales Input */}
+            {/* Sales and Tips Input */}
             <Card>
               <CardHeader className={`flex flex-row items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
-                  {language === 'he' ? 'מכירות בפועל החודש עד היום' : 'Actual Sales This Month to Date'}
+                  {language === 'he' ? 'מכירות וטיפים בפועל החודש' : 'Actual Sales & Tips This Month'}
                 </CardTitle>
                 {!editMode && (
                   <Button 
@@ -429,34 +433,51 @@ export default function DashboardPage() {
                 )}
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <Label className={isRTL ? 'text-right block' : 'text-left block'}>
-                    {language === 'he' ? 'סה"כ מכירות (כולל מע"מ)' : 'Total Sales (incl. VAT)'}
-                  </Label>
-                  <div className="flex items-center gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                      {language === 'he' ? 'סה"כ מכירות (כולל מע"מ)' : 'Total Sales (incl. VAT)'}
+                    </Label>
                     <Input
                       type="number"
                       value={actualSales}
                       onChange={(e) => setActualSales(parseFloat(e.target.value) || 0)}
                       placeholder="0"
-                      className={`max-w-xs text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
+                      className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
                       disabled={!editMode}
                     />
-                    {editMode && (
-                      <Button 
-                        onClick={handleSave} 
-                        disabled={saving}
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      </Button>
-                    )}
+                    <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {language === 'he' ? 'ללא מע"מ:' : 'Excl. VAT:'} {formatCurrency(actualSalesExVAT)}
+                    </p>
                   </div>
-                  <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'ללא מע"מ:' : 'Excl. VAT:'} {formatCurrency(actualSalesExVAT)}
-                  </p>
+
+                  <div className="space-y-2">
+                    <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                      {language === 'he' ? 'סה"כ טיפים חודשי' : 'Total Monthly Tips'}
+                    </Label>
+                    <Input
+                      type="number"
+                      value={totalTips}
+                      onChange={(e) => setTotalTips(parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
+                      disabled={!editMode}
+                    />
+                    <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {actualSales > 0 ? `${((totalTips / actualSales) * 100).toFixed(1)}%` : '0%'} {language === 'he' ? 'מהמכירות' : 'of sales'}
+                    </p>
+                  </div>
                 </div>
+                {editMode && (
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={saving}
+                    className="bg-green-600 hover:bg-green-700 mt-4 w-full"
+                  >
+                    {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {' '}{language === 'he' ? 'שמור' : 'Save'}
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
