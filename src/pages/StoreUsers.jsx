@@ -170,14 +170,18 @@ export default function StoreUsersPage() {
         console.log('[StoreUsers] Response status:', createAccountResponse.status);
 
         if (!createAccountResponse.data || !createAccountResponse.data.success) {
-          const errorMsg = createAccountResponse.data?.error || 
-                         createAccountResponse.data?.details ||
-                         createAccountResponse.error?.message ||
-                         createAccountResponse.error || 
-                         (createAccountResponse.status === 500 ? 'Server error - check console logs' : 'Failed to create account');
-          console.error('[StoreUsers] Account creation failed:', errorMsg);
-          console.error('[StoreUsers] Full error response:', createAccountResponse);
-          throw new Error(errorMsg);
+        const errorMsg = createAccountResponse.data?.error || 
+                       createAccountResponse.data?.details ||
+                       createAccountResponse.error?.message ||
+                       createAccountResponse.error || 
+                       'שגיאת שרת - לא ניתן ליצור משתמש';
+
+        console.error('[StoreUsers] ❌ Account creation failed:', errorMsg);
+        console.error('[StoreUsers] Full error response:', createAccountResponse);
+
+        // Show alert immediately with actual error
+        alert(`❌ שגיאה ביצירת משתמש:\n\n${errorMsg}\n\nשם: ${userName}\nאימייל: ${userEmail}\nתפקיד: ${userRole}`);
+        throw new Error(errorMsg);
         }
 
         // Create store user record

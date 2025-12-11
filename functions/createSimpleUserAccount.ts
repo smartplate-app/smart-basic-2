@@ -15,10 +15,21 @@ Deno.serve(async (req) => {
     // Verify the requester is authenticated
     const requester = await base44.auth.me();
     if (!requester) {
-      return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      console.error('[createSimpleUserAccount] ❌ No authenticated user');
+      return Response.json({ success: false, error: 'לא מחובר למערכת - יש להתחבר מחדש' }, { status: 401 });
     }
 
+    console.log('[createSimpleUserAccount] ✓ Requester:', requester.email);
+
     const { username, password, email, full_name, restaurant_name, restaurant_address, role, owner_email, update_existing } = await req.json();
+    
+    console.log('[createSimpleUserAccount] Request data:', {
+      email,
+      full_name,
+      role,
+      owner_email,
+      update_existing
+    });
 
     if (!username || !password || !email || !full_name) {
       return Response.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -99,6 +110,16 @@ Deno.serve(async (req) => {
         }
 
         // Create new user
+        console.log('[createSimpleUserAccount] Attempting to create user with data:', {
+          email,
+          full_name,
+          username,
+          role: 'user',
+          business_name: restaurant_name,
+          store_user_role: role,
+          store_user_owner_email: owner_email
+        });
+        
         const newUser = await base44.asServiceRole.entities.User.create({
           email: email,
           full_name: full_name,
@@ -111,7 +132,7 @@ Deno.serve(async (req) => {
           store_user_owner_email: owner_email
         });
 
-        console.log('[createSimpleUserAccount] User created successfully:', newUser.id);
+        console.log('[createSimpleUserAccount] ✓ User created successfully:', newUser.id);
 
         return Response.json({ 
           success: true, 
