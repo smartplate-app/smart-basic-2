@@ -120,17 +120,23 @@ Deno.serve(async (req) => {
           store_user_owner_email: owner_email
         });
         
-        const newUser = await base44.asServiceRole.entities.User.create({
+        const userData = {
           email: email,
           full_name: full_name,
-          username: username,
-          password: hashedPassword,
-          role: 'user',
-          business_name: restaurant_name,
-          business_address: restaurant_address,
-          store_user_role: role,
-          store_user_owner_email: owner_email
-        });
+          role: 'user'
+        };
+        
+        // Add optional custom fields if they exist
+        if (username) userData.username = username;
+        if (hashedPassword) userData.password = hashedPassword;
+        if (restaurant_name) userData.business_name = restaurant_name;
+        if (restaurant_address) userData.business_address = restaurant_address;
+        if (role) userData.store_user_role = role;
+        if (owner_email) userData.store_user_owner_email = owner_email;
+        
+        console.log('[createSimpleUserAccount] Final user data:', userData);
+        
+        const newUser = await base44.asServiceRole.entities.User.create(userData);
 
         console.log('[createSimpleUserAccount] ✓ User created successfully:', newUser.id);
 
