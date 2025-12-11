@@ -473,7 +473,7 @@ export default function DashboardPage() {
               <Card className="bg-gradient-to-br from-gray-800 to-gray-900 text-white">
                 <CardHeader>
                   <CardTitle className={`text-white text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'עלות עבודה (מלו"ז)' : 'Labor Cost (from Schedules)'}
+                    {language === 'he' ? 'עלויות עבודה מסידור עבודה' : 'Labor Cost (from Schedules)'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
