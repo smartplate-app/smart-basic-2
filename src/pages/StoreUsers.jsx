@@ -138,7 +138,8 @@ export default function StoreUsersPage() {
         });
 
         if (!updateAccountResponse.data.success) {
-          throw new Error(updateAccountResponse.data.error || 'Failed to update account');
+          const errorMsg = updateAccountResponse.data.error || 'Failed to update account';
+          throw new Error(errorMsg);
         }
 
         console.log('[StoreUsers] Updating StoreUser record...');
@@ -164,8 +165,12 @@ export default function StoreUsersPage() {
           owner_email: ownerEmail
         });
 
-        if (!createAccountResponse.data.success) {
-          throw new Error(createAccountResponse.data.error || 'Failed to create account');
+        console.log('[StoreUsers] Response:', createAccountResponse);
+
+        if (!createAccountResponse.data || !createAccountResponse.data.success) {
+          const errorMsg = createAccountResponse.data?.error || createAccountResponse.error || 'Failed to create account';
+          console.error('[StoreUsers] Account creation failed:', errorMsg);
+          throw new Error(errorMsg);
         }
 
         // Create store user record
@@ -192,11 +197,35 @@ export default function StoreUsersPage() {
       // Show credentials
       setGeneratedLink(`${language === 'he' ? 'אימייל' : 'Email'}: ${userEmail}\n${language === 'he' ? 'סיסמה' : 'Password'}: ${password}`);
       setLinkCopied(false);
-      
+
       console.log('[StoreUsers] All done!');
     } catch (error) {
       console.error("[StoreUsers] Error adding/updating user:", error);
-      alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + error.message);
+      console.error("[StoreUsers] Full error details:", {
+        message: error.message,
+        response: error.response,
+        data: error.data
+      });
+
+      // Show user-friendly error messages
+      let errorMessage = error.message || 'Unknown error occurred';
+
+      // Translate common errors to Hebrew if needed
+      if (language === 'he') {
+        if (errorMessage.includes('email') && errorMessage.includes('exist')) {
+          errorMessage = 'האימייל כבר קיים במערכת';
+        } else if (errorMessage.includes('password')) {
+          errorMessage = 'שגיאה בסיסמה - נדרש לפחות 6 תווים';
+        } else if (errorMessage.includes('Unauthorized')) {
+          errorMessage = 'אין הרשאה לבצע פעולה זו';
+        } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+          errorMessage = 'שגיאת רשת - בדוק את החיבור לאינטרנט';
+        } else if (errorMessage === 'Failed to create account') {
+          errorMessage = 'שגיאה ביצירת חשבון משתמש - אנא נסה שוב';
+        }
+      }
+
+      alert((language === 'he' ? '❌ שגיאה: ' : '❌ Error: ') + errorMessage);
     } finally {
       setSaving(false);
     }
