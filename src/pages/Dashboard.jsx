@@ -475,69 +475,6 @@ export default function DashboardPage() {
                 {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
               </Button>
             </div>
-            {/* Predicted Values from Schedules */}
-            {hasScheduleData && (
-              <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
-                <CardHeader>
-                  <CardTitle className={`text-indigo-800 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? '📊 תחזית מלו"ז עד היום' : '📊 Forecast from Schedules to Date'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
-                      <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
-                        {language === 'he' ? 'עלות עבודה צפויה עד היום' : 'Predicted Labor Cost to Date'}
-                      </Label>
-                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
-                        <span className={`text-2xl font-bold text-indigo-700`}>
-                          {formatCurrency(predictedLaborToDate)}
-                        </span>
-                        <span className={`text-sm px-2 py-0.5 rounded ${
-                          calculatedLaborCost <= predictedLaborToDate 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {language === 'he' ? 'בפועל:' : 'Actual:'} {formatCurrency(calculatedLaborCost)}
-                        </span>
-                      </div>
-                      <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {language === 'he' ? 'מבוסס על עלות שבועית / 7 × ימים שעברו' : 'Based on weekly cost / 7 × days passed'}
-                      </p>
-                    </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
-                      <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
-                        {language === 'he' ? 'מכירות צפויות עד היום' : 'Predicted Sales to Date'}
-                      </Label>
-                      <div className={`text-2xl font-bold text-purple-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {formatCurrency(predictedSalesToDate)}
-                      </div>
-                      <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {language === 'he' ? 'מבוסס על תחזית שבועית / 7 × ימים שעברו' : 'Based on weekly prediction / 7 × days passed'}
-                      </p>
-                    </div>
-                    {/* Big Predicted Labor % */}
-                    <div className={`bg-gradient-to-br ${
-                      predictedSalesToDate > 0 && (predictedLaborToDate / (predictedSalesToDate / 1.17) * 100) <= laborGoalPercent
-                        ? 'from-green-500 to-green-600' 
-                        : 'from-orange-500 to-orange-600'
-                    } rounded-lg p-4 shadow-sm flex flex-col items-center justify-center text-white`}>
-                      <Label className="text-sm text-white/80 text-center">
-                        {language === 'he' ? '% עלות עבודה צפויה' : 'Predicted Labor %'}
-                      </Label>
-                      <div className="text-5xl font-black my-2">
-                        {predictedSalesToDate > 0 
-                          ? ((predictedLaborToDate / (predictedSalesToDate / 1.17)) * 100).toFixed(1)
-                          : '0'}%
-                      </div>
-                      <p className="text-xs text-white/70 text-center">
-                        {language === 'he' ? `יעד: ${laborGoalPercent}%` : `Goal: ${laborGoalPercent}%`}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Sales Input */}
             <Card>
