@@ -120,14 +120,26 @@ Deno.serve(async (req) => {
           store_user_owner_email: owner_email
         });
         
-        // Try to create with minimal required fields first
+        // Create new user
+        console.log('[createSimpleUserAccount] Attempting to create user with data:', {
+          email,
+          full_name,
+          username,
+          role: 'user',
+          business_name: restaurant_name,
+          store_user_role: role,
+          store_user_owner_email: owner_email
+        });
+        
         const newUser = await base44.asServiceRole.entities.User.create({
           email: email,
           full_name: full_name,
           role: 'user'
         });
+
+        console.log('[createSimpleUserAccount] User created with ID:', newUser.id);
         
-        // Then update with custom fields
+        // Update with custom fields
         await base44.asServiceRole.entities.User.update(newUser.id, {
           username: username,
           password: hashedPassword,
@@ -136,6 +148,8 @@ Deno.serve(async (req) => {
           store_user_role: role,
           store_user_owner_email: owner_email
         });
+        
+        console.log('[createSimpleUserAccount] User updated with custom fields');
 
         console.log('[createSimpleUserAccount] ✓ User created successfully:', newUser.id);
 
