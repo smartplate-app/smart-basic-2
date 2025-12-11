@@ -42,7 +42,6 @@ Deno.serve(async (req) => {
         const tableRows = days.map(day => {
             const dayShifts = shiftsByDay[day];
             const totalHours = dayShifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
-            const totalCost = dayShifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
             const shiftDate = dayShifts[0]?.date || '';
 
             return `
@@ -59,14 +58,12 @@ Deno.serve(async (req) => {
                         `).join('') || '-'}
                     </td>
                     <td><strong>${totalHours.toFixed(1)}</strong></td>
-                    <td><strong>₪${totalCost.toLocaleString()}</strong></td>
                 </tr>
             `;
         }).join('');
 
         const totalShifts = shifts.length;
         const totalHours = shifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
-        const totalCost = shifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
 
         const html = `<!DOCTYPE html>
 <html dir="rtl" lang="he">
@@ -146,11 +143,7 @@ Deno.serve(async (req) => {
         <h1>📅 לוח משמרות שבועי</h1>
         <div class="date">שבוע מתאריך: ${new Date(week_start_date).toLocaleDateString('he-IL')}</div>
         
-        ${predicted_weekly_sales > 0 ? `
-        <div class="sales-info">
-            <strong>מכירות שבועיות צפויות:</strong> ₪${predicted_weekly_sales.toLocaleString()}
-        </div>
-        ` : ''}
+
         
         <table>
             <thead>
@@ -159,7 +152,6 @@ Deno.serve(async (req) => {
                     <th>תאריך</th>
                     <th>משמרות</th>
                     <th>סה"כ שעות</th>
-                    <th>סה"כ עלות</th>
                 </tr>
             </thead>
             <tbody>
@@ -179,10 +171,6 @@ Deno.serve(async (req) => {
                 <div>
                     <div style="font-size: 14px; color: #666;">שעות</div>
                     <div style="font-size: 24px; font-weight: bold; color: #667eea;">${totalHours.toFixed(1)}</div>
-                </div>
-                <div>
-                    <div style="font-size: 14px; color: #666;">עלות</div>
-                    <div style="font-size: 24px; font-weight: bold; color: #667eea;">₪${totalCost.toLocaleString()}</div>
                 </div>
             </div>
         </div>
