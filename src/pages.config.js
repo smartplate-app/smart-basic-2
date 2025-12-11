@@ -24,6 +24,7 @@ import TestInviteLinks from './pages/TestInviteLinks';
 import RestaurantInvite from './pages/RestaurantInvite';
 import ToDoList from './pages/ToDoList';
 import StoreLogin from './pages/StoreLogin';
+import Tips from './pages/Tips';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +55,7 @@ export const PAGES = {
     "RestaurantInvite": RestaurantInvite,
     "ToDoList": ToDoList,
     "StoreLogin": StoreLogin,
+    "Tips": Tips,
 }
 
 export const pagesConfig = {

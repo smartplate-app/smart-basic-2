@@ -10,6 +10,7 @@ import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
 import MonthlySalaryReport from "../components/labor/MonthlySalaryReport";
+import MonthlyTipReport from "../components/tips/MonthlyTipReport";
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
@@ -333,7 +334,7 @@ export default function DashboardPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-4xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-5xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
@@ -349,6 +350,10 @@ export default function DashboardPage() {
             <TabsTrigger value="salary" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
               {language === 'he' ? 'דו"ח שכר חודשי' : 'Monthly Salary Report'}
+            </TabsTrigger>
+            <TabsTrigger value="tips" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              {language === 'he' ? 'דו"ח טיפים' : 'Tips Report'}
             </TabsTrigger>
           </TabsList>
 
@@ -747,6 +752,14 @@ export default function DashboardPage() {
               selectedMonth={selectedMonth}
               user={user}
               language={language}
+            />
+          </TabsContent>
+
+          {/* Tips Report Tab */}
+          <TabsContent value="tips" className="space-y-6">
+            <MonthlyTipReport 
+              selectedMonth={selectedMonth}
+              totalSales={actualSales}
             />
           </TabsContent>
 
