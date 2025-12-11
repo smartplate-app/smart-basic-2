@@ -349,19 +349,21 @@ export default function StoreUsersPage() {
                       <SelectItem value="manager">
                         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <UserCog className="w-4 h-4 text-blue-600" />
-                          {t.manager}
+                          {language === 'he' ? 'מנהל - גישה מלאה' : 'Manager - Full Access'}
                         </div>
                       </SelectItem>
                       <SelectItem value="worker">
                         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <UserCheck className="w-4 h-4 text-green-600" />
-                          {t.worker}
+                          {language === 'he' ? 'עובד - הזמנות, קבלות וספירות' : 'Worker - Orders, Receipts & Counts'}
                         </div>
                       </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-gray-500 mt-1">
-                    {userRole === 'manager' ? t.managerDesc : t.workerDesc}
+                    {userRole === 'manager' 
+                      ? (language === 'he' ? 'רואה הכל ומנהל את המסעדה' : 'Can see everything and manage restaurant')
+                      : (language === 'he' ? 'יוצר הזמנות, מקבל אספקה ועושה ספירות' : 'Creates orders, receives supplies, does counts')}
                   </p>
                 </div>
                 {!generatedLink ? (
@@ -464,7 +466,7 @@ export default function StoreUsersPage() {
                 <UserCog className="w-8 h-8 text-blue-600" />
                 <div>
                   <h3 className="font-bold text-blue-900">{language === 'he' ? 'מנהל' : 'Manager'}</h3>
-                  <p className="text-sm text-blue-700">{t.managerDesc}</p>
+                  <p className="text-sm text-blue-700">{language === 'he' ? 'רואה הכל ומנהל את המסעדה' : 'Can see everything and manage restaurant'}</p>
                 </div>
               </div>
             </CardContent>
@@ -475,7 +477,7 @@ export default function StoreUsersPage() {
                 <UserCheck className="w-8 h-8 text-green-600" />
                 <div>
                   <h3 className="font-bold text-green-900">{language === 'he' ? 'עובד' : 'Worker'}</h3>
-                  <p className="text-sm text-green-700">{t.workerDesc}</p>
+                  <p className="text-sm text-green-700">{language === 'he' ? 'יוצר הזמנות, מקבל אספקה ועושה ספירות' : 'Creates orders, receives supplies, does counts'}</p>
                 </div>
               </div>
             </CardContent>
