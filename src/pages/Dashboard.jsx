@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3 } from "lucide-react";
+import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
@@ -41,6 +41,8 @@ export default function DashboardPage() {
   const [predictedSalesToDate, setPredictedSalesToDate] = useState(0);
   const [predictedMonthlyLabor, setPredictedMonthlyLabor] = useState(0);
   const [hasScheduleData, setHasScheduleData] = useState(false);
+  const [exportingMonthly, setExportingMonthly] = useState(false);
+  const [exportingTips, setExportingTips] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -239,6 +241,109 @@ export default function DashboardPage() {
     }).format(amount);
   };
 
+  const handleExportMonthlyReport = async () => {
+    try {
+      setExportingMonthly(true);
+      
+      const exportData = {
+        reportType: 'monthly',
+        month: selectedMonth,
+        data: {
+          actualSales: actualSales,
+          actualSalesExVAT: actualSalesExVAT,
+          laborCost: calculatedLaborCost,
+          laborPercent: actualLaborPercent.toFixed(1),
+          foodCost: calculatedFoodCost,
+          foodPercent: actualFoodPercent.toFixed(1),
+          combinedCost: calculatedLaborCost + calculatedFoodCost,
+          combinedPercent: actualCombinedPercent.toFixed(1),
+          predictedSales: predictedSales,
+          laborGoalAmount: laborGoalAmount,
+          laborGoalPercent: laborGoalPercent,
+          foodGoalAmount: foodGoalAmount,
+          foodGoalPercent: foodGoalPercent
+        }
+      };
+
+      const response = await base44.functions.invoke('exportToGoogleSheets', exportData);
+      
+      if (response.data.success) {
+        window.open(response.data.url, '_blank');
+        alert(language === 'he' ? 'הדוח יוצא בהצלחה!' : 'Report exported successfully!');
+      } else {
+        throw new Error(response.data.error || 'Export failed');
+      }
+    } catch (error) {
+      console.error("Error exporting monthly report:", error);
+      alert(language === 'he' ? 'שגיאה בייצוא הדוח' : 'Error exporting report');
+    } finally {
+      setExportingMonthly(false);
+    }
+  };
+
+  const handleExportTipsReport = async () => {
+    try {
+      setExportingTips(true);
+      
+      // Fetch tip data for the month
+      const monthStart = moment(selectedMonth).startOf('month').format('YYYY-MM-DD');
+      const monthEnd = moment(selectedMonth).endOf('month').format('YYYY-MM-DD');
+      
+      const allEntries = await base44.entities.TipEntry.list();
+      const monthEntries = allEntries.filter(entry => 
+        entry.date >= monthStart && entry.date <= monthEnd
+      );
+      
+      const workerTotals = {};
+      monthEntries.forEach(entry => {
+        entry.workers?.forEach(worker => {
+          if (!workerTotals[worker.worker_id]) {
+            workerTotals[worker.worker_id] = {
+              name: worker.worker_name,
+              total: 0,
+              shifts: 0
+            };
+          }
+          workerTotals[worker.worker_id].total += worker.tip_amount || 0;
+          workerTotals[worker.worker_id].shifts += 1;
+        });
+      });
+      
+      const totalTips = monthEntries.reduce((sum, entry) => sum + (entry.total_tips || 0), 0);
+      const tipPercentage = actualSales > 0 ? (totalTips / actualSales) * 100 : 0;
+      
+      const exportData = {
+        reportType: 'tips',
+        month: selectedMonth,
+        data: {
+          totalTips: totalTips,
+          totalSales: actualSales,
+          tipPercentage: tipPercentage.toFixed(1),
+          workerCount: Object.keys(workerTotals).length,
+          workers: Object.values(workerTotals).map(w => ({
+            name: w.name,
+            total: w.total,
+            shifts: w.shifts
+          }))
+        }
+      };
+
+      const response = await base44.functions.invoke('exportToGoogleSheets', exportData);
+      
+      if (response.data.success) {
+        window.open(response.data.url, '_blank');
+        alert(language === 'he' ? 'דוח הטיפים יוצא בהצלחה!' : 'Tips report exported successfully!');
+      } else {
+        throw new Error(response.data.error || 'Export failed');
+      }
+    } catch (error) {
+      console.error("Error exporting tips report:", error);
+      alert(language === 'he' ? 'שגיאה בייצוא דוח הטיפים' : 'Error exporting tips report');
+    } finally {
+      setExportingTips(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -359,6 +464,17 @@ export default function DashboardPage() {
 
           {/* Actual Performance Tab */}
           <TabsContent value="actual" className="space-y-6">
+            <div className={`flex justify-end ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button 
+                onClick={handleExportMonthlyReport}
+                disabled={exportingMonthly}
+                variant="outline"
+                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+              >
+                {exportingMonthly ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
+              </Button>
+            </div>
             {/* Predicted Values from Schedules */}
             {hasScheduleData && (
               <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
@@ -757,6 +873,17 @@ export default function DashboardPage() {
 
           {/* Tips Report Tab */}
           <TabsContent value="tips" className="space-y-6">
+            <div className={`flex justify-end mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button 
+                onClick={handleExportTipsReport}
+                disabled={exportingTips}
+                variant="outline"
+                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+              >
+                {exportingTips ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
+              </Button>
+            </div>
             <MonthlyTipReport 
               selectedMonth={selectedMonth}
               totalSales={actualSales}
