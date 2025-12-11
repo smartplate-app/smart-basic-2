@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp } from "lucide-react";
+import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import UserSwitcher from "./components/UserSwitcher";
 import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
@@ -34,7 +34,7 @@ const AppLayout = ({ children, currentPageName }) => {
             { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
             { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false, workerHidden: false },
             { title: language === 'he' ? 'סידור עבודה' : 'Labor Cost', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
-            { title: language === 'he' ? 'ניהול טיפים' : 'Tips Management', url: createPageUrl("Tips"), icon: TrendingUp, adminOnly: false, workerHidden: true },
+            { title: language === 'he' ? 'ניהול טיפים' : 'Tips Management', url: createPageUrl("Tips"), icon: DollarSign, adminOnly: false, workerHidden: true },
             { title: language === 'he' ? 'ניהול רשת' : 'Chain Management', url: createPageUrl("ChainManagement"), icon: TrendingUp, adminOnly: false, workerHidden: true },
             { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
 
