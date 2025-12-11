@@ -59,6 +59,15 @@ Deno.serve(async (req) => {
           is_active: true
         });
         
+        // Update user password if provided
+        const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
+        if (existingUsers.length > 0) {
+          await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
+            username: username,
+            password: hashedPassword
+          });
+        }
+        
         console.log('[createSimpleUserAccount] ✓ StoreUser updated successfully');
         return Response.json({ 
           success: true, 
@@ -68,31 +77,61 @@ Deno.serve(async (req) => {
       }
 
       // Check if user account exists (User entity)
-      const existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
+      let existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
+      let userId;
       
       if (existingUsers.length === 0) {
-        // Create new User account first
-        console.log('[createSimpleUserAccount] Creating new User account');
+        // Create new User account in Base44 platform
+        console.log('[createSimpleUserAccount] Creating new User in Base44 platform');
         
-        const newUser = await base44.asServiceRole.entities.User.create({
-          email: email,
-          full_name: full_name,
-          role: 'user'
-        });
+        try {
+          // Use Base44's built-in user creation to ensure proper auth setup
+          const newUser = await base44.asServiceRole.entities.User.create({
+            email: email,
+            full_name: full_name,
+            role: 'user'
+          });
 
-        console.log('[createSimpleUserAccount] ✓ User created:', newUser.id);
+          userId = newUser.id;
+          console.log('[createSimpleUserAccount] ✓ User created:', userId);
+          
+          // Update with password and custom fields
+          await base44.asServiceRole.entities.User.update(userId, {
+            username: username,
+            password: hashedPassword,
+            business_name: restaurant_name,
+            business_address: restaurant_address
+          });
+          
+          console.log('[createSimpleUserAccount] ✓ User updated with credentials');
+        } catch (userCreateError) {
+          console.error('[createSimpleUserAccount] Error creating user:', userCreateError);
+          
+          // If user creation failed due to existing email, fetch and update
+          existingUsers = await base44.asServiceRole.entities.User.filter({ email: email });
+          if (existingUsers.length > 0) {
+            userId = existingUsers[0].id;
+            await base44.asServiceRole.entities.User.update(userId, {
+              username: username,
+              password: hashedPassword,
+              full_name: full_name
+            });
+            console.log('[createSimpleUserAccount] ✓ Updated existing user with new credentials');
+          } else {
+            throw userCreateError;
+          }
+        }
+      } else {
+        console.log('[createSimpleUserAccount] User account already exists');
+        userId = existingUsers[0].id;
         
-        // Update with password and custom fields
-        await base44.asServiceRole.entities.User.update(newUser.id, {
+        // Update password for existing user
+        await base44.asServiceRole.entities.User.update(userId, {
           username: username,
           password: hashedPassword,
-          business_name: restaurant_name,
-          business_address: restaurant_address
+          full_name: full_name
         });
-        
-        console.log('[createSimpleUserAccount] ✓ User updated with credentials');
-      } else {
-        console.log('[createSimpleUserAccount] User account already exists, will link to restaurant');
+        console.log('[createSimpleUserAccount] ✓ Updated existing user credentials');
       }
 
       // Create or update StoreUser record
@@ -122,12 +161,14 @@ Deno.serve(async (req) => {
       return Response.json({ 
         success: true, 
         email: email,
-        username: username
+        username: username,
+        user_id: userId
       });
 
     } catch (error) {
       console.error('[createSimpleUserAccount] ❌ Error:', error);
       console.error('[createSimpleUserAccount] Error details:', error.message);
+      console.error('[createSimpleUserAccount] Error stack:', error.stack);
       
       let hebrewError = '';
       const errorMessage = error.message || 'Failed to create account';
