@@ -31,8 +31,10 @@ Deno.serve(async (req) => {
       is_active: true
     });
     
+    console.log('[loginRestaurantUser] Found users:', users.length);
+    
     if (!users || users.length === 0) {
-      console.log('[loginRestaurantUser] User not found');
+      console.log('[loginRestaurantUser] User not found in RestaurantUser entity');
       return Response.json({ 
         success: false, 
         error: 'Invalid email or password' 
@@ -40,10 +42,13 @@ Deno.serve(async (req) => {
     }
     
     const user = users[0];
+    console.log('[loginRestaurantUser] User found, checking password...');
+    console.log('[loginRestaurantUser] Stored hash:', user.password);
+    console.log('[loginRestaurantUser] Provided hash:', hashedPassword);
     
     // Verify password
     if (user.password !== hashedPassword) {
-      console.log('[loginRestaurantUser] Invalid password');
+      console.log('[loginRestaurantUser] Password mismatch!');
       return Response.json({ 
         success: false, 
         error: 'Invalid email or password' 
