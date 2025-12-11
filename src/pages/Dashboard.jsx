@@ -348,7 +348,7 @@ export default function DashboardPage() {
             </TabsTrigger>
             <TabsTrigger value="salary" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
-              {language === 'he' ? 'ניהול עלויות עבודה' : 'Labor Cost Management'}
+              {language === 'he' ? 'סידור עבודה' : 'Labor Cost Management'}
             </TabsTrigger>
           </TabsList>
 
