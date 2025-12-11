@@ -801,6 +801,17 @@ export default function DashboardPage() {
 
           {/* Monthly Salary Report Tab */}
           <TabsContent value="salary" className="space-y-6">
+            <div className={`flex justify-end mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button 
+                onClick={handleExportMonthlyReport}
+                disabled={exportingMonthly}
+                variant="outline"
+                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+              >
+                {exportingMonthly ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
+              </Button>
+            </div>
             <MonthlySalaryReport 
               selectedMonth={selectedMonth}
               user={user}
