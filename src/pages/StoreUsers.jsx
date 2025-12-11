@@ -117,28 +117,31 @@ export default function StoreUsersPage() {
     }
 
     try {
-      setSaving(true);
-      console.log('[StoreUsers] Starting user creation/update...');
+        setSaving(true);
+        console.log('[StoreUsers] Starting user creation/update...');
 
-      const ownerEmail = user.acting_as_store_email || user.email;
-      const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
-      const storeId = user.acting_as_store_id || "main";
+        const ownerEmail = user.acting_as_store_email || user.email;
+        const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
+        const restaurantAddress = user.business_address || '';
 
-      // Create user in our custom system
-      const createResponse = await base44.functions.invoke('createRestaurantUser', {
-        email: userEmail,
-        password: password,
-        full_name: userName,
-        store_name: storeName,
-        role: userRole,
-        owner_email: ownerEmail
-      });
+        // Create real User account (for login page)
+        const createResponse = await base44.functions.invoke('createSimpleUserAccount', {
+          username: userEmail,
+          password: password,
+          email: userEmail,
+          full_name: userName,
+          restaurant_name: storeName,
+          restaurant_address: restaurantAddress,
+          role: userRole,
+          owner_email: ownerEmail,
+          update_existing: !!editingUser
+        });
 
-      if (!createResponse.data.success) {
-        throw new Error(createResponse.data.error || 'Failed to create user');
-      }
+        if (!createResponse.data.success) {
+          throw new Error(createResponse.data.error || 'Failed to create user');
+        }
 
-      console.log('[StoreUsers] User created successfully');
+        console.log('[StoreUsers] User created successfully');
 
       // Reload the user list
       console.log('[StoreUsers] Loading updated data...');
