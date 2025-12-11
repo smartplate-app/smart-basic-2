@@ -33,7 +33,7 @@ const AppLayout = ({ children, currentPageName }) => {
             { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
             { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
             { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false, workerHidden: false },
-            { title: t('labor_cost_management'), url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
+            { title: language === 'he' ? 'סידור עבודה' : 'Labor Cost', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
             { title: language === 'he' ? 'ניהול רשת' : 'Chain Management', url: createPageUrl("ChainManagement"), icon: TrendingUp, adminOnly: false, workerHidden: true },
             { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
 
