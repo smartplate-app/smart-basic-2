@@ -412,8 +412,8 @@ export default function StoreUsersPage() {
                             <strong>{language === 'he' ? '💡 איך זה עובד:' : '💡 How it works:'}</strong>
                           </p>
                           <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
-                            <li>{language === 'he' ? 'שלח את הפרטים בווצאפ או במייל' : 'Send credentials via WhatsApp or email'}</li>
-                            <li>{language === 'he' ? 'העובד נכנס לאתר: smartplatebasic.com' : 'Worker goes to: smartplatebasic.com'}</li>
+                            <li>{language === 'he' ? 'שלח את הפרטים בווצאפ (כולל קישור התחברות)' : 'Send credentials via WhatsApp (includes login link)'}</li>
+                            <li>{language === 'he' ? 'העובד לוחץ על הקישור שקיבל' : 'Worker clicks the link they received'}</li>
                             <li>{language === 'he' ? 'מתחבר עם האימייל והסיסמה' : 'Logs in with email and password'}</li>
                             <li>{language === 'he' ? 'יקבל גישה אוטומטית למסעדה שלך' : 'Gets automatic access to your restaurant'}</li>
                           </ul>
@@ -423,7 +423,8 @@ export default function StoreUsersPage() {
                       {/* WhatsApp Quick Share Button */}
                       <Button
                         onClick={() => {
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'פרטי הגישה שלך (שמור אותם):' : 'Your access credentials (save them):'}\n\n${generatedLink}\n\n${language === 'he' ? 'איך להתחבר:' : 'How to login:'}\n${language === 'he' ? '1. היכנס ל: smartplatebasic.com' : '1. Go to: smartplatebasic.com'}\n${language === 'he' ? '2. התחבר עם האימייל והסיסמה למעלה' : '2. Login with the email and password above'}\n${language === 'he' ? '3. תקבל גישה אוטומטית למערכת!' : '3. You\'ll get automatic access to the system!'}`;
+                          const loginUrl = `${window.location.origin}/pages/StoreLogin`;
+                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || storeName}.\n\n${language === 'he' ? 'פרטי הגישה שלך (שמור אותם):' : 'Your access credentials (save them):'}\n\n${generatedLink}\n\n${language === 'he' ? '🔗 קישור התחברות:' : '🔗 Login link:'}\n${loginUrl}\n\n${language === 'he' ? '💡 חשוב: השתמש בקישור למעלה, לא באתר הרגיל!' : '💡 Important: Use the link above, not the regular website!'}`;
                           const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                           window.open(whatsappUrl, '_blank');
                         }}
