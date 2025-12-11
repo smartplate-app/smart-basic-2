@@ -55,6 +55,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [laborGoals, setLaborGoals] = useState({ shiftWorkersGoal: 0, managementSalary: 0, laborGoalPercent: 25 });
   const [positionOrder, setPositionOrder] = useState([]);
   const scheduleTableRef = useRef(null);
+  const [isCapturingImage, setIsCapturingImage] = useState(false);
 
   const days = [
     { key: 'sunday', label: t('sunday') },
@@ -962,12 +963,21 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       const element = scheduleTableRef.current;
       if (!element) return;
       
+      // Hide costs before capturing
+      setIsCapturingImage(true);
+      
+      // Wait for state to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const canvas = await html2canvas(element, {
         scale: 2,
         backgroundColor: '#ffffff',
         windowWidth: 1920,
         windowHeight: 1080
       });
+      
+      // Show costs again
+      setIsCapturingImage(false);
       
       const image = canvas.toDataURL('image/jpeg', 0.95);
       const link = document.createElement('a');
@@ -979,6 +989,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     } catch (error) {
       console.error('Error downloading JPG:', error);
       toast.error(language === 'he' ? 'שגיאה בהורדת התמונה' : 'Error downloading image');
+      setIsCapturingImage(false);
     }
   };
 
@@ -1018,7 +1029,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Monthly Predicted Sales Input */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+          {!isCapturingImage && <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className={`text-sm font-semibold text-green-800 ${isRTL ? 'text-right block' : 'text-left block'}`}>
@@ -1059,10 +1070,10 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 </p>
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
+          {!isCapturingImage && <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
 
             <div className="space-y-1">
               <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
@@ -1096,10 +1107,10 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 {language === 'he' ? 'עלות עבודה / מכירות (ללא מע״מ)' : 'Labor Cost / Sales (excl. VAT)'}
               </p>
             </div>
-          </div>
+          </div>}
 
           {/* Goal Comparison */}
-          {laborGoals.shiftWorkersGoalWeekly > 0 && (
+          {!isCapturingImage && laborGoals.shiftWorkersGoalWeekly > 0 && (
             <div className={`p-4 rounded-lg border-2 ${
               totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly 
                 ? 'bg-green-50 border-green-300' 
@@ -1312,7 +1323,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                             <div className={`font-semibold ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
                                             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse pr-5' : 'pl-5'}`}>
                                               <span>{shift.start_time}-{shift.end_time}</span>
-                                              <span>{formatCurrency(shift.payment_for_shift || 0)}</span>
+                                              {!isCapturingImage && <span>{formatCurrency(shift.payment_for_shift || 0)}</span>}
                                             </div>
                                             {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
                                               <Badge variant="secondary" className={`mt-1 ${isRTL ? 'mr-5' : 'ml-5'}`}>
