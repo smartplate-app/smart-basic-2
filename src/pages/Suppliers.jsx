@@ -55,13 +55,17 @@ export default function SuppliersPage() {
                   const storeOwnerEmail = currentUser.store_user_owner_email;
 
                   if (isStoreUser && storeOwnerEmail) {
-                    // Store user - load suppliers from the store owner
-                    const [ownerSuppliers, ownerItems] = await Promise.all([
+                    // Store user - load suppliers from the store owner + ones with store_owner_email
+                    const [ownerSuppliers, storeSuppliers, ownerItems, storeItems] = await Promise.all([
                       base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, '-created_date'),
-                      base44.entities.Item.filter({ created_by: storeOwnerEmail })
+                      base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, '-created_date'),
+                      base44.entities.Item.filter({ created_by: storeOwnerEmail }),
+                      base44.entities.Item.filter({ store_owner_email: storeOwnerEmail })
                     ]);
-                    suppliersData = ownerSuppliers;
-                    itemsData = ownerItems;
+                    const allSuppliers = [...ownerSuppliers, ...storeSuppliers];
+                    suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+                    const allItems = [...ownerItems, ...storeItems];
+                    itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
                   } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore) {
                     // Branch store - get suppliers from chain head + own
                     const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
@@ -198,9 +202,9 @@ export default function SuppliersPage() {
               });
             } else if (user.store_user_owner_email) {
               // If user is a manager/worker, create with store owner's email
-              await base44.entities.Supplier.create({
-                ...supplierData,
-                created_by: user.store_user_owner_email
+              await base44.functions.invoke('createSupplierForStore', {
+                supplierData,
+                storeEmail: user.store_user_owner_email
               });
             } else {
               await base44.entities.Supplier.create(supplierData);
