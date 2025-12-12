@@ -196,7 +196,9 @@ export default function ItemsPage() {
       
       const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
       
-      await base44.entities.Item.create({ ...cleanData, created_by: user.email });
+      // Use store owner's email if user is a manager/worker
+      const ownerEmail = user.store_user_owner_email || user.email;
+      await base44.entities.Item.create({ ...cleanData, created_by: ownerEmail });
       setShowForm(false);
       await loadData(user);
     } catch (error) {

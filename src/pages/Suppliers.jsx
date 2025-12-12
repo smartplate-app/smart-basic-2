@@ -196,6 +196,12 @@ export default function SuppliersPage() {
                 supplierData,
                 storeEmail: user.acting_as_store_email
               });
+            } else if (user.store_user_owner_email) {
+              // If user is a manager/worker, create with store owner's email
+              await base44.entities.Supplier.create({
+                ...supplierData,
+                created_by: user.store_user_owner_email
+              });
             } else {
               await base44.entities.Supplier.create(supplierData);
             }

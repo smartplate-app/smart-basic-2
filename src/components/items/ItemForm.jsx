@@ -66,9 +66,14 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
 
     try {
       setCreatingWarehouse(true);
-      const newWarehouse = await Warehouse.create({ // Corrected from base44.entities.Warehouse.create
+      const { base44 } = await import('@/api/base44Client');
+      const user = await base44.auth.me();
+      const ownerEmail = user.store_user_owner_email || user.email;
+      
+      const newWarehouse = await base44.entities.Warehouse.create({
         name: newWarehouseName,
-        is_active: true
+        is_active: true,
+        created_by: ownerEmail
       });
       
       setCurrentItem(prev => ({
