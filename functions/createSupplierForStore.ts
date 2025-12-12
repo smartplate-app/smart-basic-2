@@ -4,15 +4,10 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Verify the user is authenticated and is a chain head
+    // Verify the user is authenticated
     const user = await base44.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    // Check if user is a chain head
-    if (!user.is_chain_head) {
-      return Response.json({ error: 'Only chain heads can create suppliers for other stores' }, { status: 403 });
     }
     
     const { supplierData, storeEmail } = await req.json();
