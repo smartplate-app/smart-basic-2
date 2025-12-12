@@ -50,13 +50,26 @@ export default function ItemsPage() {
       const isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
       const storeOwnerEmail = currentUser.store_user_owner_email;
 
+      console.log('[Items] Loading check:', {
+        isStoreUser,
+        storeOwnerEmail,
+        currentUserEmail: currentUser.email,
+        store_user_role: currentUser.store_user_role
+      });
+
       if (isStoreUser && storeOwnerEmail) {
         // Store user - load data from the store owner
+        console.log('[Items] Loading as STORE USER from owner:', storeOwnerEmail);
         const [ownerItems, ownerSuppliers, ownerWarehouses] = await Promise.all([
           base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date"),
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
           base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name")
         ]);
+        console.log('[Items] Loaded from owner:', {
+          items: ownerItems.length,
+          suppliers: ownerSuppliers.length,
+          warehouses: ownerWarehouses.length
+        });
         itemsData = ownerItems;
         suppliersData = ownerSuppliers;
         warehousesData = ownerWarehouses;
