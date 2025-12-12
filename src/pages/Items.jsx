@@ -74,8 +74,9 @@ export default function ItemsPage() {
         });
         // Combine items created by owner and items with store_owner_email
         const allItems = [...ownerItems, ...ownItems];
-        // Remove duplicates by id
-        itemsData = Array.from(new Map(allItems.map(item => [item.id, item])).values());
+        // Remove duplicates by id and sort by created_date descending (newest first)
+        itemsData = Array.from(new Map(allItems.map(item => [item.id, item])).values())
+          .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
         suppliersData = ownerSuppliers;
         warehousesData = ownerWarehouses;
       } else if (currentUser.chain_id && !currentUser.is_chain_head) {
@@ -92,7 +93,8 @@ export default function ItemsPage() {
             base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
             base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
           ]);
-          itemsData = [...headItems, ...ownItems];
+          itemsData = [...headItems, ...ownItems]
+            .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
           suppliersData = [...headSuppliers, ...ownSuppliers];
           warehousesData = [...headWarehouses, ...ownWarehouses];
         }
