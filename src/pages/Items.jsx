@@ -209,40 +209,42 @@ export default function ItemsPage() {
       
       const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
       
-      console.log('[Items] User data:', { 
-        email: user.email, 
-        store_user_owner_email: user.store_user_owner_email,
-        store_user_role: user.store_user_role 
-      });
+      let createdItemId;
       
       // If user is a manager/worker, use backend function to create with owner's email
       if (user.store_user_owner_email) {
-        console.log('[Items] Manager creating item with owner email:', user.store_user_owner_email);
-        console.log('[Items] Item data:', cleanData);
         const response = await base44.functions.invoke('createItemForStore', {
           itemData: cleanData,
           storeEmail: user.store_user_owner_email
         });
-        console.log('[Items] Backend function response:', response);
         if (!response.data.success) {
           throw new Error(response.data.error || 'Failed to create item');
         }
-        console.log('[Items] Item created successfully, reloading data...');
+        createdItemId = response.data.item?.id;
       } else {
-        console.log('[Items] Owner creating item directly');
-        await base44.entities.Item.create(cleanData);
+        const newItem = await base44.entities.Item.create(cleanData);
+        createdItemId = newItem.id;
       }
+      
       setShowForm(false);
       
-      // Force reload with fresh user data
+      // Reload data
       const refreshedUser = await base44.auth.me();
-      console.log('[Items] Refreshed user data before reload:', {
-        email: refreshedUser.email,
-        store_user_owner_email: refreshedUser.store_user_owner_email
-      });
       setUser(refreshedUser);
       await loadData(refreshedUser);
-      console.log('[Items] Data reloaded, items count:', items.length);
+      
+      // Verify item appears in the list after reload
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const itemExists = items.some(item => item.id === createdItemId || item.name === cleanData.name);
+      
+      if (!itemExists && createdItemId) {
+        alert(
+          t('error_saving') || 'Error' + ': ' + 
+          (user.store_user_role === 'manager' 
+            ? 'הפריט נוצר אך לא מופיע ברשימה. אנא בקש מהבעלים להוסיף פריטים.\n\nItem created but not showing. Please ask the owner to add items.'
+            : 'הפריט נוצר אך לא מופיע ברשימה.\n\nItem created but not showing in list.')
+        );
+      }
     } catch (error) {
       console.error("Error creating item:", error);
       alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
