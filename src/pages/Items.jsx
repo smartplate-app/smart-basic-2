@@ -198,10 +198,15 @@ export default function ItemsPage() {
       
       // If user is a manager/worker, use backend function to create with owner's email
       if (user.store_user_owner_email) {
-        await base44.functions.invoke('createItemForStore', {
+        console.log('[Items] Manager creating item, calling backend function with:', cleanData);
+        const response = await base44.functions.invoke('createItemForStore', {
           itemData: cleanData,
           storeEmail: user.store_user_owner_email
         });
+        console.log('[Items] Backend function response:', response);
+        if (!response.data.success) {
+          throw new Error(response.data.error || 'Failed to create item');
+        }
       } else {
         await base44.entities.Item.create(cleanData);
       }
