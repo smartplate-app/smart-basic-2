@@ -196,9 +196,16 @@ export default function ItemsPage() {
       
       const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
       
+      console.log('[Items] User data:', { 
+        email: user.email, 
+        store_user_owner_email: user.store_user_owner_email,
+        store_user_role: user.store_user_role 
+      });
+      
       // If user is a manager/worker, use backend function to create with owner's email
       if (user.store_user_owner_email) {
-        console.log('[Items] Manager creating item, calling backend function with:', cleanData);
+        console.log('[Items] Manager creating item with owner email:', user.store_user_owner_email);
+        console.log('[Items] Item data:', cleanData);
         const response = await base44.functions.invoke('createItemForStore', {
           itemData: cleanData,
           storeEmail: user.store_user_owner_email
@@ -207,11 +214,22 @@ export default function ItemsPage() {
         if (!response.data.success) {
           throw new Error(response.data.error || 'Failed to create item');
         }
+        console.log('[Items] Item created successfully, reloading data...');
       } else {
+        console.log('[Items] Owner creating item directly');
         await base44.entities.Item.create(cleanData);
       }
       setShowForm(false);
-      await loadData(user);
+      
+      // Force reload with fresh user data
+      const refreshedUser = await base44.auth.me();
+      console.log('[Items] Refreshed user data before reload:', {
+        email: refreshedUser.email,
+        store_user_owner_email: refreshedUser.store_user_owner_email
+      });
+      setUser(refreshedUser);
+      await loadData(refreshedUser);
+      console.log('[Items] Data reloaded, items count:', items.length);
     } catch (error) {
       console.error("Error creating item:", error);
       alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
