@@ -28,11 +28,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Missing required item fields (name, supplier_id, unit)' }, { status: 400 });
     }
 
-    // Create item with the store owner's email as created_by using service role
+    // Create item with store_owner_email field
     console.log('[createItemForStore] Creating item with service role...');
     const newItem = await base44.asServiceRole.entities.Item.create({
       ...itemData,
-      created_by: storeEmail
+      store_owner_email: storeEmail
     });
 
     console.log('[createItemForStore] Item created successfully:', newItem.id);

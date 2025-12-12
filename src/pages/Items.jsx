@@ -60,17 +60,22 @@ export default function ItemsPage() {
       if (isStoreUser && storeOwnerEmail) {
         // Store user - load data from the store owner
         console.log('[Items] Loading as STORE USER from owner:', storeOwnerEmail);
-        const [ownerItems, ownerSuppliers, ownerWarehouses] = await Promise.all([
+        const [ownerItems, ownItems, ownerSuppliers, ownerWarehouses] = await Promise.all([
           base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date"),
+          base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }, "-created_date"),
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
           base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name")
         ]);
         console.log('[Items] Loaded from owner:', {
-          items: ownerItems.length,
+          ownerItems: ownerItems.length,
+          ownItems: ownItems.length,
           suppliers: ownerSuppliers.length,
           warehouses: ownerWarehouses.length
         });
-        itemsData = ownerItems;
+        // Combine items created by owner and items with store_owner_email
+        const allItems = [...ownerItems, ...ownItems];
+        // Remove duplicates by id
+        itemsData = Array.from(new Map(allItems.map(item => [item.id, item])).values());
         suppliersData = ownerSuppliers;
         warehousesData = ownerWarehouses;
       } else if (currentUser.chain_id && !currentUser.is_chain_head) {
