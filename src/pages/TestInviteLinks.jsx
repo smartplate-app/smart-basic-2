@@ -125,7 +125,7 @@ export default function TestInviteLinksPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8" dir="rtl">
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">בדיקת לינקי הזמנה</h1>
           <p className="text-gray-600">בדוק אם לינק הזמנה תקף וראה את הפרטים שלו</p>

@@ -384,7 +384,7 @@ export default function SuppliersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full">
         {/* Acting as Store Banner */}
                       {user?.acting_as_store_name && (
                         <div className="mb-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white p-3 rounded-lg flex items-center justify-between">
