@@ -491,8 +491,7 @@ const AppLayout = ({ children, currentPageName }) => {
           </Button>
         )}
 
-        <main className="flex-1 min-w-0 w-full overflow-x-hidden">
-          <div className={`w-full transition-all duration-300 ${showDesktopSidebar ? 'max-w-7xl mx-auto' : 'px-4 md:px-6'}`}>
+        <main className={`flex-1 min-w-0 w-full overflow-x-hidden ${!showDesktopSidebar ? 'sidebar-hidden' : ''}`}>
             {showWorkerInvite && (
               <div className="p-4 md:p-8">
                 <div className="max-w-2xl mx-auto">
@@ -501,7 +500,6 @@ const AppLayout = ({ children, currentPageName }) => {
               </div>
             )}
             {children}
-          </div>
         </main>
 
         {/* Global Help Chat - except on Suppliers and AdminDashboard which have their own */}
