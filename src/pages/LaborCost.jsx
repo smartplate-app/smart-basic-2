@@ -165,7 +165,7 @@ export default function LaborCostPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{t('labor_cost_management')}</h1>
           <p className="text-gray-600 mt-2">{t('manage_workers_schedules')}</p>
