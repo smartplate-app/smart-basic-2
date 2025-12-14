@@ -11,6 +11,7 @@ import AppHelpChat from "./components/AppHelpChat";
 import OfflineNotification from "./components/OfflineNotification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { RefreshCw, WifiOff } from "lucide-react";
 
 const AppLayout = ({ children, currentPageName }) => {
