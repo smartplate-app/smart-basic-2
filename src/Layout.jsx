@@ -491,7 +491,7 @@ const AppLayout = ({ children, currentPageName }) => {
           </Button>
         )}
 
-        <main className={`flex-1 min-w-0 w-full overflow-x-hidden ${!showDesktopSidebar ? 'sidebar-hidden' : ''}`}>
+        <main className="flex-1 min-w-0 w-full overflow-x-hidden">
             {showWorkerInvite && (
               <div className="p-4 md:p-8">
                 <div className="max-w-2xl mx-auto">
@@ -499,7 +499,9 @@ const AppLayout = ({ children, currentPageName }) => {
                 </div>
               </div>
             )}
-            {children}
+            <div className={showDesktopSidebar ? '' : 'px-0'}>
+              {children}
+            </div>
         </main>
 
         {/* Global Help Chat - except on Suppliers and AdminDashboard which have their own */}
