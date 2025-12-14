@@ -492,7 +492,7 @@ const AppLayout = ({ children, currentPageName }) => {
         )}
 
         <main className="flex-1 min-w-0 w-full overflow-x-hidden">
-          <div className="max-w-7xl mx-auto w-full">
+          <div className={`w-full transition-all duration-300 ${showDesktopSidebar ? 'max-w-7xl mx-auto' : 'px-4 md:px-6'}`}>
             {showWorkerInvite && (
               <div className="p-4 md:p-8">
                 <div className="max-w-2xl mx-auto">
