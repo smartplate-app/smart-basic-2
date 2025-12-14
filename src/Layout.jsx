@@ -23,6 +23,7 @@ const AppLayout = ({ children, currentPageName }) => {
       const [retryCount, setRetryCount] = React.useState(0);
       const [storeUserRole, setStoreUserRole] = React.useState(null); // null = owner, 'manager', or 'worker'
       const { t, language } = useLanguage();
+  const [navSearchTerm, setNavSearchTerm] = React.useState("");
 
   const navigationItems = [
             { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
@@ -169,6 +170,10 @@ const AppLayout = ({ children, currentPageName }) => {
                 if (item.workerHidden && isWorker) return false;
                 return true;
               });
+
+  const filteredNavigationItems = visibleNavigationItems.filter(item =>
+    item.title.toLowerCase().includes(navSearchTerm.toLowerCase())
+  );
 
     const exitAdminControl = async () => {
       try {
@@ -402,9 +407,22 @@ const AppLayout = ({ children, currentPageName }) => {
             <LanguageSwitcher />
           </div>
 
+          <div className="p-4 border-b border-gray-200">
+            <div className="relative">
+              <Search className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400`} />
+              <Input
+                type="text"
+                placeholder={language === 'he' ? 'חפש דף...' : 'Search page...'}
+                value={navSearchTerm}
+                onChange={(e) => setNavSearchTerm(e.target.value)}
+                className={`text-sm h-9 ${isRTL ? 'pr-9' : 'pl-9'}`}
+              />
+            </div>
+          </div>
+
           <nav className="p-4 flex-grow overflow-y-auto">
             <ul className="space-y-2">
-              {visibleNavigationItems.map((item) => (
+              {filteredNavigationItems.map((item) => (
                 <li key={item.title}>
                   <a 
                     href={item.url} 
