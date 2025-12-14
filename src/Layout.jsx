@@ -16,6 +16,7 @@ import { RefreshCw, WifiOff } from "lucide-react";
 const AppLayout = ({ children, currentPageName }) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [showDesktopSidebar, setShowDesktopSidebar] = React.useState(true);
   const [user, setUser] = React.useState(null);
   const [authLoading, setAuthLoading] = React.useState(true);
   const [showWorkerInvite, setShowWorkerInvite] = React.useState(false);
@@ -371,9 +372,9 @@ const AppLayout = ({ children, currentPageName }) => {
                       </header>
 
       <div className="flex">
-        <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full' : '-translate-x-full')}`}>
-          <div className="p-4 border-b border-gray-200 hidden md:block">
-                            <div className={`flex flex-col items-center justify-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+        <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-all duration-300 ease-in-out md:sticky md:top-0 md:h-screen ${sidebarOpen ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-64' : '-translate-x-full w-64')} md:${showDesktopSidebar ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-0' : '-translate-x-full w-0')}`}>
+          <div className="p-4 border-b border-gray-200 hidden md:flex md:flex-row md:items-center md:justify-between">
+                            <div className={`flex flex-col items-center justify-center flex-1 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
                               <div className="flex items-center gap-3">
                                 <img 
                                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
@@ -393,6 +394,14 @@ const AppLayout = ({ children, currentPageName }) => {
                               </div>
                               <span className="text-lg font-bold text-gray-500 mt-2 tracking-wide">BASIC</span>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setShowDesktopSidebar(false)}
+                              className="hidden md:flex h-8 w-8"
+                            >
+                              <Menu className="h-5 w-5" />
+                            </Button>
                           </div>
           
           <div className="p-4 border-b border-gray-200">
@@ -446,6 +455,19 @@ const AppLayout = ({ children, currentPageName }) => {
             onClick={() => setSidebarOpen(false)}
             onTouchStart={() => setSidebarOpen(false)}
           />
+        )}
+
+        {/* Desktop Sidebar Toggle Button */}
+        {!showDesktopSidebar && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDesktopSidebar(true)}
+            className={`hidden md:flex fixed ${isRTL ? 'right-4' : 'left-4'} top-4 z-30 shadow-lg bg-white hover:bg-gray-50`}
+          >
+            <Menu className="h-4 w-4 mr-2" />
+            {language === 'he' ? 'תפריט' : 'Menu'}
+          </Button>
         )}
 
         <main className="flex-1 min-w-0 w-full overflow-x-hidden">
