@@ -56,6 +56,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [positionOrder, setPositionOrder] = useState([]);
   const scheduleTableRef = useRef(null);
   const [showWorkerSidebar, setShowWorkerSidebar] = useState(true);
+  const [workerSearchTerm, setWorkerSearchTerm] = useState("");
 
   const days = [
     { key: 'sunday', label: t('sunday') },
@@ -1014,6 +1015,11 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     };
   }).filter(w => w.count > 0).sort((a, b) => b.count - a.count);
 
+  // Filter workers by search term
+  const filteredWorkerCounts = workerShiftCounts.filter(w => 
+    w.name.toLowerCase().includes(workerSearchTerm.toLowerCase())
+  );
+
   return (
     <div className={`flex gap-6 relative ${isRTL ? 'flex-row-reverse' : ''}`}>
       {/* Worker Shift Counts Sidebar */}
@@ -1035,8 +1041,18 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 </Button>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  {workerShiftCounts.map(worker => (
+                <div className="mb-3 relative">
+                  <Search className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400`} />
+                  <Input
+                    type="text"
+                    placeholder={language === 'he' ? 'חפש עובד...' : 'Search worker...'}
+                    value={workerSearchTerm}
+                    onChange={(e) => setWorkerSearchTerm(e.target.value)}
+                    className={`text-sm h-9 ${isRTL ? 'pr-9' : 'pl-9'}`}
+                  />
+                </div>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  {filteredWorkerCounts.map(worker => (
                     <div key={worker.id} className={`flex justify-between items-center p-2 rounded bg-gray-50 border ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <span className="font-medium text-sm">{worker.name}</span>
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700">
