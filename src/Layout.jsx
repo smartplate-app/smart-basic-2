@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search } from "lucide-react";
+import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import UserSwitcher from "./components/UserSwitcher";
 import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
@@ -375,6 +375,15 @@ const AppLayout = ({ children, currentPageName }) => {
       <div className="flex">
         <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-all duration-300 ease-in-out md:sticky md:top-0 md:h-screen ${sidebarOpen ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-64' : '-translate-x-full w-64')} md:${showDesktopSidebar ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-0' : '-translate-x-full w-0')}`}>
           <div className="p-4 border-b border-gray-200 hidden md:flex md:flex-row md:items-center md:justify-between">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setShowDesktopSidebar(false)}
+                              className="hidden md:flex h-8 w-8 hover:bg-gray-100 rounded-lg"
+                              title={language === 'he' ? 'הסתר תפריט' : 'Hide menu'}
+                            >
+                              {isRTL ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+                            </Button>
                             <div className={`flex flex-col items-center justify-center flex-1 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
                               <div className="flex items-center gap-3">
                                 <img 
@@ -395,14 +404,7 @@ const AppLayout = ({ children, currentPageName }) => {
                               </div>
                               <span className="text-lg font-bold text-gray-500 mt-2 tracking-wide">BASIC</span>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setShowDesktopSidebar(false)}
-                              className="hidden md:flex h-8 w-8"
-                            >
-                              <Menu className="h-5 w-5" />
-                            </Button>
+                            <div className="w-8"></div>
                           </div>
           
           <div className="p-4 border-b border-gray-200">
