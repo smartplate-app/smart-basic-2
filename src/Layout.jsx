@@ -27,6 +27,24 @@ const AppLayout = ({ children, currentPageName }) => {
       const { t, language } = useLanguage();
   const [navSearchTerm, setNavSearchTerm] = React.useState("");
 
+  // Auto-hide sidebar on smaller screens
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1280) { // Hide on screens smaller than xl (1280px)
+        setShowDesktopSidebar(false);
+      } else {
+        setShowDesktopSidebar(true);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    // Listen for resize events
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const navigationItems = [
             { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
             { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
