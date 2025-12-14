@@ -1003,8 +1003,45 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
   const { totalHours, totalBaseCost, totalCostWithEmployer, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT } = calculateTotals();
 
+  // Calculate worker shift counts
+  const workerShiftCounts = workers.map(worker => {
+    const shiftCount = (schedule?.shifts || []).filter(s => s.worker_id === worker.id).length;
+    return {
+      id: worker.id,
+      name: worker.full_name,
+      count: shiftCount
+    };
+  }).filter(w => w.count > 0).sort((a, b) => b.count - a.count);
+
   return (
-    <div className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`flex gap-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      {/* Worker Shift Counts Sidebar */}
+      {workerShiftCounts.length > 0 && (
+        <div className="w-64 flex-shrink-0">
+          <Card className="sticky top-4">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">
+                {language === 'he' ? 'משמרות לפי עובד' : 'Shifts by Worker'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {workerShiftCounts.map(worker => (
+                  <div key={worker.id} className={`flex justify-between items-center p-2 rounded bg-gray-50 border ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <span className="font-medium text-sm">{worker.name}</span>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                      {worker.count} {language === 'he' ? 'משמרות' : 'shifts'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Schedule Content */}
+      <div className={`flex-1 space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader>
           <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -1675,6 +1712,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
