@@ -24,7 +24,7 @@ export default function TipsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full max-w-4xl mx-auto">
         <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <h1 className="text-3xl font-bold text-gray-900">
             {language === 'he' ? 'ניהול טיפים' : 'Tip Management'}

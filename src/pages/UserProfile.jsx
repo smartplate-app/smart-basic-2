@@ -98,7 +98,7 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{t('user_profile')}</h1>
           <p className="text-gray-600 mt-2">{t('manage_your_profile')}</p>
