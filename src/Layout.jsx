@@ -366,7 +366,7 @@ const AppLayout = ({ children, currentPageName }) => {
                       </header>
 
       <div className="flex">
-        <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full' : '-translate-x-full')}`}>
+        <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full' : '-translate-x-full')}`}>
           <div className="p-4 border-b border-gray-200 hidden md:block">
                             <div className={`flex flex-col items-center justify-center ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
                               <div className="flex items-center gap-3">
@@ -424,13 +424,14 @@ const AppLayout = ({ children, currentPageName }) => {
 
         {sidebarOpen && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden touch-none" 
             onClick={() => setSidebarOpen(false)}
+            onTouchStart={() => setSidebarOpen(false)}
           />
         )}
 
-        <main className="flex-1 min-w-0">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 min-w-0 w-full overflow-x-hidden">
+          <div className="max-w-7xl mx-auto w-full">
             {showWorkerInvite && (
               <div className="p-4 md:p-8">
                 <div className="max-w-2xl mx-auto">
