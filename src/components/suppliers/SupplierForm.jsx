@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -6,18 +5,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { X, Upload, Loader } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
+import { base44 } from "@/api/base44Client";
 
 export default function SupplierForm({ supplier, onSubmit, onCancel }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [formData, setFormData] = React.useState(supplier || {
     name: "",
     email: "",
     phone: "",
     contact_person: "",
-    supplier_type: "simple"
+    supplier_type: "simple",
+    grant_notes: "",
+    grant_amount: "",
+    grant_document_url: ""
   });
+  const [uploading, setUploading] = React.useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -30,6 +35,22 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      handleChange("grant_document_url", file_url);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert(language === 'he' ? 'שגיאה בהעלאת הקובץ' : 'Error uploading file');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -113,6 +134,56 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
                 <p className="text-sm text-gray-600 mt-1">
                   {t('catalogic_supplier_note')}
                 </p>
+              )}
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="grant_notes">{language === 'he' ? 'הערות על מענק/הנחה מיוחדת' : 'Grant/Special Discount Notes'}</Label>
+              <Textarea
+                id="grant_notes"
+                value={formData.grant_notes || ""}
+                onChange={(e) => handleChange("grant_notes", e.target.value)}
+                placeholder={language === 'he' ? 'תאר כאן את פרטי המענק או ההנחה המיוחדת...' : 'Describe grant or special discount details...'}
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="grant_amount">{language === 'he' ? 'סכום מענק/הנחה (₪)' : 'Grant/Discount Amount (₪)'}</Label>
+              <Input
+                id="grant_amount"
+                type="number"
+                value={formData.grant_amount || ""}
+                onChange={(e) => handleChange("grant_amount", parseFloat(e.target.value) || "")}
+                placeholder={language === 'he' ? 'סכום' : 'Amount'}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="grant_document">{language === 'he' ? 'מסמך הסכם (תמונה/PDF)' : 'Agreement Document (Image/PDF)'}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="grant_document"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="flex-1"
+                />
+                {uploading && <Loader className="w-5 h-5 animate-spin text-gray-600" />}
+              </div>
+              {formData.grant_document_url && (
+                <div className="mt-2">
+                  <a 
+                    href={formData.grant_document_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {language === 'he' ? 'צפה במסמך' : 'View Document'}
+                  </a>
+                </div>
               )}
             </div>
 

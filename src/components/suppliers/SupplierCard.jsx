@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Mail, User, Edit, Trash2, Camera, PackageX, Plus } from "lucide-react";
+import { Phone, Mail, User, Edit, Trash2, Camera, PackageX, Plus, FileText, DollarSign } from "lucide-react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -181,6 +181,32 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
                 >
                   {supplier.email}
                 </a>
+              </div>
+            )}
+
+            {supplier.grant_notes && (
+              <div className="flex items-start gap-2 text-sm bg-green-50 p-2 rounded">
+                <FileText className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-green-800 font-medium">{language === 'he' ? 'מענק/הנחה:' : 'Grant/Discount:'}</p>
+                  <p className="text-gray-700 text-xs mt-1">{supplier.grant_notes}</p>
+                  {supplier.grant_amount && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <DollarSign className="w-3 h-3 text-green-600" />
+                      <span className="text-green-700 font-bold">₪{supplier.grant_amount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {supplier.grant_document_url && (
+                    <a 
+                      href={supplier.grant_document_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-xs mt-1 inline-block"
+                    >
+                      {language === 'he' ? '📎 צפה במסמך' : '📎 View Document'}
+                    </a>
+                  )}
+                </div>
               </div>
             )}
 
