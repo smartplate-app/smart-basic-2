@@ -65,31 +65,27 @@ export default function ItemCard({ item, onEdit, onDelete }) {
           </div>
           
           {item.price > 0 && (
-            <div className="bg-gray-50 rounded-lg p-3">
-              {item.discount > 0 ? (
-                <div className="space-y-2">
+            <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">{t('price_per_unit') || 'מחיר ליחידה'}:</span>
+                <span className={item.discount > 0 ? "line-through text-gray-400" : "font-bold text-gray-900"}>
+                  ₪{item.price.toFixed(2)}
+                </span>
+              </div>
+              
+              {item.discount > 0 && (
+                <>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{t('price_per_unit')}:</span>
-                    <span className="line-through text-gray-400">₪{item.price.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-orange-600 font-medium">{t('discount')}:</span>
+                    <span className="text-orange-600 font-medium">{t('discount') || 'הנחה'}:</span>
                     <span className="text-orange-600">{item.discount}%</span>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="text-green-700 font-bold">{t('price_after_discount') || 'מחיר אחרי הנחה'}:</span>
-                    <span className="text-xl font-bold text-green-700">
+                  <div className="flex items-center justify-between pt-1 border-t">
+                    <span className="text-green-700 font-bold text-sm">{t('price_after_discount') || 'מחיר אחרי הנחה'}:</span>
+                    <span className="text-lg font-bold text-green-700">
                       ₪{finalPrice.toFixed(2)}
                     </span>
                   </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{t('price_per_unit')}:</span>
-                  <span className="text-lg font-bold text-gray-900">
-                    ₪{item.price.toFixed(2)}
-                  </span>
-                </div>
+                </>
               )}
             </div>
           )}
