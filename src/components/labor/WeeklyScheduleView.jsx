@@ -1026,18 +1026,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               {t('weekly_schedule')} - {moment(weekStartDate).format('DD/MM/YYYY')}
             </CardTitle>
             
-            <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Button
-                onClick={handleDownloadJPG}
-                variant="outline"
-                size="sm"
-                className={`flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white ${isRTL ? 'flex-row-reverse' : ''}`}
-                disabled={!schedule?.shifts?.length}
-              >
-                <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                {language === 'he' ? 'הורד כתמונה' : 'Download as Image'}
-              </Button>
-            </div>
+
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
