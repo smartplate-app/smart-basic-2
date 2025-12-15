@@ -499,9 +499,15 @@ const AppLayout = ({ children, currentPageName }) => {
                 </div>
               </div>
             )}
-            <div className={showDesktopSidebar ? '' : 'px-0'}>
+            <div className={showDesktopSidebar ? '' : 'sidebar-hidden'}>
               {children}
             </div>
+            <style>{`
+              .sidebar-hidden > * {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+              }
+            `}</style>
         </main>
 
         {/* Global Help Chat - except on Suppliers and AdminDashboard which have their own */}
