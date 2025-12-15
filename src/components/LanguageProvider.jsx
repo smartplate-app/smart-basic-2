@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useMemo, useEffect } from 'react';
 
 const translations = {
@@ -229,6 +228,7 @@ const translations = {
         // Pricing translations
         "price_per_unit": "מחיר ליחידה",
         "price": "מחיר",
+        "price_after_discount": "מחיר אחרי הנחה",
         "total": "סה\"כ",
         "total_cost": "עלות כוללת",
         "currency": "",
