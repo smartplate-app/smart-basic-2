@@ -67,15 +67,19 @@ export default function ItemCard({ item, onEdit, onDelete }) {
           {item.price > 0 && (
             <div className="bg-gray-50 rounded-lg p-3">
               {item.discount > 0 ? (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">{t('price_per_unit')}:</span>
-                    <span className="line-through text-gray-400">{item.price}</span>
+                    <span className="line-through text-gray-400">₪{item.price.toFixed(2)}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-red-600 font-medium">{t('discount')} {item.discount}%:</span>
-                    <span className="text-lg font-bold text-red-600">
-                      {finalPrice.toFixed(2)}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-orange-600 font-medium">{t('discount')}:</span>
+                    <span className="text-orange-600">{item.discount}%</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-green-700 font-bold">{t('price_after_discount') || 'מחיר אחרי הנחה'}:</span>
+                    <span className="text-xl font-bold text-green-700">
+                      ₪{finalPrice.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -83,7 +87,7 @@ export default function ItemCard({ item, onEdit, onDelete }) {
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">{t('price_per_unit')}:</span>
                   <span className="text-lg font-bold text-gray-900">
-                    {item.price}
+                    ₪{item.price.toFixed(2)}
                   </span>
                 </div>
               )}
