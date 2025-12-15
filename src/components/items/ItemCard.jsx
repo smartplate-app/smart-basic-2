@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,9 +13,9 @@ export default function ItemCard({ item, onEdit, onDelete }) {
     onEdit(item);
   };
 
-  const finalPrice = item.price && item.discount > 0 
-    ? item.price * (1 - item.discount / 100) 
-    : item.price;
+  const finalPrice = item.price_after_discount || (item.price && item.discount > 0 
+    ? item.price / (1 + (item.discount / 100))
+    : item.price);
 
   return (
     <motion.div

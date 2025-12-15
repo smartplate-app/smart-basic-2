@@ -96,6 +96,11 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     }
   };
 
+  const calculatePriceAfterDiscount = (price, discount) => {
+    if (!price || !discount) return price || 0;
+    return price / (1 + (discount / 100));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!currentItem.name || !currentItem.supplier_id) {
@@ -105,13 +110,17 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     
     const selectedSupplier = suppliers.find(s => s.id === currentItem.supplier_id);
     const selectedWarehouse = warehouses.find(w => w.id === currentItem.warehouse_id);
+    const price = currentItem.price || 0;
+    const discount = currentItem.discount || 0;
+    
     const completeData = {
       ...currentItem,
       supplier_name: selectedSupplier?.name || "",
       warehouse_name: selectedWarehouse?.name || "",
       units_per_package: currentItem.units_per_package || 1,
-      price: currentItem.price || 0,
-      discount: currentItem.discount || 0,
+      price: price,
+      discount: discount,
+      price_after_discount: calculatePriceAfterDiscount(price, discount),
       minimum_stock: currentItem.minimum_stock || 0
     };
     
@@ -302,6 +311,24 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
             />
           </div>
 
+          <div>
+            <Label>{t('price_after_discount') || 'מחיר אחרי הנחה'}</Label>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
+              <span className="text-sm text-green-700">{t('final_price') || 'מחיר סופי'}:</span>
+              <span className="text-lg font-bold text-green-700">
+                ₪{(currentItem.price && currentItem.discount 
+                  ? (currentItem.price / (1 + (currentItem.discount / 100))).toFixed(2)
+                  : (currentItem.price || 0).toFixed(2)
+                )}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {t('price_after_discount_help') || 'המחיר שישמש לכל החישובים'}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
           <div>
             <Label htmlFor="minimum_stock">{t('minimum_stock') || 'מלאי מינימום'}</Label>
             <Input
