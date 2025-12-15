@@ -57,35 +57,35 @@ export default function ItemCard({ item, onEdit, onDelete }) {
           </DropdownMenu>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Package className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-700">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <span className="text-gray-700 break-words">
               {item.units_per_package} {t('unit_' + item.unit)} {t('per')} {t('package')}
             </span>
           </div>
           
           {item.price > 0 && (
-            <div className="bg-gray-50 rounded-lg p-3 space-y-1">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">{t('price_per_unit') || 'מחיר ליחידה'}:</span>
-                <span className={item.discount > 0 ? "line-through text-gray-400" : "font-bold text-gray-900"}>
-                  ₪{item.price.toFixed(2)}
-                </span>
-              </div>
-              
-              {item.discount > 0 && (
+            <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+              {item.discount > 0 ? (
                 <>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-orange-600 font-medium">{t('discount') || 'הנחה'}:</span>
-                    <span className="text-orange-600">{item.discount}%</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-gray-500 whitespace-nowrap">{t('price_per_unit') || 'מחיר ליחידה'}:</span>
+                    <span className="line-through text-gray-400 text-sm">₪{item.price.toFixed(2)}</span>
                   </div>
-                  <div className="flex items-center justify-between pt-1 border-t">
-                    <span className="text-green-700 font-bold text-sm">{t('price_after_discount') || 'מחיר אחרי הנחה'}:</span>
-                    <span className="text-lg font-bold text-green-700">
-                      ₪{finalPrice.toFixed(2)}
-                    </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-orange-600 whitespace-nowrap">{t('discount') || 'הנחה'}:</span>
+                    <span className="text-orange-600 text-sm font-medium">{item.discount}%</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t">
+                    <span className="text-sm text-green-700 font-bold">{t('price_after_discount') || 'מחיר אחרי הנחה'}:</span>
+                    <span className="text-xl font-bold text-green-700">₪{finalPrice.toFixed(2)}</span>
                   </div>
                 </>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-gray-600">{t('price_per_unit') || 'מחיר ליחידה'}:</span>
+                  <span className="text-xl font-bold text-gray-900">₪{item.price.toFixed(2)}</span>
+                </div>
               )}
             </div>
           )}
