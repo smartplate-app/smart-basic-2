@@ -1015,56 +1015,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   }).filter(w => w.count > 0).sort((a, b) => b.count - a.count);
 
   return (
-    <div className={`flex gap-6 relative ${isRTL ? 'flex-row-reverse' : ''}`}>
-      {/* Worker Shift Counts Sidebar */}
-      {workerShiftCounts.length > 0 && (
-        <>
-          <div className={`transition-all duration-300 ease-in-out ${showWorkerSidebar ? 'w-64 opacity-100' : 'w-0 opacity-0 overflow-hidden'} flex-shrink-0`}>
-            <Card className="sticky top-4 h-fit">
-              <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">
-                  {language === 'he' ? 'משמרות לפי עובד' : 'Shifts by Worker'}
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowWorkerSidebar(false)}
-                  className="h-6 w-6"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {workerShiftCounts.map(worker => (
-                    <div key={worker.id} className={`flex justify-between items-center p-2 rounded bg-gray-50 border ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-medium text-sm">{worker.name}</span>
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                        {worker.count} {language === 'he' ? 'משמרות' : 'shifts'}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Toggle Button */}
-          {!showWorkerSidebar && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowWorkerSidebar(true)}
-              className={`fixed ${isRTL ? 'right-4' : 'left-4'} top-24 z-10 shadow-lg bg-white hover:bg-gray-50`}
-            >
-              {language === 'he' ? 'הצג משמרות עובדים' : 'Show Worker Shifts'}
-            </Button>
-          )}
-        </>
-      )}
-
+    <div className="space-y-6">
       {/* Main Schedule Content */}
-      <div className={`flex-1 space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader>
           <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -1266,11 +1219,11 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
           {/* Schedule Table with Drag & Drop */}
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div ref={scheduleTableRef} className="overflow-x-auto bg-white p-4 rounded-lg" dir={isRTL ? 'rtl' : 'ltr'}>
-              <table className="w-full border-collapse">
+            <div ref={scheduleTableRef} className="overflow-x-auto bg-white p-4 rounded-lg -mx-4 md:mx-0" dir={isRTL ? 'rtl' : 'ltr'}>
+              <table className="w-full border-collapse min-w-[800px]">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className={`border p-2 text-sm font-semibold ${isRTL ? 'text-right' : 'text-left'} w-32`}>
+                    <th className={`border p-2 text-sm font-semibold ${isRTL ? 'text-right' : 'text-left'} min-w-[100px]`}>
                       {t('position')}
                     </th>
                     {days.map(day => {
