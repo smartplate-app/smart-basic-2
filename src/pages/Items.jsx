@@ -213,42 +213,38 @@ export default function ItemsPage() {
   }, []);
 
   const handleSubmit = async (itemData) => {
+    if (!user) {
+      alert(t('error_no_logged_in_user') || "Error: No user logged in");
+      return;
+    }
+
+    const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
+
+    // 1) Create item (show error only if creation fails)
     try {
-      if (!user) {
-        alert(t('error_no_logged_in_user') || "Error: No user logged in");
-        return;
-      }
-      
-      const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
-      
-      let createdItemId;
-      
-      // If user is a manager/worker, use backend function to create with owner's email
       if (user.store_user_owner_email) {
-        const response = await base44.functions.invoke('createItemForStore', {
+        const { data } = await base44.functions.invoke('createItemForStore', {
           itemData: cleanData,
           storeEmail: user.store_user_owner_email
         });
-        if (!response.data.success) {
-          throw new Error(response.data.error || 'Failed to create item');
-        }
-        createdItemId = response.data.item?.id;
+        if (!data?.success) throw new Error(data?.error || 'Failed to create item');
       } else {
-        const newItem = await base44.entities.Item.create(cleanData);
-        createdItemId = newItem.id;
+        await base44.entities.Item.create(cleanData);
       }
-      
       setShowForm(false);
-      
-      // Reload data
+    } catch (e) {
+      console.error("Create item failed:", e);
+      alert(t('error_saving') + ': ' + (e.message || 'Unknown error'));
+      return;
+    }
+
+    // 2) Soft refresh (non-blocking, no alert on failure)
+    try {
       const refreshedUser = await base44.auth.me();
       setUser(refreshedUser);
       await loadData(refreshedUser);
-      
-      // Skipping redundant post-create verification to avoid false error popups.
-    } catch (error) {
-      console.error("Error creating item:", error);
-      alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
+    } catch (e) {
+      console.warn("Item created, but refresh failed:", e);
     }
   };
 
