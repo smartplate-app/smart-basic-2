@@ -14,11 +14,15 @@ export default function TipsSimulator({ presetWorkers }) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [positions, setPositions] = useState([]);
 
   useEffect(() => {
     const load = async () => {
+      const u = await base44.auth.me();
       const pol = await base44.entities.TipPolicy.list();
+      const pos = await base44.entities.JobPosition.filter({ created_by: u.acting_as_store_email || u.email }, 'name');
       setPolicies(pol || []);
+      setPositions(pos || []);
       if (pol?.length && !selectedPolicy) setSelectedPolicy(pol[0].id);
     };
     load();
@@ -136,7 +140,7 @@ export default function TipsSimulator({ presetWorkers }) {
                   {result.results?.map((r) => (
                     <tr key={r.worker_id} className="border-b">
                       <td className="p-2">{r.worker_name}</td>
-                      <td className="p-2">{r.job_position_id || ''}</td>
+                      <td className="p-2">{r.job_position_name || positions.find(p => p.id === r.job_position_id)?.name || ''}</td>
                       <td className="p-2">₪{(r.total || 0).toLocaleString()}</td>
                       <td className="p-2">₪{(r.total_cash || 0).toLocaleString()}</td>
                       <td className="p-2">₪{(r.total_credit || 0).toLocaleString()}</td>

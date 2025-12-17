@@ -87,11 +87,13 @@ Deno.serve(async (req) => {
       const overrideRate = Number(rec.tip_hourly_rate_override || 0);
       const positionRate = Number(pos?.tip_hourly_rate || 0);
       const hourlyRate = overrideRate > 0 ? overrideRate : positionRate;
+      const tipsMethod = pos?.tips_method || 'general_pool';
       return {
         worker_id: w.worker_id,
         worker_name: rec.full_name || '',
         job_position_id: explicitPosId,
         job_position_name: rec.job_position_name || pos?.name || '',
+        tips_method: tipsMethod,
         hours: Number(w.hours || 0),
         hourly_rate: Number(hourlyRate || 0)
       };
@@ -108,6 +110,7 @@ Deno.serve(async (req) => {
           worker_id: wid,
           worker_name: normalizedWorkers.find(x => x.worker_id === wid)?.worker_name || '',
           job_position_id: normalizedWorkers.find(x => x.worker_id === wid)?.job_position_id || null,
+          job_position_name: normalizedWorkers.find(x => x.worker_id === wid)?.job_position_name || '',
           breakdown: {
             hourly_fixed: 0,
             hourly_fixed_cash: 0,
@@ -125,7 +128,7 @@ Deno.serve(async (req) => {
     };
 
     // 1) Pay fixed tip-per-hour first
-    const hourlyWorkers = normalizedWorkers.filter(w => w.hourly_rate > 0 && w.hours > 0);
+    const hourlyWorkers = normalizedWorkers.filter(w => w.tips_method === 'fixed_hourly' && w.hourly_rate > 0 && w.hours > 0);
     for (const w of hourlyWorkers) {
       const due = w.hours * w.hourly_rate;
       let fromCash = Math.min(cashPool, due);
@@ -174,7 +177,7 @@ Deno.serve(async (req) => {
       const used = useCash + useCredit;
 
       // Eligible workers: same job position as bucket
-      const group = normalizedWorkers.filter(w => w.job_position_id && w.job_position_id === b.job_position_id && w.hours > 0);
+      const group = normalizedWorkers.filter(w => w.job_position_id && w.job_position_id === b.job_position_id && w.hours > 0 && w.tips_method !== 'excluded');
       const totalHours = group.reduce((s, w) => s + w.hours, 0);
       if (group.length === 0 || totalHours === 0) {
         // No eligible workers; return funds to residual pool
@@ -196,7 +199,7 @@ Deno.serve(async (req) => {
 
     // 3) Residual distribution among remaining eligible workers
     const pctPositionIds = new Set(pctBuckets.map(b => b.job_position_id).filter(Boolean));
-    const residualGroup = normalizedWorkers.filter(w => w.hours > 0 && w.hourly_rate <= 0 && (!w.job_position_id || !pctPositionIds.has(w.job_position_id)));
+    const residualGroup = normalizedWorkers.filter(w => w.hours > 0 && w.tips_method === 'general_pool' && (!w.job_position_id || !pctPositionIds.has(w.job_position_id)));
     const residualTotal = cashPool + creditPool;
     const residualHours = residualGroup.reduce((s, w) => s + w.hours, 0);
 
