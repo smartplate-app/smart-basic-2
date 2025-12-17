@@ -132,6 +132,8 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
       });
       setItemQuantities({});
       setCurrentStock({});
+      // Force reload items immediately on supplier change
+      loadSupplierItems(supplier.id);
     }
   };
 
