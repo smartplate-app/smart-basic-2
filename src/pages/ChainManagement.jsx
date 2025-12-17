@@ -54,7 +54,7 @@ export default function ChainManagement() {
         storeName: form.storeName,
         inviteeEmail: form.managerEmail,
         inviteeName: form.managerName,
-        sendEmail: false
+        sendEmail: false // silent: we just need the user in Base44, no email required
       });
       if (!data?.success) throw new Error(data?.error || 'Failed to create invite');
       setInviteLink(data.inviteLink);
