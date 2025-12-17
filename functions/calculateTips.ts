@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
       const used = useCash + useCredit;
 
       // Eligible workers: same job position as bucket
-      const group = normalizedWorkers.filter(w => w.job_position_id && w.job_position_id === b.job_position_id && w.hours > 0 && w.tips_method !== 'excluded');
+      const group = normalizedWorkers.filter(w => w.job_position_id && w.job_position_id === b.job_position_id && w.hours > 0 && w.tips_method === 'percent_allocation');
       const totalHours = group.reduce((s, w) => s + w.hours, 0);
       if (group.length === 0 || totalHours === 0) {
         // No eligible workers; return funds to residual pool
