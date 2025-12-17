@@ -67,24 +67,40 @@ export default function SuppliersPage() {
                     const allItems = [...ownerItems, ...storeItems];
                     itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
                   } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore) {
-                    // Branch store - get suppliers from chain head + own
-                    const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
-                    if (chain.length > 0) {
-                      const headEmail = chain[0].head_store_user_email;
-                      // Load from head store + store's own suppliers (including those with store_owner_email)
-                      const [headSuppliers, headItems, ownSuppliers, ownItems, storeSuppliers, storeItems] = await Promise.all([
-                        base44.entities.Supplier.filter({ created_by: headEmail }, '-created_date'),
-                        base44.entities.Item.filter({ created_by: headEmail }),
-                        base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
-                        base44.entities.Item.filter({ created_by: workingEmail }),
-                        base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
-                        base44.entities.Item.filter({ created_by: workingEmail })
-                      ]);
-                      // Combine all suppliers, avoiding duplicates
-                      const allSuppliers = [...headSuppliers, ...ownSuppliers, ...storeSuppliers];
-                      const uniqueSuppliers = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-                      suppliersData = uniqueSuppliers;
-                      itemsData = [...headItems, ...ownItems, ...storeItems].filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
+                    // Branch store - get suppliers from chain head + own (with fallbacks)
+                    let effectiveChainId = currentUser.chain_id;
+                    if (!effectiveChainId) {
+                      try {
+                        const myStores = await base44.entities.ChainStore.filter({ user_email: workingEmail });
+                        if (myStores?.length) effectiveChainId = myStores[0].chain_id;
+                      } catch {}
+                    }
+                    if (effectiveChainId) {
+                      let headEmail = null;
+                      try {
+                        const chainRec = await base44.entities.Chain.filter({ id: effectiveChainId });
+                        headEmail = chainRec?.[0]?.head_store_user_email || null;
+                      } catch {}
+                      if (!headEmail) {
+                        try {
+                          const storesInChain = await base44.entities.ChainStore.filter({ chain_id: effectiveChainId });
+                          const headStore = storesInChain?.find(s => s.is_head_store);
+                          headEmail = headStore?.user_email || null;
+                        } catch {}
+                      }
+                      if (headEmail) {
+                        const [headSuppliers, headItems, ownSuppliers, ownItems, storeSuppliers, storeItems] = await Promise.all([
+                          base44.entities.Supplier.filter({ created_by: headEmail }, '-created_date'),
+                          base44.entities.Item.filter({ created_by: headEmail }),
+                          base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
+                          base44.entities.Item.filter({ created_by: workingEmail }),
+                          base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
+                          base44.entities.Item.filter({ created_by: workingEmail })
+                        ]);
+                        const allSuppliers = [...headSuppliers, ...ownSuppliers, ...storeSuppliers];
+                        suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+                        itemsData = [...headItems, ...ownItems, ...storeItems].filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
+                      }
                     }
                   } else {
                     // Head store or no chain - load own suppliers + any with store_owner_email
