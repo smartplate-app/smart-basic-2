@@ -69,12 +69,13 @@ export default function ItemsPage() {
         ]);
         console.log('[Items] Loaded from owner:', {
           ownerItems: ownerItems.length,
-          ownItems: ownItems.length,
+          ownItemsByStoreOwner: ownItemsByStoreOwner.length,
+          managerCreated: managerCreated.length,
           suppliers: ownerSuppliers.length,
           warehouses: ownerWarehouses.length
         });
-        // Combine items created by owner and items with store_owner_email
-        const allItems = [...ownerItems, ...ownItems];
+        // Combine items created by owner, items attributed to owner, and items the manager just created
+        const allItems = [...ownerItems, ...ownItemsByStoreOwner, ...managerCreated];
         // Remove duplicates by id and sort by created_date descending (newest first)
         itemsData = Array.from(new Map(allItems.map(item => [item.id, item])).values())
           .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
