@@ -140,17 +140,19 @@ const AppLayout = ({ children, currentPageName }) => {
                     console.error("[Layout] Error checking store user record:", storeUserError);
                   }
 
-                  // Auto-attach chain context for branch managers on first login
+                  // Auto-attach chain context for branch managers on first login (service-role)
                   try {
                     if (!currentUser.chain_id) {
-                      const myStores = await base44.entities.ChainStore.filter({ user_email: currentUser.email });
-                      if (myStores && myStores.length > 0) {
-                        const store = myStores[0];
+                      const { data } = await base44.functions.invoke('getChainContextForUser', {});
+                      if (data?.success && data?.found) {
                         await base44.auth.updateMe({
-                          chain_id: store.chain_id,
-                          is_chain_head: !!store.is_head_store,
-                          business_name: store.store_name
+                          chain_id: data.chain_id,
+                          is_chain_head: !!data.is_head_store,
+                          business_name: data.store_name
                         });
+                        // Refresh local copy
+                        currentUser = await base44.auth.me();
+                        setUser(currentUser);
                       }
                     }
                   } catch (e) {
