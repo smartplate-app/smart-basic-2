@@ -68,10 +68,9 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
   const loadSupplierItems = async (supplierId) => {
     setLoadingItems(true);
     try {
-      // Get current user to check if they're a store user
       const user = await base44.auth.me();
       let ownerEmail = user.store_user_owner_email;
-      
+
       // If not saved on user, check StoreUser entity
       if (!ownerEmail) {
         try {
@@ -83,16 +82,35 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
           console.log("Could not fetch store user records");
         }
       }
-      
-      // If store user, load items from owner
-      let items;
+
+      // Build queries to include all relevant sources and merge
+      const queries = [];
       if (ownerEmail) {
-        items = await base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, "name");
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, 'name'));
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: ownerEmail }, 'name'));
+        // Also include items created by the current store user (manager/worker)
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
       } else {
-        items = await base44.entities.Item.filter({ supplier_id: supplierId }, "name");
+        // Owner/head store context: include own items + any legacy items without owner field
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId }, 'name'));
       }
-      
-      setAvailableItems(items);
+
+      const results = await Promise.allSettled(queries);
+      const merged = results
+        .filter(r => r.status === 'fulfilled')
+        .flatMap(r => r.value || []);
+      // De-duplicate by id
+      const seen = new Set();
+      const deduped = [];
+      for (const it of merged) {
+        if (!seen.has(it.id)) {
+          seen.add(it.id);
+          deduped.push(it);
+        }
+      }
+
+      setAvailableItems(deduped);
     } catch (error) {
       console.error("Error loading items:", error);
       setAvailableItems([]);
