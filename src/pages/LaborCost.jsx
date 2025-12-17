@@ -19,6 +19,7 @@ import WorkersList from "../components/labor/WorkersList";
 import WeeklyScheduleView from "../components/labor/WeeklyScheduleView";
 import LaborGoalsTab from "../components/labor/LaborGoalsTab";
 import TipsSimulator from "../components/labor/TipsSimulator";
+import TipPolicyEditor from "../components/labor/TipPolicyEditor";
 
 export default function LaborCostPage() {
   const [positions, setPositions] = useState([]);
@@ -256,6 +257,7 @@ export default function LaborCostPage() {
           </TabsContent>
 
           <TabsContent value="tips" className="space-y-6">
+            <TipPolicyEditor />
             <TipsSimulator presetWorkers={workers} />
           </TabsContent>
         </Tabs>

@@ -649,10 +649,15 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                       <span className="font-semibold">
                         {language === 'he' ? 'שכר בסיס:' : 'Base:'}
                       </span>
-                      <span>
+                      <button
+                        type="button"
+                        onClick={() => setShowRateHistory(worker.id)}
+                        className="underline decoration-dotted hover:text-blue-700"
+                        title={language === 'he' ? 'צפה בהיסטוריית תעריפים' : 'View rate history'}
+                      >
                         {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')}
                         {paymentTypeSuffixes[worker.payment_type]}
-                      </span>
+                      </button>
                     </div>
                     <div className="flex items-center gap-2 text-green-700 font-bold">
                       <span className="text-xs">
