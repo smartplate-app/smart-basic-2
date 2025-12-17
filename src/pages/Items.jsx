@@ -99,13 +99,16 @@ export default function ItemsPage() {
           warehousesData = [...headWarehouses, ...ownWarehouses];
         }
       } else {
-        // Head store or no chain
-        const [items, suppliers, warehouses] = await Promise.all([
+        // Head store or no chain - include items created by owner and items attributed to owner via store_owner_email
+        const [ownCreated, ownedByStore, suppliers, warehouses] = await Promise.all([
           base44.entities.Item.filter({ created_by: currentUser.email }, "-created_date"),
+          base44.entities.Item.filter({ store_owner_email: currentUser.email }, "-created_date"),
           base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
           base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
         ]);
-        itemsData = items;
+        const allItems = [...ownCreated, ...ownedByStore];
+        itemsData = Array.from(new Map(allItems.map(i => [i.id, i])).values())
+          .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
         suppliersData = suppliers;
         warehousesData = warehouses;
       }
@@ -240,18 +243,7 @@ export default function ItemsPage() {
       setUser(refreshedUser);
       await loadData(refreshedUser);
       
-      // Verify item appears in the list after reload
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const itemExists = items.some(item => item.id === createdItemId || item.name === cleanData.name);
-      
-      if (!itemExists && createdItemId) {
-        alert(
-          t('error_saving') || 'Error' + ': ' + 
-          (user.store_user_role === 'manager' 
-            ? 'הפריט נוצר אך לא מופיע ברשימה. אנא בקש מהבעלים להוסיף פריטים.\n\nItem created but not showing. Please ask the owner to add items.'
-            : 'הפריט נוצר אך לא מופיע ברשימה.\n\nItem created but not showing in list.')
-        );
-      }
+      // Skipping redundant post-create verification to avoid false error popups.
     } catch (error) {
       console.error("Error creating item:", error);
       alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
