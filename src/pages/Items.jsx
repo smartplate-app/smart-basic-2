@@ -81,24 +81,43 @@ export default function ItemsPage() {
           .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
         suppliersData = ownerSuppliers;
         warehousesData = ownerWarehouses;
-      } else if (currentUser.chain_id && !currentUser.is_chain_head) {
-        // Branch store in chain
-        const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
-        if (chain.length > 0) {
-          const headEmail = chain[0].head_store_user_email;
-          // Load from head store + own data
-          const [headItems, headSuppliers, headWarehouses, ownItems, ownSuppliers, ownWarehouses] = await Promise.all([
-            base44.entities.Item.filter({ created_by: headEmail }, "-created_date"),
-            base44.entities.Supplier.filter({ created_by: headEmail }, "name"),
-            base44.entities.Warehouse.filter({ created_by: headEmail }, "name"),
-            base44.entities.Item.filter({ created_by: currentUser.email }, "-created_date"),
-            base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
-            base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
-          ]);
-          itemsData = [...headItems, ...ownItems]
-            .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-          suppliersData = [...headSuppliers, ...ownSuppliers];
-          warehousesData = [...headWarehouses, ...ownWarehouses];
+      } else if (!currentUser.is_chain_head) {
+        // Branch store in chain (with fallbacks)
+        let effectiveChainId = currentUser.chain_id;
+        if (!effectiveChainId) {
+          // derive from ChainStore by email
+          try {
+            const myStores = await base44.entities.ChainStore.filter({ user_email: currentUser.email });
+            if (myStores?.length) effectiveChainId = myStores[0].chain_id;
+          } catch {}
+        }
+        if (effectiveChainId) {
+          let headEmail = null;
+          try {
+            const chain = await base44.entities.Chain.filter({ id: effectiveChainId });
+            headEmail = chain?.[0]?.head_store_user_email || null;
+          } catch {}
+          if (!headEmail) {
+            try {
+              const storesInChain = await base44.entities.ChainStore.filter({ chain_id: effectiveChainId });
+              const headStore = storesInChain?.find(s => s.is_head_store);
+              headEmail = headStore?.user_email || null;
+            } catch {}
+          }
+          if (headEmail) {
+            const [headItems, headSuppliers, headWarehouses, ownItems, ownSuppliers, ownWarehouses] = await Promise.all([
+              base44.entities.Item.filter({ created_by: headEmail }, "-created_date"),
+              base44.entities.Supplier.filter({ created_by: headEmail }, "name"),
+              base44.entities.Warehouse.filter({ created_by: headEmail }, "name"),
+              base44.entities.Item.filter({ created_by: currentUser.email }, "-created_date"),
+              base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
+              base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
+            ]);
+            itemsData = [...headItems, ...ownItems]
+              .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+            suppliersData = [...headSuppliers, ...ownSuppliers];
+            warehousesData = [...headWarehouses, ...ownWarehouses];
+          }
         }
       } else {
         // Head store or no chain - include items created by owner and items attributed to owner via store_owner_email
