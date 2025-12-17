@@ -29,6 +29,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
   const [loadingItems, setLoadingItems] = React.useState(false);
   const [itemQuantities, setItemQuantities] = React.useState({});
   const [currentStock, setCurrentStock] = React.useState({}); // Track current stock per item
+  const [itemSearch, setItemSearch] = React.useState("");
   const { language } = useLanguage();
 
   React.useEffect(() => {
@@ -310,8 +311,16 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
 
         {currentOrder.supplier_id && (
           <div className="space-y-3">
-            <Label className="text-lg font-semibold">{t('items')}</Label>
-            
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-lg font-semibold">{t('items')}</Label>
+              <Input
+                placeholder={t('search_items') || 'Search items'}
+                value={itemSearch}
+                onChange={(e) => setItemSearch(e.target.value)}
+                className="max-w-xs"
+              />
+            </div>
+
             {loadingItems ? (
               <div className="flex items-center justify-center py-8">
                 <Loader className="w-6 h-6 animate-spin text-purple-600" />
@@ -323,7 +332,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto border rounded-lg p-4 bg-gray-50">
-                {availableItems.map((item) => {
+                {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
                   const stock = currentStock[item.id] || 0;
                   const itemTotal = quantity * (item.price || 0);
