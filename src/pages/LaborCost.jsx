@@ -43,8 +43,15 @@ export default function LaborCostPage() {
       const user = await base44.auth.me();
       // Use acting_as_store_email if admin is controlling a user
       const workingEmail = user.acting_as_store_email || user.email;
+
+      let headEmail = null;
+      if (user.chain_id && !user.is_chain_head) {
+        const chains = await base44.entities.Chain.filter({ id: user.chain_id });
+        if (chains?.length) headEmail = chains[0].head_store_user_email;
+      }
+
       const [positionsData, workersData, schedulesData] = await Promise.all([
-        base44.entities.JobPosition.filter({ created_by: workingEmail }, "name"),
+        base44.entities.JobPosition.filter({ created_by: headEmail || workingEmail }, "name"),
         base44.entities.Worker.filter({ created_by: workingEmail }, "full_name"),
         base44.entities.WeeklySchedule.filter({ created_by: workingEmail }, "-week_start_date")
       ]);
