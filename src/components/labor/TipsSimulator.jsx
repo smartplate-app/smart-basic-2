@@ -1,0 +1,126 @@
+import React, { useEffect, useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Loader } from "lucide-react";
+
+export default function TipsSimulator({ presetWorkers }) {
+  const [workers, setWorkers] = useState(presetWorkers || []);
+  const [policies, setPolicies] = useState([]);
+  const [selectedPolicy, setSelectedPolicy] = useState("");
+  const [cash, setCash] = useState(0);
+  const [credit, setCredit] = useState(0);
+  const [hours, setHours] = useState({});
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!presetWorkers?.length) {
+        const u = await base44.auth.me();
+        const list = await base44.entities.Worker.filter({ created_by: u.email }, "full_name");
+        setWorkers(list);
+      }
+      const pol = await base44.entities.TipPolicy.list();
+      setPolicies(pol || []);
+      if (pol?.length && !selectedPolicy) setSelectedPolicy(pol[0].id);
+    };
+    load();
+  }, []);
+
+  const run = async () => {
+    setLoading(true);
+    try {
+      const payload = {
+        cash_tips: Number(cash) || 0,
+        credit_tips: Number(credit) || 0,
+        policy_id: selectedPolicy || null,
+        workers: workers.map(w => ({ worker_id: w.id, hours: Number(hours[w.id] || 0), job_position_id: w.job_position_id }))
+      };
+      const { data } = await base44.functions.invoke('calculateTips', payload);
+      setResult(data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>סימולטור טיפים</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm text-gray-600">טיפ מזומן</label>
+              <Input type="number" value={cash} onChange={(e) => setCash(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600">טיפ אשראי</label>
+              <Input type="number" value={credit} onChange={(e) => setCredit(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600">מדיניות</label>
+              <select className="w-full border rounded-md h-10 px-2" value={selectedPolicy} onChange={(e) => setSelectedPolicy(e.target.value)}>
+                <option value="">ללא</option>
+                {policies.map(p => (
+                  <option key={p.id} value={p.id}>{p.policy_name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-600 mb-2 block">שעות לפי עובד</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {workers.map(w => (
+                <div key={w.id} className="border rounded-md p-3 bg-gray-50">
+                  <div className="font-medium">{w.full_name}</div>
+                  <Input type="number" placeholder="שעות" value={hours[w.id] || ''} onChange={(e) => setHours(prev => ({ ...prev, [w.id]: e.target.value }))} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Button onClick={run} className="bg-gray-900 hover:bg-gray-800" disabled={loading}>
+            {loading ? <Loader className="w-4 h-4 animate-spin" /> : 'חשב'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {result && (
+        <Card>
+          <CardHeader>
+            <CardTitle>תוצאות</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="p-2 text-right">עובד</th>
+                    <th className="p-2 text-right">סה"כ</th>
+                    <th className="p-2 text-right">מזומן</th>
+                    <th className="p-2 text-right">אשראי</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.results?.map((r) => (
+                    <tr key={r.worker_id} className="border-b">
+                      <td className="p-2">{r.worker_name}</td>
+                      <td className="p-2">₪{(r.total || 0).toLocaleString()}</td>
+                      <td className="p-2">₪{(r.total_cash || 0).toLocaleString()}</td>
+                      <td className="p-2">₪{(r.total_credit || 0).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

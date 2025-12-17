@@ -8,18 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, X, Save, User, Phone, Mail, DollarSign, Wallet, FileText, Send, History } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
-import WorkerPayslip from "./WorkerPayslip";
 import WorkerBankTransfer from "./WorkerBankTransfer";
-import WorkerPaymentHistory from "./WorkerPaymentHistory";
+import WorkerRateHistory from "./WorkerRateHistory";
 
 export default function WorkersList({ workers, positions, onAdd, onUpdate, onDelete }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const { t, language } = useLanguage();
 
-  const [showPayslip, setShowPayslip] = useState(null);
   const [showBankTransfer, setShowBankTransfer] = useState(null);
-  const [showPaymentHistory, setShowPaymentHistory] = useState(null);
+  const [showRateHistory, setShowRateHistory] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -707,15 +705,6 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setShowPayslip({ worker, month: selectedMonth })}
-                    className="text-blue-700 hover:bg-blue-50"
-                  >
-                    <FileText className="w-4 h-4 mr-1" />
-                    {language === 'he' ? 'תלוש' : 'Payslip'}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
                     onClick={() => setShowBankTransfer({ worker, month: selectedMonth })}
                     className="text-green-700 hover:bg-green-50"
                     disabled={!worker.bank_account}
@@ -726,11 +715,11 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setShowPaymentHistory(worker.id)}
+                    onClick={() => setShowRateHistory(worker.id)}
                     className="text-purple-700 hover:bg-purple-50"
                   >
                     <History className="w-4 h-4 mr-1" />
-                    {language === 'he' ? 'היסטוריה' : 'History'}
+                    {language === 'he' ? 'תעריפים' : 'Rates'}
                   </Button>
                 </div>
               </CardContent>
@@ -740,14 +729,6 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       </div>
 
       {/* Modals */}
-      {showPayslip && (
-        <WorkerPayslip
-          worker={showPayslip.worker}
-          month={showPayslip.month}
-          onClose={() => setShowPayslip(null)}
-        />
-      )}
-
       {showBankTransfer && (
         <WorkerBankTransfer
           worker={showBankTransfer.worker}
@@ -760,19 +741,19 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
         />
       )}
 
-      {showPaymentHistory && (
+      {showRateHistory && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
               <h3 className="text-xl font-bold">
-                {language === 'he' ? 'היסטוריית תשלומים' : 'Payment History'}
+                {language === 'he' ? 'היסטוריית תעריפים' : 'Rate History'}
               </h3>
-              <Button variant="ghost" size="icon" onClick={() => setShowPaymentHistory(null)}>
+              <Button variant="ghost" size="icon" onClick={() => setShowRateHistory(null)}>
                 <X className="w-5 h-5" />
               </Button>
             </div>
             <div className="p-4">
-              <WorkerPaymentHistory workerId={showPaymentHistory} />
+              <WorkerRateHistory workerId={showRateHistory} />
             </div>
           </div>
         </div>

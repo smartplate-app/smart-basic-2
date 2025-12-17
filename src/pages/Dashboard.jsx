@@ -9,7 +9,6 @@ import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, Bar
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
-import MonthlySalaryReport from "../components/labor/MonthlySalaryReport";
 
 
 export default function DashboardPage() {
@@ -381,7 +380,7 @@ export default function DashboardPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-4xl">
+          <TabsList className="grid w-full grid-cols-3 max-w-3xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
@@ -393,10 +392,6 @@ export default function DashboardPage() {
             <TabsTrigger value="labor" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
               {language === 'he' ? 'יעד עבודה' : 'Labor Goals'}
-            </TabsTrigger>
-            <TabsTrigger value="salary" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              {language === 'he' ? 'דו"ח שכר חודשי' : 'Monthly Salary Report'}
             </TabsTrigger>
           </TabsList>
 
@@ -754,25 +749,6 @@ export default function DashboardPage() {
             </div>
           </TabsContent>
 
-          {/* Monthly Salary Report Tab */}
-          <TabsContent value="salary" className="space-y-6">
-            <div className={`flex justify-end mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Button 
-                onClick={handleExportMonthlyReport}
-                disabled={exportingMonthly}
-                variant="outline"
-                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-              >
-                {exportingMonthly ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-                {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
-              </Button>
-            </div>
-            <MonthlySalaryReport 
-              selectedMonth={selectedMonth}
-              user={user}
-              language={language}
-            />
-          </TabsContent>
 
 
 
