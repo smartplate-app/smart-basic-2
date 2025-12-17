@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     // 2) Create chain store placeholder for the invitee (manager of new restaurant)
-    await base44.asServiceRole.entities.ChainStore.create({
+    const store = await base44.asServiceRole.entities.ChainStore.create({
       chain_id: chain.id,
       chain_name: chain.name,
       store_name: storeName,
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       is_head_store: false
     });
 
-    // 2b) Ensure a Base44 User exists (silent platform invite - no email needed)
+    // 2b) Ensure a Base44 User exists and attach chain context (no links/emails)
     let createdUserId = null;
     try {
       const existing = await base44.asServiceRole.entities.User.filter({ email: inviteeEmail.toLowerCase() });
@@ -68,56 +68,26 @@ Deno.serve(async (req) => {
         const newUser = await base44.asServiceRole.entities.User.create({
           email: inviteeEmail.toLowerCase(),
           full_name: inviteeName,
-          role: 'user'
+          role: 'user',
+          chain_id: chain.id,
+          is_chain_head: false,
+          business_name: storeName
         });
         createdUserId = newUser.id;
       } else {
         createdUserId = existing[0].id;
+        // Update user with chain info (idempotent)
+        await base44.asServiceRole.entities.User.update(createdUserId, {
+          chain_id: chain.id,
+          is_chain_head: false,
+          business_name: storeName
+        });
       }
     } catch (e) {
-      console.warn('[createChainStoreInvite] Could not ensure platform user exists:', e?.message || e);
+      console.warn('[createChainStoreInvite] Could not ensure platform user exists/updated:', e?.message || e);
     }
 
-    // 3) Create UserInvite (type = chain_store)
-    const token = crypto.randomUUID();
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 3); // 3 days
-
-    const inviteRecord = await base44.asServiceRole.entities.UserInvite.create({
-      token,
-      email: inviteeEmail,
-      full_name: inviteeName,
-      invite_type: 'chain_store',
-      chain_id: chain.id,
-      chain_name: chain.name,
-      store_id: '',
-      store_name: storeName,
-      role: 'manager',
-      inviter_email: me.email,
-      inviter_name: me.full_name || me.email,
-      restaurant_name: me.business_name || 'Head Store',
-      restaurant_address: me.business_address || '',
-      expires_at: expiresAt.toISOString(),
-      used: false
-    });
-
-    const origin = req.headers.get('origin') || 'https://app.base44.com';
-    const inviteLink = `${origin}/#/pages/RestaurantInvite?token=${token}`;
-
-    if (sendEmail) {
-      try {
-        await base44.integrations.Core.SendEmail({
-          to: inviteeEmail,
-          subject: `Invitation to manage ${storeName} in ${chain.name}`,
-          body: `Hello ${inviteeName},\n\nYou have been invited to manage a restaurant (${storeName}) in the chain ${chain.name}.\nClick the link to join: ${inviteLink}\n\nRegards,\n${me.full_name || me.email}`
-        });
-      } catch (e) {
-        // Non-fatal if email fails
-        console.warn('[createChainStoreInvite] Email sending failed:', e?.message || e);
-      }
-    }
-
-    return Response.json({ success: true, chain, token, inviteLink, invite_id: inviteRecord.id });
+    return Response.json({ success: true, chain, store, user_id: createdUserId });
   } catch (error) {
     return Response.json({ success: false, error: error.message || 'Failed to create invite' }, { status: 500 });
   }

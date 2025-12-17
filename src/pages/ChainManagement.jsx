@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Copy, Loader } from 'lucide-react';
+import { Building2, Plus, Loader } from 'lucide-react';
 
 export default function ChainManagement() {
   const [user, setUser] = useState(null);
@@ -18,7 +18,7 @@ export default function ChainManagement() {
     managerName: '',
     managerEmail: ''
   });
-  const [inviteLink, setInviteLink] = useState('');
+
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -54,10 +54,9 @@ export default function ChainManagement() {
         storeName: form.storeName,
         inviteeEmail: form.managerEmail,
         inviteeName: form.managerName,
-        sendEmail: false // silent: we just need the user in Base44, no email required
+        sendEmail: false
       });
-      if (!data?.success) throw new Error(data?.error || 'Failed to create invite');
-      setInviteLink(data.inviteLink);
+      if (!data?.success) throw new Error(data?.error || 'Failed to create');
       setChain(data.chain);
       const storesData = await base44.entities.ChainStore.filter({ chain_id: data.chain.id });
       setStores(storesData || []);
@@ -130,26 +129,11 @@ export default function ChainManagement() {
                 </div>
               </div>
               <Button type="submit" className="bg-purple-600 hover:bg-purple-700" disabled={submitting}>
-                <Plus className="w-4 h-4 mr-2" /> Create & Generate Invite
+                <Plus className="w-4 h-4 mr-2" /> Create Restaurant
               </Button>
             </form>
 
-            {inviteLink && (
-              <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm">
-                <div className="font-semibold mb-1">Invitation Link</div>
-                <div className="break-all bg-white p-2 rounded border">{inviteLink}</div>
-                <Button
-                  variant="outline"
-                  className="mt-2"
-                  onClick={() => {
-                    navigator.clipboard.writeText(inviteLink);
-                    alert('Link copied');
-                  }}
-                >
-                  <Copy className="w-4 h-4 mr-2" /> Copy Link
-                </Button>
-              </div>
-            )}
+
           </CardContent>
         </Card>
 
