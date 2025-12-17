@@ -20,6 +20,8 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
     default_payment_amount: 0,
     default_start_time: "09:00",
     default_end_time: "17:00",
+    tip_hourly_rate: 0,
+    tips_method: "general_pool",
     is_active: true
   });
   const { t } = useLanguage();
@@ -33,6 +35,8 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
       default_payment_amount: 0,
       default_start_time: "09:00",
       default_end_time: "17:00",
+      tip_hourly_rate: 0,
+      tips_method: "general_pool",
       is_active: true
     });
     setIsAdding(true);
@@ -48,6 +52,8 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
       default_payment_amount: position.default_payment_amount || 0,
       default_start_time: position.default_start_time || "09:00",
       default_end_time: position.default_end_time || "17:00",
+      tip_hourly_rate: typeof position.tip_hourly_rate === 'number' ? position.tip_hourly_rate : 0,
+      tips_method: position.tips_method || "general_pool",
       is_active: position.is_active !== false
     });
     setEditingId(position.id);
@@ -172,6 +178,36 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               </div>
 
               <div className="space-y-2">
+                <Label>{t('tips_method') || 'שיטת תגמול בטיפים'}</Label>
+                <Select value={formData.tips_method} onValueChange={(v) => setFormData({ ...formData, tips_method: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general_pool">{t('general_pool') || 'בריכה כללית'}</SelectItem>
+                    <SelectItem value="fixed_hourly">{t('fixed_hourly') || 'קבוע לשעה'}</SelectItem>
+                    <SelectItem value="percent_allocation">{t('percent_allocation') || 'הפרשה אחוזית'}</SelectItem>
+                    <SelectItem value="excluded">{t('excluded') || 'לא זכאי לטיפים'}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">{t('tips_method_help') || 'קובע כיצד התפקיד משתתף בחלוקת טיפים.'}</p>
+              </div>
+
+              {formData.tips_method === 'fixed_hourly' && (
+                <div className="space-y-2">
+                  <Label>{t('tip_hourly_rate') || 'תעריף טיפ לשעה'}</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.tip_hourly_rate}
+                    onChange={(e) => setFormData({ ...formData, tip_hourly_rate: parseFloat(e.target.value) || 0 })}
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
                 <Label>{t('default_start_time') || 'שעת התחלה ברירת מחדל'}</Label>
                 <Input
                   type="time"
@@ -241,6 +277,15 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                         </p>
                       </div>
                     )}
+
+                    <div className="mt-2 p-2 bg-yellow-50 rounded-lg">
+                      <p className="text-sm font-semibold text-yellow-800">
+                        {t('tips_method') || 'שיטת תגמול טיפים'}: {position.tips_method === 'fixed_hourly' ? (t('fixed_hourly') || 'קבוע לשעה') : position.tips_method === 'percent_allocation' ? (t('percent_allocation') || 'הפרשה אחוזית') : position.tips_method === 'excluded' ? (t('excluded') || 'לא זכאי') : (t('general_pool') || 'בריכה כללית')}
+                      </p>
+                      {position.tips_method === 'fixed_hourly' && (
+                        <p className="text-sm text-yellow-900">{t('tip_hourly_rate') || 'תעריף לשעה'}: {Number(position.tip_hourly_rate || 0).toLocaleString()} {t('currency')}</p>
+                      )}
+                    </div>
                     
                     {(position.default_start_time || position.default_end_time) && (
                       <div className="mt-2 p-2 bg-blue-50 rounded-lg">

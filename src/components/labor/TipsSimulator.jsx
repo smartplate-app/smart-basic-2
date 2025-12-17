@@ -11,17 +11,12 @@ export default function TipsSimulator({ presetWorkers }) {
   const [selectedPolicy, setSelectedPolicy] = useState("");
   const [cash, setCash] = useState(0);
   const [credit, setCredit] = useState(0);
-  const [hours, setHours] = useState({});
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      if (!presetWorkers?.length) {
-        const u = await base44.auth.me();
-        const list = await base44.entities.Worker.filter({ created_by: u.email }, "full_name");
-        setWorkers(list);
-      }
       const pol = await base44.entities.TipPolicy.list();
       setPolicies(pol || []);
       if (pol?.length && !selectedPolicy) setSelectedPolicy(pol[0].id);
@@ -32,11 +27,46 @@ export default function TipsSimulator({ presetWorkers }) {
   const run = async () => {
     setLoading(true);
     try {
+      const user = await base44.auth.me();
+      const workingEmail = user.acting_as_store_email || user.email;
+      const schedules = await base44.entities.WeeklySchedule.filter({ created_by: workingEmail });
+
+      // find schedule that contains the selected date
+      const target = schedules.find(s => {
+        if (!s.week_start_date) return false;
+        const start = new Date(s.week_start_date);
+        const end = new Date(new Date(s.week_start_date).getTime() + 6 * 24 * 60 * 60 * 1000);
+        const d = new Date(date);
+        return d >= start && d <= end;
+      });
+
+      const shifts = (target?.shifts || []).filter(sh => sh.date === date);
+      const byWorker = new Map();
+      for (const sh of shifts) {
+        const wid = sh.worker_id;
+        if (!wid) continue;
+        const hrs = typeof sh.hours_worked === 'number' && sh.hours_worked > 0
+          ? sh.hours_worked
+          : (() => {
+              if (!sh.start_time || !sh.end_time) return 0;
+              const [shh, sm] = String(sh.start_time).split(":").map(Number);
+              const [eh, em] = String(sh.end_time).split(":").map(Number);
+              return ((eh * 60 + em) - (shh * 60 + sm)) / 60;
+            })();
+        if (hrs <= 0) continue;
+        const prev = byWorker.get(wid) || { worker_id: wid, hours: 0, job_position_id: sh.job_position_id };
+        prev.hours += hrs;
+        prev.job_position_id = sh.job_position_id || prev.job_position_id;
+        byWorker.set(wid, prev);
+      }
+
+      const workersPayload = Array.from(byWorker.values());
+
       const payload = {
         cash_tips: Number(cash) || 0,
         credit_tips: Number(credit) || 0,
         policy_id: selectedPolicy || null,
-        workers: workers.map(w => ({ worker_id: w.id, hours: Number(hours[w.id] || 0), job_position_id: w.job_position_id }))
+        workers: workersPayload
       };
       const { data } = await base44.functions.invoke('calculateTips', payload);
       setResult(data);
@@ -49,10 +79,10 @@ export default function TipsSimulator({ presetWorkers }) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>סימולטור טיפים</CardTitle>
+          <CardTitle>חישוב טיפים לפי סידור</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm text-gray-600">טיפ מזומן</label>
               <Input type="number" value={cash} onChange={(e) => setCash(e.target.value)} />
@@ -70,19 +100,13 @@ export default function TipsSimulator({ presetWorkers }) {
                 ))}
               </select>
             </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-600 mb-2 block">שעות לפי עובד</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {workers.map(w => (
-                <div key={w.id} className="border rounded-md p-3 bg-gray-50">
-                  <div className="font-medium">{w.full_name}</div>
-                  <Input type="number" placeholder="שעות" value={hours[w.id] || ''} onChange={(e) => setHours(prev => ({ ...prev, [w.id]: e.target.value }))} />
-                </div>
-              ))}
+            <div>
+              <label className="text-sm text-gray-600">תאריך משמרת</label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
           </div>
+
+          <p className="text-sm text-gray-500">השעות ייאספו אוטומטית מסידור העבודה ליום הנבחר לפי התפקידים המוגדרים.</p>
 
           <Button onClick={run} className="bg-gray-900 hover:bg-gray-800" disabled={loading}>
             {loading ? <Loader className="w-4 h-4 animate-spin" /> : 'חשב'}
@@ -94,6 +118,7 @@ export default function TipsSimulator({ presetWorkers }) {
         <Card>
           <CardHeader>
             <CardTitle>תוצאות</CardTitle>
+            <div className="text-sm text-gray-500">סה"כ שחולק: ₪{(result?.summary?.distributed_total || 0).toLocaleString()}</div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -101,6 +126,7 @@ export default function TipsSimulator({ presetWorkers }) {
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="p-2 text-right">עובד</th>
+                    <th className="p-2 text-right">תפקיד</th>
                     <th className="p-2 text-right">סה"כ</th>
                     <th className="p-2 text-right">מזומן</th>
                     <th className="p-2 text-right">אשראי</th>
@@ -110,6 +136,7 @@ export default function TipsSimulator({ presetWorkers }) {
                   {result.results?.map((r) => (
                     <tr key={r.worker_id} className="border-b">
                       <td className="p-2">{r.worker_name}</td>
+                      <td className="p-2">{r.job_position_id || ''}</td>
                       <td className="p-2">₪{(r.total || 0).toLocaleString()}</td>
                       <td className="p-2">₪{(r.total_cash || 0).toLocaleString()}</td>
                       <td className="p-2">₪{(r.total_credit || 0).toLocaleString()}</td>
