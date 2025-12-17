@@ -60,9 +60,10 @@ export default function ItemsPage() {
       if (isStoreUser && storeOwnerEmail) {
         // Store user - load data from the store owner
         console.log('[Items] Loading as STORE USER from owner:', storeOwnerEmail);
-        const [ownerItems, ownItems, ownerSuppliers, ownerWarehouses] = await Promise.all([
+        const [ownerItems, ownItemsByStoreOwner, managerCreated, ownerSuppliers, ownerWarehouses] = await Promise.all([
           base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date"),
           base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }, "-created_date"),
+          base44.entities.Item.filter({ created_by: currentUser.email }, "-created_date"),
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
           base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name")
         ]);
