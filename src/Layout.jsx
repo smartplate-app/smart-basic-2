@@ -140,6 +140,23 @@ const AppLayout = ({ children, currentPageName }) => {
                     console.error("[Layout] Error checking store user record:", storeUserError);
                   }
 
+                  // Auto-attach chain context for branch managers on first login
+                  try {
+                    if (!currentUser.chain_id) {
+                      const myStores = await base44.entities.ChainStore.filter({ user_email: currentUser.email });
+                      if (myStores && myStores.length > 0) {
+                        const store = myStores[0];
+                        await base44.auth.updateMe({
+                          chain_id: store.chain_id,
+                          is_chain_head: !!store.is_head_store,
+                          business_name: store.store_name
+                        });
+                      }
+                    }
+                  } catch (e) {
+                    console.log('[Layout] Could not attach chain context:', e?.message || e);
+                  }
+
                   const currentPath = location.pathname;
                                           if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
                                             console.log("[Layout] Redirecting to Orders page");

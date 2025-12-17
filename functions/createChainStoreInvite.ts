@@ -60,34 +60,8 @@ Deno.serve(async (req) => {
       is_head_store: false
     });
 
-    // 2b) Ensure a Base44 User exists and attach chain context (no links/emails)
-    let createdUserId = null;
-    try {
-      const existing = await base44.asServiceRole.entities.User.filter({ email: inviteeEmail.toLowerCase() });
-      if (!existing || existing.length === 0) {
-        const newUser = await base44.asServiceRole.entities.User.create({
-          email: inviteeEmail.toLowerCase(),
-          full_name: inviteeName,
-          role: 'user',
-          chain_id: chain.id,
-          is_chain_head: false,
-          business_name: storeName
-        });
-        createdUserId = newUser.id;
-      } else {
-        createdUserId = existing[0].id;
-        // Update user with chain info (idempotent)
-        await base44.asServiceRole.entities.User.update(createdUserId, {
-          chain_id: chain.id,
-          is_chain_head: false,
-          business_name: storeName
-        });
-      }
-    } catch (e) {
-      console.warn('[createChainStoreInvite] Could not ensure platform user exists/updated:', e?.message || e);
-    }
-
-    return Response.json({ success: true, chain, store, user_id: createdUserId });
+    // Note: User records are created automatically on first login (Google). No manual creation here.
+    return Response.json({ success: true, chain, store });
   } catch (error) {
     return Response.json({ success: false, error: error.message || 'Failed to create invite' }, { status: 500 });
   }
