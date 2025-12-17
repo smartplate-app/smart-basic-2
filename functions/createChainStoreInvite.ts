@@ -60,6 +60,24 @@ Deno.serve(async (req) => {
       is_head_store: false
     });
 
+    // 2b) Ensure a Base44 User exists (silent platform invite - no email needed)
+    let createdUserId = null;
+    try {
+      const existing = await base44.asServiceRole.entities.User.filter({ email: inviteeEmail.toLowerCase() });
+      if (!existing || existing.length === 0) {
+        const newUser = await base44.asServiceRole.entities.User.create({
+          email: inviteeEmail.toLowerCase(),
+          full_name: inviteeName,
+          role: 'user'
+        });
+        createdUserId = newUser.id;
+      } else {
+        createdUserId = existing[0].id;
+      }
+    } catch (e) {
+      console.warn('[createChainStoreInvite] Could not ensure platform user exists:', e?.message || e);
+    }
+
     // 3) Create UserInvite (type = chain_store)
     const token = crypto.randomUUID();
     const expiresAt = new Date();
