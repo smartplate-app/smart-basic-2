@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Loader } from 'lucide-react';
+import { Building2, Plus, Loader, Trash } from 'lucide-react';
 
 export default function ChainManagement() {
   const [user, setUser] = useState(null);
@@ -20,6 +20,7 @@ export default function ChainManagement() {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -65,6 +66,20 @@ export default function ChainManagement() {
       alert('Error: ' + (err.message || 'Failed'));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteStore = async (store) => {
+    if (store.is_head_store) return;
+    if (!confirm(`Delete "${store.store_name}" from chain?`)) return;
+    try {
+      setDeletingId(store.id);
+      await base44.entities.ChainStore.delete(store.id);
+      setStores(prev => prev.filter(s => s.id !== store.id));
+    } catch (err) {
+      alert('Failed to delete: ' + (err.message || 'Unknown error'));
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -148,12 +163,26 @@ export default function ChainManagement() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {stores.map((s) => (
                   <div key={s.id} className="border rounded-lg p-3 bg-white">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="font-semibold">{s.store_name}</div>
                         <div className="text-xs text-gray-500">{s.user_email}</div>
                       </div>
-                      {s.is_head_store && <Badge className="bg-yellow-100 text-yellow-800">Head</Badge>}
+                      <div className="flex items-center gap-2">
+                        {s.is_head_store ? (
+                          <Badge className="bg-yellow-100 text-yellow-800">Head</Badge>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteStore(s)}
+                            disabled={deletingId === s.id}
+                            className="text-red-600 border-red-200 hover:bg-red-50"
+                          >
+                            <Trash className="w-4 h-4 mr-1" /> {deletingId === s.id ? 'Deleting...' : 'Delete'}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
