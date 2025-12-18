@@ -25,6 +25,7 @@ import ToDoList from './pages/ToDoList';
 import StoreLogin from './pages/StoreLogin';
 import Tips from './pages/Tips';
 import ChainManagement from './pages/ChainManagement';
+import Transfers from './pages/Transfers';
 import __Layout from './Layout.jsx';
 
 
@@ -56,6 +57,7 @@ export const PAGES = {
     "StoreLogin": StoreLogin,
     "Tips": Tips,
     "ChainManagement": ChainManagement,
+    "Transfers": Transfers,
 }
 
 export const pagesConfig = {
