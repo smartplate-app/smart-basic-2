@@ -1190,7 +1190,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </Button>
             <Button
               onClick={handleSaveSchedule}
-              className={`bg-purple-600 hover:bg-purple-700 text:white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
               disabled={saving}
             >
               {saving ? (
