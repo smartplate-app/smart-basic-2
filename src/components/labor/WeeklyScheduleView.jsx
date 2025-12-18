@@ -1218,6 +1218,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
             </Button>
+            <Button 
+              onClick={handleDownloadJPG} 
+              variant="outline" 
+              size="sm" 
+              className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+            >
+              <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
+            </Button>
           </div>
 
           <div className={`text-sm text-gray-600 bg-blue-50 p-3 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
