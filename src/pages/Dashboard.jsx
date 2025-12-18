@@ -69,10 +69,12 @@ export default function DashboardPage() {
       const monthEnd = moment(selectedMonth).endOf('month');
       const endDate = today.isBefore(monthEnd) && today.isAfter(monthStart) ? today : monthEnd;
 
-      const [allDashboardData, allSchedules, allReceipts] = await Promise.all([
+      const [allDashboardData, allSchedules, allReceipts, incomingTransfers, outgoingTransfers] = await Promise.all([
         base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: selectedMonth }),
         base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
-        base44.entities.SupplyReceipt.filter({ created_by: workingEmail })
+        base44.entities.SupplyReceipt.filter({ created_by: workingEmail }),
+        base44.entities.InventoryTransfer.filter({ to_store_email: workingEmail, status: 'received' }),
+        base44.entities.InventoryTransfer.filter({ from_store_email: workingEmail, status: 'received' })
       ]);
 
       // Process dashboard data
@@ -152,14 +154,24 @@ export default function DashboardPage() {
       // Calculate food cost (remove VAT from receipts since invoice_total includes VAT)
       const VAT_RATE = 1.17;
       let totalFoodCost = 0;
+      // Supply receipts (excl. VAT)
       allReceipts.forEach(receipt => {
         const receiptDate = moment(receipt.received_date);
         if (receiptDate.isSameOrAfter(monthStart) && receiptDate.isSameOrBefore(endDate)) {
           const receiptTotal = receipt.invoice_total || receipt.calculated_total || 0;
-          // Remove VAT from receipt total
           totalFoodCost += receiptTotal / VAT_RATE;
         }
       });
+      // Inventory transfers between branches (no VAT)
+      const incomingTransferTotal = (incomingTransfers || []).reduce((sum, t) => {
+        const d = moment(t.transfer_date);
+        return (d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate)) ? sum + (t.total_value || 0) : sum;
+      }, 0);
+      const outgoingTransferTotal = (outgoingTransfers || []).reduce((sum, t) => {
+        const d = moment(t.transfer_date);
+        return (d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate)) ? sum + (t.total_value || 0) : sum;
+      }, 0);
+      totalFoodCost = totalFoodCost + incomingTransferTotal - outgoingTransferTotal;
       setCalculatedFoodCost(totalFoodCost);
 
     } catch (error) {
