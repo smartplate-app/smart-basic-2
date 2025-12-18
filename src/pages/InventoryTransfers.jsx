@@ -66,7 +66,9 @@ export default function InventoryTransfers() {
   const addLine = () => {
     if (!newLine.item_id) return;
     const item = items.find(i => i.id === newLine.item_id);
-    const unit_cost = newLine.unit_cost || item?.price_after_discount || item?.price || 0;
+    const unit_cost = (item?.price_after_discount != null)
+      ? Number(item.price_after_discount)
+      : Number((item?.price || 0) * (1 - ((item?.discount || 0) / 100)));
     const line = {
       item_id: item?.id,
       item_name: item?.name,
@@ -74,7 +76,7 @@ export default function InventoryTransfers() {
       unit: item?.unit || "unit",
       quantity: Number(newLine.quantity) || 0,
       unit_cost: Number(unit_cost) || 0,
-      total_cost: (Number(newLine.quantity) || 0) * (Number(unit_cost) || 0),
+      total_cost: Number(newLine.quantity || 0) * Number(unit_cost || 0),
     };
     setLines(prev => [...prev, line]);
     setNewLine({ item_id: "", quantity: 1, unit_cost: 0 });
@@ -187,7 +189,13 @@ export default function InventoryTransfers() {
             <Label className="mb-2 block">Add Item</Label>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
               <div>
-                <Select value={newLine.item_id} onValueChange={(v) => setNewLine({ ...newLine, item_id: v })}>
+                <Select value={newLine.item_id} onValueChange={(v) => {
+                  const itm = items.find(i => i.id === v);
+                  const computed = (itm && itm.price_after_discount != null)
+                    ? itm.price_after_discount
+                    : ((itm?.price || 0) * (1 - ((itm?.discount || 0) / 100)));
+                  setNewLine({ ...newLine, item_id: v, unit_cost: Number((computed || 0).toFixed(2)) });
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select item" />
                   </SelectTrigger>
@@ -205,8 +213,8 @@ export default function InventoryTransfers() {
               </div>
               <div>
                 <Label>Unit Cost</Label>
-                <Input type="number" min="0" step="0.01" value={newLine.unit_cost}
-                  onChange={(e) => setNewLine({ ...newLine, unit_cost: e.target.value })} />
+                <Input type="number" min="0" step="0.01" value={newLine.unit_cost || 0} disabled readOnly />
+                <div className="text-xs text-gray-500 mt-1">Auto from item price (after discount if available)</div>
               </div>
               <div>
                 <Button onClick={addLine} className="w-full"><Plus className="w-4 h-4 mr-2" /> Add</Button>
