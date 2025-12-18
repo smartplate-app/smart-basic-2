@@ -69,10 +69,12 @@ export default function DashboardPage() {
       const monthEnd = moment(selectedMonth).endOf('month');
       const endDate = today.isBefore(monthEnd) && today.isAfter(monthStart) ? today : monthEnd;
 
-      const [allDashboardData, allSchedules, allReceipts] = await Promise.all([
+      const [allDashboardData, allSchedules, allReceipts, incomingTransfers, outgoingTransfers] = await Promise.all([
         base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: selectedMonth }),
         base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
-        base44.entities.SupplyReceipt.filter({ created_by: workingEmail })
+        base44.entities.SupplyReceipt.filter({ created_by: workingEmail }),
+        base44.entities.InventoryTransfer.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }),
+        base44.entities.InventoryTransfer.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' })
       ]);
 
       // Process dashboard data
@@ -160,7 +162,13 @@ export default function DashboardPage() {
           totalFoodCost += receiptTotal / VAT_RATE;
         }
       });
-      setCalculatedFoodCost(totalFoodCost);
+
+      // Branch transfers: add incoming, subtract outgoing (costs assumed excl. VAT)
+      const incomingTransfersTotal = (incomingTransfers || []).reduce((sum, t) => sum + (t.total_cost || 0), 0);
+      const outgoingTransfersTotal = (outgoingTransfers || []).reduce((sum, t) => sum + (t.total_cost || 0), 0);
+      const adjustedFoodCost = totalFoodCost + incomingTransfersTotal - outgoingTransfersTotal;
+
+      setCalculatedFoodCost(adjustedFoodCost);
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
