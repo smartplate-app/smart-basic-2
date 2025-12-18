@@ -978,10 +978,10 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       costElements.forEach(el => el.style.display = '');
       
       const image = canvas.toDataURL('image/jpeg', 0.95);
-       const link = document.createElement('a');
-       link.href = image;
-       link.download = 'AJ.jpg';
-       link.click();
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = 'AJ.jpg';
+      link.click();
       
       toast.success(language === 'he' ? 'הלוח הורד בהצלחה' : 'Schedule downloaded successfully');
     } catch (error) {
@@ -1178,10 +1178,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               <Copy className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {t('copy_to_next_week')}
             </Button>
-            <Button onClick={handleDownloadJPG} variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!schedule?.shifts?.length}>
-              <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'הורד תמונה (לרוחב)' : 'Download JPG (landscape)'}
-            </Button>
             <Button 
               onClick={handleClearSchedule} 
               variant="outline" 
@@ -1194,7 +1190,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </Button>
             <Button
               onClick={handleSaveSchedule}
-              className={`bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`bg-purple-600 hover:bg-purple-700 text:white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
               disabled={saving}
             >
               {saving ? (
@@ -1203,6 +1199,24 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               )}
               {t('save_schedule')}
+            </Button>
+            <Button 
+              onClick={handleDownloadJPG} 
+              variant="outline" 
+              size="sm" 
+              className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+            >
+              <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
+            </Button>
+            <Button 
+              onClick={handleDownloadJPG} 
+              variant="outline" 
+              size="sm" 
+              className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+            >
+              <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
             </Button>
           </div>
 
