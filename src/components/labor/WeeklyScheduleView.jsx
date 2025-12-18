@@ -1174,6 +1174,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               <FileText className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {t('manage_templates')}
             </Button>
+            <Button 
+              onClick={handleDownloadJPG} 
+              variant="outline" 
+              size="sm" 
+              className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+            >
+              <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
+            </Button>
             <Button onClick={handleCopyToNextWeek} variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!schedule?.shifts?.length}>
               <Copy className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {t('copy_to_next_week')}
