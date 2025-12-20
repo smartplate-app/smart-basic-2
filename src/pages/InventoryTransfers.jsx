@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, ArrowLeftRight, Loader } from "lucide-react";
 import moment from "moment";
+import { useLanguage } from "../components/LanguageProvider";
 
 export default function InventoryTransfers() {
+  const { t, language } = useLanguage();
+  const isRTL = language === 'he' || language === 'ar';
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -88,15 +91,15 @@ export default function InventoryTransfers() {
 
   const saveTransfer = async () => {
     if (!fromStore || !toStore) {
-      alert("Please select From and To stores");
+      alert(language === 'he' ? 'אנא בחרו חנות מקור ויעד' : 'Please select From and To stores');
       return;
     }
     if (fromStore.id === toStore.id) {
-      alert("From and To stores must be different");
+      alert(language === 'he' ? 'חנות המקור והיעד חייבות להיות שונות' : 'From and To stores must be different');
       return;
     }
     if (lines.length === 0) {
-      alert("Add at least one line item");
+      alert(language === 'he' ? 'הוסיפו לפחות פריט אחד' : 'Add at least one line item');
       return;
     }
 
@@ -120,9 +123,9 @@ export default function InventoryTransfers() {
       const res = await base44.entities.InventoryTransfer.create(payload);
       setTransfers(prev => [res, ...prev]);
       setLines([]);
-      alert("Transfer saved");
+      alert(language === 'he' ? 'העברה נשמרה' : 'Transfer saved');
     } catch (e) {
-      alert("Failed to save: " + (e?.message || "Unknown error"));
+      alert((language === 'he' ? 'שמירת העברה נכשלה: ' : 'Failed to save: ') + (e?.message || (language === 'he' ? 'שגיאה לא ידועה' : 'Unknown error')));
     } finally {
       setSaving(false);
     }
@@ -137,10 +140,10 @@ export default function InventoryTransfers() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center gap-2 mb-6">
         <ArrowLeftRight className="w-6 h-6 text-purple-700" />
-        <h1 className="text-3xl font-bold">Inventory Transfers</h1>
+        <h1 className="text-3xl font-bold">{language === 'he' ? 'העברות מלאי' : 'Inventory Transfers'}</h1>
       </div>
 
       {error && (
@@ -149,15 +152,15 @@ export default function InventoryTransfers() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>New Transfer</CardTitle>
+          <CardTitle>{language === 'he' ? 'העברה חדשה' : 'New Transfer'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>From Store</Label>
+              <Label>{language === 'he' ? 'חנות מקור' : 'From Store'}</Label>
               <Select value={form.from_store_id} onValueChange={(v) => setForm({ ...form, from_store_id: v })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select store" />
+                  <SelectValue placeholder={language === 'he' ? 'בחר סניף' : 'Select store'} />
                 </SelectTrigger>
                 <SelectContent>
                   {stores.map(s => (
@@ -167,10 +170,10 @@ export default function InventoryTransfers() {
               </Select>
             </div>
             <div>
-              <Label>To Store</Label>
+              <Label>{language === 'he' ? 'חנות יעד' : 'To Store'}</Label>
               <Select value={form.to_store_id} onValueChange={(v) => setForm({ ...form, to_store_id: v })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select store" />
+                  <SelectValue placeholder={language === 'he' ? 'בחר סניף' : 'Select store'} />
                 </SelectTrigger>
                 <SelectContent>
                   {stores.map(s => (
@@ -180,13 +183,13 @@ export default function InventoryTransfers() {
               </Select>
             </div>
             <div>
-              <Label>Date</Label>
+              <Label>{language === 'he' ? 'תאריך' : 'Date'}</Label>
               <Input type="date" value={form.transfer_date} onChange={(e) => setForm({ ...form, transfer_date: e.target.value })} />
             </div>
           </div>
 
           <div>
-            <Label className="mb-2 block">Add Item</Label>
+            <Label className="mb-2 block">{language === 'he' ? 'הוסף פריט' : 'Add Item'}</Label>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
               <div>
                 <Select value={newLine.item_id} onValueChange={(v) => {
@@ -197,7 +200,7 @@ export default function InventoryTransfers() {
                   setNewLine({ ...newLine, item_id: v, unit_cost: Number((computed || 0).toFixed(2)) });
                 }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select item" />
+                    <SelectValue placeholder={language === 'he' ? 'בחר פריט' : 'Select item'} />
                   </SelectTrigger>
                   <SelectContent className="max-h-80">
                     {items.map(i => (
@@ -207,17 +210,17 @@ export default function InventoryTransfers() {
                 </Select>
               </div>
               <div>
-                <Label>Quantity</Label>
+                <Label>{language === 'he' ? 'כמות' : 'Quantity'}</Label>
                 <Input type="number" min="0" step="0.01" value={newLine.quantity}
                   onChange={(e) => setNewLine({ ...newLine, quantity: e.target.value })} />
               </div>
               <div>
-                <Label>Unit Cost</Label>
+                <Label>{language === 'he' ? 'עלות ליחידה' : 'Unit Cost'}</Label>
                 <Input type="number" min="0" step="0.01" value={newLine.unit_cost || 0} disabled readOnly />
-                <div className="text-xs text-gray-500 mt-1">Auto from item price (after discount if available)</div>
+                <div className="text-xs text-gray-500 mt-1">{language === 'he' ? 'מחושב אוטומטית ממחיר הפריט (לאחר הנחה אם קיימת)' : 'Auto from item price (after discount if available)'}</div>
               </div>
               <div>
-                <Button onClick={addLine} className="w-full"><Plus className="w-4 h-4 mr-2" /> Add</Button>
+                <Button onClick={addLine} className="w-full"><Plus className="w-4 h-4 mr-2" /> {language === 'he' ? 'הוסף' : 'Add'}</Button>
               </div>
             </div>
           </div>
@@ -226,19 +229,19 @@ export default function InventoryTransfers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Unit Cost</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>{language === 'he' ? 'פריט' : 'Item'}</TableHead>
+                  <TableHead>{language === 'he' ? 'ספק' : 'Supplier'}</TableHead>
+                  <TableHead>{language === 'he' ? 'יחידה' : 'Unit'}</TableHead>
+                  <TableHead className="text-right">{language === 'he' ? 'כמות' : 'Qty'}</TableHead>
+                  <TableHead className="text-right">{language === 'he' ? 'עלות ליחידה' : 'Unit Cost'}</TableHead>
+                  <TableHead className="text-right">{language === 'he' ? 'סה"כ' : 'Total'}</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {lines.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-gray-500">No items added</TableCell>
+                    <TableCell colSpan={7} className="text-center text-gray-500">{language === 'he' ? 'לא נוספו פריטים' : 'No items added'}</TableCell>
                   </TableRow>
                 ) : (
                   lines.map((l, idx) => (
@@ -258,7 +261,7 @@ export default function InventoryTransfers() {
                   ))
                 )}
                 <TableRow>
-                  <TableCell colSpan={5} className="text-right font-semibold">Total</TableCell>
+                  <TableCell colSpan={5} className="text-right font-semibold">{language === 'he' ? 'סה"כ' : 'Total'}</TableCell>
                   <TableCell className="text-right font-bold">{totalCost.toFixed(2)}</TableCell>
                   <TableCell />
                 </TableRow>
@@ -267,14 +270,14 @@ export default function InventoryTransfers() {
           </div>
 
           <div>
-            <Label>Notes</Label>
-            <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Optional" />
+            <Label>{language === 'he' ? 'הערות' : 'Notes'}</Label>
+            <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={language === 'he' ? 'אופציונלי' : 'Optional'} />
           </div>
 
           <div className="flex justify-end">
             <Button onClick={saveTransfer} disabled={saving || lines.length === 0}>
               {saving ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <ArrowLeftRight className="w-4 h-4 mr-2" />}
-              Save Transfer
+              {language === 'he' ? 'שמור העברה' : 'Save Transfer'}
             </Button>
           </div>
         </CardContent>
@@ -282,25 +285,25 @@ export default function InventoryTransfers() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transfers</CardTitle>
+          <CardTitle>{language === 'he' ? 'העברות אחרונות' : 'Recent Transfers'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>From</TableHead>
-                  <TableHead>To</TableHead>
-                  <TableHead className="text-right">Items</TableHead>
-                  <TableHead className="text-right">Total Cost</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{language === 'he' ? 'תאריך' : 'Date'}</TableHead>
+                  <TableHead>{language === 'he' ? 'מקור' : 'From'}</TableHead>
+                  <TableHead>{language === 'he' ? 'יעד' : 'To'}</TableHead>
+                  <TableHead className="text-right">{language === 'he' ? 'פריטים' : 'Items'}</TableHead>
+                  <TableHead className="text-right">{language === 'he' ? 'סה"כ' : 'Total Cost'}</TableHead>
+                  <TableHead>{language === 'he' ? 'סטטוס' : 'Status'}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transfers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-gray-500">No transfers yet</TableCell>
+                    <TableCell colSpan={6} className="text-center text-gray-500">{language === 'he' ? 'אין העברות עדיין' : 'No transfers yet'}</TableCell>
                   </TableRow>
                 ) : (
                   transfers.map(t => (
