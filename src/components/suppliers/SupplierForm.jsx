@@ -30,7 +30,20 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
       alert(t('supplier_name_phone_required'));
       return;
     }
-    onSubmit(formData);
+    // Sanitize numeric fields before submit
+    const payload = { ...formData };
+    // grant_amount: if empty -> remove; else normalize comma/dot and cast to number
+    if (payload.grant_amount === "" || payload.grant_amount === null || typeof payload.grant_amount === 'undefined') {
+      delete payload.grant_amount;
+    } else {
+      const normalized = Number(String(payload.grant_amount).replace(',', '.'));
+      if (Number.isNaN(normalized)) {
+        alert(language === 'he' ? 'סכום המענק אינו מספר תקין' : 'Grant amount is not a valid number');
+        return;
+      }
+      payload.grant_amount = normalized;
+    }
+    onSubmit(payload);
   };
 
   const handleChange = (field, value) => {
@@ -152,9 +165,11 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
               <Label htmlFor="grant_amount">{language === 'he' ? 'סכום מענק/הנחה (₪)' : 'Grant/Discount Amount (₪)'}</Label>
               <Input
                 id="grant_amount"
-                type="number"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
                 value={formData.grant_amount || ""}
-                onChange={(e) => handleChange("grant_amount", parseFloat(e.target.value) || "")}
+                onChange={(e) => handleChange("grant_amount", e.target.value)}
                 placeholder={language === 'he' ? 'סכום' : 'Amount'}
               />
             </div>
