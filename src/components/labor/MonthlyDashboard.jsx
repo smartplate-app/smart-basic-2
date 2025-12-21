@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +28,9 @@ export default function MonthlyDashboard({ user }) {
   function getMonthDateRange(monthStr) {
     const [year, month] = monthStr.split('-').map(Number);
     const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0);
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && (today.getMonth() + 1) === month;
+    const endDate = isCurrentMonth ? today : new Date(year, month, 0);
     return {
       start: startDate.toISOString().split('T')[0],
       end: endDate.toISOString().split('T')[0]
