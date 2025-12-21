@@ -49,6 +49,17 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
       }
     }
   }, [defaultSupplierId, suppliers]);
+
+  // If suppliers load later and none selected yet, auto-select the only supplier
+  React.useEffect(() => {
+    if (!item && !currentItem.supplier_id && suppliers && suppliers.length === 1) {
+      setCurrentItem(prev => ({
+        ...prev,
+        supplier_id: suppliers[0].id,
+        supplier_name: suppliers[0].name
+      }));
+    }
+  }, [suppliers, currentItem.supplier_id, item]);
   
   const handleChange = (field, value) => {
     setCurrentItem(prev => ({ ...prev, [field]: value }));
