@@ -258,9 +258,9 @@ export default function SuppliersPage() {
   };
 
   const filteredSuppliers = suppliers.filter(supplier =>
-    supplier.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    String(supplier.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(supplier.phone || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(supplier.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const generateReport = async () => {

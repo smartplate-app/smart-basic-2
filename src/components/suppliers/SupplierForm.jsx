@@ -30,7 +30,15 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
       alert(t('supplier_name_phone_required'));
       return;
     }
-    onSubmit(formData);
+    const cleaned = { ...formData };
+    // Ensure phone stays a string and allow any format
+    cleaned.phone = String(cleaned.phone);
+    // Drop invalid/empty optional fields to avoid backend format validation errors
+    if (!cleaned.email || !/^\S+@\S+\.\S+$/.test(cleaned.email)) delete cleaned.email;
+    if (cleaned.grant_amount === "" || cleaned.grant_amount === null || Number.isNaN(Number(cleaned.grant_amount))) delete cleaned.grant_amount;
+    if (!cleaned.grant_document_url) delete cleaned.grant_document_url;
+    if (!cleaned.contact_person) delete cleaned.contact_person;
+    onSubmit(cleaned);
   };
 
   const handleChange = (field, value) => {
@@ -86,8 +94,7 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
               <Label htmlFor="phone">{t('phone')} *</Label>
               <Input
                 id="phone"
-                type="tel" // Changed to 'tel' for numeric keyboard on mobile
-                inputMode="tel" // Added to force numeric keyboard on iPhones
+                type="text"
                 value={formData.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 placeholder={t('phone')}
