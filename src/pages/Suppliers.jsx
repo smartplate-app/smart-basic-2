@@ -265,7 +265,8 @@ export default function SuppliersPage() {
     }
     
     try {
-      await base44.entities.Supplier.delete(supplierId);
+      const { data } = await base44.functions.invoke('deleteSupplierAndItems', { supplierId });
+      if (!data?.success) throw new Error(data?.error || 'Failed to delete');
       await loadData(user);
     } catch (error) {
       console.error("Error deleting supplier:", error);

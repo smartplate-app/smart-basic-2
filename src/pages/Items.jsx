@@ -310,7 +310,12 @@ export default function ItemsPage() {
     }
 
     try {
-      await base44.entities.Item.delete(item.id);
+      if (user?.store_user_owner_email || user?.acting_as_store_email) {
+        const { data } = await base44.functions.invoke('deleteItemForStore', { itemId: item.id });
+        if (!data?.success) throw new Error(data?.error || 'Failed to delete');
+      } else {
+        await base44.entities.Item.delete(item.id);
+      }
       await loadData(user);
     } catch (error) {
       console.error("Error deleting item:", error);
