@@ -25,7 +25,7 @@ const AppLayout = ({ children, currentPageName }) => {
       const [retryCount, setRetryCount] = React.useState(0);
       const [storeUserRole, setStoreUserRole] = React.useState(null); // null = owner, 'manager', or 'worker'
       const { t, language } = useLanguage();
-      const isPartner = user?.is_partner === true;
+      const isPartner = (storeUserRole === 'partner') || (user?.store_user_role === 'partner');
   const [navSearchTerm, setNavSearchTerm] = React.useState("");
 
   // Partner read-only: block writes globally
