@@ -90,7 +90,7 @@ export default function ItemsPage() {
           .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
         suppliersData = ownerSuppliers;
         warehousesData = ownerWarehouses;
-      } else if (!currentUser.is_chain_head) {
+      } else if (currentUser.chain_id && !currentUser.is_chain_head) {
         // Branch store in chain (with fallbacks)
         let effectiveChainId = currentUser.chain_id;
         if (!effectiveChainId) {
