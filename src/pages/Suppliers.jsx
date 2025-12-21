@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Scan, Loader, FileSpreadsheet, Store, ArrowLeft, Download, BarChart3 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { createPageUrl } from "@/utils";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import SupplierForm from "../components/suppliers/SupplierForm";
@@ -207,25 +208,38 @@ export default function SuppliersPage() {
 
           if (editingSupplier) {
             await base44.entities.Supplier.update(editingSupplier.id, supplierData);
-          } else {
-            // If acting as a store, we need to create the supplier with that store's email
-            // This requires using asServiceRole to set created_by properly
-            if (user.acting_as_store_email) {
-              // Create supplier with the branch store's email as created_by
-              await base44.functions.invoke('createSupplierForStore', {
-                supplierData,
-                storeEmail: user.acting_as_store_email
-              });
-            } else if (user.store_user_owner_email) {
-              // If user is a manager/worker, create with store owner's email
-              await base44.functions.invoke('createSupplierForStore', {
-                supplierData,
-                storeEmail: user.store_user_owner_email
-              });
-            } else {
-              await base44.entities.Supplier.create(supplierData);
-            }
+            setShowForm(false);
+            setEditingSupplier(null);
+            await loadData(user);
+            return;
           }
+
+          // Create NEW supplier and redirect to Items with supplierId for quick item attach
+          let newSupplierId = null;
+          if (user.acting_as_store_email) {
+            const { data } = await base44.functions.invoke('createSupplierForStore', {
+              supplierData,
+              storeEmail: user.acting_as_store_email
+            });
+            if (data?.success) newSupplierId = data?.supplier?.id || null;
+          } else if (user.store_user_owner_email) {
+            const { data } = await base44.functions.invoke('createSupplierForStore', {
+              supplierData,
+              storeEmail: user.store_user_owner_email
+            });
+            if (data?.success) newSupplierId = data?.supplier?.id || null;
+          } else {
+            const created = await base44.entities.Supplier.create(supplierData);
+            newSupplierId = created?.id || null;
+          }
+
+          // If created successfully → redirect to Items page with preselect
+          if (newSupplierId) {
+            window.location.href = createPageUrl(`Items?supplierId=${newSupplierId}`);
+            return;
+          }
+
+          // Fallback: just close and refresh list
           setShowForm(false);
           setEditingSupplier(null);
           await loadData(user);
