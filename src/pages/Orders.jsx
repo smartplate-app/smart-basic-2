@@ -28,6 +28,17 @@ export default function OrdersPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const { t } = useLanguage();
 
+  // One-time cleanup of any leftover acting_as_store flags
+  useEffect(() => {
+    (async () => {
+      if (localStorage.getItem('b44_cleared_user_ctx') === '1') return;
+      await base44.functions.invoke('clearUserContext', {});
+      localStorage.setItem('b44_cleared_user_ctx', '1');
+      const refreshedUser = await base44.auth.me();
+      setUser(refreshedUser);
+    })();
+  }, []);
+
   const loadData = async (currentUser, retryAttempt = 0) => {
     try {
       setLoading(true);
