@@ -25,31 +25,9 @@ const AppLayout = ({ children, currentPageName }) => {
       const [retryCount, setRetryCount] = React.useState(0);
       const [storeUserRole, setStoreUserRole] = React.useState(null); // null = owner, 'manager', or 'worker'
       const { t, language } = useLanguage();
-      const isPartner = user?.is_partner === true;
   const [navSearchTerm, setNavSearchTerm] = React.useState("");
 
-  // Partner read-only: block writes globally
-  React.useEffect(() => {
-    if (!isPartner) return;
-    try {
-      const ents = base44.entities || {};
-      Object.keys(ents).forEach((key) => {
-        const e = ents[key];
-        ["create", "update", "delete", "bulkCreate"].forEach((m) => {
-          if (e && typeof e[m] === "function" && !e[`__partner_wrapped_${m}`]) {
-            e[`__partner_wrapped_${m}`] = true;
-            const original = e[m].bind(e);
-            e[m] = async (...args) => {
-              alert(language === 'he' ? 'מצב קריאה בלבד לשותפים - אין הרשאה לשנות נתונים' : 'Partner read-only mode: changes are not allowed');
-              throw new Error("partner_read_only");
-            };
-          }
-        });
-      });
-    } catch (e) {
-      console.warn("Partner read-only patch failed", e);
-    }
-  }, [isPartner, language]);
+
 
   // Auto-hide sidebar on smaller screens
   React.useEffect(() => {
@@ -138,18 +116,7 @@ const AppLayout = ({ children, currentPageName }) => {
                           store_user_store_name: activeRecord.store_name,
                           store_user_revoked: false
                         });
-                        // Partner read-only: view owner's data context
-                        if (isPartner && !user?.admin_original_email) {
-                          try {
-                            await base44.auth.updateMe({
-                              acting_as_store_email: activeRecord.owner_email,
-                              acting_as_store_name: activeRecord.store_name
-                            });
-                            console.log('[Layout] Partner mode: set acting_as_store_email to owner');
-                          } catch (e) {
-                            console.warn('[Layout] Failed to set partner viewing context', e);
-                          }
-                        }
+
                       } else if (storeUserRecords.length > 0 && storeUserRecords.every(r => !r.is_active)) {
                         // User has StoreUser records but all are inactive (access revoked)
                         console.log('[Layout] StoreUser records exist but all inactive - access revoked');
@@ -416,11 +383,6 @@ const AppLayout = ({ children, currentPageName }) => {
             </div>
           )}
 
-          {isPartner && (
-            <div className="bg-amber-50 text-amber-800 border-b border-amber-200 px-4 py-2 text-sm text-center">
-              {language === 'he' ? 'מצב קריאה בלבד לשותפים: לא ניתן לבצע שינויים' : 'Partner read-only mode: changes are disabled'}
-            </div>
-          )}
           <header className={`bg-white border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <button 
                           onClick={() => setSidebarOpen(!sidebarOpen)}

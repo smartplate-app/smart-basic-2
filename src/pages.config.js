@@ -4,7 +4,6 @@ import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import InventoryTransfers from './pages/InventoryTransfers';
 import InviteUser from './pages/InviteUser';
-import Items from './pages/Items';
 import JoinRestaurant from './pages/JoinRestaurant';
 import LaborCost from './pages/LaborCost';
 import MonthlyCount from './pages/MonthlyCount';
@@ -15,8 +14,6 @@ import Register from './pages/Register';
 import RestaurantInvite from './pages/RestaurantInvite';
 import SalesPrediction from './pages/SalesPrediction';
 import StoreLogin from './pages/StoreLogin';
-import StoreUsers from './pages/StoreUsers';
-import Suppliers from './pages/Suppliers';
 import SupplyReceipts from './pages/SupplyReceipts';
 import TestInviteLinks from './pages/TestInviteLinks';
 import TestInvites from './pages/TestInvites';
@@ -27,6 +24,9 @@ import Users from './pages/Users';
 import Warehouses from './pages/Warehouses';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
+import Items from './pages/Items';
+import Suppliers from './pages/Suppliers';
+import StoreUsers from './pages/StoreUsers';
 import __Layout from './Layout.jsx';
 
 
@@ -37,7 +37,6 @@ export const PAGES = {
     "Home": Home,
     "InventoryTransfers": InventoryTransfers,
     "InviteUser": InviteUser,
-    "Items": Items,
     "JoinRestaurant": JoinRestaurant,
     "LaborCost": LaborCost,
     "MonthlyCount": MonthlyCount,
@@ -48,8 +47,6 @@ export const PAGES = {
     "RestaurantInvite": RestaurantInvite,
     "SalesPrediction": SalesPrediction,
     "StoreLogin": StoreLogin,
-    "StoreUsers": StoreUsers,
-    "Suppliers": Suppliers,
     "SupplyReceipts": SupplyReceipts,
     "TestInviteLinks": TestInviteLinks,
     "TestInvites": TestInvites,
@@ -60,6 +57,9 @@ export const PAGES = {
     "Warehouses": Warehouses,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
+    "Items": Items,
+    "Suppliers": Suppliers,
+    "StoreUsers": StoreUsers,
 }
 
 export const pagesConfig = {
