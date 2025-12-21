@@ -32,12 +32,10 @@ export default function ItemsPage() {
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const s = params.get('supplier_id');
+    const s = params.get('supplier_id') || params.get('supplierId');
     const add = params.get('add') || params.get('openForm');
     if (s) setDefaultSupplierId(s);
-    if ((s || add === '1') && !showForm) {
-      setShowForm(true);
-    }
+    // Do not open the form here; wait until suppliers are loaded to avoid empty supplier selection
   }, []);
 
   const loadData = async (currentUser, retryCount = 0) => {

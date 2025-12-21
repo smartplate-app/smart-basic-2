@@ -171,7 +171,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
             />
           </div>
           
-          {suppliers && suppliers.length > 1 && ( // Conditional rendering for supplier select
+          {((suppliers && suppliers.length !== 1) || !currentItem.supplier_id) && ( // Show when none or multiple suppliers, or when not preselected
             <div className="space-y-2">
               <Label htmlFor="supplier_id">{t('supplier')} *</Label>
               <Select 
