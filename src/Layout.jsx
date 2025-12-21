@@ -144,6 +144,24 @@ const AppLayout = ({ children, currentPageName }) => {
                     console.error("[Layout] Error checking store user record:", storeUserError);
                   }
 
+                  // One-time cleanup for user who requested worker removal
+                  try {
+                    if (currentUser?.email === 'nitsan.bennet@gmail.com') {
+                      const flagKey = 'b44_removed_worker_' + currentUser.email;
+                      if (!localStorage.getItem(flagKey)) {
+                        const { data } = await base44.functions.invoke('removeStoreMembership', { userEmail: currentUser.email });
+                        console.log('[Layout] removeStoreMembership result:', data);
+                        localStorage.setItem(flagKey, '1');
+                        // Refresh local user context
+                        const refreshed = await base44.auth.me();
+                        setUser(refreshed);
+                        setStoreUserRole(null);
+                      }
+                    }
+                  } catch (cleanupErr) {
+                    console.log('[Layout] Cleanup worker membership failed:', cleanupErr?.message || cleanupErr);
+                  }
+
                   // Auto-attach chain context for branch managers on first login (service-role)
                   try {
                     if (!currentUser.chain_id) {
