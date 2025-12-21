@@ -79,7 +79,11 @@ export default function ItemsPage() {
         // Remove duplicates by id and sort by created_date descending (newest first)
         itemsData = Array.from(new Map(allItems.map(item => [item.id, item])).values())
           .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-        suppliersData = ownerSuppliers;
+        // Include suppliers linked via store_owner_email and ones created by the current user
+        const storeSuppliers = await base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, "name");
+        const ownUserSuppliers = await base44.entities.Supplier.filter({ created_by: currentUser.email }, "name");
+        suppliersData = [...ownerSuppliers, ...storeSuppliers, ...ownUserSuppliers]
+          .filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         warehousesData = ownerWarehouses;
       } else if (!currentUser.is_chain_head) {
         // Branch store in chain (with fallbacks)
@@ -113,9 +117,13 @@ export default function ItemsPage() {
               base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
               base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
             ]);
-            itemsData = [...headItems, ...ownItems]
+            // Also include items/suppliers attributed to this branch via store_owner_email
+            const ownItemsByStoreOwner = await base44.entities.Item.filter({ store_owner_email: currentUser.email }, "-created_date");
+            const storeSuppliers = await base44.entities.Supplier.filter({ store_owner_email: currentUser.email }, "name");
+            itemsData = [...headItems, ...ownItems, ...ownItemsByStoreOwner]
               .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-            suppliersData = [...headSuppliers, ...ownSuppliers];
+            suppliersData = [...headSuppliers, ...ownSuppliers, ...storeSuppliers]
+              .filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
             warehousesData = [...headWarehouses, ...ownWarehouses];
           }
         }
@@ -130,7 +138,10 @@ export default function ItemsPage() {
         const allItems = [...ownCreated, ...ownedByStore];
         itemsData = Array.from(new Map(allItems.map(i => [i.id, i])).values())
           .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-        suppliersData = suppliers;
+        // Include suppliers linked via store_owner_email as well
+        const storeSuppliers = await base44.entities.Supplier.filter({ store_owner_email: currentUser.email }, "name");
+        suppliersData = [...suppliers, ...storeSuppliers]
+          .filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         warehousesData = warehouses;
       }
 
