@@ -8,7 +8,7 @@ import { X, Plus } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Warehouse } from "@/entities/Warehouse";
 
-export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCancel, onWarehouseCreated }) {
+export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCancel, onWarehouseCreated, defaultSupplierId }) {
   const { t } = useLanguage();
 
   const UNITS = [
@@ -20,8 +20,8 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
 
   const [currentItem, setCurrentItem] = React.useState(item || {
     name: "",
-    supplier_id: suppliers && suppliers.length === 1 ? suppliers[0].id : "",
-    supplier_name: suppliers && suppliers.length === 1 ? suppliers[0].name : "",
+    supplier_id: (defaultSupplierId) ? defaultSupplierId : (suppliers && suppliers.length === 1 ? suppliers[0].id : ""),
+    supplier_name: (defaultSupplierId ? (suppliers.find(s => s.id === defaultSupplierId)?.name || "") : (suppliers && suppliers.length === 1 ? suppliers[0].name : "")),
     catalog_number: "",
     warehouse_id: "",
     warehouse_name: "",
@@ -35,6 +35,20 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
   const [showWarehouseForm, setShowWarehouseForm] = useState(false);
   const [newWarehouseName, setNewWarehouseName] = useState("");
   const [creatingWarehouse, setCreatingWarehouse] = useState(false);
+
+  // Auto-select supplier when provided via URL/defaultSupplierId once suppliers are loaded
+  React.useEffect(() => {
+    if (!item && defaultSupplierId && !currentItem.supplier_id && suppliers && suppliers.length > 0) {
+      const selectedSupplier = suppliers.find(s => s.id === defaultSupplierId);
+      if (selectedSupplier) {
+        setCurrentItem(prev => ({
+          ...prev,
+          supplier_id: defaultSupplierId,
+          supplier_name: selectedSupplier.name
+        }));
+      }
+    }
+  }, [defaultSupplierId, suppliers]);
   
   const handleChange = (field, value) => {
     setCurrentItem(prev => ({ ...prev, [field]: value }));

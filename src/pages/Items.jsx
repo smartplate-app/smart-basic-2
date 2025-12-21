@@ -28,7 +28,17 @@ export default function ItemsPage() {
   const [networkError, setNetworkError] = useState(null);
   const { t } = useLanguage();
   const [viewMode, setViewMode] = useState("cards");
-  const [prefillItem, setPrefillItem] = useState(null);
+  const [defaultSupplierId, setDefaultSupplierId] = useState(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get('supplier_id');
+    const add = params.get('add') || params.get('openForm');
+    if (s) setDefaultSupplierId(s);
+    if ((s || add === '1') && !showForm) {
+      setShowForm(true);
+    }
+  }, []);
 
   const loadData = async (currentUser, retryCount = 0) => {
     try {
@@ -310,32 +320,6 @@ export default function ItemsPage() {
     }
   };
 
-  // Auto-open add item when redirected with supplierId
-  React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sid = params.get('supplierId');
-    if (!sid) return;
-    if (!suppliers || suppliers.length === 0) return;
-    if (showForm) return;
-    const s = suppliers.find(x => x.id === sid);
-    setPrefillItem({
-      name: "",
-      supplier_id: sid,
-      supplier_name: s?.name || "",
-      catalog_number: "",
-      warehouse_id: "",
-      warehouse_name: "",
-      unit: "unit",
-      units_per_package: 1,
-      price: 0,
-      discount: 0,
-      minimum_stock: 0
-    });
-    setShowForm(true);
-    const cleanUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, '', cleanUrl);
-  }, [suppliers, showForm]);
-
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -431,18 +415,18 @@ export default function ItemsPage() {
 
         <AnimatePresence>
           {showForm && (
-              <ItemForm
-                item={prefillItem}
-                suppliers={suppliers}
-                warehouses={warehouses}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setShowForm(false);
-                  setPrefillItem(null);
-                }}
-                onWarehouseCreated={() => user && loadData(user)}
-              />
-            )}
+            <ItemForm
+              item={null}
+              suppliers={suppliers}
+              warehouses={warehouses}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setShowForm(false);
+              }}
+              onWarehouseCreated={() => user && loadData(user)}
+              defaultSupplierId={defaultSupplierId}
+            />
+          )}
         </AnimatePresence>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

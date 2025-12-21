@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Scan, Loader, FileSpreadsheet, Store, ArrowLeft, Download, BarChart3 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { createPageUrl } from "@/utils";
 import { useLanguage } from "../components/LanguageProvider";
+import { createPageUrl } from "@/utils";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import SupplierForm from "../components/suppliers/SupplierForm";
 import SupplierCard from "../components/suppliers/SupplierCard";
@@ -208,41 +208,43 @@ export default function SuppliersPage() {
 
           if (editingSupplier) {
             await base44.entities.Supplier.update(editingSupplier.id, supplierData);
+            // Stay on suppliers page when editing
             setShowForm(false);
             setEditingSupplier(null);
             await loadData(user);
-            return;
-          }
-
-          // Create NEW supplier and redirect to Items with supplierId for quick item attach
-          let newSupplierId = null;
-          if (user.acting_as_store_email) {
-            const { data } = await base44.functions.invoke('createSupplierForStore', {
-              supplierData,
-              storeEmail: user.acting_as_store_email
-            });
-            if (data?.success) newSupplierId = data?.supplier?.id || null;
-          } else if (user.store_user_owner_email) {
-            const { data } = await base44.functions.invoke('createSupplierForStore', {
-              supplierData,
-              storeEmail: user.store_user_owner_email
-            });
-            if (data?.success) newSupplierId = data?.supplier?.id || null;
           } else {
-            const created = await base44.entities.Supplier.create(supplierData);
-            newSupplierId = created?.id || null;
-          }
+            // New supplier: create and then auto-open Items add form preselected to this supplier
+            let newSupplierId = null;
 
-          // If created successfully → redirect to Items page with preselect
-          if (newSupplierId) {
-            window.location.href = createPageUrl(`Items?supplierId=${newSupplierId}`);
-            return;
-          }
+            if (user.acting_as_store_email || user.store_user_owner_email) {
+              const { data } = await base44.functions.invoke('createSupplierForStore', {
+                supplierData,
+                storeEmail: user.acting_as_store_email || user.store_user_owner_email
+              });
+              newSupplierId = data?.supplier?.id || data?.created?.id || data?.supplier_id || data?.id || null;
+            } else {
+              const created = await base44.entities.Supplier.create(supplierData);
+              newSupplierId = created?.id || null;
+            }
 
-          // Fallback: just close and refresh list
-          setShowForm(false);
-          setEditingSupplier(null);
-          await loadData(user);
+            if (!newSupplierId) {
+              // Fallback: reload suppliers and try to find by name
+              await loadData(user);
+              const match = suppliers.find(s => s.name === supplierData.name);
+              if (match) newSupplierId = match.id;
+            }
+
+            // Redirect to Items with supplier preselected and Add form open
+            if (newSupplierId) {
+              window.location.href = createPageUrl(`Items?supplier_id=${newSupplierId}&add=1`);
+              return; // Stop further execution
+            }
+
+            // If cannot resolve supplier id, just close form and refresh
+            setShowForm(false);
+            setEditingSupplier(null);
+            await loadData(user);
+          }
         } catch (error) {
           console.error("Error saving supplier:", error);
           alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
