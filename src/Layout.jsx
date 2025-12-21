@@ -203,7 +203,19 @@ const AppLayout = ({ children, currentPageName }) => {
     }
   };
 
-  const isWorker = storeUserRole === 'worker' || user?.store_user_role === 'worker';
+  const isWorker = (() => {
+    // If viewing another restaurant (acting_as_store), respect that role
+    if (user?.acting_as_store_email) {
+      return (storeUserRole === 'worker' || user?.store_user_role === 'worker');
+    }
+    // If the user has no own business (pure store-user account), treat accordingly
+    const hasOwnRestaurant = !!user?.business_name;
+    if (!hasOwnRestaurant) {
+      return (storeUserRole === 'worker' || user?.store_user_role === 'worker');
+    }
+    // Otherwise, user is in their own (owner/head) context → not a worker
+    return false;
+  })();
     const isAdminControllingUser = user?.admin_original_email && user?.acting_as_user_email;
 
               const visibleNavigationItems = navigationItems.filter(item => {
