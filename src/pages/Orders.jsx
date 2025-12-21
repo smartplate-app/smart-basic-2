@@ -28,14 +28,23 @@ export default function OrdersPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const { t } = useLanguage();
 
-  // One-time cleanup of any leftover acting_as_store flags
+  // One-time cleanup of any leftover acting_as_store flags and worker linkage
   useEffect(() => {
     (async () => {
-      if (localStorage.getItem('b44_cleared_user_ctx') === '1') return;
-      await base44.functions.invoke('clearUserContext', {});
-      localStorage.setItem('b44_cleared_user_ctx', '1');
-      const refreshedUser = await base44.auth.me();
-      setUser(refreshedUser);
+      try {
+        if (!localStorage.getItem('b44_cleared_user_ctx')) {
+          await base44.functions.invoke('clearUserContext', {});
+          localStorage.setItem('b44_cleared_user_ctx', '1');
+        }
+        if (!localStorage.getItem('b44_purged_storeuser')) {
+          await base44.functions.invoke('deleteMyStoreUserRecords', {});
+          localStorage.setItem('b44_purged_storeuser', '1');
+        }
+        const refreshedUser = await base44.auth.me();
+        setUser(refreshedUser);
+      } catch (e) {
+        console.log('[Orders] cleanup skipped:', e?.message || e);
+      }
     })();
   }, []);
 
