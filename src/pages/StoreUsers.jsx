@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Copy, Check, Edit } from "lucide-react";
+import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Copy, Check, Edit, Eye } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function StoreUsersPage() {
@@ -51,6 +51,8 @@ export default function StoreUsersPage() {
       currentRestaurant: "המסעדה הנוכחית שלך",
       managerDesc: "יכול לראות הכל ולנהל את המסעדה",
       workerDesc: "יכול ליצור הזמנות, לקבל אספקה ולבצע ספירות",
+      partner: "שותף - קריאה בלבד",
+      partnerDesc: "שותף יכול לראות את כל הנתונים אך אינו יכול לבצע שינויים",
       personalMessage: "הודעה אישית (אופציונלי)",
       personalMessagePlaceholder: "הוסף הודעה אישית...",
       userAdded: "המשתמש נוסף בהצלחה!"
@@ -76,6 +78,8 @@ export default function StoreUsersPage() {
       currentRestaurant: "Your Current Restaurant",
       managerDesc: "Can see everything and manage the restaurant",
       workerDesc: "Can create orders, receive supplies and do counts",
+      partner: "Partner - Read Only",
+      partnerDesc: "Can view all data across the restaurant but cannot make changes",
       personalMessage: "Personal Message (Optional)",
       personalMessagePlaceholder: "Add a personal message...",
       userAdded: "User added successfully!"
@@ -312,6 +316,12 @@ export default function StoreUsersPage() {
                           {language === 'he' ? 'עובד - הזמנות, קבלות וספירות' : 'Worker - Orders, Receipts & Counts'}
                         </div>
                       </SelectItem>
+                      <SelectItem value="partner">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Eye className="w-4 h-4 text-amber-600" />
+                          {language === 'he' ? 'שותף - קריאה בלבד' : 'Partner - Read Only'}
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-gray-500 mt-1">
@@ -393,7 +403,7 @@ export default function StoreUsersPage() {
         </div>
 
         {/* Role Explanation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-4">
               <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
@@ -417,6 +427,18 @@ export default function StoreUsersPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-amber-200 bg-amber-50 mb-8">
+          <CardContent className="p-4">
+            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+              <Eye className="w-8 h-8 text-amber-600" />
+              <div>
+                <h3 className="font-bold text-amber-900">{language === 'he' ? 'שותף' : 'Partner'}</h3>
+                <p className="text-sm text-amber-700">{language === 'he' ? 'יכול לראות את כל הנתונים אך ללא אפשרות לבצע שינויים' : 'Can view all data but cannot make changes'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Migration Results */}
         {migrationResults && (
@@ -458,6 +480,8 @@ export default function StoreUsersPage() {
                     <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                       {storeUser.role === 'manager' ? (
                         <UserCog className="w-6 h-6 text-blue-600" />
+                      ) : storeUser.role === 'partner' ? (
+                        <Eye className="w-6 h-6 text-amber-600" />
                       ) : (
                         <UserCheck className="w-6 h-6 text-green-600" />
                       )}
@@ -468,9 +492,15 @@ export default function StoreUsersPage() {
                       <span className={`text-xs px-2 py-1 rounded ${
                         storeUser.role === 'manager' 
                           ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-green-100 text-green-800'
+                          : storeUser.role === 'partner'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-green-100 text-green-800'
                       }`}>
-                        {storeUser.role === 'manager' ? (language === 'he' ? 'מנהל' : 'Manager') : (language === 'he' ? 'עובד' : 'Worker')}
+                        {storeUser.role === 'manager' 
+                          ? (language === 'he' ? 'מנהל' : 'Manager') 
+                          : storeUser.role === 'partner' 
+                            ? (language === 'he' ? 'שותף' : 'Partner') 
+                            : (language === 'he' ? 'עובד' : 'Worker')}
                       </span>
                       </div>
                       <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
