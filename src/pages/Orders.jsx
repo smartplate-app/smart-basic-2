@@ -28,6 +28,8 @@ export default function OrdersPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const { t } = useLanguage();
 
+        const isViewer = user?.store_user_role === 'viewer' || user?.store_user_read_only;
+
   // One-time cleanup of any leftover acting_as_store flags and worker linkage
   useEffect(() => {
     (async () => {
@@ -329,7 +331,8 @@ export default function OrdersPage() {
   };
 
   const handleSubmit = async (orderData) => {
-    if (!orderData.restaurant_name) {
+        if (isViewer) { return; }
+        if (!orderData.restaurant_name) {
       alert(t('business_name_required'));
       return;
     }
@@ -450,19 +453,21 @@ export default function OrdersPage() {
             <p className="text-gray-600 mt-2">{t('orders_greeting', { name: user.full_name })}</p>
           </div>
           <div className="flex gap-3">
-            <Button
-              onClick={() => setShowForm(!showForm)}
-              className="bg-gray-900 hover:bg-gray-800 text-white"
-            >
-              <Plus className="w-5 h-5 ml-2" />
-              {t('new_order')}
-            </Button>
+            {!isViewer && (
+              <Button
+                onClick={() => setShowForm(!showForm)}
+                className="bg-gray-900 hover:bg-gray-800 text-white"
+              >
+                <Plus className="w-5 h-5 ml-2" />
+                {t('new_order')}
+              </Button>
+            )}
           </div>
         </div>
 
         <AnimatePresence>
-          {showForm && (
-            <OrderForm
+            {showForm && !isViewer && (
+              <OrderForm
               order={editingOrder}
               suppliers={suppliers}
               onSubmit={handleSubmit}
@@ -549,7 +554,7 @@ export default function OrdersPage() {
                     </div>
                     
                     <div className="flex gap-2 pt-2">
-                      {order.supplier_phone && (
+                      {!isViewer && order.supplier_phone && (
                         <button
                           onClick={() => handleResend(order)}
                           className="flex-1 text-white text-sm font-medium rounded-md px-3 py-2 flex items-center justify-center"
@@ -561,11 +566,12 @@ export default function OrdersPage() {
                           WhatsApp
                         </button>
                       )}
-                      <Button
-                        variant="outline"
-                        onClick={() => handleEdit(order)}
-                        className="flex-1"
-                      >
+                      {!isViewer && (
+                        <Button
+                          variant="outline"
+                          onClick={() => handleEdit(order)}
+                          className="flex-1"
+                        >
                         <Edit className="w-4 h-4 mr-2" />
                         {t('edit')}
                       </Button>
@@ -631,7 +637,7 @@ export default function OrdersPage() {
                       <tr
                         key={order.id}
                         className="hover:bg-blue-50 cursor-pointer transition-colors"
-                        onDoubleClick={() => handleEdit(order)}
+                        onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
                       >
                         <td className="px-4 py-3 text-right">
                           <div className="text-sm font-medium text-gray-900">{order.order_number}</div>
@@ -654,8 +660,8 @@ export default function OrdersPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-2">
-                            {order.supplier_phone && (
+                          <div className="flex items-center justify-center gap-2 pointer-events-auto">
+                            {!isViewer && order.supplier_phone && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -675,18 +681,20 @@ export default function OrdersPage() {
                                 WhatsApp
                               </button>
                             )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(order);
-                              }}
-                              className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                            >
+                            {!isViewer && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(order);
+                                }}
+                                className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                              >
                               <Edit className="w-3 h-3 mr-1" />
                               {t('edit')}
                             </Button>
+                            )
                           </div>
                         </td>
                       </tr>
