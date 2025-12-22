@@ -573,7 +573,6 @@ export default function OrdersPage() {
                           {t('edit')}
                         </Button>
                       )}
-                      )}
                     </div>
                   </div>
                 </Card>
