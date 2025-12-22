@@ -687,6 +687,12 @@ const AppLayout = ({ children, currentPageName }) => {
 
                       {/* Offline notification for data-sensitive pages */}
                       <OfflineNotification pageName={currentPageName} />
+                      {/* Hard hide non-whitelisted pages content for viewer */}
+                      {isViewer && !new Set(['Dashboard','SupplyReceipts','MonthlyCount']).has(currentPageName) && (
+                        <div className="p-6 text-sm text-amber-800 bg-amber-50 border-t border-amber-200">
+                          {language === 'he' ? 'מצב צפייה בלבד - דף זה אינו זמין.' : 'View-only mode - this page is not available.'}
+                        </div>
+                      )}
       </div>
     </div>
   );
