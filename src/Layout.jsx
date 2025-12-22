@@ -460,10 +460,10 @@ const AppLayout = ({ children, currentPageName }) => {
           )}
 
           {isViewer && (
-            <div className="bg-amber-50 text-amber-800 px-4 py-2 flex items-center justify-between sticky top-0 z-40">
+            <div className="bg-amber-50 text-amber-800 px-4 py-2 flex items-center justify-between sticky top-0 z-40 border-b border-amber-200">
               <div className={`text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                 <span className="font-semibold">{language === 'he' ? 'מצב צפייה בלבד' : 'View-only access'}</span>
-                <span className="text-amber-700 ml-2 rtl:mr-2 rtl:ml-0">{language === 'he' ? 'ניתן לצפות בכל העמודים אך לא לבצע שינויים' : 'You can view all pages but cannot make changes.'}</span>
+                <span className="text-amber-700 ml-2 rtl:mr-2 rtl:ml-0">{language === 'he' ? 'ניתן לצפות בכל הדפים אך לא לבצע שינויים' : 'You can view all pages but cannot make changes.'}</span>
               </div>
             </div>
           )}
