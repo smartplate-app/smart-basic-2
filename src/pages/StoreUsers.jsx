@@ -312,11 +312,19 @@ export default function StoreUsersPage() {
                           {language === 'he' ? 'עובד - הזמנות, קבלות וספירות' : 'Worker - Orders, Receipts & Counts'}
                         </div>
                       </SelectItem>
+                      <SelectItem value="viewer">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <UserCheck className="w-4 h-4 text-amber-600" />
+                          {language === 'he' ? 'צופה - צפייה בכל הדפים בלבד' : 'Viewer - View all pages only'}
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-gray-500 mt-1">
-                    {userRole === 'manager' 
+                    {userRole === 'manager'
                       ? (language === 'he' ? 'רואה הכל ומנהל את המסעדה' : 'Can see everything and manage restaurant')
+                      : userRole === 'viewer'
+                      ? (language === 'he' ? 'צופה בלבד, ללא אפשרות לבצע שינויים' : 'View-only, cannot make changes')
                       : (language === 'he' ? 'יוצר הזמנות, מקבל אספקה ועושה ספירות' : 'Creates orders, receives supplies, does counts')}
                   </p>
                 </div>
@@ -393,7 +401,7 @@ export default function StoreUsersPage() {
         </div>
 
         {/* Role Explanation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-4">
               <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
@@ -412,6 +420,17 @@ export default function StoreUsersPage() {
                 <div>
                   <h3 className="font-bold text-green-900">{language === 'he' ? 'עובד' : 'Worker'}</h3>
                   <p className="text-sm text-green-700">{language === 'he' ? 'יוצר הזמנות, מקבל אספקה ועושה ספירות' : 'Creates orders, receives supplies, does counts'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="p-4">
+              <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                <UserCheck className="w-8 h-8 text-amber-600" />
+                <div>
+                  <h3 className="font-bold text-amber-900">{language === 'he' ? 'צופה' : 'Viewer'}</h3>
+                  <p className="text-sm text-amber-700">{language === 'he' ? 'צפייה בכל הדפים בלבד, ללא אפשרות לשינויים' : 'View all pages only, no changes allowed'}</p>
                 </div>
               </div>
             </CardContent>
@@ -458,6 +477,8 @@ export default function StoreUsersPage() {
                     <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                       {storeUser.role === 'manager' ? (
                         <UserCog className="w-6 h-6 text-blue-600" />
+                      ) : storeUser.role === 'viewer' ? (
+                        <UserCheck className="w-6 h-6 text-amber-600" />
                       ) : (
                         <UserCheck className="w-6 h-6 text-green-600" />
                       )}
@@ -466,11 +487,17 @@ export default function StoreUsersPage() {
                         <p className="text-sm text-gray-500">{storeUser.user_email}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded ${
-                        storeUser.role === 'manager' 
-                          ? 'bg-blue-100 text-blue-800' 
+                        storeUser.role === 'manager'
+                          ? 'bg-blue-100 text-blue-800'
+                          : storeUser.role === 'viewer'
+                          ? 'bg-amber-100 text-amber-800'
                           : 'bg-green-100 text-green-800'
                       }`}>
-                        {storeUser.role === 'manager' ? (language === 'he' ? 'מנהל' : 'Manager') : (language === 'he' ? 'עובד' : 'Worker')}
+                        {storeUser.role === 'manager'
+                          ? (language === 'he' ? 'מנהל' : 'Manager')
+                          : storeUser.role === 'viewer'
+                          ? (language === 'he' ? 'צופה' : 'Viewer')
+                          : (language === 'he' ? 'עובד' : 'Worker')}
                       </span>
                       </div>
                       <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
