@@ -28,7 +28,7 @@ export default function OrdersPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const { t } = useLanguage();
 
-        const isViewer = user?.store_user_role === 'viewer' || user?.store_user_read_only;
+  const [isViewer, setIsViewer] = useState(false);
 
 
   const loadData = async (currentUser, retryAttempt = 0) => {
