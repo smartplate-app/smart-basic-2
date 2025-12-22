@@ -15,8 +15,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const roleText = role === 'manager' 
+    const roleText = role === 'manager'
       ? (language === 'he' ? 'מנהל' : 'Manager')
+      : role === 'viewer'
+      ? (language === 'he' ? 'צופה' : 'Viewer')
       : (language === 'he' ? 'עובד' : 'Worker');
 
     const appUrl = req.headers.get('origin') || 'https://app.base44.com';

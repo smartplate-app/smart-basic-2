@@ -114,6 +114,7 @@ const AppLayout = ({ children, currentPageName }) => {
                           store_user_role: activeRecord.role,
                           store_user_owner_email: activeRecord.owner_email,
                           store_user_store_name: activeRecord.store_name,
+                          store_user_read_only: activeRecord.role === 'viewer',
                           store_user_revoked: false
                         });
 
@@ -124,6 +125,7 @@ const AppLayout = ({ children, currentPageName }) => {
                           store_user_role: null,
                           store_user_owner_email: null,
                           store_user_store_name: null,
+                          store_user_read_only: false,
                           store_user_revoked: true
                         });
                         setStoreUserRole(null);
@@ -235,6 +237,30 @@ const AppLayout = ({ children, currentPageName }) => {
     return false;
   })();
     const isAdminControllingUser = user?.admin_original_email && user?.acting_as_user_email;
+
+    const isViewer = (storeUserRole === 'viewer' || user?.store_user_role === 'viewer');
+
+    React.useEffect(() => {
+      if (!user) return;
+      const viewer = (storeUserRole === 'viewer' || user?.store_user_role === 'viewer');
+      if (!viewer) return;
+
+      const handler = (e) => {
+        const target = e.target;
+        const el = target && target.closest && target.closest('button, [type="submit"]');
+        if (!el) return;
+        const txt = (el.innerText || el.textContent || '').toLowerCase();
+        const blocked = ['add','create','edit','update','save','delete','remove','send','import','upload','scan','prepare','receive','new','publish','confirm'].some(k => txt.includes(k));
+        if (blocked) {
+          e.preventDefault();
+          e.stopPropagation();
+          alert(language === 'he' ? 'מצב צפייה בלבד - אין לך הרשאות לשנות' : 'View-only mode: you do not have permission to make changes.');
+        }
+      };
+
+      document.addEventListener('click', handler, true);
+      return () => document.removeEventListener('click', handler, true);
+    }, [user, storeUserRole, language]);
 
               const visibleNavigationItems = navigationItems.filter(item => {
                 // Admin-only items
@@ -413,6 +439,14 @@ const AppLayout = ({ children, currentPageName }) => {
             </div>
           )}
 
+          {isViewer && (
+            <div className="bg-amber-50 text-amber-800 px-4 py-2 flex items-center justify-between sticky top-0 z-40">
+              <div className={`text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                <span className="font-semibold">{language === 'he' ? 'מצב צפייה בלבד' : 'View-only access'}</span>
+                <span className="text-amber-700 ml-2 rtl:mr-2 rtl:ml-0">{language === 'he' ? 'ניתן לצפות בכל העמודים אך לא לבצע שינויים' : 'You can view all pages but cannot make changes.'}</span>
+              </div>
+            </div>
+          )}
           <header className={`bg-white border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <button 
                           onClick={() => setSidebarOpen(!sidebarOpen)}
