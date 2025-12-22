@@ -250,7 +250,12 @@ const AppLayout = ({ children, currentPageName }) => {
         const el = target && target.closest && target.closest('button, [type="submit"]');
         if (!el) return;
         const txt = (el.innerText || el.textContent || '').toLowerCase();
-        const blocked = ['add','create','edit','update','save','delete','remove','send','import','upload','scan','prepare','receive','new','publish','confirm'].some(k => txt.includes(k));
+        const blockedWords = language === 'he'
+          ? ['הוסף','צור','ערוך','עדכן','שמור','מחק','הסר','שלח','ייבא','יבא','העלה','סרוק','הכן','קבל','חדש','פרסם','אשר','שנה','קלוט','ייצא','יצוא']
+          : language === 'ar'
+          ? ['إضافة','إنشاء','تعديل','تحديث','حفظ','حذف','إزالة','إرسال','استيراد','تحميل','مسح','تحضير','استلام','جديد','نشر','تأكيد']
+          : ['add','create','edit','update','save','delete','remove','send','import','upload','scan','prepare','receive','new','publish','confirm'];
+        const blocked = blockedWords.some(k => txt.includes(k));
         if (blocked) {
           e.preventDefault();
           e.stopPropagation();
@@ -586,13 +591,29 @@ const AppLayout = ({ children, currentPageName }) => {
                 </div>
               </div>
             )}
-            <div className={showDesktopSidebar ? '' : 'sidebar-hidden'}>
+            <div className={`${showDesktopSidebar ? '' : 'sidebar-hidden'} ${isViewer ? 'viewer-readonly' : ''}`}>
               {children}
             </div>
             <style>{`
               .sidebar-hidden > * {
                 padding-left: 0 !important;
                 padding-right: 0 !important;
+              }
+              /* Viewer read-only hard guard: disables interactive controls within page content */
+              .viewer-readonly button,
+              .viewer-readonly [type="submit"],
+              .viewer-readonly input,
+              .viewer-readonly select,
+              .viewer-readonly textarea,
+              .viewer-readonly [role="switch"],
+              .viewer-readonly [role="button"] {
+                pointer-events: none !important;
+                opacity: 0.6 !important;
+                cursor: not-allowed !important;
+              }
+              .viewer-readonly .ql-toolbar,
+              .viewer-readonly .ql-editor {
+                pointer-events: none !important;
               }
             `}</style>
         </main>
