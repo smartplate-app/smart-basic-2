@@ -78,6 +78,22 @@ export default function OrdersPage() {
 
       console.log(`[Orders] isAdminControlling: ${isAdminControlling}, isStoreUser: ${isStoreUser}, storeOwnerEmail: ${storeOwnerEmail}, workingEmail: ${workingEmail}`);
 
+      // Compute viewer mode from StoreUser records or user flags
+      let viewerMode = currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only;
+      try {
+        const roleRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+        if (roleRecords.length > 0) {
+          const effective =
+            roleRecords.find(r => r.role === 'viewer') ||
+            roleRecords.find(r => r.role === 'worker') ||
+            roleRecords[0];
+          viewerMode = effective.role === 'viewer';
+        }
+      } catch (e) {
+        console.log('[Orders] viewer-mode check failed:', e?.message || e);
+      }
+      setIsViewer(!!viewerMode);
+
       if (isAdminControlling) {
         // Admin controlling a user - load that user's data using the controlled user's email
         console.log(`[Orders] Admin controlling user, loading data for: ${workingEmail}`);
