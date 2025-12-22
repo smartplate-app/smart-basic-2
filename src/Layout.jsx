@@ -239,6 +239,10 @@ const AppLayout = ({ children, currentPageName }) => {
     if (!hasOwnRestaurant) {
       return (storeUserRole === 'worker' || user?.store_user_role === 'worker');
     }
+    // Viewer should never be considered worker
+    if (storeUserRole === 'viewer' || user?.store_user_role === 'viewer') {
+      return false;
+    }
     // Otherwise, user is in their own (owner/head) context → not a worker
     return false;
   })();
