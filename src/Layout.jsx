@@ -334,6 +334,11 @@ const AppLayout = ({ children, currentPageName }) => {
   }
 
   // Check if user's store access was revoked
+  if ((storeUserRole === 'viewer' || user?.store_user_role === 'viewer') && !user?.store_user_read_only) {
+    // Ensure read-only flag is set if user is viewer (redundant safety)
+    base44.auth.updateMe({ store_user_read_only: true });
+  }
+
   if (user?.store_user_revoked) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50 p-4">
