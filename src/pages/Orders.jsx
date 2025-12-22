@@ -30,25 +30,6 @@ export default function OrdersPage() {
 
         const isViewer = user?.store_user_role === 'viewer' || user?.store_user_read_only;
 
-  // One-time cleanup of any leftover acting_as_store flags and worker linkage
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!localStorage.getItem('b44_cleared_user_ctx')) {
-          await base44.functions.invoke('clearUserContext', {});
-          localStorage.setItem('b44_cleared_user_ctx', '1');
-        }
-        if (!localStorage.getItem('b44_purged_storeuser')) {
-          await base44.functions.invoke('deleteMyStoreUserRecords', {});
-          localStorage.setItem('b44_purged_storeuser', '1');
-        }
-        const refreshedUser = await base44.auth.me();
-        setUser(refreshedUser);
-      } catch (e) {
-        console.log('[Orders] cleanup skipped:', e?.message || e);
-      }
-    })();
-  }, []);
 
   const loadData = async (currentUser, retryAttempt = 0) => {
     try {
@@ -575,6 +556,7 @@ export default function OrdersPage() {
                           <Edit className="w-4 h-4 mr-2" />
                           {t('edit')}
                         </Button>
+                      )}
                       )}
                     </div>
                   </div>
