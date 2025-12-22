@@ -572,9 +572,10 @@ export default function OrdersPage() {
                           onClick={() => handleEdit(order)}
                           className="flex-1"
                         >
-                        <Edit className="w-4 h-4 mr-2" />
-                        {t('edit')}
-                      </Button>
+                          <Edit className="w-4 h-4 mr-2" />
+                          {t('edit')}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </Card>
@@ -691,10 +692,10 @@ export default function OrdersPage() {
                                 }}
                                 className="border-gray-300 text-gray-700 hover:bg-gray-100"
                               >
-                              <Edit className="w-3 h-3 mr-1" />
-                              {t('edit')}
-                            </Button>
-                            )
+                                <Edit className="w-3 h-3 mr-1" />
+                                {t('edit')}
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
