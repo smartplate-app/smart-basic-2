@@ -282,6 +282,15 @@ const AppLayout = ({ children, currentPageName }) => {
                 if (item.adminOnly && user?.role !== 'admin') return false;
                 // Worker-hidden items
                 if (item.workerHidden && isWorker) return false;
+                // Viewer whitelist: only allow specific pages in the sidebar
+                if (isViewer) {
+                  const allowed = [
+                    createPageUrl("Dashboard"),
+                    createPageUrl("SupplyReceipts"),
+                    createPageUrl("MonthlyCount")
+                  ];
+                  if (!allowed.includes(item.url)) return false;
+                }
                 return true;
               });
 
