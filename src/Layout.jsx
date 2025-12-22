@@ -104,17 +104,23 @@ const AppLayout = ({ children, currentPageName }) => {
                   // Always check StoreUser entity to verify they still have access
                   try {
                     const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email });
-                    const activeRecord = storeUserRecords.find(r => r.is_active === true);
+                    const activeRecords = storeUserRecords.filter(r => r.is_active === true);
 
-                    if (activeRecord) {
-                        console.log('[Layout] Found active StoreUser record:', { role: activeRecord.role, owner: activeRecord.owner_email });
-                        setStoreUserRole(activeRecord.role);
+                    if (activeRecords.length > 0) {
+                        // Prefer the lowest privilege if multiple records exist: viewer < worker < manager
+                        const effectiveRecord =
+                          activeRecords.find(r => r.role === 'viewer') ||
+                          activeRecords.find(r => r.role === 'worker') ||
+                          activeRecords[0];
+
+                        console.log('[Layout] Effective StoreUser record:', { role: effectiveRecord.role, owner: effectiveRecord.owner_email });
+                        setStoreUserRole(effectiveRecord.role);
                         // Save store info to user context
                         await base44.auth.updateMe({
-                          store_user_role: activeRecord.role,
-                          store_user_owner_email: activeRecord.owner_email,
-                          store_user_store_name: activeRecord.store_name,
-                          store_user_read_only: activeRecord.role === 'viewer',
+                          store_user_role: effectiveRecord.role,
+                          store_user_owner_email: effectiveRecord.owner_email,
+                          store_user_store_name: effectiveRecord.store_name,
+                          store_user_read_only: effectiveRecord.role === 'viewer',
                           store_user_revoked: false
                         });
 
