@@ -277,6 +277,15 @@ const AppLayout = ({ children, currentPageName }) => {
       return () => document.removeEventListener('click', handler, true);
     }, [user, storeUserRole, language]);
 
+    // Viewer route guard: allow only specific pages
+    React.useEffect(() => {
+      if (!isViewer) return;
+      const allowedPages = new Set(['Dashboard', 'SupplyReceipts', 'MonthlyCount']);
+      if (!allowedPages.has(currentPageName)) {
+        window.location.href = createPageUrl('Dashboard');
+      }
+    }, [isViewer, currentPageName]);
+
               const visibleNavigationItems = navigationItems.filter(item => {
                 // Admin-only items
                 if (item.adminOnly && user?.role !== 'admin') return false;
