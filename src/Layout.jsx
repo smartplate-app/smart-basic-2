@@ -248,7 +248,7 @@ const AppLayout = ({ children, currentPageName }) => {
   })();
     const isAdminControllingUser = user?.admin_original_email && user?.acting_as_user_email;
 
-    const isViewer = (storeUserRole === 'viewer' || user?.store_user_role === 'viewer');
+    const isViewer = (storeUserRole === 'viewer' || user?.store_user_role === 'viewer' || user?.store_user_read_only === true);
 
     React.useEffect(() => {
       if (!user) return;
@@ -516,7 +516,7 @@ const AppLayout = ({ children, currentPageName }) => {
                       </header>
 
       <div className="flex">
-        <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-all duration-300 ease-in-out md:sticky md:top-0 md:h-screen ${sidebarOpen ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-64' : '-translate-x-full w-64')} md:${showDesktopSidebar ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-0' : '-translate-x-full w-0')}`}>
+        <aside data-viewer={isViewer ? '1' : '0'} className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-all duration-300 ease-in-out md:sticky md:top-0 md:h-screen ${sidebarOpen ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-64' : '-translate-x-full w-64')} md:${showDesktopSidebar ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-0' : '-translate-x-full w-0')}`}>
           <div className="p-4 border-b border-gray-200 hidden md:flex md:flex-row md:items-center md:justify-between">
                             <Button
                               variant="ghost"
@@ -647,6 +647,10 @@ const AppLayout = ({ children, currentPageName }) => {
               .viewer-readonly .ql-toolbar,
               .viewer-readonly .ql-editor {
                 pointer-events: none !important;
+              }
+              /* Viewer nav whitelist - only show these links in sidebar */
+              aside[data-viewer="1"] nav a[href]:not([href="/pages/Dashboard"]):not([href="/pages/SupplyReceipts"]):not([href="/pages/MonthlyCount"]) {
+                display: none !important;
               }
             `}</style>
         </main>
