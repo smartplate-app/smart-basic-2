@@ -599,8 +599,14 @@ const AppLayout = ({ children, currentPageName }) => {
               {filteredNavigationItems.map((item) => (
                 <li key={item.title}>
                   <a 
-                    href={item.url} 
-                    onClick={() => setSidebarOpen(false)}
+                    href={item.url}
+                    onClick={(e) => {
+                      if (isViewer && !['/pages/Dashboard','/pages/SupplyReceipts','/pages/MonthlyCount'].includes(item.url)) {
+                        e.preventDefault();
+                        return;
+                      }
+                      setSidebarOpen(false)
+                    }}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isRTL ? 'flex-row-reverse text-right' : ''} ${
                       location.pathname === item.url || location.pathname.includes(item.url.split('/').pop()) ? 'bg-gray-900 text-white font-bold' : 'text-gray-700 hover:bg-gray-100'
                     }`}
