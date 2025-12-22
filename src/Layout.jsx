@@ -286,6 +286,25 @@ const AppLayout = ({ children, currentPageName }) => {
       }
     }, [isViewer, currentPageName]);
 
+    // Re-check viewer role on route change (keeps role up-to-date after admin edits)
+    React.useEffect(() => {
+      if (!user) return;
+      (async () => {
+        try {
+          const recs = await base44.entities.StoreUser.filter({ user_email: user.email });
+          const active = recs.filter(r => r.is_active !== false);
+          const effective =
+            active.find(r => r.role === 'viewer') ||
+            active.find(r => r.role === 'worker') ||
+            active[0];
+          setStoreUserRole(effective?.role || null);
+          if (effective?.role === 'viewer') {
+            await base44.auth.updateMe({ store_user_role: 'viewer', store_user_read_only: true });
+          }
+        } catch {}
+      })();
+    }, [location.pathname]);
+
               const visibleNavigationItems = navigationItems.filter(item => {
                 // Admin-only items
                 if (item.adminOnly && user?.role !== 'admin') return false;
