@@ -277,14 +277,7 @@ const AppLayout = ({ children, currentPageName }) => {
       return () => document.removeEventListener('click', handler, true);
     }, [user, storeUserRole, language]);
 
-    // Viewer route guard: allow only specific pages
-    useEffect(() => {
-      if (!isViewer) return;
-      const allowedPages = new Set(['Dashboard', 'SupplyReceipts', 'MonthlyCount']);
-      if (!allowedPages.has(currentPageName)) {
-        window.location.href = createPageUrl('Dashboard');
-      }
-    }, [isViewer, currentPageName]);
+
 
     // Re-check viewer role on route change (keeps role up-to-date after admin edits)
     useEffect(() => {
