@@ -1358,7 +1358,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                             </div>
                                             <div className={`font-bold text-sm ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
                                             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse pr-5' : 'pl-5'}`}>
-                                              <span>{shift.start_time}-{shift.end_time}</span>
+                                              <span className="text-[11px]">{shift.start_time}-{shift.end_time}</span>
                                               <span className="shift-cost">{formatCurrency(shift.payment_for_shift || 0)}</span>
                                             </div>
                                             {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
