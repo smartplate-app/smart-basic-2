@@ -1343,9 +1343,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                           <div
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
-                                            className={`bg-blue-100 p-2 rounded text-xs cursor-pointer group relative ${
-                                              snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-400' : 'hover:bg-blue-200'
-                                            } ${isRTL ? 'text-right' : 'text-left'}`}
+                                            className={`${['bg-amber-50 border-amber-200','bg-blue-50 border-blue-200','bg-emerald-50 border-emerald-200','bg-violet-50 border-violet-200','bg-rose-50 border-rose-200'][idx % 5]} p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-400' : ''} ${isRTL ? 'text-right' : 'text-left'}`
                                             onClick={() => {
                                               setEditingShift(shift);
                                               setSelectedCell({ day: day.key, date: dateStr, positionId: position.id });
