@@ -1304,7 +1304,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                         <GripVertical className="h-4 w-4" />
                                       </div>
                                       <div className={`h-2.5 w-2.5 rounded-sm ${['bg-amber-400','bg-blue-400','bg-emerald-400','bg-violet-400','bg-rose-400'][posIndex % 5]}`} />
-<span className={`text-[18px] font-extrabold ${['text-amber-700','text-blue-700','text-emerald-700','text-violet-700','text-rose-700'][posIndex % 5]}`}>{position.name}</span>
+<span className={`text-[20px] font-extrabold ${['text-amber-700','text-blue-700','text-emerald-700','text-violet-700','text-rose-700'][posIndex % 5]}`}>{position.name}</span>
                                     </div>
                                   </td>
                       {days.map(day => {
@@ -1344,7 +1344,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                           <div
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
-                                            className={`${['bg-amber-50 border-amber-200','bg-blue-50 border-blue-200','bg-emerald-50 border-emerald-200','bg-violet-50 border-violet-200','bg-rose-50 border-rose-200'][idx % 5]} p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-400' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
+                                            className={`${['bg-amber-50 border-amber-200','bg-blue-50 border-blue-200','bg-emerald-50 border-emerald-200','bg-violet-50 border-violet-200','bg-rose-50 border-rose-200'][posIndex % 5]} p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-400' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
                                             onClick={() => {
                                               setEditingShift(shift);
                                               setSelectedCell({ day: day.key, date: dateStr, positionId: position.id });
