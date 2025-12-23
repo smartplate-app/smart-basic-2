@@ -310,15 +310,6 @@ const AppLayout = ({ children, currentPageName }) => {
                 if (item.adminOnly && user?.role !== 'admin') return false;
                 // Worker-hidden items
                 if (item.workerHidden && isWorker) return false;
-                // Viewer whitelist: only allow specific pages in the sidebar
-                if (isViewer) {
-                  const allowed = [
-                    createPageUrl("Dashboard"),
-                    createPageUrl("SupplyReceipts"),
-                    createPageUrl("MonthlyCount")
-                  ];
-                  if (!allowed.includes(item.url)) return false;
-                }
                 return true;
               });
 
@@ -600,13 +591,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 <li key={item.title}>
                   <a 
                     href={item.url}
-                    onClick={(e) => {
-                      if (isViewer && !['/pages/Dashboard','/pages/SupplyReceipts','/pages/MonthlyCount'].includes(item.url)) {
-                        e.preventDefault();
-                        return;
-                      }
-                      setSidebarOpen(false)
-                    }}
+                    onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isRTL ? 'flex-row-reverse text-right' : ''} ${
                       location.pathname === item.url || location.pathname.includes(item.url.split('/').pop()) ? 'bg-gray-900 text-white font-bold' : 'text-gray-700 hover:bg-gray-100'
                     }`}
@@ -673,10 +658,7 @@ const AppLayout = ({ children, currentPageName }) => {
               .viewer-readonly .ql-editor {
                 pointer-events: none !important;
               }
-              /* Viewer nav whitelist - only show these links in sidebar */
-              aside[data-viewer="1"] nav a[href]:not([href="/pages/Dashboard"]):not([href="/pages/SupplyReceipts"]):not([href="/pages/MonthlyCount"]) {
-                display: none !important;
-              }
+
             `}</style>
         </main>
 
@@ -687,12 +669,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
                       {/* Offline notification for data-sensitive pages */}
                       <OfflineNotification pageName={currentPageName} />
-                      {/* Hard hide non-whitelisted pages content for viewer */}
-                      {isViewer && !new Set(['Dashboard','SupplyReceipts','MonthlyCount']).has(currentPageName) && (
-                        <div className="p-6 text-sm text-amber-800 bg-amber-50 border-t border-amber-200">
-                          {language === 'he' ? 'מצב צפייה בלבד - דף זה אינו זמין.' : 'View-only mode - this page is not available.'}
-                        </div>
-                      )}
+
       </div>
     </div>
   );
