@@ -39,6 +39,9 @@ Deno.serve(async (req) => {
             }
         });
 
+        // Colors for better readability per shift block
+        const colorPalette = ['#FFF7ED', '#EEF2FF', '#ECFDF5', '#FEF3C7', '#FCE7F3', '#E0F2FE', '#F3E8FF'];
+
         const tableRows = days.map(day => {
             const dayShifts = shiftsByDay[day];
             const totalHours = dayShifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
@@ -49,11 +52,11 @@ Deno.serve(async (req) => {
                     <td><strong>${dayNames[day]}</strong></td>
                     <td>${shiftDate ? new Date(shiftDate).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }) : ''}</td>
                     <td>
-                        ${dayShifts.map(shift => `
-                            <div style="background: #f8f9ff; border-radius: 8px; padding: 8px; margin: 4px;">
-                                <div style="font-weight: bold; color: #667eea;">${shift.worker_name || ''}</div>
-                                <div style="color: #666; font-size: 13px;">${shift.start_time} - ${shift.end_time}</div>
-                                <div style="color: #999; font-size: 12px;">${shift.hours_worked || 0} שעות</div>
+                        ${dayShifts.map((shift, idx) => `
+                            <div style="background: ${colorPalette[idx % colorPalette.length]}; border-radius: 10px; padding: 10px 12px; margin: 6px 4px; border: 1px solid rgba(0,0,0,0.06);">
+                                <div style="font-weight: 800; font-size: 16px; color: #111827; letter-spacing: 0.2px;">${shift.worker_name || ''}</div>
+                                <div style="color: #374151; font-size: 13px;">${shift.start_time} - ${shift.end_time}</div>
+                                <div style="color: #6B7280; font-size: 12px;">${shift.hours_worked || 0} שעות</div>
                             </div>
                         `).join('') || '-'}
                     </td>
@@ -123,6 +126,8 @@ Deno.serve(async (req) => {
             font-weight: bold;
             font-size: 16px;
         }
+        tbody tr:nth-child(odd) { background: #fafafa; }
+        tbody tr:nth-child(even) { background: #ffffff; }
         .totals {
             background: #f0f4ff;
             padding: 20px;
