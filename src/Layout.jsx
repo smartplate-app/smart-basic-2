@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight } from "lucide-react";
@@ -16,21 +16,21 @@ import { RefreshCw, WifiOff } from "lucide-react";
 
 const AppLayout = ({ children, currentPageName }) => {
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const [showDesktopSidebar, setShowDesktopSidebar] = React.useState(true);
-  const [user, setUser] = React.useState(null);
-  const [authLoading, setAuthLoading] = React.useState(true);
-  const [showWorkerInvite, setShowWorkerInvite] = React.useState(false);
-  const [error, setError] = React.useState(null);
-      const [retryCount, setRetryCount] = React.useState(0);
-      const [storeUserRole, setStoreUserRole] = React.useState(null); // null = owner, 'manager', or 'worker'
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showDesktopSidebar, setShowDesktopSidebar] = useState(true);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [showWorkerInvite, setShowWorkerInvite] = useState(false);
+  const [error, setError] = useState(null);
+      const [retryCount, setRetryCount] = useState(0);
+      const [storeUserRole, setStoreUserRole] = useState(null); // null = owner, 'manager', or 'worker'
       const { t, language } = useLanguage();
-  const [navSearchTerm, setNavSearchTerm] = React.useState("");
+  const [navSearchTerm, setNavSearchTerm] = useState("");
 
 
 
   // Auto-hide sidebar on smaller screens
-  React.useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1280) { // Hide on screens smaller than xl (1280px)
         setShowDesktopSidebar(false);
@@ -67,7 +67,7 @@ const AppLayout = ({ children, currentPageName }) => {
             { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true }
           ];
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite') {
       loadAuth();
     } else {
@@ -75,7 +75,7 @@ const AppLayout = ({ children, currentPageName }) => {
     }
   }, [currentPageName]);
   
-  React.useEffect(() => {
+  useEffect(() => {
     document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
   }, [language]);
@@ -94,7 +94,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
 
 
-          const currentUser = await base44.auth.me();
+          let currentUser = await base44.auth.me();
 
           setUser(currentUser);
                   setError(null);
@@ -250,7 +250,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
     const isViewer = (storeUserRole === 'viewer' || user?.store_user_role === 'viewer' || user?.store_user_read_only === true);
 
-    React.useEffect(() => {
+    useEffect(() => {
       if (!user) return;
       const viewer = (storeUserRole === 'viewer' || user?.store_user_role === 'viewer');
       if (!viewer) return;
@@ -278,7 +278,7 @@ const AppLayout = ({ children, currentPageName }) => {
     }, [user, storeUserRole, language]);
 
     // Viewer route guard: allow only specific pages
-    React.useEffect(() => {
+    useEffect(() => {
       if (!isViewer) return;
       const allowedPages = new Set(['Dashboard', 'SupplyReceipts', 'MonthlyCount']);
       if (!allowedPages.has(currentPageName)) {
@@ -287,7 +287,7 @@ const AppLayout = ({ children, currentPageName }) => {
     }, [isViewer, currentPageName]);
 
     // Re-check viewer role on route change (keeps role up-to-date after admin edits)
-    React.useEffect(() => {
+    useEffect(() => {
       if (!user) return;
       (async () => {
         try {
