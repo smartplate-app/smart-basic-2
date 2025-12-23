@@ -1295,7 +1295,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                   {...provided.draggableProps}
                                   className={snapshot.isDragging ? 'bg-purple-50' : ''}
                                 >
-                                  <td className={`border p-2 font-medium bg-gray-50 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                  <td className={`border p-2 font-medium ${['bg-amber-50','bg-blue-50','bg-emerald-50','bg-violet-50','bg-rose-50'][posIndex % 5]} ${isRTL ? 'text-right' : 'text-left'}`}>
                                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                       <div 
                                         {...provided.dragHandleProps}
@@ -1303,7 +1303,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                       >
                                         <GripVertical className="h-4 w-4" />
                                       </div>
-                                      <span>{position.name}</span>
+                                      <div className={`h-2.5 w-2.5 rounded-sm ${['bg-amber-400','bg-blue-400','bg-emerald-400','bg-violet-400','bg-rose-400'][posIndex % 5]}`} />
+<span className={`text-[18px] font-extrabold ${['text-amber-700','text-blue-700','text-emerald-700','text-violet-700','text-rose-700'][posIndex % 5]}`}>{position.name}</span>
                                     </div>
                                   </td>
                       {days.map(day => {
