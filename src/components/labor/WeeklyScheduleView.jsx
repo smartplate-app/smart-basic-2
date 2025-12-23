@@ -1356,7 +1356,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                             >
                                               <GripVertical className="h-4 w-4" />
                                             </div>
-                                            <div className={`font-semibold ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
+                                            <div className={`font-bold text-sm ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
                                             <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse pr-5' : 'pl-5'}`}>
                                               <span>{shift.start_time}-{shift.end_time}</span>
                                               <span className="shift-cost">{formatCurrency(shift.payment_for_shift || 0)}</span>
