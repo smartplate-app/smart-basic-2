@@ -33,6 +33,9 @@ export default function MonthlyCountPage() {
   const [showScreenshotImport, setShowScreenshotImport] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const { t } = useLanguage();
+  const [exportStartDate, setExportStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+  const [exportEndDate, setExportEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [exporting, setExporting] = useState(false);
 
   const loadData = async (userEmail, retryAttempt = 0) => {
     try {
@@ -301,6 +304,26 @@ export default function MonthlyCountPage() {
     console.log('[MonthlyCount] Count form should now be visible');
   };
 
+  const handleExportToSheets = async () => {
+    try {
+      setExporting(true);
+      const { data } = await base44.functions.invoke('exportCountsToSheets', {
+        start_date: exportStartDate,
+        end_date: exportEndDate
+      });
+      if (data?.success && data?.spreadsheetUrl) {
+        window.open(data.spreadsheetUrl, '_blank');
+      } else {
+        alert(t('error_saving') || 'Export failed');
+      }
+    } catch (e) {
+      console.error('Export error:', e);
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const filteredCounts = counts.filter(count => {
     const matchesSearch = count.warehouse_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesWarehouse = warehouseFilter === "all" || count.warehouse_id === warehouseFilter;
@@ -397,6 +420,14 @@ export default function MonthlyCountPage() {
                 className={viewMode === 'list' ? 'bg-gray-900 hover:bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-100'}
               >
                 <List className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Input type="date" value={exportStartDate} onChange={(e) => setExportStartDate(e.target.value)} />
+              <Input type="date" value={exportEndDate} onChange={(e) => setExportEndDate(e.target.value)} />
+              <Button onClick={handleExportToSheets} disabled={exporting || filteredCounts.length === 0} variant="outline" className="gap-2">
+                <FileSpreadsheet className="w-4 h-4" /> {exporting ? (t('saving') || 'Saving...') : (t('save_to_google_sheets') || 'Save to Google Sheets')}
               </Button>
             </div>
             
