@@ -301,8 +301,10 @@ const AppLayout = ({ children, currentPageName }) => {
               const visibleNavigationItems = navigationItems.filter(item => {
                 // Admin-only items
                 if (item.adminOnly && user?.role !== 'admin') return false;
-                // Worker-hidden items (never hide for viewers)
-                if (item.workerHidden && isWorker && !isViewer) return false;
+                // Viewers can see all non-admin pages
+                if (isViewer) return true;
+                // Worker-hidden items
+                if (item.workerHidden && isWorker) return false;
                 return true;
               });
 
