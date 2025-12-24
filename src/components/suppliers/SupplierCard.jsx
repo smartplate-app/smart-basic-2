@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Mail, User, Edit, Trash2, PackageX, Plus, FileText, DollarSign, FileSpreadsheet } from "lucide-react";
+import { Phone, Mail, User, Edit, Trash2, Camera, PackageX, Plus, FileText, DollarSign, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import SupplierExcelImport from "./SupplierExcelImport";
+import InvoiceScanner from "./InvoiceScanner";
 import { base44 } from "@/api/base44Client";
 import ItemForm from "../items/ItemForm";
 
@@ -137,6 +138,15 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
                 <Button 
                   variant="ghost" 
                   size="icon" 
+                  onClick={() => setShowScanner(true)}
+                  className="text-gray-400 hover:text-green-600"
+                  title={language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import items from image'}
+                >
+                  <Camera className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
                   onClick={() => setShowDeleteItemsDialog(true)}
                   className="text-gray-400 hover:text-orange-600"
                   title={t('delete_all_items') || 'מחק את כל הפריטים'}
@@ -230,6 +240,21 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
             onClose={() => setShowExcelImport(false)}
             onImportComplete={() => {
               setShowExcelImport(false);
+              if (onImportComplete) onImportComplete();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showScanner} onOpenChange={setShowScanner}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import Items from Image'}</DialogTitle>
+          </DialogHeader>
+          <InvoiceScanner 
+            supplier={supplier}
+            onImportComplete={() => {
+              setShowScanner(false);
               if (onImportComplete) onImportComplete();
             }}
           />
