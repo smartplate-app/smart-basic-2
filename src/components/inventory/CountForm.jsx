@@ -24,6 +24,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     count_type: "monthly",
     items: [],
     total_inventory_value: 0,
+    name: "",
     notes: "",
     status: "in_progress"
   });
@@ -368,6 +369,15 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                     <SelectItem value="completed">{t('status_completed')}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">{language === 'he' ? 'שם ספירה' : 'Count Name'}</Label>
+                <Input
+                  id="name"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder={language === 'he' ? 'למשל: ספירת סוף חודש דצמבר' : 'e.g., December month-end'}
+                />
               </div>
             </div>
 
