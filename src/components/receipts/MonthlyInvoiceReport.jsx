@@ -14,6 +14,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [selected, setSelected] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
+  const [driveAuthorized, setDriveAuthorized] = useState(null);
 
   const supplierById = useMemo(() => {
     const map = {};
@@ -61,6 +62,17 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   try {
                     setUploading(true);
                     setUploadResult(null);
+                    // Quick auth check
+                    try {
+                      const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
+                      setDriveAuthorized(!!auth?.authorized);
+                    } catch (authErr) {
+                      setDriveAuthorized(false);
+                    }
+                    if (driveAuthorized === false) {
+                      alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
+                      return;
+                    }
                     // Minimal payload per receipt
                     const payload = {
                       month,
@@ -86,6 +98,22 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 className="bg-green-600 hover:bg-green-700"
               >
                 {uploading ? (t('uploading') || 'Uploading...') : (t('upload_to_drive') || 'Upload to Drive')}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={uploading}
+                onClick={async () => {
+                  try {
+                    const { data } = await base44.functions.invoke('checkDriveAuth', {});
+                    setDriveAuthorized(!!data?.authorized);
+                    alert(data?.authorized ? (t('drive_connected') || 'Google Drive is connected') : (t('drive_not_connected') || 'Google Drive is not connected'));
+                  } catch (e) {
+                    setDriveAuthorized(false);
+                    alert(t('drive_not_connected') || 'Google Drive is not connected');
+                  }
+                }}
+              >
+                {t('check_drive') || 'Check Drive'}
               </Button>
             </div>
           </CardTitle>
@@ -142,6 +170,13 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 )}
               </tbody>
             </table>
+            {uploadResult?.parentFolder?.webViewLink && (
+              <div className="mt-3 text-sm text-gray-700">
+                <a href={uploadResult.parentFolder.webViewLink} target="_blank" rel="noreferrer" className="text-blue-600 underline">
+                  {t('open_drive_folder') || 'Open Drive folder'}
+                </a>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
