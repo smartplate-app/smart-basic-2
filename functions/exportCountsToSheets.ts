@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const dataRows = inRange.map((c) => [
       c.count_date || '',
       c.warehouse_name || 'All',
-      (c.notes || ''),
+      (c.name || ''),
       Number(c.total_inventory_value || 0)
     ]);
 
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
     // Prepare values (A1:C...)
     const values = [];
     values.push([title, '', '', '']); // A1 merged later
-    values.push(['Date', 'Warehouse', 'Description', 'Total']); // headers
+    values.push(['Date', 'Warehouse', 'Name', 'Total']); // headers
     for (const row of dataRows) values.push(row);
     values.push(['', '', 'Total', totalSum]); // total row
 
@@ -173,6 +173,20 @@ Deno.serve(async (req) => {
         {
           autoResizeDimensions: {
             dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 4 }
+          }
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 },
+            properties: { pixelSize: 90 },
+            fields: 'pixelSize'
+          }
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 },
+            properties: { pixelSize: 260 },
+            fields: 'pixelSize'
           }
         }
       ]
