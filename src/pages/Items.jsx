@@ -498,7 +498,7 @@ export default function ItemsPage() {
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 sticky top-0 z-20 bg-gray-50/95 backdrop-blur supports-[backdrop-filter]:bg-gray-50/70 py-3 border-b border-gray-200">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
