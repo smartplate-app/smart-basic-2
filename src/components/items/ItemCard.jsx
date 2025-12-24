@@ -59,7 +59,7 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
                 <Pencil className="w-4 h-4 mr-2" />
                 {t('edit')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-600">
+              <DropdownMenuItem onClick={() => onDelete(item)} className="text-red-600">
                 <Trash2 className="w-4 h-4 mr-2" />
                 {t('delete')}
               </DropdownMenuItem>
