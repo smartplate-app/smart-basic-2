@@ -72,12 +72,12 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
     return list;
   }, [items, sortKey, sortDir]);
 
-  const getFinalPrice = (item) => {
+  function getFinalPrice(item) {
     if (!item.price) return 0;
     return item.discount > 0
       ? item.price * (1 - item.discount / 100)
       : item.price;
-  };
+  }
 
   const allSelected = items.length > 0 && items.every(i => selectedIds.includes(i.id));
 
