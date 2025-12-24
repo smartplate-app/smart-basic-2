@@ -2,14 +2,18 @@ import React, { useMemo, useState } from "react";
 import moment from "moment";
 import { useLanguage } from "../LanguageProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { base44 } from "@/api/base44Client";
 
 export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
   const [month, setMonth] = useState(() => moment().format('YYYY-MM'));
   const [selected, setSelected] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
 
   const supplierById = useMemo(() => {
     const map = {};
@@ -51,6 +55,38 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             <div className="flex items-center gap-3">
               <label className="text-sm text-gray-600">{t('month') || 'Month'}</label>
               <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-40" />
+              <Button
+                disabled={uploading}
+                onClick={async () => {
+                  try {
+                    setUploading(true);
+                    setUploadResult(null);
+                    // Minimal payload per receipt
+                    const payload = {
+                      month,
+                      receipts: monthReceipts.map(r => ({
+                        id: r.id,
+                        supplier_id: r.supplier_id,
+                        supplier_name: r.supplier_name,
+                        invoice_number: r.invoice_number,
+                        invoice_date: r.invoice_date,
+                        received_date: r.received_date,
+                        receipt_images: r.receipt_images,
+                      })),
+                    };
+                    const { data } = await base44.functions.invoke('uploadMonthlyInvoicesToDrive', payload);
+                    setUploadResult(data);
+                    alert((t('upload_completed') || 'Upload completed') + (data?.parentFolder?.webViewLink ? `\n${data.parentFolder.webViewLink}` : ''));
+                  } catch (e) {
+                    alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {uploading ? (t('uploading') || 'Uploading...') : (t('upload_to_drive') || 'Upload to Drive')}
+              </Button>
             </div>
           </CardTitle>
         </CardHeader>
