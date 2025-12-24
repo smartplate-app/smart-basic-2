@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
     // Prepare values (A1:C...)
     const values = [];
-    values.push([title, '', '', '']); // A1 merged later
+    values.push([title, '', '']); // A1 merged later
     values.push(['Date', 'Name', 'Total']); // headers
     for (const row of dataRows) values.push(row);
     values.push(['', 'Total', totalSum]); // total row
