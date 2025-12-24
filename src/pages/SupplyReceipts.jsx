@@ -313,6 +313,7 @@ export default function SupplyReceiptsPage() {
           )}
         </AnimatePresence>
 
+        <div className={activeTab !== 'receipts' ? 'hidden' : ''}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
