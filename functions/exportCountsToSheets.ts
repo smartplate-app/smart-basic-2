@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
         // Merge title A1:C1
         {
           mergeCells: {
-                    range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 4 },
+                    range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 3 },
                     mergeType: 'MERGE_ALL'
                   }
         },
