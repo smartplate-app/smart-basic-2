@@ -334,17 +334,23 @@ export default function ItemsPage() {
     setShowEditModal(true);
   };
 
-  const handleDelete = async (item) => {
-    if (!confirm(`${t('delete')} ${item.name}?`)) {
+  const handleDelete = async (target) => {
+    const id = typeof target === 'string' ? target : target?.id;
+    const name = typeof target === 'string' ? '' : (target?.name || '');
+    if (!id) {
+      alert(t('error_saving') + ': Invalid item');
+      return;
+    }
+    if (!confirm(`${t('delete')} ${name}?`)) {
       return;
     }
 
     try {
       if (user?.store_user_owner_email || user?.acting_as_store_email) {
-        const { data } = await base44.functions.invoke('deleteItemForStore', { itemId: item.id });
+        const { data } = await base44.functions.invoke('deleteItemForStore', { itemId: id });
         if (!data?.success) throw new Error(data?.error || 'Failed to delete');
       } else {
-        await base44.entities.Item.delete(item.id);
+        await base44.entities.Item.delete(id);
       }
       await loadData(user);
     } catch (error) {

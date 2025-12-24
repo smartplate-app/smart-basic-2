@@ -35,10 +35,18 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
-    // Delete all items of this supplier
-    const items = await base44.asServiceRole.entities.Item.filter({ supplier_id: supplierId });
+    // Delete all items of this supplier (by id) and any orphan items matching supplier name for this owner
+    const itemsById = await base44.asServiceRole.entities.Item.filter({ supplier_id: supplierId });
+    const itemsByNameCreated = await base44.asServiceRole.entities.Item.filter({ supplier_name: supplier.name, created_by: ownerEmail });
+    const itemsByNameStore = await base44.asServiceRole.entities.Item.filter({ supplier_name: supplier.name, store_owner_email: ownerEmail });
+
+    const allToDeleteMap = new Map();
+    for (const it of [...itemsById, ...itemsByNameCreated, ...itemsByNameStore]) {
+      allToDeleteMap.set(it.id, it);
+    }
+
     let deletedItems = 0;
-    for (const it of items) {
+    for (const it of allToDeleteMap.values()) {
       try {
         await base44.asServiceRole.entities.Item.delete(it.id);
         deletedItems += 1;

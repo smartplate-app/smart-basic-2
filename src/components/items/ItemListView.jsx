@@ -122,7 +122,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                         {t('edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => onDelete(item.id)}
+                        onClick={() => onDelete(item)}
                         className="text-red-600"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
