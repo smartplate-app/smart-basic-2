@@ -521,17 +521,39 @@ export default function ItemsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
-            <SelectTrigger>
-              <SelectValue placeholder={t('warehouse') + ' — ' + t('filter')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All warehouses</SelectItem>
-              {warehouses.map(w => (
-                <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('warehouse') + ' — ' + t('filter')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All warehouses</SelectItem>
+                {warehouses.map(w => (
+                  <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              className="border-red-300 text-red-600 hover:bg-red-50"
+              disabled={selectedWarehouseId === 'all'}
+              onClick={async () => {
+                if (selectedWarehouseId === 'all') return;
+                const wh = warehouses.find(w => w.id === selectedWarehouseId);
+                if (!wh) return;
+                if (!confirm(`Delete warehouse "${wh.name}"?`)) return;
+                try {
+                  await base44.entities.Warehouse.delete(selectedWarehouseId);
+                  setWarehouses(prev => prev.filter(w => w.id !== selectedWarehouseId));
+                  setSelectedWarehouseId('all');
+                } catch (e) {
+                  alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
+                }
+              }}
+            >
+              <Trash2 className="w-4 h-4 mr-2" /> Delete
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -598,9 +620,13 @@ export default function ItemsPage() {
       <SelectionBar
         selectedCount={selectedIds.length}
         currentWarehouseName={selectedWarehouseId !== 'all' ? (warehouses.find(w => w.id === selectedWarehouseId)?.name || '') : ''}
+        warehouses={warehouses}
+        targetWarehouseId={selectedWarehouseId !== 'all' ? selectedWarehouseId : ''}
+        onChangeTargetWarehouse={(id) => setSelectedWarehouseId(id)}
         onAddToCurrent={async () => {
-          if (selectedWarehouseId === 'all') { alert('Select a warehouse first'); return; }
-          const wh = warehouses.find(w => w.id === selectedWarehouseId);
+          const targetId = selectedWarehouseId;
+          if (!targetId || targetId === 'all') { alert('Select a warehouse first'); return; }
+          const wh = warehouses.find(w => w.id === targetId);
           if (!wh) return;
           const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
           const next = Array.from(new Set([...existing, ...selectedIds]));

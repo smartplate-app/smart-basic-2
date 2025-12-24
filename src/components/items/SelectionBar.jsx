@@ -2,12 +2,16 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, CheckCircle2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SelectionBar({
   selectedCount,
   currentWarehouseName,
   onAddToCurrent,
-  onCreateNew
+  onCreateNew,
+  warehouses = [],
+  targetWarehouseId,
+  onChangeTargetWarehouse
 }) {
   if (!selectedCount) return null;
 
@@ -17,17 +21,27 @@ export default function SelectionBar({
         <Badge variant="secondary" className="text-sm">
           {selectedCount} selected
         </Badge>
-        {currentWarehouseName ? (
-          <div className="text-sm text-gray-700 hidden sm:block">
-            Add to: <span className="font-semibold">{currentWarehouseName}</span>
-          </div>
-        ) : (
-          <div className="text-sm text-gray-500 hidden sm:block">Choose a warehouse to enable quick add</div>
-        )}
+
+        <div className="hidden sm:block">
+          <Select value={targetWarehouseId || ""} onValueChange={(v) => onChangeTargetWarehouse && onChangeTargetWarehouse(v)}>
+            <SelectTrigger className="h-8 w-56">
+              <SelectValue placeholder="Choose warehouse" />
+            </SelectTrigger>
+            <SelectContent>
+              {warehouses.map((w) => (
+                <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="text-sm text-gray-700 hidden sm:block">
+          Add to: <span className="font-semibold">{currentWarehouseName || (warehouses.find(w => w.id === targetWarehouseId)?.name) || '—'}</span>
+        </div>
         <div className="flex gap-2">
           <Button
             size="sm"
-            disabled={!currentWarehouseName}
+            disabled={!(targetWarehouseId || currentWarehouseName)}
             onClick={onAddToCurrent}
             className="bg-green-600 hover:bg-green-700"
           >
