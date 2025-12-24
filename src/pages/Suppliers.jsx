@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Scan, Loader, FileSpreadsheet, Store, ArrowLeft, Download, BarChart3 } from "lucide-react";
+import { Plus, Search, Scan, Loader, Store, ArrowLeft, Download, BarChart3 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/LanguageProvider";
 import { createPageUrl } from "@/utils";
@@ -474,17 +474,6 @@ export default function SuppliersPage() {
             >
               <Download className="w-5 h-5 mr-2" />
               {language === 'he' ? 'הורד תבנית אקסל' : 'Download Template'}
-            </Button>
-            <Button
-              onClick={() => {
-                setShowExcelPanel(!showExcelPanel);
-                setShowForm(false);
-                setShowScanner(false);
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <FileSpreadsheet className="w-5 h-5 mr-2" />
-              {language === 'he' ? 'ייבוא/ייצוא אקסל' : 'Excel Import/Export'}
             </Button>
             <Button
               onClick={() => {
