@@ -3,10 +3,11 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, MoreVertical, Pencil, Package } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 
-export default function ItemCard({ item, onEdit, onDelete }) {
+export default function ItemCard({ item, onEdit, onDelete, selectable = true, selected = false, onToggleSelect }) {
   const { t } = useLanguage();
 
   const handleDoubleClick = () => {
@@ -27,7 +28,15 @@ export default function ItemCard({ item, onEdit, onDelete }) {
     >
       <Card className="hover:shadow-xl transition-shadow duration-300 bg-white/80 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-start justify-between pb-3">
-          <div className="flex-1">
+          <div className="flex items-start gap-3 flex-1">
+            {selectable && (
+              <Checkbox
+                checked={!!selected}
+                onCheckedChange={() => onToggleSelect && onToggleSelect(item.id)}
+                aria-label="Select item"
+              />
+            )}
+            <div className="flex-1">
             <CardTitle className="text-lg font-bold text-gray-900">
               {item.name}
             </CardTitle>
@@ -37,6 +46,7 @@ export default function ItemCard({ item, onEdit, onDelete }) {
                 {t('catalog_number')}: {item.catalog_number}
               </p>
             )}
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

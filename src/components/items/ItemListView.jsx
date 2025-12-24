@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, MoreVertical } from "lucide-react";
@@ -17,8 +16,9 @@ import {
   TableCell,
 } from "@/components/ui/table"; // Added table component imports
 import { useLanguage } from "../LanguageProvider";
+import { Checkbox } from "@/components/ui/checkbox";
 
-export default function ItemListView({ items, onEdit, onDelete }) {
+export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll }) {
   const { t } = useLanguage();
 
   const getFinalPrice = (item) => {
@@ -28,12 +28,17 @@ export default function ItemListView({ items, onEdit, onDelete }) {
       : item.price;
   };
 
+  const allSelected = items.length > 0 && items.every(i => selectedIds.includes(i.id));
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto">
         <Table className="w-full"> {/* Replaced <table> with <Table> */}
           <TableHeader className="bg-gray-50 border-b"> {/* Replaced <thead> with <TableHeader> */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
+              <TableHead className="px-3 py-3 text-center">
+                <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" />
+              </TableHead>
               <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"> {/* Replaced <th> with <TableHead> */}
                 {t('item_name')}
               </TableHead>
@@ -67,6 +72,9 @@ export default function ItemListView({ items, onEdit, onDelete }) {
                 onDoubleClick={() => onEdit(item)}
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
               > {/* Replaced <tr> with <TableRow> */}
+                <TableCell className="px-3 py-3 text-center">
+                  <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={() => onToggleSelect && onToggleSelect(item.id)} aria-label="Select row" />
+                </TableCell>
                 <TableCell className="px-4 py-3 text-right"> {/* Replaced <td> with <TableCell> */}
                   <div className="text-sm font-medium text-gray-900">{item.name}</div>
                   {item.description && (

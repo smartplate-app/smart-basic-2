@@ -12,6 +12,7 @@ import ItemCard from "../components/items/ItemCard";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import ItemEditModal from "../components/items/ItemEditModal";
 import ItemListView from "../components/items/ItemListView";
+import SelectionBar from "../components/items/SelectionBar";
 
 export default function ItemsPage() {
   const [items, setItems] = useState([]);
@@ -28,6 +29,8 @@ export default function ItemsPage() {
   const [networkError, setNetworkError] = useState(null);
   const { t } = useLanguage();
   const [viewMode, setViewMode] = useState("cards");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState("all");
   const [defaultSupplierId, setDefaultSupplierId] = useState(null);
 
   React.useEffect(() => {
@@ -69,12 +72,13 @@ export default function ItemsPage() {
       if (isStoreUser && storeOwnerEmail) {
         // Store user - load data from the store owner
         console.log('[Items] Loading as STORE USER from owner:', storeOwnerEmail);
-        const [ownerItems, ownItemsByStoreOwner, managerCreated, ownerSuppliers, ownerWarehouses] = await Promise.all([
+        const [ownerItems, ownItemsByStoreOwner, managerCreated, ownerSuppliers, ownerWarehouses, myWarehouses] = await Promise.all([
           base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date"),
           base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }, "-created_date"),
           base44.entities.Item.filter({ created_by: currentUser.email }, "-created_date"),
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
-          base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name")
+          base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name"),
+          base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
         ]);
         console.log('[Items] Loaded from owner:', {
           ownerItems: ownerItems.length,
@@ -89,7 +93,7 @@ export default function ItemsPage() {
         itemsData = Array.from(new Map(allItems.map(item => [item.id, item])).values())
           .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
         suppliersData = ownerSuppliers;
-        warehousesData = ownerWarehouses;
+        warehousesData = [...ownerWarehouses, ...myWarehouses];
       } else if (currentUser.chain_id && !currentUser.is_chain_head) {
         // Branch store in chain (with fallbacks)
         let effectiveChainId = currentUser.chain_id;
@@ -143,11 +147,15 @@ export default function ItemsPage() {
         warehousesData = warehouses;
       }
 
+      // Ensure a 'General' warehouse exists and includes all items
+      const ensured = await ensureGeneralWarehouse(currentUser, itemsData, warehousesData);
+      const finalWarehouses = ensured || warehousesData;
+
       setItems(itemsData);
       setSuppliers(suppliersData);
-      setWarehouses(warehousesData);
-      console.log(`[Items] Loaded ${itemsData.length} items, ${suppliersData.length} suppliers`);
-      
+      setWarehouses(finalWarehouses);
+      console.log(`[Items] Loaded ${itemsData.length} items, ${suppliersData.length} suppliers, ${finalWarehouses.length} warehouses`);
+
       setNetworkError(null);
     } catch (error) {
       console.error(`[Items] Error loading data (attempt ${retryCount + 1}):`, error);
@@ -168,6 +176,28 @@ export default function ItemsPage() {
       setWarehouses([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const ensureGeneralWarehouse = async (currentUser, itemsData, warehousesData) => {
+    try {
+      const name = 'General';
+      let general = warehousesData.find(w => (w.name || '').toLowerCase() === name.toLowerCase());
+      const allIds = itemsData.map(i => i.id);
+      if (!general) {
+        const created = await base44.entities.Warehouse.create({ name, catalog_items: allIds });
+        return [...warehousesData, created];
+      }
+      const existing = Array.isArray(general.catalog_items) ? general.catalog_items : [];
+      const missing = allIds.filter(id => !existing.includes(id));
+      if (missing.length > 0 || existing.length !== allIds.length) {
+        general = await base44.entities.Warehouse.update(general.id, { catalog_items: allIds });
+        return warehousesData.map(w => (w.id === general.id ? general : w));
+      }
+      return warehousesData;
+    } catch (e) {
+      console.warn('[Items] ensureGeneralWarehouse failed:', e?.message || e);
+      return warehousesData;
     }
   };
 
@@ -323,12 +353,14 @@ export default function ItemsPage() {
     }
   };
 
+  const currentWarehouse = selectedWarehouseId !== 'all' ? warehouses.find(w => w.id === selectedWarehouseId) : null;
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (item.catalog_number && item.catalog_number.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesSupplier = selectedSupplier === "all" || item.supplier_id === selectedSupplier;
-    return matchesSearch && matchesSupplier;
+    const matchesWarehouse = !currentWarehouse || (Array.isArray(currentWarehouse.catalog_items) && currentWarehouse.catalog_items.includes(item.id));
+    return matchesSearch && matchesSupplier && matchesWarehouse;
   });
 
   if (authLoading) {
@@ -432,7 +464,7 @@ export default function ItemsPage() {
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
@@ -452,6 +484,17 @@ export default function ItemsPage() {
                 <SelectItem key={supplier.id} value={supplier.id}>
                   {supplier.name}
                 </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('warehouse') + ' — ' + t('filter')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All warehouses</SelectItem>
+              {warehouses.map(w => (
+                <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -479,6 +522,9 @@ export default function ItemsPage() {
                           item={item}
                           onEdit={handleEdit}
                           onDelete={handleDelete}
+                          selectable
+                          selected={selectedIds.includes(item.id)}
+                          onToggleSelect={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
                         />
                       ))}
                     </AnimatePresence>
@@ -488,8 +534,13 @@ export default function ItemsPage() {
                     items={filteredItems}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
-                    suppliers={suppliers}
-                    warehouses={warehouses}
+                    selectedIds={selectedIds}
+                    onToggleSelect={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
+                    onToggleSelectAll={(list) => {
+                      const ids = list.map(i => i.id);
+                      const allSelected = ids.every(id => selectedIds.includes(id));
+                      setSelectedIds(allSelected ? selectedIds.filter(id => !ids.includes(id)) : Array.from(new Set([...selectedIds, ...ids])));
+                    }}
                   />
                 )}
               </>
@@ -509,6 +560,28 @@ export default function ItemsPage() {
         }}
         onSave={handleModalSave}
         onWarehouseCreated={() => user && loadData(user)}
+      />
+      <SelectionBar
+        selectedCount={selectedIds.length}
+        currentWarehouseName={selectedWarehouseId !== 'all' ? (warehouses.find(w => w.id === selectedWarehouseId)?.name || '') : ''}
+        onAddToCurrent={async () => {
+          if (selectedWarehouseId === 'all') { alert('Select a warehouse first'); return; }
+          const wh = warehouses.find(w => w.id === selectedWarehouseId);
+          if (!wh) return;
+          const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
+          const next = Array.from(new Set([...existing, ...selectedIds]));
+          const updated = await base44.entities.Warehouse.update(wh.id, { catalog_items: next });
+          setWarehouses(prev => prev.map(w => w.id === wh.id ? updated : w));
+          setSelectedIds([]);
+        }}
+        onCreateNew={async () => {
+          const name = window.prompt('Warehouse name');
+          if (!name) return;
+          const created = await base44.entities.Warehouse.create({ name, catalog_items: selectedIds });
+          setWarehouses(prev => [...prev, created]);
+          setSelectedWarehouseId(created.id);
+          setSelectedIds([]);
+        }}
       />
     </div>
   );
