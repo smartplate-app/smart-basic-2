@@ -181,6 +181,25 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={async () => {
+                                if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
+                                try {
+                                  await Warehouse.delete(warehouse.id);
+                                  const updated = await Warehouse.list();
+                                  setLocalWarehouses(updated);
+                                  if (showItemSelection?.id === warehouse.id) setShowItemSelection(null);
+                                  if (editingWarehouse?.id === warehouse.id) { setEditingWarehouse(null); setShowForm(false); }
+                                } catch (e) {
+                                  alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
+                                }
+                              }}
+                              className="text-gray-400 hover:text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
                           </div>
                         </div>
                       </CardContent>

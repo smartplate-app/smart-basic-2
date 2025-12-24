@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Warehouse } from "@/entities/Warehouse";
 import { User } from "@/entities/User";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, Edit, MapPin } from "lucide-react";
+import { Plus, Search, Loader, Edit, MapPin, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -250,14 +250,32 @@ export default function WarehousesPage() {
                             </div>
                           )}
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleEdit(warehouse)}
-                          className="text-gray-400 hover:text-indigo-600"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEdit(warehouse)}
+                            className="text-gray-400 hover:text-indigo-600"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={async () => {
+                              if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
+                              try {
+                                await Warehouse.delete(warehouse.id);
+                                setWarehouses(prev => prev.filter(w => w.id !== warehouse.id));
+                              } catch (e) {
+                                alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
+                              }
+                            }}
+                            className="text-gray-400 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
