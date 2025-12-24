@@ -5,7 +5,7 @@ import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2 } from "lucid
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MonthlyInvoiceReport from "../components/receipts/MonthlyInvoiceReport";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
@@ -280,96 +280,96 @@ export default function SupplyReceiptsPage() {
             <TabsTrigger value="receipts">{t('receipts_tab') || 'Receipts'}</TabsTrigger>
             <TabsTrigger value="monthly_report">{t('monthly_report') || 'Monthly Report'}</TabsTrigger>
           </TabsList>
-        </Tabs>
 
-        <AnimatePresence>
-          {/* Editing Form */}
-          {showForm && editingReceipt && (
-            <ReceiveSupplyForm
-              order={null}
-              receipt={editingReceipt}
-              suppliers={suppliers}
-              noOrderMode={true}
-              onSubmit={handleReceiptSubmit}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingReceipt(null);
-              }}
-            />
-          )}
-
-          {/* Supply Without Order Form */}
-          {showNoOrderForm && (
-            <ReceiveSupplyForm
-              order={null}
-              receipt={null}
-              suppliers={suppliers}
-              noOrderMode={true}
-              onSubmit={handleReceiptSubmit}
-              onCancel={() => {
-                setShowNoOrderForm(false);
-              }}
-            />
-          )}
-        </AnimatePresence>
-
-        <div className={activeTab !== 'receipts' ? 'hidden' : ''}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              placeholder={t('search_receipts')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder={t('receipt_status')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('all_statuses')}</SelectItem>
-              <SelectItem value="verified">{t('status_verified')}</SelectItem>
-              <SelectItem value="has_issues">{t('status_has_issues')}</SelectItem>
-              <SelectItem value="pending">{t('status_pending')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <AnimatePresence>
-            {loading ? (
-              Array(4).fill(0).map((_, i) => (
-                <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-16 bg-gray-200 rounded"></div>
-                </div>
-              ))
-            ) : (
-              filteredReceipts.map((receipt) => (
-                <ReceiptCard
-                  key={receipt.id}
-                  receipt={receipt}
-                  onEdit={handleEditReceipt}
+          <TabsContent value="receipts">
+            <AnimatePresence>
+              {/* Editing Form */}
+              {showForm && editingReceipt && (
+                <ReceiveSupplyForm
+                  order={null}
+                  receipt={editingReceipt}
+                  suppliers={suppliers}
+                  noOrderMode={true}
+                  onSubmit={handleReceiptSubmit}
+                  onCancel={() => {
+                    setShowForm(false);
+                    setEditingReceipt(null);
+                  }}
                 />
-              ))
+              )}
+
+              {/* Supply Without Order Form */}
+              {showNoOrderForm && (
+                <ReceiveSupplyForm
+                  order={null}
+                  receipt={null}
+                  suppliers={suppliers}
+                  noOrderMode={true}
+                  onSubmit={handleReceiptSubmit}
+                  onCancel={() => {
+                    setShowNoOrderForm(false);
+                  }}
+                />
+              )}
+            </AnimatePresence>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  placeholder={t('search_receipts')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('receipt_status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                  <SelectItem value="verified">{t('status_verified')}</SelectItem>
+                  <SelectItem value="has_issues">{t('status_has_issues')}</SelectItem>
+                  <SelectItem value="pending">{t('status_pending')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <AnimatePresence>
+                {loading ? (
+                  Array(4).fill(0).map((_, i) => (
+                    <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
+                      <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-16 bg-gray-200 rounded"></div>
+                    </div>
+                  ))
+                ) : (
+                  filteredReceipts.map((receipt) => (
+                    <ReceiptCard
+                      key={receipt.id}
+                      receipt={receipt}
+                      onEdit={handleEditReceipt}
+                    />
+                  ))
+                )}
+              </AnimatePresence>
+            </div>
+
+            {!loading && filteredReceipts.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-400 text-lg mb-2">{t('no_receipts_to_display')}</div>
+                <div className="text-gray-500">{t('start_by_creating_receipt')}</div>
+              </div>
             )}
-          </AnimatePresence>
-        </div>
+          </TabsContent>
 
-        {!loading && filteredReceipts.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-lg mb-2">{t('no_receipts_to_display')}</div>
-            <div className="text-gray-500">{t('start_by_creating_receipt')}</div>
-          </div>
-        )}
-        </div>
-
-        <div className={activeTab !== 'monthly_report' ? 'hidden' : ''}>
-          <MonthlyInvoiceReport receipts={receipts} suppliers={suppliers} />
-        </div>
+          <TabsContent value="monthly_report">
+            <MonthlyInvoiceReport receipts={receipts} suppliers={suppliers} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
