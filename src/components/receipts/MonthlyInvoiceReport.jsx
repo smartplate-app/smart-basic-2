@@ -59,20 +59,25 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               <Button
                 disabled={uploading}
                 onClick={async () => {
+                  setUploading(true);
+                  setUploadResult(null);
                   try {
-                    setUploading(true);
-                    setUploadResult(null);
                     // Quick auth check
+                    let isAuth = false;
                     try {
                       const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
-                      setDriveAuthorized(!!auth?.authorized);
+                      isAuth = !!auth?.authorized;
+                      setDriveAuthorized(isAuth);
                     } catch (authErr) {
+                      isAuth = false;
                       setDriveAuthorized(false);
                     }
-                    if (driveAuthorized === false) {
+                    if (!isAuth) {
                       alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
+                      setUploading(false);
                       return;
                     }
+
                     // Minimal payload per receipt
                     const payload = {
                       month,
