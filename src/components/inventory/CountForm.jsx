@@ -521,7 +521,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder={t('notes')}
+                placeholder={language === 'he' ? 'תיאור' : 'Description'}
                 className="h-20"
               />
             </div>
