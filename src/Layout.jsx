@@ -29,22 +29,9 @@ const AppLayout = ({ children, currentPageName }) => {
 
 
 
-  // Auto-hide sidebar on smaller screens
+  // Keep sidebar visible; adjust only width via CSS
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1280) { // Hide on screens smaller than xl (1280px)
-        setShowDesktopSidebar(false);
-      } else {
-        setShowDesktopSidebar(true);
-      }
-    };
-
-    // Set initial state
-    handleResize();
-
-    // Listen for resize events
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    setShowDesktopSidebar(true);
   }, []);
 
   const navigationItems = [
@@ -521,7 +508,7 @@ const AppLayout = ({ children, currentPageName }) => {
                       </header>
 
       <div className="flex">
-        <aside data-viewer={isViewer ? '1' : '0'} className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-all duration-300 ease-in-out md:sticky md:top-0 md:h-screen ${sidebarOpen ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-64' : '-translate-x-full w-64')} md:${showDesktopSidebar ? 'translate-x-0 w-64' : (isRTL ? 'translate-x-full w-0' : '-translate-x-full w-0')}`}>
+        <aside data-viewer={isViewer ? '1' : '0'} className={`sticky top-0 ${isRTL ? 'right-0' : 'left-0'} z-40 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col h-screen w-52 sm:w-56 md:w-64 lg:w-72`}>
           <div className="p-4 border-b border-gray-200 hidden md:flex md:flex-row md:items-center md:justify-between">
                             <Button
                               variant="ghost"
@@ -600,7 +587,7 @@ const AppLayout = ({ children, currentPageName }) => {
           </nav>
         </aside>
 
-        {sidebarOpen && (
+        {false && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden touch-none" 
             onClick={() => setSidebarOpen(false)}
