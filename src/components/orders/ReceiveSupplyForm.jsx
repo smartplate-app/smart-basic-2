@@ -64,6 +64,8 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
 
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [duplicateExists, setDuplicateExists] = useState(false);
+  const [duplicateReceipts, setDuplicateReceipts] = useState([]);
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -137,7 +139,27 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     return { calculatedTotal, totalsMatch };
   };
 
-  const handleAutoScan = async () => {
+  const checkDuplicateInvoice = async (invoiceNum, supplierId, excludeId) => {
+  if (!invoiceNum || !supplierId) { setDuplicateExists(false); setDuplicateReceipts([]); return false; }
+  try {
+    const results = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId, invoice_number: invoiceNum });
+    const filtered = (results || []).filter(r => !excludeId || r.id !== excludeId);
+    if (filtered.length > 0) {
+      setDuplicateExists(true);
+      setDuplicateReceipts(filtered);
+      return true;
+    } else {
+      setDuplicateExists(false);
+      setDuplicateReceipts([]);
+      return false;
+    }
+  } catch (e) {
+    console.error('Duplicate check failed:', e);
+    return false;
+  }
+};
+
+const handleAutoScan = async () => {
     if (!formData.receipt_images.length) {
       alert(t('click_to_upload_images'));
       return;
@@ -191,7 +213,13 @@ Return JSON:
           manual_entry_mode: true // Automatically switch to manual entry mode to allow editing/adding
         }));
 
-        alert(t('scanning_complete') || 'סריקה הושלמה! הוסף פריטים ידנית.');
+        const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
+        const isDup = await checkDuplicateInvoice(response.invoice_number || '', supplierId, receipt?.id);
+        if (isDup) {
+          alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.');
+        } else {
+          alert(t('scanning_complete') || 'סריקה הושלמה! הוסף פריטים ידנית.');
+        }
 
       } else {
         // Original flow for orders - only update invoice details from scan
@@ -208,7 +236,13 @@ Return JSON:
           totals_match: totalsMatch
         }));
 
-        alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים.');
+        const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
+        const isDup = await checkDuplicateInvoice(response.invoice_number || '', supplierId, receipt?.id);
+        if (isDup) {
+          alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.');
+        } else {
+          alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים.');
+        }
       }
 
     } catch (error) {
@@ -377,6 +411,8 @@ Return JSON:
       }
     }
 
+    const dup = await checkDuplicateInvoice(formData.invoice_number, formData.supplier_id || (receipt?.supplier_id || ''), receipt?.id);
+    if (dup) { alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.'); return; }
     onSubmit(formData);
   };
 
@@ -541,7 +577,12 @@ Return JSON:
                             <Label className="text-xs text-gray-600">{t('invoice_number')} *</Label>
                             <Input
                               value={formData.invoice_number}
-                              onChange={(e) => setFormData(prev => ({ ...prev, invoice_number: e.target.value }))}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setFormData(prev => ({ ...prev, invoice_number: val }));
+                                const supplierId = (formData.supplier_id || (receipt?.supplier_id));
+                                if (supplierId) { checkDuplicateInvoice(val, supplierId, receipt?.id); }
+                              }}
                               className="mt-1 font-semibold"
                               placeholder={t('enter_invoice_number') || 'הזן מספר חשבונית'}
                               required
@@ -690,11 +731,19 @@ Return JSON:
                     </>
                   )}
 
-                  <div className="flex gap-3 pt-4">
+                  {duplicateExists && (
+                      <Alert variant="destructive" className="mt-2">
+                        <AlertDescription>
+                          {t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier. You cannot save another copy.'}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="flex gap-3 pt-4">
                     <Button 
                       type="submit" 
                       className="flex-1 bg-green-600 hover:bg-green-700"
-                      disabled={!formData.invoice_number || formData.invoice_total === 0 || formData.receipt_images.length === 0}
+                      disabled={!formData.invoice_number || formData.invoice_total === 0 || formData.receipt_images.length === 0 || duplicateExists}
                     >
                       <PackageCheck className="w-4 h-4 ml-2" />
                       {t('save_receipt')}
