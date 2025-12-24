@@ -33,7 +33,7 @@ export default function CountCard({ count, onEdit }) {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <WarehouseIcon className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-lg text-gray-900">{count.warehouse_name}</h3>
+                <h3 className="font-bold text-lg text-gray-900">{count.name || count.warehouse_name}</h3>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className={`${statusColors[count.status]} border`}>

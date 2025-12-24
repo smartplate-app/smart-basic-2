@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
 
 export default function CountListView({ counts, onEdit }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const statusColors = {
     in_progress: "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -41,6 +41,9 @@ export default function CountListView({ counts, onEdit }) {
             <TableRow>
               <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('warehouse')}
+              </TableHead>
+              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {language === 'he' ? 'שם ספירה' : 'Name'}
               </TableHead>
               <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('count_date')}
@@ -71,6 +74,9 @@ export default function CountListView({ counts, onEdit }) {
               >
                 <TableCell className="px-4 py-3 text-right">
                   <div className="text-sm font-medium text-gray-900">{count.warehouse_name}</div>
+                </TableCell>
+                <TableCell className="px-4 py-3 text-right text-sm text-gray-900">
+                  {count.name || '-'}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
                   {new Date(count.count_date).toLocaleDateString('he-IL')}

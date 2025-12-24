@@ -35,7 +35,6 @@ Deno.serve(async (req) => {
 
     const dataRows = inRange.map((c) => [
       c.count_date || '',
-      c.warehouse_name || 'All',
       (c.name || ''),
       Number(c.total_inventory_value || 0)
     ]);
@@ -75,9 +74,9 @@ Deno.serve(async (req) => {
     // Prepare values (A1:C...)
     const values = [];
     values.push([title, '', '', '']); // A1 merged later
-    values.push(['Date', 'Warehouse', 'Name', 'Total']); // headers
+    values.push(['Date', 'Name', 'Total']); // headers
     for (const row of dataRows) values.push(row);
-    values.push(['', '', 'Total', totalSum]); // total row
+    values.push(['', 'Total', totalSum]); // total row
 
     const rowsCount = values.length; // total rows written
 
@@ -92,7 +91,7 @@ Deno.serve(async (req) => {
         valueInputOption: 'USER_ENTERED',
         data: [
           {
-            range: `${sheetTitle}!A1:D${rowsCount}`,
+            range: `${sheetTitle}!A1:C${rowsCount}`,
             values
           }
         ]
@@ -120,7 +119,7 @@ Deno.serve(async (req) => {
         // Style title row
         {
           repeatCell: {
-            range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 4 },
+            range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 3 },
             cell: {
               userEnteredFormat: {
                 horizontalAlignment: 'CENTER',
@@ -134,7 +133,7 @@ Deno.serve(async (req) => {
         // Style header row (row 2)
         {
           repeatCell: {
-            range: { sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: 4 },
+            range: { sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: 3 },
             cell: {
               userEnteredFormat: {
                 backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 },
@@ -147,7 +146,7 @@ Deno.serve(async (req) => {
         // Number format for totals column (C)
         {
           repeatCell: {
-            range: { sheetId, startRowIndex: 2, endRowIndex: totalRowIndex + 1, startColumnIndex: 3, endColumnIndex: 4 },
+            range: { sheetId, startRowIndex: 2, endRowIndex: totalRowIndex + 1, startColumnIndex: 2, endColumnIndex: 3 },
             cell: {
               userEnteredFormat: {
                 numberFormat: { type: 'NUMBER', pattern: '#,##0.00' }
@@ -159,7 +158,7 @@ Deno.serve(async (req) => {
         // Bold total row
         {
           repeatCell: {
-            range: { sheetId, startRowIndex: totalRowIndex, endRowIndex: totalRowIndex + 1, startColumnIndex: 0, endColumnIndex: 4 },
+            range: { sheetId, startRowIndex: totalRowIndex, endRowIndex: totalRowIndex + 1, startColumnIndex: 0, endColumnIndex: 3 },
             cell: {
               userEnteredFormat: {
                 textFormat: { bold: true },
@@ -172,7 +171,7 @@ Deno.serve(async (req) => {
         // Auto resize columns
         {
           autoResizeDimensions: {
-            dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 4 }
+            dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 3 }
           }
         },
         {
@@ -184,8 +183,8 @@ Deno.serve(async (req) => {
         },
         {
           updateDimensionProperties: {
-            range: { sheetId, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 },
-            properties: { pixelSize: 260 },
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 },
+            properties: { pixelSize: 300 },
             fields: 'pixelSize'
           }
         }
