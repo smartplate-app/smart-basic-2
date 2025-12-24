@@ -325,10 +325,12 @@ export default function MonthlyCountPage() {
   };
 
   const filteredCounts = counts.filter(count => {
-    const matchesSearch = count.warehouse_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesWarehouse = warehouseFilter === "all" || count.warehouse_id === warehouseFilter;
-    return matchesSearch && matchesWarehouse;
-  });
+        const matchesSearch = count.warehouse_name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesWarehouse = warehouseFilter === "all" || count.warehouse_id === warehouseFilter;
+        return matchesSearch && matchesWarehouse;
+      });
+
+      const grandTotal = filteredCounts.reduce((sum, c) => sum + (c.total_inventory_value || 0), 0);
 
   if (authLoading) {
     return (
@@ -531,6 +533,13 @@ export default function MonthlyCountPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="mb-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
+                <span className="text-emerald-900 font-semibold">{t('total_inventory_value')}</span>
+                <span className="text-emerald-700 font-bold">₪{grandTotal.toFixed(2)}</span>
+              </div>
             </div>
 
             {loading ? (
