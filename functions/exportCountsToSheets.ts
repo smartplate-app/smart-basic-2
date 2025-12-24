@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       Number(c.total_inventory_value || 0)
     ]);
 
-    const totalSum = dataRows.reduce((sum, r) => sum + (Number(r[3]) || 0), 0);
+    const totalSum = dataRows.reduce((sum, r) => sum + (Number(r[2]) || 0), 0);
 
     const startLabel = startDate ? new Date(startDate).toLocaleDateString() : '';
     const endLabel = endDate ? new Date(endDate).toLocaleDateString() : '';
