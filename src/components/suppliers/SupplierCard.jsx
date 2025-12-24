@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import SupplierExcelImport from "./SupplierExcelImport";
+import SupplierSheetsImport from "./SupplierSheetsImport";
 import InvoiceScanner from "./InvoiceScanner";
 import { base44 } from "@/api/base44Client";
 import ItemForm from "../items/ItemForm";
@@ -24,7 +24,7 @@ import ItemForm from "../items/ItemForm";
 export default function SupplierCard({ supplier, onEdit, onDelete, onImportComplete }) {
   const { t, language } = useLanguage();
   const [showScanner, setShowScanner] = useState(false);
-  const [showExcelImport, setShowExcelImport] = useState(false);
+  const [showSheetsImport, setShowSheetsImport] = useState(false);
   const [showDeleteItemsDialog, setShowDeleteItemsDialog] = useState(false);
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -129,9 +129,9 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => setShowExcelImport(true)}
+                  onClick={() => setShowSheetsImport(true)}
                   className="text-gray-400 hover:text-green-600"
-                  title={language === 'he' ? 'ייבוא פריטים מאקסל' : 'Import items from Excel'}
+                  title={language === 'he' ? 'ייבוא פריטים מגוגל שיטס' : 'Import items from Google Sheets'}
                 >
                   <FileSpreadsheet className="w-4 h-4" />
                 </Button>
@@ -230,16 +230,16 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
         </Card>
       </motion.div>
 
-      <Dialog open={showExcelImport} onOpenChange={setShowExcelImport}>
+      <Dialog open={showSheetsImport} onOpenChange={setShowSheetsImport}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{language === 'he' ? 'ייבוא פריטים מאקסל' : 'Import Items from Excel'}</DialogTitle>
+            <DialogTitle>{language === 'he' ? 'ייבוא פריטים מגוגל שיטס' : 'Import Items from Google Sheets'}</DialogTitle>
           </DialogHeader>
-          <SupplierExcelImport 
+          <SupplierSheetsImport 
             supplier={supplier}
-            onClose={() => setShowExcelImport(false)}
+            onClose={() => setShowSheetsImport(false)}
             onImportComplete={() => {
-              setShowExcelImport(false);
+              setShowSheetsImport(false);
               if (onImportComplete) onImportComplete();
             }}
           />
