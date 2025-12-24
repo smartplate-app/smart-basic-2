@@ -90,32 +90,46 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const calculatePayment = (worker, hoursWorked, overtimeRate) => {
-    if (!worker) {
-      return { basePayment: 0, totalPayment: 0, totalWithEmployerCost: 0 };
-    }
+            if (!worker) {
+              return { basePayment: 0, totalPayment: 0, totalWithEmployerCost: 0 };
+            }
 
-    let basePaymentAmount = 0;
-    if (worker.payment_type === 'hourly') {
-      basePaymentAmount = hoursWorked * (worker.payment_amount || 0);
-    } else if (worker.payment_type === 'daily') {
-      basePaymentAmount = worker.payment_amount || 0;
-    } else if (worker.payment_type === 'monthly') {
-      const monthlyWorkingDays = 22; // This is a common assumption for monthly workers
-      const dailyRate = (worker.payment_amount || 0) / monthlyWorkingDays;
-      basePaymentAmount = dailyRate * (hoursWorked / 8); // Assuming an 8-hour workday for prorating monthly
-    }
+            let basePaymentAmount = 0;
+            if (worker.payment_type === 'hourly') {
+              basePaymentAmount = hoursWorked * (worker.payment_amount || 0);
+            } else if (worker.payment_type === 'daily') {
+              basePaymentAmount = worker.payment_amount || 0;
+            } else if (worker.payment_type === 'monthly') {
+              const monthlyWorkingDays = 22; // This is a common assumption for monthly workers
+              const dailyRate = (worker.payment_amount || 0) / monthlyWorkingDays;
+              basePaymentAmount = dailyRate * (hoursWorked / 8); // Assuming an 8-hour workday for prorating monthly
+            }
 
-    let paymentForShift = basePaymentAmount;
-    if (overtimeRate === '125') {
-      paymentForShift = basePaymentAmount * 1.25;
-    }
+            let paymentForShift = basePaymentAmount;
+            if (overtimeRate === '125') {
+              paymentForShift = basePaymentAmount * 1.25;
+            } else if (overtimeRate === '150') {
+              paymentForShift = basePaymentAmount * 1.5;
+            }
 
-    // Calculate total cost including employer cost percentage (default 25%)
-    const employerCostPercent = worker.employer_cost_percentage || 25;
-    const totalWithEmployerCost = paymentForShift * (1 + employerCostPercent / 100);
+            // Calculate total cost including employer cost percentage (default 25%)
+            const employerCostPercent = worker.employer_cost_percentage || 25;
+            const totalWithEmployerCost = paymentForShift * (1 + employerCostPercent / 100);
 
-    return { basePayment: basePaymentAmount, totalPayment: paymentForShift, totalWithEmployerCost };
-  };
+            return { basePayment: basePaymentAmount, totalPayment: paymentForShift, totalWithEmployerCost };
+          };
+
+          // 150% eligibility: Friday from 18:00 and all Saturday
+          const is150Eligible = (dayKey, startTime) => {
+            if (dayKey === 'saturday') return true;
+            if (dayKey === 'friday') {
+              if (!startTime) return false;
+              const [h, m] = String(startTime).split(':').map(Number);
+              const minutes = (h || 0) * 60 + (m || 0);
+              return minutes >= 18 * 60; // 18:00
+            }
+            return false;
+          };
 
   const calculateTotals = () => {
     const shifts = schedule?.shifts || [];
@@ -290,75 +304,78 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const handleWorkerChange = (workerId) => {
-    const worker = workers.find(w => w.id === workerId);
-    if (!worker) {
-      setEditingShift({
-        ...editingShift,
-        worker_id: "",
-        worker_name: "",
-        base_payment: 0,
-        payment_for_shift: 0
-      });
-      return;
-    }
+            const worker = workers.find(w => w.id === workerId);
+            if (!worker) {
+              setEditingShift({
+                ...editingShift,
+                worker_id: "",
+                worker_name: "",
+                base_payment: 0,
+                payment_for_shift: 0
+              });
+              return;
+            }
 
-    const { basePayment, totalPayment } = calculatePayment(worker, editingShift.hours_worked, editingShift.overtime_rate);
+            const desiredRate = editingShift.overtime_rate;
+            const effectiveRate = (desiredRate === '150' && !is150Eligible(editingShift.day, editingShift.start_time)) ? 'regular' : desiredRate;
+            if (desiredRate === '150' && effectiveRate !== '150') {
+              toast.error(t('overtime_150_restricted') || '150% applies only Friday after 18:00 and Saturday');
+            }
+            const { basePayment, totalPayment } = calculatePayment(worker, editingShift.hours_worked, effectiveRate);
 
-    setEditingShift({
-      ...editingShift,
-      worker_id: workerId,
-      worker_name: worker.full_name,
-      base_payment: basePayment,
-      payment_for_shift: totalPayment
-    });
-  };
+            setEditingShift({
+              ...editingShift,
+              worker_id: workerId,
+              worker_name: worker.full_name,
+              overtime_rate: effectiveRate,
+              base_payment: basePayment,
+              payment_for_shift: totalPayment
+            });
+          };
 
   const handleTimeChange = (field, value) => {
-    const newStartTime = field === 'start_time' ? value : editingShift.start_time;
-    const newEndTime = field === 'end_time' ? value : editingShift.end_time;
-    const hours = calculateHours(newStartTime, newEndTime);
+            const newStartTime = field === 'start_time' ? value : editingShift.start_time;
+            const newEndTime = field === 'end_time' ? value : editingShift.end_time;
+            const hours = calculateHours(newStartTime, newEndTime);
 
-    const worker = workers.find(w => w.id === editingShift.worker_id);
-    const { basePayment, totalPayment } = calculatePayment(worker, hours, editingShift.overtime_rate);
+            const worker = workers.find(w => w.id === editingShift.worker_id);
+            const desiredRate = editingShift.overtime_rate;
+            const effectiveRate = (desiredRate === '150' && !is150Eligible(editingShift.day, newStartTime)) ? 'regular' : desiredRate;
+            if (desiredRate === '150' && effectiveRate !== '150') {
+              toast.error(t('overtime_150_restricted') || '150% applies only Friday after 18:00 and Saturday');
+            }
+            const { basePayment, totalPayment } = calculatePayment(worker, hours, effectiveRate);
 
-    setEditingShift({
-      ...editingShift,
-      [field]: value,
-      hours_worked: hours,
-      base_payment: basePayment,
-      payment_for_shift: totalPayment
-    });
-  };
+            setEditingShift({
+              ...editingShift,
+              [field]: value,
+              hours_worked: hours,
+              overtime_rate: effectiveRate,
+              base_payment: basePayment,
+              payment_for_shift: totalPayment
+            });
+          };
 
   const handleOvertimeChange = (overtimeRate) => {
-    const worker = workers.find(w => w.id === editingShift.worker_id);
-    if (!worker) return;
+            const worker = workers.find(w => w.id === editingShift.worker_id);
+            if (!worker) return;
 
-    let basePaymentAmount = 0;
-    const hoursWorked = editingShift.hours_worked || 0;
+            // Enforce 150% only on Friday 18:00+ and Saturday
+            if (overtimeRate === '150' && !is150Eligible(editingShift.day, editingShift.start_time)) {
+              toast.error(t('overtime_150_restricted') || '150% applies only Friday after 18:00 and Saturday');
+              overtimeRate = 'regular';
+            }
 
-    if (worker.payment_type === 'hourly') {
-      basePaymentAmount = hoursWorked * (worker.payment_amount || 0);
-    } else if (worker.payment_type === 'daily') {
-      basePaymentAmount = worker.payment_amount || 0;
-    } else {
-      const monthlyWorkingDays = 22;
-      const dailyRate = (worker.payment_amount || 0) / monthlyWorkingDays;
-      basePaymentAmount = dailyRate * (hoursWorked / 8);
-    }
+            const hoursWorked = editingShift.hours_worked || 0;
+            const { basePayment, totalPayment } = calculatePayment(worker, hoursWorked, overtimeRate);
 
-    let paymentForShift = basePaymentAmount;
-    if (overtimeRate === '125') {
-      paymentForShift = basePaymentAmount * 1.25;
-    }
-
-    setEditingShift({
-      ...editingShift,
-      overtime_rate: overtimeRate,
-      base_payment: basePaymentAmount,
-      payment_for_shift: paymentForShift
-    });
-  };
+            setEditingShift({
+              ...editingShift,
+              overtime_rate: overtimeRate,
+              base_payment: basePayment,
+              payment_for_shift: totalPayment
+            });
+          };
 
   const checkForDoubleShift = (workerId, dayKey, currentShiftId) => {
     // Check if this worker already has a shift on the same day (in any position)
@@ -1099,9 +1116,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
 
             <div className="space-y-1">
-              <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
-                {t('weekly_labor_cost_percentage')}
-              </Label>
+                <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
+                  {t('weekly_labor_cost_percentage')}
+                </Label>
               <div className={`text-2xl font-bold ${laborPercentage > 30 ? 'text-red-600' : 'text-green-600'} ${isRTL ? 'text-right' : 'text-left'}`}>
                 {laborPercentage.toFixed(1)}%
               </div>
@@ -1364,7 +1381,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                             </div>
                                             {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
                                               <Badge variant="secondary" className={`mt-1 ${isRTL ? 'mr-5' : 'ml-5'}`}>
-                                                {shift.overtime_rate === '125' ? '125%' : ''}
+                                                {shift.overtime_rate === '125' ? '125%' : (shift.overtime_rate === '150' ? '150%' : '')}
                                               </Badge>
                                             )}
                                             <Button
@@ -1514,6 +1531,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                   <SelectContent>
                     <SelectItem value="regular">{t('regular_rate')}</SelectItem>
                     <SelectItem value="125">{t('overtime_125')}</SelectItem>
+                    <SelectItem value="150">{t('overtime_150') || 'Shabbat 150%'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1524,6 +1542,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                   {editingShift.base_payment > 0 && (
                     <>
                       <div><strong>{t('base_payment')}:</strong> {editingShift.base_payment.toFixed(2)} {t('currency_ILS')}</div>
+                      <div className="text-xs text-gray-600">
+                        {editingShift.overtime_rate === '150' ? (t('overtime_150_note') || '150% allowed only Friday 18:00+ and Saturday') : null}
+                      </div>
                       <div className="text-lg font-bold text-blue-700">
                         <strong>{t('total')}:</strong> {(editingShift.payment_for_shift || 0).toFixed(2)} {t('currency_ILS')}
                       </div>
