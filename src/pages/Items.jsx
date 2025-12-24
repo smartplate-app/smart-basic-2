@@ -350,13 +350,26 @@ export default function ItemsPage() {
         const { data } = await base44.functions.invoke('deleteItemForStore', { itemId: id });
         if (!data?.success) throw new Error(data?.error || 'Failed to delete');
       } else {
+        const exists = await base44.entities.Item.filter({ id });
+        if (!exists?.length) throw new Error('Entity Item with ID ' + id + ' not found');
         await base44.entities.Item.delete(id);
       }
       await loadData(user);
     } catch (error) {
       console.error("Error deleting item:", error);
-      alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
+      alert((t('error_saving') || 'Error') + ': ' + (error.message || 'Unknown error'));
     }
+  };
+
+  const handleCleanOrphans = async (ownerEmail) => {
+    const email = ownerEmail || user?.store_user_owner_email || user?.acting_as_store_email || user?.email;
+    const { data } = await base44.functions.invoke('cleanOrphanItems', { targetEmail: email });
+    if (!data?.success) {
+      alert((t('error_saving') || 'Error') + ': ' + (data?.error || 'Failed to clean orphans'));
+      return;
+    }
+    alert(`Deleted ${data.deleted} orphan items (of ${data.orphanCount}) for ${email}`);
+    await loadData(user);
   };
 
   const currentWarehouse = selectedWarehouseId !== 'all' ? warehouses.find(w => w.id === selectedWarehouseId) : null;
