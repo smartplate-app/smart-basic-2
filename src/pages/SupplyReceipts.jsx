@@ -219,6 +219,43 @@ export default function SupplyReceiptsPage() {
             <p className="text-gray-600 mt-2">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
           </div>
           <div className="flex gap-3 flex-wrap">
+           <Button
+             onClick={async () => {
+               // Scan for duplicate invoices across same supplier
+               const map = {};
+               receipts.forEach(r => {
+                 if (!r.supplier_id || !r.invoice_number) return;
+                 const key = r.supplier_id + '|' + String(r.invoice_number).trim();
+                 if (!map[key]) map[key] = [];
+                 map[key].push(r);
+               });
+               const dups = Object.values(map).filter(list => list.length > 1);
+               if (dups.length === 0) {
+                 alert(t('no_duplicates_found') || 'No duplicate invoices found.');
+                 return;
+               }
+               // Let user choose groups to delete extras
+               const summary = dups.map(group => `${group[0].supplier_name} • ${group[0].invoice_number} → ${group.length} copies`).join('\n');
+               const confirmMsg = (t('duplicates_found_confirm_delete') || 'Found duplicate invoices. Delete extra copies?') + '\n\n' + summary;
+               const ok = window.confirm(confirmMsg);
+               if (!ok) return;
+               // Delete all but the earliest (by created_date)
+               for (const group of dups) {
+                 const sorted = [...group].sort((a,b) => new Date(a.created_date) - new Date(b.created_date));
+                 const toDelete = sorted.slice(1);
+                 for (const rec of toDelete) {
+                   try { await base44.entities.SupplyReceipt.delete(rec.id); } catch (e) { console.error('Delete failed', e); }
+                 }
+               }
+               alert(t('duplicates_deleted') || 'Duplicate invoices deleted.');
+               await loadData(user.email);
+             }}
+             variant="outline"
+             className="flex items-center gap-2 border-red-300 text-red-700 hover:bg-red-50"
+           >
+             <AlertTriangle className="w-5 h-5 ml-2" />
+             {t('check_duplicate_invoices') || 'Check Duplicate Invoices'}
+           </Button>
             <Button
               onClick={() => {
                 setShowNoOrderForm(true); // Open the no-order receipt creation form
