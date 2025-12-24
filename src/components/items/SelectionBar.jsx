@@ -41,6 +41,14 @@ export default function SelectionBar({
         <div className="flex gap-2">
           <Button
             size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white"
+            onClick={onAddToCurrent}
+            disabled={!targetWarehouseId}
+          >
+            Add to current
+          </Button>
+          <Button
+            size="sm"
             variant="outline"
             onClick={onCreateNew}
           >
