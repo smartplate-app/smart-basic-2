@@ -300,14 +300,14 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
               <div className="space-y-2">
                 <Label htmlFor="warehouse">{t('warehouse')} *</Label>
                 <Select 
-                  value={formData.warehouse_id} 
-                  onValueChange={handleWarehouseChange}
-                  
-                >
+                                   value={formData.warehouse_id} 
+                                   onValueChange={(val) => { if (val === "__create__") { handleCreateWarehouse(); return; } handleWarehouseChange(val); }}
+                                 >
                   <SelectTrigger id="warehouse">
                     <SelectValue placeholder={t('select_warehouse')} />
                   </SelectTrigger>
                   <SelectContent>
+                     <SelectItem value="__create__">+ {t('new_warehouse') || 'New Warehouse'}</SelectItem>
                      {warehouseOptions.map(warehouse => (
                        <SelectItem key={warehouse.id} value={warehouse.id}>
                         <div className="flex items-center">
