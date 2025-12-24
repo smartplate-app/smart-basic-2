@@ -15,6 +15,8 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
   const [driveAuthorized, setDriveAuthorized] = useState(null);
+  const [showDriveConfirm, setShowDriveConfirm] = useState(false);
+  const [driveAccount, setDriveAccount] = useState(null);
 
   const supplierById = useMemo(() => {
     const map = {};
@@ -59,7 +61,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               <Button
                 disabled={uploading}
                 onClick={async () => {
-                  setUploading(true);
                   setUploadResult(null);
                   try {
                     // Quick auth check
@@ -74,30 +75,19 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                     }
                     if (!isAuth) {
                       alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
-                      setUploading(false);
                       return;
                     }
 
-                    // Minimal payload per receipt
-                    const payload = {
-                      month,
-                      receipts: monthReceipts.map(r => ({
-                        id: r.id,
-                        supplier_id: r.supplier_id,
-                        supplier_name: r.supplier_name,
-                        invoice_number: r.invoice_number,
-                        invoice_date: r.invoice_date,
-                        received_date: r.received_date,
-                        receipt_images: r.receipt_images,
-                      })),
-                    };
-                    const { data } = await base44.functions.invoke('uploadMonthlyInvoicesToDrive', payload);
-                    setUploadResult(data);
-                    alert((t('upload_completed') || 'Upload completed') + (data?.parentFolder?.webViewLink ? `\n${data.parentFolder.webViewLink}` : ''));
+                    // Lookup the Google Drive account tied to this token
+                    try {
+                      const { data } = await base44.functions.invoke('driveWhoAmI', {});
+                      setDriveAccount(data?.user || null);
+                    } catch {}
+
+                    // Show confirmation dialog before uploading
+                    setShowDriveConfirm(true);
                   } catch (e) {
                     alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
-                  } finally {
-                    setUploading(false);
                   }
                 }}
                 className="bg-green-600 hover:bg-green-700"
