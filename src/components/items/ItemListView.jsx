@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, MoreVertical } from "lucide-react";
+import { Pencil, Trash2, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,57 @@ import { Checkbox } from "@/components/ui/checkbox";
 export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll }) {
   const { t } = useLanguage();
 
+  // Sorting state
+  const [sortKey, setSortKey] = React.useState('name');
+  const [sortDir, setSortDir] = React.useState('asc'); // 'asc' | 'desc'
+
+  const handleSort = (key) => {
+    setSortKey((prev) => {
+      if (prev === key) {
+        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+        return prev;
+      } else {
+        setSortDir('asc');
+        return key;
+      }
+    });
+  };
+
+  const getSortValue = (item, key) => {
+    switch (key) {
+      case 'name':
+        return (item.name || '').toString().toLowerCase();
+      case 'supplier_name':
+        return (item.supplier_name || '').toString().toLowerCase();
+      case 'catalog_number':
+        return (item.catalog_number || '').toString().toLowerCase();
+      case 'unit':
+        return `${item.unit || ''}_${item.units_per_package || 0}`;
+      case 'price':
+        return Number(item.price) || 0;
+      case 'discount':
+        return Number(item.discount) || 0;
+      case 'finalPrice':
+        return getFinalPrice(item) || 0;
+      default:
+        return '';
+    }
+  };
+
+  const sortedItems = React.useMemo(() => {
+    const list = [...items];
+    list.sort((a, b) => {
+      const av = getSortValue(a, sortKey);
+      const bv = getSortValue(b, sortKey);
+      if (typeof av === 'number' && typeof bv === 'number') {
+        return sortDir === 'asc' ? av - bv : bv - av;
+      }
+      const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return list;
+  }, [items, sortKey, sortDir]);
+
   const getFinalPrice = (item) => {
     if (!item.price) return 0;
     return item.discount > 0
@@ -36,37 +87,58 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
         <Table className="w-full"> {/* Replaced <table> with <Table> */}
           <TableHeader className="bg-gray-50 border-b"> {/* Replaced <thead> with <TableHeader> */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
-              <TableHead className="px-3 py-3 text-center">
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-3 py-3 text-center">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" />
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"> {/* Replaced <th> with <TableHead> */}
-                {t('item_name')}
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('name')}>
+                  <span>{t('item_name')}</span>
+                  {sortKey === 'name' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                </button>
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('supplier')}
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('supplier_name')}>
+                  <span>{t('supplier')}</span>
+                  {sortKey === 'supplier_name' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                </button>
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('catalog_number')}
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('catalog_number')}>
+                  <span>{t('catalog_number')}</span>
+                  {sortKey === 'catalog_number' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                </button>
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('unit_of_measure')}
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('unit')}>
+                  <span>{t('unit_of_measure')}</span>
+                  {sortKey === 'unit' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                </button>
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('price')}
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('price')}>
+                  <span>{t('price')}</span>
+                  {sortKey === 'price' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                </button>
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('discount')}
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('discount')}>
+                  <span>{t('discount')}</span>
+                  {sortKey === 'discount' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                </button>
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('final_price') || 'מחיר סופי'}
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('finalPrice')}>
+                  <span>{t('final_price') || 'מחיר סופי'}</span>
+                  {sortKey === 'finalPrice' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                </button>
               </TableHead>
-              <TableHead className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <TableHead className="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                 {t('actions') || 'פעולות'}
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="bg-white divide-y divide-gray-200"> {/* Replaced <tbody> with <TableBody> */}
-            {items.map((item) => (
+            {sortedItems.map((item) => (
               <TableRow
                 key={item.id}
                 onDoubleClick={() => onEdit(item)}
