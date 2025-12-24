@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         // Style title row
         {
           repeatCell: {
-            range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 3 },
+            range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 4 },
             cell: {
               userEnteredFormat: {
                 horizontalAlignment: 'CENTER',
