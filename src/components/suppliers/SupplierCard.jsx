@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Mail, User, Edit, Trash2, Camera, PackageX, Plus, FileText, DollarSign } from "lucide-react";
+import { Phone, Mail, User, Edit, Trash2, PackageX, Plus, FileText, DollarSign, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -16,13 +16,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import InvoiceScanner from "./InvoiceScanner";
+import SupplierExcelImport from "./SupplierExcelImport";
 import { base44 } from "@/api/base44Client";
 import ItemForm from "../items/ItemForm";
 
 export default function SupplierCard({ supplier, onEdit, onDelete, onImportComplete }) {
   const { t, language } = useLanguage();
   const [showScanner, setShowScanner] = useState(false);
+  const [showExcelImport, setShowExcelImport] = useState(false);
   const [showDeleteItemsDialog, setShowDeleteItemsDialog] = useState(false);
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -127,11 +128,11 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => setShowScanner(true)}
+                  onClick={() => setShowExcelImport(true)}
                   className="text-gray-400 hover:text-green-600"
-                  title={language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import items from image'}
+                  title={language === 'he' ? 'ייבוא פריטים מאקסל' : 'Import items from Excel'}
                 >
-                  <Camera className="w-4 h-4" />
+                  <FileSpreadsheet className="w-4 h-4" />
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -219,15 +220,16 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
         </Card>
       </motion.div>
 
-      <Dialog open={showScanner} onOpenChange={setShowScanner}>
+      <Dialog open={showExcelImport} onOpenChange={setShowExcelImport}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import Items from Image'}</DialogTitle>
+            <DialogTitle>{language === 'he' ? 'ייבוא פריטים מאקסל' : 'Import Items from Excel'}</DialogTitle>
           </DialogHeader>
-          <InvoiceScanner 
+          <SupplierExcelImport 
             supplier={supplier}
+            onClose={() => setShowExcelImport(false)}
             onImportComplete={() => {
-              setShowScanner(false);
+              setShowExcelImport(false);
               if (onImportComplete) onImportComplete();
             }}
           />
