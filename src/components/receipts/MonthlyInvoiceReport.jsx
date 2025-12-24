@@ -176,6 +176,53 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
         </CardContent>
       </Card>
 
+      {/* Drive confirmation dialog */}
+      <Dialog open={showDriveConfirm} onOpenChange={setShowDriveConfirm}>
+        <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle>{t('confirm_upload') || 'Confirm upload'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div>{t('drive_upload_account') || 'Files will be uploaded to this Google Drive account:'}</div>
+            <div className="font-medium">{driveAccount?.emailAddress || driveAccount?.displayName || (t('google_drive') || 'Google Drive')}</div>
+            <div className="text-gray-500">{t('change_drive_hint') || 'If this is not your account, cancel and connect the correct Google account using the Check Drive button.'}</div>
+          </div>
+          <div className="flex gap-2 justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowDriveConfirm(false)}>{t('cancel') || 'Cancel'}</Button>
+            <Button
+              onClick={async () => {
+                try {
+                  setUploading(true);
+                  const payload = {
+                    month,
+                    receipts: monthReceipts.map(r => ({
+                      id: r.id,
+                      supplier_id: r.supplier_id,
+                      supplier_name: r.supplier_name,
+                      invoice_number: r.invoice_number,
+                      invoice_date: r.invoice_date,
+                      received_date: r.received_date,
+                      receipt_images: r.receipt_images,
+                    })),
+                  };
+                  const { data } = await base44.functions.invoke('uploadMonthlyInvoicesToDrive', payload);
+                  setUploadResult(data);
+                  setShowDriveConfirm(false);
+                  alert((t('upload_completed') || 'Upload completed') + (data?.parentFolder?.webViewLink ? `\n${data.parentFolder.webViewLink}` : ''));
+                } catch (e) {
+                  alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
+                } finally {
+                  setUploading(false);
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {t('upload') || 'Upload'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
