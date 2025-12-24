@@ -35,13 +35,7 @@ Deno.serve(async (req) => {
 
     const dataRows = inRange.map((c) => [
       c.count_date || '',
-      (typeof c.name === 'string' && c.name.trim()
-        ? c.name.trim()
-        : (typeof c.notes === 'string' && c.notes.trim()
-          ? c.notes.trim()
-          : (typeof c.warehouse_name === 'string' && c.warehouse_name.trim()
-            ? c.warehouse_name.trim()
-            : '-'))),
+      (c.name || ''),
       Number(c.total_inventory_value || 0)
     ]);
 
