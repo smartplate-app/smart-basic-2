@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, CheckCircle2 } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SelectionBar({
@@ -39,14 +39,6 @@ export default function SelectionBar({
           Add to: <span className="font-semibold">{currentWarehouseName || (warehouses.find(w => w.id === targetWarehouseId)?.name) || '—'}</span>
         </div>
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            disabled={!(targetWarehouseId || currentWarehouseName)}
-            onClick={onAddToCurrent}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-2" /> Add to current
-          </Button>
           <Button
             size="sm"
             variant="outline"
