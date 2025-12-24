@@ -516,7 +516,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="notes">{t('notes')}</Label>
+              <Label htmlFor="notes">{language === 'he' ? 'תיאור' : 'Description'}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
