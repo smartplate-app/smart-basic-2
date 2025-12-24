@@ -5,6 +5,8 @@ import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2 } from "lucid
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MonthlyInvoiceReport from "../components/receipts/MonthlyInvoiceReport";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 
@@ -29,6 +31,7 @@ export default function SupplyReceiptsPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [networkError, setNetworkError] = useState(false);
   const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState('receipts');
 
   const loadData = async (userEmail, storeOwnerEmail = null, retryCount = 0) => {
     try {
@@ -272,6 +275,13 @@ export default function SupplyReceiptsPage() {
           </div>
         </div>
 
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="receipts">{t('receipts_tab') || 'Receipts'}</TabsTrigger>
+            <TabsTrigger value="monthly_report">{t('monthly_report') || 'Monthly Report'}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         <AnimatePresence>
           {/* Editing Form */}
           {showForm && editingReceipt && (
@@ -354,6 +364,11 @@ export default function SupplyReceiptsPage() {
             <div className="text-gray-500">{t('start_by_creating_receipt')}</div>
           </div>
         )}
+        </div>
+
+        <div className={activeTab !== 'monthly_report' ? 'hidden' : ''}>
+          <MonthlyInvoiceReport receipts={receipts} suppliers={suppliers} />
+        </div>
       </div>
     </div>
   );
