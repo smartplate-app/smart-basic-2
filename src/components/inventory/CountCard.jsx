@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Edit, Package, Warehouse as WarehouseIcon } from "lucide-react";
+import { Calendar, Edit, Trash2, Package, Warehouse as WarehouseIcon } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 
-export default function CountCard({ count, onEdit }) {
+export default function CountCard({ count, onEdit, onDelete }) {
   const { t } = useLanguage();
 
   const statusColors = {
@@ -117,18 +117,32 @@ export default function CountCard({ count, onEdit }) {
             <Badge variant="outline" className="text-xs">
               {t('created_at')}: {new Date(count.created_date).toLocaleDateString('he-IL')}
             </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(count);
-              }}
-              className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              {t('edit')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(count);
+                }}
+                className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                {t('edit')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete && onDelete(count);
+                }}
+                className="border-red-600 text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {t('delete')}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

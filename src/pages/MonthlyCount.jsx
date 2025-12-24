@@ -266,6 +266,20 @@ export default function MonthlyCountPage() {
     setShowCountForm(true);
   };
 
+  const handleDeleteCount = async (count) => {
+    const id = typeof count === 'string' ? count : count?.id;
+    const name = typeof count === 'string' ? '' : (count?.name || count?.warehouse_name || '');
+    if (!id) return;
+    if (!confirm(`${t('delete')} ${name ? `"${name}"` : (t('count') || 'count')}?`)) return;
+    try {
+      await base44.entities.InventoryCount.delete(id);
+      await loadData(user.email);
+    } catch (error) {
+      console.error('Error deleting count:', error);
+      alert((t('error_saving') || 'Error') + ': ' + (error.message || 'Unknown'));
+    }
+  };
+
   const handleExcelImport = (importedData) => {
     console.log('[MonthlyCount] Excel import received:', importedData);
     setEditingCount({
@@ -562,6 +576,7 @@ export default function MonthlyCountPage() {
                           key={count.id}
                           count={count}
                           onEdit={handleEditCount}
+                          onDelete={handleDeleteCount}
                         />
                       ))}
                     </AnimatePresence>
@@ -570,6 +585,7 @@ export default function MonthlyCountPage() {
                   <CountListView
                     counts={filteredCounts}
                     onEdit={handleEditCount}
+                    onDelete={handleDeleteCount}
                   />
                 )}
 

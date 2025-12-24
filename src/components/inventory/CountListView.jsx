@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, MoreVertical, Eye } from "lucide-react";
+import { Pencil, Trash2, MoreVertical, Eye } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
 
-export default function CountListView({ counts, onEdit }) {
+export default function CountListView({ counts, onEdit, onDelete }) {
   const { t, language } = useLanguage();
 
   const statusColors = {
@@ -105,6 +105,15 @@ export default function CountListView({ counts, onEdit }) {
                     >
                       <Pencil className="w-4 h-4 mr-1" />
                       {t('edit')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDelete && onDelete(count)}
+                      className="border-red-600 text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      {t('delete')}
                     </Button>
                   </div>
                 </TableCell>
