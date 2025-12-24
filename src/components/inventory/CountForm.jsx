@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Trash2, Save, WifiOff, Upload } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
+import { base44 } from "@/api/base44Client";
 import { Item } from "@/entities/Item";
 
 const LOCAL_STORAGE_KEY = 'offline_count_draft';
@@ -143,7 +144,17 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     setSelectedItemId("");
   };
 
-  const handleSaveToWarehouseCatalog = async () => {
+  const handleCreateWarehouse = async () => {
+    const name = prompt(t('warehouse_name') || 'Warehouse name');
+    if (!name) return;
+    const created = await base44.entities.Warehouse.create({ name, catalog_items: [] });
+    if (typeof onWarehouseCatalogSaved === 'function') {
+      onWarehouseCatalogSaved();
+    }
+    setFormData(prev => ({ ...prev, warehouse_id: created.id, warehouse_name: created.name }));
+  };
+
+   const handleSaveToWarehouseCatalog = async () => {
     if (!formData.warehouse_id || formData.items.length === 0) {
       alert(t('warehouse_required') + ' ' + t('and') + ' ' + t('items'));
       return;
@@ -284,7 +295,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                 <Select 
                   value={formData.warehouse_id} 
                   onValueChange={handleWarehouseChange}
-                  disabled={!!count}
+                  
                 >
                   <SelectTrigger id="warehouse">
                     <SelectValue placeholder={t('select_warehouse')} />
