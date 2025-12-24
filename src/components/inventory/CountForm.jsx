@@ -33,6 +33,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const [filteredAvailableItems, setFilteredAvailableItems] = useState([]);
   const [hasDraft, setHasDraft] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [warehouseOptions, setWarehouseOptions] = useState(warehouses || []);
 
   // Monitor online/offline status
   useEffect(() => {
@@ -53,6 +54,11 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
       setHasDraft(true);
     }
   }, []);
+
+  // Keep local warehouse options in sync with props
+  useEffect(() => {
+    setWarehouseOptions(warehouses || []);
+  }, [warehouses]);
 
   const saveToLocalStorage = () => {
     const dataToSave = {
@@ -99,7 +105,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   useEffect(() => {
     // Only for new counts, and if a warehouse is selected, and items array is initially empty
     if (!count && formData.warehouse_id && formData.items.length === 0) {
-      const warehouse = warehouses.find(w => w.id === formData.warehouse_id);
+      const warehouse = warehouseOptions.find(w => w.id === formData.warehouse_id);
       if (warehouse && warehouse.catalog_items && warehouse.catalog_items.length > 0) {
         const catalogItems = items.filter(item => warehouse.catalog_items.includes(item.id));
         if (catalogItems.length > 0) {
@@ -116,10 +122,10 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
         }
       }
     }
-  }, [formData.warehouse_id, warehouses, items, count, formData.items.length]);
+  }, [formData.warehouse_id, warehouseOptions, items, count, formData.items.length]);
 
   const handleWarehouseChange = (warehouseId) => {
-    const warehouse = warehouses.find(w => w.id === warehouseId);
+    const warehouse = warehouseOptions.find(w => w.id === warehouseId);
     let newItems = [];
 
     if (!count && warehouse && warehouse.catalog_items && warehouse.catalog_items.length > 0) {
@@ -148,6 +154,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     const name = prompt(t('warehouse_name') || 'Warehouse name');
     if (!name) return;
     const created = await base44.entities.Warehouse.create({ name, catalog_items: [] });
+    setWarehouseOptions(prev => [...prev, created]);
     if (typeof onWarehouseCatalogSaved === 'function') {
       onWarehouseCatalogSaved();
     }
@@ -301,8 +308,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                     <SelectValue placeholder={t('select_warehouse')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {warehouses.map(warehouse => (
-                      <SelectItem key={warehouse.id} value={warehouse.id}>
+                     {warehouseOptions.map(warehouse => (
+                       <SelectItem key={warehouse.id} value={warehouse.id}>
                         <div className="flex items-center">
                           <span>{warehouse.name}</span>
                           {warehouse.catalog_items && warehouse.catalog_items.length > 0 && (
