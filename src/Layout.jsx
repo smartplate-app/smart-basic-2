@@ -547,7 +547,7 @@ const AppLayout = ({ children, currentPageName }) => {
                       </header>
 
       <div className="flex">
-        <aside data-viewer={isViewer ? '1' : '0'} className={`z-40 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 h-screen w-52 sm:w-56 md:w-64 lg:w-72 transition-transform duration-300 ${sidebarOpen ? `fixed top-0 ${isRTL ? 'right-0' : 'left-0'} translate-x-0 flex flex-col` : 'hidden'} md:sticky md:top-0 md:flex md:flex-col`}>
+        <aside data-viewer={isViewer ? '1' : '0'} className={`z-50 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 h-screen w-52 sm:w-56 md:w-64 lg:w-72 transition-transform duration-300 ${sidebarOpen ? `fixed top-0 ${isRTL ? 'right-0' : 'left-0'} translate-x-0 flex flex-col` : 'hidden'} md:sticky md:top-0 md:flex md:flex-col`}>
           <div className="p-4 border-b border-gray-200 hidden md:flex md:flex-row md:items-center md:justify-between">
                             <Button
                               variant="ghost"
@@ -628,7 +628,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
         {sidebarOpen && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden touch-none" 
+            className="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden touch-none" 
             onClick={() => setSidebarOpen(false)}
             onTouchStart={() => setSidebarOpen(false)}
           />
