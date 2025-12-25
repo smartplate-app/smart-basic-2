@@ -27,6 +27,7 @@ export default function CountListView({ counts, onEdit, onDelete }) {
   };
 
   const countTypeLabels = {
+    daily: t('daily'),
     weekly: t('weekly'),
     monthly: t('monthly'),
     quarterly: t('quarterly'),

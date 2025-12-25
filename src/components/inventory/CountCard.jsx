@@ -15,6 +15,7 @@ export default function CountCard({ count, onEdit, onDelete }) {
   };
 
   const countTypeLabels = {
+    daily: t('daily'),
     weekly: t('weekly'),
     monthly: t('monthly'),
     quarterly: t('quarterly'),
