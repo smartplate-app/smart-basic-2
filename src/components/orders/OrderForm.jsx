@@ -92,9 +92,26 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
         // Also include items created by the current store user (manager/worker)
         queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
       } else {
-        // Owner/head store context: include own items + any legacy items without owner field
-        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
-        queries.push(base44.entities.Item.filter({ supplier_id: supplierId }, 'name'));
+        // Chain branch: include head store items as well as own
+        if (user.chain_id && !user.is_chain_head) {
+          let headEmail = null;
+          try {
+            const chainRec = await base44.entities.Chain.filter({ id: user.chain_id });
+            headEmail = chainRec?.[0]?.head_store_user_email || null;
+            if (!headEmail) {
+              const storesInChain = await base44.entities.ChainStore.filter({ chain_id: user.chain_id });
+              const headStore = storesInChain?.find(s => s.is_head_store);
+              headEmail = headStore?.user_email || null;
+            }
+          } catch {}
+          if (headEmail) {
+            queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: headEmail }, 'name'));
+          }
+          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
+        } else {
+          // Owner/head store context: include own items
+          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
+        }
       }
 
       const results = await Promise.allSettled(queries);
