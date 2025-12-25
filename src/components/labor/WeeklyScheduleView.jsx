@@ -1283,7 +1283,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-xs h-6 px-2 bg-blue-50 hover:bg-green-100 border-blue-300"
+                                  className="text-xs h-6 px-2 bg-blue-50 hover:bg-blue-100 border-blue-300"
                                   onClick={() => handleCopyDayToWeek(day.key)}
                                   title={language === 'he' ? 'העתק יום זה לכל השבוע' : 'Copy this day to all week'}
                                 >
@@ -1312,7 +1312,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                   {...provided.draggableProps}
                                   className={snapshot.isDragging ? 'bg-purple-50' : ''}
                                 >
-                                  <td className={`border p-2 font-medium ${['bg-green-100','bg-orange-100'][posIndex % 2]} ${isRTL ? 'text-right' : 'text-left'}`}>
+                                  <td className={`border p-2 font-medium ${['bg-blue-50','bg-gray-50'][posIndex % 2]} ${isRTL ? 'text-right' : 'text-left'}`}>
                                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                       <div 
                                         {...provided.dragHandleProps}
@@ -1320,8 +1320,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                       >
                                         <GripVertical className="h-4 w-4" />
                                       </div>
-                                      <div className={`h-2.5 w-2.5 rounded-sm ${['bg-green-700','bg-orange-600'][posIndex % 2]}`} />
-<span className={`text-[20px] font-extrabold ${['text-green-800','text-orange-800'][posIndex % 2]}`}>{position.name}</span>
+                                      <div className={`h-2.5 w-2.5 rounded-sm ${['bg-blue-600','bg-gray-600'][posIndex % 2]}`} />
+<span className={`text-[20px] font-extrabold ${['text-blue-800','text-gray-800'][posIndex % 2]}`}>{position.name}</span>
                                     </div>
                                   </td>
                       {days.map(day => {
@@ -1343,8 +1343,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
                                   className={`space-y-1 min-h-[60px] rounded transition-colors ${
-                                    snapshot.isDraggingOver ? 'bg-green-100' : 'hover:bg-green-50'
-                                  }`}
+                                     snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-blue-50'
+                                   }`
                                 >
                                   {shiftsForCell.length === 0 ? (
                                     <div className={`text-xs text-gray-400 py-2 ${isRTL ? 'text-right' : 'text-center'}`}>
@@ -1361,7 +1361,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                           <div
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
-                                            className={`${['bg-green-100 border-green-300','bg-orange-100 border-orange-300'][posIndex % 2]} p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg ring-2 ring-green-600' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
+                                            className={`${['bg-blue-50 border-blue-200','bg-gray-50 border-gray-200'][posIndex % 2]} p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-600' : ''} ${isRTL ? 'text-right' : 'text-left'}`
                                             onClick={() => {
                                               setEditingShift(shift);
                                               setSelectedCell({ day: day.key, date: dateStr, positionId: position.id });
