@@ -181,6 +181,10 @@ export default function ItemsPage() {
 
   const ensureGeneralWarehouse = async (currentUser, itemsData, warehousesData) => {
     try {
+      // Do not create/modify warehouses for sub-users (viewer/worker/managers under an owner)
+      if (currentUser?.store_user_owner_email) {
+        return warehousesData;
+      }
       const name = 'General';
       let general = warehousesData.find(w => (w.name || '').toLowerCase() === name.toLowerCase());
       const allIds = itemsData.map(i => i.id);
