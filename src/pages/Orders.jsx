@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle } from "lucide-react";
+import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -400,6 +400,19 @@ export default function OrdersPage() {
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleDelete = async (order) => {
+    if (isViewer) return;
+    const input = window.prompt(`Type DELETE to confirm deletion of order ${order.order_number}`);
+    if (!input || input.trim().toLowerCase() !== 'delete') return;
+    try {
+      await base44.entities.Order.delete(order.id);
+      await loadData(user);
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert((t('error_saving') || 'Error') + ': ' + (error.message || 'Unknown error'));
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -564,14 +577,24 @@ export default function OrdersPage() {
                         </button>
                       )}
                       {!isViewer && (
-                        <Button
-                          variant="outline"
-                          onClick={() => handleEdit(order)}
-                          className="flex-1"
-                        >
-                          <Edit className="w-4 h-4 mr-2" />
-                          {t('edit')}
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={() => handleEdit(order)}
+                            className="flex-1"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            {t('edit')}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => handleDelete(order)}
+                            className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            {t('delete')}
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -680,18 +703,32 @@ export default function OrdersPage() {
                               </button>
                             )}
                             {!isViewer && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEdit(order);
-                                }}
-                                className="border-gray-300 text-gray-700 hover:bg-gray-100"
-                              >
-                                <Edit className="w-3 h-3 mr-1" />
-                                {t('edit')}
-                              </Button>
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEdit(order);
+                                  }}
+                                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                                >
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  {t('edit')}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(order);
+                                  }}
+                                  className="border-red-300 text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  {t('delete')}
+                                </Button>
+                              </>
                             )}
                           </div>
                         </td>
