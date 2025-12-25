@@ -254,6 +254,19 @@ export default function OrdersPage() {
         setUser(currentUser);
         setAuthLoading(false);
         
+        // One-time bulk delete sent orders for Studio A.K.A
+        try {
+          const flagKey = 'b44_deleted_sent_orders_studioaka55';
+          const allowed = (currentUser.role === 'admin') || (currentUser.email === 'studioaka55@gmail.com');
+          if (allowed && !localStorage.getItem(flagKey)) {
+            const { data } = await base44.functions.invoke('deleteSentOrdersForUser', { targetEmail: 'studioaka55@gmail.com' });
+            console.log('[Orders] Bulk delete sent orders:', data);
+            localStorage.setItem(flagKey, '1');
+          }
+        } catch (e) {
+          console.log('[Orders] deleteSentOrdersForUser failed:', e?.message || e);
+        }
+        
         // Delay before loading data
         await new Promise(resolve => setTimeout(resolve, 500));
         
