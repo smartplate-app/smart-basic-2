@@ -160,6 +160,21 @@ const AppLayout = ({ children, currentPageName }) => {
                       setStoreUserRole(null);
                     } else {
                       console.log('[Layout] No StoreUser record found, user is regular owner');
+                      try {
+                        if (currentUser?.store_user_role || currentUser?.store_user_read_only) {
+                          await base44.auth.updateMe({
+                            store_user_role: null,
+                            store_user_owner_email: null,
+                            store_user_store_name: null,
+                            store_user_read_only: false
+                          });
+                          currentUser = await base44.auth.me();
+                          setUser(currentUser);
+                          setStoreUserRole(null);
+                        }
+                      } catch (e) {
+                        console.log('[Layout] Cleanup store_user flags for owner failed:', e?.message || e);
+                      }
                     }
                   } catch (storeUserError) {
                     console.error("[Layout] Error checking store user record:", storeUserError);
@@ -614,7 +629,7 @@ const AppLayout = ({ children, currentPageName }) => {
                     href={item.url}
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isRTL ? 'flex-row-reverse text-right' : ''} ${
-                      location.pathname === item.url || location.pathname.includes(item.url.split('/').pop()) ? 'bg-gray-900 text-white font-bold' : 'text-gray-700 hover:bg-gray-100'
+                      location.pathname === item.url || location.pathname.includes(item.url.split('/').pop()) ? 'bg-gray-900 text-white font-bold' : 'text-gray-900 hover:bg-gray-100'
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
