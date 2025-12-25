@@ -96,8 +96,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   useEffect(() => {
     const newFilteredItems = items.filter(item => {
       const isNotInCount = !formData.items.some(countItem => countItem.item_id === item.id);
-      const belongsToCurrentOrNoWarehouse = !item.warehouse_id || item.warehouse_id === formData.warehouse_id;
-      return isNotInCount && belongsToCurrentOrNoWarehouse;
+      const belongsToScope = !formData.warehouse_id ? true : (!item.warehouse_id || item.warehouse_id === formData.warehouse_id);
+      return isNotInCount && belongsToScope;
     });
     setFilteredAvailableItems(newFilteredItems);
   }, [items, formData.items, formData.warehouse_id]);
@@ -346,6 +346,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="daily">{t('daily')}</SelectItem>
                     <SelectItem value="weekly">{t('weekly')}</SelectItem>
                     <SelectItem value="monthly">{t('monthly')}</SelectItem>
                     <SelectItem value="quarterly">{t('quarterly')}</SelectItem>
@@ -381,7 +382,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
               </div>
             </div>
 
-            {formData.warehouse_id && (
+            {(formData.warehouse_id || formData.items.length > 0) && (
               <div className="space-y-4">
                 <div className="flex flex-col md:flex-row items-end gap-2">
                   <div className="flex-1 space-y-2 w-full">

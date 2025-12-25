@@ -266,6 +266,31 @@ export default function MonthlyCountPage() {
     setShowCountForm(true);
   };
 
+  const handleNewDailyCount = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const dailyItems = items.map(item => ({
+      item_id: item.id,
+      item_name: item.name,
+      counted_quantity: 0,
+      unit: item.unit,
+      price_per_unit: item.price || 0,
+      total_cost: 0,
+      notes: ""
+    }));
+    setEditingCount({
+      warehouse_id: "",
+      warehouse_name: "All Items",
+      count_date: today,
+      count_type: "daily",
+      items: dailyItems,
+      total_inventory_value: 0,
+      name: "",
+      notes: "",
+      status: "in_progress"
+    });
+    setShowCountForm(true);
+  };
+
   const handleDeleteCount = async (count) => {
     const id = typeof count === 'string' ? count : count?.id;
     const name = typeof count === 'string' ? '' : (count?.name || count?.warehouse_name || '');
@@ -447,6 +472,15 @@ export default function MonthlyCountPage() {
               </Button>
             </div>
             
+            <Button
+              onClick={handleNewDailyCount}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              disabled={items.length === 0}
+            >
+              <Plus className="w-5 h-5 ml-2" />
+              {t('new_daily_count') || 'New Daily Count'}
+            </Button>
+
             <Button
               onClick={() => {
                 setShowCountForm(!showCountForm);
