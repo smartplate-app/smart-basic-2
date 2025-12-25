@@ -11,13 +11,21 @@ export default function Welcome() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border p-8 text-center">
-        <div className="flex items-center justify-center mb-6">
-          <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 flex items-center justify-center shadow-lg">
-            <span className="text-white font-black text-2xl tracking-widest">B</span>
-          </div>
-          <div className="ml-4 text-left">
-            <div className="text-3xl font-extrabold tracking-tight leading-none">basic</div>
-            <div className="text-sm text-gray-500 -mt-0.5">by Smart Plate</div>
+        <div className="flex items-center justify-center mb-6 gap-4">
+          <img
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
+            alt="Smart Plate Logo"
+            className="h-12 w-auto object-contain"
+          />
+          <span className="text-gray-300 text-2xl">+</span>
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 flex items-center justify-center shadow-lg">
+              <span className="text-white font-black text-xl tracking-widest">B</span>
+            </div>
+            <div className="text-left">
+              <div className="text-3xl font-extrabold tracking-tight leading-none">basic</div>
+              <div className="text-sm text-gray-500 -mt-0.5">by Smart Plate</div>
+            </div>
           </div>
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-3">Welcome to Smart Plate basic</h1>
