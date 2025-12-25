@@ -626,7 +626,7 @@ const AppLayout = ({ children, currentPageName }) => {
           </nav>
         </aside>
 
-        {false && (
+        {sidebarOpen && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden touch-none" 
             onClick={() => setSidebarOpen(false)}

@@ -14,6 +14,7 @@ import PublicOrder from './pages/PublicOrder';
 import Register from './pages/Register';
 import RestaurantInvite from './pages/RestaurantInvite';
 import SalesPrediction from './pages/SalesPrediction';
+import SignIn from './pages/SignIn';
 import StoreLogin from './pages/StoreLogin';
 import StoreUsers from './pages/StoreUsers';
 import Suppliers from './pages/Suppliers';
@@ -25,10 +26,9 @@ import ToDoList from './pages/ToDoList';
 import UserProfile from './pages/UserProfile';
 import Users from './pages/Users';
 import Warehouses from './pages/Warehouses';
+import Welcome from './pages/Welcome';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import Welcome from './pages/Welcome';
-import SignIn from './pages/SignIn';
 import __Layout from './Layout.jsx';
 
 
@@ -49,6 +49,7 @@ export const PAGES = {
     "Register": Register,
     "RestaurantInvite": RestaurantInvite,
     "SalesPrediction": SalesPrediction,
+    "SignIn": SignIn,
     "StoreLogin": StoreLogin,
     "StoreUsers": StoreUsers,
     "Suppliers": Suppliers,
@@ -60,14 +61,13 @@ export const PAGES = {
     "UserProfile": UserProfile,
     "Users": Users,
     "Warehouses": Warehouses,
+    "Welcome": Welcome,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "Welcome": Welcome,
-    "SignIn": SignIn,
 }
 
 export const pagesConfig = {
-    mainPage: "Welcome",
+    mainPage: "Orders",
     Pages: PAGES,
     Layout: __Layout,
 };
