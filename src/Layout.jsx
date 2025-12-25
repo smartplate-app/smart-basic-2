@@ -110,8 +110,19 @@ const AppLayout = ({ children, currentPageName }) => {
                           store_user_read_only: effectiveRecord.role === 'viewer',
                           store_user_revoked: false
                         });
+                        // Refresh local copy immediately so subsequent logic sees store-user context
+                        currentUser = await base44.auth.me();
+                        setUser(currentUser);
+                        // For viewer/worker, ensure no standalone business context is set accidentally
+                        if (effectiveRecord.role !== 'manager') {
+                          if (currentUser.business_name || currentUser.chain_id) {
+                            await base44.auth.updateMe({ business_name: null, chain_id: null, is_chain_head: false });
+                            currentUser = await base44.auth.me();
+                            setUser(currentUser);
+                          }
+                        }
 
-                      } else if (storeUserRecords.length > 0 && storeUserRecords.every(r => !r.is_active)) {
+                        } else if (storeUserRecords.length > 0 && storeUserRecords.every(r => !r.is_active)) {
                         // User has StoreUser records but all are inactive (access revoked)
                         console.log('[Layout] StoreUser records exist but all inactive - access revoked');
                         await base44.auth.updateMe({
