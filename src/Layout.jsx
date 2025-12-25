@@ -168,6 +168,19 @@ const AppLayout = ({ children, currentPageName }) => {
                     console.log('[Layout] Cleanup worker membership failed:', cleanupErr?.message || cleanupErr);
                   }
 
+                  // One-time cleanup of standalone data for sub-user (dankraicer)
+                  try {
+                    const allowedToClean = (currentUser?.role === 'admin') || (currentUser?.email === 'studioaka55@gmail.com');
+                    const flagKey2 = 'b44_cleaned_user_dankraicer';
+                    if (allowedToClean && !localStorage.getItem(flagKey2)) {
+                      const { data } = await base44.functions.invoke('cleanUserStandaloneData', { targetEmail: 'dankraicer@gmail.com' });
+                      console.log('[Layout] cleanUserStandaloneData result:', data);
+                      localStorage.setItem(flagKey2, '1');
+                    }
+                  } catch (e) {
+                    console.log('[Layout] cleanUserStandaloneData failed:', e?.message || e);
+                  }
+
                   // Auto-attach chain context for branch managers on first login (service-role)
                   try {
                     if (!currentUser.chain_id) {
