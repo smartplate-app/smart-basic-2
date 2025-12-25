@@ -289,7 +289,7 @@ const AppLayout = ({ children, currentPageName }) => {
   })();
     const isAdminControllingUser = user?.admin_original_email && user?.acting_as_user_email;
 
-    const isViewer = (storeUserRole === 'viewer' || user?.store_user_role === 'viewer' || user?.store_user_read_only === true);
+    const isViewer = (!user?.is_chain_head) && (storeUserRole === 'viewer' || user?.store_user_role === 'viewer' || user?.store_user_read_only === true);
 
     useEffect(() => {
       if (!user) return;
