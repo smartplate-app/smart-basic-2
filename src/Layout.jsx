@@ -34,6 +34,20 @@ const AppLayout = ({ children, currentPageName }) => {
     setShowDesktopSidebar(true);
   }, []);
 
+  // Redirect unauthenticated visitors at root to the public Welcome page
+  useEffect(() => {
+    const currentPath = location.pathname;
+    if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
+      base44.auth.isAuthenticated().then((auth) => {
+        if (!auth) {
+          window.location.href = createPageUrl('Welcome');
+        }
+      }).catch(() => {
+        window.location.href = createPageUrl('Welcome');
+      });
+    }
+  }, [location.pathname]);
+
   const navigationItems = [
             { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
             { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
@@ -55,7 +69,7 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   useEffect(() => {
-    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite') {
+    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite' && currentPageName !== 'Welcome') {
       loadAuth();
     } else {
       setAuthLoading(false);
@@ -340,7 +354,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite') {
+  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite' || currentPageName === 'Welcome') {
         return <>{children}</>;
       }
 

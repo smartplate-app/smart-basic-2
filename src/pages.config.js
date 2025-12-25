@@ -27,6 +27,7 @@ import Users from './pages/Users';
 import Warehouses from './pages/Warehouses';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
+import Welcome from './pages/Welcome';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +61,7 @@ export const PAGES = {
     "Warehouses": Warehouses,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
+    "Welcome": Welcome,
 }
 
 export const pagesConfig = {
