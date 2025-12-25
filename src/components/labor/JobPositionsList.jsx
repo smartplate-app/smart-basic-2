@@ -246,9 +246,29 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                   placeholder="#E6F4FF"
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
+              {/* Position color */}
+              <div className="space-y-2 md:col-span-2">
+                <Label>{t('color') || 'Color'}</Label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={formData.color}
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                    className="h-10 w-12 p-0 border rounded"
+                    aria-label="Position color"
+                  />
+                  <Input
+                    value={formData.color}
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                    placeholder="#E6F4FF"
+                    className="max-w-[140px]"
+                  />
+                </div>
+              </div>
+              </div>
+
+              <div className="space-y-2">
               <Label>{t('job_description')}</Label>
               <Textarea
                 value={formData.description}
