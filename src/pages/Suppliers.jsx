@@ -33,6 +33,8 @@ export default function SuppliersPage() {
   const [endDate, setEndDate] = useState('');
   const { t, language } = useLanguage();
 
+  const [isViewer, setIsViewer] = useState(false);
+
   const loadData = async (currentUser, retryCount = 0) => {
                 try {
                   setLoading(true);
@@ -161,6 +163,7 @@ export default function SuppliersPage() {
 
                         if (mounted) {
                           setUser(currentUser);
+                          setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
                           await loadData(currentUser);
                         }
       } catch (error) {
@@ -200,6 +203,7 @@ export default function SuppliersPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = async (supplierData) => {
+        if (isViewer) return;
         // Prevent double submission
         if (isSaving) return;
 
@@ -260,6 +264,7 @@ export default function SuppliersPage() {
   };
 
   const handleDelete = async (supplierId) => {
+    if (isViewer) return;
     if (!confirm(t('delete') + '?')) {
       return;
     }
@@ -475,28 +480,32 @@ export default function SuppliersPage() {
               <Download className="w-5 h-5 mr-2" />
               {language === 'he' ? 'הורד תבנית אקסל' : 'Download Template'}
             </Button>
-            <Button
-              onClick={() => {
-                setShowScanner(!showScanner);
-                setShowForm(false);
-                setShowExcelPanel(false);
-              }}
-              className="bg-gray-700 hover:bg-gray-800 text-white"
-            >
-              <Scan className="w-5 h-5 mr-2" />
-              {t('scan_supplier_list')}
-            </Button>
-            <Button
-              onClick={() => {
-                setEditingSupplier(null);
-                setShowForm(!showForm);
-                setShowScanner(false);
-              }}
-              className="bg-gray-900 hover:bg-gray-800 text-white"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              {t('add_new_supplier')}
-            </Button>
+            {!isViewer && (
+              <Button
+                onClick={() => {
+                  setShowScanner(!showScanner);
+                  setShowForm(false);
+                  setShowExcelPanel(false);
+                }}
+                className="bg-gray-700 hover:bg-gray-800 text-white"
+              >
+                <Scan className="w-5 h-5 mr-2" />
+                {t('scan_supplier_list')}
+              </Button>
+            )}
+            {!isViewer && (
+              <Button
+                onClick={() => {
+                  setEditingSupplier(null);
+                  setShowForm(!showForm);
+                  setShowScanner(false);
+                }}
+                className="bg-gray-900 hover:bg-gray-800 text-white"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                {t('add_new_supplier')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -623,7 +632,7 @@ export default function SuppliersPage() {
         )}
 
         <AnimatePresence>
-          {showExcelPanel && (
+          {!isViewer && showExcelPanel && (
             <SupplierItemsExcel
               suppliers={suppliers}
               items={allItems}
@@ -632,7 +641,7 @@ export default function SuppliersPage() {
             />
           )}
 
-          {showScanner && (
+          {!isViewer && showScanner && (
             <SupplierListScanner
               onSuppliersAdded={() => {
                                 setShowScanner(false);
@@ -642,7 +651,7 @@ export default function SuppliersPage() {
             />
           )}
 
-          {showForm && (
+          {!isViewer && showForm && (
             <SupplierForm
               supplier={editingSupplier}
               onSubmit={handleSubmit}

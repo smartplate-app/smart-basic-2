@@ -28,6 +28,7 @@ export default function ItemsPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [networkError, setNetworkError] = useState(null);
   const { t } = useLanguage();
+  const [isViewer, setIsViewer] = useState(false);
   const [viewMode, setViewMode] = useState("cards");
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState("all");
@@ -230,7 +231,8 @@ export default function ItemsPage() {
         if (!mounted) return;
         
         setUser(currentUser);
-        
+        setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
+
         await new Promise(resolve => setTimeout(resolve, 500));
         
         if (mounted) {
@@ -275,6 +277,7 @@ export default function ItemsPage() {
   }, []);
 
   const handleSubmit = async (itemData) => {
+    if (isViewer) return;
     if (!user) {
       alert(t('error_no_logged_in_user') || "Error: No user logged in");
       return;
@@ -311,6 +314,7 @@ export default function ItemsPage() {
   };
 
   const handleModalSave = async (itemData) => {
+    if (isViewer) return;
     try {
       if (!user) {
         alert(t('error_no_logged_in_user') || "Error: No user logged in");
@@ -339,6 +343,7 @@ export default function ItemsPage() {
   };
 
   const handleDelete = async (target) => {
+    if (isViewer) return;
     const id = typeof target === 'string' ? target : target?.id;
     const name = typeof target === 'string' ? '' : (target?.name || '');
     if (!id) {
@@ -366,6 +371,7 @@ export default function ItemsPage() {
   };
 
   const handleCleanOrphans = async (ownerEmail) => {
+    if (isViewer) return;
     const email = ownerEmail || user?.store_user_owner_email || user?.acting_as_store_email || user?.email;
     const { data } = await base44.functions.invoke('cleanOrphanItems', { targetEmail: email });
     if (!data?.success) {
@@ -458,6 +464,7 @@ export default function ItemsPage() {
                 <List className="w-5 h-5" />
               </Button>
             </div>
+            {!isViewer && (
             <Button
               variant="outline"
               onClick={async () => {
@@ -472,7 +479,9 @@ export default function ItemsPage() {
               <Trash2 className="w-5 h-5 mr-2" />
               Clean Orphan Items
             </Button>
+            )}
 
+            {!isViewer && (
             <Button
               onClick={() => {
                 setShowForm(!showForm);
@@ -483,11 +492,12 @@ export default function ItemsPage() {
               <Plus className="w-5 h-5 ml-2" />
               {t('add_new_item')}
             </Button>
+            )}
           </div>
         </div>
 
         <AnimatePresence>
-          {showForm && (
+          {!isViewer && showForm && (
             <ItemForm
               item={null}
               suppliers={suppliers}
@@ -609,6 +619,7 @@ export default function ItemsPage() {
         )}
       </div>
 
+      {!isViewer && (
       <ItemEditModal
         item={editingItem}
         suppliers={suppliers}
@@ -621,6 +632,8 @@ export default function ItemsPage() {
         onSave={handleModalSave}
         onWarehouseCreated={() => user && loadData(user)}
       />
+      )}
+      {!isViewer && (
       <SelectionBar
         selectedCount={selectedIds.length}
         currentWarehouseName={selectedWarehouseId !== 'all' ? (warehouses.find(w => w.id === selectedWarehouseId)?.name || '') : ''}
@@ -646,7 +659,8 @@ export default function ItemsPage() {
           setSelectedWarehouseId(created.id);
           setSelectedIds([]);
         }}
-      />
+        />
+        )}
     </div>
   );
 }
