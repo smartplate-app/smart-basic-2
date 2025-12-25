@@ -30,6 +30,19 @@ moment.updateLocale('en', {
   }
 });
 
+// Helper: convert hex color to rgba with alpha
+const hexToRgba = (hex, alpha = 1) => {
+  if (!hex) return `rgba(0,0,0,${alpha})`;
+  let c = hex.trim();
+  if (c[0] === '#') c = c.substring(1);
+  if (c.length === 3) c = c.split('').map(ch => ch + ch).join('');
+  const num = parseInt(c, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 export default function WeeklyScheduleView({ weekStartDate, positions, workers, onScheduleSaved }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he';
@@ -1312,7 +1325,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                   {...provided.draggableProps}
                                   className={snapshot.isDragging ? 'bg-purple-50' : ''}
                                 >
-                                  <td className={`border p-2 font-medium ${['bg-blue-50','bg-gray-50'][posIndex % 2]} ${isRTL ? 'text-right' : 'text-left'}`}>
+                                  <td className={`border p-2 font-medium ${isRTL ? 'text-right' : 'text-left'}`} style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.25) }}>
                                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                       <div 
                                         {...provided.dragHandleProps}
@@ -1320,7 +1333,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                       >
                                         <GripVertical className="h-4 w-4" />
                                       </div>
-                                      <div className={`h-2.5 w-2.5 rounded-sm ${['bg-blue-600','bg-gray-600'][posIndex % 2]}`} />
+                                      <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: position.color || '#1E88E5' }} />
 <span className={`text-[20px] font-extrabold ${['text-blue-800','text-gray-800'][posIndex % 2]}`}>{position.name}</span>
                                     </div>
                                   </td>
@@ -1359,7 +1372,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                           <div
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
-                                            className={`${['bg-blue-50 border-blue-200','bg-gray-50 border-gray-200'][posIndex % 2]} p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-600' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
+                                            className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
+                                              style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}}
                                                 onClick={() => {
                                               setEditingShift(shift);
                                               setSelectedCell({ day: day.key, date: dateStr, positionId: position.id });

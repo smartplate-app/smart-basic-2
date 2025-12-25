@@ -22,7 +22,8 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
     default_end_time: "17:00",
     tip_hourly_rate: 0,
     tips_method: "general_pool",
-    is_active: true
+    is_active: true,
+    color: "#E6F4FF"
   });
   const { t } = useLanguage();
 
@@ -37,7 +38,8 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
       default_end_time: "17:00",
       tip_hourly_rate: 0,
       tips_method: "general_pool",
-      is_active: true
+      is_active: true,
+      color: "#E6F4FF"
     });
     setIsAdding(true);
     setEditingId(null);
@@ -54,7 +56,8 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
       default_end_time: position.default_end_time || "17:00",
       tip_hourly_rate: typeof position.tip_hourly_rate === 'number' ? position.tip_hourly_rate : 0,
       tips_method: position.tips_method || "general_pool",
-      is_active: position.is_active !== false
+      is_active: position.is_active !== false,
+      color: position.color || "#E6F4FF"
     });
     setEditingId(position.id);
     setIsAdding(false);
@@ -74,13 +77,13 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", is_active: true });
+    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", is_active: true, color: "#E6F4FF" });
   };
 
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", is_active: true });
+    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", is_active: true, color: "#E6F4FF" });
   };
 
   const sectionColors = {
@@ -262,7 +265,10 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h4 className="font-bold text-lg mb-2">{position.name}</h4>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-block h-3 w-3 rounded" style={{ backgroundColor: position.color || '#E6F4FF' }} />
+                      <h4 className="font-bold text-lg">{position.name}</h4>
+                    </div>
                     <Badge className={sectionColors[position.section] || sectionColors.other}>
                       {t(position.section)}
                     </Badge>
