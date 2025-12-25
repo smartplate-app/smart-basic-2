@@ -114,15 +114,21 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
         }
       }
 
-      const results = await Promise.allSettled(queries);
-      const merged = results
-        .filter(r => r.status === 'fulfilled')
-        .flatMap(r => r.value || []);
+      // Use a mobile-safe Promise.all with per-promise fallbacks (older mobile Safari lacks allSettled)
+      const safeQueries = queries.map(p => p.then(res => res).catch(() => []));
+      const results = await Promise.all(safeQueries);
+      // Merge arrays safely without flatMap
+      const merged = [];
+      for (const arr of results) {
+        if (Array.isArray(arr)) {
+          for (const item of arr) merged.push(item);
+        }
+      }
       // De-duplicate by id
       const seen = new Set();
       const deduped = [];
       for (const it of merged) {
-        if (!seen.has(it.id)) {
+        if (it && !seen.has(it.id)) {
           seen.add(it.id);
           deduped.push(it);
         }
