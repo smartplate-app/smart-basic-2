@@ -1355,7 +1355,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
-                                  className={`space-y-1 min-h-[60px] rounded transition-colors ${snapshot.isDraggingOver ? 'bg-blue-100' : 'hover:bg-blue-50'}`}
+                                  className={`space-y-1 min-h-[60px] rounded transition-colors`}
+                                  style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), snapshot.isDraggingOver ? 0.25 : 0.08) }}
                                   >
                                   {shiftsForCell.length === 0 ? (
                                     <div className={`text-xs text-gray-400 py-2 ${isRTL ? 'text-right' : 'text-center'}`}>
@@ -1373,7 +1374,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
-                                              style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}}
+                                              style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}
                                                 onClick={() => {
                                               setEditingShift(shift);
                                               setSelectedCell({ day: day.key, date: dateStr, positionId: position.id });
