@@ -28,6 +28,7 @@ import Warehouses from './pages/Warehouses';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
 import Welcome from './pages/Welcome';
+import SignIn from './pages/SignIn';
 import __Layout from './Layout.jsx';
 
 
@@ -62,6 +63,7 @@ export const PAGES = {
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
     "Welcome": Welcome,
+    "SignIn": SignIn,
 }
 
 export const pagesConfig = {
