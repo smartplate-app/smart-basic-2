@@ -30,7 +30,7 @@ export default function Welcome() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-3">Welcome to Smart Plate basic</h1>
         <p className="text-gray-700 leading-relaxed mb-8 text-lg">
-          המערכת הכי יעילה בישראל לביצוע הזמנות מספקים ויצירת סידור עבודה שבועי, הזמנות בווצאפ, סריקת חשבוניות , ומשלוח לרואה חשבון. דאשבורד חודשי שמראה לך בדיוק מה מצב עלויות כוח האדם והקניינות שלך מתחילת החודש והאם עברת 60% ביחד או לא, חיבור ישיר ל דוגל דרייב שלך, הרשאות יוזרים שונות, המערכת החכמה והיעילה בישראל.
+          המערכת הכי יעילה בישראל לביצוע הזמנות מספקים ויצירת סידור עבודה שבועי, הזמנות בווצאפ, סריקת חשבוניות, ומשלוח לרואה חשבון. דאשבורד חודשי שמראה לך בדיוק מה מצב עלויות כוח האדם והקניינות שלך מתחילת החודש והאם עברת 60% ביחד או לא. המערכת החכמה והיעילה בישראל.
         </p>
         <a href="mailto:admin@smartplate.org" className="block text-2xl md:text-3xl font-extrabold text-blue-600 hover:text-blue-700 hover:underline mb-8">
           admin@smartplate.org
