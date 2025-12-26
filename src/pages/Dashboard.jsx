@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
@@ -42,6 +43,9 @@ export default function DashboardPage() {
   const [predictedMonthlyLabor, setPredictedMonthlyLabor] = useState(0);
   const [hasScheduleData, setHasScheduleData] = useState(false);
   const [exportingMonthly, setExportingMonthly] = useState(false);
+  const [inventoryCounts, setInventoryCounts] = useState([]);
+  const [selectedStartCountId, setSelectedStartCountId] = useState("");
+  const [selectedEndCountId, setSelectedEndCountId] = useState("");
 
   useEffect(() => {
     loadData();
