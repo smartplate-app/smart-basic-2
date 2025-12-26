@@ -73,13 +73,16 @@ export default function DashboardPage() {
       const monthEnd = moment(selectedMonth).endOf('month');
       const endDate = today.isBefore(monthEnd) && today.isAfter(monthStart) ? today : monthEnd;
 
-      const [allDashboardData, allSchedules, allReceipts, incomingTransfers, outgoingTransfers] = await Promise.all([
+      const [allDashboardData, allSchedules, allReceipts, incomingTransfers, outgoingTransfers, allCounts] = await Promise.all([
         base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: selectedMonth }),
         base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
         base44.entities.SupplyReceipt.filter({ created_by: workingEmail }),
         base44.entities.InventoryTransfer.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }),
-        base44.entities.InventoryTransfer.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' })
+        base44.entities.InventoryTransfer.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' }),
+        base44.entities.InventoryCount.filter({ created_by: workingEmail }, "-count_date")
       ]);
+
+      setInventoryCounts(allCounts);
 
       // Process dashboard data
       const existingData = allDashboardData[0];
