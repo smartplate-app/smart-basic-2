@@ -968,7 +968,7 @@ export default function DashboardPage() {
                       <SelectContent>
                         {inventoryCounts.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
-                            {format(new Date(c.count_date), 'yyyy-MM-dd')} • {c.name || (language === 'he' ? 'ללא שם' : 'No name')} • {formatCurrency(c.total_inventory_value || 0)}
+                            {moment(c.count_date).format('YYYY-MM-DD')} • {c.name || (language === 'he' ? 'ללא שם' : 'No name')} • {formatCurrency(c.total_inventory_value || 0)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -986,7 +986,7 @@ export default function DashboardPage() {
                       <SelectContent>
                         {inventoryCounts.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
-                            {format(new Date(c.count_date), 'yyyy-MM-dd')} • {c.name || (language === 'he' ? 'ללא שם' : 'No name')} • {formatCurrency(c.total_inventory_value || 0)}
+                            {moment(c.count_date).format('YYYY-MM-DD')} • {c.name || (language === 'he' ? 'ללא שם' : 'No name')} • {formatCurrency(c.total_inventory_value || 0)}
                           </SelectItem>
                         ))}
                       </SelectContent>
