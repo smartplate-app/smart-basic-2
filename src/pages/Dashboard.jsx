@@ -439,7 +439,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>
-                      {language === 'he' ? 'סה"כ מכירות (כולל מע"מ)' : 'Total Sales (incl. VAT)'}
+                      {language === 'he' ? 'סה״כ מכירות עד עכשיו (כולל מע״מ)' : 'Total sales till now (incl. VAT)'}
                     </Label>
                     <Input
                       type="number"
