@@ -1198,6 +1198,32 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
           )}
 
+          {/* Compact worker shifts summary */}
+          <div className="bg-white border rounded-lg p-3">
+            <div className={`text-[12px] font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+              {language === 'he' ? 'מספר משמרות לכל עובד' : 'Shifts per worker'}
+            </div>
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+              {workerShiftCounts.length > 0 ? (
+                workerShiftCounts.map(w => (
+                  <div
+                    key={w.id}
+                    className="min-w-[120px] bg-gray-50 border border-gray-200 rounded-md p-2"
+                  >
+                    <div className="font-semibold text-[11px] truncate">{w.name}</div>
+                    <div className="text-[11px] text-gray-600">
+                      {language === 'he' ? `${w.count} משמרות` : `${w.count} shifts`}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-[11px] text-gray-500">
+                  {language === 'he' ? 'אין משמרות לשבוע זה' : 'No shifts this week'}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className={`flex gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Button onClick={() => setShowTemplateDialog(true)} variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
