@@ -232,8 +232,8 @@ const AppLayout = ({ children, currentPageName }) => {
 
                   const currentPath = location.pathname;
                                           if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-                                            console.log("[Layout] Redirecting to Orders page");
-                                            window.location.href = createPageUrl("Orders");
+                                            console.log("[Layout] Redirecting to To-Do List page");
+                                            window.location.href = createPageUrl("ToDoList");
                                           }
       
       setAuthLoading(false);

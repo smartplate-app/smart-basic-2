@@ -26,7 +26,8 @@ export default function ToDoListPage() {
     description: "",
     date: format(new Date(), 'yyyy-MM-dd'),
     category: "food_cost",
-    priority: "medium"
+    priority: "medium",
+    image_url: ""
   });
 
   useEffect(() => {
@@ -62,7 +63,8 @@ export default function ToDoListPage() {
         description: "",
         date: format(new Date(), 'yyyy-MM-dd'),
         category: "food_cost",
-        priority: "medium"
+        priority: "medium",
+        image_url: ""
       });
     } catch (error) {
       console.error("Error saving todo:", error);
@@ -76,7 +78,8 @@ export default function ToDoListPage() {
       description: todo.description || "",
       date: todo.date,
       category: todo.category,
-      priority: todo.priority
+      priority: todo.priority,
+      image_url: todo.image_url || ""
     });
     setShowForm(true);
   };
@@ -245,6 +248,27 @@ export default function ToDoListPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Image upload */}
+                <div className="space-y-2">
+                  <div className={`text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {isRTL ? 'תמונה (אופציונלי)' : 'Image (optional)'}
+                  </div>
+                  {formData.image_url && (
+                    <img src={formData.image_url} alt="preview" className="h-24 w-24 object-cover rounded border" />
+                  )}
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                      setFormData((prev) => ({ ...prev, image_url: file_url }));
+                    }}
+                  />
+                </div>
+
                 <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Button type="submit">{editingTodo ? (isRTL ? 'עדכן' : 'Update') : (isRTL ? 'שמור' : 'Save')}</Button>
                   <Button type="button" variant="outline" onClick={() => {
@@ -544,6 +568,15 @@ export default function ToDoListPage() {
                     </div>
                   )}
                 </div>
+
+                {viewingTodo.image_url && (
+                  <div>
+                    <label className={`text-sm font-semibold text-gray-600 block mb-1 ${isRTL ? 'text-right' : ''}`}>
+                      {isRTL ? 'תמונה' : 'Image'}
+                    </label>
+                    <img src={viewingTodo.image_url} alt="todo" className="max-h-64 rounded border" />
+                  </div>
+                )}
 
                 <div className={`flex gap-3 pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Button
