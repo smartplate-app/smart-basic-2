@@ -352,6 +352,15 @@ export default function DashboardPage() {
     { name: language === 'he' ? 'עלות מזון' : 'Food Cost', value: calculatedFoodCost, color: '#6b7280' }
   ];
 
+  // AFC calculations (start count + supplies accepted - end count) / sales (excl. VAT)
+  const startCount = inventoryCounts.find(c => c.id === selectedStartCountId);
+  const endCount = inventoryCounts.find(c => c.id === selectedEndCountId);
+  const startVal = startCount?.total_inventory_value || 0;
+  const endVal = endCount?.total_inventory_value || 0;
+  const suppliesAccepted = calculatedFoodCost; // Already excl. VAT and adjusted for transfers
+  const afcUsage = Math.max(0, startVal + suppliesAccepted - endVal);
+  const afcPercent = actualSalesExVAT > 0 ? (afcUsage / actualSalesExVAT) * 100 : 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-8" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="w-full">
@@ -407,6 +416,10 @@ export default function DashboardPage() {
             <TabsTrigger value="labor" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
               {language === 'he' ? 'יעד עבודה' : 'Labor Goals'}
+            </TabsTrigger>
+            <TabsTrigger value="afc" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              {language === 'he' ? 'דוח AFC' : 'AFC Report'}
             </TabsTrigger>
           </TabsList>
 
@@ -933,7 +946,131 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
+
+          {/* AFC Report Tab */}
+          <TabsContent value="afc" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                  {language === 'he' ? 'דוח AFC' : 'AFC Report'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                  <div className="space-y-2">
+                    <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                      {language === 'he' ? 'ספירת פתיחה' : 'Start Count'}
+                    </Label>
+                    <Select value={selectedStartCountId} onValueChange={setSelectedStartCountId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === 'he' ? 'בחר ספירת פתיחה' : 'Choose start count'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {inventoryCounts.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {format(new Date(c.count_date), 'yyyy-MM-dd')} • {c.name || (language === 'he' ? 'ללא שם' : 'No name')} • {formatCurrency(c.total_inventory_value || 0)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                      {language === 'he' ? 'ספירת סיום' : 'End Count'}
+                    </Label>
+                    <Select value={selectedEndCountId} onValueChange={setSelectedEndCountId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === 'he' ? 'בחר ספירת סיום' : 'Choose end count'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {inventoryCounts.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {format(new Date(c.count_date), 'yyyy-MM-dd')} • {c.name || (language === 'he' ? 'ללא שם' : 'No name')} • {formatCurrency(c.total_inventory_value || 0)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card className="bg-white">
+                    <CardHeader>
+                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'מלאי פתיחה' : 'Opening Inventory'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{formatCurrency(startVal)}</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-white">
+                    <CardHeader>
+                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'אספקה שהתקבלה (ללא מע"מ)' : 'Supplies Accepted (excl. VAT)'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{formatCurrency(suppliesAccepted)}</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-white">
+                    <CardHeader>
+                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'מלאי סגירה' : 'Closing Inventory'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{formatCurrency(endVal)}</div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-white">
+                    <CardHeader>
+                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'מכירות (ללא מע"מ)' : 'Sales (excl. VAT)'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{formatCurrency(actualSalesExVAT)}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className={`bg-gradient-to-br ${afcPercent > 35 ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} text-white`}>
+                  <CardContent className="py-8">
+                    <div className={`text-center`}>
+                      <div className="text-5xl font-extrabold tracking-tight">{afcPercent.toFixed(1)}%</div>
+                      <div className="mt-2 text-white/90 text-lg">שימוש סחורות בפועל - לא סתם קניינות</div>
+                      <div className="mt-4 text-sm text-white/80">
+                        {language === 'he' ? 'חישוב: מלאי פתיחה + אספקה - מלאי סגירה' : 'Formula: Opening + Supplies - Closing'}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'שימוש בסחורה (₪)' : 'Goods Used (₪)'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{formatCurrency(afcUsage)}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'יחס לשוק' : 'Benchmark Note'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-sm text-gray-700">{language === 'he' ? 'יעד מסעדות נפוץ: 28%–32% (משתנה לפי סוג העסק)' : 'Common target: 28%–32% (varies by concept)'}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'בחירת חודש' : 'Selected Month'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{selectedMonth}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          </Tabs>
       </div>
     </div>
   );
