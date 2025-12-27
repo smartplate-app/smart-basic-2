@@ -84,7 +84,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="overflow-y-auto max-h-[70vh] sm:max-h-[75vh] relative overscroll-contain">
-        <Table className="w-full"> {/* Replaced <table> with <Table> */}
+        <Table className="w-full border-separate border-spacing-0"> {/* Replaced <table> with <Table> */}
           <TableHeader className="sticky top-0 z-40 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
               <TableHead className="sticky top-0 z-30 bg-white/95 backdrop-blur px-3 py-3 text-center">
