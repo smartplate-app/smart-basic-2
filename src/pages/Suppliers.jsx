@@ -447,39 +447,7 @@ export default function SuppliersPage() {
               <BarChart3 className="w-5 h-5 mr-2" />
               {language === 'he' ? 'דוח הזמנות מול קבלות' : 'Orders vs Receipts Report'}
             </Button>
-            <Button
-              onClick={() => {
-                // Generate Excel template for items
-                const headers = language === 'he' 
-                  ? ['שם הפריט (חובה)', 'מק"ט (אופציונלי)', 'יחידה (kg/liter/unit/case)', 'מחיר', 'הנחה %', 'כמות באריזה']
-                  : ['Item Name (required)', 'Catalog Number (optional)', 'Unit (kg/liter/unit/case)', 'Price', 'Discount %', 'Units Per Package'];
-                
-                const exampleRow = language === 'he'
-                  ? ['עגבניות', '', 'kg', '5.90', '10', '1']
-                  : ['Tomatoes', '', 'kg', '5.90', '10', '1'];
-                
-                const csvContent = [
-                  headers.join(','),
-                  exampleRow.join(',')
-                ].join('\n');
-                
-                const BOM = '\uFEFF';
-                const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = language === 'he' ? 'תבנית_פריטים.csv' : 'items_template.csv';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-              }}
-              variant="outline"
-              className="border-green-600 text-green-600 hover:bg-green-50"
-            >
-              <Download className="w-5 h-5 mr-2" />
-              {language === 'he' ? 'הורד תבנית אקסל' : 'Download Template'}
-            </Button>
+
             {!isViewer && (
               <Button
                 onClick={() => {
