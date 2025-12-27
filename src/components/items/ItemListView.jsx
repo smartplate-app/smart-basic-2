@@ -87,7 +87,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
         <Table className="w-full border-separate border-spacing-0 min-w-max"> {/* Replaced <table> with <Table> */}
           <TableHeader className="sticky top-0 z-30 bg-white/90 supports-[backdrop-filter]:bg-white/70 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
-              <TableHead className="sticky top-0 z-40 bg-white px-3 py-3 text-center">
+              <TableHead className="sticky top-0 z-40 bg-white px-3 py-3 text-center bg-white">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" className="h-5 w-5 sm:h-4 sm:w-4" />
               </TableHead>
               <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
