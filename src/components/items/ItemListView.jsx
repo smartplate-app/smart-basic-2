@@ -87,46 +87,46 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
         <Table className="w-full border-separate border-spacing-0"> {/* Replaced <table> with <Table> */}
           <TableHeader className="sticky top-0 z-40 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
-              <TableHead className="sticky top-0 z-30 bg-white/95 backdrop-blur px-3 py-3 text-center">
+              <TableHead className="sticky top-0 z-40 bg-white px-3 py-3 text-center shadow-sm">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" className="h-5 w-5 sm:h-4 sm:w-4" />
               </TableHead>
-              <TableHead className="sticky top-0 z-40 bg-white backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
+              <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('name')}>
                   <span>{t('item_name')}</span>
                   {sortKey === 'name' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-0 z-40 bg-white backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
+              <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('supplier_name')}>
                   <span>{t('supplier')}</span>
                   {sortKey === 'supplier_name' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-0 z-40 bg-white backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
+              <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('catalog_number')}>
                   <span>{t('catalog_number')}</span>
                   {sortKey === 'catalog_number' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-0 z-40 bg-white backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
+              <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('unit')}>
                   <span>{t('unit_of_measure')}</span>
                   {sortKey === 'unit' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-0 z-40 bg-white backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
+              <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('price')}>
                   <span>{t('price')}</span>
                   {sortKey === 'price' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-0 z-40 bg-white backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
+              <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('discount')}>
                   <span>{t('discount')}</span>
                   {sortKey === 'discount' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-0 z-40 bg-white backdrop-blur px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
+              <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('finalPrice')}>
                   <span>{t('final_price') || 'מחיר סופי'}</span>
                   {sortKey === 'finalPrice' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
