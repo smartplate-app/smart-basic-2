@@ -83,9 +83,9 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
 
   return (
     <div className="bg-white rounded-lg shadow relative min-h-0">
-      <div className="overflow-y-auto overflow-x-auto max-h-[70vh] sm:max-h-[75vh] relative overscroll-contain will-change-scroll min-h-0">
+      <div className="h-[65vh] sm:h-[70vh] overflow-auto relative overscroll-contain will-change-scroll min-h-0">
         <Table className="w-full border-separate border-spacing-0"> {/* Replaced <table> with <Table> */}
-          <TableHeader className="sticky top-0 z-40 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
+          <TableHeader className="bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
               <TableHead className="sticky top-0 z-40 bg-white px-3 py-3 text-center shadow-sm">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" className="h-5 w-5 sm:h-4 sm:w-4" />
