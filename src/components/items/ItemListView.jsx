@@ -85,7 +85,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
     <div className="bg-white rounded-lg shadow">
       <div className="overflow-x-auto relative">
         <Table className="w-full"> {/* Replaced <table> with <Table> */}
-          <TableHeader className="bg-gray-50 border-b">
+          <TableHeader className="sticky top-0 z-40 bg-white border-b">
             <TableRow> {/* Replaced <tr> with <TableRow> */}
               <TableHead className="sticky top-0 z-50 bg-white px-3 py-3 text-center">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" />
