@@ -82,8 +82,8 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
   const allSelected = items.length > 0 && items.every(i => selectedIds.includes(i.id));
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="overflow-y-auto max-h-[70vh] sm:max-h-[75vh] relative overscroll-contain will-change-scroll">
+    <div className="bg-white rounded-lg shadow relative min-h-0">
+      <div className="overflow-y-auto overflow-x-auto max-h-[70vh] sm:max-h-[75vh] relative overscroll-contain will-change-scroll min-h-0">
         <Table className="w-full border-separate border-spacing-0"> {/* Replaced <table> with <Table> */}
           <TableHeader className="sticky top-0 z-40 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
