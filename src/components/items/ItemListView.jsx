@@ -18,8 +18,9 @@ import {
 import { useLanguage } from "../LanguageProvider";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll }) {
+export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll, headerOffset = 0 }) {
   const { t } = useLanguage();
+  const stickyHeadStyle = { top: headerOffset };
 
   // Sorting state
   const [sortKey, setSortKey] = React.useState('name');
