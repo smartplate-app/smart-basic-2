@@ -479,7 +479,7 @@ export default function OrdersPage() {
             {!isViewer && (
               <Button
                 onClick={() => setShowForm(!showForm)}
-                className="bg-gray-900 hover:bg-gray-800 text-white"
+                className="bg-gray-900 hover:bg-gray-800 text-white h-11 md:h-10 px-5 rounded-lg"
               >
                 <Plus className="w-5 h-5 ml-2" />
                 {t('new_order')}
@@ -509,11 +509,11 @@ export default function OrdersPage() {
               placeholder={t('search_orders')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10"
+              className="pr-10 h-11 md:h-10 text-base rounded-lg"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 md:h-10 rounded-lg">
               <SelectValue placeholder={t('order_status')} />
             </SelectTrigger>
             <SelectContent>
@@ -580,7 +580,7 @@ export default function OrdersPage() {
                       {!isViewer && order.supplier_phone && (
                         <button
                           onClick={() => handleResend(order)}
-                          className="flex-1 text-white text-sm font-medium rounded-md px-3 py-2 flex items-center justify-center"
+                          className="flex-1 text-white text-base font-medium rounded-lg px-4 py-3 flex items-center justify-center"
                           style={{ backgroundColor: '#25D366' }}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -594,7 +594,7 @@ export default function OrdersPage() {
                           <Button
                             variant="outline"
                             onClick={() => handleEdit(order)}
-                            className="flex-1"
+                            className="flex-1 h-11 rounded-lg text-base"
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             {t('edit')}
@@ -602,7 +602,7 @@ export default function OrdersPage() {
                           <Button
                             variant="outline"
                             onClick={() => handleDelete(order)}
-                            className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                            className="flex-1 h-11 rounded-lg text-base border-red-300 text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             {t('delete')}
@@ -619,26 +619,26 @@ export default function OrdersPage() {
 
         {/* Desktop View */}
         <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[70vh] md:max-h-[75vh]">
             <table className="w-full min-w-max">
-              <thead className="bg-gray-50 border-b">
+              <thead className="sticky top-0 z-20 bg-white/90 supports-[backdrop-filter]:bg-white/70 backdrop-blur border-b">
                 <tr>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {t('order_number')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {t('supplier')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {t('delivery_date')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {t('total_cost')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {t('status')}
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {t('actions') || 'פעולות'}
                   </th>
                 </tr>
