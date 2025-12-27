@@ -86,54 +86,54 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
     <div className="bg-white rounded-lg shadow">
       <div className="overflow-x-auto relative">
         <Table className="w-full"> {/* Replaced <table> with <Table> */}
-          <TableHeader className="bg-gray-50 border-b">
+          <TableHeader className="sticky top-0 z-50 bg-white/95 supports-[backdrop-filter]:bg-white/75 backdrop-blur border-b">
             <TableRow> {/* Replaced <tr> with <TableRow> */}
-              <TableHead className="sticky top-[64px] z-30 bg-white px-3 py-3 text-center">
+              <TableHead className="bg-white px-3 py-3 text-center">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" />
               </TableHead>
-              <TableHead className="sticky top-[64px] z-30 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('name')}>
                   <span>{t('item_name')}</span>
                   {sortKey === 'name' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-[64px] z-30 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('supplier_name')}>
                   <span>{t('supplier')}</span>
                   {sortKey === 'supplier_name' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-[64px] z-30 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('catalog_number')}>
                   <span>{t('catalog_number')}</span>
                   {sortKey === 'catalog_number' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-[64px] z-30 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('unit')}>
                   <span>{t('unit_of_measure')}</span>
                   {sortKey === 'unit' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-[64px] z-30 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('price')}>
                   <span>{t('price')}</span>
                   {sortKey === 'price' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-[64px] z-30 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('discount')}>
                   <span>{t('discount')}</span>
                   {sortKey === 'discount' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-[64px] z-30 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('finalPrice')}>
                   <span>{t('final_price') || 'מחיר סופי'}</span>
                   {sortKey === 'finalPrice' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-[64px] z-30 bg-white px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                 {t('actions') || 'פעולות'}
               </TableHead>
             </TableRow>
