@@ -83,7 +83,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
 
   return (
     <div className="bg-white rounded-lg shadow relative min-h-0">
-      <div className="h-[65vh] sm:h-[70vh] overflow-auto relative overscroll-contain will-change-scroll min-h-0">
+      <div className="h-[65vh] sm:h-[70vh] overflow-auto overflow-x-auto relative overscroll-contain will-change-scroll min-h-0">
         <Table className="w-full border-separate border-spacing-0 min-w-max"> {/* Replaced <table> with <Table> */}
           <TableHeader className="z-30 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
