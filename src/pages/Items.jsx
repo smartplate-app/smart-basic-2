@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, LayoutGrid, List, Trash2 } from "lucide-react";
+import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -33,6 +33,7 @@ export default function ItemsPage() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState("all");
   const [defaultSupplierId, setDefaultSupplierId] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -382,7 +383,24 @@ export default function ItemsPage() {
     await loadData(user);
   };
 
-  const currentWarehouse = selectedWarehouseId !== 'all' ? warehouses.find(w => w.id === selectedWarehouseId) : null;
+  const handleExportToSheets = async () => {
+    try {
+      setExporting(true);
+      const { data } = await base44.functions.invoke('exportItemsToSheets', {});
+      if (data?.success && data?.url) {
+        window.open(data.url, '_blank');
+        alert('Exported to Google Sheets. Share or paste this link in your other system.');
+      } else {
+        alert('Export failed: ' + (data?.error || 'Unknown error'));
+      }
+    } catch (e) {
+      alert('Export failed: ' + (e?.message || 'Unknown error'));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+   const currentWarehouse = selectedWarehouseId !== 'all' ? warehouses.find(w => w.id === selectedWarehouseId) : null;
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -464,7 +482,15 @@ export default function ItemsPage() {
                 <List className="w-5 h-5" />
               </Button>
             </div>
-            {!isViewer && (
+            <Button
+              variant="outline"
+              onClick={handleExportToSheets}
+              className="gap-2"
+            >
+              {exporting ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+              Export to Google Sheets
+            </Button>
+             {!isViewer && (
             <Button
               variant="outline"
               onClick={async () => {
