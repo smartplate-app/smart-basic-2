@@ -84,10 +84,10 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
   return (
     <div className="bg-white rounded-lg shadow relative min-h-0">
       <div className="h-[65vh] sm:h-[70vh] overflow-auto relative overscroll-contain will-change-scroll min-h-0">
-        <Table className="w-full border-separate border-spacing-0"> {/* Replaced <table> with <Table> */}
-          <TableHeader className="bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
+        <Table className="w-full"> {/* Replaced <table> with <Table> */}
+          <TableHeader className="sticky top-0 z-30 bg-white/90 supports-[backdrop-filter]:bg-white/70 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
-              <TableHead className="sticky top-0 z-40 bg-white px-3 py-3 text-center shadow-sm">
+              <TableHead className="px-3 py-3 text-center">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" className="h-5 w-5 sm:h-4 sm:w-4" />
               </TableHead>
               <TableHead className="sticky top-0 z-40 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider shadow-sm">
@@ -132,7 +132,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                   {sortKey === 'finalPrice' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-0 z-30 bg-white/95 backdrop-blur px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                 {t('actions') || 'פעולות'}
               </TableHead>
             </TableRow>
