@@ -418,7 +418,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
             </div>
           ))}
         </div>
-      )
+      )}
     </div>
   );
 }
