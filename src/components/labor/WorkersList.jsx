@@ -717,7 +717,6 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
         </div>
       )}
 
-      }
 
       {/* Modals */}
       {showBankTransfer && (
