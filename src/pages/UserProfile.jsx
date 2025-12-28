@@ -82,6 +82,23 @@ export default function UserProfilePage() {
     }
   };
 
+  const buildGoogleRecurringURL = () => {
+    const now = new Date();
+    let start = new Date(now.getFullYear(), now.getMonth(), 20);
+    if (now.getDate() > 20) start = new Date(now.getFullYear(), now.getMonth() + 1, 20);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    const fmt = (d) => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    const text = encodeURIComponent(language === 'he' ? 'בדיקות חודשיות: עלות עבודה, עלות מזון, סידור עבודה, קבלות' : 'Monthly checklist: labor cost, food cost, schedule, receipts');
+    const details = encodeURIComponent(language === 'he'
+      ? 'צ׳ק ליסט:\n1) בדיקת עלות עבודה\n2) בדיקת עלות מזון\n3) לאשר שכל העובדים שובצו\n4) לאשר כל הקבלות'
+      : 'Checklist:\n1) Review labor cost\n2) Review food cost\n3) Verify workers scheduled\n4) Accept all receipts');
+    const dates = `${fmt(start)}/${fmt(end)}`;
+    const recur = encodeURIComponent('RRULE:FREQ=MONTHLY;BYMONTHDAY=20');
+    const ctz = encodeURIComponent('Asia/Jerusalem');
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&dates=${dates}&recur=${recur}&ctz=${ctz}`;
+  };
+
   const handleEnableReminder = async () => {
     try {
       setReminderLoading(true);
@@ -89,11 +106,11 @@ export default function UserProfilePage() {
       if (data?.success) {
         alert((language === 'he' ? 'תזכורת חודשית נוצרה/עודכנה ביומן שלך' : 'Monthly reminder created/updated on your calendar'));
       } else {
-        const msg = data?.error || 'Authorization required to access Google Calendar.';
-        alert((language === 'he' ? 'נדרש חיבור ליומן Google. אנא אשרי את החיבור בחלון הצ׳אט ואז נסי שוב.' : msg));
+        // Fallback: open pre-filled Google Calendar event (no OAuth needed)
+        window.open(buildGoogleRecurringURL(), '_blank');
       }
     } catch (e) {
-      alert((language === 'he' ? 'נדרש חיבור ליומן Google. אשר/י את החיבור בחלון הצ׳אט ואז נסה שוב.' : (e?.message || 'Authorization required.')));
+      window.open(buildGoogleRecurringURL(), '_blank');
     } finally {
       setReminderLoading(false);
     }
@@ -367,8 +384,8 @@ export default function UserProfilePage() {
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
               {language === 'he'
-                ? 'כפתור זה ייצור אירוע יום־שלם חוזר ב־20 לכל חודש ביומן Google האישי שלך: בדיקת עלות עבודה, עלות מזון, השלמת סידור עבודה ואישור קבלות.'
-                : 'Creates a recurring all‑day event on the 20th in your Google Calendar: review labor cost, food cost, ensure workers scheduled, and accept receipts.'}
+                ? 'כפתור זה ייצור אירוע יום־שלם חוזר ב־20 לכל חודש ביומן Google האישי שלך. אם יש הרשאה פעילה – ניצור את האירוע אוטומטית; אחרת ייפתח חלון Google Calendar מוכן לשמירה בלחיצה.'
+                : 'This creates a recurring all‑day event on the 20th in your Google Calendar. If authorization exists, we create it automatically; otherwise we open Google Calendar pre‑filled for one‑click save.'}
             </p>
             <Button onClick={handleEnableReminder} disabled={reminderLoading} className="bg-green-600 hover:bg-green-700">
               {reminderLoading ? (
@@ -378,7 +395,7 @@ export default function UserProfilePage() {
               )}
             </Button>
             <p className="text-xs text-gray-500 mt-2">
-              {language === 'he' ? 'אם תתבקש/י לחבר את יומן Google – אשר/י את ההרשאה, והאירוע ייווצר ביומן שלך (לא ביומן האדמין).' : 'If asked to connect Google Calendar, approve the permission; the event is added to your own calendar, not the admin\'s.'}
+              {language === 'he' ? 'האירוע יתוסף ביומן האישי שלך (לא ביומן האדמין). ללא הרשאה – ייפתח מסך Google Calendar מוכן לשמירה.' : 'The event is added to your personal calendar (not the admin\'s). Without authorization, a Google Calendar screen will open ready to save.'}
             </p>
           </CardContent>
         </Card>
