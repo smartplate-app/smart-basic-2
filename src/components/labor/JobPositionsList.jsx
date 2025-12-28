@@ -26,7 +26,13 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
     is_active: true,
     color: "#E6F4FF"
   });
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // translate-with-fallback helper
+  const tf = (key, he, en) => {
+    const v = t(key);
+    return (v && v !== key) ? v : (language === 'he' ? he : (en || key));
+  };
 
   const handleStartAdd = () => {
     setFormData({
@@ -97,9 +103,9 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
   };
 
   const paymentTypeLabels = {
-    monthly: t('monthly_salary'),
-    daily: t('daily_rate'),
-    hourly: t('hourly_rate')
+    monthly: tf('monthly_salary', 'שכר חודשי', 'Monthly salary'),
+    daily: tf('daily_rate', 'תעריף יומי', 'Daily rate'),
+    hourly: tf('hourly_rate', 'תעריף שעתי', 'Hourly rate')
   };
 
   return (
@@ -210,10 +216,10 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="general_pool">{t('general_pool') || 'בריכה כללית'}</SelectItem>
-                    <SelectItem value="fixed_hourly">{t('fixed_hourly') || 'קבוע לשעה'}</SelectItem>
-                    <SelectItem value="percent_allocation">{t('percent_allocation') || 'הפרשה אחוזית'}</SelectItem>
-                    <SelectItem value="excluded">{t('excluded') || 'לא זכאי לטיפים'}</SelectItem>
+                    <SelectItem value="general_pool">{tf('general_pool', 'בריכה כללית', 'General pool')}</SelectItem>
+                    <SelectItem value="fixed_hourly">{tf('fixed_hourly', 'קבוע לשעה', 'Fixed hourly')}</SelectItem>
+                    <SelectItem value="percent_allocation">{tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation')}</SelectItem>
+                    <SelectItem value="excluded">{tf('excluded', 'לא זכאי לטיפים', 'Excluded from tips')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500">{tf('tips_method_help', 'קובע כיצד התפקיד משתתף בחלוקת טיפים.', 'Defines how the role participates in tips.')}</p>
@@ -254,7 +260,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
             {/* Color picker */}
             <div className="space-y-2">
-              <Label>{t('color') || 'Color'}</Label>
+              <Label>{tf('color', 'צבע', 'Color')}</Label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -272,7 +278,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
               {/* Position color */}
               <div className="space-y-2 md:col-span-2">
-                <Label>{t('color') || 'Color'}</Label>
+                <Label>{tf('color', 'צבע', 'Color')}</Label>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -351,7 +357,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                         {tf('tips_method', 'שיטת תגמול טיפים', 'Tips method')}: {position.tips_method === 'fixed_hourly' ? tf('fixed_hourly', 'קבוע לשעה', 'Fixed hourly') : position.tips_method === 'percent_allocation' ? tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation') : position.tips_method === 'excluded' ? tf('excluded', 'לא זכאי', 'Excluded') : tf('general_pool', 'בריכה כללית', 'General pool')}
                       </p>
                       {position.tips_method === 'fixed_hourly' && (
-                        <p className="text-sm text-yellow-900">{t('tip_hourly_rate') || 'תעריף לשעה'}: {Number(position.tip_hourly_rate || 0).toLocaleString()} {t('currency')}</p>
+                        <p className="text-sm text-yellow-900">{tf('tip_hourly_rate', 'תעריף לשעה', 'Tip hourly rate')}: {Number(position.tip_hourly_rate || 0).toLocaleString()} {t('currency')}</p>
                       )}
                     </div>
 
