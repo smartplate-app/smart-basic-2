@@ -459,7 +459,7 @@ export default function ItemsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="w-full">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 ${viewMode === 'list' ? 'sticky top-[56px] md:top-[72px] z-40 bg-gray-50/95 backdrop-blur supports-[backdrop-filter]:bg-gray-50/70 border-b pt-4 pb-4' : ''}`}>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('items_title')}</h1>
             <p className="text-gray-600 mt-2">{t('items_greeting', { name: user.full_name })}</p>
@@ -661,6 +661,7 @@ export default function ItemsPage() {
                       const allSelected = ids.every(id => selectedIds.includes(id));
                       setSelectedIds(allSelected ? selectedIds.filter(id => !ids.includes(id)) : Array.from(new Set([...selectedIds, ...ids])));
                     }}
+                    headerTopClass={viewMode === 'list' ? 'top-[120px] md:top-[140px]' : 'top-[64px] md:top-[84px]'}
                   />
                 )}
               </>

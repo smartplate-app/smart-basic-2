@@ -18,7 +18,7 @@ import {
 import { useLanguage } from "../LanguageProvider";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll }) {
+export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll, headerTopClass = "top-[64px] md:top-[84px]" }) {
   const { t } = useLanguage();
 
   // Sorting state
@@ -85,7 +85,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
     <div className="bg-white rounded-lg shadow relative min-h-0">
       <div className="relative overflow-visible">
         <Table className="w-full min-w-max"> {/* Replaced <table> with <Table> */}
-          <TableHeader className="sticky top-[64px] md:top-[84px] z-50 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm"> {/* Sticky header below filters */}
+          <TableHeader className={`sticky ${headerTopClass} z-50 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm`}> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
               <TableHead className="bg-white px-3 py-3 text-center">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" className="h-5 w-5 sm:h-4 sm:w-4" />
