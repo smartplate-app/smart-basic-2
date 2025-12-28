@@ -90,7 +90,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
               <TableHead className="bg-white px-3 py-3 text-center">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" className="h-5 w-5 sm:h-4 sm:w-4" />
               </TableHead>
-              <TableHead className="sticky top-[56px] md:top-[72px] z-50 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('name')}>
                   <span>{t('item_name')}</span>
                   {sortKey === 'name' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
