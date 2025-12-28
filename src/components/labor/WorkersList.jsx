@@ -53,7 +53,8 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
     tax_credit_points: 2.25,
     start_date: new Date().toISOString().split('T')[0],
     is_active: true,
-    notes: ""
+    notes: "",
+    position_rates: []
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -91,7 +92,8 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       tax_credit_points: parseFloat(worker.tax_credit_points) || 2.25,
       start_date: worker.start_date || new Date().toISOString().split('T')[0],
       is_active: worker.is_active !== false,
-      notes: worker.notes || ""
+      notes: worker.notes || "",
+      position_rates: worker.position_rates || []
     });
     setEditingId(worker.id);
     setIsAdding(false);
@@ -109,19 +111,35 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
         secondary_job_position_id: positionId,
         secondary_job_position_name: position?.name || ""
       }));
+      // ensure rate entry exists for secondary when selected
+      setFormData(prev => {
+        const existing = (prev.position_rates || []).slice();
+        if (!existing.find(r => r.position_id === positionId)) {
+          existing.push({ position_id: positionId, position_name: position?.name || "", amount: parseFloat(position?.default_payment_amount) || 0, payment_type: position?.default_payment_type || 'monthly' });
+        }
+        return { ...prev, position_rates: existing };
+      });
     } else {
       const newPaymentAmount = parseFloat(position?.default_payment_amount) || 0;
       const totalCost = calculateTotalCost(newPaymentAmount, formData.employer_cost_percentage);
 
-      setFormData(prev => ({
-        ...prev,
-        job_position_id: positionId,
-        job_position_name: position?.name || "",
-        section: position?.section || "",
-        payment_type: position?.default_payment_type || "monthly",
-        payment_amount: newPaymentAmount,
-        total_cost_with_employer: totalCost
-      }));
+      setFormData(prev => {
+        const existing = (prev.position_rates || []).slice();
+        const idx = existing.findIndex(r => r.position_id === positionId);
+        const base = { position_id: positionId, position_name: position?.name || "", amount: newPaymentAmount, payment_type: position?.default_payment_type || 'monthly' };
+        if (idx >= 0) existing[idx] = { ...existing[idx], ...base };
+        else existing.push(base);
+        return {
+          ...prev,
+          job_position_id: positionId,
+          job_position_name: position?.name || "",
+          section: position?.section || "",
+          payment_type: position?.default_payment_type || "monthly",
+          payment_amount: newPaymentAmount,
+          total_cost_with_employer: totalCost,
+          position_rates: existing
+        };
+      });
     }
   };
 
@@ -132,23 +150,25 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
     setFormData(prev => {
       const currentIds = prev.job_position_ids || [];
       const currentNames = prev.job_position_names || [];
-      
-      // Check if already selected
       const isSelected = currentIds.includes(positionId);
-      
+
+      let nextRates = (prev.position_rates || []).slice();
+
       if (isSelected) {
-        // Remove position
+        nextRates = nextRates.filter(r => r.position_id !== positionId);
         return {
           ...prev,
           job_position_ids: currentIds.filter(id => id !== positionId),
-          job_position_names: currentNames.filter(name => name !== position.name)
+          job_position_names: currentNames.filter(name => name !== position.name),
+          position_rates: nextRates
         };
       } else {
-        // Add position
+        nextRates.push({ position_id: positionId, position_name: position.name, amount: parseFloat(position.default_payment_amount) || 0, payment_type: position.default_payment_type || 'monthly' });
         return {
           ...prev,
           job_position_ids: [...currentIds, positionId],
-          job_position_names: [...currentNames, position.name]
+          job_position_names: [...currentNames, position.name],
+          position_rates: nextRates
         };
       }
     });
@@ -177,16 +197,37 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
   };
 
   const handleSave = async () => {
-    if (!formData.full_name || !formData.job_position_id || !formData.payment_amount) {
+    if (!formData.full_name || !formData.job_position_id) {
       alert(t('required_fields'));
       return;
     }
 
+    // Build position_rates for all selected positions (primary + additional)
+    const allIds = [formData.job_position_id, ...(formData.job_position_ids || [])].filter(Boolean);
+    const comp = allIds.map(pid => {
+      const p = positions.find(pp => pp.id === pid);
+      const override = (formData.position_rates || []).find(r => r.position_id === pid);
+      const amount = override?.amount ?? (parseFloat(p?.default_payment_amount) || 0);
+      return {
+        position_id: pid,
+        position_name: p?.name || "",
+        amount,
+        payment_type: p?.default_payment_type || formData.payment_type
+      };
+    });
+
+    const primary = comp.find(c => c.position_id === formData.job_position_id);
+    const baseAmount = primary ? primary.amount : (formData.payment_amount || 0);
+    const baseType = positions.find(p => p.id === formData.job_position_id)?.default_payment_type || formData.payment_type;
+
     // Ensure total_cost_with_employer is up-to-date before saving
-    const finalTotalCost = calculateTotalCost(formData.payment_amount, formData.employer_cost_percentage);
+    const finalTotalCost = calculateTotalCost(baseAmount, formData.employer_cost_percentage);
 
     const dataToSave = {
       ...formData,
+      payment_amount: baseAmount,
+      payment_type: baseType,
+      position_rates: comp,
       total_cost_with_employer: finalTotalCost
     };
 
@@ -347,9 +388,9 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
 
               {/* Multiple Job Positions */}
               <div className="space-y-2 md:col-span-2">
-                <Label>{language === 'he' ? 'תפקידים נוספים' : 'Additional Positions'} - {t('optional')}</Label>
+                <Label>{language === 'he' ? 'תפקידים נוספים - אופציונלי' : 'Additional Positions - Optional'}</Label>
                 <div className="border rounded-lg p-3 bg-gray-50">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2" dir={language === 'he' ? 'rtl' : 'ltr'}>
                     {positions
                       .filter(p => p.id !== formData.job_position_id)
                       .map(position => {
@@ -474,6 +515,65 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                 />
               </div>
+
+              {/* Position specific rates */}
+              <div className="space-y-2 md:col-span-2">
+                <Label>{language === 'he' ? 'תעריפים לפי תפקיד' : 'Rates per position'}</Label>
+                <div className="space-y-2">
+                  {([formData.job_position_id].filter(Boolean).concat(formData.job_position_ids || [])).map((pid) => {
+                    const p = positions.find(pp => pp.id === pid);
+                    if (!p) return null;
+                    const defAmt = parseFloat(p.default_payment_amount) || 0;
+                    const overrideObj = (formData.position_rates || []).find(r => r.position_id === pid);
+                    const value = overrideObj?.amount ?? defAmt;
+                    const isPrimary = formData.job_position_id === pid;
+                    return (
+                      <div key={pid} className="flex items-center gap-3">
+                        <Badge className="bg-gray-100 text-gray-800">{p.name}</Badge>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={value}
+                          onChange={(e) => {
+                            const amt = parseFloat(e.target.value) || 0;
+                            setFormData(prev => {
+                              const existing = (prev.position_rates || []).slice();
+                              const idx = existing.findIndex(r => r.position_id === pid);
+                              const base = { position_id: pid, position_name: p.name, amount: amt, payment_type: p.default_payment_type || 'monthly' };
+                              if (idx >= 0) existing[idx] = { ...existing[idx], ...base };
+                              else existing.push(base);
+                              const next = { ...prev, position_rates: existing };
+                              if (isPrimary) {
+                                next.payment_amount = amt;
+                                next.payment_type = p.default_payment_type || prev.payment_type;
+                                next.total_cost_with_employer = calculateTotalCost(amt, prev.employer_cost_percentage);
+                              }
+                              return next;
+                            });
+                          }}
+                          className="max-w-[140px]"
+                        />
+                        <span className="text-xs text-gray-500">{language === 'he' ? 'ברירת מחדל:' : 'Default:'} {defAmt.toLocaleString()} {t('currency')}</span>
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          setFormData(prev => {
+                            const existing = (prev.position_rates || []).filter(r => r.position_id !== pid);
+                            const next = { ...prev, position_rates: existing };
+                            if (isPrimary) {
+                              next.payment_amount = defAmt;
+                              next.total_cost_with_employer = calculateTotalCost(defAmt, prev.employer_cost_percentage);
+                            }
+                            return next;
+                          });
+                        }}>
+                          {language === 'he' ? 'אתחל לברירת מחדל' : 'Reset'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
 
             {formData.payment_amount > 0 && (
