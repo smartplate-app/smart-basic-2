@@ -315,14 +315,14 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {positions.length === 0 ? (
-          <div className="col-span-full text-center py-8 text-gray-500">
-            <p className="text-lg">{t('no_positions_yet')}</p>
-            <p className="text-sm">{t('create_position_first')}</p>
-          </div>
-        ) : (
-          positions.map((position) => (
+      {positions.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <p className="text-lg">{t('no_positions_yet')}</p>
+          <p className="text-sm">{t('create_position_first')}</p>
+        </div>
+      ) : viewMode === 'grid' ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {positions.map((position) => (
             <Card key={position.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start mb-3">
@@ -334,7 +334,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                     <Badge className={sectionColors[position.section] || sectionColors.other}>
                       {t(position.section)}
                     </Badge>
-                    
+
                     {position.default_payment_amount > 0 && (
                       <div className="mt-3 p-2 bg-green-50 rounded-lg">
                         <p className="text-sm font-semibold text-green-800">
@@ -354,7 +354,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                         <p className="text-sm text-yellow-900">{t('tip_hourly_rate') || 'תעריף לשעה'}: {Number(position.tip_hourly_rate || 0).toLocaleString()} {t('currency')}</p>
                       )}
                     </div>
-                    
+
                     {(position.default_start_time || position.default_end_time) && (
                       <div className="mt-2 p-2 bg-blue-50 rounded-lg">
                         <p className="text-sm text-blue-800">
@@ -364,18 +364,10 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleStartEdit(position)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleStartEdit(position)}>
                       <Edit className="w-4 h-4 text-blue-600" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(position.id)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => onDelete(position.id)}>
                       <Trash2 className="w-4 h-4 text-red-600" />
                     </Button>
                   </div>
@@ -385,9 +377,48 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                 )}
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border divide-y">
+          {positions.map((position) => (
+            <div key={position.id} className="p-3 flex items-center justify-between gap-3 hover:bg-gray-50">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="inline-block h-3 w-3 rounded" style={{ backgroundColor: position.color || '#E6F4FF' }} />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold truncate max-w-[240px] md:max-w-[360px]">{position.name}</span>
+                    <Badge className={sectionColors[position.section] || sectionColors.other}>{t(position.section)}</Badge>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-3">
+                    {position.default_payment_amount > 0 && (
+                      <span>
+                        {paymentTypeLabels[position.default_payment_type]} · {position.default_payment_amount.toLocaleString()} {t('currency')}
+                      </span>
+                    )}
+                    {(position.default_start_time || position.default_end_time) && (
+                      <span>
+                        {t('default_hours') || 'שעות ברירת מחדל'}: {position.default_start_time || '09:00'} - {position.default_end_time || '17:00'}
+                      </span>
+                    )}
+                    <span>
+                      {t('tips_method') || 'שיטת תגמול'}: {position.tips_method}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
+                <Button variant="ghost" size="icon" onClick={() => handleStartEdit(position)}>
+                  <Edit className="w-4 h-4 text-blue-600" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => onDelete(position.id)}>
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )
     </div>
   );
 }
