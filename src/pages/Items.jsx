@@ -490,6 +490,22 @@ export default function ItemsPage() {
               {exporting ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
               Export to Google Sheets
             </Button>
+            {user?.role === 'admin' && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const { data } = await base44.functions.invoke('seedItems', {});
+                if (data?.success) {
+                  await loadData(user);
+                  alert(`Added ${data.created} test items`);
+                } else {
+                  alert('Seeding failed: ' + (data?.error || 'Unknown error'));
+                }
+              }}
+            >
+              Add 12 test items
+            </Button>
+            )}
              {!isViewer && (
             <Button
               variant="outline"
