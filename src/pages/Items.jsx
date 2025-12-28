@@ -496,10 +496,11 @@ export default function ItemsPage() {
               onClick={async () => {
                 setSeeding(true);
                 try {
-                  const { data } = await base44.functions.invoke('seedItems', { ownerEmail: user.email, count: 12 });
+                  const { data } = await base44.functions.invoke('seedItems', { ownerEmail: (user?.store_user_owner_email || user?.acting_as_store_email || user?.email), count: 12 });
                   if (data?.success) {
                     await loadData(user);
-                    alert(`Added ${data.created} test items`);
+                    const added = (data?.created_count ?? data?.created ?? 0);
+                          alert(`Added ${added} test items`);
                   } else {
                     alert('Seeding failed: ' + (data?.error || 'Unknown error'));
                   }
