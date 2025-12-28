@@ -204,7 +204,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               </div>
 
               <div className="space-y-2">
-                <Label>{t('tips_method') || 'שיטת תגמול בטיפים'}</Label>
+                <Label>{tf('tips_method', 'שיטת תגמול בטיפים', 'Tips method')}</Label>
                 <Select value={formData.tips_method} onValueChange={(v) => setFormData({ ...formData, tips_method: v })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -216,12 +216,12 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                     <SelectItem value="excluded">{t('excluded') || 'לא זכאי לטיפים'}</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">{t('tips_method_help') || 'קובע כיצד התפקיד משתתף בחלוקת טיפים.'}</p>
+                <p className="text-xs text-gray-500">{tf('tips_method_help', 'קובע כיצד התפקיד משתתף בחלוקת טיפים.', 'Defines how the role participates in tips.')}</p>
               </div>
 
               {formData.tips_method === 'fixed_hourly' && (
                 <div className="space-y-2">
-                  <Label>{t('tip_hourly_rate') || 'תעריף טיפ לשעה'}</Label>
+                  <Label>{tf('tip_hourly_rate', 'תעריף טיפ לשעה', 'Tip hourly rate')}</Label>
                   <Input
                     type="number"
                     min="0"
@@ -234,7 +234,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               )}
 
               <div className="space-y-2">
-                <Label>{t('default_start_time') || 'שעת התחלה ברירת מחדל'}</Label>
+                <Label>{tf('default_start_time', 'שעת התחלה ברירת מחדל', 'Default start time')}</Label>
                 <Input
                   type="time"
                   value={formData.default_start_time}
@@ -243,7 +243,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               </div>
 
               <div className="space-y-2">
-                <Label>{t('default_end_time') || 'שעת סיום ברירת מחדל'}</Label>
+                <Label>{tf('default_end_time', 'שעת סיום ברירת מחדל', 'Default end time')}</Label>
                 <Input
                   type="time"
                   value={formData.default_end_time}
@@ -292,7 +292,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               </div>
 
               <div className="space-y-2">
-              <Label>{t('job_description')}</Label>
+              <Label>{tf('job_description', 'תיאור תפקיד', 'Job description')}</Label>
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -348,7 +348,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
                     <div className="mt-2 p-2 bg-yellow-50 rounded-lg">
                       <p className="text-sm font-semibold text-yellow-800">
-                        {t('tips_method') || 'שיטת תגמול טיפים'}: {position.tips_method === 'fixed_hourly' ? (t('fixed_hourly') || 'קבוע לשעה') : position.tips_method === 'percent_allocation' ? (t('percent_allocation') || 'הפרשה אחוזית') : position.tips_method === 'excluded' ? (t('excluded') || 'לא זכאי') : (t('general_pool') || 'בריכה כללית')}
+                        {tf('tips_method', 'שיטת תגמול טיפים', 'Tips method')}: {position.tips_method === 'fixed_hourly' ? tf('fixed_hourly', 'קבוע לשעה', 'Fixed hourly') : position.tips_method === 'percent_allocation' ? tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation') : position.tips_method === 'excluded' ? tf('excluded', 'לא זכאי', 'Excluded') : tf('general_pool', 'בריכה כללית', 'General pool')}
                       </p>
                       {position.tips_method === 'fixed_hourly' && (
                         <p className="text-sm text-yellow-900">{t('tip_hourly_rate') || 'תעריף לשעה'}: {Number(position.tip_hourly_rate || 0).toLocaleString()} {t('currency')}</p>
@@ -358,7 +358,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                     {(position.default_start_time || position.default_end_time) && (
                       <div className="mt-2 p-2 bg-blue-50 rounded-lg">
                         <p className="text-sm text-blue-800">
-                          {t('default_hours') || 'שעות ברירת מחדל'}: {position.default_start_time || '09:00'} - {position.default_end_time || '17:00'}
+                          {tf('default_hours', 'שעות ברירת מחדל', 'Default hours')}: {position.default_start_time || '09:00'} - {position.default_end_time || '17:00'}
                         </p>
                       </div>
                     )}
@@ -398,11 +398,11 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                     )}
                     {(position.default_start_time || position.default_end_time) && (
                       <span>
-                        {t('default_hours') || 'שעות ברירת מחדל'}: {position.default_start_time || '09:00'} - {position.default_end_time || '17:00'}
+                        {tf('default_hours', 'שעות ברירת מחדל', 'Default hours')}: {position.default_start_time || '09:00'} - {position.default_end_time || '17:00'}
                       </span>
                     )}
                     <span>
-                      {t('tips_method') || 'שיטת תגמול'}: {position.tips_method}
+                      {tf('tips_method', 'שיטת תגמול', 'Tips method')}: {position.tips_method === 'fixed_hourly' ? tf('fixed_hourly','קבוע לשעה','Fixed hourly') : position.tips_method === 'percent_allocation' ? tf('percent_allocation','הפרשה אחוזית','Percent allocation') : position.tips_method === 'excluded' ? tf('excluded','לא זכאי','Excluded') : tf('general_pool','בריכה כללית','General pool')}
                     </span>
                   </div>
                 </div>
