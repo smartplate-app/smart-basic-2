@@ -6,12 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, X, Save } from "lucide-react";
+import { Plus, Edit, Trash2, X, Save, LayoutGrid, List } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 
 export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [viewMode, setViewMode] = useState('grid');
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -103,14 +104,36 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3">
         <h3 className="text-xl font-semibold">{t('job_positions')}</h3>
-        {!isAdding && !editingId && (
-          <Button onClick={handleStartAdd} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="w-4 h-4 mr-2" />
-            {t('add_position')}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="flex bg-white rounded-lg shadow-sm border">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+              title={t('list') || 'List'}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('grid')}
+              className={viewMode === 'grid' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+              title={t('grid') || 'Grid'}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+          </div>
+          {!isAdding && !editingId && (
+            <Button onClick={handleStartAdd} className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="w-4 h-4 mr-2" />
+              {t('add_position')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {(isAdding || editingId) && (

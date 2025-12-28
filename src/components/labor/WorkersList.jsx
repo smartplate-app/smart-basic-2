@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, X, Save, User, Phone, Mail, DollarSign, Wallet, FileText, Send, History } from "lucide-react";
+import { Plus, Edit, Trash2, X, Save, User, Phone, Mail, DollarSign, Wallet, FileText, Send, History, LayoutGrid, List } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import WorkerBankTransfer from "./WorkerBankTransfer";
 import WorkerRateHistory from "./WorkerRateHistory";
@@ -14,6 +14,7 @@ import WorkerRateHistory from "./WorkerRateHistory";
 export default function WorkersList({ workers, positions, onAdd, onUpdate, onDelete }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [viewMode, setViewMode] = useState('grid');
   const { t, language } = useLanguage();
 
   const [showBankTransfer, setShowBankTransfer] = useState(null);
@@ -227,14 +228,36 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3">
         <h3 className="text-xl font-semibold">{t('workers')}</h3>
-        {!isAdding && !editingId && (
-          <Button onClick={handleStartAdd} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" />
-            {t('add_worker')}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="flex bg-white rounded-lg shadow-sm border">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+              title={t('list') || 'List'}
+            >
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="icon"
+              onClick={() => setViewMode('grid')}
+              className={viewMode === 'grid' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+              title={t('grid') || 'Grid'}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+          </div>
+          {!isAdding && !editingId && (
+            <Button onClick={handleStartAdd} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              {t('add_worker')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {(isAdding || editingId) && (
@@ -568,14 +591,14 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
         </Card>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {workers.length === 0 ? (
-          <div className="col-span-full text-center py-8 text-gray-500">
-            <p className="text-lg">{t('no_workers_yet')}</p>
-            <p className="text-sm">{t('add_first_worker')}</p>
-          </div>
-        ) : (
-          workers.map((worker) => (
+      {workers.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <p className="text-lg">{t('no_workers_yet')}</p>
+          <p className="text-sm">{t('add_first_worker')}</p>
+        </div>
+      ) : viewMode === 'grid' ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {workers.map((worker) => (
             <Card key={worker.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start mb-3">
@@ -585,45 +608,23 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                       <h4 className="font-bold text-lg">{worker.full_name}</h4>
                     </div>
                     <div className="flex flex-wrap gap-2 mb-2">
-                      <Badge className="bg-purple-100 text-purple-800">
-                        {worker.job_position_name}
-                      </Badge>
+                      <Badge className="bg-purple-100 text-purple-800">{worker.job_position_name}</Badge>
                       {worker.secondary_job_position_name && (
-                        <Badge className="bg-blue-100 text-blue-800">
-                          {worker.secondary_job_position_name}
-                        </Badge>
+                        <Badge className="bg-blue-100 text-blue-800">{worker.secondary_job_position_name}</Badge>
                       )}
                       {(worker.job_position_names || []).map((posName, idx) => (
-                        <Badge key={idx} className="bg-green-100 text-green-800">
-                          {posName}
-                        </Badge>
+                        <Badge key={idx} className="bg-green-100 text-green-800">{posName}</Badge>
                       ))}
                     </div>
                     {worker.id_number && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {t('id_number')}: {worker.id_number}
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">{t('id_number')}: {worker.id_number}</p>
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleStartEdit(worker)}
-                      title={t('edit')}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => handleStartEdit(worker)} title={t('edit')}>
                       <Edit className="w-4 h-4 text-blue-600" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) {
-                          onDelete(worker.id);
-                        }
-                      }}
-                      title={t('delete')}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
                       <Trash2 className="w-4 h-4 text-red-600" />
                     </Button>
                   </div>
@@ -631,107 +632,90 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
 
                 <div className="space-y-2 text-sm">
                   {worker.phone && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Phone className="w-4 h-4" />
-                      <span>{worker.phone}</span>
-                    </div>
+                    <div className="flex items-center gap-2 text-gray-600"><Phone className="w-4 h-4" /><span>{worker.phone}</span></div>
                   )}
                   {worker.email && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Mail className="w-4 h-4" />
-                      <span>{worker.email}</span>
-                    </div>
+                    <div className="flex items-center gap-2 text-gray-600"><Mail className="w-4 h-4" /><span>{worker.email}</span></div>
                   )}
 
                   <div className="bg-gray-50 rounded-lg p-3 mt-3">
                     <div className="flex items-center gap-2 text-gray-700 mb-1">
                       <DollarSign className="w-4 h-4" />
-                      <span className="font-semibold">
-                        {language === 'he' ? 'שכר בסיס:' : 'Base:'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowRateHistory(worker.id)}
-                        className="underline decoration-dotted hover:text-blue-700"
-                        title={language === 'he' ? 'צפה בהיסטוריית תעריפים' : 'View rate history'}
-                      >
-                        {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')}
-                        {paymentTypeSuffixes[worker.payment_type]}
+                      <span className="font-semibold">{language === 'he' ? 'שכר בסיס:' : 'Base:'}</span>
+                      <button type="button" onClick={() => setShowRateHistory(worker.id)} className="underline decoration-dotted hover:text-blue-700" title={language === 'he' ? 'צפה בהיסטוריית תעריפים' : 'View rate history'}>
+                        {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')}{paymentTypeSuffixes[worker.payment_type]}
                       </button>
                     </div>
                     <div className="flex items-center gap-2 text-green-700 font-bold">
-                      <span className="text-xs">
-                        {language === 'he' ? 'עלות כוללת:' : 'Total Cost:'}
-                      </span>
-                      <span>
-                        {(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25)).toLocaleString()} {t('currency')}
-                      </span>
+                      <span className="text-xs">{language === 'he' ? 'עלות כוללת:' : 'Total Cost:'}</span>
+                      <span>{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25)).toLocaleString()} {t('currency')}</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      +{parseFloat(worker.employer_cost_percentage) || 25}% {language === 'he' ? 'עלויות מעסיק' : 'employer costs'}
-                    </p>
+                    <p className="text-xs text-gray-500 mt-1">+{parseFloat(worker.employer_cost_percentage) || 25}% {language === 'he' ? 'עלויות מעסיק' : 'employer costs'}</p>
                   </div>
 
-                  {/* Bank Details Display */}
                   {(worker.bank_name || worker.bank_account) && (
                     <div className="bg-blue-50 rounded-lg p-3 mt-2 border border-blue-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Wallet className="w-4 h-4 text-blue-600" />
-                        <span className="font-semibold text-blue-900 text-xs">
-                          {t('bank_details')}
-                        </span>
-                      </div>
+                      <div className="flex items-center gap-2 mb-2"><Wallet className="w-4 h-4 text-blue-600" /><span className="font-semibold text-blue-900 text-xs">{t('bank_details')}</span></div>
                       <div className="space-y-1 text-xs text-gray-700">
-                        {worker.bank_name && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">{t('bank_name')}:</span>
-                            <span className="font-medium">{worker.bank_name}</span>
-                          </div>
-                        )}
-                        {worker.bank_branch && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">{t('bank_branch')}:</span>
-                            <span className="font-medium">{worker.bank_branch}</span>
-                          </div>
-                        )}
-                        {worker.bank_account && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">{t('bank_account')}:</span>
-                            <span className="font-medium">{worker.bank_account}</span>
-                          </div>
-                        )}
+                        {worker.bank_name && (<div className="flex justify-between"><span className="text-gray-600">{t('bank_name')}:</span><span className="font-medium">{worker.bank_name}</span></div>)}
+                        {worker.bank_branch && (<div className="flex justify-between"><span className="text-gray-600">{t('bank_branch')}:</span><span className="font-medium">{worker.bank_branch}</span></div>)}
+                        {worker.bank_account && (<div className="flex justify-between"><span className="text-gray-600">{t('bank_account')}:</span><span className="font-medium">{worker.bank_account}</span></div>)}
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex gap-2 mt-4 flex-wrap">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowBankTransfer({ worker, month: selectedMonth })}
-                    className="text-green-700 hover:bg-green-50"
-                    disabled={!worker.bank_account}
-                  >
-                    <Send className="w-4 h-4 mr-1" />
-                    {language === 'he' ? 'העבר' : 'Transfer'}
+                  <Button size="sm" variant="outline" onClick={() => setShowBankTransfer({ worker, month: selectedMonth })} className="text-green-700 hover:bg-green-50" disabled={!worker.bank_account}>
+                    <Send className="w-4 h-4 mr-1" />{language === 'he' ? 'העבר' : 'Transfer'}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowRateHistory(worker.id)}
-                    className="text-purple-700 hover:bg-purple-50"
-                  >
-                    <History className="w-4 h-4 mr-1" />
-                    {language === 'he' ? 'תעריפים' : 'Rates'}
+                  <Button size="sm" variant="outline" onClick={() => setShowRateHistory(worker.id)} className="text-purple-700 hover:bg-purple-50">
+                    <History className="w-4 h-4 mr-1" />{language === 'he' ? 'תעריפים' : 'Rates'}
                   </Button>
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border divide-y">
+          {workers.map((worker) => (
+            <div key={worker.id} className="p-3 flex items-center justify-between gap-3 hover:bg-gray-50">
+              <div className="flex items-center gap-3 min-w-0">
+                <User className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold truncate max-w-[240px] md:max-w-[360px]">{worker.full_name}</span>
+                    {worker.job_position_name && <Badge className="bg-purple-100 text-purple-800">{worker.job_position_name}</Badge>}
+                    {worker.secondary_job_position_name && <Badge className="bg-blue-100 text-blue-800">{worker.secondary_job_position_name}</Badge>}
+                    {(worker.job_position_names || []).map((posName, idx) => (
+                      <Badge key={idx} className="bg-green-100 text-green-800">{posName}</Badge>
+                    ))}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-3">
+                    {worker.phone && <span>{worker.phone}</span>}
+                    {worker.email && <span>{worker.email}</span>}
+                    <span>
+                      {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')} · +{parseFloat(worker.employer_cost_percentage) || 25}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
+                <Button variant="ghost" size="icon" onClick={() => setShowRateHistory(worker.id)} title={language === 'he' ? 'תעריפים' : 'Rates'}>
+                  <History className="w-4 h-4 text-purple-700" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => handleStartEdit(worker)} title={t('edit')}>
+                  <Edit className="w-4 h-4 text-blue-600" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )
 
       {/* Modals */}
       {showBankTransfer && (
