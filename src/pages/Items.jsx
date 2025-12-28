@@ -496,7 +496,7 @@ export default function ItemsPage() {
               onClick={async () => {
                 setSeeding(true);
                 try {
-                  const { data } = await base44.functions.invoke('seedItems', {});
+                  const { data } = await base44.functions.invoke('seedItems', { ownerEmail: user.email, count: 12 });
                   if (data?.success) {
                     await loadData(user);
                     alert(`Added ${data.created} test items`);
