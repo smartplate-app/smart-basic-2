@@ -120,7 +120,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                   {sortKey === 'price' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
                 </button>
               </TableHead>
-              <TableHead className="sticky top-[56px] md:top-[72px] z-50 bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('discount')}>
                   <span>{t('discount')}</span>
                   {sortKey === 'discount' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
