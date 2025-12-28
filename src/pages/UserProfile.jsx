@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Save, Upload, X } from "lucide-react";
+import { Loader, Save, Upload, X, CalendarPlus } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function UserProfilePage() {
@@ -25,6 +25,7 @@ export default function UserProfilePage() {
     restaurant_logo: ""
   });
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [reminderLoading, setReminderLoading] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -78,6 +79,23 @@ export default function UserProfilePage() {
       alert(t('error_saving') || 'Error saving profile. Please try again.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEnableReminder = async () => {
+    try {
+      setReminderLoading(true);
+      const { data } = await base44.functions.invoke('createMonthlyComplianceReminder', {});
+      if (data?.success) {
+        alert((language === 'he' ? 'תזכורת חודשית נוצרה/עודכנה ביומן שלך' : 'Monthly reminder created/updated on your calendar'));
+      } else {
+        const msg = data?.error || 'Authorization required to access Google Calendar.';
+        alert((language === 'he' ? 'נדרש חיבור ליומן Google. אנא אשרי את החיבור בחלון הצ׳אט ואז נסי שוב.' : msg));
+      }
+    } catch (e) {
+      alert((language === 'he' ? 'נדרש חיבור ליומן Google. אשר/י את החיבור בחלון הצ׳אט ואז נסה שוב.' : (e?.message || 'Authorization required.')));
+    } finally {
+      setReminderLoading(false);
     }
   };
 
@@ -339,6 +357,29 @@ export default function UserProfilePage() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>{language === 'he' ? 'תזכורת חודשית (20 לחודש)' : 'Monthly Reminder (20th)'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              {language === 'he'
+                ? 'כפתור זה ייצור אירוע יום־שלם חוזר ב־20 לכל חודש ביומן Google האישי שלך: בדיקת עלות עבודה, עלות מזון, השלמת סידור עבודה ואישור קבלות.'
+                : 'Creates a recurring all‑day event on the 20th in your Google Calendar: review labor cost, food cost, ensure workers scheduled, and accept receipts.'}
+            </p>
+            <Button onClick={handleEnableReminder} disabled={reminderLoading} className="bg-green-600 hover:bg-green-700">
+              {reminderLoading ? (
+                <><Loader className="w-4 h-4 mr-2 animate-spin" />{language === 'he' ? 'מפעיל...' : 'Enabling...'}</>
+              ) : (
+                <><CalendarPlus className="w-4 h-4 mr-2" />{language === 'he' ? 'הפעל תזכורת חודשית' : 'Enable Monthly Reminder'}</>
+              )}
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">
+              {language === 'he' ? 'אם תתבקש/י לחבר את יומן Google – אשר/י את ההרשאה, והאירוע ייווצר ביומן שלך (לא ביומן האדמין).' : 'If asked to connect Google Calendar, approve the permission; the event is added to your own calendar, not the admin\'s.'}
+            </p>
           </CardContent>
         </Card>
       </div>
