@@ -1440,7 +1440,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                       <div
                                         ref={provided.innerRef}
                                         {...provided.droppableProps}
-                                        className={`space-y-1 rounded transition-colors min-h-[40px]`}
+                                        className={`space-y-1 rounded transition-colors min-h-[40px] group`}
                                         style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), snapshot.isDraggingOver ? 0.25 : 0.08) }}
                                       >
                                         {shiftsForCell.length === 0 ? (
