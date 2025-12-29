@@ -27,6 +27,8 @@ export default function SupplyReceiptsPage() {
   const [editingReceipt, setEditingReceipt] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [supplierFilter, setSupplierFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("none");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -188,8 +190,19 @@ export default function SupplyReceiptsPage() {
     const matchesSearch = receipt.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || receipt.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSupplier = supplierFilter === "all" || receipt.supplier_name === supplierFilter;
+    return matchesSearch && matchesStatus && matchesSupplier;
   });
+
+  const sortedReceipts = React.useMemo(() => {
+    if (sortBy === 'amount_asc') {
+      return [...filteredReceipts].sort((a,b) => (parseFloat(a.invoice_total||0) - parseFloat(b.invoice_total||0)));
+    }
+    if (sortBy === 'amount_desc') {
+      return [...filteredReceipts].sort((a,b) => (parseFloat(b.invoice_total||0) - parseFloat(a.invoice_total||0)));
+    }
+    return filteredReceipts;
+  }, [filteredReceipts, sortBy]);
 
   if (authLoading) {
     return (
@@ -335,7 +348,7 @@ export default function SupplyReceiptsPage() {
               )}
             </AnimatePresence>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
@@ -356,13 +369,40 @@ export default function SupplyReceiptsPage() {
                   <SelectItem value="pending">{t('status_pending')}</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* Supplier filter */}
+              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('supplier') || 'Supplier'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all_suppliers') || 'All suppliers'}</SelectItem>
+                  {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                    .sort((a,b) => a.localeCompare(b))
+                    .map(name => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              {/* Sort by amount */}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('sort') || 'Sort'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('no_sort') || 'No sort'}</SelectItem>
+                  <SelectItem value="amount_asc">{t('amount_low_to_high') || 'Amount: Low → High'}</SelectItem>
+                  <SelectItem value="amount_desc">{t('amount_high_to_low') || 'Amount: High → Low'}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {viewMode === 'list' ? (
               <ReceiptList
-                receipts={filteredReceipts}
-                onEdit={handleEditReceipt}
-                loading={loading}
+              receipts={sortedReceipts}
+              onEdit={handleEditReceipt}
+              loading={loading}
               />
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
@@ -376,7 +416,7 @@ export default function SupplyReceiptsPage() {
                       </div>
                     ))
                   ) : (
-                    filteredReceipts.map((receipt) => (
+                    sortedReceipts.map((receipt) => (
                       <ReceiptCard
                         key={receipt.id}
                         receipt={receipt}
@@ -388,7 +428,7 @@ export default function SupplyReceiptsPage() {
               </div>
             )}
 
-            {!loading && filteredReceipts.length === 0 && (
+            {!loading && sortedReceipts.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-gray-400 text-lg mb-2">{t('no_receipts_to_display')}</div>
                 <div className="text-gray-500">{t('start_by_creating_receipt')}</div>
