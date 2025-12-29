@@ -183,12 +183,12 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       try {
         const user = await base44.auth.me();
         setCurrentUser(user);
-        const workingEmail = user.acting_as_store_email || user.email;
+        const effectiveEmail = user.acting_as_user_email || user.acting_as_store_email || user.email;
 
         // Load labor goals for the month
         const currentMonth = moment(weekStartDate).format('YYYY-MM');
         const dashboardData = await base44.entities.MonthlyDashboardData.filter({
-          created_by: workingEmail,
+          created_by: effectiveEmail,
           month: currentMonth
         });
         
@@ -218,7 +218,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         const schedulesRes = await base44.entities.WeeklySchedule.filter({ 
           week_number: String(weekNumber), // Ensure week_number is string
           year: String(year), // Ensure year is string
-          created_by: user.email
+          created_by: effectiveEmail
         });
 
         if (schedulesRes && schedulesRes.length > 0) {
@@ -256,7 +256,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     try {
       const user = currentUser || await base44.auth.me();
       setCurrentUser(user);
-      const templatesData = await base44.entities.ScheduleTemplate.filter({ created_by: user.email }, "template_name");
+      const effectiveEmail = user.acting_as_user_email || user.acting_as_store_email || user.email;
+      const templatesData = await base44.entities.ScheduleTemplate.filter({ created_by: effectiveEmail }, "template_name");
       setTemplates(templatesData);
     } catch (error) {
       console.error("Error loading templates:", error);
@@ -268,8 +269,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     try {
       const user = currentUser || await base44.auth.me();
       setCurrentUser(user);
+      const effectiveEmail = user.acting_as_user_email || user.acting_as_store_email || user.email;
       const defaultTemplate = await base44.entities.ScheduleTemplate.filter({ 
-        created_by: user.email,
+        created_by: effectiveEmail,
         is_default: true 
       });
       
@@ -833,11 +835,12 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       // Fetch the schedule for THIS specific week
       const user = currentUser || await base44.auth.me();
       setCurrentUser(user);
-      
+      const effectiveEmail = user.acting_as_user_email || user.acting_as_store_email || user.email;
+
       const schedulesRes = await base44.entities.WeeklySchedule.filter({ 
         week_number: String(weekNumber),
         year: String(year),
-        created_by: user.email
+        created_by: effectiveEmail
       });
 
       if (schedulesRes && schedulesRes.length > 0) {
