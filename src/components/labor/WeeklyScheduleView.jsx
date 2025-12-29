@@ -215,31 +215,43 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         const weekNumber = moment(weekStartDate).week();
         const year = moment(weekStartDate).year();
         
-        const schedulesRes = await base44.entities.WeeklySchedule.filter({ 
+        let schedulesRes = await base44.entities.WeeklySchedule.filter({ 
           week_number: String(weekNumber), // Ensure week_number is string
           year: String(year), // Ensure year is string
           created_by: effectiveEmail
         });
 
+        // Fallback: if admin is controlling and data was saved under admin's email
+        if ((!schedulesRes || schedulesRes.length === 0) && user?.admin_original_email) {
+          try {
+            const alt = await base44.entities.WeeklySchedule.filter({
+              week_number: String(weekNumber),
+              year: String(year),
+              created_by: user.admin_original_email
+            });
+            if (alt && alt.length > 0) schedulesRes = alt;
+          } catch {}
+        }
+
         if (schedulesRes && schedulesRes.length > 0) {
-                    const fetchedSchedule = schedulesRes[0];
-                    setSchedule(fetchedSchedule);
-                    // Convert stored weekly sales back to monthly (multiply by 4.2)
-                    setMonthlyPredictedSales((fetchedSchedule.predicted_weekly_sales || 0) * 4.2);
-                    // Load saved position order if exists
-                    if (fetchedSchedule.position_order && fetchedSchedule.position_order.length > 0) {
-                      // Merge saved order with any new positions
-                      const newPositionIds = positions.map(p => p.id).filter(id => !fetchedSchedule.position_order.includes(id));
-                      setPositionOrder([...fetchedSchedule.position_order, ...newPositionIds]);
-                    } else {
-                      setPositionOrder(positions.map(p => p.id));
-                    }
-                  } else {
-                    setSchedule(null);
-                    setMonthlyPredictedSales(0);
-                    setPositionOrder(positions.map(p => p.id));
-                    loadDefaultTemplate();
-                  }
+          const fetchedSchedule = schedulesRes[0];
+          setSchedule(fetchedSchedule);
+          // Convert stored weekly sales back to monthly (multiply by 4.2)
+          setMonthlyPredictedSales((fetchedSchedule.predicted_weekly_sales || 0) * 4.2);
+          // Load saved position order if exists
+          if (fetchedSchedule.position_order && fetchedSchedule.position_order.length > 0) {
+            // Merge saved order with any new positions
+            const newPositionIds = positions.map(p => p.id).filter(id => !fetchedSchedule.position_order.includes(id));
+            setPositionOrder([...fetchedSchedule.position_order, ...newPositionIds]);
+          } else {
+            setPositionOrder(positions.map(p => p.id));
+          }
+        } else {
+          setSchedule(null);
+          setMonthlyPredictedSales(0);
+          setPositionOrder(positions.map(p => p.id));
+          loadDefaultTemplate();
+        }
       } catch (error) {
         console.error("Error loading schedule or user:", error);
         toast.error(t("error_loading_schedule"));
