@@ -210,7 +210,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               </div>
 
               <div className="space-y-2">
-                <Label>{tf('tips_method', 'שיטת תגמול בטיפים', 'Tips method')}</Label>
+                <Label>{tf('tips_method', 'תגמול מהטיפים', 'Tips method')}</Label>
                 <Select value={formData.tips_method} onValueChange={(v) => setFormData({ ...formData, tips_method: v })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -336,7 +336,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
                     <div className="mt-2 p-2 bg-yellow-50 rounded-lg">
                       <p className="text-sm font-semibold text-yellow-800">
-                        {tf('tips_method', 'שיטת תגמול טיפים', 'Tips method')}: {position.tips_method === 'fixed_hourly' ? tf('fixed_hourly', 'קבוע לשעה', 'Fixed hourly') : position.tips_method === 'percent_allocation' ? tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation') : position.tips_method === 'excluded' ? tf('excluded', 'לא זכאי', 'Excluded') : tf('general_pool', 'טיפים', 'General pool')}
+                        {tf('tips_method', 'תגמול מהטיפים', 'Tips method')}: {position.tips_method === 'fixed_hourly' ? tf('fixed_hourly', 'קבוע לשעה', 'Fixed hourly') : position.tips_method === 'percent_allocation' ? tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation') : position.tips_method === 'excluded' ? tf('excluded', 'לא זכאי', 'Excluded') : tf('general_pool', 'טיפים', 'General pool')}
                       </p>
                       {position.tips_method === 'fixed_hourly' && (
                         <p className="text-sm text-yellow-900">{tf('tip_hourly_rate', 'תעריף לשעה', 'Tip hourly rate')}: {Number(position.tip_hourly_rate || 0).toLocaleString()} {t('currency')}</p>
