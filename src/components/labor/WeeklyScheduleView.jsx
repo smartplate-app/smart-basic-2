@@ -559,15 +559,16 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       
       const scheduleData = {
         week_start_date: moment(weekStartDate).format('YYYY-MM-DD'),
-        week_number: String(weekNumber), // Convert to string
-        year: String(year), // Convert to string
-        predicted_weekly_sales: monthlyPredictedSales / 4.2, // Store weekly predicted sales (monthly / 4.2)
+        week_number: String(weekNumber),
+        year: String(year),
+        predicted_weekly_sales: monthlyPredictedSales / 4.2,
         shifts: schedule?.shifts || [],
+        position_rows: schedule?.position_rows || [],
         total_hours: totalHours,
-        total_cost: totalCostWithEmployer, // Save total cost WITH employer costs
+        total_cost: totalCostWithEmployer,
         labor_cost_percentage: laborPercentage,
-        position_order: positionOrder, // Save position order
-        status: 'published' 
+        position_order: positionOrder,
+        status: 'published'
       };
 
       console.log("Saving schedule:", scheduleData);
@@ -635,13 +636,14 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
       const scheduleData = {
         week_start_date: nextWeekStart.format('YYYY-MM-DD'),
-        week_number: String(nextWeekNumber), // Convert to string
-        year: String(nextWeekYear), // Convert to string
-        predicted_weekly_sales: monthlyPredictedSales / 4.2, // Copy weekly predicted sales to next week
+        week_number: String(nextWeekNumber),
+        year: String(nextWeekYear),
+        predicted_weekly_sales: monthlyPredictedSales / 4.2,
         shifts: copiedShifts,
-        total_hours: calculateTotals().totalHours, // Recalculated on save
-        total_cost: calculateTotals().totalCost,   // Recalculated on save
-        labor_cost_percentage: calculateTotals().laborPercentage, // Recalculated on save
+        position_rows: schedule?.position_rows || [],
+        total_hours: calculateTotals().totalHours,
+        total_cost: calculateTotals().totalCost,
+        labor_cost_percentage: calculateTotals().laborPercentage,
         status: 'draft',
         created_by: user.email
       };
@@ -993,8 +995,10 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const destRowId = dst[2] && dst[2] !== 'default' ? dst[2] : undefined;
 
     // Find the shift being moved
-    const shiftsInSourceCell = (schedule?.shifts || []).filter(
-      s => s.day === sourceDay && s.job_position_id === sourcePositionId
+    const shiftsInSourceCell = (schedule?.shifts || []).filter(s =>
+      s.day === sourceDay &&
+      s.job_position_id === sourcePositionId &&
+      ((sourceRowId && s.position_row_id === sourceRowId) || (!sourceRowId && !s.position_row_id))
     );
     const movedShift = shiftsInSourceCell[source.index];
 
