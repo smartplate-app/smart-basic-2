@@ -16,6 +16,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "../LanguageProvider";
 import { toast } from "sonner";
 import moment from "moment";
@@ -1411,17 +1412,33 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                       }}>
                                         {row.label}
                                       </div>
-                                      <div className="flex items-center gap-1">
-                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openRowTimeDialog(row)} title={language === 'he' ? 'עריכת שעות לשורה' : 'Edit row hours'}>
-                                          <Clock className="h-3 w-3" />
-                                        </Button>
-                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)} title={language === 'he' ? 'הוסף משמרת' : 'Add shift'}>
-                                          <Plus className="h-3 w-3" />
-                                        </Button>
-                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removePositionRow(rowId)} title={language === 'he' ? 'מחק שורה' : 'Delete row'}>
-                                          <Trash2 className="h-3 w-3 text-red-600" />
-                                        </Button>
-                                      </div>
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button size="icon" variant="ghost" className="h-6 w-6" title={language === 'he' ? 'עוד פעולות' : 'More actions'}>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align={isRTL ? 'start' : 'end'} dir={isRTL ? 'rtl' : 'ltr'}>
+                                          <DropdownMenuItem onClick={() => openRowTimeDialog(row)}>
+                                            {language === 'he' ? 'קבע שעות לשורה' : 'Set row hours'}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => {
+                                            const name = prompt(language === 'he' ? 'שם לשורה' : 'Row name', row.label || '');
+                                            if (name !== null) {
+                                              const updated = (schedule?.position_rows || []).map(rr => rr.row_id === row.row_id ? { ...rr, label: name } : rr);
+                                              setSchedule({ ...(schedule || {}), position_rows: updated });
+                                            }
+                                          }}>
+                                            {language === 'he' ? 'שנה שם שורה' : 'Rename row'}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)}>
+                                            {language === 'he' ? 'הוסף משמרת' : 'Add shift'}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => removePositionRow(rowId)} className="text-red-600">
+                                            {language === 'he' ? 'מחק שורה' : 'Delete row'}
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
                                     </div>
                                   )}
                                   <Droppable droppableId={droppableId} type="SHIFT">
