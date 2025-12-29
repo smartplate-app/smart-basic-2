@@ -46,6 +46,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
       default_start_time: "09:00",
       default_end_time: "17:00",
       tip_hourly_rate: 0,
+      tip_allocation_percent: 0,
       tips_method: "general_pool",
       is_active: true,
       color: "#E6F4FF"
@@ -87,13 +88,13 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", is_active: true, color: "#E6F4FF" });
+    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", tip_hourly_rate: 0, tip_allocation_percent: 0, tips_method: "general_pool", is_active: true, color: "#E6F4FF" });
   };
 
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", is_active: true, color: "#E6F4FF" });
+    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", tip_hourly_rate: 0, tip_allocation_percent: 0, tips_method: "general_pool", is_active: true, color: "#E6F4FF" });
   };
 
   const sectionColors = {
@@ -213,19 +214,59 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               </div>
 
               <div className="space-y-2">
-                <Label>{tf('tips_method', 'תגמול מהטיפים', 'Tips method')}</Label>
-                <Select value={formData.tips_method} onValueChange={(v) => setFormData({ ...formData, tips_method: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general_pool">{tf('general_pool', 'טיפים', 'General pool')}</SelectItem>
-                    <SelectItem value="fixed_hourly">{tf('fixed_hourly', 'קבוע לשעה', 'Fixed hourly')}</SelectItem>
-                    <SelectItem value="percent_allocation">{tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation')}</SelectItem>
-                    <SelectItem value="excluded">{tf('excluded', 'לא זכאי לטיפים', 'Excluded from tips')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500">{tf('tips_method_help', 'קובע כיצד התפקיד משתתף בחלוקת טיפים.', 'Defines how the role participates in tips.')}</p>
+                <div className="flex items-center justify-between">
+                  <Label>{tf('tips_method', 'תגמול מהטיפים', 'Tips method')}</Label>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={formData.tips_method !== 'excluded'}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData({ ...formData, tips_method: (formData.tips_method === 'excluded' ? 'general_pool' : formData.tips_method) });
+                        } else {
+                          setFormData({ ...formData, tips_method: 'excluded' });
+                        }
+                      }}
+                    />
+                    <span className="text-sm">{language === 'he' ? 'מופעל' : 'Enabled'}</span>
+                  </div>
+                </div>
+
+                {formData.tips_method !== 'excluded' && (
+                  <>
+                    <Select value={formData.tips_method} onValueChange={(v) => setFormData({ ...formData, tips_method: v })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general_pool">{language === 'he' ? 'השלמה' : 'Completion'}</SelectItem>
+                        <SelectItem value="percent_allocation">{tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {formData.tips_method === 'percent_allocation' && (
+                      <div className="space-y-2">
+                        <Label>{language === 'he' ? 'אחוז הפרשה לתפקיד' : 'Allocation percent for role'}</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            value={typeof formData.tip_allocation_percent === 'number' ? formData.tip_allocation_percent : 0}
+                            onChange={(e) => {
+                              const val = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
+                              setFormData({ ...formData, tip_allocation_percent: val });
+                            }}
+                            className="w-32"
+                          />
+                          <span>%</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-500">{tf('tips_method_help', 'קובע כיצד התפקיד משתתף בחלוקת טיפים.', 'Defines how the role participates in tips.')}</p>
+                  </>
+                )}
               </div>
 
 
@@ -327,10 +368,10 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
                     <div className="mt-2 p-2 bg-yellow-50 rounded-lg">
                       <p className="text-sm font-semibold text-yellow-800">
-                        {tf('tips_method', 'תגמול מהטיפים', 'Tips method')}: {position.tips_method === 'fixed_hourly' ? tf('fixed_hourly', 'קבוע לשעה', 'Fixed hourly') : position.tips_method === 'percent_allocation' ? tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation') : position.tips_method === 'excluded' ? tf('excluded', 'לא זכאי', 'Excluded') : tf('general_pool', 'טיפים', 'General pool')}
+                        {tf('tips_method', 'תגמול מהטיפים', 'Tips method')}: {position.tips_method === 'excluded' ? tf('excluded', 'לא זכאי', 'Excluded') : position.tips_method === 'percent_allocation' ? tf('percent_allocation', 'הפרשה אחוזית', 'Percent allocation') : (language === 'he' ? 'השלמה' : 'Completion')}
                       </p>
-                      {position.tips_method === 'fixed_hourly' && (
-                        <p className="text-sm text-yellow-900">{tf('tip_hourly_rate', 'תעריף לשעה', 'Tip hourly rate')}: {Number(position.tip_hourly_rate || 0).toLocaleString()} {t('currency')}</p>
+                      {position.tips_method === 'percent_allocation' && (
+                        <p className="text-sm text-yellow-900">{language === 'he' ? 'אחוז הפרשה לתפקיד' : 'Allocation percent for role'}: {Number(position.tip_allocation_percent || 0).toLocaleString()}%</p>
                       )}
                     </div>
 
@@ -381,7 +422,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                       </span>
                     )}
                     <span>
-                      {tf('tips_method', 'שיטת תגמול', 'Tips method')}: {position.tips_method === 'fixed_hourly' ? tf('fixed_hourly','קבוע לשעה','Fixed hourly') : position.tips_method === 'percent_allocation' ? tf('percent_allocation','הפרשה אחוזית','Percent allocation') : position.tips_method === 'excluded' ? tf('excluded','לא זכאי','Excluded') : tf('general_pool','טיפים','General pool')}
+                      {tf('tips_method', 'תגמול מהטיפים', 'Tips method')}: {position.tips_method === 'excluded' ? tf('excluded','לא זכאי','Excluded') : position.tips_method === 'percent_allocation' ? tf('percent_allocation','הפרשה אחוזית','Percent allocation') : (language === 'he' ? 'השלמה' : 'Completion')}
                     </span>
                   </div>
                 </div>
