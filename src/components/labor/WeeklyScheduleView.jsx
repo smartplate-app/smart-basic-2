@@ -1647,7 +1647,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             }}>
               {t('cancel')}
             </Button>
-            {editingShift && ( // Only show delete button if editing an existing shift
+            {editingShift && (
               <Button 
                 type="button" 
                 variant="destructive" 
