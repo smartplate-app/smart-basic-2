@@ -410,12 +410,12 @@ export default function SupplyReceiptsPage() {
               {/* Sort by amount */}
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('sort') || 'Sort'} />
+                  <SelectValue placeholder={t('sort') || 'מיון'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t('no_sort') || 'No sort'}</SelectItem>
-                  <SelectItem value="amount_asc">{t('amount_low_to_high') || 'Amount: Low → High'}</SelectItem>
-                  <SelectItem value="amount_desc">{t('amount_high_to_low') || 'Amount: High → Low'}</SelectItem>
+                  <SelectItem value="none">{t('no_sort') || 'ללא מיון'}</SelectItem>
+                  <SelectItem value="amount_asc">{t('amount_low_to_high') || 'סכום: נמוך → גבוה'}</SelectItem>
+                  <SelectItem value="amount_desc">{t('amount_high_to_low') || 'סכום: גבוה → נמוך'}</SelectItem>
                 </SelectContent>
               </Select>
 
