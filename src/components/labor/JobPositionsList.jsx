@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, X, Save, LayoutGrid, List } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 
@@ -22,6 +23,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
     default_start_time: "09:00",
     default_end_time: "17:00",
     tip_hourly_rate: 0,
+    tip_allocation_percent: 0,
     tips_method: "general_pool",
     is_active: true,
     color: "#E6F4FF"
@@ -62,6 +64,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
       default_start_time: position.default_start_time || "09:00",
       default_end_time: position.default_end_time || "17:00",
       tip_hourly_rate: typeof position.tip_hourly_rate === 'number' ? position.tip_hourly_rate : 0,
+      tip_allocation_percent: typeof position.tip_allocation_percent === 'number' ? position.tip_allocation_percent : 0,
       tips_method: position.tips_method || "general_pool",
       is_active: position.is_active !== false,
       color: position.color || "#E6F4FF"
@@ -225,19 +228,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                 <p className="text-xs text-gray-500">{tf('tips_method_help', 'קובע כיצד התפקיד משתתף בחלוקת טיפים.', 'Defines how the role participates in tips.')}</p>
               </div>
 
-              {formData.tips_method === 'fixed_hourly' && (
-                <div className="space-y-2">
-                  <Label>{tf('tip_hourly_rate', 'תעריף טיפ לשעה', 'Tip hourly rate')}</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.tip_hourly_rate}
-                    onChange={(e) => setFormData({ ...formData, tip_hourly_rate: parseFloat(e.target.value) || 0 })}
-                    placeholder="0.00"
-                  />
-                </div>
-              )}
+
 
               <div className="space-y-2">
                 <Label>{tf('default_start_time', 'שעת התחלה ברירת מחדל', 'Default start time')}</Label>
