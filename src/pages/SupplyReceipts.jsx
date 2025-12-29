@@ -29,6 +29,9 @@ export default function SupplyReceiptsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [sortBy, setSortBy] = useState("none");
+  const [datePreset, setDatePreset] = useState("all"); // all | week | month | year | custom
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -191,7 +194,26 @@ export default function SupplyReceiptsPage() {
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || receipt.status === statusFilter;
     const matchesSupplier = supplierFilter === "all" || receipt.supplier_name === supplierFilter;
-    return matchesSearch && matchesStatus && matchesSupplier;
+
+    // Date range filter (inclusive)
+    let matchesDate = true;
+    if (dateFrom || dateTo) {
+      const recDate = new Date(receipt.received_date);
+      if (!isNaN(recDate)) {
+        if (dateFrom) {
+          const fromD = new Date(dateFrom);
+          fromD.setHours(0,0,0,0);
+          if (recDate < fromD) matchesDate = false;
+        }
+        if (matchesDate && dateTo) {
+          const toD = new Date(dateTo);
+          toD.setHours(23,59,59,999);
+          if (recDate > toD) matchesDate = false;
+        }
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesSupplier && matchesDate;
   });
 
   const sortedReceipts = React.useMemo(() => {
@@ -348,7 +370,7 @@ export default function SupplyReceiptsPage() {
               )}
             </AnimatePresence>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
@@ -396,6 +418,66 @@ export default function SupplyReceiptsPage() {
                   <SelectItem value="amount_desc">{t('amount_high_to_low') || 'Amount: High → Low'}</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* Timeframe preset */}
+              <Select
+                value={datePreset}
+                onValueChange={(v) => {
+                  setDatePreset(v);
+                  const now = new Date();
+                  if (v === 'week') {
+                    const s = new Date(now);
+                    const dow = s.getDay(); // 0=Sunday
+                    s.setDate(s.getDate() - dow);
+                    s.setHours(0,0,0,0);
+                    const e = new Date(s);
+                    e.setDate(s.getDate() + 6);
+                    e.setHours(23,59,59,999);
+                    setDateFrom(s.toISOString().slice(0,10));
+                    setDateTo(e.toISOString().slice(0,10));
+                  } else if (v === 'month') {
+                    const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    setDateFrom(s.toISOString().slice(0,10));
+                    setDateTo(e.toISOString().slice(0,10));
+                  } else if (v === 'year') {
+                    const s = new Date(now.getFullYear(), 0, 1);
+                    const e = new Date(now.getFullYear(), 11, 31);
+                    setDateFrom(s.toISOString().slice(0,10));
+                    setDateTo(e.toISOString().slice(0,10));
+                  } else if (v === 'all') {
+                    setDateFrom("");
+                    setDateTo("");
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('timeframe') || 'Timeframe'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all_time') || 'All time'}</SelectItem>
+                  <SelectItem value="week">{t('current_week') || 'Current week'}</SelectItem>
+                  <SelectItem value="month">{t('current_month') || 'Current month'}</SelectItem>
+                  <SelectItem value="year">{t('current_year') || 'Current year'}</SelectItem>
+                  <SelectItem value="custom">{t('custom_range') || 'Custom range'}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* From / To dates */}
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); }}
+                placeholder={t('from_date') || 'From date'}
+                disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
+              />
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); }}
+                placeholder={t('to_date') || 'To date'}
+                disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
+              />
             </div>
 
             {viewMode === 'list' ? (
