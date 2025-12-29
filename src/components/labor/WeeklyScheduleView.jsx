@@ -85,6 +85,11 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     { key: 'saturday', label: t('saturday') }
   ];
 
+  // Stable draggable id for shifts (works also before DB id exists)
+  const getShiftDraggableId = (s) => (
+    s.id || `${s.day}|${s.date}|${s.job_position_id}|${s.position_row_id || 'default'}|${s.worker_id}|${s.start_time}|${s.end_time}`
+  );
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat(language === 'he' ? 'he-IL' : 'en-US', {
       style: 'currency',
@@ -957,78 +962,64 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const handleDragEnd = (result) => {
-    const { source, destination, draggableId, type } = result;
-
-    // Dropped outside a valid droppable
+    const { source, destination, type } = result;
     if (!destination) return;
-
-    // Dropped in the same place
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    // Handle position row reordering
+    // Positions reorder
     if (type === 'POSITION') {
       const newOrder = Array.from(positionOrder);
-      const [movedPositionId] = newOrder.splice(source.index, 1);
-      newOrder.splice(destination.index, 0, movedPositionId);
+      const [moved] = newOrder.splice(source.index, 1);
+      newOrder.splice(destination.index, 0, moved);
       setPositionOrder(newOrder);
       toast.success(language === 'he' ? 'סדר התפקידים עודכן' : 'Position order updated');
       return;
     }
 
-    // Handle shift reordering (existing logic)
-    // Parse droppable IDs: day|positionId|rowId(optional)
-    const src = source.droppableId.split('|');
-    const dst = destination.droppableId.split('|');
-    const sourceDay = src[0];
-    const sourcePositionId = src[1];
-    const sourceRowId = src[2] && src[2] !== 'default' ? src[2] : undefined;
-    const destDay = dst[0];
-    const destPositionId = dst[1];
-    const destRowId = dst[2] && dst[2] !== 'default' ? dst[2] : undefined;
+    // Shifts: reorder within cell or move across cells
+    const parse = (id) => {
+      const [day, positionId, rowRaw] = id.split('|');
+      return { day, positionId, rowId: rowRaw && rowRaw !== 'default' ? rowRaw : undefined };
+    };
+    const src = parse(source.droppableId);
+    const dst = parse(destination.droppableId);
 
-    // Find the shift being moved
-    const shiftsInSourceCell = (schedule?.shifts || []).filter(s =>
-      s.day === sourceDay &&
-      s.job_position_id === sourcePositionId &&
-      ((sourceRowId && s.position_row_id === sourceRowId) || (!sourceRowId && !s.position_row_id))
+    const matchCell = (s, cell) => (
+      s.day === cell.day &&
+      s.job_position_id === cell.positionId &&
+      ((cell.rowId && s.position_row_id === cell.rowId) || (!cell.rowId && !s.position_row_id))
     );
-    const movedShift = shiftsInSourceCell[source.index];
 
+    const list = (schedule?.shifts || []);
+    const srcIndices = list.map((s, i) => ({ s, i })).filter(({ s }) => matchCell(s, src)).map(({ i }) => i);
+    if (srcIndices.length <= source.index) return;
+    const from = srcIndices[source.index];
+
+    const newShifts = [...list];
+    const [movedShift] = newShifts.splice(from, 1);
     if (!movedShift) return;
 
-    // Get the destination position info
-    const destPosition = positions.find(p => p.id === destPositionId);
-    const destDateStr = moment(weekStartDate).day(days.findIndex(d => d.key === destDay)).format('YYYY-MM-DD');
+    // Update props if moved to a different cell
+    if (src.day !== dst.day || src.positionId !== dst.positionId || src.rowId !== dst.rowId) {
+      const destDateStr = moment(weekStartDate).day(days.findIndex(d => d.key === dst.day)).format('YYYY-MM-DD');
+      const destPosition = positions.find(p => p.id === dst.positionId);
+      movedShift.day = dst.day;
+      movedShift.date = destDateStr;
+      movedShift.job_position_id = dst.positionId;
+      movedShift.job_position = destPosition?.name || movedShift.job_position;
+      movedShift.position_row_id = dst.rowId;
+    }
 
-    // Create updated shift with new day, position, and date
-    const updatedShift = {
-      ...movedShift,
-      day: destDay,
-      date: destDateStr,
-      job_position_id: destPositionId,
-      job_position: destPosition?.name || movedShift.job_position,
-      position_row_id: destRowId,
-      id: movedShift.id // Keep the original ID if it exists
-    };
+    const destIndices = newShifts.map((s, i) => ({ s, i })).filter(({ s }) => matchCell(s, dst)).map(({ i }) => i);
+    let to = destIndices[destination.index];
+    if (typeof to !== 'number') {
+      // Append to end of destination cell
+      to = destIndices.length > 0 ? destIndices[destIndices.length - 1] + 1 : newShifts.length;
+    }
+    if (to > newShifts.length) to = newShifts.length;
+    newShifts.splice(to, 0, movedShift);
 
-    // Remove the shift from old position and add to new
-    const updatedShifts = (schedule?.shifts || []).filter(s => {
-      if (movedShift.id) {
-        return s.id !== movedShift.id;
-      }
-      // For shifts without ID, match by properties
-      return !(
-        s.day === movedShift.day &&
-        s.job_position_id === movedShift.job_position_id &&
-        s.worker_id === movedShift.worker_id &&
-        s.start_time === movedShift.start_time &&
-        s.end_time === movedShift.end_time
-      );
-    });
-
-    updatedShifts.push(updatedShift);
-
-    setSchedule({ ...schedule, shifts: updatedShifts });
+    setSchedule({ ...schedule, shifts: newShifts });
     toast.success(language === 'he' ? 'המשמרת הועברה בהצלחה' : 'Shift moved successfully');
   };
 
@@ -1451,7 +1442,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                           </div>
                                         ) : (
                                           shiftsForCell.map((shift, idx) => (
-                                            <Draggable key={shift.id || `${shift.day}-${shift.worker_id}-${shift.start_time}-${idx}`} draggableId={shift.id || `${shift.day}-${shift.worker_id}-${shift.start_time}-${idx}`} index={idx}>
+                                            <Draggable key={getShiftDraggableId(shift)} draggableId={getShiftDraggableId(shift)} index={idx}>
                                               {(provided, snapshot) => (
                                                 <div
                                                   ref={provided.innerRef}
@@ -1460,6 +1451,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                                   className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
                                                   style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}
                                                   onClick={() => { setEditingShift(shift); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
+                                                  data-drag-id={getShiftDraggableId(shift)}
                                                 >
                                                   <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity`}>
                                                     <GripVertical className="h-4 w-4" />
