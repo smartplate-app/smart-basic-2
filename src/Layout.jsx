@@ -49,25 +49,28 @@ const AppLayout = ({ children, currentPageName }) => {
   }, [location.pathname]);
 
   const navigationItems = [
-            { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
-            { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
-            { title: t('nav_receipts'), url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false, workerHidden: false },
-            { title: t('nav_suppliers'), url: createPageUrl("Suppliers"), icon: Users, adminOnly: false, workerHidden: true },
-            { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
-            { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
-            { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false, workerHidden: false },
-            { title: language === 'he' ? 'רשימת משימות' : 'To-Do List', url: createPageUrl("ToDoList"), icon: ChefHat, adminOnly: false, workerHidden: false },
-            { title: language === 'he' ? 'עלויות כח אדם' : 'Labor Cost', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
-            { title: language === 'he' ? 'העברות מלאי' : 'Inventory Transfers', url: createPageUrl("InventoryTransfers"), icon: ArrowLeftRight, adminOnly: false, workerHidden: true },
-            { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
+  // Weekly Schedule (Labor Cost) first
+  { title: language === 'he' ? 'עלויות כח אדם' : 'Labor Cost', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
+  // Dashboard second
+  { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
+  // Then the rest
+  { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
+  { title: t('nav_receipts'), url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false, workerHidden: false },
+  { title: t('nav_suppliers'), url: createPageUrl("Suppliers"), icon: Users, adminOnly: false, workerHidden: true },
+  { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
+  { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
+  { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false, workerHidden: false },
+  { title: language === 'he' ? 'רשימת משימות' : 'To-Do List', url: createPageUrl("ToDoList"), icon: ChefHat, adminOnly: false, workerHidden: false },
+  { title: language === 'he' ? 'העברות מלאי' : 'Inventory Transfers', url: createPageUrl("InventoryTransfers"), icon: ArrowLeftRight, adminOnly: false, workerHidden: true },
+  { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
 
-            { title: t('user_profile'), url: createPageUrl("UserProfile"), icon: UserCircle, adminOnly: false, workerHidden: false },
-            { title: (language === 'he' ? 'ניהול רשת' : 'Chain'), url: createPageUrl("ChainManagement"), icon: Warehouse, adminOnly: false, workerHidden: true },
-            { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
-            { title: language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard', url: createPageUrl("AdminDashboard"), icon: Shield, adminOnly: true, workerHidden: true },
-            { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true },
-            { title: language === 'he' ? 'דף ברוך הבא (תצוגה)' : 'Welcome (Preview)', url: createPageUrl("Welcome"), icon: Shield, adminOnly: true, workerHidden: true }
-            ];
+  { title: t('user_profile'), url: createPageUrl("UserProfile"), icon: UserCircle, adminOnly: false, workerHidden: false },
+  { title: (language === 'he' ? 'ניהול רשת' : 'Chain'), url: createPageUrl("ChainManagement"), icon: Warehouse, adminOnly: false, workerHidden: true },
+  { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
+  { title: language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard', url: createPageUrl("AdminDashboard"), icon: Shield, adminOnly: true, workerHidden: true },
+  { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true },
+  { title: language === 'he' ? 'דף ברוך הבא (תצוגה)' : 'Welcome (Preview)', url: createPageUrl("Welcome"), icon: Shield, adminOnly: true, workerHidden: true }
+  ];
 
   useEffect(() => {
     if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite' && currentPageName !== 'Welcome') {
@@ -232,8 +235,8 @@ const AppLayout = ({ children, currentPageName }) => {
 
                   const currentPath = location.pathname;
                                           if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-                                            console.log("[Layout] Redirecting to To-Do List page");
-                                            window.location.href = createPageUrl("ToDoList");
+                                            console.log("[Layout] Redirecting to Weekly Schedule (LaborCost) page");
+                                            window.location.href = createPageUrl("LaborCost");
                                           }
       
       setAuthLoading(false);
