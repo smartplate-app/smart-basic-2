@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
+import { Download } from "lucide-react";
 
 export default function ReceiptList({ receipts = [], onEdit, loading = false }) {
   const { t, language } = useLanguage();
@@ -107,6 +108,11 @@ export default function ReceiptList({ receipts = [], onEdit, loading = false }) 
                           +{r.receipt_images.length - 1}
                         </span>
                       )}
+                    </a>
+                    <a href={r.receipt_images[0]} download target="_blank" rel="noopener noreferrer" title={t('download') || 'Download'}>
+                      <Button size="icon" variant="ghost" aria-label={t('download') || 'Download'}>
+                        <Download className="w-4 h-4" />
+                      </Button>
                     </a>
                   </div>
                 ) : (
