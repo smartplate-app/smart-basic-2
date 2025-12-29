@@ -16,6 +16,14 @@ export default function ReceiptList({ receipts = [], onEdit, loading = false }) 
     }
   };
 
+  const fmtCurrency = (n) => {
+    const num = typeof n === 'number' ? n : parseFloat(n || 0);
+    return num.toLocaleString(
+      language === 'he' ? 'he-IL' : (language === 'ar' ? 'ar-IL' : 'en-US'),
+      { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+    );
+  };
+
   const statusVariant = (status) => {
     if (status === 'verified') return 'default';
     if (status === 'has_issues') return 'destructive';
@@ -24,12 +32,14 @@ export default function ReceiptList({ receipts = [], onEdit, loading = false }) 
 
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
-      <div className={`hidden md:grid grid-cols-6 gap-2 px-4 py-2 text-xs font-semibold text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+      <div className={`hidden md:grid grid-cols-8 gap-2 px-4 py-2 text-xs font-semibold text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
         <div>{t('supplier') || 'Supplier'}</div>
         <div>{t('order_number') || 'Order #'}</div>
         <div>{t('invoice_number') || 'Invoice #'}</div>
         <div>{t('received_date') || 'Date'}</div>
+        <div>{t('invoice_total') || 'Amount'}</div>
         <div>{t('status') || 'Status'}</div>
+        <div>{t('files') || 'Files'}</div>
         <div className={isRTL ? 'text-left' : 'text-right'}>{t('actions') || 'Actions'}</div>
       </div>
       <div className="divide-y">
@@ -44,17 +54,62 @@ export default function ReceiptList({ receipts = [], onEdit, loading = false }) 
           receipts.map((r) => (
             <div
               key={r.id}
-              className={`px-4 py-3 flex flex-col md:grid md:grid-cols-6 md:items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
+              className={`px-4 py-3 flex flex-col md:grid md:grid-cols-8 md:items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
             >
-              <div className="font-medium">{r.supplier_name || '-'}</div>
+              {/* Supplier + items count (if any) */}
+              <div>
+                <div className="font-medium">{r.supplier_name || '-'}</div>
+                {Array.isArray(r.verified_items) && r.verified_items.length > 0 && (
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {(t('items') || 'Items')}: {r.verified_items.length}
+                  </div>
+                )}
+              </div>
+
+              {/* Order and invoice numbers */}
               <div className="text-sm text-gray-600">{r.order_number || '-'}</div>
               <div className="text-sm text-gray-600">{r.invoice_number || '-'}</div>
+
+              {/* Date */}
               <div className="text-sm">{fmtDate(r.received_date)}</div>
+
+              {/* Amount */}
+              <div className="text-sm font-semibold text-blue-700">
+                {typeof r.invoice_total !== 'undefined' ? fmtCurrency(r.invoice_total) : '-'}
+              </div>
+
+              {/* Status */}
               <div>
                 <Badge variant={statusVariant(r.status)}>
                   {t(`status_${r.status}`) || r.status || '-'}
                 </Badge>
               </div>
+
+              {/* Files / images */}
+              <div>
+                {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 ? (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={r.receipt_images[0]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative block w-12 h-12 rounded-md overflow-hidden border"
+                      title={(t('open_file') || 'Open file')}
+                    >
+                      <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover" />
+                      {r.receipt_images.length > 1 && (
+                        <span className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[10px] px-1 rounded-tl">
+                          +{r.receipt_images.length - 1}
+                        </span>
+                      )}
+                    </a>
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-400">-</span>
+                )}
+              </div>
+
+              {/* Actions */}
               <div className={`flex md:justify-end ${isRTL ? 'md:justify-start' : ''}`}>
                 <Button size="sm" variant="outline" onClick={() => onEdit && onEdit(r)}>
                   {t('edit') || 'Edit'}
