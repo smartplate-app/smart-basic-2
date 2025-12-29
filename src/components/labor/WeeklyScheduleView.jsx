@@ -964,6 +964,18 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     setSchedule({ ...(schedule || {}), position_rows: updated });
   };
 
+  const removePositionRow = (rowId) => {
+    const confirmMessage = language === 'he'
+      ? 'למחוק את שורת התפקיד וכל המשמרות השייכות לה?'
+      : 'Delete this position row and all its shifts?';
+    if (!window.confirm(confirmMessage)) return;
+
+    const nextRows = (schedule?.position_rows || []).filter(r => r.row_id !== rowId);
+    const nextShifts = (schedule?.shifts || []).filter(s => s.position_row_id !== rowId);
+    setSchedule({ ...(schedule || {}), position_rows: nextRows, shifts: nextShifts });
+    toast.success(language === 'he' ? 'השורה נמחקה' : 'Row deleted');
+  };
+
   const handleDragEnd = (result) => {
     const { source, destination, draggableId, type } = result;
 
@@ -1452,6 +1464,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                         </Button>
                                         <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)} title={language === 'he' ? 'הוסף משמרת' : 'Add shift'}>
                                           <Plus className="h-3 w-3" />
+                                        </Button>
+                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removePositionRow(rowId)} title={language === 'he' ? 'מחק שורה' : 'Delete row'}>
+                                          <Trash2 className="h-3 w-3 text-red-600" />
                                         </Button>
                                       </div>
                                     </div>
