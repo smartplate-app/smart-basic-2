@@ -1456,6 +1456,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                                 <div
                                                   ref={provided.innerRef}
                                                   {...provided.draggableProps}
+                                                  {...provided.dragHandleProps}
                                                   className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
                                                   style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}
                                                   onClick={() => { setEditingShift(shift); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
