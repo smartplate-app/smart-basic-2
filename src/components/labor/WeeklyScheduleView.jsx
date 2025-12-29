@@ -74,6 +74,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [showRowTimeDialog, setShowRowTimeDialog] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
   const [rowTime, setRowTime] = useState({ start: "", end: "", mode: "all", dayFrom: "sunday", dayTo: "saturday" });
+  const [isDraggingShift, setIsDraggingShift] = useState(false);
 
   const days = [
     { key: 'sunday', label: t('sunday') },
@@ -1330,7 +1331,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           </div>
 
           {/* Schedule Table with Drag & Drop */}
-          <DragDropContext onDragEnd={handleDragEnd}>
+          <DragDropContext onDragStart={() => setIsDraggingShift(true)} onDragEnd={(result) => { setIsDraggingShift(false); handleDragEnd(result); }}>
             <div ref={scheduleTableRef} className="overflow-x-auto bg-white p-4 rounded-lg -mx-4 md:mx-0" dir={isRTL ? 'rtl' : 'ltr'}>
               <table className="w-full border-collapse min-w-[800px]">
                 <thead>
@@ -1467,16 +1468,17 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                                 <div
                                                   ref={provided.innerRef}
                                                   {...provided.draggableProps}
-                                                  className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'} ${snapshot.isDragging ? 'will-change-transform' : ''}`}
+                                                  className={`p-2 rounded border text-xs cursor-pointer group relative select-none touch-none ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'} ${snapshot.isDragging ? 'will-change-transform' : ''}`}
                                                   style={{
                                                     ...provided.draggableProps.style,
                                                     backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2),
-                                                    borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5)
+                                                    borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5),
+                                                    zIndex: snapshot.isDragging ? 1000 : 'auto'
                                                   }}
-                                                  onClick={() => { setEditingShift(shift); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
+                                                  onClick={() => { if (isDraggingShift) return; setEditingShift(shift); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
                                                   data-drag-id={getShiftDraggableId(shift)}
                                                 >
-                                                  <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity`} {...provided.dragHandleProps}>
+                                                  <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-100 transition-opacity h-6 w-6 flex items-center justify-center`} {...provided.dragHandleProps} onMouseDown={(e) => e.preventDefault()} aria-label={t('drag')}>
                                                     <GripVertical className="h-4 w-4" />
                                                   </div>
                                                   <div className={`font-extrabold text-[16px] ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
