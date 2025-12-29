@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -320,7 +321,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       start_time: defaultStartTime,
       end_time: defaultEndTime,
       hours_worked: calculateHours(defaultStartTime, defaultEndTime),
-      overtime_rate: "regular",
+      overtime_rate: "regular", // Default to regular 100%
       payment_for_shift: 0,
       base_payment: 0,
       notes: ""
@@ -342,17 +343,21 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             }
 
             const desiredRate = editingShift.overtime_rate;
+            // The effective rate takes into account the eligibility for 150% overtime
             const effectiveRate = (desiredRate === '150' && !is150Eligible(editingShift.day, editingShift.start_time)) ? 'regular' : desiredRate;
+            
+            // Inform user if 150% was requested but not eligible
             if (desiredRate === '150' && effectiveRate !== '150') {
               toast.error(t('overtime_150_restricted') || '150% applies only Friday after 18:00 and Saturday');
             }
+            
             const { basePayment, totalPayment } = calculatePayment(worker, editingShift.hours_worked, effectiveRate);
 
             setEditingShift({
               ...editingShift,
               worker_id: workerId,
               worker_name: worker.full_name,
-              overtime_rate: effectiveRate,
+              overtime_rate: effectiveRate, // Update to effective rate
               base_payment: basePayment,
               payment_for_shift: totalPayment
             });
@@ -365,42 +370,27 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
             const worker = workers.find(w => w.id === editingShift.worker_id);
             const desiredRate = editingShift.overtime_rate;
+            // The effective rate takes into account the eligibility for 150% overtime
             const effectiveRate = (desiredRate === '150' && !is150Eligible(editingShift.day, newStartTime)) ? 'regular' : desiredRate;
+            
+            // Inform user if 150% was requested but not eligible
             if (desiredRate === '150' && effectiveRate !== '150') {
               toast.error(t('overtime_150_restricted') || '150% applies only Friday after 18:00 and Saturday');
             }
+            
             const { basePayment, totalPayment } = calculatePayment(worker, hours, effectiveRate);
 
             setEditingShift({
               ...editingShift,
               [field]: value,
               hours_worked: hours,
-              overtime_rate: effectiveRate,
+              overtime_rate: effectiveRate, // Update to effective rate
               base_payment: basePayment,
               payment_for_shift: totalPayment
             });
           };
 
-  const handleOvertimeChange = (overtimeRate) => {
-            const worker = workers.find(w => w.id === editingShift.worker_id);
-            if (!worker) return;
-
-            // Enforce 150% only on Friday 18:00+ and Saturday
-            if (overtimeRate === '150' && !is150Eligible(editingShift.day, editingShift.start_time)) {
-              toast.error(t('overtime_150_restricted') || '150% applies only Friday after 18:00 and Saturday');
-              overtimeRate = 'regular';
-            }
-
-            const hoursWorked = editingShift.hours_worked || 0;
-            const { basePayment, totalPayment } = calculatePayment(worker, hoursWorked, overtimeRate);
-
-            setEditingShift({
-              ...editingShift,
-              overtime_rate: overtimeRate,
-              base_payment: basePayment,
-              payment_for_shift: totalPayment
-            });
-          };
+  // handleOvertimeChange function removed as it is no longer triggered by UI
 
   const checkForDoubleShift = (workerId, dayKey, currentShiftId) => {
     // Check if this worker already has a shift on the same day (in any position)
@@ -1331,33 +1321,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               )}
               {t('save_schedule')}
             </Button>
-            <Button 
-              onClick={handleDownloadJPG} 
-              variant="outline" 
-              size="sm" 
-              className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-            >
-              <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
-            </Button>
-            <Button 
-              onClick={handleDownloadJPG} 
-              variant="outline" 
-              size="sm" 
-              className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-            >
-              <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
-            </Button>
-            <Button 
-              onClick={handleDownloadJPG} 
-              variant="outline" 
-              size="sm" 
-              className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-            >
-              <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
-            </Button>
+            {/* These three Download buttons were duplicates, keeping one as per the initial code. */}
           </div>
 
           <div className={`text-sm text-gray-600 bg-blue-50 p-3 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -1633,25 +1597,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                     dir={isRTL ? 'rtl' : 'ltr'}
                   />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="overtime_rate" className={isRTL ? 'text-right block' : 'text-left block'}>
-                  {t('overtime_rate')}
-                </Label>
-                <Select
-                  value={editingShift.overtime_rate || 'regular'}
-                  onValueChange={handleOvertimeChange}
-                >
-                  <SelectTrigger id="overtime_rate" className={isRTL ? 'text-right' : 'text-left'}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="regular">{t('regular_rate')}</SelectItem>
-                    <SelectItem value="125">{t('overtime_125')}</SelectItem>
-                    <SelectItem value="150">{t('overtime_150') || 'Shabbat 150%'}</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className={`bg-blue-50 p-3 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
