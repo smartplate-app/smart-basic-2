@@ -1444,8 +1444,10 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                         style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), snapshot.isDraggingOver ? 0.25 : 0.08) }}
                                       >
                                         {shiftsForCell.length === 0 ? (
-                                          <div className={`text-xs text-gray-400 py-2 ${isRTL ? 'text-right' : 'text-center'}`} onDoubleClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)}>
-                                            {t('double_click_to_add')}
+                                          <div className={`text-xs text-gray-400 py-2 ${isRTL ? 'text-right' : 'text-center'}`}>
+                                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700" onClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)}>
+                                              {t('add')} +
+                                            </Button>
                                           </div>
                                         ) : (
                                           shiftsForCell.map((shift, idx) => (
