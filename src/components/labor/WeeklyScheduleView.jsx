@@ -1403,13 +1403,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                 <div key={rIdx} className="mb-1">
                                   {row && (
                                     <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                      <div className="text-[11px] font-semibold text-gray-600 cursor-pointer" onDoubleClick={() => {
-                                        const name = prompt(language === 'he' ? 'שם לשורה' : 'Row name', row.label || '');
-                                        if (name !== null) {
-                                          const updated = (schedule?.position_rows || []).map(rr => rr.row_id === row.row_id ? { ...rr, label: name } : rr);
-                                          setSchedule({ ...(schedule || {}), position_rows: updated });
-                                        }
-                                      }}>
+                                      <div className="text-[11px] font-semibold text-gray-600">
                                         {row.label}
                                       </div>
                                       <DropdownMenu>
