@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2 } from "lucide-react";
+import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -12,6 +12,7 @@ import NetworkErrorHandler from "../components/NetworkErrorHandler";
 
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
 import ReceiptCard from "../components/receipts/ReceiptCard";
+import ReceiptList from "../components/receipts/ReceiptList";
 
 export default function SupplyReceiptsPage() {
   const [receipts, setReceipts] = useState([]);
@@ -32,6 +33,7 @@ export default function SupplyReceiptsPage() {
   const [networkError, setNetworkError] = useState(false);
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('receipts');
+  const [viewMode, setViewMode] = useState('list');
 
   const loadData = async (userEmail, storeOwnerEmail = null, retryCount = 0) => {
     try {
@@ -221,8 +223,28 @@ export default function SupplyReceiptsPage() {
             <h1 className="text-3xl font-bold text-gray-900">{t('receipts_title')}</h1>
             <p className="text-gray-600 mt-2">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
           </div>
-          <div className="flex gap-3 flex-wrap">
-           <Button
+          <div className="flex gap-3 flex-wrap items-center">
+            <div className="flex bg-white rounded-lg shadow-sm border">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                title={t('list') || 'List'}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('grid')}
+                className={viewMode === 'grid' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                title={t('grid') || 'Grid'}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+            </div>
+            <Button
              onClick={async () => {
                // Scan for duplicate invoices across same supplier
                const map = {};
@@ -336,27 +358,35 @@ export default function SupplyReceiptsPage() {
               </Select>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <AnimatePresence>
-                {loading ? (
-                  Array(4).fill(0).map((_, i) => (
-                    <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
-                      <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-16 bg-gray-200 rounded"></div>
-                    </div>
-                  ))
-                ) : (
-                  filteredReceipts.map((receipt) => (
-                    <ReceiptCard
-                      key={receipt.id}
-                      receipt={receipt}
-                      onEdit={handleEditReceipt}
-                    />
-                  ))
-                )}
-              </AnimatePresence>
-            </div>
+            {viewMode === 'list' ? (
+              <ReceiptList
+                receipts={filteredReceipts}
+                onEdit={handleEditReceipt}
+                loading={loading}
+              />
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2">
+                <AnimatePresence>
+                  {loading ? (
+                    Array(4).fill(0).map((_, i) => (
+                      <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
+                        <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-16 bg-gray-200 rounded"></div>
+                      </div>
+                    ))
+                  ) : (
+                    filteredReceipts.map((receipt) => (
+                      <ReceiptCard
+                        key={receipt.id}
+                        receipt={receipt}
+                        onEdit={handleEditReceipt}
+                      />
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {!loading && filteredReceipts.length === 0 && (
               <div className="text-center py-12">
