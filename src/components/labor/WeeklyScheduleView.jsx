@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, GripVertical, Download } from "lucide-react";
+import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, GripVertical, Download, Plus, MoreHorizontal, Clock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
