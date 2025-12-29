@@ -367,11 +367,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             // The effective rate takes into account the eligibility for 150% overtime
             const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
             
-            // Inform user if 150% was requested but not eligible
-            if (desiredRate === '150' && effectiveRate !== '150') {
-              toast.error(t('overtime_150_restricted') || '150% applies only Friday after 18:00 and Saturday');
-            }
-            
             const { basePayment, totalPayment } = calculatePayment(worker, hours, effectiveRate);
 
             setEditingShift({
