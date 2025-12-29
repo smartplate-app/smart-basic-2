@@ -343,7 +343,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
             const desiredRate = editingShift.overtime_rate;
             // The effective rate takes into account the eligibility for 150% overtime
-            const effectiveRate = (desiredRate === '150' && !is150Eligible(editingShift.day, editingShift.start_time)) ? 'regular' : desiredRate;
+            const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
             
             // Inform user if 150% was requested but not eligible
             if (desiredRate === '150' && effectiveRate !== '150') {
