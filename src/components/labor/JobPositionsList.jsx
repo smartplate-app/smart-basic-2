@@ -12,7 +12,7 @@ import { useLanguage } from "../LanguageProvider";
 export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('list');
   const [formData, setFormData] = useState({
     name: "",
     description: "",

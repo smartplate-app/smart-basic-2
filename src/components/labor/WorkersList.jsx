@@ -14,7 +14,7 @@ import WorkerRateHistory from "./WorkerRateHistory";
 export default function WorkersList({ workers, positions, onAdd, onUpdate, onDelete }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('list');
   const { t, language } = useLanguage();
 
   const [showBankTransfer, setShowBankTransfer] = useState(null);
