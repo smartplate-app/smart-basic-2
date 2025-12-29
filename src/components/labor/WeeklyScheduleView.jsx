@@ -1011,28 +1011,33 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const from = srcIndices[source.index];
 
     const newShifts = [...list];
-    const [movedShift] = newShifts.splice(from, 1);
-    if (!movedShift) return;
+    const movedOriginal = newShifts[from];
+    if (!movedOriginal) return;
+    // Remove first to calculate destination indices on the updated array
+    newShifts.splice(from, 1);
 
-    // Update props if moved to a different cell
+    // Create an immutable copy and update if destination cell differs
+    let updated = { ...movedOriginal };
     if (src.day !== dst.day || src.positionId !== dst.positionId || src.rowId !== dst.rowId) {
       const destDateStr = moment(weekStartDate).day(days.findIndex(d => d.key === dst.day)).format('YYYY-MM-DD');
       const destPosition = positions.find(p => p.id === dst.positionId);
-      movedShift.day = dst.day;
-      movedShift.date = destDateStr;
-      movedShift.job_position_id = dst.positionId;
-      movedShift.job_position = destPosition?.name || movedShift.job_position;
-      movedShift.position_row_id = dst.rowId;
+      updated = {
+        ...updated,
+        day: dst.day,
+        date: destDateStr,
+        job_position_id: dst.positionId,
+        job_position: destPosition?.name || updated.job_position,
+        position_row_id: dst.rowId
+      };
     }
 
     const destIndices = newShifts.map((s, i) => ({ s, i })).filter(({ s }) => matchCell(s, dst)).map(({ i }) => i);
     let to = destIndices[destination.index];
     if (typeof to !== 'number') {
-      // Append to end of destination cell
       to = destIndices.length > 0 ? destIndices[destIndices.length - 1] + 1 : newShifts.length;
     }
     if (to > newShifts.length) to = newShifts.length;
-    newShifts.splice(to, 0, movedShift);
+    newShifts.splice(to, 0, updated);
 
     setSchedule({ ...schedule, shifts: newShifts });
     toast.success(language === 'he' ? 'המשמרת הועברה בהצלחה' : 'Shift moved successfully');
@@ -1462,8 +1467,12 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                                 <div
                                                   ref={provided.innerRef}
                                                   {...provided.draggableProps}
-                                                  className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
-                                                  style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}
+                                                  className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'} ${snapshot.isDragging ? 'will-change-transform' : ''}`}
+                                                  style={{
+                                                    ...provided.draggableProps.style,
+                                                    backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2),
+                                                    borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5)
+                                                  }}
                                                   onClick={() => { setEditingShift(shift); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
                                                   data-drag-id={getShiftDraggableId(shift)}
                                                 >
