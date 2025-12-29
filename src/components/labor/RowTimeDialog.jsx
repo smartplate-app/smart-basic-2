@@ -12,6 +12,22 @@ export default function RowTimeDialog({ open, onClose, initial, onApply, isRTL, 
 
   const t = (he, en) => (language === 'he' ? he : en);
 
+  // Localized day names
+  const daysLocalized = [
+    { key: 'sunday', he: 'ראשון', ar: 'الأحد', en: 'Sunday' },
+    { key: 'monday', he: 'שני', ar: 'الاثنين', en: 'Monday' },
+    { key: 'tuesday', he: 'שלישי', ar: 'الثلاثاء', en: 'Tuesday' },
+    { key: 'wednesday', he: 'רביעי', ar: 'الأربعاء', en: 'Wednesday' },
+    { key: 'thursday', he: 'חמישי', ar: 'الخميس', en: 'Thursday' },
+    { key: 'friday', he: 'שישי', ar: 'الجمعة', en: 'Friday' },
+    { key: 'saturday', he: 'שבת', ar: 'السبت', en: 'Saturday' }
+  ];
+  const dayName = (key) => {
+    const m = daysLocalized.find((d) => d.key === key);
+    if (!m) return key;
+    return language === 'he' ? m.he : (language === 'ar' ? m.ar : m.en);
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -50,8 +66,8 @@ export default function RowTimeDialog({ open, onClose, initial, onApply, isRTL, 
                   <Select value={cfg.dayFrom} onValueChange={(v) => setCfg({ ...cfg, dayFrom: v })}>
                     <SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].map(d => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      {daysLocalized.map(d => (
+                        <SelectItem key={d.key} value={d.key}>{dayName(d.key)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -61,8 +77,8 @@ export default function RowTimeDialog({ open, onClose, initial, onApply, isRTL, 
                   <Select value={cfg.dayTo} onValueChange={(v) => setCfg({ ...cfg, dayTo: v })}>
                     <SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].map(d => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      {daysLocalized.map(d => (
+                        <SelectItem key={d.key} value={d.key}>{dayName(d.key)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
