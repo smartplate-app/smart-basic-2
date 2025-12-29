@@ -1462,13 +1462,12 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                                 <div
                                                   ref={provided.innerRef}
                                                   {...provided.draggableProps}
-                                                  {...provided.dragHandleProps}
                                                   className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
                                                   style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}
                                                   onClick={() => { setEditingShift(shift); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
                                                   data-drag-id={getShiftDraggableId(shift)}
                                                 >
-                                                  <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                                                  <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity`} {...provided.dragHandleProps}>
                                                     <GripVertical className="h-4 w-4" />
                                                   </div>
                                                   <div className={`font-extrabold text-[16px] ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
@@ -1479,9 +1478,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                                   {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
                                                     <Badge variant="secondary" className={`mt-1 ${isRTL ? 'mr-5' : 'ml-5'}`}>{shift.overtime_rate === '125' ? '125%' : (shift.overtime_rate === '150' ? '150%' : '')}</Badge>
                                                   )}
-                                                  <Button variant="ghost" size="icon" className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 bg-white hover:bg-red-50`} onClick={(e) => handleQuickDelete(shift, e)} title={t('delete')}>
-                                                    <Trash2 className="h-3 w-3 text-red-600" />
-                                                  </Button>
+
                                                 </div>
                                               )}
                                             </Draggable>
