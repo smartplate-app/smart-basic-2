@@ -22,6 +22,7 @@ import moment from "moment";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
+import RowTimeDialog from "./RowTimeDialog";
 
 // Set week to start on Sunday (Israel standard)
 moment.updateLocale('en', {
@@ -69,6 +70,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [positionOrder, setPositionOrder] = useState([]);
   const scheduleTableRef = useRef(null);
   const [showWorkerSidebar, setShowWorkerSidebar] = useState(true);
+  const [showRowTimeDialog, setShowRowTimeDialog] = useState(false);
+  const [editingRow, setEditingRow] = useState(null);
+  const [rowTime, setRowTime] = useState({ start: "", end: "", mode: "all", dayFrom: "sunday", dayTo: "saturday" });
 
   const days = [
     { key: 'sunday', label: t('sunday') },
@@ -292,12 +296,20 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     toast.success(t('template_loaded_successfully'));
   };
 
-  const handleCellDoubleClick = (dayKey, dateStr, positionId) => {
+  const handleCellDoubleClick = (dayKey, dateStr, positionId, rowId) => {
     const position = positions.find(p => p.id === positionId);
-    const defaultStartTime = position?.default_start_time || "09:00";
-    const defaultEndTime = position?.default_end_time || "17:00";
+    let defaultStartTime = position?.default_start_time || "09:00";
+      let defaultEndTime = position?.default_end_time || "17:00";
+      if (rowId) {
+        const row = (schedule?.position_rows || []).find(r => r.row_id === rowId);
+        const perDay = row?.per_day_times?.[dayKey];
+        if (perDay?.start) defaultStartTime = perDay.start;
+        if (perDay?.end) defaultEndTime = perDay.end;
+        if (!perDay && row?.default_start_time) defaultStartTime = row.default_start_time;
+        if (!perDay && row?.default_end_time) defaultEndTime = row.default_end_time;
+      }
     
-    setSelectedCell({ day: dayKey, date: dateStr, positionId: positionId });
+    setSelectedCell({ day: dayKey, date: dateStr, positionId: positionId, rowId });
     setEditingShift({
       day: dayKey,
       date: dateStr,
@@ -443,7 +455,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       job_position: position.name,
       date: selectedCell.date,
       day: selectedCell.day,
-      id: editingShift.id || undefined 
+      id: editingShift.id || undefined,
+      position_row_id: selectedCell?.rowId || editingShift.position_row_id 
     };
 
     let updatedShifts;
@@ -919,6 +932,36 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       : `Shifts from ${days.find(d => d.key === sourceDayKey).label} copied to all week`);
   };
 
+  // Position rows helpers
+  const getRowsForPosition = (positionId) => (schedule?.position_rows || []).filter(r => r.position_id === positionId);
+  const addPositionRow = (positionId, label) => {
+    const row = { row_id: `${positionId}-${Date.now()}`, position_id: positionId, label: label || (language === 'he' ? 'שורה חדשה' : 'New row'), default_start_time: '', default_end_time: '', per_day_times: {} };
+    const next = { ...(schedule || {}), position_rows: [...(schedule?.position_rows || []), row] };
+    setSchedule(next);
+  };
+  const openRowTimeDialog = (row) => { setEditingRow(row); setRowTime({ start: row.default_start_time || '', end: row.default_end_time || '', mode: 'all', dayFrom: 'sunday', dayTo: 'saturday' }); setShowRowTimeDialog(true); };
+  const applyRowTimes = (cfg) => {
+    const daysOrder = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const updated = (schedule?.position_rows || []).map(r => {
+      if (!editingRow || r.row_id !== editingRow.row_id) return r;
+      const next = { ...r };
+      if (cfg.mode === 'all') {
+        next.default_start_time = cfg.start;
+        next.default_end_time = cfg.end;
+        next.per_day_times = {};
+        daysOrder.forEach(d => { next.per_day_times[d] = { start: cfg.start, end: cfg.end }; });
+      } else {
+        next.per_day_times = next.per_day_times || {};
+        const fromIdx = daysOrder.indexOf(cfg.dayFrom);
+        const toIdx = daysOrder.indexOf(cfg.dayTo);
+        const [a,b] = fromIdx <= toIdx ? [fromIdx, toIdx] : [toIdx, fromIdx];
+        daysOrder.slice(a, b+1).forEach(d => { next.per_day_times[d] = { start: cfg.start, end: cfg.end }; });
+      }
+      return next;
+    });
+    setSchedule({ ...(schedule || {}), position_rows: updated });
+  };
+
   const handleDragEnd = (result) => {
     const { source, destination, draggableId, type } = result;
 
@@ -939,9 +982,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     }
 
     // Handle shift reordering (existing logic)
-    // Parse the droppable IDs to get day and position
-    const [sourceDay, sourcePositionId] = source.droppableId.split('|');
-    const [destDay, destPositionId] = destination.droppableId.split('|');
+    // Parse droppable IDs: day|positionId|rowId(optional)
+    const src = source.droppableId.split('|');
+    const dst = destination.droppableId.split('|');
+    const sourceDay = src[0];
+    const sourcePositionId = src[1];
+    const sourceRowId = src[2] && src[2] !== 'default' ? src[2] : undefined;
+    const destDay = dst[0];
+    const destPositionId = dst[1];
+    const destRowId = dst[2] && dst[2] !== 'default' ? dst[2] : undefined;
 
     // Find the shift being moved
     const shiftsInSourceCell = (schedule?.shifts || []).filter(
@@ -962,6 +1011,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       date: destDateStr,
       job_position_id: destPositionId,
       job_position: destPosition?.name || movedShift.job_position,
+      position_row_id: destRowId,
       id: movedShift.id // Keep the original ID if it exists
     };
 
@@ -1361,86 +1411,96 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                       </div>
                                       <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: position.color || '#1E88E5' }} />
 <span className={`text-[20px] font-extrabold ${['text-blue-800','text-gray-800'][posIndex % 2]}`}>{position.name}</span>
+                                      <Button size="icon" variant="ghost" className="h-7 w-7" title={language === 'he' ? 'הוסף שורת תפקיד' : 'Add position row'} onClick={() => addPositionRow(position.id)}>
+                                        <Plus className="h-4 w-4" />
+                                      </Button>
                                     </div>
                                   </td>
                       {days.map(day => {
                         const dateStr = moment(weekStartDate).day(days.indexOf(day)).format('YYYY-MM-DD');
-                        const droppableId = `${day.key}|${position.id}`;
-                        const shiftsForCell = schedule?.shifts?.filter(
-                          s => s.day === day.key && s.job_position_id === position.id
-                        ) || [];
+                        const positionRows = (schedule?.position_rows || []).filter(r => r.position_id === position.id);
 
                         return (
                           <td
                             key={`${day.key}-${position.id}`}
                             className={`border p-1 ${isRTL ? 'text-right' : 'text-left'}`}
-                            onDoubleClick={() => handleCellDoubleClick(day.key, dateStr, position.id)}
                           >
-                            <Droppable droppableId={droppableId} type="SHIFT">
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.droppableProps}
-                                  className={`space-y-1 min-h-[60px] rounded transition-colors`}
-                                  style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), snapshot.isDraggingOver ? 0.25 : 0.08) }}
-                                  >
-                                  {shiftsForCell.length === 0 ? (
-                                    <div className={`text-xs text-gray-400 py-2 ${isRTL ? 'text-right' : 'text-center'}`}>
-                                      {t('double_click_to_add')}
+                            {[null, ...positionRows].map((row, rIdx) => {
+                              const rowId = row?.row_id;
+                              const droppableId = `${day.key}|${position.id}|${rowId || 'default'}`;
+                              const shiftsForCell = (schedule?.shifts || []).filter(s => s.day === day.key && s.job_position_id === position.id && ((rowId && s.position_row_id === rowId) || (!rowId && !s.position_row_id)));
+                              return (
+                                <div key={rIdx} className="mb-1">
+                                  {row && (
+                                    <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                      <div className="text-[11px] font-semibold text-gray-600 cursor-pointer" onDoubleClick={() => {
+                                        const name = prompt(language === 'he' ? 'שם לשורה' : 'Row name', row.label || '');
+                                        if (name !== null) {
+                                          const updated = (schedule?.position_rows || []).map(rr => rr.row_id === row.row_id ? { ...rr, label: name } : rr);
+                                          setSchedule({ ...(schedule || {}), position_rows: updated });
+                                        }
+                                      }}>
+                                        {row.label}
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openRowTimeDialog(row)} title={language === 'he' ? 'עריכת שעות לשורה' : 'Edit row hours'}>
+                                          <Clock className="h-3 w-3" />
+                                        </Button>
+                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)} title={language === 'he' ? 'הוסף משמרת' : 'Add shift'}>
+                                          <Plus className="h-3 w-3" />
+                                        </Button>
+                                      </div>
                                     </div>
-                                  ) : (
-                                    shiftsForCell.map((shift, idx) => (
-                                      <Draggable
-                                        key={shift.id || `${shift.day}-${shift.worker_id}-${shift.start_time}-${idx}`}
-                                        draggableId={shift.id || `${shift.day}-${shift.worker_id}-${shift.start_time}-${idx}`}
-                                        index={idx}
-                                      >
-                                        {(provided, snapshot) => (
-                                          <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
-                                              style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}
-                                                onClick={() => {
-                                              setEditingShift(shift);
-                                              setSelectedCell({ day: day.key, date: dateStr, positionId: position.id });
-                                              setShowShiftDialog(true);
-                                            }}
-                                          >
-                                            <div 
-                                              {...provided.dragHandleProps}
-                                              className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600`}
-                                            >
-                                              <GripVertical className="h-4 w-4" />
-                                            </div>
-                                            <div className={`font-extrabold text-[16px] ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
-                                            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse pr-5' : 'pl-5'}`}>
-                                              <span className="text-[11px]">{shift.start_time}-{shift.end_time}</span>
-                                              <span className="shift-cost">{formatCurrency(shift.payment_for_shift || 0)}</span>
-                                            </div>
-                                            {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
-                                              <Badge variant="secondary" className={`mt-1 ${isRTL ? 'mr-5' : 'ml-5'}`}>
-                                                {shift.overtime_rate === '125' ? '125%' : (shift.overtime_rate === '150' ? '150%' : '')}
-                                              </Badge>
-                                            )}
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 bg-white hover:bg-red-50`}
-                                              onClick={(e) => handleQuickDelete(shift, e)}
-                                              title={t('delete')}
-                                            >
-                                              <Trash2 className="h-3 w-3 text-red-600" />
-                                            </Button>
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ))
                                   )}
-                                  {provided.placeholder}
+                                  <Droppable droppableId={droppableId} type="SHIFT">
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        className={`space-y-1 rounded transition-colors min-h-[40px]`}
+                                        style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), snapshot.isDraggingOver ? 0.25 : 0.08) }}
+                                      >
+                                        {shiftsForCell.length === 0 ? (
+                                          <div className={`text-xs text-gray-400 py-2 ${isRTL ? 'text-right' : 'text-center'}`} onDoubleClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)}>
+                                            {t('double_click_to_add')}
+                                          </div>
+                                        ) : (
+                                          shiftsForCell.map((shift, idx) => (
+                                            <Draggable key={shift.id || `${shift.day}-${shift.worker_id}-${shift.start_time}-${idx}`} draggableId={shift.id || `${shift.day}-${shift.worker_id}-${shift.start_time}-${idx}`} index={idx}>
+                                              {(provided, snapshot) => (
+                                                <div
+                                                  ref={provided.innerRef}
+                                                  {...provided.draggableProps}
+                                                  className={`p-2 rounded border text-xs cursor-pointer group relative ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'}`}
+                                                  style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2), borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5) }}
+                                                  onClick={() => { setEditingShift(shift); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
+                                                >
+                                                  <div {...provided.dragHandleProps} className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600`}>
+                                                    <GripVertical className="h-4 w-4" />
+                                                  </div>
+                                                  <div className={`font-extrabold text-[16px] ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
+                                                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse pr-5' : 'pl-5'}`}>
+                                                    <span className="text-[11px]">{shift.start_time}-{shift.end_time}</span>
+                                                    <span className="shift-cost">{formatCurrency(shift.payment_for_shift || 0)}</span>
+                                                  </div>
+                                                  {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
+                                                    <Badge variant="secondary" className={`mt-1 ${isRTL ? 'mr-5' : 'ml-5'}`}>{shift.overtime_rate === '125' ? '125%' : (shift.overtime_rate === '150' ? '150%' : '')}</Badge>
+                                                  )}
+                                                  <Button variant="ghost" size="icon" className={`absolute top-1 ${isRTL ? 'left-1' : 'right-1'} h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 bg-white hover:bg-red-50`} onClick={(e) => handleQuickDelete(shift, e)} title={t('delete')}>
+                                                    <Trash2 className="h-3 w-3 text-red-600" />
+                                                  </Button>
+                                                </div>
+                                              )}
+                                            </Draggable>
+                                          ))
+                                        )}
+                                        {provided.placeholder}
+                                      </div>
+                                    )}
+                                  </Droppable>
                                 </div>
-                              )}
-                            </Droppable>
+                              );
+                            })}
                           </td>
                         );
                       })}
@@ -1687,6 +1747,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <RowTimeDialog
+        open={showRowTimeDialog}
+        onClose={() => setShowRowTimeDialog(false)}
+        initial={rowTime}
+        onApply={(cfg) => { setShowRowTimeDialog(false); applyRowTimes(cfg); }}
+        isRTL={isRTL}
+        language={language}
+      />
 
       {/* Template Dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
