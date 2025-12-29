@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -371,7 +370,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             const worker = workers.find(w => w.id === editingShift.worker_id);
             const desiredRate = editingShift.overtime_rate;
             // The effective rate takes into account the eligibility for 150% overtime
-            const effectiveRate = (desiredRate === '150' && !is150Eligible(editingShift.day, newStartTime)) ? 'regular' : desiredRate;
+            const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
             
             // Inform user if 150% was requested but not eligible
             if (desiredRate === '150' && effectiveRate !== '150') {
