@@ -64,6 +64,11 @@ export default function ReceiptList({ receipts = [], onEdit, loading = false }) 
                     {(t('items') || 'Items')}: {r.verified_items.length}
                   </div>
                 )}
+                {r.notes && (
+                  <div className="text-xs text-amber-700 mt-0.5 truncate max-w-[220px]">
+                    {(t('notes') || 'Notes')}: {r.notes}
+                  </div>
+                )}
               </div>
 
               {/* Order and invoice numbers */}
