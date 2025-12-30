@@ -34,14 +34,15 @@ const AppLayout = ({ children, currentPageName }) => {
     setShowDesktopSidebar(true);
   }, []);
 
-  // Vanity path: map /welcome -> hash-based Welcome preview (incognito-safe)
+  // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
   useEffect(() => {
     const path = location.pathname.toLowerCase();
-    // If already on hash Welcome page, do nothing
-    if (window.location.hash && window.location.hash.startsWith('#/pages/Welcome')) return;
+    if (window.location.hash && window.location.hash.startsWith('#/pages/WelcomePublic')) return;
     if (path === '/welcome') {
-      const target = '/#/pages/Welcome?preview=1';
-      window.location.replace(target);
+      const target = '/#/pages/WelcomePublic';
+      if (window.location.href.indexOf(target) === -1) {
+        window.location.replace(target);
+      }
     }
   }, [location.pathname]);
 
@@ -90,7 +91,7 @@ const AppLayout = ({ children, currentPageName }) => {
   { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
   { title: language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard', url: createPageUrl("AdminDashboard"), icon: Shield, adminOnly: true, workerHidden: true },
   { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true },
-  { title: language === 'he' ? 'תצוגת ברוך הבא (אינקוגניטו)' : 'Welcome Incognito', url: createPageUrl("WelcomeIncognito"), icon: Shield, adminOnly: true, workerHidden: true },
+  { title: language === 'he' ? 'תצוגת ברוך הבא (אינקוגניטו)' : 'Welcome Incognito', url: createPageUrl("WelcomePublic"), icon: Shield, adminOnly: true, workerHidden: true },
   { title: language === 'he' ? 'בודק קישורים' : 'Link Checker', url: createPageUrl("LinkChecker"), icon: Shield, adminOnly: true, workerHidden: true },
   { title: language === 'he' ? 'דף ברוך הבא (תצוגה)' : 'Welcome (Preview)', url: createPageUrl("Welcome"), icon: Shield, adminOnly: true, workerHidden: true }
   ];
@@ -406,7 +407,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite' || currentPageName === 'Welcome') {
+  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite' || currentPageName === 'Welcome' || currentPageName === 'WelcomePublic') {
         return <>{children}</>;
       }
 

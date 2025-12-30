@@ -31,6 +31,7 @@ import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
 import LinkChecker from './pages/LinkChecker';
 import WelcomeIncognito from './pages/WelcomeIncognito';
+import WelcomePublic from './pages/WelcomePublic';
 import __Layout from './Layout.jsx';
 
 
@@ -68,6 +69,7 @@ export const PAGES = {
     "WorkerSchedule": WorkerSchedule,
     "LinkChecker": LinkChecker,
     "WelcomeIncognito": WelcomeIncognito,
+    "WelcomePublic": WelcomePublic,
 }
 
 export const pagesConfig = {
