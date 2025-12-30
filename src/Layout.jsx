@@ -37,11 +37,11 @@ const AppLayout = ({ children, currentPageName }) => {
   // Vanity path: map /welcome -> hash-based Welcome preview (incognito-safe)
   useEffect(() => {
     const path = location.pathname.toLowerCase();
+    // If already on hash Welcome page, do nothing
+    if (window.location.hash && window.location.hash.startsWith('#/pages/Welcome')) return;
     if (path === '/welcome') {
       const target = '/#/pages/Welcome?preview=1';
-      if (!window.location.href.endsWith(target)) {
-        window.location.replace(target);
-      }
+      window.location.replace(target);
     }
   }, [location.pathname]);
 
@@ -257,10 +257,13 @@ const AppLayout = ({ children, currentPageName }) => {
                   }
 
                   const currentPath = location.pathname;
-                                          if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-                                            console.log("[Layout] Redirecting to Weekly Schedule (LaborCost) page");
-                                            window.location.href = createPageUrl("LaborCost");
-                                          }
+                  // Respect hash-based page targets (e.g., /#/pages/Welcome) to avoid override loops
+                  if (window.location.hash && window.location.hash.startsWith('#/pages/Welcome')) {
+                    // do not override Welcome preview
+                  } else if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
+                    console.log("[Layout] Redirecting to Weekly Schedule (LaborCost) page");
+                    window.location.href = createPageUrl("LaborCost");
+                  }
       
       setAuthLoading(false);
     } catch (err) {
