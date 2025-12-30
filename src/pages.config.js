@@ -7,6 +7,7 @@ import InviteUser from './pages/InviteUser';
 import Items from './pages/Items';
 import JoinRestaurant from './pages/JoinRestaurant';
 import LaborCost from './pages/LaborCost';
+import LinkChecker from './pages/LinkChecker';
 import MonthlyCount from './pages/MonthlyCount';
 import OrderDetails from './pages/OrderDetails';
 import Orders from './pages/Orders';
@@ -27,11 +28,10 @@ import UserProfile from './pages/UserProfile';
 import Users from './pages/Users';
 import Warehouses from './pages/Warehouses';
 import Welcome from './pages/Welcome';
-import WorkerPortal from './pages/WorkerPortal';
-import WorkerSchedule from './pages/WorkerSchedule';
-import LinkChecker from './pages/LinkChecker';
 import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
+import WorkerPortal from './pages/WorkerPortal';
+import WorkerSchedule from './pages/WorkerSchedule';
 import __Layout from './Layout.jsx';
 
 
@@ -45,6 +45,7 @@ export const PAGES = {
     "Items": Items,
     "JoinRestaurant": JoinRestaurant,
     "LaborCost": LaborCost,
+    "LinkChecker": LinkChecker,
     "MonthlyCount": MonthlyCount,
     "OrderDetails": OrderDetails,
     "Orders": Orders,
@@ -65,15 +66,14 @@ export const PAGES = {
     "Users": Users,
     "Warehouses": Warehouses,
     "Welcome": Welcome,
-    "WorkerPortal": WorkerPortal,
-    "WorkerSchedule": WorkerSchedule,
-    "LinkChecker": LinkChecker,
     "WelcomeIncognito": WelcomeIncognito,
     "WelcomePublic": WelcomePublic,
+    "WorkerPortal": WorkerPortal,
+    "WorkerSchedule": WorkerSchedule,
 }
 
 export const pagesConfig = {
-    mainPage: "Orders",
+    mainPage: "WelcomePublic",
     Pages: PAGES,
     Layout: __Layout,
 };
