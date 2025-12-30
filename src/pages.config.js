@@ -29,6 +29,7 @@ import Warehouses from './pages/Warehouses';
 import Welcome from './pages/Welcome';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
+import LinkChecker from './pages/LinkChecker';
 import __Layout from './Layout.jsx';
 
 
@@ -64,6 +65,7 @@ export const PAGES = {
     "Welcome": Welcome,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
+    "LinkChecker": LinkChecker,
 }
 
 export const pagesConfig = {
