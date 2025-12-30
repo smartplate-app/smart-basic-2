@@ -34,11 +34,26 @@ const AppLayout = ({ children, currentPageName }) => {
     setShowDesktopSidebar(true);
   }, []);
 
+  // Vanity path: map /welcome -> hash-based Welcome preview (incognito-safe)
+  useEffect(() => {
+    const path = location.pathname.toLowerCase();
+    if (path === '/welcome') {
+      const target = '/#/pages/Welcome?preview=1';
+      if (!window.location.href.endsWith(target)) {
+        window.location.replace(target);
+      }
+    }
+  }, [location.pathname]);
+
   // Redirect unauthenticated visitors at root to the public Welcome page (preserve ?preview=1)
+  // Do not override when a hash-based page is already specified
   useEffect(() => {
     const currentPath = location.pathname;
     const params = new URLSearchParams(window.location.search);
     const preview = params.get('preview');
+    if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
+      return; // respect hash router target to avoid loops
+    }
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
       base44.auth.isAuthenticated().then((auth) => {
         if (!auth) {
