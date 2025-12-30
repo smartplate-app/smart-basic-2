@@ -17,6 +17,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [driveAuthorized, setDriveAuthorized] = useState(null);
   const [showDriveConfirm, setShowDriveConfirm] = useState(false);
   const [driveAccount, setDriveAccount] = useState(null);
+  const [targetPath, setTargetPath] = useState('');
 
   const supplierById = useMemo(() => {
     const map = {};
@@ -83,6 +84,9 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                       const { data } = await base44.functions.invoke('driveWhoAmI', {});
                       setDriveAccount(data?.user || null);
                     } catch {}
+                    let me = null;
+                    try { me = await base44.auth.me(); } catch {}
+                    setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
 
                     // Show confirmation dialog before uploading
                     setShowDriveConfirm(true);
@@ -180,12 +184,17 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
       <Dialog open={showDriveConfirm} onOpenChange={setShowDriveConfirm}>
         <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle>{t('confirm_upload') || 'Confirm upload'}</DialogTitle>
+            <DialogTitle>{(t('confirm_upload') && t('confirm_upload') !== 'confirm_upload') ? t('confirm_upload') : 'Confirm upload'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm">
-            <div>{t('drive_upload_account') || 'Files will be uploaded to this Google Drive account:'}</div>
-            <div className="font-medium">{driveAccount?.emailAddress || driveAccount?.displayName || (t('google_drive') || 'Google Drive')}</div>
-            <div className="text-gray-500">{t('change_drive_hint') || 'If this is not your account, cancel and connect the correct Google account using the Check Drive button.'}</div>
+            <div>{(t('drive_upload_account') && t('drive_upload_account') !== 'drive_upload_account') ? t('drive_upload_account') : "Files will be uploaded using the app owner’s Google Drive account:"}</div>
+            <div className="font-medium">{driveAccount?.emailAddress || driveAccount?.displayName || ((t('google_drive') && t('google_drive') !== 'google_drive') ? t('google_drive') : 'Google Drive')}</div>
+            <div className="text-gray-500">
+              { (t('drive_target_folder') && t('drive_target_folder') !== 'drive_target_folder') ? t('drive_target_folder') : 'Target folder:' } {targetPath || 'SmartPlateUploads/<your email>/Invoices-<month>'}
+            </div>
+            <div className="text-gray-500">
+              { (t('drive_app_connector_note') && t('drive_app_connector_note') !== 'drive_app_connector_note') ? t('drive_app_connector_note') : 'Note: For security, files upload to the app owner’s Drive and are organized under your personal folder.'}
+            </div>
           </div>
           <div className="flex gap-2 justify-end mt-4">
             <Button variant="outline" onClick={() => setShowDriveConfirm(false)}>{t('cancel') || 'Cancel'}</Button>

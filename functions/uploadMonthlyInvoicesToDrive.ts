@@ -129,8 +129,12 @@ Deno.serve(async (req) => {
     // Acquire Google Drive access token for this app/user
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('googledrive');
 
+    const me = user; // current logged-in user
+    const root = await findOrCreateFolder(accessToken, 'SmartPlateUploads', null);
+    const userFolderName = sanitizeName(me?.email || 'unknown-user');
+    const userFolder = await findOrCreateFolder(accessToken, userFolderName, root.id);
     const parentFolderName = `Invoices-${month}`;
-    const parent = await findOrCreateFolder(accessToken, parentFolderName, null);
+    const parent = await findOrCreateFolder(accessToken, parentFolderName, userFolder.id);
 
     // Build supplier groups from provided receipts
     const groups = {};
