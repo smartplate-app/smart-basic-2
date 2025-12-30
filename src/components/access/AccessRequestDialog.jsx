@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
+import { useLanguage } from '../LanguageProvider';
 
 export default function AccessRequestDialog({ open, onOpenChange, onSubmitted }) {
   const [fullName, setFullName] = React.useState('');
@@ -13,6 +14,8 @@ export default function AccessRequestDialog({ open, onOpenChange, onSubmitted })
   const [message, setMessage] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
+  const { language } = useLanguage();
+  const isHe = language === 'he';
 
   React.useEffect(() => {
     if (!open) return;
@@ -30,8 +33,8 @@ export default function AccessRequestDialog({ open, onOpenChange, onSubmitted })
 
   const submit = async () => {
     if (!fullName || !email) {
-      alert('Please fill in your name and email');
-      return;
+    alert(isHe ? 'נא למלא שם מלא ואימייל' : 'Please fill in your name and email');
+    return;
     }
     setLoading(true);
     try {
@@ -47,10 +50,10 @@ export default function AccessRequestDialog({ open, onOpenChange, onSubmitted })
         setSuccess(true);
         onSubmitted && onSubmitted();
       } else {
-        alert(data?.error || 'Failed to submit request');
+        alert(data?.error || (isHe ? 'שליחת הבקשה נכשלה' : 'Failed to submit request'));
       }
     } catch (e) {
-      alert(e?.message || 'Failed to submit request');
+      alert(e?.message || (isHe ? 'שליחת הבקשה נכשלה' : 'Failed to submit request'));
     } finally {
       setLoading(false);
     }
@@ -60,34 +63,34 @@ export default function AccessRequestDialog({ open, onOpenChange, onSubmitted })
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Request access</DialogTitle>
-          <DialogDescription>Tell us who you are and we will enable access ASAP.</DialogDescription>
+          <DialogTitle>{isHe ? 'בקשת גישה' : 'Request access'}</DialogTitle>
+          <DialogDescription>{isHe ? 'ספרו לנו מי אתם ונאפשר גישה בהקדם.' : 'Tell us who you are and we will enable access ASAP.'}</DialogDescription>
         </DialogHeader>
 
         {success ? (
           <div className="p-4 bg-green-50 border border-green-200 rounded-md text-green-800">
-            Thanks! Your request was sent. We'll be in touch shortly.
+            {isHe ? 'תודה! הבקשה נשלחה. נחזור אליך בקרוב.' : "Thanks! Your request was sent. We'll be in touch shortly."}
           </div>
         ) : (
           <div className="grid gap-3">
             <div>
-              <Label>Your name</Label>
+              <Label>{isHe ? 'שם מלא' : 'Your name'}</Label>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" />
             </div>
             <div>
-              <Label>Email</Label>
+              <Label>{isHe ? 'אימייל' : 'Email'}</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
             </div>
             <div>
-              <Label>Phone (optional)</Label>
+              <Label>{isHe ? 'טלפון (לא חובה)' : 'Phone (optional)'}</Label>
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+972..." />
             </div>
             <div>
-              <Label>Business name (optional)</Label>
+              <Label>{isHe ? 'שם עסק (לא חובה)' : 'Business name (optional)'}</Label>
               <Input value={business} onChange={(e) => setBusiness(e.target.value)} placeholder="Restaurant / Business" />
             </div>
             <div>
-              <Label>Anything we should know? (optional)</Label>
+              <Label>{isHe ? 'האם יש משהו שכדאי שנדע? (לא חובה)' : 'Anything we should know? (optional)'}</Label>
               <Input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Notes" />
             </div>
           </div>
@@ -96,10 +99,10 @@ export default function AccessRequestDialog({ open, onOpenChange, onSubmitted })
         <DialogFooter>
           {!success ? (
             <Button onClick={submit} disabled={loading} className="bg-gray-900 hover:bg-gray-800">
-              {loading ? 'Sending...' : 'Request access'}
+              {loading ? (isHe ? 'שולח...' : 'Sending...') : (isHe ? 'שלח בקשה' : 'Request access')}
             </Button>
           ) : (
-            <Button onClick={() => onOpenChange(false)} className="bg-gray-900 hover:bg-gray-800">Close</Button>
+            <Button onClick={() => onOpenChange(false)} className="bg-gray-900 hover:bg-gray-800">{isHe ? 'סגור' : 'Close'}</Button>
           )}
         </DialogFooter>
       </DialogContent>
