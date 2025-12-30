@@ -274,9 +274,9 @@ const AppLayout = ({ children, currentPageName }) => {
                   }
 
                   const currentPath = location.pathname;
-                  // Respect hash-based page targets (e.g., /#/pages/Welcome) to avoid override loops
-                  if (window.location.hash && window.location.hash.startsWith('#/pages/Welcome')) {
-                    // do not override Welcome preview
+                  // Respect hash-based page targets (Welcome/WelcomePublic); also never redirect in incognito
+                  if (isIncognito || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')))) {
+                    // do not override incognito/public welcome
                   } else if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
                     console.log("[Layout] Redirecting to Weekly Schedule (LaborCost) page");
                     window.location.href = createPageUrl("LaborCost");
