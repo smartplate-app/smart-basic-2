@@ -4,6 +4,7 @@ import AccessRequestDialog from "../components/access/AccessRequestDialog";
 import { Button } from "@/components/ui/button";
 
 export default function Welcome() {
+  const [openRequest, setOpenRequest] = React.useState(false);
   const handleSignIn = async () => {
     // If already authenticated, go straight in
     try {
