@@ -47,7 +47,7 @@ export default function Welcome() {
             </div>
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">Welcome to Smart Plate basic</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-3">Smart Plate basic</h1>
         <p className="text-gray-700 leading-relaxed mb-8 text-lg">
           המערכת הכי יעילה בישראל לביצוע הזמנות מספקים ויצירת סידור עבודה שבועי, הזמנות בווצאפ, סריקת חשבוניות, ומשלוח לרואה חשבון. דאשבורד חודשי שמראה לך בדיוק מה מצב עלויות כוח האדם והקניינות שלך מתחילת החודש והאם עברת 60% או לא. המערכת החכמה והיעילה בישראל.
         </p>
