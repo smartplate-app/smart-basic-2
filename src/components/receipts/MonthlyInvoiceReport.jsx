@@ -21,13 +21,25 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [me, setMe] = useState(null);
   const [showConnect, setShowConnect] = useState(false);
   const [connectEmail, setConnectEmail] = useState('');
+  const [targetUser, setTargetUser] = useState(null);
+  const [targetEmail, setTargetEmail] = useState('');
 
   React.useEffect(() => {
     (async () => {
       try {
         const u = await base44.auth.me();
         setMe(u);
-        setConnectEmail(u?.drive_share_email || u?.email || '');
+        const acting = u?.acting_as_store_email || u?.acting_as_user_email || u?.email || '';
+        setTargetEmail(acting);
+        if (acting && acting !== u?.email) {
+          const users = await base44.entities.User.filter({ email: acting });
+          const tu = Array.isArray(users) && users.length ? users[0] : null;
+          setTargetUser(tu);
+          setConnectEmail(tu?.drive_share_email || acting);
+        } else {
+          setTargetUser(u);
+          setConnectEmail(u?.drive_share_email || acting);
+        }
       } catch {}
     })();
   }, []);
@@ -133,6 +145,11 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               >
                 {t('check_drive') || 'Check Drive'}
               </Button>
+              {(me?.role !== 'admin' || me?.acting_as_store_email || me?.acting_as_user_email) && (
+                <Button variant="outline" disabled={uploading} onClick={() => setShowConnect(true)}>
+                  {t('connect_drive') || 'Connect Drive'}
+                </Button>
+              )}
             </div>
           </CardTitle>
         </CardHeader>
@@ -211,7 +228,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
           </div>
           <div className="flex gap-2 justify-end mt-4">
             <Button variant="outline" onClick={() => setShowConnect(false)}>{t('cancel') || 'Cancel'}</Button>
-            <Button onClick={async () => { try { await base44.auth.updateMe({ drive_share_email: (connectEmail || '').trim() }); alert(t('saved') || 'Saved'); setShowConnect(false); const u = await base44.auth.me(); setMe(u); } catch (e) { alert((t('error_saving') || 'Error') + ': ' + (e?.message || e)); } }} className="bg-green-600 hover:bg-green-700">{t('save') || 'Save'}</Button>
+            <Button onClick={async () => { try { const email = (connectEmail || '').trim(); if (!email) { alert(t('enter_google_email') || 'Enter the Google email'); return; } const adminControlling = !!(me?.role === 'admin' && (me?.acting_as_store_email || me?.acting_as_user_email)); if (adminControlling) { let tu = targetUser; if (!tu) { const users = await base44.entities.User.filter({ email: targetEmail }); tu = Array.isArray(users) && users.length ? users[0] : null; setTargetUser(tu); } if (!tu?.id) { alert('User not found'); return; } await base44.entities.User.update(tu.id, { drive_share_email: email }); setTargetUser({ ...tu, drive_share_email: email }); } else { await base44.auth.updateMe({ drive_share_email: email }); const u2 = await base44.auth.me(); setMe(u2); } alert(t('saved') || 'Saved'); setShowConnect(false); } catch (e) { alert((t('error_saving') || 'Error') + ': ' + (e?.message || e)); } }} className="bg-green-600 hover:bg-green-700">{t('save') || 'Save'}</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -229,7 +246,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               { (t('drive_target_folder') && t('drive_target_folder') !== 'drive_target_folder') ? t('drive_target_folder') : 'Target folder:' } {targetPath || 'SmartPlateUploads/<your email>/Invoices-<month>'}
             </div>
             <div className="text-gray-500">
-              {(t('drive_shared_with') && t('drive_shared_with') !== 'drive_shared_with') ? t('drive_shared_with') : 'Files will be shared with:'} {me?.drive_share_email || me?.email}
+              {(t('drive_shared_with') && t('drive_shared_with') !== 'drive_shared_with') ? t('drive_shared_with') : 'Files will be shared with:'} {targetUser?.drive_share_email || targetEmail}
             </div>
             <div className="text-gray-500">
               { (t('drive_app_connector_note') && t('drive_app_connector_note') !== 'drive_app_connector_note') ? t('drive_app_connector_note') : 'Note: For security, files upload to the app owner’s Drive and are organized under your personal folder.'}
@@ -243,6 +260,8 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   setUploading(true);
                   const payload = {
                     month,
+                    targetEmail,
+                    shareEmail: targetUser?.drive_share_email || '',
                     receipts: monthReceipts.map(r => ({
                       id: r.id,
                       supplier_id: r.supplier_id,

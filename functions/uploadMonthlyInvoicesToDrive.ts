@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { month, receipts } = await req.json();
+    const { month, receipts, shareEmail, targetEmail } = await req.json();
     if (!month) return Response.json({ error: 'month is required (YYYY-MM)' }, { status: 400 });
 
     // Acquire Google Drive access token for this app/user
@@ -140,12 +140,13 @@ Deno.serve(async (req) => {
 
     const me = user; // current logged-in user
     const root = await findOrCreateFolder(accessToken, 'SmartPlateUploads', null);
-    const userFolderName = sanitizeName(me?.email || 'unknown-user');
+    const targetUserEmail = (targetEmail || me?.acting_as_store_email || me?.acting_as_user_email || me?.email || 'unknown-user');
+    const userFolderName = sanitizeName(targetUserEmail);
     const userFolder = await findOrCreateFolder(accessToken, userFolderName, root.id);
     const parentFolderName = `Invoices-${month}`;
     const parent = await findOrCreateFolder(accessToken, parentFolderName, userFolder.id);
 
-    const shareTo = (me?.drive_share_email || me?.email || '').trim();
+    const shareTo = (shareEmail || me?.drive_share_email || targetUserEmail || '').trim();
     if (shareTo) {
       try { await ensureShared(accessToken, userFolder.id, shareTo); } catch {}
       try { await ensureShared(accessToken, parent.id, shareTo); } catch {}
