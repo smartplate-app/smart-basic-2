@@ -145,6 +145,57 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               >
                 {t('check_drive') || 'Check Drive'}
               </Button>
+              <Button
+                variant="outline"
+                disabled={uploading}
+                onClick={async () => {
+                  try {
+                    // Auth check
+                    let isAuth = false;
+                    try {
+                      const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
+                      isAuth = !!auth?.authorized;
+                      setDriveAuthorized(isAuth);
+                    } catch {
+                      isAuth = false;
+                    }
+                    if (!isAuth) { alert(t('connect_drive_prompt') || 'Please connect Google Drive first.'); return; }
+
+                    // Ensure share email exists (for admin preview use target user's share)
+                    const adminControlling = !!(me?.role === 'admin' && (me?.acting_as_store_email || me?.acting_as_user_email));
+                    const shareEmail = adminControlling ? (targetUser?.drive_share_email || '') : (me?.drive_share_email || '');
+                    if (!shareEmail) { setShowConnect(true); return; }
+
+                    const payload = {
+                      month,
+                      targetEmail,
+                      shareEmail,
+                      receipts: monthReceipts.map(r => ({
+                        id: r.id,
+                        supplier_id: r.supplier_id,
+                        supplier_name: r.supplier_name,
+                        invoice_number: r.invoice_number,
+                        invoice_date: r.invoice_date,
+                        received_date: r.received_date,
+                        invoice_total: r.invoice_total,
+                        receipt_images: r.receipt_images,
+                      })),
+                    };
+
+                    const { data } = await base44.functions.invoke('exportMonthlyInvoicesSheet', payload);
+                    if (data?.sheet?.webViewLink) {
+                      alert((t('export_completed') || 'Export completed') + `\n${data.sheet.webViewLink}`);
+                      window.open(data.sheet.webViewLink, '_blank');
+                    } else {
+                      alert(t('export_completed') || 'Export completed');
+                    }
+                  } catch (e) {
+                    alert((t('export_failed') || 'Export failed') + `: ${e?.message || e}`);
+                  }
+                }}
+              >
+                {t('export_sheet') || 'Export Sheet'}
+              </Button>
               {(me?.role !== 'admin' || me?.acting_as_store_email || me?.acting_as_user_email) && (
                 <Button variant="outline" disabled={uploading} onClick={() => setShowConnect(true)}>
                   {t('connect_drive') || 'Connect Drive'}

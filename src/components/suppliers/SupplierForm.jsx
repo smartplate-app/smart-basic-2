@@ -20,7 +20,8 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
     supplier_type: "simple",
     grant_notes: "",
     grant_amount: "",
-    grant_document_url: ""
+    grant_document_url: "",
+    accounting_code: ""
   });
   const [uploading, setUploading] = React.useState(false);
 
@@ -126,6 +127,16 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
                 value={formData.contact_person}
                 onChange={(e) => handleChange("contact_person", e.target.value)}
                 placeholder={t('contact_person')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="accounting_code">{language === 'he' ? 'קוד הנה"ח' : 'Accounting code'}</Label>
+              <Input
+                id="accounting_code"
+                value={formData.accounting_code || ""}
+                onChange={(e) => handleChange("accounting_code", e.target.value)}
+                placeholder={language === 'he' ? 'לדוגמה: 5401' : 'e.g., 5401'}
               />
             </div>
 
