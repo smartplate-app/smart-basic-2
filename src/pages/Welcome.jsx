@@ -18,8 +18,10 @@ export default function Welcome() {
     await base44.auth.redirectToLogin('/pages/LaborCost');
   };
 
-  // Auto-redirect authenticated users away from the access page
+  // Auto-redirect authenticated users away from the access page (unless preview=1)
   React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('preview') === '1') return;
     (async () => {
       try {
         const auth = await base44.auth.isAuthenticated();
