@@ -54,7 +54,8 @@ export default function Welcome() {
         <a href="mailto:admin@smartplate.org" className="block text-2xl md:text-3xl font-extrabold text-blue-600 hover:text-blue-700 hover:underline mb-8">
           admin@smartplate.org
         </a>
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <div className="text-sm text-gray-500 text-center">If you already have access, click Sign in. Otherwise, request access and we’ll enable your account.</div>
           <p className="text-sm text-gray-500">If you already have access, click Sign in. Otherwise, contact us to request access.</p>
           <Button onClick={handleSignIn} className="bg-gray-900 hover:bg-gray-800">
             Sign in
