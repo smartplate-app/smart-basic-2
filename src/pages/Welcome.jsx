@@ -4,8 +4,16 @@ import { Button } from "@/components/ui/button";
 
 export default function Welcome() {
   const handleSignIn = async () => {
-    // Redirect to the standard login screen; after login go to Orders
-    await base44.auth.redirectToLogin('/pages/Orders');
+    // If already authenticated, go straight in
+    try {
+      const isAuth = await base44.auth.isAuthenticated();
+      if (isAuth) {
+        window.location.href = '/pages/LaborCost';
+        return;
+      }
+    } catch {}
+    // Otherwise redirect to login and back
+    await base44.auth.redirectToLogin('/pages/LaborCost');
   };
 
   return (
