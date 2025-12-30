@@ -44,6 +44,7 @@ export default function Welcome() {
           admin@smartplate.org
         </a>
         <div className="flex items-center justify-center gap-3">
+          <p className="text-sm text-gray-500">If you already have access, click Sign in. Otherwise, contact us to request access.</p>
           <Button onClick={handleSignIn} className="bg-gray-900 hover:bg-gray-800">
             Sign in
           </Button>
