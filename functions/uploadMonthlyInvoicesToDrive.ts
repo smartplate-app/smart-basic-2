@@ -136,6 +136,12 @@ Deno.serve(async (req) => {
     const parentFolderName = `Invoices-${month}`;
     const parent = await findOrCreateFolder(accessToken, parentFolderName, userFolder.id);
 
+    const shareTo = (me?.drive_share_email || me?.email || '').trim();
+    if (shareTo) {
+      try { await ensureShared(accessToken, userFolder.id, shareTo); } catch {}
+      try { await ensureShared(accessToken, parent.id, shareTo); } catch {}
+    }
+
     // Build supplier groups from provided receipts
     const groups = {};
     for (const r of Array.isArray(receipts) ? receipts : []) {

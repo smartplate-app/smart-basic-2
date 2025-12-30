@@ -18,6 +18,19 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [showDriveConfirm, setShowDriveConfirm] = useState(false);
   const [driveAccount, setDriveAccount] = useState(null);
   const [targetPath, setTargetPath] = useState('');
+  const [me, setMe] = useState(null);
+  const [showConnect, setShowConnect] = useState(false);
+  const [connectEmail, setConnectEmail] = useState('');
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const u = await base44.auth.me();
+        setMe(u);
+        setConnectEmail(u?.drive_share_email || u?.email || '');
+      } catch {}
+    })();
+  }, []);
 
   const supplierById = useMemo(() => {
     const map = {};
@@ -180,6 +193,23 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
         </CardContent>
       </Card>
 
+      {/* Connect Drive dialog */}
+      <Dialog open={showConnect} onOpenChange={setShowConnect}>
+        <DialogContent dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'text-right' : 'text-left'}>
+          <DialogHeader>
+            <DialogTitle>{t('connect_drive') || 'Connect Drive'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div>{t('enter_google_email') || 'Enter the Google email to receive your uploads:'}</div>
+            <Input type="email" value={connectEmail} onChange={(e) => setConnectEmail(e.target.value)} placeholder="you@gmail.com" />
+          </div>
+          <div className="flex gap-2 justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowConnect(false)}>{t('cancel') || 'Cancel'}</Button>
+            <Button onClick={async () => { try { await base44.auth.updateMe({ drive_share_email: (connectEmail || '').trim() }); alert(t('saved') || 'Saved'); setShowConnect(false); const u = await base44.auth.me(); setMe(u); } catch (e) { alert((t('error_saving') || 'Error') + ': ' + (e?.message || e)); } }} className="bg-green-600 hover:bg-green-700">{t('save') || 'Save'}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Drive confirmation dialog */}
       <Dialog open={showDriveConfirm} onOpenChange={setShowDriveConfirm}>
         <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -191,6 +221,9 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             <div className="font-medium">{driveAccount?.emailAddress || driveAccount?.displayName || ((t('google_drive') && t('google_drive') !== 'google_drive') ? t('google_drive') : 'Google Drive')}</div>
             <div className="text-gray-500">
               { (t('drive_target_folder') && t('drive_target_folder') !== 'drive_target_folder') ? t('drive_target_folder') : 'Target folder:' } {targetPath || 'SmartPlateUploads/<your email>/Invoices-<month>'}
+            </div>
+            <div className="text-gray-500">
+              {(t('drive_shared_with') && t('drive_shared_with') !== 'drive_shared_with') ? t('drive_shared_with') : 'Files will be shared with:'} {me?.drive_share_email || me?.email}
             </div>
             <div className="text-gray-500">
               { (t('drive_app_connector_note') && t('drive_app_connector_note') !== 'drive_app_connector_note') ? t('drive_app_connector_note') : 'Note: For security, files upload to the app owner’s Drive and are organized under your personal folder.'}
