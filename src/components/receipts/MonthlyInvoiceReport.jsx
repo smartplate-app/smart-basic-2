@@ -92,13 +92,19 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                       return;
                     }
 
+                    // Require per-user share email for non-admins
+                    let me = null;
+                    try { me = await base44.auth.me(); } catch {}
+                    if ((me?.role !== 'admin') && !me?.drive_share_email) {
+                      setShowConnect(true);
+                      return;
+                    }
+
                     // Lookup the Google Drive account tied to this token
                     try {
                       const { data } = await base44.functions.invoke('driveWhoAmI', {});
                       setDriveAccount(data?.user || null);
                     } catch {}
-                    let me = null;
-                    try { me = await base44.auth.me(); } catch {}
                     setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
 
                     // Show confirmation dialog before uploading

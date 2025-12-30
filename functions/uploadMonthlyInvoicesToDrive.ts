@@ -117,6 +117,15 @@ function buildMultipartBody(metadata, fileBytes, mimeType) {
   return { body: out, contentType };
 }
 
+async function ensureShared(accessToken, fileId, email) {
+  if (!email) return;
+  await driveRequest(accessToken, `/drive/v3/files/${fileId}/permissions`, {
+    method: 'POST',
+    query: { sendNotificationEmail: 'false' },
+    body: { role: 'writer', type: 'user', emailAddress: email }
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
