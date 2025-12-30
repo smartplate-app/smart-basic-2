@@ -1,5 +1,6 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
+import AccessRequestDialog from "../components/access/AccessRequestDialog";
 import { Button } from "@/components/ui/button";
 
 export default function Welcome() {
