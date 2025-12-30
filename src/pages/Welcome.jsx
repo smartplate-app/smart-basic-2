@@ -16,6 +16,15 @@ export default function Welcome() {
     await base44.auth.redirectToLogin('/pages/LaborCost');
   };
 
+  // Auto-redirect authenticated users away from the access page
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const auth = await base44.auth.isAuthenticated();
+        if (auth) window.location.href = '/pages/LaborCost';
+      } catch {}
+    })();
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border p-8 text-center">
