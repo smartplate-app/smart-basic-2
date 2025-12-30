@@ -33,25 +33,29 @@ export default function InviteUserPage() {
     }
   };
 
-  const generateInvite = () => {
+  const generateInvite = async () => {
     if (!inviteeEmail || !inviteeName) {
       alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill all fields');
       return;
     }
 
-    // Create a long encoded link with restaurant data
-    const restaurantData = {
-      ownerEmail: user.email,
-      restaurantName: user.business_name || user.full_name,
-      restaurantAddress: user.business_address || '',
-      restaurantLogo: user.restaurant_logo || '',
-      inviteeName: inviteeName,
-      inviteeEmail: inviteeEmail,
-      role: role
-    };
+    // Create a token-based invite record (incognito-safe)
+    const { data } = await base44.functions.invoke('createUserInvite', {
+      email: inviteeEmail,
+      full_name: inviteeName,
+      invite_type: 'store_user',
+      role,
+      store_name: user.business_name || user.full_name,
+      restaurant_name: user.business_name || user.full_name,
+      restaurant_address: user.business_address || ''
+    });
 
-    const encodedData = btoa(JSON.stringify(restaurantData));
-    const link = `${window.location.origin}/pages/JoinRestaurant?data=${encodedData}`;
+    if (!data?.success || !data?.token) {
+      alert((language === 'he' ? 'שגיאה ביצירת הזמנה: ' : 'Failed to create invite: ') + (data?.error || ''));
+      return;
+    }
+
+    const link = `${window.location.origin}/#/pages/Register?invite=${data.token}`;
     setInviteLink(link);
 
     // Generate HTML email template
@@ -108,6 +112,19 @@ export default function InviteUserPage() {
   const copyLink = () => {
     navigator.clipboard.writeText(inviteLink);
     alert(language === 'he' ? '✅ קישור הועתק!' : '✅ Link copied!');
+  };
+
+  const sendEmail = async () => {
+    if (!inviteLink || !inviteeEmail) {
+      alert(language === 'he' ? 'אין קישור או אימייל לשליחה' : 'Missing link or email');
+      return;
+    }
+    const subject = language === 'he' ? `הזמנה להצטרף ל-${user.business_name || 'Smart Plate'}` : `Invitation to join ${user.business_name || 'Smart Plate'}`;
+    const body = (language === 'he'
+      ? `שלום ${inviteeName},\n\nהוזמנת להצטרף ל-${user.business_name || 'Smart Plate'} כ${role === 'manager' ? 'מנהל' : 'עובד'}.\n\nלהצטרפות: ${inviteLink}\n\nבברכה,\n${user.full_name}`
+      : `Hello ${inviteeName},\n\nYou've been invited to join ${user.business_name || 'Smart Plate'} as a ${role}.\n\nJoin here: ${inviteLink}\n\nBest regards,\n${user.full_name}`);
+    const { data } = await base44.integrations.Core.SendEmail({ to: inviteeEmail, subject, body });
+    alert(language === 'he' ? 'נשלח ✉️' : 'Sent ✉️');
   };
 
   if (loading) {
@@ -207,6 +224,10 @@ export default function InviteUserPage() {
                 <Button onClick={copyLink} variant="outline" className="w-full">
                   <Copy className="w-4 h-4 mr-2" />
                   {language === 'he' ? 'העתק קישור' : 'Copy Link'}
+                </Button>
+                <Button onClick={sendEmail} className="w-full mt-3 bg-green-600 hover:bg-green-700">
+                  <Mail className="w-4 h-4 mr-2" />
+                  {language === 'he' ? 'שלח במייל עכשיו' : 'Send Email Now'}
                 </Button>
               </CardContent>
             </Card>
