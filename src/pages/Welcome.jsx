@@ -18,14 +18,25 @@ export default function Welcome() {
     await base44.auth.redirectToLogin('/pages/LaborCost');
   };
 
-  // Auto-redirect authenticated users away from the access page (unless preview=1)
+  // Auto-redirect authenticated users away from the access page
+  // Allow admins to view Welcome only when ?preview=1 is present
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('preview') === '1') return;
     (async () => {
       try {
-        const auth = await base44.auth.isAuthenticated();
-        if (auth) window.location.href = '/pages/LaborCost';
+        const params = new URLSearchParams(window.location.search);
+        const preview = params.get('preview') === '1';
+        const isAuth = await base44.auth.isAuthenticated();
+        if (isAuth) {
+          if (preview) {
+            const me = await base44.auth.me();
+            if (me?.role === 'admin') {
+              // Admin preview allowed, do not redirect
+              return;
+            }
+          }
+          // Non-admins (or admin without preview) get redirected
+          window.location.href = '/pages/LaborCost';
+        }
       } catch {}
     })();
   }, []);
