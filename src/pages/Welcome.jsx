@@ -62,6 +62,7 @@ export default function Welcome() {
           </div>
         </div>
       </div>
+      <AccessRequestDialog open={openRequest} onOpenChange={setOpenRequest} />
     </div>
   );
 }
