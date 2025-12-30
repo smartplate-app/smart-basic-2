@@ -34,16 +34,22 @@ const AppLayout = ({ children, currentPageName }) => {
     setShowDesktopSidebar(true);
   }, []);
 
-  // Redirect unauthenticated visitors at root to the public Welcome page
+  // Redirect unauthenticated visitors at root to the public Welcome page (preserve ?preview=1)
   useEffect(() => {
     const currentPath = location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    const preview = params.get('preview');
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
       base44.auth.isAuthenticated().then((auth) => {
         if (!auth) {
-          window.location.href = createPageUrl('Welcome');
+          const url = new URL(createPageUrl('Welcome'), window.location.origin);
+          if (preview === '1') url.searchParams.set('preview', '1');
+          window.location.href = url.pathname + url.search;
         }
       }).catch(() => {
-        window.location.href = createPageUrl('Welcome');
+        const url = new URL(createPageUrl('Welcome'), window.location.origin);
+        if (preview === '1') url.searchParams.set('preview', '1');
+        window.location.href = url.pathname + url.search;
       });
     }
   }, [location.pathname]);
