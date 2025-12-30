@@ -56,10 +56,10 @@ export default function Welcome() {
         </a>
         <div className="flex flex-col items-center justify-center gap-4">
           <div className="text-sm text-gray-500 text-center">If you already have access, click Sign in. Otherwise, request access and we’ll enable your account.</div>
-          <p className="text-sm text-gray-500">If you already have access, click Sign in. Otherwise, contact us to request access.</p>
-          <Button onClick={handleSignIn} className="bg-gray-900 hover:bg-gray-800">
-            Sign in
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSignIn} className="bg-gray-900 hover:bg-gray-800">Sign in</Button>
+            <Button variant="outline" onClick={() => setOpenRequest(true)}>Request access</Button>
+          </div>
         </div>
       </div>
     </div>
