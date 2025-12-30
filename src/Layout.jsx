@@ -26,12 +26,27 @@ const AppLayout = ({ children, currentPageName }) => {
       const [storeUserRole, setStoreUserRole] = useState(null); // null = owner, 'manager', or 'worker'
       const { t, language } = useLanguage();
   const [navSearchTerm, setNavSearchTerm] = useState("");
+  const [isIncognito, setIsIncognito] = useState(false);
 
 
 
   // Keep sidebar visible; adjust only width via CSS
   useEffect(() => {
     setShowDesktopSidebar(true);
+  }, []);
+
+  // Detect incognito/private mode (best-effort) to avoid auto-redirects
+  useEffect(() => {
+    (async () => {
+      try {
+        if ('storage' in navigator && navigator.storage && navigator.storage.estimate) {
+          const { quota } = await navigator.storage.estimate();
+          if (quota && quota < 120 * 1024 * 1024) {
+            setIsIncognito(true);
+          }
+        }
+      } catch {}
+    })();
   }, []);
 
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
@@ -47,11 +62,12 @@ const AppLayout = ({ children, currentPageName }) => {
   }, [location.pathname]);
 
   // Redirect unauthenticated visitors at root to the public Welcome page (preserve ?preview=1)
-  // Do not override when a hash-based page is already specified
+  // Do not override when a hash-based page is already specified; skip entirely in incognito
   useEffect(() => {
     const currentPath = location.pathname;
     const params = new URLSearchParams(window.location.search);
     const preview = params.get('preview');
+    if (isIncognito) return; // never redirect in incognito
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
     }
@@ -68,7 +84,7 @@ const AppLayout = ({ children, currentPageName }) => {
         window.location.href = url.pathname + url.search;
       });
     }
-  }, [location.pathname]);
+  }, [location.pathname, isIncognito]);
 
   const navigationItems = [
   // Weekly Schedule (Labor Cost) first
