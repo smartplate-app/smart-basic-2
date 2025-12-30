@@ -267,6 +267,13 @@ const AppLayout = ({ children, currentPageName }) => {
         return;
       }
       
+      // Redirect unauthenticated users to Welcome (access request page)
+      const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED';
+      if (unauthorized) {
+        window.location.href = createPageUrl('Welcome');
+        return;
+      }
+      
       console.error("[Layout] Max retries reached or non-network error");
       setError(err.message || "Failed to load app");
       setAuthLoading(false);
