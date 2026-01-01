@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, Warehouse as WarehouseIcon, RefreshCw, LayoutGrid, List, FileSpreadsheet, Camera } from "lucide-react";
+import { Plus, Search, Loader, Warehouse as WarehouseIcon, RefreshCw, LayoutGrid, List, FileSpreadsheet, Camera, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -36,6 +36,8 @@ export default function MonthlyCountPage() {
   const [exportStartDate, setExportStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
   const [exportEndDate, setExportEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [exporting, setExporting] = useState(false);
+  const [generatingSheet, setGeneratingSheet] = useState(false);
+  const [importingSheet, setImportingSheet] = useState(false);
 
   const loadData = async (userEmail, retryAttempt = 0) => {
     try {
@@ -360,6 +362,46 @@ export default function MonthlyCountPage() {
       alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleGenerateCountSheet = async () => {
+    try {
+      setGeneratingSheet(true);
+      const { data } = await base44.functions.invoke('generateInventoryCountSheet', {});
+      if (data?.sheet?.webViewLink) {
+        window.open(data.sheet.webViewLink, '_blank');
+      }
+      alert((t('export_completed') || 'Generated') + (data?.sheet?.webViewLink ? `\n${data.sheet.webViewLink}` : ''));
+    } catch (e) {
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
+    } finally {
+      setGeneratingSheet(false);
+    }
+  };
+
+  const handleImportCountFromSheet = async () => {
+    try {
+      const url = window.prompt(t('paste_sheet_url') || 'Paste Google Sheet URL');
+      if (!url) return;
+      setImportingSheet(true);
+      const name = window.prompt(t('count_name') || 'Count name (optional)') || '';
+      const date = window.prompt(t('count_date') || 'Count date (YYYY-MM-DD)', new Date().toISOString().slice(0,10)) || '';
+      const { data } = await base44.functions.invoke('importInventoryCountFromSheet', { sheet_url: url, count_name: name, count_date: date });
+      if (data?.success) {
+        alert(t('import_completed') || 'Import completed');
+        await loadData(user.email);
+        if (data?.count) {
+          setEditingCount(data.count);
+          setShowCountForm(true);
+        }
+      } else {
+        alert((t('error_saving') || 'Error') + ': ' + (data?.error || ''));
+      }
+    } catch (e) {
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
+    } finally {
+      setImportingSheet(false);
     }
   };
 
