@@ -400,6 +400,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                     </div>
                     <Label htmlFor="add_item_select">{t('add_item')}</Label>
                     <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+                      {/* Prevent Enter in trigger from submitting the form */}
                       <SelectTrigger id="add_item_select">
                         <SelectValue placeholder={
                           filteredAvailableItems.length === 0 ? (availableSearch ? (language === 'he' ? 'לא נמצאו פריטים' : 'No results') : t('no_available_items')) : t('select_item')
