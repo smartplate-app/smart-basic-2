@@ -68,7 +68,51 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Failed to write headers/rows', details: txt }, { status: 500 });
     }
 
-    return Response.json({ success: true, spreadsheetId, url: spreadsheetUrl, title });
+    // Share the sheet with the intended user (owner's token creates it; we share to user's Google email)
+    try {
+      // Decide who should get access: prefer saved drive_share_email, otherwise acting user, otherwise current user's email
+      let shareEmail = (user?.drive_share_email || '').trim();
+      const actingEmail = user?.acting_as_store_email || user?.acting_as_user_email || '';
+      if (!shareEmail && actingEmail) {
+        try {
+          const list = await base44.asServiceRole.entities.User.filter({ email: actingEmail });
+          if (Array.isArray(list) && list.length > 0) {
+            shareEmail = (list[0].drive_share_email || actingEmail || '').trim();
+          }
+        } catch {}
+      }
+      if (!shareEmail) shareEmail = (user?.email || '').trim();
+
+      const driveToken = await base44.asServiceRole.connectors.getAccessToken('googledrive');
+      // Grant writer access (no email notification)
+      await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions?supportsAllDrives=true&sendNotificationEmail=false`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${driveToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: 'writer', type: 'user', emailAddress: shareEmail })
+      });
+
+      // Get a webViewLink for convenience
+      try {
+        const infoRes = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?fields=webViewLink&supportsAllDrives=true`, {
+          headers: { 'Authorization': `Bearer ${driveToken}` }
+        });
+        if (infoRes.ok) {
+          const info = await infoRes.json();
+          if (info?.webViewLink) {
+            return Response.json({ success: true, spreadsheetId, url: info.webViewLink, title, shared_with: shareEmail });
+          }
+        }
+      } catch {}
+
+      // Fallback to Sheets URL if Drive webViewLink not available
+      return Response.json({ success: true, spreadsheetId, url: spreadsheetUrl, title, shared_with: shareEmail });
+    } catch (e) {
+      // Even if sharing fails, return the created URL so admin can access
+      return Response.json({ success: true, spreadsheetId, url: spreadsheetUrl, title, share_error: e?.message || String(e) });
+    }
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
   }
