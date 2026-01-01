@@ -440,9 +440,14 @@ export default function UserProfilePage() {
               </div>
             </div>
             {driveAuthorized !== null && (
-              <p className={`text-sm mt-3 ${driveAuthorized ? 'text-green-700' : 'text-red-700'}`}>
-                {driveAuthorized ? `Connected as ${driveAccount?.emailAddress || driveAccount?.displayName || 'Google account'}` : 'Not connected'}
-              </p>
+              driveAuthorized ? (
+                <div className="text-sm mt-3 text-green-700">
+                  <div>App connector is active (connected as app owner: {driveAccount?.emailAddress || driveAccount?.displayName || 'Google account'}).</div>
+                  <div>Files generated for you will be shared to: { (driveEmail || user?.email || '').trim() }.</div>
+                </div>
+              ) : (
+                <p className="text-sm mt-3 text-red-700">Not connected</p>
+              )
             )}
           </CardContent>
         </Card>
