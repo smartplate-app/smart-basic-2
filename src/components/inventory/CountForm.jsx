@@ -389,6 +389,14 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
               <div className="space-y-4">
                 <div className="flex flex-col md:flex-row items-end gap-2">
                   <div className="flex-1 space-y-2 w-full">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder={language === 'he' ? 'חפש פריט...' : 'Search item...'}
+                        value={availableSearch}
+                        onChange={(e) => setAvailableSearch(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
                     <Label htmlFor="add_item_select">{t('add_item')}</Label>
                     <Select value={selectedItemId} onValueChange={setSelectedItemId}>
                       <SelectTrigger id="add_item_select">
