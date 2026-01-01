@@ -401,7 +401,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                     <Select value={selectedItemId} onValueChange={setSelectedItemId}>
                       <SelectTrigger id="add_item_select">
                         <SelectValue placeholder={
-                          filteredAvailableItems.length === 0 ? t('no_available_items') : t('select_item')
+                          filteredAvailableItems.length === 0 ? (availableSearch ? (language === 'he' ? 'לא נמצאו פריטים' : 'No results') : t('no_available_items')) : t('select_item')
                         } />
                       </SelectTrigger>
                       <SelectContent>
