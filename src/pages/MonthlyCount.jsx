@@ -487,7 +487,27 @@ export default function MonthlyCountPage() {
               {t('import_from_excel') || 'ייבא מאקסל'}
             </Button>
             
-            <div className="flex bg-white rounded-lg shadow-sm border">
+            <Button
+              onClick={handleGenerateCountSheet}
+              variant="outline"
+              disabled={generatingSheet}
+              className="gap-2"
+            >
+              <FileSpreadsheet className="w-5 h-5" />
+              {generatingSheet ? (t('generating') || 'Generating...') : (t('generate_count_sheet') || 'Generate Count Sheet')}
+            </Button>
+
+            <Button
+              onClick={handleImportCountFromSheet}
+              variant="outline"
+              disabled={importingSheet}
+              className="gap-2"
+            >
+              <Upload className="w-5 h-5" />
+              {importingSheet ? (t('importing') || 'Importing...') : (t('import_from_sheet_url') || 'Import from Sheet URL')}
+            </Button>
+
+              <div className="flex bg-white rounded-lg shadow-sm border">
               <Button
                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
                 size="icon"
