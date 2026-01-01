@@ -105,10 +105,12 @@ export default function UserProfilePage() {
       const { data } = await base44.functions.invoke('checkDriveAuth', {});
       setDriveAuthorized(!!data?.authorized);
       if (data?.authorized) {
-        const who = await base44.functions.invoke('driveWhoAmI', {});
-        setDriveAccount(who?.data?.user || null);
-        const email = who?.data?.user?.emailAddress || who?.data?.user?.displayName || 'Google';
-        alert('Connected to ' + email);
+        try {
+          const who = await base44.functions.invoke('driveWhoAmI', {});
+          setDriveAccount(who?.data?.user || null);
+        } catch {}
+        const target = (driveEmail || user?.email || '').trim();
+        alert(`Connected. Files will be shared to ${target}.`);
       } else {
         alert('Not connected to Google Drive');
       }
