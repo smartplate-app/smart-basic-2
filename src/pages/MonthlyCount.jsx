@@ -463,6 +463,26 @@ export default function MonthlyCountPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             <Button
+              onClick={handleGenerateCountSheet}
+              variant="outline"
+              disabled={generatingSheet}
+              className="gap-2"
+            >
+              <FileSpreadsheet className="w-5 h-5" />
+              {generatingSheet ? (t('generating') || 'Generating...') : (t('generate_count_sheet') || 'Generate Count Sheet')}
+            </Button>
+
+            <Button
+              onClick={handleImportCountFromSheet}
+              variant="outline"
+              disabled={importingSheet}
+              className="gap-2"
+            >
+              <Upload className="w-5 h-5" />
+              {importingSheet ? (t('importing') || 'Importing...') : (t('import_from_sheet_url') || 'Import from Sheet URL')}
+            </Button>
+
+            <Button
               onClick={() => setShowWarehouseManagement(true)}
               variant="outline"
               className="border-gray-600 text-gray-700 hover:bg-gray-100"
