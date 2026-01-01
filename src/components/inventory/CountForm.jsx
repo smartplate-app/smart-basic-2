@@ -394,6 +394,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                         placeholder={language === 'he' ? 'חפש פריט...' : 'Search item...'}
                         value={availableSearch}
                         onChange={(e) => setAvailableSearch(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); } }}
                         className="w-full"
                       />
                     </div>
