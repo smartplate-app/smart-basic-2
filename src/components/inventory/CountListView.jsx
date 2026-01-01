@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, MoreVertical, Eye } from "lucide-react";
+import { Pencil, Trash2, Download, Send } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
 
-export default function CountListView({ counts, onEdit, onDelete }) {
+export default function CountListView({ counts, onEdit, onDelete, onExport, onSend }) {
   const { t, language } = useLanguage();
 
   const statusColors = {
@@ -97,7 +97,7 @@ export default function CountListView({ counts, onEdit, onDelete }) {
                   </Badge>
                 </TableCell>
                 <TableCell className="px-4 py-3 text-center">
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
@@ -106,6 +106,24 @@ export default function CountListView({ counts, onEdit, onDelete }) {
                     >
                       <Pencil className="w-4 h-4 mr-1" />
                       {t('edit')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onExport && onExport(count)}
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      {t('export_pdf') || 'Export PDF'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onSend && onSend(count)}
+                      className="border-green-600 text-green-600 hover:bg-green-50"
+                    >
+                      <Send className="w-4 h-4 mr-1" />
+                      {t('send_pdf') || 'Send PDF'}
                     </Button>
                     <Button
                       variant="outline"

@@ -405,6 +405,62 @@ export default function MonthlyCountPage() {
     }
   };
 
+  // Export current count to PDF
+  const handleExportPdf = async (count) => {
+    try {
+      const fileName = `InventoryCount_${(count.name || count.warehouse_name || 'Count').replace(/\s+/g,'_')}_${count.count_date}.pdf`;
+      const { data } = await base44.functions.invoke('exportInventoryCountPdf', { count_id: count.id });
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (e) {
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || e));
+    }
+  };
+
+  // Export and email PDF link to accountant
+  const handleSendPdf = async (count) => {
+    try {
+      const email = window.prompt(t('enter_email') || 'Enter accountant email');
+      if (!email) return;
+      const fileName = `InventoryCount_${(count.name || count.warehouse_name || 'Count').replace(/\s+/g,'_')}_${count.count_date}.pdf`;
+      const { data } = await base44.functions.invoke('exportInventoryCountPdf', { count_id: count.id });
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+
+      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri });
+
+      const subject = (t('monthly_count_title') || 'Inventory Count') + ` - ${count.name || count.warehouse_name || ''} (${count.count_date})`;
+      const body = [
+        (t('hello') || 'Hello') + ',',
+        '',
+        (t('attached_is_pdf_link') || 'Here is the PDF link for the monthly inventory count:'),
+        signed_url,
+        '',
+        (t('thanks') || 'Thanks') + ',',
+        user?.business_name || user?.full_name || 'SmartPlate'
+      ].join('\n');
+
+      await base44.integrations.Core.SendEmail({
+        to: email,
+        subject,
+        body,
+        from_name: user?.email_sender_name || user?.business_name || user?.full_name || undefined
+      });
+
+      alert(t('sent') || 'Sent');
+    } catch (e) {
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || e));
+    }
+  };
+
   const filteredCounts = counts.filter(count => {
         const matchesSearch = count.warehouse_name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesWarehouse = warehouseFilter === "all" || count.warehouse_id === warehouseFilter;
@@ -702,6 +758,8 @@ export default function MonthlyCountPage() {
                     counts={filteredCounts}
                     onEdit={handleEditCount}
                     onDelete={handleDeleteCount}
+                    onExport={handleExportPdf}
+                    onSend={handleSendPdf}
                   />
                 )}
 
