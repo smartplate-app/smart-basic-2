@@ -1,6 +1,39 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { jsPDF } from 'npm:jspdf@2.5.2';
 
+// Hebrew font + RTL helpers
+let __hebrewFontB64 = null;
+const __hebrewFontUrl = 'https://cdn.jsdelivr.net/gh/google/fonts/ofl/notosanshebrew/NotoSansHebrew-Regular.ttf';
+
+function __toBase64(buffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  // btoa is available in Deno runtime
+  return btoa(binary);
+}
+
+async function __ensureHebrewFont(doc) {
+  try {
+    if (!__hebrewFontB64) {
+      const res = await fetch(__hebrewFontUrl);
+      if (!res.ok) throw new Error('Failed to download Hebrew font');
+      const buf = await res.arrayBuffer();
+      __hebrewFontB64 = __toBase64(buf);
+    }
+    const fontFile = 'NotoSansHebrew-Regular.ttf';
+    const fontName = 'NotoSansHebrew';
+    doc.addFileToVFS(fontFile, __hebrewFontB64);
+    doc.addFont(fontFile, fontName, 'normal');
+    doc.setFont(fontName, 'normal');
+  } catch (_) {
+    // If font fails, continue with default to avoid breaking PDF generation
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -22,6 +55,7 @@ Deno.serve(async (req) => {
     }
 
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    await __ensureHebrewFont(doc);
     const margin = 40;
     let y = 50;
 
@@ -39,11 +73,11 @@ Deno.serve(async (req) => {
     const monthLabel = (() => {
       try {
         const d = count.count_date ? new Date(count.count_date) : null;
-        if (d && !isNaN(d)) return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        if (d && !isNaN(d)) return d.toLocaleString('he-IL', { month: 'long', year: 'numeric' });
       } catch {}
       return '';
     })();
-    const generatedAt = new Date().toLocaleString();
+    const generatedAt = new Date().toLocaleString('he-IL');
 
     const pw = doc.internal.pageSize.getWidth();
 
@@ -85,7 +119,7 @@ Deno.serve(async (req) => {
       doc.setFontSize(12);
       doc.setTextColor(40);
       columns.forEach((col) => {
-        doc.text(col.label, col.x + (col.align === 'right' ? col.width : 0), y, { align: col.align || 'left' });
+        drawTextSmart(col.label, col.x, col.x + col.width, y, col.align || 'left');
       });
       y += 14;
       doc.setDrawColor(200);
