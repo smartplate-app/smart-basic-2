@@ -25,19 +25,31 @@ Deno.serve(async (req) => {
     const margin = 40;
     let y = 50;
 
-    const title = 'Inventory Count';
+    const restaurantName = user?.business_name || user?.store_user_store_name || user?.full_name || user?.email || 'Restaurant';
+    const monthLabel = (() => {
+      try {
+        const d = count.count_date ? new Date(count.count_date) : null;
+        if (d && !isNaN(d)) return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      } catch {}
+      return '';
+    })();
+    const generatedAt = new Date().toLocaleString();
+
+    const title = `${restaurantName} - Inventory Count${monthLabel ? ` (${monthLabel})` : ''}`;
     doc.setFontSize(18);
     doc.text(title, margin, y);
     y += 24;
 
     doc.setFontSize(11);
     const metaLines = [
-      `Name: ${count.name || '-'}`,
+      `Count Name: ${count.name || '-'}`,
       `Warehouse: ${count.warehouse_name || '-'}`,
-      `Date: ${count.count_date || '-'}`,
+      `Count Date: ${count.count_date || '-'}`,
+      monthLabel ? `Month: ${monthLabel}` : '',
       `Type: ${count.count_type || '-'}`,
       `Status: ${count.status || '-'}`,
-    ];
+      `Generated: ${generatedAt}`,
+    ].filter(Boolean);
     metaLines.forEach((line) => {
       doc.text(line, margin, y);
       y += 16;
@@ -65,7 +77,7 @@ Deno.serve(async (req) => {
       });
       y += 14;
       doc.setDrawColor(200);
-      doc.line(margin, y, pageHeight - margin, y);
+      doc.line(margin, y, pageWidth - margin, y);
       y += 10;
     };
 
@@ -101,7 +113,7 @@ Deno.serve(async (req) => {
     }
     y += 6;
     doc.setDrawColor(160);
-    doc.line(margin, y, pageHeight - margin, y);
+    doc.line(margin, y, pageWidth - margin, y);
     y += 18;
     doc.setFontSize(12);
     doc.setTextColor(20);
