@@ -26,6 +26,10 @@ export default function UserProfilePage() {
   });
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [reminderLoading, setReminderLoading] = useState(false);
+  const [driveEmail, setDriveEmail] = useState("");
+  const [driveAuthorized, setDriveAuthorized] = useState(null);
+  const [driveChecking, setDriveChecking] = useState(false);
+  const [driveAccount, setDriveAccount] = useState(null);
 
   useEffect(() => {
     loadUserData();
@@ -48,6 +52,7 @@ export default function UserProfilePage() {
         reply_to_email: currentUser.reply_to_email || "",
         restaurant_logo: currentUser.restaurant_logo || ""
       });
+      setDriveEmail(currentUser.drive_share_email || currentUser.email || "");
     } catch (error) {
       console.error("Error loading user data:", error);
     } finally {
@@ -79,6 +84,39 @@ export default function UserProfilePage() {
       alert(t('error_saving') || 'Error saving profile. Please try again.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveDriveEmail = async () => {
+    try {
+      const email = (driveEmail || '').trim();
+      if (!email) { alert('Enter a Google email'); return; }
+      await base44.auth.updateMe({ drive_share_email: email });
+      alert('Saved');
+      await loadUserData();
+    } catch (e) {
+      alert('Error: ' + (e?.message || e));
+    }
+  };
+
+  const handleCheckDrive = async () => {
+    try {
+      setDriveChecking(true);
+      const { data } = await base44.functions.invoke('checkDriveAuth', {});
+      setDriveAuthorized(!!data?.authorized);
+      if (data?.authorized) {
+        const who = await base44.functions.invoke('driveWhoAmI', {});
+        setDriveAccount(who?.data?.user || null);
+        const email = who?.data?.user?.emailAddress || who?.data?.user?.displayName || 'Google';
+        alert('Connected to ' + email);
+      } else {
+        alert('Not connected to Google Drive');
+      }
+    } catch (e) {
+      setDriveAuthorized(false);
+      alert('Not connected');
+    } finally {
+      setDriveChecking(false);
     }
   };
 
@@ -374,6 +412,36 @@ export default function UserProfilePage() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Google Drive / Sheets</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Files are created in the app owner’s Drive and automatically shared to your Google email below.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+              <div className="md:col-span-2">
+                <Label htmlFor="drive_email">Google email for sharing</Label>
+                <Input id="drive_email" type="email" value={driveEmail} onChange={(e) => setDriveEmail(e.target.value)} placeholder="you@gmail.com" />
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" onClick={handleSaveDriveEmail} className="bg-blue-600 hover:bg-blue-700">
+                  <Save className="w-4 h-4 mr-2" /> Save
+                </Button>
+                <Button type="button" variant="outline" onClick={handleCheckDrive} disabled={driveChecking}>
+                  {driveChecking ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />Checking...</>) : 'Check connection'}
+                </Button>
+              </div>
+            </div>
+            {driveAuthorized !== null && (
+              <p className={`text-sm mt-3 ${driveAuthorized ? 'text-green-700' : 'text-red-700'}`}>
+                {driveAuthorized ? `Connected as ${driveAccount?.emailAddress || driveAccount?.displayName || 'Google account'}` : 'Not connected'}
+              </p>
+            )}
           </CardContent>
         </Card>
 
