@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
     ];
 
     const pageHeight = doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.getWidth();
 
     const drawHeader = () => {
       doc.setFontSize(12);
