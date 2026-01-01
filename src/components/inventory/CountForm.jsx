@@ -35,6 +35,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const [hasDraft, setHasDraft] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [warehouseOptions, setWarehouseOptions] = useState(warehouses || []);
+  const [availableSearch, setAvailableSearch] = useState("");
 
   // Monitor online/offline status
   useEffect(() => {
