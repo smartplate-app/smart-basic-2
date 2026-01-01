@@ -25,6 +25,16 @@ Deno.serve(async (req) => {
     const margin = 40;
     let y = 50;
 
+    // RTL/Hebrew helpers
+    const containsHebrew = (s) => /[\u0590-\u05FF]/.test(String(s || ''));
+    const drawTextSmart = (txt, xLeft, xRight, yPos, preferredAlign = 'left') => {
+      const isHeb = containsHebrew(txt);
+      const align = isHeb ? 'right' : preferredAlign;
+      const x = align === 'right' ? xRight : xLeft;
+      doc.text(String(txt ?? ''), x, yPos, { align });
+    };
+    if (typeof doc.setR2L === 'function') { doc.setR2L(true); }
+
     const restaurantName = user?.business_name || user?.store_user_store_name || user?.full_name || user?.email || 'Restaurant';
     const monthLabel = (() => {
       try {
@@ -35,9 +45,11 @@ Deno.serve(async (req) => {
     })();
     const generatedAt = new Date().toLocaleString();
 
+    const pw = doc.internal.pageSize.getWidth();
+
     const title = `${restaurantName} - Inventory Count${monthLabel ? ` (${monthLabel})` : ''}`;
     doc.setFontSize(18);
-    doc.text(title, margin, y);
+    drawTextSmart(title, margin, pw - margin, y, 'left');
     y += 24;
 
     doc.setFontSize(11);
@@ -51,7 +63,7 @@ Deno.serve(async (req) => {
       `Generated: ${generatedAt}`,
     ].filter(Boolean);
     metaLines.forEach((line) => {
-      doc.text(line, margin, y);
+      drawTextSmart(line, margin, pw - margin, y, 'left');
       y += 16;
     });
 
@@ -101,7 +113,7 @@ Deno.serve(async (req) => {
       };
       columns.forEach((col) => {
         const txt = row[col.key] ?? '';
-        doc.text(String(txt), col.x + (col.align === 'right' ? col.width : 0), y, { align: col.align || 'left' });
+        drawTextSmart(txt, col.x, col.x + col.width, y, col.align || 'left');
       });
       y += 14;
     }
