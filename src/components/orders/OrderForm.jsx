@@ -90,33 +90,32 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
 
       // Build queries to include all relevant sources and merge
       const queries = [];
+
+      // Always include items tagged by store owner for the working (controlled) user
+      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: workingEmail }, 'name'));
+
       if (ownerEmail) {
+        // Controlled user is a store user → include owner's items as well
         queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, 'name'));
         queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: ownerEmail }, 'name'));
-        // Also include items created by the current store user (manager/worker)
-        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
       } else {
-        // Chain branch: include head store items as well as own
-        if (user.chain_id && !user.is_chain_head) {
-          let headEmail = null;
-          try {
-            const chainRec = await base44.entities.Chain.filter({ id: user.chain_id });
-            headEmail = chainRec?.[0]?.head_store_user_email || null;
-            if (!headEmail) {
-              const storesInChain = await base44.entities.ChainStore.filter({ chain_id: user.chain_id });
-              const headStore = storesInChain?.find(s => s.is_head_store);
-              headEmail = headStore?.user_email || null;
-            }
-          } catch {}
-          if (headEmail) {
-            queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: headEmail }, 'name'));
+        // Detect chain head for the controlled user via ChainStore
+        let headEmail = null;
+        try {
+          const myStores = await base44.entities.ChainStore.filter({ user_email: workingEmail });
+          const myStore = myStores?.[0];
+          if (myStore && !myStore.is_head_store && myStore.chain_id) {
+            const heads = await base44.entities.ChainStore.filter({ chain_id: myStore.chain_id, is_head_store: true });
+            headEmail = heads?.[0]?.user_email || null;
           }
-          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
-        } else {
-          // Owner/head store context: include own items
-          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
+        } catch {}
+        if (headEmail) {
+          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: headEmail }, 'name'));
         }
       }
+
+      // Always include working user's own items
+      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
 
       // Use a mobile-safe Promise.all with per-promise fallbacks (older mobile Safari lacks allSettled)
       const safeQueries = queries.map(p => p.then(res => res).catch(() => []));
