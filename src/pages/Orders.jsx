@@ -471,9 +471,10 @@ export default function OrdersPage() {
 
     const orderDetailsUrl = `${window.location.origin}${createPageUrl(`OrderDetails?id=${order.id}`)}`;
 
+    const msgNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const message = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n` +
       `*${t('order_from')}:* ${order.restaurant_name}\n` +
-      `*${t('order_number')}:* ${order.order_number || '—'}\n\n` +
+      `*${t('order_number')}:* ${msgNumber}\n\n` +
       `*${t('whatsapp_link_text')}*\n` +
       `${orderDetailsUrl}\n\n` +
       `${t('whatsapp_confirmation')}`;

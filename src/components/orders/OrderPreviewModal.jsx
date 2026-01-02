@@ -49,6 +49,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     try {
       setDownloading(true);
 
+      // Ensure order number exists; if missing, persist and mark as sent when appropriate
+      let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+      try {
+        if (!order.order_number && order.id) {
+          await base44.entities.Order.update(order.id, {
+            order_number: ensuredNumber,
+            status: order.status === 'draft' ? 'sent' : (order.status || 'sent')
+          });
+          order.order_number = ensuredNumber;
+        }
+      } catch (_) {}
+
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
@@ -64,7 +76,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       tempContainer.innerHTML = `
         <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 32px; text-align: center; border-radius: 16px 16px 0 0; margin: -40px -40px 20px -40px;">
           <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0;">
-            ${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}
+            ${language === 'he' ? 'הזמנה' : 'Order'} #${ensuredNumber}
           </h1>
           <p style="font-size: 16px; opacity: 0.9; margin: 0;">
             ${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}
@@ -144,7 +156,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
       // Convert to blob and try to copy to clipboard
       canvas.toBlob(async (blob) => {
-        const number = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+        const number = ensuredNumber;
         const file = new File([blob], `order-${number}.jpg`, { type: 'image/jpeg' });
 
         // Format phone for WhatsApp
@@ -156,7 +168,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           phone = '972' + phone;
         }
 
-        const msgNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+        const msgNumber = ensuredNumber;
         const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${msgNumber}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`;
         const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
@@ -195,7 +207,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `order-${order.order_number}.jpg`;
+        link.download = `order-${ensuredNumber}.jpg`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
