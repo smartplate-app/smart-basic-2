@@ -188,7 +188,15 @@ export default function OrdersPage() {
       try {
         myDrafts = await base44.entities.Order.filter({ created_by: workingEmail, status: 'draft' }, "-created_date");
       } catch (_) { myDrafts = []; }
-      const mergedAll = [...ordersData, ...myDrafts];
+
+      // Fallback: fetch drafts by status only and filter client-side by creator
+      let fallbackDrafts = [];
+      try {
+        const draftsByStatus = await base44.entities.Order.filter({ status: 'draft' }, "-created_date");
+        fallbackDrafts = (draftsByStatus || []).filter(o => o?.created_by === workingEmail);
+      } catch (_) { fallbackDrafts = []; }
+
+      const mergedAll = [...ordersData, ...myDrafts, ...fallbackDrafts];
       const uniq = [];
       const seenIds = new Set();
       for (const o of mergedAll) {
