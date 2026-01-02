@@ -16,22 +16,24 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   
   if (!isOpen || !order) return null;
 
-  // Encode minimal order data in URL for true public access (no login required)
-  const minimalOrder = {
-    n: order.order_number,
-    s: order.supplier_name,
-    r: order.restaurant_name,
-    a: order.restaurant_address,
-    d: order.delivery_date,
-    i: (order.items || []).map(item => ({
-      n: item.item_name,
-      q: item.quantity,
-      u: item.unit
-    })),
-    t: order.notes
-  };
-  const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
-  const orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
+  // Prefer ID-based preview to avoid long URLs; fallback to minified payload
+  const fallbackNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+  let orderUrl = '';
+  if (order.id) {
+    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}`)}`;
+  } else {
+    const minimalOrder = {
+      n: fallbackNumber,
+      s: order.supplier_name,
+      r: order.restaurant_name,
+      a: order.restaurant_address,
+      d: order.delivery_date,
+      i: (order.items || []).map(item => ({ n: item.item_name, q: item.quantity, u: item.unit })),
+      t: order.notes
+    };
+    const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
+    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
+  }
 
   const handleCopyLink = async () => {
     try {
@@ -142,7 +144,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
       // Convert to blob and try to copy to clipboard
       canvas.toBlob(async (blob) => {
-        const file = new File([blob], `order-${order.order_number}.jpg`, { type: 'image/jpeg' });
+        const number = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+        const file = new File([blob], `order-${number}.jpg`, { type: 'image/jpeg' });
 
         // Format phone for WhatsApp
         let phone = order.supplier_phone || '';
@@ -153,7 +156,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           phone = '972' + phone;
         }
 
-        const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${order.order_number}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`;
+        const msgNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+        const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${msgNumber}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`;
         const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
         // Try to copy image to clipboard

@@ -8,38 +8,54 @@ export default function PublicOrderPage() {
     const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const orderData = urlParams.get('d');
-            
-            if (!orderData) {
-                setError('No order data');
-                return;
+        (async () => {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const id = urlParams.get('id');
+                const orderData = urlParams.get('d');
+
+                if (id) {
+                    const res = await fetch('/functions/getPublicOrder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId: id })
+                    });
+                    const json = await res.json();
+                    if (!res.ok || !json?.order) {
+                        setError(json?.error || 'Invalid order data');
+                        return;
+                    }
+                    setOrder(json.order);
+                    return;
+                }
+
+                if (!orderData) {
+                    setError('No order data');
+                    return;
+                }
+                const decoded = decodeURIComponent(orderData);
+                const parsed = JSON.parse(decoded);
+
+                // Convert minified data back to full format
+                const fullOrder = {
+                    order_number: parsed.n,
+                    supplier_name: parsed.s,
+                    restaurant_name: parsed.r,
+                    restaurant_address: parsed.a,
+                    delivery_date: parsed.d,
+                    items: (parsed.i || []).map(item => ({
+                        item_name: item.n,
+                        quantity: item.q,
+                        unit: item.u
+                    })),
+                    notes: parsed.t
+                };
+                setOrder(fullOrder);
+            } catch (err) {
+                console.error('Parse error:', err);
+                setError('Invalid order data');
             }
-            
-            const decoded = decodeURIComponent(orderData);
-            const parsed = JSON.parse(decoded);
-            
-            // Convert minified data back to full format
-            const fullOrder = {
-                order_number: parsed.n,
-                supplier_name: parsed.s,
-                restaurant_name: parsed.r,
-                restaurant_address: parsed.a,
-                delivery_date: parsed.d,
-                items: (parsed.i || []).map(item => ({
-                    item_name: item.n,
-                    quantity: item.q,
-                    unit: item.u
-                })),
-                notes: parsed.t
-            };
-            
-            setOrder(fullOrder);
-        } catch (err) {
-            console.error('Parse error:', err);
-            setError('Invalid order data');
-        }
+        })();
     }, []);
 
     const isRTL = language === 'he';
