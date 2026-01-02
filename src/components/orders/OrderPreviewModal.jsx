@@ -33,10 +33,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   if (order.id) {
     // Always include both id and payload for robustness (drafts included)
     const qs = `id=${order.id}&d=${orderData}`;
-    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?${qs}`)}`;
+    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?${qs}`)}&ts=${Date.now()}`;
   } else {
     // Unsaved orders: embed minimal payload
-    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
+    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}&ts=${Date.now()}`;
   }
 
   const handleCopyLink = async () => {

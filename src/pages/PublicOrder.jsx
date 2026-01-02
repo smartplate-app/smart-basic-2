@@ -14,6 +14,27 @@ export default function PublicOrderPage() {
                 const id = urlParams.get('id');
                 const orderData = urlParams.get('d');
 
+                // 1) If inline payload exists, prefer it (shows latest edits immediately)
+                if (orderData) {
+                    try {
+                        const parsed = JSON.parse(decodeURIComponent(orderData));
+                        const fullOrder = {
+                            order_number: parsed.n,
+                            supplier_name: parsed.s,
+                            restaurant_name: parsed.r,
+                            restaurant_address: parsed.a,
+                            delivery_date: parsed.d,
+                            items: (parsed.i || []).map(item => ({ item_name: item.n, quantity: item.q, unit: item.u })),
+                            notes: parsed.t
+                        };
+                        setOrder(fullOrder);
+                        return;
+                    } catch (e) {
+                        console.warn('Failed to parse inline payload, will try by id', e);
+                    }
+                }
+
+                // 2) Otherwise, fetch by id
                 if (id) {
                     const res = await fetch('/functions/getPublicOrder', {
                         method: 'POST',
@@ -25,49 +46,12 @@ export default function PublicOrderPage() {
                         setOrder(json.order);
                         return;
                     }
-                    // Fallback: if payload provided, use it instead of erroring
-                    if (orderData) {
-                        try {
-                            const parsed = JSON.parse(decodeURIComponent(orderData));
-                            const fullOrder = {
-                                order_number: parsed.n,
-                                supplier_name: parsed.s,
-                                restaurant_name: parsed.r,
-                                restaurant_address: parsed.a,
-                                delivery_date: parsed.d,
-                                items: (parsed.i || []).map(item => ({ item_name: item.n, quantity: item.q, unit: item.u })),
-                                notes: parsed.t
-                            };
-                            setOrder(fullOrder);
-                            return;
-                        } catch (_) {}
-                    }
                     setError(json?.error || 'Invalid order data');
                     return;
                 }
 
-                if (!orderData) {
-                    setError('No order data');
-                    return;
-                }
-                const decoded = decodeURIComponent(orderData);
-                const parsed = JSON.parse(decoded);
-
-                // Convert minified data back to full format
-                const fullOrder = {
-                    order_number: parsed.n,
-                    supplier_name: parsed.s,
-                    restaurant_name: parsed.r,
-                    restaurant_address: parsed.a,
-                    delivery_date: parsed.d,
-                    items: (parsed.i || []).map(item => ({
-                        item_name: item.n,
-                        quantity: item.q,
-                        unit: item.u
-                    })),
-                    notes: parsed.t
-                };
-                setOrder(fullOrder);
+                // 3) No data provided
+                setError('No order data');
             } catch (err) {
                 console.error('Parse error:', err);
                 setError('Invalid order data');
