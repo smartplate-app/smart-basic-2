@@ -407,33 +407,110 @@ export default function MonthlyCountPage() {
 
   // Export current count via HTML (best Hebrew support). Open window first to avoid popup blockers.
   const handleExportPdf = async (count) => {
-    // Open a tab synchronously on click, then stream in the HTML
-    const win = window.open('about:blank', '_blank');
-    if (win) {
-      win.document.write('<!doctype html><html><body style="font-family:sans-serif;padding:24px;">Loading…</body></html>');
-      win.document.close();
+    // Open a lightweight in-app signature window first
+    const sigWin = window.open('', '_blank', 'width=720,height=520');
+    if (!sigWin) {
+      alert(t('enable_popups') || 'Please allow popups to sign and export.');
+      return;
     }
-    try {
-      const { data } = await base44.functions.invoke('exportInventoryCountHtml', { count_id: count.id });
-      if (win) {
-        win.document.open();
-        win.document.write(typeof data === 'string' ? data : String(data));
-        win.document.close();
-      } else {
-        // Fallback: open blob URL
-        const blob = new Blob([typeof data === 'string' ? data : String(data)], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+
+    const sigHtml = `<!doctype html>
+    <html lang="he" dir="rtl">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>חתימה אלקטרונית</title>
+      <style>
+        body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:0; background:#f8fafc; color:#111827}
+        .wrap{max-width:760px;margin:24px auto;padding:16px}
+        h1{font-size:18px;margin:0 0 8px}
+        .meta{color:#6b7280;font-size:12px;margin-bottom:12px}
+        .box{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+        .sig{border:1px dashed #e5e7eb;border-radius:8px;background:#fff;}
+        canvas{display:block;width:100%;height:220px}
+        .row{display:flex;gap:8px;margin-top:12px}
+        .btn{appearance:none;border:0;border-radius:8px;padding:8px 12px;background:#111827;color:#fff;text-decoration:none;cursor:pointer}
+        .btn.subtle{background:#e5e7eb;color:#111827}
+      </style>
+    </head>
+    <body>
+      <div class="wrap">
+        <h1>חתימה אלקטרונית</h1>
+        <div class="meta">חתמו עם העכבר או האצבע ואז לחצו המשך.</div>
+        <div class="box">
+          <div class="sig"><canvas id="pad"></canvas></div>
+          <div class="row">
+            <button id="clear" class="btn subtle">נקה</button>
+            <button id="cancel" class="btn subtle">בטל</button>
+            <button id="ok" class="btn">המשך וייצא PDF</button>
+          </div>
+        </div>
+      </div>
+      <script>
+        (function(){
+          const c = document.getElementById('pad');
+          const ctx = c.getContext('2d');
+          const parent = c.parentElement;
+          function resize(){
+            const ratio = Math.max(window.devicePixelRatio||1,1);
+            const w = parent.clientWidth||700; const h = 220;
+            c.style.width = w+'px'; c.style.height = h+'px';
+            c.width = Math.floor(w*ratio); c.height = Math.floor(h*ratio);
+            ctx.setTransform(1,0,0,1,0,0); ctx.scale(ratio, ratio);
+            ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=2.5; ctx.strokeStyle='#111827';
+            ctx.clearRect(0,0,c.width,c.height);
+          }
+          let drawing=false, lx=0, ly=0;
+          function pos(e){ const r=c.getBoundingClientRect(); if(e.touches&&e.touches[0]) return {x:e.touches[0].clientX-r.left, y:e.touches[0].clientY-r.top}; return {x:(e.clientX??e.pageX)-r.left, y:(e.clientY??e.pageY)-r.top}; }
+          function start(e){ drawing=true; const p=pos(e); lx=p.x; ly=p.y; e.preventDefault(); }
+          function move(e){ if(!drawing) return; const p=pos(e); ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(p.x,p.y); ctx.stroke(); lx=p.x; ly=p.y; e.preventDefault(); }
+          function end(){ drawing=false; }
+          c.addEventListener('mousedown', start); c.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
+          c.addEventListener('touchstart', start, {passive:false}); c.addEventListener('touchmove', move, {passive:false}); c.addEventListener('touchend', end);
+          window.addEventListener('resize', resize); resize();
+          document.getElementById('clear').addEventListener('click', ()=>resize());
+          document.getElementById('cancel').addEventListener('click', ()=>{ try{window.close();}catch(_){} });
+          document.getElementById('ok').addEventListener('click', ()=>{
+            const dataUrl = c.toDataURL('image/png');
+            try { window.opener.postMessage({ type:'B44_SIGNATURE_CAPTURED', dataUrl }, window.location.origin); } catch(_) { window.opener.postMessage({ type:'B44_SIGNATURE_CAPTURED', dataUrl }, '*'); }
+          });
+        })();
+      </script>
+    </body>
+    </html>`;
+
+    sigWin.document.write(sigHtml);
+    sigWin.document.close();
+
+    const onMessage = async (e) => {
+      if (e.source !== sigWin) return;
+      if (!e.data || e.data.type !== 'B44_SIGNATURE_CAPTURED') return;
+      window.removeEventListener('message', onMessage);
+      try {
+        const dataUrl = e.data.dataUrl || '';
+        const win = window.open('about:blank', '_blank');
+        if (win) {
+          win.document.write('<!doctype html><html><body style="font-family:sans-serif;padding:24px;">Loading…</body></html>');
+          win.document.close();
+        }
+        const { data } = await base44.functions.invoke('exportInventoryCountHtml', { count_id: count.id, signature_data_url: dataUrl });
+        if (win) {
+          win.document.open();
+          win.document.write(typeof data === 'string' ? data : String(data));
+          win.document.close();
+        } else {
+          const blob = new Blob([typeof data === 'string' ? data : String(data)], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        }
+      } catch (e2) {
+        alert((t('error_saving') || 'Error') + ': ' + (e2?.message || e2));
+      } finally {
+        try { sigWin.close(); } catch {}
       }
-    } catch (e) {
-      if (win) {
-        win.document.open();
-        win.document.write(`<pre style="color:#b91c1c;">${(t('error_saving') || 'Error')}: ${e?.message || e}</pre>`);
-        win.document.close();
-      } else {
-        alert((t('error_saving') || 'Error') + ': ' + (e?.message || e));
-      }
-    }
+    };
+
+    window.addEventListener('message', onMessage);
   };
 
   /* handleSendPdf removed per request */
