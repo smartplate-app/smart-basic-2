@@ -449,11 +449,14 @@ export default function OrdersPage() {
     try {
       if (!order) return;
       let toSend = order;
-      if (order.status !== 'sent') {
-        const orderNumber = order.order_number || `ORD-${Date.now()}`;
+
+      // Ensure order number exists and persist if missing; also set status to sent if not already
+      let orderNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+      if (order.status !== 'sent' || !order.order_number) {
         await base44.entities.Order.update(order.id, { status: 'sent', order_number: orderNumber });
         toSend = { ...order, status: 'sent', order_number: orderNumber };
       }
+
       sendOrderToWhatsApp(toSend);
       setPreviewOrder(null);
       await loadData(user);
