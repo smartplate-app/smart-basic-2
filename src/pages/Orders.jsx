@@ -183,8 +183,21 @@ export default function OrdersPage() {
         suppliersData = suppliers;
       }
 
-      console.log(`[Orders] Successfully loaded ${ordersData.length} orders, ${suppliersData.length} suppliers`);
-      setOrders(ordersData);
+      // Always include my own drafts as well (important for sub-users)
+      let myDrafts = [];
+      try {
+        myDrafts = await base44.entities.Order.filter({ created_by: currentUser.email, status: 'draft' }, "-created_date");
+      } catch (_) { myDrafts = []; }
+      const mergedAll = [...ordersData, ...myDrafts];
+      const uniq = [];
+      const seenIds = new Set();
+      for (const o of mergedAll) {
+        if (!o?.id || seenIds.has(o.id)) continue;
+        seenIds.add(o.id);
+        uniq.push(o);
+      }
+      console.log(`[Orders] Successfully loaded ${uniq.length} orders (after merging drafts), ${suppliersData.length} suppliers`);
+      setOrders(uniq);
       setSuppliers(suppliersData);
 
       setError(null);
