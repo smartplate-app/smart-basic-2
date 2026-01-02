@@ -183,10 +183,10 @@ export default function OrdersPage() {
         suppliersData = suppliers;
       }
 
-      // Always include my own drafts as well (important for sub-users)
+      // Always include context user's drafts (supports admin-controlling + sub-users)
       let myDrafts = [];
       try {
-        myDrafts = await base44.entities.Order.filter({ created_by: currentUser.email, status: 'draft' }, "-created_date");
+        myDrafts = await base44.entities.Order.filter({ created_by: workingEmail, status: 'draft' }, "-created_date");
       } catch (_) { myDrafts = []; }
       const mergedAll = [...ordersData, ...myDrafts];
       const uniq = [];
