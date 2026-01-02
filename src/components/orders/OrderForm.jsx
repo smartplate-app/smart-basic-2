@@ -94,7 +94,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, 'name'));
         queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: ownerEmail }, 'name'));
         // Also include items created by the current store user (manager/worker)
-        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
       } else {
         // Chain branch: include head store items as well as own
         if (user.chain_id && !user.is_chain_head) {
@@ -111,10 +111,10 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           if (headEmail) {
             queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: headEmail }, 'name'));
           }
-          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
+          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
         } else {
           // Owner/head store context: include own items
-          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: user.email }, 'name'));
+          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
         }
       }
 
