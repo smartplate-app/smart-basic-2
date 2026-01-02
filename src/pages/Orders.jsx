@@ -366,6 +366,17 @@ export default function OrdersPage() {
     };
   }, []);
 
+  const verifyDraftsNow = async () => {
+    try {
+      const { data } = await base44.functions.invoke('verifyDrafts', {});
+      console.log('[verifyDrafts]', data);
+      alert(`Drafts check for ${data.working_email}: Total ${data.merged_unique_count} (primary ${data.myDrafts_count}, fallback ${data.fallback_count})`);
+    } catch (e) {
+      console.log('[verifyDrafts] failed', e?.message || e);
+      alert('Drafts check failed: ' + (e?.message || ''));
+    }
+  };
+
   const handleManualRetry = () => {
     setError(null);
     setAuthLoading(true);
