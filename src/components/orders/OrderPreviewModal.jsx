@@ -31,8 +31,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   let orderUrl = '';
   const isDraft = (order.status === 'draft');
   if (order.id) {
-    // Saved orders (draft or sent): use ID only for shorter, reliable URLs
-    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}`)}`;
+    // Always include both id and payload for robustness (drafts included)
+    const qs = `id=${order.id}&d=${orderData}`;
+    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?${qs}`)}`;
   } else {
     // Unsaved orders: embed minimal payload
     orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
