@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Download, Send } from "lucide-react";
+import { Pencil, Trash2, Download } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
 
-export default function CountListView({ counts, onEdit, onDelete, onExport, onSend }) {
+export default function CountListView({ counts, onEdit, onDelete, onExport }) {
   const { t, language } = useLanguage();
 
   const statusColors = {
@@ -116,15 +116,7 @@ export default function CountListView({ counts, onEdit, onDelete, onExport, onSe
                       <Download className="w-4 h-4 mr-1" />
                       {t('export_pdf') || 'Export PDF'}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onSend && onSend(count)}
-                      className="border-green-600 text-green-600 hover:bg-green-50"
-                    >
-                      <Send className="w-4 h-4 mr-1" />
-                      {t('send_pdf') || 'Send PDF'}
-                    </Button>
+
                     <Button
                       variant="outline"
                       size="sm"

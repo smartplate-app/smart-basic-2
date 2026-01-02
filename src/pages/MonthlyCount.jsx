@@ -436,60 +436,7 @@ export default function MonthlyCountPage() {
     }
   };
 
-  // Export and email PDF link to accountant (fallback to HTML link if PDF fails)
-  const handleSendPdf = async (count) => {
-    const email = window.prompt(t('enter_email') || 'Enter accountant email');
-    if (!email) return;
-
-    const baseName = `InventoryCount_${(count.name || count.warehouse_name || 'Count').replace(/\s+/g,'_')}_${count.count_date}`;
-    const subject = (t('monthly_count_title') || 'Inventory Count') + ` - ${count.name || count.warehouse_name || ''} (${count.count_date})`;
-
-    let linkUrl = '';
-    let note = '';
-
-    try {
-      // Try PDF first
-      const { data } = await base44.functions.invoke('exportInventoryCountPdf', { count_id: count.id });
-      const pdfBlob = new Blob([data], { type: 'application/pdf' });
-      const pdfFile = new File([pdfBlob], `${baseName}.pdf`, { type: 'application/pdf' });
-      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file: pdfFile });
-      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri });
-      linkUrl = signed_url;
-    } catch (err) {
-      // Fallback: upload printable HTML instead
-      try {
-        const { data: html } = await base44.functions.invoke('exportInventoryCountHtml', { count_id: count.id });
-        const htmlBlob = new Blob([typeof html === 'string' ? html : String(html)], { type: 'text/html;charset=utf-8' });
-        const htmlFile = new File([htmlBlob], `${baseName}.html`, { type: 'text/html' });
-        const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file: htmlFile });
-        const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri });
-        linkUrl = signed_url;
-        note = `\n${t('if_pdf_issue') || 'If the PDF had an issue, use this HTML view (Print → Save as PDF).'}\n`;
-      } catch (e2) {
-        alert((t('error_saving') || 'Error') + ': ' + (e2?.message || e2));
-        return;
-      }
-    }
-
-    const body = [
-      (t('hello') || 'Hello') + ',',
-      '',
-      (t('attached_is_pdf_link') || 'Here is the PDF link for the monthly inventory count:'),
-      linkUrl,
-      note,
-      (t('thanks') || 'Thanks') + ',',
-      user?.business_name || user?.full_name || 'SmartPlate'
-    ].join('\n');
-
-    await base44.integrations.Core.SendEmail({
-      to: email,
-      subject,
-      body,
-      from_name: user?.email_sender_name || user?.business_name || user?.full_name || undefined
-    });
-
-    alert(t('sent') || 'Sent');
-  };
+  /* handleSendPdf removed per request */
 
   const filteredCounts = counts.filter(count => {
         const matchesSearch = count.warehouse_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -777,7 +724,6 @@ export default function MonthlyCountPage() {
                     onEdit={handleEditCount}
                     onDelete={handleDeleteCount}
                     onExport={handleExportPdf}
-                    onSend={handleSendPdf}
                   />
                 )}
 
