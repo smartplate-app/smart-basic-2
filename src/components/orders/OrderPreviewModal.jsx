@@ -30,13 +30,13 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
   let orderUrl = '';
   const isDraft = (order.status === 'draft');
-  if (!isDraft && order.id) {
-    // Sent/confirmed/delivered → reliable to fetch by id
-    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}`)}`;
-  } else {
-    // Drafts or missing id → provide payload (also include id when available for future-proofing)
-    const qs = order.id ? `id=${order.id}&d=${orderData}` : `d=${orderData}`;
+  if (order.id) {
+    // Always include both id and payload for robustness
+    const qs = `id=${order.id}&d=${orderData}`;
     orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?${qs}`)}`;
+  } else {
+    // No id yet → rely on embedded payload
+    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
   }
 
   const handleCopyLink = async () => {
