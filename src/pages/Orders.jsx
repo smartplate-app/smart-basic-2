@@ -111,24 +111,38 @@ export default function OrdersPage() {
         }
         
         // If controlled user is a store user, load from their owner
-        const dataEmail = controlledUserOwnerEmail || workingEmail;
-        console.log(`[Orders] Loading data from: ${dataEmail}`);
+        const dataEmails = controlledUserOwnerEmail ? [controlledUserOwnerEmail, workingEmail] : [workingEmail];
+        console.log(`[Orders] Loading data from: ${dataEmails.join(', ')}`);
         
-        const [userOrders, userSuppliers] = await Promise.all([
-          base44.entities.Order.filter({ created_by: dataEmail }, "-created_date"),
-          base44.entities.Supplier.filter({ created_by: dataEmail }, "name")
+        const orderPromises = dataEmails.map(e => base44.entities.Order.filter({ created_by: e }, "-created_date"));
+        const [ordersArrays, userSuppliers] = await Promise.all([
+          Promise.all(orderPromises),
+          base44.entities.Supplier.filter({ created_by: controlledUserOwnerEmail || workingEmail }, "name")
         ]);
-        ordersData = userOrders;
+        const mergedOrders = ordersArrays.flat();
+        const seenIds = new Set();
+        ordersData = mergedOrders.filter(o => {
+          if (!o?.id || seenIds.has(o.id)) return false;
+          seenIds.add(o.id);
+          return true;
+        });
         suppliersData = userSuppliers;
         console.log(`[Orders] Loaded ${userSuppliers.length} suppliers for controlled user`);
       } else if (isStoreUser && storeOwnerEmail) {
-        // Store user - load suppliers and orders from the store owner
-        const [ownerSuppliers, ownerOrders] = await Promise.all([
+        // Store user - show owner's orders + this user's orders (drafts etc.)
+        const [ownerSuppliers, ownerOrders, myOrders] = await Promise.all([
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
-          base44.entities.Order.filter({ created_by: storeOwnerEmail }, "-created_date")
+          base44.entities.Order.filter({ created_by: storeOwnerEmail }, "-created_date"),
+          base44.entities.Order.filter({ created_by: currentUser.email }, "-created_date")
         ]);
         suppliersData = ownerSuppliers;
-        ordersData = ownerOrders;
+        const merged = [...ownerOrders, ...myOrders];
+        const seen = new Set();
+        ordersData = merged.filter(o => {
+          if (!o?.id || seen.has(o.id)) return false;
+          seen.add(o.id);
+          return true;
+        });
       } else if (currentUser.chain_id && !currentUser.is_chain_head) {
         // Branch store in chain
         const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
