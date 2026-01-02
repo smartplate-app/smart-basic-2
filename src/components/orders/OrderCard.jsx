@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ export default function OrderCard({ order, onEdit, onResend, onCreateReceipt, on
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-bold text-lg text-gray-900">
-                {t('order_number')} {order.order_number}
+                {t('order_number')} {order.order_number || '—'}
               </h3>
               <Badge variant="secondary" className={`${statusInfo.color} border`}>
                 {statusInfo.label}

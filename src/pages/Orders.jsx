@@ -408,7 +408,7 @@ export default function OrdersPage() {
 
     const message = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n` +
       `*${t('order_from')}:* ${order.restaurant_name}\n` +
-      `*${t('order_number')}:* ${order.order_number}\n\n` +
+      `*${t('order_number')}:* ${order.order_number || '—'}\n\n` +
       `*${t('whatsapp_link_text')}*\n` +
       `${orderDetailsUrl}\n\n` +
       `${t('whatsapp_confirmation')}`;
@@ -432,7 +432,7 @@ export default function OrdersPage() {
 
   const handleDelete = async (order) => {
     if (isViewer) return;
-    const input = window.prompt(`Type DELETE to confirm deletion of order ${order.order_number}`);
+    const input = window.prompt(`Type DELETE to confirm deletion of order ${order.order_number || '—'}`);
     if (!input || input.trim().toLowerCase() !== 'delete') return;
     try {
       await base44.entities.Order.delete(order.id);
