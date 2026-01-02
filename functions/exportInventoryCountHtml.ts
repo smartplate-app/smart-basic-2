@@ -22,6 +22,8 @@ Deno.serve(async (req) => {
     }
 
     const restaurantName = user?.business_name || user?.store_user_store_name || user?.full_name || user?.email || 'Restaurant';
+    const companyName = user?.business_name || '';
+    const taxId = user?.business_tax_id || '';
     const monthLabel = (() => {
       try {
         const d = count.count_date ? new Date(count.count_date) : null;
@@ -84,6 +86,8 @@ Deno.serve(async (req) => {
       <div>
         <h1>${esc(restaurantName)}</h1>
         <div class="meta">
+          ${companyName ? `<div>שם חברה: ${esc(companyName)}</div>` : ''}
+          ${taxId ? `<div>מספר עוסק/חברה: ${esc(taxId)}</div>` : ''}
           <div>שם ספירה: ${esc(count.name || '-')} <span class="badge">${esc(count.status || '')}</span></div>
           <div>מחסן: ${esc(count.warehouse_name || '-')}</div>
           <div>תאריך ספירה: ${esc(count.count_date || '-')}${monthLabel ? ` • ${esc(monthLabel)}` : ''}</div>

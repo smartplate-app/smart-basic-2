@@ -16,6 +16,7 @@ export default function UserProfilePage() {
     full_name: "",
     email: "",
     business_name: "",
+    business_tax_id: "",
     business_address: "",
     phone: "",
     supply_receiving_contact: "",
@@ -44,6 +45,7 @@ export default function UserProfilePage() {
         full_name: currentUser.full_name || "",
         email: currentUser.email || "",
         business_name: currentUser.business_name || "",
+        business_tax_id: currentUser.business_tax_id || "",
         business_address: currentUser.business_address || "",
         phone: currentUser.phone || "",
         supply_receiving_contact: currentUser.supply_receiving_contact || "",
@@ -69,6 +71,7 @@ export default function UserProfilePage() {
         full_name: formData.full_name,
         phone: formData.phone,
         business_name: formData.business_name,
+        business_tax_id: formData.business_tax_id,
         business_address: formData.business_address,
         supply_receiving_contact: formData.supply_receiving_contact,
         supply_receiving_phone: formData.supply_receiving_phone,
@@ -227,6 +230,16 @@ export default function UserProfilePage() {
                     value={formData.business_name}
                     onChange={(e) => setFormData({...formData, business_name: e.target.value})}
                     placeholder={t('business_name')}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="business_tax_id">{language === 'he' ? 'מספר עוסק/חברה (מס הכנסה)' : 'Business/IRS Number'}</Label>
+                  <Input
+                    id="business_tax_id"
+                    value={formData.business_tax_id || ''}
+                    onChange={(e) => setFormData({...formData, business_tax_id: e.target.value})}
+                    placeholder={language === 'he' ? 'לדוגמה: 123456789' : 'e.g., 123456789'}
                   />
                 </div>
 

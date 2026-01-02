@@ -87,18 +87,22 @@ Deno.serve(async (req) => {
     y += 24;
 
     doc.setFontSize(11);
+    const companyName = user?.business_name || '';
+    const taxId = user?.business_tax_id || '';
     const metaLines = [
-      `Count Name: ${count.name || '-'}`,
-      `Warehouse: ${count.warehouse_name || '-'}`,
-      `Count Date: ${count.count_date || '-'}`,
-      monthLabel ? `Month: ${monthLabel}` : '',
-      `Type: ${count.count_type || '-'}`,
-      `Status: ${count.status || '-'}`,
-      `Generated: ${generatedAt}`,
+        companyName ? `שם חברה: ${companyName}` : '',
+        taxId ? `מספר עוסק/חברה: ${taxId}` : '',
+        `Count Name: ${count.name || '-'}`,
+        `Warehouse: ${count.warehouse_name || '-'}`,
+        `Count Date: ${count.count_date || '-'}`,
+        monthLabel ? `Month: ${monthLabel}` : '',
+        `Type: ${count.count_type || '-'}`,
+        `Status: ${count.status || '-'}`,
+        `Generated: ${generatedAt}`,
     ].filter(Boolean);
     metaLines.forEach((line) => {
-      drawTextSmart(line, margin, pw - margin, y, 'left');
-      y += 16;
+        drawTextSmart(line, margin, pw - margin, y, 'left');
+        y += 16;
     });
 
     y += 8;
