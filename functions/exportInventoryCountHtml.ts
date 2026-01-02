@@ -78,10 +78,7 @@ Deno.serve(async (req) => {
     }
     .actions { margin: 16px 0; }
     .btn { background: var(--accent); color:white; padding:8px 12px; border-radius:8px; text-decoration:none; }
-    .signature { margin-top: 24px; }
-    .sig-wrap { border: 1px dashed var(--border); border-radius: 8px; background:#fff; }
-    .sig-wrap canvas { display:block; width:100%; height:160px; }
-    </style>
+  </style>
 </head>
 <body>
   <div class="page">
