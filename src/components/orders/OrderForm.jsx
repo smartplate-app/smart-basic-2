@@ -70,18 +70,22 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     setLoadingItems(true);
     try {
       const user = await base44.auth.me();
-      let ownerEmail = user.store_user_owner_email;
+      const workingEmail = user.acting_as_store_email || user.email;
+      let ownerEmail = null;
 
-      // If not saved on user, check StoreUser entity
-      if (!ownerEmail) {
-        try {
-          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: user.email, is_active: true });
-          if (storeUserRecords.length > 0) {
-            ownerEmail = storeUserRecords[0].owner_email;
-          }
-        } catch (e) {
-          console.log("Could not fetch store user records");
+      // Prefer explicit lookup by the working (controlled) user
+      try {
+        const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+        if (storeUserRecords.length > 0) {
+          ownerEmail = storeUserRecords[0].owner_email;
         }
+      } catch (e) {
+        console.log("Could not fetch store user records for working user");
+      }
+
+      // Fallback to user context flag (when actually logged in as a store user)
+      if (!ownerEmail && user.store_user_owner_email) {
+        ownerEmail = user.store_user_owner_email;
       }
 
       // Build queries to include all relevant sources and merge
