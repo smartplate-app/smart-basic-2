@@ -406,6 +406,25 @@ export default function OrdersPage() {
     }
   };
 
+  const handleSaveDraft = async (orderData) => {
+    if (isViewer) { return; }
+    try {
+      let savedOrder;
+      if (editingOrder) {
+        await base44.entities.Order.update(editingOrder.id, { ...orderData, status: 'draft' });
+        savedOrder = { ...editingOrder, ...orderData, status: 'draft', id: editingOrder.id };
+      } else {
+        savedOrder = await base44.entities.Order.create({ ...orderData, status: 'draft' });
+      }
+      setShowForm(false);
+      setEditingOrder(null);
+      await loadData(user);
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
+    }
+  };
+
   const handleEdit = (order) => {
     setEditingOrder(order);
     setShowForm(true);
@@ -546,13 +565,14 @@ export default function OrdersPage() {
               order={editingOrder}
               suppliers={suppliers}
               onSubmit={handleSubmit}
+              onSaveDraft={handleSaveDraft}
               onCancel={() => {
                 setShowForm(false);
                 setEditingOrder(null);
               }}
             />
-          )}
-        </AnimatePresence>
+            )}
+            </AnimatePresence>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="relative">

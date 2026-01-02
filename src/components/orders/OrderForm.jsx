@@ -10,7 +10,7 @@ import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 
-export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
+export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSaveDraft }) {
   const { t } = useLanguage();
   const [currentOrder, setCurrentOrder] = React.useState(order || {
     supplier_id: "",
@@ -502,6 +502,39 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel }) {
         <div className="flex gap-3 justify-end">
           <Button type="button" variant="outline" onClick={onCancel}>
             {t('cancel')}
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              if (!currentOrder.supplier_id) { alert(t('supplier_and_item_required')); return; }
+              const orderItems = [];
+              Object.keys(itemQuantities).forEach(itemId => {
+                const quantity = itemQuantities[itemId] || 0;
+                if (quantity > 0) {
+                  const item = availableItems.find(i => i.id === itemId);
+                  if (item) {
+                    const itemTotal = quantity * (item.price || 0);
+                    const discountedTotal = item.discount ? itemTotal * (1 - item.discount / 100) : itemTotal;
+                    orderItems.push({
+                      item_id: item.id,
+                      item_name: item.name,
+                      quantity: quantity,
+                      unit: item.unit,
+                      price: item.price || 0,
+                      discount: item.discount || 0,
+                      total: discountedTotal
+                    });
+                  }
+                }
+              });
+              if (orderItems.length === 0) { alert(t('supplier_and_item_required')); return; }
+              const totalCost = calculateTotal();
+              const orderData = { ...currentOrder, items: orderItems, total_cost: totalCost };
+              if (onSaveDraft) onSaveDraft(orderData);
+            }}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white"
+          >
+            {t('save_draft') || 'Save Draft'}
           </Button>
           <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
             {order ? t('update_order') : t('send_order')}
