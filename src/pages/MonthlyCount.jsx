@@ -548,21 +548,9 @@ export default function MonthlyCountPage() {
               {t('manage_warehouses')}
             </Button>
             
-            <Button
-              onClick={() => setShowScreenshotImport(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              <Camera className="w-5 h-5 ml-2" />
-              {t('import_from_screenshots') || 'ייבא מצילומי מסך'}
-            </Button>
+            {/* removed import_from_screenshots button per request */}
 
-            <Button
-              onClick={() => setShowExcelImport(true)}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <FileSpreadsheet className="w-5 h-5 ml-2" />
-              {t('import_from_excel') || 'ייבא מאקסל'}
-            </Button>
+            {/* removed import_from_excel button per request */}
             
             <Button
               onClick={handleGenerateCountSheet}
