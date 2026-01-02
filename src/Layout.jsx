@@ -113,7 +113,7 @@ const AppLayout = ({ children, currentPageName }) => {
   ];
 
   useEffect(() => {
-    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite' && currentPageName !== 'Welcome') {
+    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite' && currentPageName !== 'Welcome' && currentPageName !== 'PublicOrder') {
       loadAuth();
     } else {
       setAuthLoading(false);
@@ -423,7 +423,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite' || currentPageName === 'Welcome' || currentPageName === 'WelcomePublic') {
+  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite' || currentPageName === 'Welcome' || currentPageName === 'WelcomePublic' || currentPageName === 'PublicOrder') {
         return <>{children}</>;
       }
 

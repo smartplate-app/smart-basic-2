@@ -15,7 +15,9 @@ export default function PublicOrderPage() {
                 const orderData = urlParams.get('d');
 
                 if (id) {
-                    const res = await fetch('/functions/getPublicOrder', {
+                    const appId = 'smartplatebasic';
+                    const functionUrl = `https://app.base44.com/api/apps/${appId}/functions/getPublicOrder`;
+                    const res = await fetch(functionUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ orderId: id })
