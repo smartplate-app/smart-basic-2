@@ -16,23 +16,27 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   
   if (!isOpen || !order) return null;
 
-  // Prefer ID-based preview to avoid long URLs; fallback to minified payload
+  // Prefer ID-based preview for sent orders; use inline payload for drafts to avoid edge cases
   const fallbackNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+  const minimalOrder = {
+    n: fallbackNumber,
+    s: order.supplier_name,
+    r: order.restaurant_name,
+    a: order.restaurant_address,
+    d: order.delivery_date,
+    i: (order.items || []).map(item => ({ n: item.item_name, q: item.quantity, u: item.unit })),
+    t: order.notes
+  };
+  const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
   let orderUrl = '';
-  if (order.id) {
+  const isDraft = (order.status === 'draft');
+  if (!isDraft && order.id) {
+    // Sent/confirmed/delivered → reliable to fetch by id
     orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}`)}`;
   } else {
-    const minimalOrder = {
-      n: fallbackNumber,
-      s: order.supplier_name,
-      r: order.restaurant_name,
-      a: order.restaurant_address,
-      d: order.delivery_date,
-      i: (order.items || []).map(item => ({ n: item.item_name, q: item.quantity, u: item.unit })),
-      t: order.notes
-    };
-    const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
-    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
+    // Drafts or missing id → provide payload (also include id when available for future-proofing)
+    const qs = order.id ? `id=${order.id}&d=${orderData}` : `d=${orderData}`;
+    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?${qs}`)}`;
   }
 
   const handleCopyLink = async () => {

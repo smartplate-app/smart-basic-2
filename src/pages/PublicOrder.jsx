@@ -23,11 +23,28 @@ export default function PublicOrderPage() {
                         body: JSON.stringify({ orderId: id })
                     });
                     const json = await res.json();
-                    if (!res.ok || !json?.order) {
-                        setError(json?.error || 'Invalid order data');
+                    if (res.ok && json?.order) {
+                        setOrder(json.order);
                         return;
                     }
-                    setOrder(json.order);
+                    // Fallback: if payload provided, use it instead of erroring
+                    if (orderData) {
+                        try {
+                            const parsed = JSON.parse(decodeURIComponent(orderData));
+                            const fullOrder = {
+                                order_number: parsed.n,
+                                supplier_name: parsed.s,
+                                restaurant_name: parsed.r,
+                                restaurant_address: parsed.a,
+                                delivery_date: parsed.d,
+                                items: (parsed.i || []).map(item => ({ item_name: item.n, quantity: item.q, unit: item.u })),
+                                notes: parsed.t
+                            };
+                            setOrder(fullOrder);
+                            return;
+                        } catch (_) {}
+                    }
+                    setError(json?.error || 'Invalid order data');
                     return;
                 }
 
