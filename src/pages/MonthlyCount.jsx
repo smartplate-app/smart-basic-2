@@ -405,20 +405,21 @@ export default function MonthlyCountPage() {
     }
   };
 
-  // Export current count to PDF
+  // Export current count via HTML (best Hebrew support) and let the browser Save as PDF
   const handleExportPdf = async (count) => {
     try {
-      const fileName = `InventoryCount_${(count.name || count.warehouse_name || 'Count').replace(/\s+/g,'_')}_${count.count_date}.pdf`;
-      const { data } = await base44.functions.invoke('exportInventoryCountPdf', { count_id: count.id });
-      const blob = new Blob([data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
+      const { data } = await base44.functions.invoke('exportInventoryCountHtml', { count_id: count.id });
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.open();
+        win.document.write(typeof data === 'string' ? data : String(data));
+        win.document.close();
+      } else {
+        // Fallback: open blob URL
+        const blob = new Blob([data], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      }
     } catch (e) {
       alert((t('error_saving') || 'Error') + ': ' + (e?.message || e));
     }
