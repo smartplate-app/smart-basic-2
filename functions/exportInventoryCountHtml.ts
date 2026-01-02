@@ -78,7 +78,10 @@ Deno.serve(async (req) => {
     }
     .actions { margin: 16px 0; }
     .btn { background: var(--accent); color:white; padding:8px 12px; border-radius:8px; text-decoration:none; }
-  </style>
+    .signature { margin-top: 24px; }
+    .sig-wrap { border: 1px dashed var(--border); border-radius: 8px; background:#fff; }
+    .sig-wrap canvas { display:block; width:100%; height:160px; }
+    </style>
 </head>
 <body>
   <div class="page">
@@ -118,13 +121,82 @@ Deno.serve(async (req) => {
       </tfoot>
     </table>
 
-    <div class="actions noprint">
-      <a href="#" class="btn" onclick="window.print(); return false;">הדפס / שמור כ-PDF</a>
-    </div>
+    <section class="signature">
+      <h2>חתימה אלקטרונית</h2>
+      <p class="meta">חתמו עם העכבר או האצבע, ואז לחצו "הדפס / שמור כ‑PDF".</p>
+      <div class="sig-wrap">
+        <canvas id="sigPad"></canvas>
+      </div>
+      <div class="actions noprint" style="display:flex; gap:8px; margin-top:8px;">
+        <a href="#" id="clearSig" class="btn" onclick="return false;">נקה חתימה</a>
+        <a href="#" class="btn" onclick="window.print(); return false;">הדפס / שמור כ-PDF</a>
+      </div>
+    </section>
   </div>
   <script>
-    // Auto-open print for quick Save as PDF
-    window.addEventListener('load', () => setTimeout(() => { try { window.print(); } catch(_){} }, 300));
+    (function() {
+      const canvas = document.getElementById('sigPad');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const parent = canvas.parentElement;
+
+      function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const width = parent.clientWidth || 800;
+        const height = Math.max(140, Math.floor(width * 0.25));
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(ratio, ratio);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#111827';
+
+      let drawing = false;
+      let lastX = 0, lastY = 0;
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches[0]) {
+          return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        }
+        return { x: (e.clientX ?? e.pageX) - rect.left, y: (e.clientY ?? e.pageY) - rect.top };
+      }
+
+      function start(e) { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; e.preventDefault(); }
+      function move(e) {
+        if (!drawing) return;
+        const p = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        lastX = p.x; lastY = p.y;
+        e.preventDefault();
+      }
+      function end() { drawing = false; }
+
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', end);
+
+      canvas.addEventListener('touchstart', start, { passive: false });
+      canvas.addEventListener('touchmove', move, { passive: false });
+      canvas.addEventListener('touchend', end);
+
+      document.getElementById('clearSig')?.addEventListener('click', () => {
+        resizeCanvas();
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+    })();
   </script>
 </body>
 </html>`;
