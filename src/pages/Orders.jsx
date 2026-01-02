@@ -350,12 +350,11 @@ export default function OrdersPage() {
     try {
       let savedOrder;
       if (editingOrder) {
-        await base44.entities.Order.update(editingOrder.id, orderData);
-        savedOrder = { ...editingOrder, ...orderData, id: editingOrder.id };
+        await base44.entities.Order.update(editingOrder.id, { ...orderData, status: editingOrder.status || 'draft' });
+        savedOrder = { ...editingOrder, ...orderData, status: editingOrder.status || 'draft', id: editingOrder.id };
       } else {
-        const orderNumber = `ORD-${Date.now()}`;
-        const completeOrderData = { ...orderData, order_number: orderNumber, status: 'sent' };
-        savedOrder = await base44.entities.Order.create(completeOrderData);
+        const draftData = { ...orderData, status: 'draft' };
+        savedOrder = await base44.entities.Order.create(draftData);
       }
 
       setShowForm(false);
@@ -379,6 +378,24 @@ export default function OrdersPage() {
 
   const handleResend = (order) => {
     setPreviewOrder(order);
+  };
+
+  const handleSendNow = async (order) => {
+    try {
+      if (!order) return;
+      let toSend = order;
+      if (order.status !== 'sent') {
+        const orderNumber = order.order_number || `ORD-${Date.now()}`;
+        await base44.entities.Order.update(order.id, { status: 'sent', order_number: orderNumber });
+        toSend = { ...order, status: 'sent', order_number: orderNumber };
+      }
+      sendOrderToWhatsApp(toSend);
+      setPreviewOrder(null);
+      await loadData(user);
+    } catch (e) {
+      console.error('Failed to send order:', e);
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
+    }
   };
 
   const sendOrderToWhatsApp = (order) => {
@@ -518,6 +535,7 @@ export default function OrdersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('all_statuses')}</SelectItem>
+              <SelectItem value="draft">{t('status_draft')}</SelectItem>
               <SelectItem value="sent">{t('status_sent')}</SelectItem>
               <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
               <SelectItem value="delivered">{t('status_delivered')}</SelectItem>
@@ -557,7 +575,7 @@ export default function OrdersPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="font-bold text-gray-900">{order.order_number}</div>
+                        <div className="font-bold text-gray-900">{order.order_number || '—'}</div>
                         <div className="text-sm text-gray-600">{order.supplier_name}</div>
                       </div>
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
@@ -674,7 +692,7 @@ export default function OrdersPage() {
                         onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
                       >
                         <td className="px-4 py-3 text-right">
-                          <div className="text-sm font-medium text-gray-900">{order.order_number}</div>
+                          <div className="text-sm font-medium text-gray-900">{order.order_number || '—'}</div>
                           {order.restaurant_name && (
                             <div className="text-xs text-gray-500">{order.restaurant_name}</div>
                           )}
@@ -766,10 +784,7 @@ export default function OrdersPage() {
           order={previewOrder}
           isOpen={!!previewOrder}
           onClose={() => setPreviewOrder(null)}
-          onSend={() => {
-            sendOrderToWhatsApp(previewOrder);
-            setPreviewOrder(null);
-          }}
+          onSend={() => handleSendNow(previewOrder)}
         />
       )}
     </div>
