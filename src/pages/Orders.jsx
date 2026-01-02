@@ -558,6 +558,13 @@ export default function OrdersPage() {
             <p className="text-gray-600 mt-2">{t('orders_greeting', { name: user.full_name })}</p>
           </div>
           <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={verifyDraftsNow}
+              className="h-11 md:h-10 px-4 rounded-lg"
+            >
+              {t('status_draft')} ✓
+            </Button>
             {!isViewer && (
               <Button
                 onClick={() => setShowForm(!showForm)}
