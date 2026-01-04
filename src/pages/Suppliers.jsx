@@ -9,14 +9,16 @@ import { createPageUrl } from "@/utils";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import SupplierForm from "../components/suppliers/SupplierForm";
 import SupplierCard from "../components/suppliers/SupplierCard";
-import SupplierListScanner from "../components/suppliers/SupplierListScanner";
+// import SupplierListScanner from "../components/suppliers/SupplierListScanner";
+import SuppliersSheetsImport from "../components/suppliers/SuppliersSheetsImport";
 import AppHelpChat from "../components/AppHelpChat";
 import SupplierItemsExcel from "../components/suppliers/SupplierItemsExcel";
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
+  // const [showScanner, setShowScanner] = useState(false);
+  const [showSuppliersSheetPanel, setShowSuppliersSheetPanel] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState(null);
@@ -451,14 +453,14 @@ export default function SuppliersPage() {
             {!isViewer && (
               <Button
                 onClick={() => {
-                  setShowScanner(!showScanner);
+                  setShowSuppliersSheetPanel(!showSuppliersSheetPanel);
                   setShowForm(false);
                   setShowExcelPanel(false);
                 }}
                 className="bg-gray-700 hover:bg-gray-800 text-white"
               >
-                <Scan className="w-5 h-5 mr-2" />
-                {t('scan_supplier_list')}
+                <Download className="w-5 h-5 mr-2" />
+                {language === 'he' ? 'ייבוא ספקים (Google Sheets)' : 'Import Suppliers (Sheets)'}
               </Button>
             )}
             {!isViewer && (
@@ -609,13 +611,13 @@ export default function SuppliersPage() {
             />
           )}
 
-          {!isViewer && showScanner && (
-            <SupplierListScanner
-              onSuppliersAdded={() => {
-                                setShowScanner(false);
-                                loadData(user);
-                              }}
-              onClose={() => setShowScanner(false)}
+          {!isViewer && showSuppliersSheetPanel && (
+            <SuppliersSheetsImport
+              onImportComplete={() => {
+                setShowSuppliersSheetPanel(false);
+                loadData(user);
+              }}
+              onClose={() => setShowSuppliersSheetPanel(false)}
             />
           )}
 
