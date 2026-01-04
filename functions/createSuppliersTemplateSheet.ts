@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       });
 
       try {
-        const infoRes = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetsId}?fields=webViewLink&supportsAllDrives=true`, {
+        const infoRes = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?fields=webViewLink&supportsAllDrives=true`, {
           headers: { 'Authorization': `Bearer ${driveToken}` }
         });
         if (infoRes.ok) {

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { base44 } from '@/api/base44Client';
-import { Loader2, ExternalLink, CheckCircle2, Sheet as SheetIcon } from 'lucide-react';
+import { Loader2, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageProvider';
 
 export default function SuppliersSheetsImport({ onClose, onImportComplete }) {

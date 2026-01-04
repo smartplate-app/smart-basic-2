@@ -262,7 +262,7 @@ export default function SuppliersPage() {
   const handleEdit = (supplier) => {
     setEditingSupplier(supplier);
     setShowForm(true);
-    setShowScanner(false);
+    setShowSuppliersSheetPanel(false);
   };
 
   const handleDelete = async (supplierId) => {
@@ -468,7 +468,7 @@ export default function SuppliersPage() {
                 onClick={() => {
                   setEditingSupplier(null);
                   setShowForm(!showForm);
-                  setShowScanner(false);
+                  setShowSuppliersSheetPanel(false);
                 }}
                 className="bg-gray-900 hover:bg-gray-800 text-white"
               >
