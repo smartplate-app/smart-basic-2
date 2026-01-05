@@ -294,7 +294,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             {t('close')}
           </Button>
           <Button
-            onClick={handleDownloadImage}
+            onClick={async () => {
+              // Ensure we mark as sent first (service role), then prepare image/share
+              try {
+                const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+                await base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber });
+              } catch (_) {}
+              handleDownloadImage();
+            }}
             className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium shadow-sm"
             disabled={downloading}
           >
