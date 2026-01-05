@@ -449,14 +449,21 @@ export default function OrdersPage() {
     try {
       if (!order) return;
 
-      // Use backend function (service role) so sub-users can mark owner's order as sent
+      // Mark as sent via service-role so sub-users can update owner orders
       const { data } = await base44.functions.invoke('markOrderSent', {
         orderId: order.id,
         orderNumber: order.order_number
       });
-      const toSend = data?.order ? data.order : { ...order, status: 'sent', order_number: order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}` };
+      const updated = data?.order || {};
 
-      sendOrderToWhatsApp(toSend);
+      // Optimistic UI update
+      setOrders(prev => prev.map(o => {
+        if (o.id !== (updated.id || order.id)) return o;
+        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+
+      // Close preview and refresh list
       setPreviewOrder(null);
       await loadData(user);
     } catch (e) {
