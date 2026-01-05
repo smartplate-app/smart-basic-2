@@ -126,18 +126,23 @@ export default function DashboardPage() {
         setUseManualLabor(false);
       }
 
-      // Calculate labor cost from all schedules in the month (always use latest schedules)
+      // Calculate labor cost pro-rated up to endDate (month start -> today)
       let totalLaborCost = 0;
       allSchedules.forEach(schedule => {
         const weekStart = moment(schedule.week_start_date);
         const weekEnd = moment(schedule.week_start_date).add(6, 'days');
-        // Check if week overlaps with the selected month
-        if (weekEnd.isSameOrAfter(monthStart) && weekStart.isSameOrBefore(monthEnd)) {
-          // Use total_cost from schedule which includes employer costs
-          totalLaborCost += schedule.total_cost || 0;
+
+        // Overlap window is from monthStart to endDate (today or month end)
+        const overlapStart = moment.max(weekStart, monthStart);
+        const overlapEnd = moment.min(weekEnd, endDate);
+
+        if (overlapEnd.isSameOrAfter(overlapStart)) {
+          const overlapDays = overlapEnd.diff(overlapStart, 'days') + 1; // inclusive
+          const ratio = Math.min(1, Math.max(0, overlapDays / 7));
+          totalLaborCost += (schedule.total_cost || 0) * ratio;
         }
       });
-      setCalculatedLaborCost(totalLaborCost);
+      setCalculatedLaborCost(Math.round(totalLaborCost));
 
       // Calculate predicted labor based on the latest schedule with data
       // Find the most recent schedule that has total_cost (includes employer costs)
