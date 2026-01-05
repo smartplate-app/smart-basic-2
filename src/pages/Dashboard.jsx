@@ -353,13 +353,14 @@ export default function DashboardPage() {
 
   // Actual calculations
   const actualSalesExVAT = actualSales / 1.17;
-  const actualLaborPercent = actualSalesExVAT > 0 ? (calculatedLaborCost / actualSalesExVAT * 100) : 0;
+  const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
+  const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT * 100) : 0;
   const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
   const isOverGoal = actualCombinedPercent > combinedGoalPercent;
 
   const costBreakdownData = [
-    { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: calculatedLaborCost, color: '#1f2937' },
+    { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },
     { name: language === 'he' ? 'עלות מזון' : 'Food Cost', value: calculatedFoodCost, color: '#6b7280' }
   ];
 
@@ -613,7 +614,7 @@ export default function DashboardPage() {
                       <div className={`flex justify-between items-center p-3 bg-gray-100 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <span className="text-gray-600">{language === 'he' ? 'עלות עבודה' : 'Labor Cost'}:</span>
                         <div className={isRTL ? 'text-left' : 'text-right'}>
-                          <span className="font-bold text-gray-900">{formatCurrency(calculatedLaborCost)}</span>
+                          <span className="font-bold text-gray-900">{formatCurrency(effectiveLaborCost)}</span>
                           <span className="text-sm text-gray-500 mr-2 rtl:ml-2 rtl:mr-0">({actualLaborPercent.toFixed(1)}%)</span>
                         </div>
                       </div>
