@@ -70,7 +70,18 @@ export default function DashboardPage() {
       setUser(currentUser);
 
       // Use acting_as_store_email if admin is controlling a user, otherwise use own email
-      const workingEmail = currentUser.acting_as_store_email || currentUser.email;
+      let workingEmail = currentUser.acting_as_store_email || currentUser.email;
+      // If this user is a store manager/worker, show the head owner's data on the dashboard
+      let ownerEmail = currentUser.store_user_owner_email || null;
+      if (!ownerEmail) {
+        try {
+          const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+          if (recs.length > 0) ownerEmail = recs[0].owner_email || null;
+        } catch (_) {}
+      }
+      if (ownerEmail) {
+        workingEmail = ownerEmail;
+      }
 
       // Load all data in parallel for faster loading
       const monthStart = moment(selectedMonth).startOf('month');
