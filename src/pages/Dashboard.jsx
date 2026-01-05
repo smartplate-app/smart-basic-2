@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
@@ -46,6 +47,10 @@ export default function DashboardPage() {
   const [inventoryCounts, setInventoryCounts] = useState([]);
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
+
+  // Manual overrides
+  const [useManualLabor, setUseManualLabor] = useState(false);
+  const [manualLaborCost, setManualLaborCost] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -94,6 +99,10 @@ export default function DashboardPage() {
         setManagementSalary(existingData.management_salary || 0);
         setActualSales(existingData.total_sales || 0);
         setTotalTips(existingData.total_tips || 0);
+        // Manual labor override
+        const mlc = Number(existingData.manual_labor_cost || 0);
+        setManualLaborCost(mlc);
+        setUseManualLabor(mlc > 0);
       } else {
         setDashboardData(null);
         setPredictedSales(0);
@@ -102,6 +111,8 @@ export default function DashboardPage() {
         setManagementSalary(0);
         setActualSales(0);
         setTotalTips(0);
+        setManualLaborCost(0);
+        setUseManualLabor(false);
       }
 
       // Calculate labor cost from all schedules in the month (always use latest schedules)
@@ -210,7 +221,7 @@ export default function DashboardPage() {
         management_salary: parseFloat(managementSalary) || 0,
         total_sales: parseFloat(actualSales) || 0,
         total_tips: parseFloat(totalTips) || 0,
-        manual_labor_cost: calculatedLaborCost,
+        manual_labor_cost: useManualLabor ? (parseFloat(manualLaborCost) || 0) : 0,
         manual_food_cost: calculatedFoodCost
       };
 
@@ -268,11 +279,11 @@ export default function DashboardPage() {
         data: {
           actualSales: actualSales,
           actualSalesExVAT: actualSalesExVAT,
-          laborCost: calculatedLaborCost,
+          laborCost: effectiveLaborCost,
           laborPercent: actualLaborPercent.toFixed(1),
           foodCost: calculatedFoodCost,
           foodPercent: actualFoodPercent.toFixed(1),
-          combinedCost: calculatedLaborCost + calculatedFoodCost,
+          combinedCost: effectiveLaborCost + calculatedFoodCost,
           combinedPercent: actualCombinedPercent.toFixed(1),
           predictedSales: predictedSales,
           laborGoalAmount: laborGoalAmount,
@@ -514,7 +525,7 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className={`text-3xl font-bold mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {formatCurrency(calculatedLaborCost)}
+                    {formatCurrency(effectiveLaborCost)}
                   </div>
                   <div className={`text-gray-300 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                     {actualLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות' : 'of sales'}
@@ -615,7 +626,7 @@ export default function DashboardPage() {
                       </div>
                       <div className={`flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <span className="font-semibold">{language === 'he' ? 'סה"כ עלויות' : 'Total Costs'}:</span>
-                        <span className="font-bold text-lg text-blue-700">{formatCurrency(calculatedLaborCost + calculatedFoodCost)}</span>
+                        <span className="font-bold text-lg text-blue-700">{formatCurrency(effectiveLaborCost + calculatedFoodCost)}</span>
                       </div>
                     </div>
                   </div>
