@@ -394,7 +394,7 @@ export default function DashboardPage() {
               {t('monthly_dashboard')}
             </h1>
             <p className={`text-gray-600 mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-              {t('dashboard_greeting', { name: user.full_name })}
+              {t('dashboard_greeting', { name: (user.acting_as_user_name || user.full_name) })}
             </p>
           </div>
           <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
