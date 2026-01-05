@@ -38,12 +38,14 @@ export default function ToDoListPage() {
     try {
       setLoading(true);
       const user = await base44.auth.me();
+      // Support admin controlling a sub-user
+      const workingEmail = user.acting_as_store_email || user.email;
 
       // Determine owner (head) account if this user is a store manager/worker
       let ownerEmail = user.store_user_owner_email || null;
       if (!ownerEmail) {
         try {
-          const records = await base44.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+          const records = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
           if (records.length > 0) ownerEmail = records[0].owner_email || null;
         } catch (_) {}
       }
@@ -52,7 +54,7 @@ export default function ToDoListPage() {
         // Show BOTH the owner's tasks and the sub-user's tasks
         const [ownerTodos, myTodos] = await Promise.all([
           base44.entities.ToDo.filter({ created_by: ownerEmail }, "-date"),
-          base44.entities.ToDo.filter({ created_by: user.email }, "-date")
+          base44.entities.ToDo.filter({ created_by: workingEmail }, "-date")
         ]);
         const merged = [...ownerTodos, ...myTodos];
         // De-duplicate by id
@@ -61,7 +63,7 @@ export default function ToDoListPage() {
         for (const t of merged) { if (t?.id && !seen.has(t.id)) { seen.add(t.id); uniq.push(t); } }
         setTodos(uniq);
       } else {
-        const data = await base44.entities.ToDo.filter({ created_by: user.email }, "-date");
+        const data = await base44.entities.ToDo.filter({ created_by: workingEmail }, "-date");
         setTodos(data);
       }
     } catch (error) {

@@ -46,7 +46,7 @@ export default function LaborCostPage() {
       let ownerEmail = user.store_user_owner_email || null;
       if (!ownerEmail) {
         try {
-          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
           if (storeUserRecords.length > 0) ownerEmail = storeUserRecords[0].owner_email || null;
         } catch (_) {}
       }

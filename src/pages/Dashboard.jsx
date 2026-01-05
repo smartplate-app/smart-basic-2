@@ -75,7 +75,7 @@ export default function DashboardPage() {
       let ownerEmail = currentUser.store_user_owner_email || null;
       if (!ownerEmail) {
         try {
-          const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+          const recs = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
           if (recs.length > 0) ownerEmail = recs[0].owner_email || null;
         } catch (_) {}
       }
