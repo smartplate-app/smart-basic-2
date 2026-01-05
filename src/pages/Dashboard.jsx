@@ -126,23 +126,27 @@ export default function DashboardPage() {
         setUseManualLabor(false);
       }
 
-      // Calculate labor cost pro-rated up to endDate (month start -> today)
-      let totalLaborCost = 0;
-      allSchedules.forEach(schedule => {
-        const weekStart = moment(schedule.week_start_date);
-        const weekEnd = moment(schedule.week_start_date).add(6, 'days');
-
-        // Overlap window is from monthStart to endDate (today or month end)
-        const overlapStart = moment.max(weekStart, monthStart);
-        const overlapEnd = moment.min(weekEnd, endDate);
-
-        if (overlapEnd.isSameOrAfter(overlapStart)) {
-          const overlapDays = overlapEnd.diff(overlapStart, 'days') + 1; // inclusive
-          const ratio = Math.min(1, Math.max(0, overlapDays / 7));
-          totalLaborCost += (schedule.total_cost || 0) * ratio;
-        }
+      // Labor MTD based on baseline week's daily cost × days passed in month
+      // Choose the week that contains the first day of the month; fallback to earliest overlapping week
+      const overlapping = allSchedules.filter(s => {
+        const ws = moment(s.week_start_date);
+        const we = moment(s.week_start_date).add(6, 'days');
+        return we.isSameOrAfter(monthStart) && ws.isSameOrBefore(monthEnd);
       });
-      setCalculatedLaborCost(Math.round(totalLaborCost));
+      const anchor = overlapping.find(s => {
+        const ws = moment(s.week_start_date);
+        const we = moment(s.week_start_date).add(6, 'days');
+        return monthStart.isBetween(ws, we, undefined, '[]');
+      });
+      const baseline = anchor || overlapping.sort((a, b) => moment(a.week_start_date).valueOf() - moment(b.week_start_date).valueOf())[0];
+
+      let mtdLabor = 0;
+      if (baseline && (baseline.total_cost || 0) > 0) {
+        const daysPassedLocal = endDate.diff(monthStart, 'days') + 1; // inclusive from 1st to today
+        const dailyCost = (baseline.total_cost || 0) / 7;
+        mtdLabor = dailyCost * daysPassedLocal;
+      }
+      setCalculatedLaborCost(Math.round(mtdLabor));
 
       // Calculate predicted labor based on the latest schedule with data
       // Find the most recent schedule that has total_cost (includes employer costs)
