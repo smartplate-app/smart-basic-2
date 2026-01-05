@@ -141,11 +141,22 @@ export default function DashboardPage() {
       });
       const baseline = anchor || overlapping.sort((a, b) => moment(a.week_start_date).valueOf() - moment(b.week_start_date).valueOf())[0];
 
+      // MTD based on working days elapsed (unique shift dates in month) × baseline daily cost (weekly/7)
       let mtdLabor = 0;
       if (baseline && (baseline.total_cost || 0) > 0) {
-        const daysPassedLocal = endDate.diff(monthStart, 'days') + 1; // inclusive from 1st to today
+        const workedDates = new Set();
+        allSchedules.forEach(s => {
+          (s.shifts || []).forEach(sh => {
+            const m = moment(sh.date, moment.ISO_8601, true);
+            if (!m.isValid()) return;
+            if (m.isBetween(monthStart, endDate, 'day', '[]')) {
+              workedDates.add(m.format('YYYY-MM-DD'));
+            }
+          });
+        });
+        const workingDaysElapsed = workedDates.size || 0;
         const dailyCost = (baseline.total_cost || 0) / 7;
-        mtdLabor = dailyCost * daysPassedLocal;
+        mtdLabor = dailyCost * workingDaysElapsed;
       }
       setCalculatedLaborCost(Math.round(mtdLabor));
 
