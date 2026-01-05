@@ -448,14 +448,13 @@ export default function OrdersPage() {
   const handleSendNow = async (order) => {
     try {
       if (!order) return;
-      let toSend = order;
 
-      // Ensure order number exists and persist if missing; also set status to sent if not already
-      let orderNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-      if (order.status !== 'sent' || !order.order_number) {
-        await base44.entities.Order.update(order.id, { status: 'sent', order_number: orderNumber });
-        toSend = { ...order, status: 'sent', order_number: orderNumber };
-      }
+      // Use backend function (service role) so sub-users can mark owner's order as sent
+      const { data } = await base44.functions.invoke('markOrderSent', {
+        orderId: order.id,
+        orderNumber: order.order_number
+      });
+      const toSend = data?.order ? data.order : { ...order, status: 'sent', order_number: order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}` };
 
       sendOrderToWhatsApp(toSend);
       setPreviewOrder(null);

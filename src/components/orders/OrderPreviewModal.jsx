@@ -65,6 +65,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         }
       } catch (_) {}
 
+      // Notify parent to ensure list refresh and service-role update for sub-users
+      if (onSend) {
+        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
+      }
+
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
