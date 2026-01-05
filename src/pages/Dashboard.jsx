@@ -531,6 +531,32 @@ export default function DashboardPage() {
                   <div className={`text-gray-300 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                     {actualLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות' : 'of sales'}
                   </div>
+
+                  {/* Manual override controls - always visible inside this card */}
+                  <div className={`mt-3 space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Switch checked={useManualLabor} onCheckedChange={setUseManualLabor} />
+                      <span className="text-sm">{language === 'he' ? 'השתמש בעלות עבודה ידנית' : 'Use manual labor cost'}</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Input
+                        type="number"
+                        value={manualLaborCost}
+                        onChange={(e) => { const v = parseFloat(e.target.value) || 0; setManualLaborCost(v); if (!useManualLabor) setUseManualLabor(true); }}
+                        placeholder="0"
+                        className={`w-48 bg-white/10 border-white/20 ${isRTL ? 'text-right' : 'text-left'}`}
+                      />
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={handleSave}>
+                        {t('save')}
+                      </Button>
+                    </div>
+                    {useManualLabor && (
+                      <div className={`text-xs text-yellow-300 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'מצב ידני — נשמר לחודש שנבחר למעלה' : 'Manual mode — saved for the selected month'}
+                      </div>
+                    )}
+                  </div>
+
                   <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {language === 'he' ? `סה"כ עלות עבודה כולל עלויות מעסיק בתקופה ${selectedMonth}` : `Total labor cost incl. employer costs for ${selectedMonth}`}
                   </div>
