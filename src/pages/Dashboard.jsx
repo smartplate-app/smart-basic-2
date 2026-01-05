@@ -48,6 +48,11 @@ export default function DashboardPage() {
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
 
+  // Projection (sales)
+  const [projectedMonthlySales, setProjectedMonthlySales] = useState(0);
+  const [projectionDaysElapsed, setProjectionDaysElapsed] = useState(0);
+  const [projectionAvgPerDay, setProjectionAvgPerDay] = useState(0);
+
   // Manual overrides
   const [useManualLabor, setUseManualLabor] = useState(false);
   const [manualLaborCost, setManualLaborCost] = useState(0);
@@ -126,6 +131,22 @@ export default function DashboardPage() {
         setManualLaborCost(0);
         setUseManualLabor(false);
       }
+
+      // Sales projection (based on days elapsed till yesterday)
+      const daysInMonth = moment(selectedMonth).daysInMonth();
+      let daysElapsedForProjection = 0;
+      if (moment().isSame(monthStart, 'month')) {
+        daysElapsedForProjection = Math.max(1, today.diff(monthStart, 'days'));
+      } else if (moment(selectedMonth).isBefore(moment(), 'month')) {
+        daysElapsedForProjection = daysInMonth;
+      } else {
+        daysElapsedForProjection = 1;
+      }
+      const salesTillNow = existingData ? (existingData.total_sales || 0) : 0;
+      const avgPerDayInclVAT = salesTillNow > 0 ? (salesTillNow / daysElapsedForProjection) : 0;
+      setProjectionDaysElapsed(daysElapsedForProjection);
+      setProjectionAvgPerDay(avgPerDayInclVAT);
+      setProjectedMonthlySales(avgPerDayInclVAT * daysInMonth);
 
       // Labor MTD based on baseline week's daily cost × days passed in month
       // Choose the week that contains the first day of the month; fallback to earliest overlapping week
@@ -480,6 +501,23 @@ export default function DashboardPage() {
                 {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
               </Button>
             </div>
+
+            {/* Projected Monthly Sales Banner */}
+            <Card className="bg-gradient-to-br from-amber-100 to-yellow-100 border border-amber-200">
+              <CardContent className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className="text-sm font-semibold text-amber-800">
+                  {language === 'he' ? 'תחזית מכירות לכל החודש' : 'Projected Sales for Full Month'}
+                </div>
+                <div className="text-3xl font-extrabold text-amber-900 mt-1">
+                  {formatCurrency(projectedMonthlySales)}
+                </div>
+                <div className="text-xs text-amber-700 mt-1">
+                  {language === 'he'
+                    ? `מבוסס על ${projectionDaysElapsed} ימים עד אתמול · ממוצע יומי ${formatCurrency(projectionAvgPerDay)}`
+                    : `Based on ${projectionDaysElapsed} days till yesterday · Avg/day ${formatCurrency(projectionAvgPerDay)}`}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Sales and Tips Input */}
             <Card>
