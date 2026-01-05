@@ -39,7 +39,7 @@ export default function ToDoListPage() {
       setLoading(true);
       const user = await base44.auth.me();
       // Support admin controlling a sub-user
-      const workingEmail = user.acting_as_store_email || user.email;
+      const workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.email;
 
       // Determine owner (head) account if this user is a store manager/worker
       let ownerEmail = user.store_user_owner_email || null;

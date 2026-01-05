@@ -42,7 +42,7 @@ export default function LaborCostPage() {
       
       const user = await base44.auth.me();
       // Determine working email: use owner account when this user is a store sub-user
-      let workingEmail = user.acting_as_store_email || user.email;
+      let workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.email;
       let ownerEmail = user.store_user_owner_email || null;
       if (!ownerEmail) {
         try {

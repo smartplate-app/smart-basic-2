@@ -69,8 +69,8 @@ export default function DashboardPage() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
-      // Use acting_as_store_email if admin is controlling a user, otherwise use own email
-      let workingEmail = currentUser.acting_as_store_email || currentUser.email;
+      // Use controlled user's email if admin is controlling; otherwise own
+      let workingEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
       // If this user is a store manager/worker, show the head owner's data on the dashboard
       let ownerEmail = currentUser.store_user_owner_email || null;
       if (!ownerEmail) {
