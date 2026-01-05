@@ -377,6 +377,20 @@ export default function OrdersPage() {
     }
   };
 
+  const fixLatestDraft = async () => {
+    try {
+      const { data } = await base44.functions.invoke('markLatestDraftAsSent', {});
+      if (data?.success) {
+        alert(`Marked as sent: ${data.order?.order_number || ''}`);
+      } else {
+        alert('No draft found to fix');
+      }
+      await loadData(user);
+    } catch (e) {
+      alert('Fix failed: ' + (e?.message || ''));
+    }
+  };
+
   const handleManualRetry = () => {
     setError(null);
     setAuthLoading(true);
@@ -575,6 +589,15 @@ export default function OrdersPage() {
             >
               {t('status_draft')} ✓
             </Button>
+            {(user.acting_as_store_email || user.acting_as_user_email) && !isViewer && (
+              <Button
+                variant="outline"
+                onClick={fixLatestDraft}
+                className="h-11 md:h-10 px-4 rounded-lg"
+              >
+                Fix last draft → sent
+              </Button>
+            )}
             {!isViewer && (
               <Button
                 onClick={() => setShowForm(!showForm)}
