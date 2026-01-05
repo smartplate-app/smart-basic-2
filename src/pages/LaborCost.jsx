@@ -41,8 +41,18 @@ export default function LaborCostPage() {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const user = await base44.auth.me();
-      // Use acting_as_store_email if admin is controlling a user
-      const workingEmail = user.acting_as_store_email || user.email;
+      // Determine working email: use owner account when this user is a store sub-user
+      let workingEmail = user.acting_as_store_email || user.email;
+      let ownerEmail = user.store_user_owner_email || null;
+      if (!ownerEmail) {
+        try {
+          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+          if (storeUserRecords.length > 0) ownerEmail = storeUserRecords[0].owner_email || null;
+        } catch (_) {}
+      }
+      if (ownerEmail) {
+        workingEmail = ownerEmail;
+      }
 
       let headEmail = null;
       if (user.chain_id && !user.is_chain_head) {
