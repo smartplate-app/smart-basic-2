@@ -113,7 +113,8 @@ export default function DashboardPage() {
         // Manual labor override
         const mlc = Number(existingData.manual_labor_cost || 0);
         setManualLaborCost(mlc);
-        setUseManualLabor(mlc > 0);
+        // Default to computed MTD; manual is available but OFF until explicitly toggled
+        setUseManualLabor(false);
       } else {
         setDashboardData(null);
         setPredictedSales(0);
