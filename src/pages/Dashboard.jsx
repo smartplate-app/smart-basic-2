@@ -377,6 +377,117 @@ export default function DashboardPage() {
 
 
 
+  // Generate custom date-range report
+  const generateReport = async () => {
+    if (!workingEmail) return;
+    setReportLoading(true);
+    try {
+      const start = moment(reportStartDate, 'YYYY-MM-DD');
+      const end = moment(reportEndDate, 'YYYY-MM-DD');
+      if (!start.isValid() || !end.isValid() || end.isBefore(start)) {
+        alert(language === 'he' ? 'טווח תאריכים לא תקין' : 'Invalid date range');
+        setReportLoading(false);
+        return;
+      }
+
+      // Build list of months between start and end inclusive
+      const months = [];
+      const cursor = start.clone().startOf('month');
+      const last = end.clone().startOf('month');
+      while (cursor.isSameOrBefore(last)) {
+        months.push(cursor.format('YYYY-MM'));
+        cursor.add(1, 'month');
+      }
+
+      // Fetch sales (monthly totals) for each month
+      const salesRecsArrays = await Promise.all(
+        months.map(m => base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: m }))
+      );
+      const salesByMonth = {};
+      months.forEach((m, idx) => {
+        const rec = (salesRecsArrays[idx] || [])[0];
+        salesByMonth[m] = rec ? (rec.total_sales || 0) : 0;
+      });
+
+      const VAT_RATE = 1.17;
+      const results = months.map(m => {
+        // Labor: sum weekly schedules intersecting the range, bucketed by month of week_start_date
+        const labor = (schedules || []).reduce((sum, s) => {
+          const ws = moment(s.week_start_date);
+          const we = moment(s.week_start_date).add(6, 'days');
+          if (!ws.isValid()) return sum;
+          const intersects = we.isSameOrAfter(start, 'day') && ws.isSameOrBefore(end, 'day');
+          if (!intersects) return sum;
+          if (ws.format('YYYY-MM') !== m) return sum;
+          return sum + (s.total_cost || 0);
+        }, 0);
+
+        // Food: receipts within range and month m (excl. VAT)
+        const food = (receipts || []).reduce((sum, r) => {
+          const d = moment(r.received_date);
+          if (!d.isValid()) return sum;
+          if (!d.isBetween(start, end, 'day', '[]')) return sum;
+          if (d.format('YYYY-MM') !== m) return sum;
+          const receiptTotal = r.invoice_total || r.calculated_total || 0;
+          return sum + (receiptTotal / VAT_RATE);
+        }, 0);
+
+        return { month: m, sales: salesByMonth[m] || 0, labor, food };
+      });
+
+      setReportData(results);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const exportReportCSV = () => {
+    if (!reportData || reportData.length === 0) return;
+    const header = ['Month', 'Sales (incl. VAT)', 'Labor Cost', 'Food Cost'];
+    const rows = reportData.map(r => [r.month, r.sales, r.labor, r.food]);
+    const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report_${reportStartDate}_to_${reportEndDate}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportReportPDF = () => {
+    if (!reportData || reportData.length === 0) return;
+    const doc = new jsPDF();
+    const title = language === 'he' ? 'דוח מותאם אישית' : 'Custom Report';
+    doc.setFontSize(16);
+    doc.text(title, 20, 20);
+    doc.setFontSize(10);
+    doc.text(`${reportStartDate} - ${reportEndDate}`, 20, 28);
+
+    // Table header
+    let y = 40;
+    doc.setFontSize(12);
+    doc.text('Month', 20, y);
+    doc.text('Sales', 70, y);
+    doc.text('Labor', 120, y);
+    doc.text('Food', 160, y);
+    y += 6;
+
+    doc.setFontSize(10);
+    reportData.forEach(r => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.text(r.month, 20, y);
+      doc.text(String(Math.round(r.sales)), 70, y);
+      doc.text(String(Math.round(r.labor)), 120, y);
+      doc.text(String(Math.round(r.food)), 160, y);
+      y += 6;
+    });
+
+    doc.save(`report_${reportStartDate}_to_${reportEndDate}.pdf`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
