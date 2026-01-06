@@ -282,6 +282,28 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
     setLoading(true);
 
     try {
+      // Heuristic: answer with numbers directly when user asks about costs/percentages
+      const detected = await detectMetricFromText(userMessage);
+      if (detected) {
+        const { laborCostMTD, foodCostMTD, laborPercent, foodPercent } = await computeMetrics(detected.month);
+        const combinedCost = laborCostMTD + foodCostMTD;
+        const combinedPercent = laborPercent + foodPercent;
+        let content = '';
+        switch (detected.metric) {
+          case 'labor_cost_mtd': content = `${formatCurrency(laborCostMTD)}`; break;
+          case 'food_cost_mtd': content = `${formatCurrency(foodCostMTD)}`; break;
+          case 'combined_cost_mtd': content = `${formatCurrency(combinedCost)}`; break;
+          case 'labor_percent': content = `${laborPercent.toFixed(1)}%`; break;
+          case 'food_percent': content = `${foodPercent.toFixed(1)}%`; break;
+          case 'combined_percent': content = `${combinedPercent.toFixed(1)}%`; break;
+          default: content = '';
+        }
+        const pageUrl = createPageUrl('Dashboard');
+        setMessages(prev => [...prev, { role: 'assistant', content, link: { url: pageUrl, label: t.goToPage } }]);
+        setLoading(false);
+        return;
+      }
+
       const guideTopics = Object.keys(appGuide[language] || appGuide.en);
       
       // Use LLM to understand intent
