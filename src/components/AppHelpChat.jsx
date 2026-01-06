@@ -6,6 +6,7 @@ import { MessageCircle, X, Send, Loader, HelpCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "./LanguageProvider";
 import { createPageUrl } from "@/utils";
+import moment from "moment";
 
 export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, onItemAdded }) {
   const { language } = useLanguage();
@@ -161,6 +162,98 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
     }
   }[language] || {};
 
+  // Helpers for metrics
+  const formatCurrency = (amount) => {
+    const locale = language === 'he' ? 'he-IL' : 'en-US';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 }).format(amount || 0);
+  };
+
+  const getWorkingEmail = async () => {
+    const user = await base44.auth.me();
+    let workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.email;
+    let ownerEmail = user.store_user_owner_email || null;
+    if (!ownerEmail) {
+      try {
+        const recs = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+        if (recs.length > 0) ownerEmail = recs[0].owner_email || null;
+      } catch (_) {}
+    }
+    if (ownerEmail) workingEmail = ownerEmail;
+    return workingEmail;
+  };
+
+  const computeMetrics = async (monthStr) => {
+    const workingEmail = await getWorkingEmail();
+    const monthStart = moment(monthStr, 'YYYY-MM').startOf('month');
+    const monthEnd = moment(monthStr, 'YYYY-MM').endOf('month');
+    let endDate = moment().isSame(monthStart, 'month') ? moment().subtract(1,'day') : monthEnd;
+    if (endDate.isBefore(monthStart)) endDate = monthStart;
+
+    const [schedules, receipts, dashboardData] = await Promise.all([
+      base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
+      base44.entities.SupplyReceipt.filter({ created_by: workingEmail }),
+      base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: monthStr })
+    ]);
+
+    // Labor cost till now: baseline daily (weekly/7) × unique worked days this month
+    const overlapping = schedules.filter(s => {
+      const ws = moment(s.week_start_date);
+      const we = moment(s.week_start_date).add(6,'days');
+      return we.isSameOrAfter(monthStart) && ws.isSameOrBefore(monthEnd);
+    });
+    const anchor = overlapping.find(s => {
+      const ws = moment(s.week_start_date);
+      const we = moment(s.week_start_date).add(6,'days');
+      return monthStart.isBetween(ws, we, 'day', '[]');
+    });
+    const baseline = anchor || overlapping.sort((a,b) => moment(a.week_start_date).valueOf() - moment(b.week_start_date).valueOf())[0];
+
+    const workedDates = new Set();
+    overlapping.forEach(s => {
+      (s.shifts || []).forEach(sh => {
+        const m = moment(sh.date, moment.ISO_8601, true);
+        if (!m.isValid()) return;
+        if (m.isBetween(monthStart, endDate, 'day', '[]')) workedDates.add(m.format('YYYY-MM-DD'));
+      });
+    });
+
+    let laborCostMTD = 0;
+    if (baseline && (baseline.total_cost || 0) > 0) {
+      const dailyCost = (baseline.total_cost || 0) / 7;
+      laborCostMTD = dailyCost * workedDates.size;
+    }
+
+    // Food cost till now: receipts excl. VAT (+ transfers in/out)
+    const VAT_RATE = 1.17;
+    let foodCostMTD = 0;
+    receipts.forEach(r => {
+      const d = moment(r.received_date);
+      if (d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate)) {
+        const total = r.invoice_total || r.calculated_total || 0;
+        foodCostMTD += total / VAT_RATE;
+      }
+    });
+
+    let incomingTransfersTotal = 0;
+    let outgoingTransfersTotal = 0;
+    try {
+      const [incoming, outgoing] = await Promise.all([
+        base44.entities.InventoryTransfer.filter({ month: monthStr, to_store_email: workingEmail, status: 'completed' }),
+        base44.entities.InventoryTransfer.filter({ month: monthStr, from_store_email: workingEmail, status: 'completed' })
+      ]);
+      incomingTransfersTotal = (incoming || []).reduce((sum,t)=> sum + (t.total_cost || 0),0);
+      outgoingTransfersTotal = (outgoing || []).reduce((sum,t)=> sum + (t.total_cost || 0),0);
+    } catch (_) {}
+    const adjustedFoodMTD = foodCostMTD + incomingTransfersTotal - outgoingTransfersTotal;
+
+    const totalSalesInclVAT = dashboardData[0]?.total_sales || 0;
+    const salesExVAT = totalSalesInclVAT / 1.17;
+    const laborPercent = salesExVAT > 0 ? (laborCostMTD / salesExVAT) * 100 : 0;
+    const foodPercent = salesExVAT > 0 ? (adjustedFoodMTD / salesExVAT) * 100 : 0;
+
+    return { laborCostMTD, foodCostMTD: adjustedFoodMTD, laborPercent, foodPercent };
+  };
+
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{ role: 'assistant', content: t.welcome }]);
@@ -220,7 +313,9 @@ Return JSON with action and relevant data.`,
             supplier_name: { type: "string" },
             catalog_number: { type: "string" },
             unit: { type: "string" },
-            price: { type: "number" }
+            price: { type: "number" },
+            metric: { type: "string" },
+            month: { type: "string" }
           },
           required: ["action"]
         }
@@ -289,6 +384,27 @@ Return JSON with action and relevant data.`,
           }]);
           if (onItemAdded) onItemAdded();
         }
+      } else if (response.action === 'metric') {
+        const month = response.month || moment().format('YYYY-MM');
+        const { laborCostMTD, foodCostMTD, laborPercent, foodPercent } = await computeMetrics(month);
+        const combinedCost = laborCostMTD + foodCostMTD;
+        const combinedPercent = laborPercent + foodPercent;
+        let content = '';
+        if (response.metric === 'labor_cost_mtd') {
+          content = language === 'he' ? `עלות עבודה עד עכשיו: ${formatCurrency(laborCostMTD)}` : `Labor cost till now: ${formatCurrency(laborCostMTD)}`;
+        } else if (response.metric === 'food_cost_mtd') {
+          content = language === 'he' ? `עלות מזון עד עכשיו: ${formatCurrency(foodCostMTD)}` : `Food cost till now: ${formatCurrency(foodCostMTD)}`;
+        } else if (response.metric === 'combined_cost_mtd') {
+          content = language === 'he' ? `עלויות משולבות עד עכשיו: ${formatCurrency(combinedCost)}` : `Combined cost till now: ${formatCurrency(combinedCost)}`;
+        } else if (response.metric === 'labor_percent') {
+          content = language === 'he' ? `אחוז עלות עבודה עד עכשיו: ${laborPercent.toFixed(1)}%` : `Labor cost percent till now: ${laborPercent.toFixed(1)}%`;
+        } else if (response.metric === 'food_percent') {
+          content = language === 'he' ? `אחוז עלות מזון עד עכשיו: ${foodPercent.toFixed(1)}%` : `Food cost percent till now: ${foodPercent.toFixed(1)}%`;
+        } else {
+          content = t.notUnderstood;
+        }
+        const pageUrl = createPageUrl('Dashboard');
+        setMessages(prev => [...prev, { role: 'assistant', content, link: { url: pageUrl, label: t.goToPage } }]);
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: t.notUnderstood }]);
       }
