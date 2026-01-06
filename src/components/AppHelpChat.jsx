@@ -218,9 +218,28 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
     });
 
     let laborCostMTD = 0;
+    let dailyCostBaseline = 0;
     if (baseline && (baseline.total_cost || 0) > 0) {
-      const dailyCost = (baseline.total_cost || 0) / 7;
-      laborCostMTD = dailyCost * workedDates.size;
+      dailyCostBaseline = (baseline.total_cost || 0) / 7;
+      laborCostMTD = dailyCostBaseline * workedDates.size;
+    }
+
+    // Fallbacks: if no shift dates recorded or zero worked days, use days elapsed projection
+    if (!laborCostMTD || laborCostMTD === 0) {
+      let weeklyCostSource = baseline?.total_cost || 0;
+      if (!weeklyCostSource) {
+        const schedulesWithCost = schedules
+          .filter(s => (s.total_cost || 0) > 0)
+          .sort((a, b) => moment(b.week_start_date).valueOf() - moment(a.week_start_date).valueOf());
+        weeklyCostSource = schedulesWithCost[0]?.total_cost || 0;
+      }
+      if (weeklyCostSource > 0) {
+        const dailyCost = weeklyCostSource / 7;
+        const daysElapsed = moment().isSame(monthStart, 'month')
+          ? Math.max(1, moment().diff(monthStart, 'days') + 1)
+          : monthEnd.diff(monthStart, 'days') + 1;
+        laborCostMTD = dailyCost * daysElapsed;
+      }
     }
 
     // Food cost till now: receipts excl. VAT (+ transfers in/out)
