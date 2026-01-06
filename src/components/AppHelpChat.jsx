@@ -254,6 +254,19 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
     return { laborCostMTD, foodCostMTD: adjustedFoodMTD, laborPercent, foodPercent };
   };
 
+  const detectMetricFromText = async (text) => {
+    const msg = (text || '').toLowerCase();
+    const month = moment().format('YYYY-MM');
+    const isLabor = /(labor|לייבור|הלייבור|עבודה|עלות עבודה)/.test(msg);
+    const isFood = /(food|מזון|עלות מזון|אוכל)/.test(msg);
+    const isCombined = /(combined|משולב|סך הכל|סה"כ|יחד)/.test(msg);
+    const wantsPercent = /(percent|percentage|אחוז|אחוזים|%)/.test(msg);
+    if (isCombined) return { metric: wantsPercent ? 'combined_percent' : 'combined_cost_mtd', month };
+    if (isLabor) return { metric: wantsPercent ? 'labor_percent' : 'labor_cost_mtd', month };
+    if (isFood) return { metric: wantsPercent ? 'food_percent' : 'food_cost_mtd', month };
+    return null;
+  };
+
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{ role: 'assistant', content: t.welcome }]);
@@ -319,7 +332,8 @@ Determine if the user wants:
 1. Help/question about how to use the app (action: "help", topic: one of the available topics)
 2. ${isSupplierPage ? 'Add a supplier (action: "add_supplier", extract: name, phone, email, contact_person)' : ''}
 3. ${isSupplierPage ? 'Add an item to a supplier (action: "add_item", extract: item_name, supplier_name, catalog_number, unit, price)' : ''}
-4. Unknown request (action: "unknown")
+4. Get a numeric metric summary (action: "metric", metric: one of ["labor_cost_mtd","food_cost_mtd","combined_cost_mtd","labor_percent","food_percent"], month: optional YYYY-MM)
+5. Unknown request (action: "unknown")
 
 Return JSON with action and relevant data.`,
         response_json_schema: {
@@ -413,15 +427,15 @@ Return JSON with action and relevant data.`,
         const combinedPercent = laborPercent + foodPercent;
         let content = '';
         if (response.metric === 'labor_cost_mtd') {
-          content = language === 'he' ? `עלות עבודה עד עכשיו: ${formatCurrency(laborCostMTD)}` : `Labor cost till now: ${formatCurrency(laborCostMTD)}`;
+          content = `${formatCurrency(laborCostMTD)}`;
         } else if (response.metric === 'food_cost_mtd') {
-          content = language === 'he' ? `עלות מזון עד עכשיו: ${formatCurrency(foodCostMTD)}` : `Food cost till now: ${formatCurrency(foodCostMTD)}`;
+          content = `${formatCurrency(foodCostMTD)}`;
         } else if (response.metric === 'combined_cost_mtd') {
-          content = language === 'he' ? `עלויות משולבות עד עכשיו: ${formatCurrency(combinedCost)}` : `Combined cost till now: ${formatCurrency(combinedCost)}`;
+          content = `${formatCurrency(combinedCost)}`;
         } else if (response.metric === 'labor_percent') {
-          content = language === 'he' ? `אחוז עלות עבודה עד עכשיו: ${laborPercent.toFixed(1)}%` : `Labor cost percent till now: ${laborPercent.toFixed(1)}%`;
+          content = `${laborPercent.toFixed(1)}%`;
         } else if (response.metric === 'food_percent') {
-          content = language === 'he' ? `אחוז עלות מזון עד עכשיו: ${foodPercent.toFixed(1)}%` : `Food cost percent till now: ${foodPercent.toFixed(1)}%`;
+          content = `${foodPercent.toFixed(1)}%`;
         } else {
           content = t.notUnderstood;
         }
