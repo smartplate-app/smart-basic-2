@@ -459,9 +459,19 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       position_row_id: selectedCell?.rowId || editingShift.position_row_id 
     };
 
+    const prevKey = editingShift.__originalKey;
     let updatedShifts;
     if (editingShift.id) {
       updatedShifts = (schedule?.shifts || []).map(s => s.id === editingShift.id ? updatedShift : s);
+    } else if (prevKey) {
+      let replaced = false;
+      updatedShifts = (schedule?.shifts || []).map(s => {
+        if (!replaced && getShiftDraggableId(s) === prevKey) { replaced = true; return updatedShift; }
+        return s;
+      });
+      if (!replaced) {
+        updatedShifts = [...updatedShifts, updatedShift];
+      }
     } else {
       updatedShifts = [...(schedule?.shifts || []), updatedShift];
     }
@@ -1475,7 +1485,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                                                     borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5),
                                                     zIndex: snapshot.isDragging ? 1000 : 'auto'
                                                   }}
-                                                  onClick={() => { if (isDraggingShift) return; setEditingShift(shift); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
+                                                  onClick={() => { if (isDraggingShift) return; setEditingShift({ ...shift, __originalKey: getShiftDraggableId(shift) }); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
                                                   data-drag-id={getShiftDraggableId(shift)}
                                                 >
                                                   <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-100 transition-opacity h-6 w-6 flex items-center justify-center`} {...provided.dragHandleProps} onMouseDown={(e) => e.preventDefault()} aria-label={t('drag')}>
