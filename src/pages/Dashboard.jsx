@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar } from "recharts";
-import { jsPDF } from "jspdf";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
 
 
@@ -48,15 +47,6 @@ export default function DashboardPage() {
   const [inventoryCounts, setInventoryCounts] = useState([]);
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
-
-  // Reports & data for custom ranges
-  const [workingEmail, setWorkingEmail] = useState(null);
-  const [schedules, setSchedules] = useState([]);
-  const [receipts, setReceipts] = useState([]);
-  const [reportStartDate, setReportStartDate] = useState(moment().startOf('month').format('YYYY-MM-DD'));
-  const [reportEndDate, setReportEndDate] = useState(moment().format('YYYY-MM-DD'));
-  const [reportData, setReportData] = useState([]);
-  const [reportLoading, setReportLoading] = useState(false);
 
   // Projection (sales)
   const [projectedMonthlySales, setProjectedMonthlySales] = useState(0);
@@ -97,7 +87,6 @@ export default function DashboardPage() {
       if (ownerEmail) {
         workingEmail = ownerEmail;
       }
-      setWorkingEmail(workingEmail);
 
       // Load all data in parallel for faster loading
       const monthStart = moment(selectedMonth).startOf('month');
@@ -115,8 +104,6 @@ export default function DashboardPage() {
       ]);
 
       setInventoryCounts(allCounts);
-      setSchedules(allSchedules);
-      setReceipts(allReceipts);
 
       // Process dashboard data
       const existingData = allDashboardData[0];
@@ -377,117 +364,6 @@ export default function DashboardPage() {
 
 
 
-  // Generate custom date-range report
-  const generateReport = async () => {
-    if (!workingEmail) return;
-    setReportLoading(true);
-    try {
-      const start = moment(reportStartDate, 'YYYY-MM-DD');
-      const end = moment(reportEndDate, 'YYYY-MM-DD');
-      if (!start.isValid() || !end.isValid() || end.isBefore(start)) {
-        alert(language === 'he' ? 'טווח תאריכים לא תקין' : 'Invalid date range');
-        setReportLoading(false);
-        return;
-      }
-
-      // Build list of months between start and end inclusive
-      const months = [];
-      const cursor = start.clone().startOf('month');
-      const last = end.clone().startOf('month');
-      while (cursor.isSameOrBefore(last)) {
-        months.push(cursor.format('YYYY-MM'));
-        cursor.add(1, 'month');
-      }
-
-      // Fetch sales (monthly totals) for each month
-      const salesRecsArrays = await Promise.all(
-        months.map(m => base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: m }))
-      );
-      const salesByMonth = {};
-      months.forEach((m, idx) => {
-        const rec = (salesRecsArrays[idx] || [])[0];
-        salesByMonth[m] = rec ? (rec.total_sales || 0) : 0;
-      });
-
-      const VAT_RATE = 1.17;
-      const results = months.map(m => {
-        // Labor: sum weekly schedules intersecting the range, bucketed by month of week_start_date
-        const labor = (schedules || []).reduce((sum, s) => {
-          const ws = moment(s.week_start_date);
-          const we = moment(s.week_start_date).add(6, 'days');
-          if (!ws.isValid()) return sum;
-          const intersects = we.isSameOrAfter(start, 'day') && ws.isSameOrBefore(end, 'day');
-          if (!intersects) return sum;
-          if (ws.format('YYYY-MM') !== m) return sum;
-          return sum + (s.total_cost || 0);
-        }, 0);
-
-        // Food: receipts within range and month m (excl. VAT)
-        const food = (receipts || []).reduce((sum, r) => {
-          const d = moment(r.received_date);
-          if (!d.isValid()) return sum;
-          if (!d.isBetween(start, end, 'day', '[]')) return sum;
-          if (d.format('YYYY-MM') !== m) return sum;
-          const receiptTotal = r.invoice_total || r.calculated_total || 0;
-          return sum + (receiptTotal / VAT_RATE);
-        }, 0);
-
-        return { month: m, sales: salesByMonth[m] || 0, labor, food };
-      });
-
-      setReportData(results);
-    } finally {
-      setReportLoading(false);
-    }
-  };
-
-  const exportReportCSV = () => {
-    if (!reportData || reportData.length === 0) return;
-    const header = ['Month', 'Sales (incl. VAT)', 'Labor Cost', 'Food Cost'];
-    const rows = reportData.map(r => [r.month, r.sales, r.labor, r.food]);
-    const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `report_${reportStartDate}_to_${reportEndDate}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const exportReportPDF = () => {
-    if (!reportData || reportData.length === 0) return;
-    const doc = new jsPDF();
-    const title = language === 'he' ? 'דוח מותאם אישית' : 'Custom Report';
-    doc.setFontSize(16);
-    doc.text(title, 20, 20);
-    doc.setFontSize(10);
-    doc.text(`${reportStartDate} - ${reportEndDate}`, 20, 28);
-
-    // Table header
-    let y = 40;
-    doc.setFontSize(12);
-    doc.text('Month', 20, y);
-    doc.text('Sales', 70, y);
-    doc.text('Labor', 120, y);
-    doc.text('Food', 160, y);
-    y += 6;
-
-    doc.setFontSize(10);
-    reportData.forEach(r => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.text(r.month, 20, y);
-      doc.text(String(Math.round(r.sales)), 70, y);
-      doc.text(String(Math.round(r.labor)), 120, y);
-      doc.text(String(Math.round(r.food)), 160, y);
-      y += 6;
-    });
-
-    doc.save(`report_${reportStartDate}_to_${reportEndDate}.pdf`);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -593,7 +469,7 @@ export default function DashboardPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-5xl">
+          <TabsList className="grid w-full grid-cols-4 max-w-4xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
@@ -609,10 +485,6 @@ export default function DashboardPage() {
             <TabsTrigger value="afc" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'דוח AFC' : 'AFC Report'}
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              {language === 'he' ? 'דוחות מותאמים' : 'Custom Reports'}
             </TabsTrigger>
           </TabsList>
 
@@ -1183,88 +1055,7 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
 
-           {/* Reports Tab */}
-           <TabsContent value="reports" className="space-y-6">
-             <Card>
-               <CardHeader>
-                 <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
-                   {language === 'he' ? 'דוחות לפי טווח תאריכים' : 'Reports by Date Range'}
-                 </CardTitle>
-               </CardHeader>
-               <CardContent className="space-y-4">
-                 <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                   <div>
-                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>{language === 'he' ? 'מתאריך' : 'From'}</Label>
-                     <Input type="date" value={reportStartDate} onChange={e => setReportStartDate(e.target.value)} />
-                   </div>
-                   <div>
-                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>{language === 'he' ? 'עד תאריך' : 'To'}</Label>
-                     <Input type="date" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)} />
-                   </div>
-                   <div className="flex items-end">
-                     <Button onClick={generateReport} disabled={reportLoading} className="w-full bg-gray-900 hover:bg-gray-800">
-                       {reportLoading ? <Loader className="w-4 h-4 animate-spin" /> : null}
-                       <span className="ml-2">{language === 'he' ? 'צור דוח' : 'Generate'}</span>
-                     </Button>
-                   </div>
-                   <div className="flex items-end gap-2">
-                     <Button variant="outline" onClick={exportReportCSV} disabled={!reportData?.length} className="w-full">
-                       <FileSpreadsheet className="w-4 h-4 mr-2" /> CSV
-                     </Button>
-                     <Button variant="outline" onClick={exportReportPDF} disabled={!reportData?.length} className="w-full">
-                       <FileSpreadsheet className="w-4 h-4 mr-2" /> PDF
-                     </Button>
-                   </div>
-                 </div>
-
-                 {reportLoading ? (
-                   <div className="flex items-center justify-center py-10 text-gray-600">
-                     <Loader className="w-6 h-6 animate-spin mr-2" /> {language === 'he' ? 'טוען נתונים...' : 'Loading data...'}
-                   </div>
-                 ) : reportData?.length ? (
-                   <div className="space-y-6">
-                     {/* Trend over time (line) */}
-                     <div className="bg-white rounded-lg p-4 border">
-                       <h4 className={`mb-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מגמות לאורך זמן' : 'Trends Over Time'}</h4>
-                       <ResponsiveContainer width="100%" height={280}>
-                         <LineChart data={reportData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                           <CartesianGrid strokeDasharray="3 3" />
-                           <XAxis dataKey="month" />
-                           <YAxis />
-                           <Tooltip />
-                           <Legend />
-                           <Line type="monotone" dataKey="sales" stroke="#1f2937" name={language === 'he' ? 'מכירות' : 'Sales'} />
-                           <Line type="monotone" dataKey="labor" stroke="#2563eb" name={language === 'he' ? 'עבודה' : 'Labor'} />
-                           <Line type="monotone" dataKey="food" stroke="#16a34a" name={language === 'he' ? 'מזון' : 'Food'} />
-                         </LineChart>
-                       </ResponsiveContainer>
-                     </div>
-
-                     {/* Monthly comparison (bars) */}
-                     <div className="bg-white rounded-lg p-4 border">
-                       <h4 className={`mb-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'השוואה בין חודשים' : 'Monthly Comparison'}</h4>
-                       <ResponsiveContainer width="100%" height={300}>
-                         <BarChart data={reportData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                           <CartesianGrid strokeDasharray="3 3" />
-                           <XAxis dataKey="month" />
-                           <YAxis />
-                           <Tooltip />
-                           <Legend />
-                           <Bar dataKey="sales" fill="#1f2937" name={language === 'he' ? 'מכירות' : 'Sales'} />
-                           <Bar dataKey="labor" fill="#2563eb" name={language === 'he' ? 'עבודה' : 'Labor'} />
-                           <Bar dataKey="food" fill="#16a34a" name={language === 'he' ? 'מזון' : 'Food'} />
-                         </BarChart>
-                       </ResponsiveContainer>
-                     </div>
-                   </div>
-                 ) : (
-                   <div className="text-gray-500 py-8 text-center">{language === 'he' ? 'אין נתונים להצגה' : 'No data yet'}</div>
-                 )}
-               </CardContent>
-             </Card>
-           </TabsContent>
-
-           {/* AFC Report Tab */}
+          {/* AFC Report Tab */}
           <TabsContent value="afc" className="space-y-6">
             <Card>
               <CardHeader>
