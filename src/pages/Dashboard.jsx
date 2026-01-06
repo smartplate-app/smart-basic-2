@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Legend, BarChart, Bar } from "recharts";
+import { jsPDF } from "jspdf";
 import moment from "moment";
 
 
@@ -47,6 +48,15 @@ export default function DashboardPage() {
   const [inventoryCounts, setInventoryCounts] = useState([]);
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
+
+  // Reports & data for custom ranges
+  const [workingEmail, setWorkingEmail] = useState(null);
+  const [schedules, setSchedules] = useState([]);
+  const [receipts, setReceipts] = useState([]);
+  const [reportStartDate, setReportStartDate] = useState(moment().startOf('month').format('YYYY-MM-DD'));
+  const [reportEndDate, setReportEndDate] = useState(moment().format('YYYY-MM-DD'));
+  const [reportData, setReportData] = useState([]);
+  const [reportLoading, setReportLoading] = useState(false);
 
   // Projection (sales)
   const [projectedMonthlySales, setProjectedMonthlySales] = useState(0);
@@ -87,6 +97,7 @@ export default function DashboardPage() {
       if (ownerEmail) {
         workingEmail = ownerEmail;
       }
+      setWorkingEmail(workingEmail);
 
       // Load all data in parallel for faster loading
       const monthStart = moment(selectedMonth).startOf('month');
@@ -104,6 +115,8 @@ export default function DashboardPage() {
       ]);
 
       setInventoryCounts(allCounts);
+      setSchedules(allSchedules);
+      setReceipts(allReceipts);
 
       // Process dashboard data
       const existingData = allDashboardData[0];
@@ -469,7 +482,7 @@ export default function DashboardPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-4xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-5xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
@@ -485,6 +498,10 @@ export default function DashboardPage() {
             <TabsTrigger value="afc" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'דוח AFC' : 'AFC Report'}
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              {language === 'he' ? 'דוחות מותאמים' : 'Custom Reports'}
             </TabsTrigger>
           </TabsList>
 
@@ -1055,7 +1072,88 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* AFC Report Tab */}
+           {/* Reports Tab */}
+           <TabsContent value="reports" className="space-y-6">
+             <Card>
+               <CardHeader>
+                 <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                   {language === 'he' ? 'דוחות לפי טווח תאריכים' : 'Reports by Date Range'}
+                 </CardTitle>
+               </CardHeader>
+               <CardContent className="space-y-4">
+                 <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                   <div>
+                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>{language === 'he' ? 'מתאריך' : 'From'}</Label>
+                     <Input type="date" value={reportStartDate} onChange={e => setReportStartDate(e.target.value)} />
+                   </div>
+                   <div>
+                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>{language === 'he' ? 'עד תאריך' : 'To'}</Label>
+                     <Input type="date" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)} />
+                   </div>
+                   <div className="flex items-end">
+                     <Button onClick={generateReport} disabled={reportLoading} className="w-full bg-gray-900 hover:bg-gray-800">
+                       {reportLoading ? <Loader className="w-4 h-4 animate-spin" /> : null}
+                       <span className="ml-2">{language === 'he' ? 'צור דוח' : 'Generate'}</span>
+                     </Button>
+                   </div>
+                   <div className="flex items-end gap-2">
+                     <Button variant="outline" onClick={exportReportCSV} disabled={!reportData?.length} className="w-full">
+                       <FileSpreadsheet className="w-4 h-4 mr-2" /> CSV
+                     </Button>
+                     <Button variant="outline" onClick={exportReportPDF} disabled={!reportData?.length} className="w-full">
+                       <FileSpreadsheet className="w-4 h-4 mr-2" /> PDF
+                     </Button>
+                   </div>
+                 </div>
+
+                 {reportLoading ? (
+                   <div className="flex items-center justify-center py-10 text-gray-600">
+                     <Loader className="w-6 h-6 animate-spin mr-2" /> {language === 'he' ? 'טוען נתונים...' : 'Loading data...'}
+                   </div>
+                 ) : reportData?.length ? (
+                   <div className="space-y-6">
+                     {/* Trend over time (line) */}
+                     <div className="bg-white rounded-lg p-4 border">
+                       <h4 className={`mb-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מגמות לאורך זמן' : 'Trends Over Time'}</h4>
+                       <ResponsiveContainer width="100%" height={280}>
+                         <LineChart data={reportData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                           <CartesianGrid strokeDasharray="3 3" />
+                           <XAxis dataKey="month" />
+                           <YAxis />
+                           <Tooltip />
+                           <Legend />
+                           <Line type="monotone" dataKey="sales" stroke="#1f2937" name={language === 'he' ? 'מכירות' : 'Sales'} />
+                           <Line type="monotone" dataKey="labor" stroke="#2563eb" name={language === 'he' ? 'עבודה' : 'Labor'} />
+                           <Line type="monotone" dataKey="food" stroke="#16a34a" name={language === 'he' ? 'מזון' : 'Food'} />
+                         </LineChart>
+                       </ResponsiveContainer>
+                     </div>
+
+                     {/* Monthly comparison (bars) */}
+                     <div className="bg-white rounded-lg p-4 border">
+                       <h4 className={`mb-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'השוואה בין חודשים' : 'Monthly Comparison'}</h4>
+                       <ResponsiveContainer width="100%" height={300}>
+                         <BarChart data={reportData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                           <CartesianGrid strokeDasharray="3 3" />
+                           <XAxis dataKey="month" />
+                           <YAxis />
+                           <Tooltip />
+                           <Legend />
+                           <Bar dataKey="sales" fill="#1f2937" name={language === 'he' ? 'מכירות' : 'Sales'} />
+                           <Bar dataKey="labor" fill="#2563eb" name={language === 'he' ? 'עבודה' : 'Labor'} />
+                           <Bar dataKey="food" fill="#16a34a" name={language === 'he' ? 'מזון' : 'Food'} />
+                         </BarChart>
+                       </ResponsiveContainer>
+                     </div>
+                   </div>
+                 ) : (
+                   <div className="text-gray-500 py-8 text-center">{language === 'he' ? 'אין נתונים להצגה' : 'No data yet'}</div>
+                 )}
+               </CardContent>
+             </Card>
+           </TabsContent>
+
+           {/* AFC Report Tab */}
           <TabsContent value="afc" className="space-y-6">
             <Card>
               <CardHeader>
