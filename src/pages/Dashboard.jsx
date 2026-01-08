@@ -417,7 +417,7 @@ export default function DashboardPage() {
   }
 
   // Goal calculations
-  const predictedSalesExVAT = predictedSales / 1.17;
+  const predictedSalesExVAT = Number(predictedSales || 0) / 1.17;
   const combinedGoalPercent = laborGoalPercent + foodGoalPercent;
   const laborGoalAmount = predictedSalesExVAT * (laborGoalPercent / 100);
   const foodGoalAmount = predictedSalesExVAT * (foodGoalPercent / 100);
