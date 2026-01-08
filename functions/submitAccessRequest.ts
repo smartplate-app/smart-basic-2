@@ -38,9 +38,10 @@ Deno.serve(async (req) => {
     });
 
     const adminEmail = 'admin@smartplate.org';
-    const subject = `New Access Request: ${business_name ? business_name + ' - ' : ''}${full_name}`;
+    const subject = `[Smart Plate] New access request - ${full_name}${business_name ? ' (' + business_name + ')' : ''} - action required`;
     const lines = [
-      `New access request submitted`,
+      `New access request — action required`,
+      `Reply-to: ${email}`,
       '',
       `Name: ${full_name}`,
       `Email: ${email}`,
@@ -56,6 +57,7 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: adminEmail,
+      from_name: "Smart Plate Alerts",
       subject,
       body: lines
     });
