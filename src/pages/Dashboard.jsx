@@ -428,7 +428,7 @@ export default function DashboardPage() {
   const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT * 100) : 0;
   const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
-  const isOverGoal = actualCombinedPercent > combinedGoalPercent;
+  const isOverGoal = Number(actualCombinedPercent) > Number(combinedGoalPercent || 0);
 
   // OS notification when combined cost exceeds goal (once per month)
   useEffect(() => {
