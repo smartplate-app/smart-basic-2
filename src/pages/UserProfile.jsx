@@ -32,6 +32,15 @@ export default function UserProfilePage() {
   const [driveChecking, setDriveChecking] = useState(false);
   const [driveAccount, setDriveAccount] = useState(null);
 
+  // AI & Content tools state
+  const [igType, setIgType] = useState('post');
+  const [igTopics, setIgTopics] = useState('offline mode, weekly scheduling, order management');
+  const [igGenerating, setIgGenerating] = useState(false);
+  const [igResult, setIgResult] = useState(null);
+  const [sampleLoading, setSampleLoading] = useState(false);
+  const [optLoading, setOptLoading] = useState(false);
+  const [optResult, setOptResult] = useState(null);
+
   useEffect(() => {
     loadUserData();
   }, []);
@@ -159,7 +168,51 @@ export default function UserProfilePage() {
     }
   };
 
-  if (loading) {
+  // AI/Automation handlers
+  const handleGenerateIG = async () => {
+    try {
+      setIgGenerating(true);
+      const topics = igTopics.split(',').map(s => s.trim()).filter(Boolean);
+      const { data } = await base44.functions.invoke('generateInstagramContent', {
+        type: igType,
+        topics,
+        languages: ['he', 'en']
+      });
+      setIgResult(data?.result || null);
+    } catch (e) {
+      alert('Error: ' + (e?.message || e));
+    } finally {
+      setIgGenerating(false);
+    }
+  };
+
+  const handleCreateSample = async () => {
+    try {
+      setSampleLoading(true);
+      const { data } = await base44.functions.invoke('createSampleData', {});
+      alert(language === 'he'
+        ? `נוצרו נתוני דוגמה: ספקים ${data?.created?.suppliers}, פריטים ${data?.created?.items}, הזמנות ${data?.created?.orders}, שבוע ${data?.created?.schedule}`
+        : `Sample created: suppliers ${data?.created?.suppliers}, items ${data?.created?.items}, orders ${data?.created?.orders}, schedule ${data?.created?.schedule}`);
+    } catch (e) {
+      alert('Error: ' + (e?.message || e));
+    } finally {
+      setSampleLoading(false);
+    }
+  };
+
+  const handleSuggest = async () => {
+    try {
+      setOptLoading(true);
+      const { data } = await base44.functions.invoke('suggestOptimizations', {});
+      setOptResult(data?.suggestions || null);
+    } catch (e) {
+      alert('Error: ' + (e?.message || e));
+    } finally {
+      setOptLoading(false);
+    }
+  };
+
+   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
@@ -461,6 +514,86 @@ export default function UserProfilePage() {
               ) : (
                 <p className="text-sm mt-3 text-red-700">Not connected</p>
               )
+            )}
+          </CardContent>
+        </Card>
+
+        {/* AI & Data Tools */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>{language === 'he' ? 'כלי AI ותוכן' : 'AI & Content Tools'}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+              <div>
+                <Label>{language === 'he' ? 'סוג' : 'Type'}</Label>
+                <select className="w-full border rounded-md h-10 px-3" value={igType} onChange={(e)=>setIgType(e.target.value)}>
+                  <option value="post">Post</option>
+                  <option value="reel">Reel</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <Label>{language === 'he' ? 'נושאים (מופרדים בפסיק)' : 'Topics (comma-separated)'}</Label>
+                <Input value={igTopics} onChange={(e)=>setIgTopics(e.target.value)} placeholder="offline mode, scheduling, order management" />
+              </div>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button type="button" onClick={handleGenerateIG} disabled={igGenerating} className="bg-purple-600 hover:bg-purple-700">
+                {igGenerating ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'יוצר...':'Generating...'}</>) : (<><span className="mr-2">✨</span>{language==='he'?'צור תוכן לאינסטגרם':'Generate Instagram Content'}</>)}
+              </Button>
+              <Button type="button" variant="outline" onClick={handleCreateSample} disabled={sampleLoading}>
+                {sampleLoading ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'יוצר...':'Creating...'}</>) : (<><span className="mr-2">➕</span>{language==='he'?'צור נתוני דוגמה':'Create Sample Data'}</>)}
+              </Button>
+              <Button type="button" variant="outline" onClick={handleSuggest} disabled={optLoading}>
+                {optLoading ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'מחשב...':'Analyzing...'}</>) : (<><span className="mr-2">💡</span>{language==='he'?'הצעות לשיפור':'Suggest Improvements'}</>)}
+              </Button>
+            </div>
+
+            {igResult && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {['he','en'].map(lang => (
+                  <div key={lang} className="border rounded-lg p-3 bg-white">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-semibold">{lang==='he'?'פוסט/רילס (עברית)':'Post/Reel (English)'}</div>
+                      <Button type="button" size="sm" variant="outline" onClick={()=>{
+                        const g = igResult?.generated?.[lang];
+                        const text = [g?.title, g?.caption, (g?.hashtags||[]).join(' '), igType==='reel' ? (g?.voiceover_script || '') : ''].filter(Boolean).join('\n\n');
+                        navigator.clipboard.writeText(text);
+                        alert(language==='he'?'הועתק':'Copied');
+                      }}>
+                        Copy
+                      </Button>
+                    </div>
+                    <div className="text-sm whitespace-pre-wrap">{igResult?.generated?.[lang]?.caption}</div>
+                    {Array.isArray(igResult?.generated?.[lang]?.hashtags) && (
+                      <div className="mt-2 text-xs text-gray-600">{igResult.generated[lang].hashtags.join(' ')}</div>
+                    )}
+                    {igType==='reel' && igResult?.generated?.[lang]?.voiceover_script && (
+                      <div className="mt-3 text-xs whitespace-pre-wrap bg-gray-50 p-2 rounded">{igResult.generated[lang].voiceover_script}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {optResult && (
+              <div className="border rounded-lg p-3 bg-white">
+                <div className="font-semibold mb-2">{language==='he'?'הצעות לשיפור':'Suggestions'}</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <div className="font-medium mb-1">HE</div>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {(optResult.he||[]).map((s,i)=>(<li key={i}>{s}</li>))}
+                    </ul>
+                  </div>
+                  <div>
+                    <div className="font-medium mb-1">EN</div>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {(optResult.en||[]).map((s,i)=>(<li key={i}>{s}</li>))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
