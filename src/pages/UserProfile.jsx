@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Save, Upload, X, CalendarPlus } from "lucide-react";
+import { Loader, Save, Upload, X, CalendarPlus, Download } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function UserProfilePage() {
@@ -40,6 +40,8 @@ export default function UserProfilePage() {
   const [sampleLoading, setSampleLoading] = useState(false);
   const [optLoading, setOptLoading] = useState(false);
   const [optResult, setOptResult] = useState(null);
+  const [coverGenerating, setCoverGenerating] = useState(false);
+  const [coverUrl, setCoverUrl] = useState('');
 
   useEffect(() => {
     loadUserData();
@@ -210,6 +212,51 @@ export default function UserProfilePage() {
     } finally {
       setOptLoading(false);
     }
+  };
+
+  const downloadText = (filename, text) => {
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadCaption = (lang) => {
+    const g = igResult?.generated?.[lang];
+    if (!g) return;
+    const txt = [g?.title, g?.caption, (g?.hashtags||[]).join(' '), igType==='reel' ? (g?.voiceover_script || '') : '']
+      .filter(Boolean).join('\n\n');
+    downloadText(`smartplate_${igType}_${lang}.txt`, txt);
+  };
+
+  const handleGenerateCoverImage = async () => {
+    try {
+      setCoverGenerating(true);
+      setCoverUrl('');
+      const topics = igTopics.split(',').map(s => s.trim()).filter(Boolean);
+      const prompt = `Minimal, clean social media cover image for a restaurant operations app (SmartPlate Basic). Theme: ${topics.join(', ')}. Use bold typography, white background, accent purple/blue, subtle iconography (calendar, box, wifi). No text over Hebrew/English required (graphic only).`;
+      const { url } = await base44.integrations.Core.GenerateImage({ prompt });
+      setCoverUrl(url);
+    } catch (e) {
+      alert('Image generation failed: ' + (e?.message || e));
+    } finally {
+      setCoverGenerating(false);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    if (!coverUrl) return;
+    const a = document.createElement('a');
+    a.href = coverUrl;
+    a.download = `smartplate_${igType}_cover.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
    if (loading) {
@@ -542,6 +589,9 @@ export default function UserProfilePage() {
               <Button type="button" onClick={handleGenerateIG} disabled={igGenerating} className="bg-purple-600 hover:bg-purple-700">
                 {igGenerating ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'יוצר...':'Generating...'}</>) : (<><span className="mr-2">✨</span>{language==='he'?'צור תוכן לאינסטגרם':'Generate Instagram Content'}</>)}
               </Button>
+              <Button type="button" variant="outline" onClick={handleGenerateCoverImage} disabled={coverGenerating}>
+                {coverGenerating ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'מייצר תמונה...':'Generating image...'}</>) : (<><Download className="w-4 h-4 mr-2" />{language==='he'?'צור תמונת קאבר':'Generate Cover Image'}</>)}
+              </Button>
               <Button type="button" variant="outline" onClick={handleCreateSample} disabled={sampleLoading}>
                 {sampleLoading ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'יוצר...':'Creating...'}</>) : (<><span className="mr-2">➕</span>{language==='he'?'צור נתוני דוגמה':'Create Sample Data'}</>)}
               </Button>
@@ -556,14 +606,19 @@ export default function UserProfilePage() {
                   <div key={lang} className="border rounded-lg p-3 bg-white">
                     <div className="flex items-center justify-between mb-2">
                       <div className="font-semibold">{lang==='he'?'פוסט/רילס (עברית)':'Post/Reel (English)'}</div>
-                      <Button type="button" size="sm" variant="outline" onClick={()=>{
-                        const g = igResult?.generated?.[lang];
-                        const text = [g?.title, g?.caption, (g?.hashtags||[]).join(' '), igType==='reel' ? (g?.voiceover_script || '') : ''].filter(Boolean).join('\n\n');
-                        navigator.clipboard.writeText(text);
-                        alert(language==='he'?'הועתק':'Copied');
-                      }}>
-                        Copy
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" variant="outline" onClick={()=>{
+                          const g = igResult?.generated?.[lang];
+                          const text = [g?.title, g?.caption, (g?.hashtags||[]).join(' '), igType==='reel' ? (g?.voiceover_script || '') : ''].filter(Boolean).join('\n\n');
+                          navigator.clipboard.writeText(text);
+                          alert(language==='he'?'הועתק':'Copied');
+                        }}>
+                          Copy
+                        </Button>
+                        <Button type="button" size="sm" variant="outline" onClick={()=>handleDownloadCaption(lang)}>
+                          <Download className="w-3 h-3 mr-1" /> TXT
+                        </Button>
+                      </div>
                     </div>
                     <div className="text-sm whitespace-pre-wrap">{igResult?.generated?.[lang]?.caption}</div>
                     {Array.isArray(igResult?.generated?.[lang]?.hashtags) && (
@@ -574,6 +629,17 @@ export default function UserProfilePage() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {coverUrl && (
+              <div className="border rounded-lg p-3 bg-white">
+                <div className="font-semibold mb-2">{language==='he'?'תמונת קאבר שנוצרה':'Generated Cover Image'}</div>
+                <img src={coverUrl} alt="IG Cover" className="w-full rounded" />
+                <div className="mt-2 flex gap-2">
+                  <Button type="button" variant="outline" onClick={()=>window.open(coverUrl, '_blank')}>{language==='he'?'פתח בטאב חדש':'Open in new tab'}</Button>
+                  <Button type="button" onClick={handleDownloadImage}><Download className="w-4 h-4 mr-2" />{language==='he'?'הורד תמונה':'Download Image'}</Button>
+                </div>
               </div>
             )}
 
