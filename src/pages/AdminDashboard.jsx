@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn } from "lucide-react";
+import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Download } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import AppHelpChat from "../components/AppHelpChat";
 
@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [chains, setChains] = useState([]);
   const [chainStores, setChainStores] = useState([]);
   const [showChainsView, setShowChainsView] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadAdminData();
@@ -482,6 +483,32 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2"
+                    disabled={exporting}
+                    onClick={async () => {
+                      try {
+                        setExporting(true);
+                        const res = await base44.functions.invoke('exportSnapshot', {});
+                        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+                        const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `app-snapshot-${ts}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                      } finally {
+                        setExporting(false);
+                      }
+                    }}
+                  >
+                    <Download className="w-4 h-4" />
+                    {exporting ? (language === 'he' ? 'מכין...' : 'Preparing...') : (language === 'he' ? 'ייצוא צילום' : 'Export Snapshot')}
+                  </Button>
                   <Button
                     onClick={() => setShowChainsView(!showChainsView)}
                     variant={showChainsView ? "default" : "outline"}
