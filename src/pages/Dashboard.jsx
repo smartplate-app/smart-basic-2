@@ -397,7 +397,24 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-gray-900">
+              {language === 'he' ? 'התחברות נדרשת' : 'Sign-in required'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => base44.auth.redirectToLogin()} className="bg-gray-900 hover:bg-gray-800">
+              {language === 'he' ? 'התחבר' : 'Login'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Goal calculations
   const predictedSalesExVAT = predictedSales / 1.17;
