@@ -61,6 +61,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadData();
+    // ensure UI renders even if load errors; avoid blank screen
+    setInitialized(true);
   }, [selectedMonth]);
 
   const loadData = async (retryCount = 0) => {
