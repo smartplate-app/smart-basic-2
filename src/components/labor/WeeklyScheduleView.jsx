@@ -24,6 +24,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
 import RowTimeDialog from "./RowTimeDialog";
+import { offlineQueue } from "../offline/offlineQueue";
 
 // Set week to start on Sunday (Israel standard)
 moment.updateLocale('en', {
@@ -264,6 +265,25 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     fetchScheduleAndUser(); 
     loadTemplates();
   }, [weekStartDate, t, language, workers, positions]);
+
+  // Offline sync for schedules
+  useEffect(() => {
+    const processor = async (item) => {
+      const { action, payload } = item || {};
+      if (!payload?.data) return;
+      let saved;
+      if (action === 'update_schedule' && payload.id) {
+        saved = await base44.entities.WeeklySchedule.update(payload.id, payload.data);
+      } else if (action === 'create_schedule') {
+        saved = await base44.entities.WeeklySchedule.create(payload.data);
+      }
+      if (saved) {
+        setSchedule(saved);
+        if (typeof onScheduleSaved === 'function') onScheduleSaved();
+      }
+    };
+    return offlineQueue.onOnline('schedules', processor);
+  }, [weekStartDate]);
 
   const loadTemplates = async () => {
     try {
@@ -582,6 +602,14 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       };
 
       console.log("Saving schedule:", scheduleData);
+
+      if (!navigator.onLine) {
+        offlineQueue.enqueue('schedules', { action: schedule && schedule.id ? 'update_schedule' : 'create_schedule', payload: { id: schedule?.id, data: scheduleData } });
+        setSchedule({ ...(schedule || {}), ...scheduleData, id: schedule?.id, __offline: true });
+        toast.success(language === 'he' ? 'נשמר ללא אינטרנט - יסתנכרן אוטומטית' : 'Saved offline — will sync automatically');
+        setSaving(false);
+        return { ...schedule, ...scheduleData };
+      }
 
       let savedSchedule;
       if (schedule && schedule.id) {

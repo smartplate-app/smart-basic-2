@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import OrderForm from "../components/orders/OrderForm";
 import OrderPreviewModal from "../components/orders/OrderPreviewModal";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
+import { offlineQueue } from "../components/offline/offlineQueue";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -366,6 +367,28 @@ export default function OrdersPage() {
     };
   }, []);
 
+  // Offline sync for orders
+  useEffect(() => {
+    if (!user) return;
+    const processItem = async (item) => {
+      const { action, payload, clientId } = item || {};
+      if (action === 'create_or_update_order') {
+        const draft = { ...(payload.orderData || {}), status: (payload.orderData?.status || 'draft') };
+        if (payload.editingOrderId) {
+          await base44.entities.Order.update(payload.editingOrderId, draft);
+          setOrders(prev => prev.map(o => (o.id === payload.editingOrderId || o.id === clientId) ? { ...o, ...draft, __offline: false } : o));
+        } else {
+          const saved = await base44.entities.Order.create(draft);
+          setOrders(prev => prev.map(o => (o.id === clientId) ? saved : o));
+        }
+      } else if (action === 'delete_order') {
+        await base44.entities.Order.delete(payload.id);
+        setOrders(prev => prev.filter(o => o.id !== payload.id));
+      }
+    };
+    return offlineQueue.onOnline('orders', processItem);
+  }, [user]);
+
   const verifyDraftsNow = async () => {
     try {
       const { data } = await base44.functions.invoke('verifyDrafts', {});
@@ -407,6 +430,23 @@ export default function OrdersPage() {
       return;
     }
 
+    // Offline: queue and update UI optimistically
+    if (!navigator.onLine) {
+      const clientId = 'temp-' + Date.now();
+      const draftData = { ...orderData, status: editingOrder?.status || 'draft' };
+      offlineQueue.enqueue('orders', { action: 'create_or_update_order', payload: { orderData: draftData, editingOrderId: editingOrder?.id }, clientId });
+      setShowForm(false);
+      setEditingOrder(null);
+      setOrders(prev => {
+        if (editingOrder) {
+          return prev.map(o => (o.id === editingOrder.id ? { ...o, ...draftData, __offline: true } : o));
+        }
+        return [{ ...draftData, id: clientId, __offline: true }, ...prev];
+      });
+      alert(t('saved_offline_will_sync') || 'Saved offline. Will sync automatically when back online.');
+      return;
+    }
+
     try {
       let savedOrder;
       if (editingOrder) {
@@ -433,6 +473,21 @@ export default function OrdersPage() {
 
   const handleSaveDraft = async (orderData) => {
     if (isViewer) { return; }
+    // Offline: queue draft save
+    if (!navigator.onLine) {
+      const clientId = 'temp-' + Date.now();
+      const draft = { ...orderData, status: 'draft' };
+      offlineQueue.enqueue('orders', { action: 'create_or_update_order', payload: { orderData: draft, editingOrderId: editingOrder?.id }, clientId });
+      setShowForm(false);
+      setEditingOrder(null);
+      setOrders(prev => {
+        if (editingOrder) {
+          return prev.map(o => (o.id === editingOrder.id ? { ...o, ...draft, __offline: true } : o));
+        }
+        return [{ ...draft, id: clientId, __offline: true }, ...prev];
+      });
+      return;
+    }
     try {
       let savedOrder;
       if (editingOrder) {
@@ -523,6 +578,12 @@ export default function OrdersPage() {
     if (isViewer) return;
     const input = window.prompt(`Type DELETE to confirm deletion of order ${order.order_number || '—'}`);
     if (!input || input.trim().toLowerCase() !== 'delete') return;
+    // Offline: queue delete and update UI
+    if (!navigator.onLine) {
+      offlineQueue.enqueue('orders', { action: 'delete_order', payload: { id: order.id } });
+      setOrders(prev => prev.filter(o => o.id !== order.id));
+      return;
+    }
     try {
       await base44.entities.Order.delete(order.id);
       await loadData(user);
