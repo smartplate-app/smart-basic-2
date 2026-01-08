@@ -32,6 +32,7 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
+import COGS from './pages/COGS';
 import __Layout from './Layout.jsx';
 
 
@@ -70,6 +71,7 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
+    "COGS": COGS,
 }
 
 export const pagesConfig = {
