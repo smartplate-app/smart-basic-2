@@ -11,7 +11,7 @@ import { useLanguage } from "../LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 
 export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSaveDraft }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [currentOrder, setCurrentOrder] = React.useState(order || {
     supplier_id: "",
     supplier_name: "",
