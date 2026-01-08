@@ -9,6 +9,7 @@ import { Loader, Save, PlusCircle } from "lucide-react";
 export default function RecipeManager({ entityName = "Recipe", title = "Recipes" }) {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
+  const [preps, setPreps] = useState([]);
   const [list, setList] = useState([]);
   const [name, setName] = useState("");
   const [yieldQty, setYieldQty] = useState(1);
