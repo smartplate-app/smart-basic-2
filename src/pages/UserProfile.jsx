@@ -42,6 +42,8 @@ export default function UserProfilePage() {
   const [optResult, setOptResult] = useState(null);
   const [coverGenerating, setCoverGenerating] = useState(false);
   const [coverUrl, setCoverUrl] = useState('');
+  const [savingDrive, setSavingDrive] = useState(false);
+  const [driveLink, setDriveLink] = useState('');
 
   useEffect(() => {
     loadUserData();
@@ -595,6 +597,9 @@ export default function UserProfilePage() {
               <Button type="button" variant="outline" onClick={handleCreateSample} disabled={sampleLoading}>
                 {sampleLoading ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'יוצר...':'Creating...'}</>) : (<><span className="mr-2">➕</span>{language==='he'?'צור נתוני דוגמה':'Create Sample Data'}</>)}
               </Button>
+              <Button type="button" className="bg-gray-900 hover:bg-gray-800" onClick={handleSaveToDrive} disabled={savingDrive}>
+                {savingDrive ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'שומר...':'Saving...'}</>) : (<>Google Drive</>)}
+              </Button>
               <Button type="button" variant="outline" onClick={handleSuggest} disabled={optLoading}>
                 {optLoading ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'מחשב...':'Analyzing...'}</>) : (<><span className="mr-2">💡</span>{language==='he'?'הצעות לשיפור':'Suggest Improvements'}</>)}
               </Button>
@@ -629,6 +634,13 @@ export default function UserProfilePage() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {driveLink && (
+              <div className="border rounded-lg p-3 bg-white">
+                <div className="font-semibold mb-2">{language==='he'?'נשמר ל‑Google Drive':'Saved to Google Drive'}</div>
+                <a href={driveLink} target="_blank" rel="noreferrer" className="text-blue-600 underline">{language==='he'?'פתח תיקייה':'Open folder'}</a>
               </div>
             )}
 
