@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Download } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import AppHelpChat from "../components/AppHelpChat";
+import ReportsSidebar from "../components/reports/ReportsSidebar";
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
   const [chainStores, setChainStores] = useState([]);
   const [showChainsView, setShowChainsView] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [reportsOpen, setReportsOpen] = useState(false);
 
   useEffect(() => {
     loadAdminData();
@@ -483,6 +485,13 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    className="flex items-center gap-2"
+                    onClick={() => setReportsOpen(true)}
+                  >
+                    <BarChart className="w-4 h-4" />
+                    {language === 'he' ? 'דוחות' : 'Reports'}
+                  </Button>
                   <Button
                     variant="outline"
                     className="flex items-center gap-2"
@@ -960,6 +969,7 @@ export default function AdminDashboard() {
         onSupplierAdded={loadAdminData}
         onItemAdded={() => {}}
       />
+      <ReportsSidebar open={reportsOpen} onClose={() => setReportsOpen(false)} />
     </div>
   );
 }
