@@ -518,7 +518,8 @@ export default function UserProfilePage() {
           </CardContent>
         </Card>
 
-        {/* AI & Data Tools */}
+        {/* AI & Data Tools (admin only) */}
+        {user?.role === 'admin' && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>{language === 'he' ? 'כלי AI ותוכן' : 'AI & Content Tools'}</CardTitle>
@@ -597,6 +598,7 @@ export default function UserProfilePage() {
             )}
           </CardContent>
         </Card>
+        )}
 
         <Card className="mt-6">
           <CardHeader>
