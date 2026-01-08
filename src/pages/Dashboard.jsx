@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(moment().format('YYYY-MM'));
   const [dashboardData, setDashboardData] = useState(null);
+  const [initialized, setInitialized] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
