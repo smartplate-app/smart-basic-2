@@ -109,8 +109,7 @@ const AppLayout = ({ children, currentPageName }) => {
   { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true },
   { title: language === 'he' ? 'תצוגת ברוך הבא (אינקוגניטו)' : 'Welcome Incognito', url: "/functions/welcomePublic", icon: Shield, adminOnly: true, workerHidden: true },
   { title: language === 'he' ? 'בודק קישורים' : 'Link Checker', url: createPageUrl("LinkChecker"), icon: Shield, adminOnly: true, workerHidden: true },
-  { title: language === 'he' ? 'דף ברוך הבא (תצוגה)' : 'Welcome (Preview)', url: createPageUrl("Welcome"), icon: Shield, adminOnly: true, workerHidden: true },
-  { title: language === 'he' ? 'התראות' : 'Notifications', url: createPageUrl("Notifications"), icon: AlertCircle, adminOnly: false, workerHidden: false }
+  { title: language === 'he' ? 'דף ברוך הבא (תצוגה)' : 'Welcome (Preview)', url: createPageUrl("Welcome"), icon: Shield, adminOnly: true, workerHidden: true }
   ];
 
   useEffect(() => {
