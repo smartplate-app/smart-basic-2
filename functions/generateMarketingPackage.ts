@@ -158,32 +158,95 @@ Return JSON per schema.`;
       return res.json();
     };
 
+    const uploadBinary = async (parentId, name, bytes, mime, desc='') => {
+      const meta = { name, parents: [parentId], description: desc };
+      const { body: mpBody, boundary } = buildMultipart(meta, bytes, mime);
+      const res = await driveFetch(token, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', {
+        method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body: mpBody
+      });
+      return res.json();
+    };
+
+    const generateImageWithTimeout = async (prompt, ms = 45000) => {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), ms);
+      try {
+        const { url } = await base44.integrations.Core.GenerateImage({ prompt });
+        return url;
+      } finally {
+        clearTimeout(t);
+      }
+    };
+
+    const svgPlaceholder = (en='', he='') => (
+      `<?xml version="1.0" encoding="UTF-8"?>\n` +
+      `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920">`+
+      `<rect width="100%" height="100%" fill="white"/>`+
+      `<rect x="0" y="0" width="100%" height="96" fill="#ede9fe"/>`+
+      `<text x="50%" y="160" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="48" fill="#312e81">SmartPlate Basic</text>`+
+      `<foreignObject x="100" y="320" width="880" height="400">`+
+      `<div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Arial, Helvetica, sans-serif; color:#111827; font-size:40px; text-align:center;">`+
+      `<div style="font-weight:700; margin-bottom:20px;">${en || ''}</div>`+
+      `<div style="font-size:32px; color:#4b5563;">${he || ''}</div>`+
+      `</div></foreignObject>`+
+      `</svg>`
+    );
+
+    const runWithConcurrency = async (tasks, limit = 2) => {
+      const results = [];
+      let i = 0;
+      const workers = Array.from({ length: Math.min(limit, tasks.length) }, () => (async () => {
+        for (;;) {
+          let idx;
+          if (i >= tasks.length) break;
+          idx = i++;
+          try { results[idx] = await tasks[idx](); } catch (e) { results[idx] = { error: e?.message || String(e) }; }
+        }
+      })());
+      await Promise.all(workers);
+      return results;
+    };
+
     const previews = { reel: [], stories: [] };
 
     // 3) Generate images with Core.GenerateImage
     // Reel slides
     const reelSlides = (design?.reel?.slides || []).slice(0, reelFrames);
-    const reelUploads = [];
-    for (let i = 0; i < reelSlides.length; i++) {
-      const s = reelSlides[i];
-      const imgPrompt = `Vertical 1080x1920, clean white background, bold modern typography area, brand accents (purple/blue), subtle restaurant ops icons. Do not include detailed photoreal faces. ${s.prompt || ''}`;
-      const { url } = await base44.integrations.Core.GenerateImage({ prompt: imgPrompt });
-      previews.reel.push(url);
-      const up = await uploadImageFromUrl(reelFolder.id, `reel_${String(i+1).padStart(2,'0')}.jpg`, url, `EN: ${s.text_en || ''} | HE: ${s.text_he || ''}`);
-      reelUploads.push(up);
-    }
+    const reelUploads = new Array(reelSlides.length);
+    const reelTasks = reelSlides.map((s, i) => async () => {
+      try {
+        const imgPrompt = `Vertical 1080x1920, clean white background, bold modern typography area, brand accents (purple/blue), subtle restaurant ops icons. Do not include detailed photoreal faces. ${s.prompt || ''}`;
+        const url = await generateImageWithTimeout(imgPrompt, 60000);
+        previews.reel[i] = url;
+        const up = await uploadImageFromUrl(reelFolder.id, `reel_${String(i+1).padStart(2,'0')}.jpg`, url, `EN: ${s.text_en || ''} | HE: ${s.text_he || ''}`);
+        reelUploads[i] = up;
+      } catch (e) {
+        const svg = svgPlaceholder(s?.text_en || '', s?.text_he || '');
+        const bytes = new TextEncoder().encode(svg);
+        const up = await uploadBinary(reelFolder.id, `reel_${String(i+1).padStart(2,'0')}.svg`, bytes, 'image/svg+xml', 'Placeholder slide');
+        reelUploads[i] = up;
+      }
+    });
+    await runWithConcurrency(reelTasks, 3);
 
     // Stories
     const stories = (design?.stories || []).slice(0, storiesCount);
-    const storyUploads = [];
-    for (let i = 0; i < stories.length; i++) {
-      const st = stories[i];
-      const imgPrompt = `Instagram Story 1080x1920, minimal white background, bold headline space, brand accents (purple/blue), UI/ops icons. ${st.prompt || ''}`;
-      const { url } = await base44.integrations.Core.GenerateImage({ prompt: imgPrompt });
-      previews.stories.push(url);
-      const up = await uploadImageFromUrl(storiesFolder.id, `story_${String(i+1).padStart(2,'0')}.jpg`, url, `EN: ${st.title_en || ''} — ${st.body_en || ''} | HE: ${st.title_he || ''} — ${st.body_he || ''}`);
-      storyUploads.push(up);
-    }
+    const storyUploads = new Array(stories.length);
+    const storyTasks = stories.map((st, i) => async () => {
+      try {
+        const imgPrompt = `Instagram Story 1080x1920, minimal white background, bold headline space, brand accents (purple/blue), UI/ops icons. ${st.prompt || ''}`;
+        const url = await generateImageWithTimeout(imgPrompt, 60000);
+        previews.stories[i] = url;
+        const up = await uploadImageFromUrl(storiesFolder.id, `story_${String(i+1).padStart(2,'0')}.jpg`, url, `EN: ${st.title_en || ''} — ${st.body_en || ''} | HE: ${st.title_he || ''} — ${st.body_he || ''}`);
+        storyUploads[i] = up;
+      } catch (e) {
+        const svg = svgPlaceholder(`${st?.title_en || ''} — ${st?.body_en || ''}`, `${st?.title_he || ''} — ${st?.body_he || ''}`);
+        const bytes = new TextEncoder().encode(svg);
+        const up = await uploadBinary(storiesFolder.id, `story_${String(i+1).padStart(2,'0')}.svg`, bytes, 'image/svg+xml', 'Placeholder story');
+        storyUploads[i] = up;
+      }
+    });
+    await runWithConcurrency(storyTasks, 3);
 
     // 4) Upload text assets
     await uploadText(textFolder.id, 'reel_caption_en.txt', (design?.reel?.caption_en || '') + '\n\n' + (design?.reel?.hashtags_en || []).join(' '));

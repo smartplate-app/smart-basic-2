@@ -643,7 +643,7 @@ export default function UserProfilePage() {
                 {savingDrive ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'שומר...':'Saving...'}</>) : (<>Google Drive</>)}
               </Button>
               <Button type="button" onClick={handleGenerateReelAndStories} disabled={campaignGenerating} className="bg-emerald-600 hover:bg-emerald-700">
-                {campaignGenerating ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'מייצר חבילת רילס/סטוריז...':'Generating Reels/Stories...'}</>) : (<>🎬 {language==='he'?'צור רילס + סטוריז אוטומטי':'Generate Reel + Stories'}</>)}
+                {campaignGenerating ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'מייצר סטוריבורד + סטוריז...':'Generating Storyboard + Stories...'}</>) : (<>🎬 {language==='he'?'צור סטוריבורד + סטוריז':'Generate Storyboard + Stories'}</>)}
               </Button>
               <Button type="button" variant="outline" onClick={handleSuggest} disabled={optLoading}>
                 {optLoading ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'מחשב...':'Analyzing...'}</>) : (<><span className="mr-2">💡</span>{language==='he'?'הצעות לשיפור':'Suggest Improvements'}</>)}
