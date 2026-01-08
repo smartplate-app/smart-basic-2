@@ -1,4 +1,5 @@
 import AdminDashboard from './pages/AdminDashboard';
+import COGS from './pages/COGS';
 import ChainManagement from './pages/ChainManagement';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
@@ -32,12 +33,12 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import COGS from './pages/COGS';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminDashboard": AdminDashboard,
+    "COGS": COGS,
     "ChainManagement": ChainManagement,
     "Dashboard": Dashboard,
     "Home": Home,
@@ -71,7 +72,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "COGS": COGS,
 }
 
 export const pagesConfig = {
