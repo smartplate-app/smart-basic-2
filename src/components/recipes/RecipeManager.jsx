@@ -21,12 +21,15 @@ export default function RecipeManager({ entityName = "Recipe", title = "Recipes"
     (async () => {
       setLoading(true);
       try {
-        const [its, recs] = await Promise.all([
+        const prepsPromise = entityName === "Recipe" ? base44.entities.Prep.list() : Promise.resolve([]);
+        const [its, recs, ps] = await Promise.all([
           base44.entities.Item.list(),
-          base44.entities[entityName].list()
+          base44.entities[entityName].list(),
+          prepsPromise
         ]);
         setItems(its);
         setList(recs);
+        setPreps(ps);
       } finally {
         setLoading(false);
       }
@@ -34,13 +37,28 @@ export default function RecipeManager({ entityName = "Recipe", title = "Recipes"
   }, [entityName]);
 
   const totalCost = useMemo(() => {
+    const prepCostPerUnit = (prep) => {
+      if (!prep) return 0;
+      const total = (prep.ingredients || []).reduce((s, ing) => {
+        const it = items.find((x) => x.id === ing.item_id);
+        const price = it ? (it.price_after_discount ?? it.price ?? 0) : 0;
+        const qty = Number(ing.quantity) || 0;
+        return s + price * qty;
+      }, 0);
+      const y = Number(prep.yield_quantity) || 1;
+      return y > 0 ? total / y : 0;
+    };
     return rows.reduce((sum, r) => {
+      if (r.type === 'prep') {
+        const p = preps.find((x) => x.id === r.prep_id);
+        return sum + prepCostPerUnit(p) * (Number(r.quantity) || 0);
+      }
       const it = items.find((x) => x.id === r.item_id);
       const price = it ? (it.price_after_discount ?? it.price ?? 0) : 0;
       const qty = Number(r.quantity) || 0;
       return sum + price * qty;
     }, 0);
-  }, [rows, items]);
+  }, [rows, items, preps]);
 
   const costPerUnit = useMemo(() => {
     const y = Number(yieldQty) || 0;
@@ -62,12 +80,11 @@ export default function RecipeManager({ entityName = "Recipe", title = "Recipes"
         name,
         yield_quantity: Number(yieldQty) || 1,
         yield_unit: yieldUnit,
-        ingredients: rows.map((r) => ({
-          item_id: r.item_id,
-          item_name: r.item_name,
-          quantity: Number(r.quantity) || 0,
-          unit: r.unit || ""
-        })),
+        ingredients: rows.map((r) => (
+          r.type === 'prep'
+            ? { type: 'prep', prep_id: r.prep_id, prep_name: r.prep_name, quantity: Number(r.quantity) || 0, unit: r.unit || '' }
+            : { type: 'item', item_id: r.item_id, item_name: r.item_name, quantity: Number(r.quantity) || 0, unit: r.unit || '' }
+        )),
         ...(entityName === 'Recipe' && posSku ? { pos_sku: posSku } : {})
       };
       await base44.entities[entityName].create(payload);
@@ -106,7 +123,7 @@ export default function RecipeManager({ entityName = "Recipe", title = "Recipes"
             </div>
           )}
 
-          <IngredientRows items={items} rows={rows} setRows={setRows} />
+          <IngredientRows items={items} preps={preps} rows={rows} setRows={setRows} allowPreps={entityName === 'Recipe'} />
 
           <div className="flex items-center justify-between text-sm text-gray-600">
             <div>Total cost: ₪{totalCost.toFixed(2)}</div>
