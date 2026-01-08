@@ -423,7 +423,7 @@ export default function DashboardPage() {
   const foodGoalAmount = predictedSalesExVAT * (foodGoalPercent / 100);
 
   // Actual calculations
-  const actualSalesExVAT = actualSales / 1.17;
+  const actualSalesExVAT = Number(actualSales || 0) / 1.17;
   const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
   const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT * 100) : 0;
   const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
