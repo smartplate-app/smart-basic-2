@@ -11,6 +11,7 @@ import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, Bar
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
+import { notifyOS } from "../components/notifications/notify";
 
 
 export default function DashboardPage() {
@@ -411,6 +412,19 @@ export default function DashboardPage() {
   const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
   const isOverGoal = actualCombinedPercent > combinedGoalPercent;
+
+  // OS notification when combined cost exceeds goal (once per month)
+  useEffect(() => {
+    if (!isOverGoal) return;
+    const key = `notif_over_goal_${selectedMonth}`;
+    if (localStorage.getItem(key)) return;
+    const title = language === 'he' ? 'חריגה מהיעד' : 'Over goal';
+    const body = language === 'he'
+      ? `האחוז המשולב ${actualCombinedPercent.toFixed(1)}% גבוה מהיעד ${combinedGoalPercent.toFixed(0)}%`
+      : `Combined cost ${actualCombinedPercent.toFixed(1)}% exceeds goal ${combinedGoalPercent.toFixed(0)}%`;
+    notifyOS({ title, body, tag: 'dashboard-over-goal' });
+    localStorage.setItem(key, '1');
+  }, [isOverGoal, selectedMonth, actualCombinedPercent, combinedGoalPercent, language]);
 
   const costBreakdownData = [
     { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },

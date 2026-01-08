@@ -13,6 +13,7 @@ import OrderForm from "../components/orders/OrderForm";
 import OrderPreviewModal from "../components/orders/OrderPreviewModal";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import { offlineQueue } from "../components/offline/offlineQueue";
+import { notifyOS } from "../components/notifications/notify";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -388,6 +389,27 @@ export default function OrdersPage() {
     };
     return offlineQueue.onOnline('orders', processItem);
   }, [user]);
+
+  // OS notification: orders left in draft for >24h (once per day)
+  useEffect(() => {
+    if (!orders || orders.length === 0) return;
+    try {
+      const threshold = Date.now() - 24 * 60 * 60 * 1000;
+      const staleDraft = orders.find(o => o.status === 'draft' && o.created_date && new Date(o.created_date).getTime() < threshold);
+      if (staleDraft) {
+        const key = 'notif_stale_draft_' + new Date().toISOString().slice(0,10);
+        if (!localStorage.getItem(key)) {
+          notifyOS({
+            title: t('order_left_draft') || 'Order left as draft',
+            body: `${t('order_number') || 'Order'} ${staleDraft.order_number || '—'} ${t('still_draft') || 'is still a draft after 24h'}`,
+            tag: 'order-draft',
+            url: createPageUrl('Orders')
+          });
+          localStorage.setItem(key, '1');
+        }
+      }
+    } catch (_) {}
+  }, [orders]);
 
   const verifyDraftsNow = async () => {
     try {
