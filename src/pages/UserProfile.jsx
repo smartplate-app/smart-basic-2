@@ -46,6 +46,8 @@ export default function UserProfilePage() {
   const [driveLink, setDriveLink] = useState('');
   const [campaignGenerating, setCampaignGenerating] = useState(false);
   const [campaignPreviews, setCampaignPreviews] = useState({ reel: [], stories: [] });
+  const [campaignGenerating, setCampaignGenerating] = useState(false);
+  const [campaignPreviews, setCampaignPreviews] = useState({ reel: [], stories: [] });
 
   useEffect(() => {
     loadUserData();
@@ -261,6 +263,46 @@ export default function UserProfilePage() {
     document.body.appendChild(a);
     a.click();
     a.remove();
+  };
+
+  const handleSaveToDrive = async () => {
+    try {
+      setSavingDrive(true);
+      setDriveLink('');
+      if (!igResult) { alert(language==='he'?'צור תוכן קודם':'Generate content first'); setSavingDrive(false); return; }
+      const topics = igTopics.split(',').map(s => s.trim()).filter(Boolean);
+      const { data } = await base44.functions.invoke('saveIgPackageToDrive', {
+        igType,
+        igResult,
+        coverUrl,
+        topics,
+        suggestions: optResult || null
+      });
+      const link = data?.folder?.webViewLink || '';
+      if (link) setDriveLink(link);
+      alert(language==='he' ? 'נשמר לתיקייה בגוגל דרייב' : 'Saved to Google Drive folder');
+    } catch (e) {
+      alert('Drive error: ' + (e?.message || e));
+    } finally {
+      setSavingDrive(false);
+    }
+  };
+
+  const handleGenerateReelAndStories = async () => {
+    try {
+      setCampaignGenerating(true);
+      setCampaignPreviews({ reel: [], stories: [] });
+      setDriveLink('');
+      const topics = igTopics.split(',').map(s => s.trim()).filter(Boolean);
+      const { data } = await base44.functions.invoke('generateMarketingPackage', { topics, reel_frames: 6, stories_count: 3 });
+      if (data?.folder?.webViewLink) setDriveLink(data.folder.webViewLink);
+      if (data?.previews) setCampaignPreviews(data.previews);
+      alert(language==='he' ? 'נוצרה חבילה ושמורה ב‑Google Drive' : 'Package generated and saved to Google Drive');
+    } catch (e) {
+      alert('Error: ' + (e?.message || e));
+    } finally {
+      setCampaignGenerating(false);
+    }
   };
 
    if (loading) {
@@ -602,6 +644,9 @@ export default function UserProfilePage() {
               <Button type="button" className="bg-gray-900 hover:bg-gray-800" onClick={handleSaveToDrive} disabled={savingDrive}>
                 {savingDrive ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'שומר...':'Saving...'}</>) : (<>Google Drive</>)}
               </Button>
+              <Button type="button" onClick={handleGenerateReelAndStories} disabled={campaignGenerating} className="bg-emerald-600 hover:bg-emerald-700">
+                {campaignGenerating ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'מייצר חבילת רילס/סטוריז...':'Generating Reels/Stories...'}</>) : (<>🎬 {language==='he'?'צור רילס + סטוריז אוטומטי':'Generate Reel + Stories'}</>)}
+              </Button>
               <Button type="button" variant="outline" onClick={handleSuggest} disabled={optLoading}>
                 {optLoading ? (<><Loader className="w-4 h-4 mr-2 animate-spin" />{language==='he'?'מחשב...':'Analyzing...'}</>) : (<><span className="mr-2">💡</span>{language==='he'?'הצעות לשיפור':'Suggest Improvements'}</>)}
               </Button>
@@ -643,6 +688,28 @@ export default function UserProfilePage() {
               <div className="border rounded-lg p-3 bg-white">
                 <div className="font-semibold mb-2">{language==='he'?'נשמר ל‑Google Drive':'Saved to Google Drive'}</div>
                 <a href={driveLink} target="_blank" rel="noreferrer" className="text-blue-600 underline">{language==='he'?'פתח תיקייה':'Open folder'}</a>
+              </div>
+            )}
+
+            {(campaignPreviews.reel.length > 0 || campaignPreviews.stories.length > 0) && (
+              <div className="border rounded-lg p-3 bg-white">
+                <div className="font-semibold mb-2">{language==='he'?'תצוגה מקדימה (לא מקבצי הדרייב)':'Preview (not Drive files)'}</div>
+                {campaignPreviews.reel.length > 0 && (
+                  <div className="mb-3">
+                    <div className="text-sm font-medium mb-1">Reel Frames</div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {campaignPreviews.reel.map((u,i)=>(<img key={i} src={u} alt="reel frame" className="w-full rounded border" />))}
+                    </div>
+                  </div>
+                )}
+                {campaignPreviews.stories.length > 0 && (
+                  <div>
+                    <div className="text-sm font-medium mb-1">Stories</div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {campaignPreviews.stories.map((u,i)=>(<img key={i} src={u} alt="story" className="w-full rounded border" />))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
