@@ -379,7 +379,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (error) {
+  if (error && initialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="max-w-md">
