@@ -123,6 +123,8 @@ Return JSON per schema.`;
     }
 
     const reelFolder = await createFolder('reel', root.id);
+    const reelTextEnFolder = await createFolder('reel_text_en', root.id);
+    const reelTextHeFolder = await createFolder('reel_text_he', root.id);
     const storiesFolder = await createFolder('stories', root.id);
     const textFolder = await createFolder('text_assets', root.id);
 
@@ -192,6 +194,27 @@ Return JSON per schema.`;
       `</svg>`
     );
 
+    const fetchAsBase64 = async (url) => {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('fetch base failed');
+      const ab = await r.arrayBuffer();
+      const bytes = new Uint8Array(ab);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
+      const mime = r.headers.get('content-type') || 'image/jpeg';
+      return { base64, mime };
+    };
+
+    const svgCompositeOverlay = (base64, mime, text, lang='en') => (
+      `<?xml version="1.0" encoding="UTF-8"?>\n`+
+      `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920">`+
+      `<image href="data:${mime};base64,${base64}" x="0" y="0" width="1080" height="1920" preserveAspectRatio="xMidYMid slice"/>`+
+      `<rect x="60" y="80" width="960" height="160" rx="24" fill="rgba(0,0,0,0.45)"/>`+
+      `<text x="540" y="170" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" fill="#ffffff" style="${lang==='he'?'direction:rtl;':''}">${(text||'').replace(/&/g,'&amp;')}</text>`+
+      `</svg>`
+    );
+
     const runWithConcurrency = async (tasks, limit = 2) => {
       const results = [];
       let i = 0;
@@ -229,6 +252,48 @@ Return JSON per schema.`;
     });
     await runWithConcurrency(reelTasks, 3);
 
+    // Auto text overlay variants (EN/HE)
+    const overlayEnUploads = new Array(reelSlides.length);
+    const overlayHeUploads = new Array(reelSlides.length);
+    const overlayEnTasks = reelSlides.map((s, i) => async () => {
+      const baseUrl = previews.reel[i];
+      const text = s?.text_en || '';
+      try {
+        const overlayPrompt = `Use the provided image strictly as background (no edits). Add a clean top-center text overlay: "${text}". Bold, high-contrast, modern font, white/black with subtle shadow; do not change anything else.`;
+        const { url } = await base44.integrations.Core.GenerateImage({ prompt: overlayPrompt, existing_image_urls: [baseUrl] });
+        const up = await uploadImageFromUrl(reelTextEnFolder.id, `reel_${String(i+1).padStart(2,'0')}_en.jpg`, url, `EN overlay: ${text}`);
+        overlayEnUploads[i] = up;
+      } catch (e) {
+        try {
+          const { base64, mime } = await fetchAsBase64(baseUrl);
+          const svg = svgCompositeOverlay(base64, mime, text, 'en');
+          const bytes = new TextEncoder().encode(svg);
+          const up = await uploadBinary(reelTextEnFolder.id, `reel_${String(i+1).padStart(2,'0')}_en.svg`, bytes, 'image/svg+xml', 'EN overlay');
+          overlayEnUploads[i] = up;
+        } catch {}
+      }
+    });
+    const overlayHeTasks = reelSlides.map((s, i) => async () => {
+      const baseUrl = previews.reel[i];
+      const text = s?.text_he || '';
+      try {
+        const overlayPrompt = `Use the provided image strictly as background (no edits). Add a clean top-center Hebrew text overlay: "${text}". Bold, high-contrast, modern font; do not change anything else.`;
+        const { url } = await base44.integrations.Core.GenerateImage({ prompt: overlayPrompt, existing_image_urls: [baseUrl] });
+        const up = await uploadImageFromUrl(reelTextHeFolder.id, `reel_${String(i+1).padStart(2,'0')}_he.jpg`, url, `HE overlay: ${text}`);
+        overlayHeUploads[i] = up;
+      } catch (e) {
+        try {
+          const { base64, mime } = await fetchAsBase64(baseUrl);
+          const svg = svgCompositeOverlay(base64, mime, text, 'he');
+          const bytes = new TextEncoder().encode(svg);
+          const up = await uploadBinary(reelTextHeFolder.id, `reel_${String(i+1).padStart(2,'0')}_he.svg`, bytes, 'image/svg+xml', 'HE overlay');
+          overlayHeUploads[i] = up;
+        } catch {}
+      }
+    });
+    await runWithConcurrency(overlayEnTasks, 2);
+    await runWithConcurrency(overlayHeTasks, 2);
+
     // Stories
     const stories = (design?.stories || []).slice(0, storiesCount);
     const storyUploads = new Array(stories.length);
@@ -258,10 +323,10 @@ Return JSON per schema.`;
       `Story ${i+1}\nEN Title: ${s.title_en || ''}\nEN Body: ${s.body_en || ''}\nEN CTA: ${s.cta_en || ''}\nHE Title: ${s.title_he || ''}\nHE Body: ${s.body_he || ''}\nHE CTA: ${s.cta_he || ''}\n---\n`)).join('\n');
     await uploadText(textFolder.id, 'stories_text.txt', storyTxt);
 
-    const howto = `This folder contains a SmartPlate Basic marketing package.\n\nSubfolders:\n- reel: background frames (1080x1920). Add the EN on-screen text (and small HE) per slide description.\n- stories: background story images (1080x1920). Add text overlays as in stories_text.txt.\n- text_assets: captions (EN/HE) and voiceover scripts.\n\nRecommended edits:\n- Use Instagram editor or CapCut. Keep on-screen EN under ~8 words, add small HE words.\n- Brand accents: purple/blue on clean white.\n- Duration per slide as designed.\n`;
+    const howto = `This folder contains a SmartPlate Basic marketing package.\n\nSubfolders:\n- reel: background frames (1080x1920).\n- reel_text_en: frames with English text overlay.\n- reel_text_he: frames with Hebrew text overlay.\n- stories: background story images (1080x1920).\n- text_assets: captions (EN/HE) and voiceover scripts.\n\nNotes:\n- Overlays are auto-generated. If an AI overlay failed, a vector SVG overlay was created using the original frame.\n- IG accepts raster formats; if you need PNG/JPG, tell us and we'll add rasterization.\n\nRecommended edits:\n- Keep on-screen EN under ~8 words, add small HE words.\n- Brand accents: purple/blue on clean white.\n- Duration per slide as designed.\n`;
     await uploadText(root.id, 'README.txt', howto);
 
-    return Response.json({ success: true, folder: root, subfolders: { reel: reelFolder, stories: storiesFolder, text: textFolder }, previews, reel_files: reelUploads, story_files: storyUploads, design });
+    return Response.json({ success: true, folder: root, subfolders: { reel: reelFolder, reel_text_en: reelTextEnFolder, reel_text_he: reelTextHeFolder, stories: storiesFolder, text: textFolder }, previews, reel_files: reelUploads, overlay_en_files: overlayEnUploads, overlay_he_files: overlayHeUploads, story_files: storyUploads, design });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
   }
