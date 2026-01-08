@@ -424,7 +424,7 @@ export default function DashboardPage() {
 
   // Actual calculations
   const actualSalesExVAT = Number(actualSales || 0) / 1.17;
-  const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
+  const effectiveLaborCost = (useManualLabor && Number(manualLaborCost) > 0) ? Number(manualLaborCost) : Number(calculatedLaborCost || 0);
   const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT * 100) : 0;
   const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
