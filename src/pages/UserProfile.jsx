@@ -44,6 +44,8 @@ export default function UserProfilePage() {
   const [coverUrl, setCoverUrl] = useState('');
   const [savingDrive, setSavingDrive] = useState(false);
   const [driveLink, setDriveLink] = useState('');
+  const [campaignGenerating, setCampaignGenerating] = useState(false);
+  const [campaignPreviews, setCampaignPreviews] = useState({ reel: [], stories: [] });
 
   useEffect(() => {
     loadUserData();
