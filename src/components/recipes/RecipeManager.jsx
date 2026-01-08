@@ -13,6 +13,7 @@ export default function RecipeManager({ entityName = "Recipe", title = "Recipes"
   const [name, setName] = useState("");
   const [yieldQty, setYieldQty] = useState(1);
   const [yieldUnit, setYieldUnit] = useState("portion");
+  const [posSku, setPosSku] = useState("");
   const [rows, setRows] = useState([]);
   const [saving, setSaving] = useState(false);
 
@@ -50,6 +51,7 @@ export default function RecipeManager({ entityName = "Recipe", title = "Recipes"
     setName("");
     setYieldQty(1);
     setYieldUnit(entityName === "Prep" ? "kg" : "portion");
+    setPosSku("");
     setRows([]);
   };
 
@@ -65,7 +67,8 @@ export default function RecipeManager({ entityName = "Recipe", title = "Recipes"
           item_name: r.item_name,
           quantity: Number(r.quantity) || 0,
           unit: r.unit || ""
-        }))
+        })),
+        ...(entityName === 'Recipe' && posSku ? { pos_sku: posSku } : {})
       };
       await base44.entities[entityName].create(payload);
       const refreshed = await base44.entities[entityName].list();
@@ -97,6 +100,11 @@ export default function RecipeManager({ entityName = "Recipe", title = "Recipes"
             <Input type="number" value={yieldQty} onChange={(e) => setYieldQty(e.target.value)} placeholder="Yield quantity" />
             <Input value={yieldUnit} onChange={(e) => setYieldUnit(e.target.value)} placeholder="Yield unit" />
           </div>
+          {entityName === 'Recipe' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+              <Input value={posSku} onChange={(e) => setPosSku(e.target.value)} placeholder="POS SKU (optional)" />
+            </div>
+          )}
 
           <IngredientRows items={items} rows={rows} setRows={setRows} />
 
