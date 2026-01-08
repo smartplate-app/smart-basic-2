@@ -30,7 +30,6 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   const [itemQuantities, setItemQuantities] = React.useState({});
   const [currentStock, setCurrentStock] = React.useState({}); // Track current stock per item
   const [itemSearch, setItemSearch] = React.useState("");
-  const { language } = useLanguage();
 
   React.useEffect(() => {
     const loadUser = async () => {
