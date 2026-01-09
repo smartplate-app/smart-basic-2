@@ -12,6 +12,7 @@ import { Globe } from 'lucide-react';
 const languages = [
   { code: 'he', name: 'עברית', flag: '🇮🇱' },
   { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
   { code: 'ar', name: 'العربية', flag: '🇸🇦' },
   { code: 'el', name: 'Ελληνικά', flag: '🇬🇷' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
