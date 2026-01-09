@@ -22,7 +22,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(moment().format('YYYY-MM'));
   const [dashboardData, setDashboardData] = useState(null);
-  const [initialized, setInitialized] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -61,8 +60,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadData();
-    // ensure UI renders even if load errors; avoid blank screen
-    setInitialized(true);
   }, [selectedMonth]);
 
   const loadData = async (retryCount = 0) => {
@@ -366,35 +363,9 @@ export default function DashboardPage() {
     }
   };
 
-  // Goal calculations
-  const predictedSalesExVAT = Number(predictedSales || 0) / 1.17;
-  const combinedGoalPercent = laborGoalPercent + foodGoalPercent;
-  const laborGoalAmount = predictedSalesExVAT * (laborGoalPercent / 100);
-  const foodGoalAmount = predictedSalesExVAT * (foodGoalPercent / 100);
-
-  // Actual calculations
-  const actualSalesExVAT = Number(actualSales || 0) / 1.17;
-  const effectiveLaborCost = (useManualLabor && Number(manualLaborCost) > 0) ? Number(manualLaborCost) : Number(calculatedLaborCost || 0);
-  const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT * 100) : 0;
-  const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
-  const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
-  const isOverGoal = Number(actualCombinedPercent) > Number(combinedGoalPercent || 0);
-
-  // OS notification when combined cost exceeds goal (once per month)
-  useEffect(() => {
-    if (!isOverGoal) return;
-    const key = `notif_over_goal_${selectedMonth}`;
-    if (localStorage.getItem(key)) return;
-    const title = language === 'he' ? 'חריגה מהיעד' : 'Over goal';
-    const body = language === 'he'
-      ? `האחוז המשולב ${actualCombinedPercent.toFixed(1)}% גבוה מהיעד ${combinedGoalPercent.toFixed(0)}%`
-      : `Combined cost ${actualCombinedPercent.toFixed(1)}% exceeds goal ${combinedGoalPercent.toFixed(0)}%`;
-    notifyOS({ title, body, tag: 'dashboard-over-goal' });
-    localStorage.setItem(key, '1');
-  }, [isOverGoal, selectedMonth, actualCombinedPercent, combinedGoalPercent, language]);
 
 
-  if (loading && !initialized) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
@@ -405,7 +376,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (error && initialized) {
+  if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="max-w-md">
@@ -426,26 +397,35 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="text-gray-900">
-              {language === 'he' ? 'התחברות נדרשת' : 'Sign-in required'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => base44.auth.redirectToLogin()} className="bg-gray-900 hover:bg-gray-800">
-              {language === 'he' ? 'התחבר' : 'Login'}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  if (!user) return null;
 
-  
+  // Goal calculations
+  const predictedSalesExVAT = predictedSales / 1.17;
+  const combinedGoalPercent = laborGoalPercent + foodGoalPercent;
+  const laborGoalAmount = predictedSalesExVAT * (laborGoalPercent / 100);
+  const foodGoalAmount = predictedSalesExVAT * (foodGoalPercent / 100);
+
+  // Actual calculations
+  const actualSalesExVAT = actualSales / 1.17;
+  const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
+  const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT * 100) : 0;
+  const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
+  const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
+  const isOverGoal = actualCombinedPercent > combinedGoalPercent;
+
+  // OS notification when combined cost exceeds goal (once per month)
+  useEffect(() => {
+    if (!isOverGoal) return;
+    const key = `notif_over_goal_${selectedMonth}`;
+    if (localStorage.getItem(key)) return;
+    const title = language === 'he' ? 'חריגה מהיעד' : 'Over goal';
+    const body = language === 'he'
+      ? `האחוז המשולב ${actualCombinedPercent.toFixed(1)}% גבוה מהיעד ${combinedGoalPercent.toFixed(0)}%`
+      : `Combined cost ${actualCombinedPercent.toFixed(1)}% exceeds goal ${combinedGoalPercent.toFixed(0)}%`;
+    notifyOS({ title, body, tag: 'dashboard-over-goal' });
+    localStorage.setItem(key, '1');
+  }, [isOverGoal, selectedMonth, actualCombinedPercent, combinedGoalPercent, language]);
+
   const costBreakdownData = [
     { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },
     { name: language === 'he' ? 'עלות מזון' : 'Food Cost', value: calculatedFoodCost, color: '#6b7280' }

@@ -2,19 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Loader, Shield } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import RecipesReport from "../components/reports/RecipesReport";
 import PrepsReport from "../components/reports/PrepsReport";
-import MonthlyCogsReport from "../components/reports/MonthlyCogsReport.jsx";
+import PosCogsPlannedReport from "../components/reports/PosCogsPlannedReport";
 
 export default function COGS() {
   const [tab, setTab] = useState("recipes");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [unlocked, setUnlocked] = useState(false);
-  const [pass, setPass] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -61,44 +58,19 @@ export default function COGS() {
           </CardHeader>
         </Card>
 
-        {unlocked ? (
-          <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 max-w-xl">
-              <TabsTrigger value="recipes">POS Recipes</TabsTrigger>
-              <TabsTrigger value="preps">Preps</TabsTrigger>
-              <TabsTrigger value="monthly">Monthly COGS</TabsTrigger>
-            </TabsList>
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 max-w-xl">
+            <TabsTrigger value="recipes">Recipes</TabsTrigger>
+            <TabsTrigger value="preps">Preps</TabsTrigger>
+            <TabsTrigger value="pos">POS COGS Planned</TabsTrigger>
+          </TabsList>
 
-            <div className="mt-4">
-              <TabsContent value="recipes"><RecipesReport /></TabsContent>
-              <TabsContent value="preps"><PrepsReport /></TabsContent>
-              <TabsContent value="monthly"><MonthlyCogsReport /></TabsContent>
-            </div>
-          </Tabs>
-        ) : (
-          <Card className="max-w-md">
-            <CardHeader>
-              <CardTitle className="text-xl">COGS Report – Enter Password</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input
-                type="password"
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                placeholder="Enter passcode"
-              />
-              <Button
-                onClick={() => {
-                  if ((pass || '').trim() === '2233') setUnlocked(true);
-                  else alert('Wrong password');
-                }}
-                className="bg-gray-900 hover:bg-gray-800"
-              >
-                Unlock
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+          <div className="mt-4">
+            <TabsContent value="recipes"><RecipesReport /></TabsContent>
+            <TabsContent value="preps"><PrepsReport /></TabsContent>
+            <TabsContent value="pos"><PosCogsPlannedReport /></TabsContent>
+          </div>
+        </Tabs>
       </div>
     </div>
   );
