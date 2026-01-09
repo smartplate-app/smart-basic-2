@@ -24,7 +24,6 @@ import TestInviteLinks from './pages/TestInviteLinks';
 import TestInvites from './pages/TestInvites';
 import Tips from './pages/Tips';
 import ToDoList from './pages/ToDoList';
-import UserProfile from './pages/UserProfile';
 import Users from './pages/Users';
 import Warehouses from './pages/Warehouses';
 import Welcome from './pages/Welcome';
@@ -32,7 +31,7 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import COGS from './pages/COGS';
+import UserProfile from './pages/UserProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -63,7 +62,6 @@ export const PAGES = {
     "TestInvites": TestInvites,
     "Tips": Tips,
     "ToDoList": ToDoList,
-    "UserProfile": UserProfile,
     "Users": Users,
     "Warehouses": Warehouses,
     "Welcome": Welcome,
@@ -71,7 +69,7 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "COGS": COGS,
+    "UserProfile": UserProfile,
 }
 
 export const pagesConfig = {
