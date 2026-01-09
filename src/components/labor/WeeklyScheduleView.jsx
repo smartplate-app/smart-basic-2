@@ -180,6 +180,23 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     return { totalHours, totalBaseCost, totalCostWithEmployer, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT };
   };
 
+  // OS notification if weekly labor % exceeds goal (moved before early return)
+  useEffect(() => {
+    const lp = calculateTotals().laborPercentage;
+    const goalPercent = laborGoals?.laborGoalPercent || 25;
+    if (lp > goalPercent) {
+      const key = `notif_week_over_goal_${weekStartDate || ''}`;
+      if (!localStorage.getItem(key)) {
+        const title = language === 'he' ? 'סידור שבועי מעל היעד' : 'Weekly schedule over goal';
+        const body = language === 'he'
+          ? `עלות עבודה שבועית ${lp.toFixed(1)}% גבוהה מהיעד ${goalPercent}%`
+          : `Weekly labor ${lp.toFixed(1)}% is above goal ${goalPercent}%`;
+        notifyOS({ title, body, tag: 'weekly-over-goal' });
+        localStorage.setItem(key, '1');
+      }
+    }
+  }, [schedule, monthlyPredictedSales, laborGoals?.laborGoalPercent, weekStartDate, language]);
+
   useEffect(() => {
     const fetchScheduleAndUser = async () => {
       setLoading(true);
@@ -1131,21 +1148,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
   const { totalHours, totalBaseCost, totalCostWithEmployer, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT } = calculateTotals();
 
-// OS notification if weekly labor % exceeds goal (once per week)
-useEffect(() => {
-  const goalPercent = laborGoals?.laborGoalPercent || 25;
-  if (laborPercentage > goalPercent) {
-    const key = `notif_week_over_goal_${weekStartDate || ''}`;
-    if (!localStorage.getItem(key)) {
-      const title = language === 'he' ? 'סידור שבועי מעל היעד' : 'Weekly schedule over goal';
-      const body = language === 'he'
-        ? `עלות עבודה שבועית ${laborPercentage.toFixed(1)}% גבוהה מהיעד ${goalPercent}%`
-        : `Weekly labor ${laborPercentage.toFixed(1)}% is above goal ${goalPercent}%`;
-      notifyOS({ title, body, tag: 'weekly-over-goal' });
-      localStorage.setItem(key, '1');
-    }
-  }
-}, [laborPercentage, laborGoals?.laborGoalPercent, weekStartDate, language]);
+
 
   // Calculate worker shift counts
   const workerShiftCounts = workers.map(worker => {

@@ -1,6 +1,4 @@
-import AdminDashboard from './pages/AdminDashboard';
 import ChainManagement from './pages/ChainManagement';
-import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import InventoryTransfers from './pages/InventoryTransfers';
 import InviteUser from './pages/InviteUser';
@@ -24,6 +22,7 @@ import TestInviteLinks from './pages/TestInviteLinks';
 import TestInvites from './pages/TestInvites';
 import Tips from './pages/Tips';
 import ToDoList from './pages/ToDoList';
+import UserProfile from './pages/UserProfile';
 import Users from './pages/Users';
 import Warehouses from './pages/Warehouses';
 import Welcome from './pages/Welcome';
@@ -31,14 +30,13 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import UserProfile from './pages/UserProfile';
+import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "AdminDashboard": AdminDashboard,
     "ChainManagement": ChainManagement,
-    "Dashboard": Dashboard,
     "Home": Home,
     "InventoryTransfers": InventoryTransfers,
     "InviteUser": InviteUser,
@@ -62,6 +60,7 @@ export const PAGES = {
     "TestInvites": TestInvites,
     "Tips": Tips,
     "ToDoList": ToDoList,
+    "UserProfile": UserProfile,
     "Users": Users,
     "Warehouses": Warehouses,
     "Welcome": Welcome,
@@ -69,7 +68,8 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "UserProfile": UserProfile,
+    "Dashboard": Dashboard,
+    "AdminDashboard": AdminDashboard,
 }
 
 export const pagesConfig = {

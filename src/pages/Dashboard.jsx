@@ -365,6 +365,27 @@ export default function DashboardPage() {
 
 
 
+  // OS notification when combined cost exceeds goal (before early returns)
+  useEffect(() => {
+    const predictedSalesExVATLocal = (predictedSales || 0) / 1.17;
+    const combinedGoalPercentLocal = (laborGoalPercent || 0) + (foodGoalPercent || 0);
+    const actualSalesExVATLocal = (actualSales || 0) / 1.17;
+    const effectiveLaborCostLocal = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
+    const actualLaborPercentLocal = actualSalesExVATLocal > 0 ? (effectiveLaborCostLocal / actualSalesExVATLocal) * 100 : 0;
+    const actualFoodPercentLocal = actualSalesExVATLocal > 0 ? (calculatedFoodCost / actualSalesExVATLocal) * 100 : 0;
+    const actualCombinedPercentLocal = actualLaborPercentLocal + actualFoodPercentLocal;
+    const isOverGoalLocal = actualCombinedPercentLocal > combinedGoalPercentLocal;
+    if (!isOverGoalLocal) return;
+    const key = `notif_over_goal_${selectedMonth}`;
+    if (localStorage.getItem(key)) return;
+    const title = language === 'he' ? 'חריגה מהיעד' : 'Over goal';
+    const body = language === 'he'
+      ? `האחוז המשולב ${actualCombinedPercentLocal.toFixed(1)}% גבוה מהיעד ${combinedGoalPercentLocal.toFixed(0)}%`
+      : `Combined cost ${actualCombinedPercentLocal.toFixed(1)}% exceeds goal ${combinedGoalPercentLocal.toFixed(0)}%`;
+    notifyOS({ title, body, tag: 'dashboard-over-goal' });
+    localStorage.setItem(key, '1');
+  }, [predictedSales, laborGoalPercent, foodGoalPercent, actualSales, useManualLabor, manualLaborCost, calculatedLaborCost, calculatedFoodCost, selectedMonth, language]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -412,19 +433,6 @@ export default function DashboardPage() {
   const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
   const isOverGoal = actualCombinedPercent > combinedGoalPercent;
-
-  // OS notification when combined cost exceeds goal (once per month)
-  useEffect(() => {
-    if (!isOverGoal) return;
-    const key = `notif_over_goal_${selectedMonth}`;
-    if (localStorage.getItem(key)) return;
-    const title = language === 'he' ? 'חריגה מהיעד' : 'Over goal';
-    const body = language === 'he'
-      ? `האחוז המשולב ${actualCombinedPercent.toFixed(1)}% גבוה מהיעד ${combinedGoalPercent.toFixed(0)}%`
-      : `Combined cost ${actualCombinedPercent.toFixed(1)}% exceeds goal ${combinedGoalPercent.toFixed(0)}%`;
-    notifyOS({ title, body, tag: 'dashboard-over-goal' });
-    localStorage.setItem(key, '1');
-  }, [isOverGoal, selectedMonth, actualCombinedPercent, combinedGoalPercent, language]);
 
   const costBreakdownData = [
     { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },
