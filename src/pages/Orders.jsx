@@ -670,6 +670,26 @@ export default function OrdersPage() {
     return itemsSummary.rows.filter(r => (r.name || '').toLowerCase().includes(term));
   }, [itemsSummary.rows, itemSearch]);
 
+  const handleGenerateAfcSheet = async () => {
+    try {
+      if (!reportMonth) return;
+      const [yStr, mStr] = reportMonth.split('-');
+      const y = Number(yStr);
+      const m = Number(mStr);
+      const startDate = `${yStr}-${mStr}-01`;
+      const endDateObj = new Date(y, m, 0); // last day of month
+      const endDate = `${endDateObj.getFullYear()}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')}`;
+      const { data } = await base44.functions.invoke('generateAfcSheet', { startDate, endDate });
+      if (data?.spreadsheetUrl) {
+        window.open(data.spreadsheetUrl, '_blank');
+      } else {
+        alert('Failed to generate sheet');
+      }
+    } catch (e) {
+      alert('Failed to generate sheet');
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -791,6 +811,7 @@ export default function OrdersPage() {
               <div className="flex items-center gap-2">
                 <label className="text-sm text-gray-600">{t('month')}</label>
                 <Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} className="h-9 w-44" />
+                <Button variant="outline" className="h-9" onClick={handleGenerateAfcSheet}>Generate AFC Sheet</Button>
               </div>
             </div>
 
