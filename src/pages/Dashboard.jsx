@@ -372,15 +372,11 @@ export default function DashboardPage() {
       const { data } = await base44.functions.invoke('generateAfcSheet', { startDate, endDate });
       if (data?.spreadsheetUrl) {
         window.open(data.spreadsheetUrl, '_blank');
-        return;
+      } else {
+        alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
       }
-      const msg = (data?.error || data?.details)
-        ? `${data.error || ''}\n${data.details || ''}`.trim()
-        : (language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
-      alert(msg);
     } catch (e) {
-      const msg = e?.response?.data?.error || e?.response?.data?.details || e?.message || (language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
-      alert(msg);
+      alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
     }
   };
 
