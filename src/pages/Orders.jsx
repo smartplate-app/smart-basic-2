@@ -31,6 +31,7 @@ export default function OrdersPage() {
   const { t } = useLanguage();
 
   const [isViewer, setIsViewer] = useState(false);
+  const [itemSearch, setItemSearch] = useState("");
 
 
   const loadData = async (currentUser, retryAttempt = 0) => {
@@ -663,6 +664,12 @@ export default function OrdersPage() {
     return { rows, totalQty, totalCost };
   }, [reportOrders]);
 
+  const filteredItemRows = useMemo(() => {
+    const term = (itemSearch || '').toLowerCase();
+    if (!term) return itemsSummary.rows;
+    return itemsSummary.rows.filter(r => (r.name || '').toLowerCase().includes(term));
+  }, [itemsSummary.rows, itemSearch]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -802,6 +809,15 @@ export default function OrdersPage() {
               </div>
             </div>
 
+            <div className="mb-3">
+              <Input
+                value={itemSearch}
+                onChange={(e) => setItemSearch(e.target.value)}
+                placeholder={t('search') || 'Search items...'}
+                className="h-9 max-w-sm"
+              />
+            </div>
+
             <div className="overflow-auto border rounded-md">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
@@ -811,12 +827,12 @@ export default function OrdersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {itemsSummary.rows.length === 0 ? (
+                  {filteredItemRows.length === 0 ? (
                     <tr>
                       <td colSpan={2} className="px-3 py-6 text-center text-gray-500">{t('no_items_to_display_items') || t('no_items_to_display')}</td>
                     </tr>
                   ) : (
-                    itemsSummary.rows.map((row) => (
+                    filteredItemRows.map((row) => (
                       <tr key={row.name} className="border-t">
                         <td className="px-3 py-2 text-right text-gray-800">{row.name}</td>
                         <td className="px-3 py-2 text-right font-semibold">{row.quantity.toFixed(2)} {row.unit || ''}</td>
