@@ -1096,9 +1096,15 @@ export default function DashboardPage() {
           <TabsContent value="afc" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
-                  {language === 'he' ? 'דוח AFC' : 'AFC Report'}
-                </CardTitle>
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" onClick={handleGenerateAfcSheet} className="gap-2 h-9">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    {language === 'he' ? 'צור גיליון AFC' : 'Generate AFC Sheet'}
+                  </Button>
+                  <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                    {language === 'he' ? 'דוח AFC' : 'AFC Report'}
+                  </CardTitle>
+                </div>
                 <div className={`mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                   <Button variant="outline" onClick={handleGenerateAfcSheet} className="gap-2 h-9">
                     <FileSpreadsheet className="w-4 h-4" />
