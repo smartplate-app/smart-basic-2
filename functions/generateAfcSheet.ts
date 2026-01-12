@@ -120,6 +120,9 @@ Deno.serve(async (req) => {
 
     // Create Google Sheet and write data
     const token = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
+    if (!token) {
+      return Response.json({ error: 'No Google Sheets access token. Please reconnect Google Sheets.' }, { status: 500 });
+    }
     const title = `AFC ${startDate} to ${endDate}`;
 
     const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
