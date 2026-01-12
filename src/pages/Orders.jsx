@@ -622,13 +622,29 @@ export default function OrdersPage() {
     return matchesSearch && matchesStatus;
   });
 
+  const [reportMonth, setReportMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const reportOrders = useMemo(() => {
+    if (!reportMonth) return filteredOrders;
+    return filteredOrders.filter((o) => {
+      const dateStr = o.delivery_date || o.created_date || o.updated_date;
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return ym === reportMonth;
+    });
+  }, [filteredOrders, reportMonth]);
+
   // Aggregate quantities per item across filtered orders (not per supplier)
   const itemsSummary = useMemo(() => {
     const map = new Map();
     let totalQty = 0;
     let totalCost = 0;
 
-    filteredOrders.forEach((o) => {
+    reportOrders.forEach((o) => {
       totalCost += Number(o.total_cost) || 0;
       const items = Array.isArray(o.items) ? o.items : [];
       items.forEach((it) => {
@@ -645,7 +661,7 @@ export default function OrdersPage() {
 
     const rows = Array.from(map.values()).sort((a, b) => (b.quantity - a.quantity));
     return { rows, totalQty, totalCost };
-  }, [filteredOrders]);
+  }, [reportOrders]);
 
   if (authLoading) {
     return (
@@ -760,10 +776,21 @@ export default function OrdersPage() {
         {/* Items Quantity Report (aggregated across orders) */}
         <Card className="mb-6">
           <CardContent className="p-4">
+            <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+              <div>
+                <div className="text-base font-semibold text-gray-800">{t('reports_title') || 'Monthly Report'}</div>
+                <div className="text-xs text-gray-500">{t('report_for_month_year', { month: (reportMonth || '').split('-')[1], year: (reportMonth || '').split('-')[0] }) || ''}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">{t('month')}</label>
+                <Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} className="h-9 w-44" />
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-6 mb-4">
               <div>
                 <div className="text-sm text-gray-600">{t('total_orders')}</div>
-                <div className="text-xl font-bold">{filteredOrders.length}</div>
+                <div className="text-xl font-bold">{reportOrders.length}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">{t('total_cost')}</div>
