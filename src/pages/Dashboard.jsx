@@ -1084,6 +1084,12 @@ export default function DashboardPage() {
                 <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
                   {language === 'he' ? 'דוח AFC' : 'AFC Report'}
                 </CardTitle>
+                <div className={`mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <Button variant="outline" onClick={handleGenerateAfcSheet} className="gap-2 h-9">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    {language === 'he' ? 'צור גיליון AFC' : 'Generate AFC Sheet'}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
