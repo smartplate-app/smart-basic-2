@@ -118,10 +118,62 @@ Deno.serve(async (req) => {
     rows.push([]);
     rows.push(['TOTALS', '', totalBegin, totalPurch, totalEnd, totalUsage]);
 
+    // Fallback CSV builder (in case Google APIs fail)
+    const buildUsageRows = () => {
+      const uRows = [['Item', 'Unit', 'Usage Qty']];
+      Array.from(keys).forEach((key) => {
+        const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
+        const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
+        const b = Number(beginMap.get(key)?.qty || 0);
+        const p = Number(purchasesMap.get(key)?.qty || 0);
+        const e = Number(endMap.get(key)?.qty || 0);
+        const u = b + p - e;
+        uRows.push([name, unit, u]);
+      });
+      const header = uRows.shift();
+      uRows.sort((a,b) => Number(b[2]) - Number(a[2]));
+      uRows.unshift(header);
+      return uRows;
+    };
+
+    const buildSummaryRows = () => ([
+      ['Metric', 'Value'],
+      ['Beginning Qty', totalBegin],
+      ['Purchases Qty', totalPurch],
+      ['Ending Qty', totalEnd],
+      ['Usage Qty', totalUsage],
+    ]);
+
+    const escapeCsv = (v) => {
+      const s = String(v ?? '');
+      if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    };
+
+    const toCsv = (arr) => arr.map(r => r.map(escapeCsv).join(',')).join('\n');
+
+    const returnFallbackCSV = async (message) => {
+      const usageRows = buildUsageRows();
+      const summaryRows = buildSummaryRows();
+      const parts = [
+        '# AFC', '', toCsv(rows), '', '# Usage', '', toCsv(usageRows), '', '# Summary', '', toCsv(summaryRows)
+      ];
+      const csvContent = parts.join('\n');
+      return Response.json({
+        success: true,
+        spreadsheetId: null,
+        spreadsheetUrl: null,
+        csvContent,
+        suggestedFileName: `AFC_${startDate}_to_${endDate}.csv`,
+        note: message || null
+      });
+    };
+
+
     // Create Google Sheet and write data (robust with Drive fallback + shareable link)
     const sheetsToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
     if (!sheetsToken) {
-      return Response.json({ error: 'Google Sheets is not connected.' }, { status: 500 });
+      return await returnFallbackCSV('Google Sheets is not connected. Returning CSV instead.');
     }
     const driveToken = await base44.asServiceRole.connectors.getAccessToken('googledrive').catch(() => null);
     const title = `AFC ${startDate} to ${endDate}`;
@@ -157,11 +209,11 @@ Deno.serve(async (req) => {
       } else {
         const txt = await sheetsCreate.text();
         const txt2 = await driveCreate.text().catch(() => '');
-        return Response.json({ error: 'Failed to create spreadsheet', details: (txt || '') + (txt2 ? `\n${txt2}` : '') }, { status: 500 });
+        return await returnFallbackCSV(`Failed to create spreadsheet. Details: ${(txt || '') + (txt2 ? `\n${txt2}` : '')}`);
       }
     } else {
       const txt = await sheetsCreate.text();
-      return Response.json({ error: 'Failed to create spreadsheet', details: txt }, { status: 500 });
+      return await returnFallbackCSV(`Failed to create spreadsheet. Details: ${txt}`);
     }
 
     // Ensure sheets exist: AFC, Usage, Summary
@@ -289,6 +341,12 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    return Response.json({ error: error.message || String(error) }, { status: 500 });
+    // Last-resort CSV fallback if anything unexpected happens
+    try {
+      const csvContent = (error && (error.stack || error.message)) ? String(error.stack || error.message) : 'Unknown error';
+      return Response.json({ success: false, error: 'Unexpected error', details: csvContent });
+    } catch {
+      return Response.json({ error: 'Unexpected error' }, { status: 500 });
+    }
   }
 });

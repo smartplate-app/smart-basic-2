@@ -372,9 +372,21 @@ export default function DashboardPage() {
       const { data } = await base44.functions.invoke('generateAfcSheet', { startDate, endDate });
       if (data?.spreadsheetUrl) {
         window.open(data.spreadsheetUrl, '_blank');
-      } else {
-        alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
+        return;
       }
+      if (data?.csvContent) {
+        const blob = new Blob([data.csvContent], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = data?.suggestedFileName || 'afc_report.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        return;
+      }
+      alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
     } catch (e) {
       alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
     }
