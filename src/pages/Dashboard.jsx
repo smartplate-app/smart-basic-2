@@ -365,6 +365,21 @@ export default function DashboardPage() {
 
 
 
+  const handleGenerateAfcSheet = async () => {
+    try {
+      const startDate = moment(selectedMonth, 'YYYY-MM').startOf('month').format('YYYY-MM-DD');
+      const endDate = moment(selectedMonth, 'YYYY-MM').endOf('month').format('YYYY-MM-DD');
+      const { data } = await base44.functions.invoke('generateAfcSheet', { startDate, endDate });
+      if (data?.spreadsheetUrl) {
+        window.open(data.spreadsheetUrl, '_blank');
+      } else {
+        alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
+      }
+    } catch (e) {
+      alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
+    }
+  };
+
   // OS notification when combined cost exceeds goal (before early returns)
   useEffect(() => {
     const predictedSalesExVATLocal = (predictedSales || 0) / 1.17;
