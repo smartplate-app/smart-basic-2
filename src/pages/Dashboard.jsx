@@ -1118,10 +1118,9 @@ export default function DashboardPage() {
                   </CardTitle>
                 </div>
                 <div className={`mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  <Button variant="outline" onClick={handleGenerateAfcSheet} className="gap-2 h-9">
-                    <FileSpreadsheet className="w-4 h-4" />
-                    {language === 'he' ? 'צור גיליון AFC' : 'Generate AFC Sheet'}
-                  </Button>
+                  <span className="text-xs text-gray-500">
+                    {language === 'he' ? 'מייצר Google Sheet עם 3 עמודות: פריט, יחידה, שימוש' : 'Generates Google Sheet with 3 columns: Item, Unit, Usage'}
+                  </span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">

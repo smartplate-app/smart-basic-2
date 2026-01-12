@@ -216,21 +216,11 @@ Deno.serve(async (req) => {
       return await returnFallbackCSV(`Failed to create spreadsheet. Details: ${txt}`);
     }
 
-    // Ensure sheets exist: AFC, Usage, Summary
+    // Verify spreadsheet metadata (AFC sheet should exist already)
     const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,sheetId)`, {
       headers: { 'Authorization': `Bearer ${sheetsToken}` },
     });
     const metaJson = await metaRes.json();
-    const existingTitles = new Set((metaJson?.sheets || []).map(s => s.properties?.title));
-    const needed = ['AFC', 'Usage', 'Summary'].filter(t => !existingTitles.has(t));
-    if (needed.length) {
-      const requests = needed.map(title => ({ addSheet: { properties: { title } } }));
-      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requests })
-      });
-    }
 
     // Refresh metadata to get sheetIds
     const metaRes2 = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,sheetId)`, {
@@ -264,48 +254,23 @@ Deno.serve(async (req) => {
       ['Usage Qty', totalUsage],
     ];
 
-    // Write all values
-    const writeAfc = fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('AFC!A1')}:update?valueInputOption=RAW`, {
-      method: 'PUT', headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ range: 'AFC!A1', majorDimension: 'ROWS', values: rows })
+    // Write values: three columns (Item, Unit, Usage)
+    const writeRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('AFC!A1')}:update?valueInputOption=RAW`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ range: 'AFC!A1', majorDimension: 'ROWS', values: usageRows })
     });
-    const writeUsage = fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('Usage!A1')}:update?valueInputOption=RAW`, {
-      method: 'PUT', headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ range: 'Usage!A1', majorDimension: 'ROWS', values: usageRows })
-    });
-    const writeSummary = fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('Summary!A1')}:update?valueInputOption=RAW`, {
-      method: 'PUT', headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ range: 'Summary!A1', majorDimension: 'ROWS', values: summaryRows })
-    });
-
-    const [wr1, wr2, wr3] = await Promise.all([writeAfc, writeUsage, writeSummary]);
-    if (!wr1.ok || !wr2.ok || !wr3.ok) {
-      const t1 = !wr1.ok ? await wr1.text() : '';
-      const t2 = !wr2.ok ? await wr2.text() : '';
-      const t3 = !wr3.ok ? await wr3.text() : '';
-      return Response.json({ error: 'Failed to write data to sheet', details: `${t1}\n${t2}\n${t3}`.trim() }, { status: 500 });
+    if (!writeRes.ok) {
+      const txt = await writeRes.text();
+      return await returnFallbackCSV(`Failed to write data to sheet. Details: ${txt}`);
     }
 
-    // Formatting: freeze header, bold header, auto-resize columns
-    const fmtRequests = ['AFC','Usage'].map(title => ({
-      updateSheetProperties: {
-        properties: { sheetId: sheetIdByTitle[title], gridProperties: { frozenRowCount: 1 } },
-        fields: 'gridProperties.frozenRowCount'
-      }
-    })).concat([
-      // Bold header rows
-      ...['AFC','Usage','Summary'].map(title => ({
-        repeatCell: {
-          range: { sheetId: sheetIdByTitle[title], startRowIndex: 0, endRowIndex: 1 },
-          cell: { userEnteredFormat: { textFormat: { bold: true } } },
-          fields: 'userEnteredFormat.textFormat.bold'
-        }
-      })),
-      // Auto-resize first 6 columns for AFC, 3 for Usage, 2 for Summary
-      { autoResizeDimensions: { dimensions: { sheetId: sheetIdByTitle['AFC'], dimension: 'COLUMNS', startIndex: 0, endIndex: 6 } } },
-      { autoResizeDimensions: { dimensions: { sheetId: sheetIdByTitle['Usage'], dimension: 'COLUMNS', startIndex: 0, endIndex: 3 } } },
-      { autoResizeDimensions: { dimensions: { sheetId: sheetIdByTitle['Summary'], dimension: 'COLUMNS', startIndex: 0, endIndex: 2 } } },
-    ]);
+    // Formatting: header bold + freeze + auto-resize (AFC only)
+    const fmtRequests = [
+      { updateSheetProperties: { properties: { sheetId: sheetIdByTitle['AFC'], gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
+      { repeatCell: { range: { sheetId: sheetIdByTitle['AFC'], startRowIndex: 0, endRowIndex: 1 }, cell: { userEnteredFormat: { textFormat: { bold: true } } }, fields: 'userEnteredFormat.textFormat.bold' } },
+      { autoResizeDimensions: { dimensions: { sheetId: sheetIdByTitle['AFC'], dimension: 'COLUMNS', startIndex: 0, endIndex: 3 } } },
+    ];
 
     await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
       method: 'POST',
