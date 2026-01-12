@@ -118,50 +118,77 @@ Deno.serve(async (req) => {
     rows.push([]);
     rows.push(['TOTALS', '', totalBegin, totalPurch, totalEnd, totalUsage]);
 
-    // Create Google Sheet and write data
-    const token = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
-    if (!token) {
-      return Response.json({ error: 'No Google Sheets access token. Please reconnect Google Sheets.' }, { status: 500 });
+    // Create Google Sheet and write data (robust with Drive fallback + shareable link)
+    const sheetsToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
+    if (!sheetsToken) {
+      return Response.json({ error: 'Google Sheets is not connected.' }, { status: 500 });
     }
+    const driveToken = await base44.asServiceRole.connectors.getAccessToken('googledrive').catch(() => null);
     const title = `AFC ${startDate} to ${endDate}`;
 
-    const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    let spreadsheetId = null;
+
+    // Try create via Sheets API first
+    const sheetsCreate = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${sheetsToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        properties: { title },
-        sheets: [{ properties: { title: 'AFC' } }],
-      }),
+      body: JSON.stringify({ properties: { title }, sheets: [{ properties: { title: 'AFC' } }] }),
     });
 
-    if (!createRes.ok) {
-      const txt = await createRes.text();
+    if (sheetsCreate.ok) {
+      const created = await sheetsCreate.json();
+      spreadsheetId = created.spreadsheetId || created?.spreadsheet?.spreadsheetId || null;
+    } else if (driveToken) {
+      // Fallback: create empty Google Sheet via Drive API
+      const driveCreate = await fetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${driveToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: title, mimeType: 'application/vnd.google-apps.spreadsheet' }),
+      });
+      if (driveCreate.ok) {
+        const created = await driveCreate.json();
+        spreadsheetId = created.id || null;
+      } else {
+        const txt = await sheetsCreate.text();
+        const txt2 = await driveCreate.text().catch(() => '');
+        return Response.json({ error: 'Failed to create spreadsheet', details: (txt || '') + (txt2 ? `\n${txt2}` : '') }, { status: 500 });
+      }
+    } else {
+      const txt = await sheetsCreate.text();
       return Response.json({ error: 'Failed to create spreadsheet', details: txt }, { status: 500 });
     }
 
-    const created = await createRes.json();
-    const spreadsheetId = created.spreadsheetId || created?.spreadsheet?.spreadsheetId;
     const sheetName = 'AFC';
-
-    const updateRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName + '!A1')}:update?valueInputOption=RAW`, {
+    // Write data using Sheets API
+    const writeRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName + '!A1')}:update?valueInputOption=RAW`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${sheetsToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        range: `${sheetName}!A1`,
-        majorDimension: 'ROWS',
-        values: rows,
-      }),
+      body: JSON.stringify({ range: `${sheetName}!A1`, majorDimension: 'ROWS', values: rows }),
     });
-
-    if (!updateRes.ok) {
-      const txt = await updateRes.text();
+    if (!writeRes.ok) {
+      const txt = await writeRes.text();
       return Response.json({ error: 'Failed to write data to sheet', details: txt }, { status: 500 });
+    }
+
+    // Make link shareable (if Drive token available)
+    if (driveToken) {
+      await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${driveToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role: 'reader', type: 'anyone', allowFileDiscovery: false }),
+      }).catch(() => {});
     }
 
     const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
@@ -176,7 +203,7 @@ Deno.serve(async (req) => {
         beginningCountId: beginning?.id || null,
         endingCountId: ending?.id || null,
         ordersCount: ordersInRange.length,
-        items: rows.length - 2, // minus header and totals row
+        items: rows.length - 2,
       },
     });
   } catch (error) {
