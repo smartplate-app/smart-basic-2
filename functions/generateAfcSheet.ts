@@ -164,20 +164,102 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Failed to create spreadsheet', details: txt }, { status: 500 });
     }
 
-    const sheetName = 'AFC';
-    // Write data using Sheets API
-    const writeRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName + '!A1')}:update?valueInputOption=RAW`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${sheetsToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ range: `${sheetName}!A1`, majorDimension: 'ROWS', values: rows }),
+    // Ensure sheets exist: AFC, Usage, Summary
+    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,sheetId)`, {
+      headers: { 'Authorization': `Bearer ${sheetsToken}` },
     });
-    if (!writeRes.ok) {
-      const txt = await writeRes.text();
-      return Response.json({ error: 'Failed to write data to sheet', details: txt }, { status: 500 });
+    const metaJson = await metaRes.json();
+    const existingTitles = new Set((metaJson?.sheets || []).map(s => s.properties?.title));
+    const needed = ['AFC', 'Usage', 'Summary'].filter(t => !existingTitles.has(t));
+    if (needed.length) {
+      const requests = needed.map(title => ({ addSheet: { properties: { title } } }));
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requests })
+      });
     }
+
+    // Refresh metadata to get sheetIds
+    const metaRes2 = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,sheetId)`, {
+      headers: { 'Authorization': `Bearer ${sheetsToken}` },
+    });
+    const meta2 = await metaRes2.json();
+    const sheetIdByTitle = {};
+    (meta2?.sheets || []).forEach(s => { sheetIdByTitle[s.properties.title] = s.properties.sheetId; });
+
+    // Build additional sheets data
+    const usageRows = [['Item', 'Unit', 'Usage Qty']];
+    Array.from(keys).forEach((key) => {
+      const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
+      const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
+      const b = Number(beginMap.get(key)?.qty || 0);
+      const p = Number(purchasesMap.get(key)?.qty || 0);
+      const e = Number(endMap.get(key)?.qty || 0);
+      const u = b + p - e;
+      usageRows.push([name, unit, u]);
+    });
+    // sort usage descending (skip header)
+    const headerUsage = usageRows.shift();
+    usageRows.sort((a,b) => Number(b[2]) - Number(a[2]));
+    usageRows.unshift(headerUsage);
+
+    const summaryRows = [
+      ['Metric', 'Value'],
+      ['Beginning Qty', totalBegin],
+      ['Purchases Qty', totalPurch],
+      ['Ending Qty', totalEnd],
+      ['Usage Qty', totalUsage],
+    ];
+
+    // Write all values
+    const writeAfc = fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('AFC!A1')}:update?valueInputOption=RAW`, {
+      method: 'PUT', headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ range: 'AFC!A1', majorDimension: 'ROWS', values: rows })
+    });
+    const writeUsage = fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('Usage!A1')}:update?valueInputOption=RAW`, {
+      method: 'PUT', headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ range: 'Usage!A1', majorDimension: 'ROWS', values: usageRows })
+    });
+    const writeSummary = fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('Summary!A1')}:update?valueInputOption=RAW`, {
+      method: 'PUT', headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ range: 'Summary!A1', majorDimension: 'ROWS', values: summaryRows })
+    });
+
+    const [wr1, wr2, wr3] = await Promise.all([writeAfc, writeUsage, writeSummary]);
+    if (!wr1.ok || !wr2.ok || !wr3.ok) {
+      const t1 = !wr1.ok ? await wr1.text() : '';
+      const t2 = !wr2.ok ? await wr2.text() : '';
+      const t3 = !wr3.ok ? await wr3.text() : '';
+      return Response.json({ error: 'Failed to write data to sheet', details: `${t1}\n${t2}\n${t3}`.trim() }, { status: 500 });
+    }
+
+    // Formatting: freeze header, bold header, auto-resize columns
+    const fmtRequests = ['AFC','Usage'].map(title => ({
+      updateSheetProperties: {
+        properties: { sheetId: sheetIdByTitle[title], gridProperties: { frozenRowCount: 1 } },
+        fields: 'gridProperties.frozenRowCount'
+      }
+    })).concat([
+      // Bold header rows
+      ...['AFC','Usage','Summary'].map(title => ({
+        repeatCell: {
+          range: { sheetId: sheetIdByTitle[title], startRowIndex: 0, endRowIndex: 1 },
+          cell: { userEnteredFormat: { textFormat: { bold: true } } },
+          fields: 'userEnteredFormat.textFormat.bold'
+        }
+      })),
+      // Auto-resize first 6 columns for AFC, 3 for Usage, 2 for Summary
+      { autoResizeDimensions: { dimensions: { sheetId: sheetIdByTitle['AFC'], dimension: 'COLUMNS', startIndex: 0, endIndex: 6 } } },
+      { autoResizeDimensions: { dimensions: { sheetId: sheetIdByTitle['Usage'], dimension: 'COLUMNS', startIndex: 0, endIndex: 3 } } },
+      { autoResizeDimensions: { dimensions: { sheetId: sheetIdByTitle['Summary'], dimension: 'COLUMNS', startIndex: 0, endIndex: 2 } } },
+    ]);
+
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requests: fmtRequests })
+    });
 
     // Make link shareable (if Drive token available)
     if (driveToken) {
