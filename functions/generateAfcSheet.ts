@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
       rows.push([name, unit, b, p, e, u]);
     });
 
-    rows.push([]);
+    rows.push(['', '', '', '', '', '']);
     rows.push(['TOTALS', '', totalBegin, totalPurch, totalEnd, totalUsage]);
 
     // Fallback CSV builder (in case Google APIs fail)
