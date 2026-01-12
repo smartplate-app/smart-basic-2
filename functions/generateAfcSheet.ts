@@ -170,68 +170,32 @@ Deno.serve(async (req) => {
     };
 
 
-    // Create Google Sheet and write data (robust with Drive fallback + shareable link)
-    const sheetsToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
-    if (!sheetsToken) {
-      return await returnFallbackCSV('Google Sheets is not connected. Returning CSV instead.');
+    // Create Google Sheet (single sheet, 3 columns) — same pattern as other exports
+    const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
+    if (!accessToken) {
+      return await returnFallbackCSV('Google Sheets token missing.');
     }
-    const driveToken = await base44.asServiceRole.connectors.getAccessToken('googledrive').catch(() => null);
-    const title = `AFC ${startDate} to ${endDate}`;
 
-    let spreadsheetId = null;
+    const title = `AFC ${formatDateYYYYMMDD(start)} - ${formatDateYYYYMMDD(end)}`;
 
-    // Try create via Sheets API first
-    const sheetsCreate = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    // 1) Create spreadsheet
+    const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${sheetsToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ properties: { title }, sheets: [{ properties: { title: 'AFC' } }] }),
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ properties: { title } })
     });
-
-    if (sheetsCreate.ok) {
-      const created = await sheetsCreate.json();
-      spreadsheetId = created.spreadsheetId || created?.spreadsheet?.spreadsheetId || null;
-    } else if (driveToken) {
-      // Fallback: create empty Google Sheet via Drive API
-      const driveCreate = await fetch('https://www.googleapis.com/drive/v3/files', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${driveToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: title, mimeType: 'application/vnd.google-apps.spreadsheet' }),
-      });
-      if (driveCreate.ok) {
-        const created = await driveCreate.json();
-        spreadsheetId = created.id || null;
-      } else {
-        const txt = await sheetsCreate.text();
-        const txt2 = await driveCreate.text().catch(() => '');
-        return await returnFallbackCSV(`Failed to create spreadsheet. Details: ${(txt || '') + (txt2 ? `\n${txt2}` : '')}`);
-      }
-    } else {
-      const txt = await sheetsCreate.text();
-      return await returnFallbackCSV(`Failed to create spreadsheet. Details: ${txt}`);
+    if (!createRes.ok) {
+      const errText = await createRes.text();
+      return await returnFallbackCSV(`Create spreadsheet failed: ${errText}`);
     }
+    const created = await createRes.json();
+    const spreadsheetId = created.spreadsheetId;
+    const first = created.sheets?.[0]?.properties || {};
+    const sheetId = first.sheetId;
+    const sheetTitle = first.title || 'Sheet1';
 
-    // Verify spreadsheet metadata (AFC sheet should exist already)
-    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,sheetId)`, {
-      headers: { 'Authorization': `Bearer ${sheetsToken}` },
-    });
-    const metaJson = await metaRes.json();
-
-    // Refresh metadata to get sheetIds
-    const metaRes2 = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,sheetId)`, {
-      headers: { 'Authorization': `Bearer ${sheetsToken}` },
-    });
-    const meta2 = await metaRes2.json();
-    const sheetIdByTitle = {};
-    (meta2?.sheets || []).forEach(s => { sheetIdByTitle[s.properties.title] = s.properties.sheetId; });
-
-    // Build additional sheets data
-    const usageRows = [['Item', 'Unit', 'Usage Qty']];
+    // 2) Build Usage rows (Item, Unit, Usage)
+    const usageOnly = [['Item', 'Unit', 'Usage']];
     Array.from(keys).forEach((key) => {
       const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
       const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
@@ -239,72 +203,45 @@ Deno.serve(async (req) => {
       const p = Number(purchasesMap.get(key)?.qty || 0);
       const e = Number(endMap.get(key)?.qty || 0);
       const u = b + p - e;
-      usageRows.push([name, unit, u]);
+      usageOnly.push([name, unit, u]);
     });
-    // sort usage descending (skip header)
-    const headerUsage = usageRows.shift();
-    usageRows.sort((a,b) => Number(b[2]) - Number(a[2]));
-    usageRows.unshift(headerUsage);
+    const hdr = usageOnly.shift();
+    usageOnly.sort((a,b) => Number(b[2]) - Number(a[2]));
+    usageOnly.unshift(hdr);
 
-    const summaryRows = [
-      ['Metric', 'Value'],
-      ['Beginning Qty', totalBegin],
-      ['Purchases Qty', totalPurch],
-      ['Ending Qty', totalEnd],
-      ['Usage Qty', totalUsage],
-    ];
-
-    // Write values: three columns (Item, Unit, Usage)
-    const writeRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('AFC!A1')}:update?valueInputOption=RAW`, {
-      method: 'PUT',
-      headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ range: 'AFC!A1', majorDimension: 'ROWS', values: usageRows })
+    // 3) Write values
+    const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ valueInputOption: 'USER_ENTERED', data: [{ range: `${sheetTitle}!A1:C${usageOnly.length}`, values: usageOnly }] })
     });
-    if (!writeRes.ok) {
-      const txt = await writeRes.text();
-      return await returnFallbackCSV(`Failed to write data to sheet. Details: ${txt}`);
+    if (!valuesRes.ok) {
+      const errText = await valuesRes.text();
+      return await returnFallbackCSV(`Write values failed: ${errText}`);
     }
 
-    // Formatting: header bold + freeze + auto-resize (AFC only)
-    const fmtRequests = [
-      { updateSheetProperties: { properties: { sheetId: sheetIdByTitle['AFC'], gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
-      { repeatCell: { range: { sheetId: sheetIdByTitle['AFC'], startRowIndex: 0, endRowIndex: 1 }, cell: { userEnteredFormat: { textFormat: { bold: true } } }, fields: 'userEnteredFormat.textFormat.bold' } },
-      { autoResizeDimensions: { dimensions: { sheetId: sheetIdByTitle['AFC'], dimension: 'COLUMNS', startIndex: 0, endIndex: 3 } } },
-    ];
-
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+    // 4) Format (rename, freeze, bold, number format, auto-resize)
+    const fmtReq = {
+      requests: [
+        { updateSheetProperties: { properties: { sheetId, title: 'AFC' }, fields: 'title' } },
+        { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
+        { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 3 }, cell: { userEnteredFormat: { textFormat: { bold: true } } }, fields: 'userEnteredFormat.textFormat.bold' } },
+        { repeatCell: { range: { sheetId, startRowIndex: 1, startColumnIndex: 2, endColumnIndex: 3 }, cell: { userEnteredFormat: { numberFormat: { type: 'NUMBER', pattern: '#,##0.###' } } }, fields: 'userEnteredFormat.numberFormat' } },
+        { autoResizeDimensions: { dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 3 } } },
+      ]
+    };
+    const fmtRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${sheetsToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requests: fmtRequests })
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(fmtReq)
     });
-
-    // Make link shareable (if Drive token available)
-    if (driveToken) {
-      await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${driveToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ role: 'reader', type: 'anyone', allowFileDiscovery: false }),
-      }).catch(() => {});
+    if (!fmtRes.ok) {
+      const errText = await fmtRes.text();
+      return await returnFallbackCSV(`Format failed: ${errText}`);
     }
 
     const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
-
-    return Response.json({
-      success: true,
-      spreadsheetId,
-      spreadsheetUrl,
-      meta: {
-        startDate: formatDateYYYYMMDD(start),
-        endDate: formatDateYYYYMMDD(end),
-        beginningCountId: beginning?.id || null,
-        endingCountId: ending?.id || null,
-        ordersCount: ordersInRange.length,
-        items: rows.length - 2,
-      },
-    });
+    return Response.json({ success: true, spreadsheetId, spreadsheetUrl });
   } catch (error) {
     // Last-resort CSV fallback if anything unexpected happens
     try {
