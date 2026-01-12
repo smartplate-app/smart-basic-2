@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2 } from "lucide-react";
@@ -622,6 +622,31 @@ export default function OrdersPage() {
     return matchesSearch && matchesStatus;
   });
 
+  // Aggregate quantities per item across filtered orders (not per supplier)
+  const itemsSummary = useMemo(() => {
+    const map = new Map();
+    let totalQty = 0;
+    let totalCost = 0;
+
+    filteredOrders.forEach((o) => {
+      totalCost += Number(o.total_cost) || 0;
+      const items = Array.isArray(o.items) ? o.items : [];
+      items.forEach((it) => {
+        const key = it.item_name || it.item_id || it.item || '—';
+        const qty = Number(it.quantity) || 0;
+        const unit = it.unit || '';
+        const prev = map.get(key) || { name: key, quantity: 0, unit };
+        prev.quantity += qty;
+        if (!prev.unit && unit) prev.unit = unit;
+        map.set(key, prev);
+        totalQty += qty;
+      });
+    });
+
+    const rows = Array.from(map.values()).sort((a, b) => (b.quantity - a.quantity));
+    return { rows, totalQty, totalCost };
+  }, [filteredOrders]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -732,7 +757,52 @@ export default function OrdersPage() {
           </Select>
         </div>
 
-        {/* Mobile View */}
+        {/* Items Quantity Report (aggregated across orders) */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-wrap gap-6 mb-4">
+              <div>
+                <div className="text-sm text-gray-600">{t('total_orders')}</div>
+                <div className="text-xl font-bold">{filteredOrders.length}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">{t('total_cost')}</div>
+                <div className="text-xl font-bold">₪{(itemsSummary.totalCost || 0).toFixed(2)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">{t('total_item_quantity') || t('quantity')}</div>
+                <div className="text-xl font-bold">{(itemsSummary.totalQty || 0).toFixed(2)}</div>
+              </div>
+            </div>
+
+            <div className="overflow-auto border rounded-md">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{t('item')}</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{t('quantity')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itemsSummary.rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={2} className="px-3 py-6 text-center text-gray-500">{t('no_items_to_display_items') || t('no_items_to_display')}</td>
+                    </tr>
+                  ) : (
+                    itemsSummary.rows.map((row) => (
+                      <tr key={row.name} className="border-t">
+                        <td className="px-3 py-2 text-right text-gray-800">{row.name}</td>
+                        <td className="px-3 py-2 text-right font-semibold">{row.quantity.toFixed(2)} {row.unit || ''}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+         {/* Mobile View */}
         <div className="md:hidden space-y-4">
           {loading ? (
             <div className="text-center py-12">

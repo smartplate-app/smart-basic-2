@@ -1,4 +1,6 @@
+import AdminDashboard from './pages/AdminDashboard';
 import ChainManagement from './pages/ChainManagement';
+import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import InventoryTransfers from './pages/InventoryTransfers';
 import InviteUser from './pages/InviteUser';
@@ -30,13 +32,13 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import Dashboard from './pages/Dashboard';
-import AdminDashboard from './pages/AdminDashboard';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AdminDashboard": AdminDashboard,
     "ChainManagement": ChainManagement,
+    "Dashboard": Dashboard,
     "Home": Home,
     "InventoryTransfers": InventoryTransfers,
     "InviteUser": InviteUser,
@@ -68,8 +70,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "Dashboard": Dashboard,
-    "AdminDashboard": AdminDashboard,
 }
 
 export const pagesConfig = {
