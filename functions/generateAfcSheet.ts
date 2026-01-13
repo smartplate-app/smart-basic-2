@@ -115,6 +115,17 @@ Deno.serve(async (req) => {
       });
     });
 
+    // Ensure beginning and ending counts are distinct; if same, pick next earlier for beginning
+    if (beginning && ending && (beginning.id === ending.id)) {
+      const earlier = countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) < new Date(beginning.count_date || beginning.created_date || 0));
+      if (earlier.length > 0) {
+        beginning = earlier[earlier.length - 1];
+        // Rebuild beginMap with the adjusted beginning
+        const tmp = toCountMap(beginning, itemById, itemByName);
+        for (const [k,v] of tmp.entries()) beginMap.set(k, v);
+      }
+    }
+
     // Union of all item keys
     const keys = new Set([
       ...Array.from(beginMap.keys()),
