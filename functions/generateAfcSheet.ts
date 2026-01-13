@@ -208,10 +208,10 @@ Deno.serve(async (req) => {
     // 2) Build Usage rows (Item, Unit, Usage)
     const usageOnly = [['Item', 'Unit', 'Usage']];
     Array.from(keys).forEach((key) => {
-      const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
-      const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
+      const name = beginMap.get(key)?.name || receiptsMap.get(key)?.name || endMap.get(key)?.name || key;
+      const unit = beginMap.get(key)?.unit || receiptsMap.get(key)?.unit || endMap.get(key)?.unit || '';
       const b = Number(beginMap.get(key)?.qty || 0);
-      const p = Number(purchasesMap.get(key)?.qty || 0);
+      const p = Number(receiptsMap.get(key)?.qty || 0);
       const e = Number(endMap.get(key)?.qty || 0);
       const u = b + p - e;
       usageOnly.push([name, unit, u]);
