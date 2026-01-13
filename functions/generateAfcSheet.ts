@@ -27,10 +27,11 @@ Deno.serve(async (req) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Load inventory counts and orders for this user
-    const [allCounts, allOrders] = await Promise.all([
+    // Load inventory counts, supply receipts and items for this user
+    const [allCounts, allReceipts, allItems] = await Promise.all([
       base44.entities.InventoryCount.filter({ created_by: effectiveEmail }),
-      base44.entities.Order.filter({ created_by: effectiveEmail }),
+      base44.entities.SupplyReceipt.filter({ created_by: effectiveEmail }),
+      base44.entities.Item.filter({ created_by: effectiveEmail }),
     ]);
 
     // Sort counts by date ascending
@@ -68,19 +69,30 @@ Deno.serve(async (req) => {
     const beginMap = toCountMap(beginning);
     const endMap = toCountMap(ending);
 
-    // Orders in range (purchases)
-    const ordersInRange = (allOrders || []).filter((o) => {
-      const d = new Date(o.created_date || o.delivery_date || o.updated_date || 0);
+    // Supply Receipts in range (actual purchases received)
+    const receiptsInRange = (allReceipts || []).filter((r) => {
+      const d = new Date(r.received_date || r.created_date || r.updated_date || 0);
       return d >= start && d <= end;
     });
+
+    // Map item definitions for optional unit conversions
+    const itemById = new Map();
+    (allItems || []).forEach((it) => itemById.set(it.id, it));
+
     const purchasesMap = new Map();
-    ordersInRange.forEach((o) => {
-      const items = Array.isArray(o.items) ? o.items : [];
-      items.forEach((it) => {
+    receiptsInRange.forEach((r) => {
+      const vitems = Array.isArray(r.verified_items) ? r.verified_items : [];
+      vitems.forEach((it) => {
         const key = it.item_id || it.item_name || it.item || '—';
         const name = it.item_name || key;
-        const qty = Number(it.quantity) || 0;
-        const unit = it.unit || '';
+        const itemDef = it.item_id ? itemById.get(it.item_id) : null;
+        const unit = it.unit || itemDef?.unit || '';
+        const rawQty = Number(it.received_quantity ?? it.certificate_quantity ?? it.ordered_quantity ?? it.quantity ?? 0) || 0;
+        let qty = rawQty;
+        // Convert cases to units when units_per_package is known
+        if (unit === 'case' && itemDef?.units_per_package) {
+          qty = rawQty * Number(itemDef.units_per_package);
+        }
         const prev = purchasesMap.get(key) || { name, qty: 0, unit };
         prev.qty += qty;
         if (!prev.unit && unit) prev.unit = unit;
