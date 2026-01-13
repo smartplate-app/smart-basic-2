@@ -27,11 +27,10 @@ Deno.serve(async (req) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Load inventory counts, supply receipts and items for this user
-    const [allCounts, allReceipts, allItems] = await Promise.all([
+    // Load inventory counts and orders for this user
+    const [allCounts, allOrders] = await Promise.all([
       base44.entities.InventoryCount.filter({ created_by: effectiveEmail }),
-      base44.entities.SupplyReceipt.filter({ created_by: effectiveEmail }),
-      base44.entities.Item.filter({ created_by: effectiveEmail }),
+      base44.entities.Order.filter({ created_by: effectiveEmail }),
     ]);
 
     // Sort counts by date ascending
@@ -50,25 +49,14 @@ Deno.serve(async (req) => {
       if (cd <= end) ending = c;
     }
 
-    const normalize = (s) => String(s || '').trim().toLowerCase();
-
-    const toCountMap = (countRec, itemById, itemByName) => {
+    const toCountMap = (countRec) => {
       const map = new Map();
       const items = Array.isArray(countRec?.items) ? countRec.items : [];
       items.forEach((it) => {
-        const byId = it.item_id && itemById.get(it.item_id);
-        const byName = !byId ? itemByName.get(normalize(it.item_name || it.item)) : null;
-        const itemDef = byId || byName || null;
-        const baseUnit = it.unit || itemDef?.unit || '';
-        const rawQty = Number(it.counted_quantity) || 0;
-        let qty = rawQty;
-        // Convert cases to base units when possible
-        if (baseUnit === 'case' && itemDef?.units_per_package) {
-          qty = rawQty * Number(itemDef.units_per_package);
-        }
-        const key = (itemDef?.id) || it.item_id || normalize(it.item_name || it.item) || '—';
-        const name = it.item_name || itemDef?.name || it.item || key;
-        const unit = baseUnit === 'case' && itemDef?.unit ? itemDef.unit : baseUnit;
+        const key = it.item_id || it.item_name || it.item || '—';
+        const name = it.item_name || key;
+        const qty = Number(it.counted_quantity) || 0;
+        const unit = it.unit || '';
         const prev = map.get(key) || { name, qty: 0, unit };
         prev.qty += qty;
         if (!prev.unit && unit) prev.unit = unit;
@@ -77,97 +65,28 @@ Deno.serve(async (req) => {
       return map;
     };
 
-    const itemById = new Map();
-    const itemByName = new Map();
-    (allItems || []).forEach((it) => {
-      itemById.set(it.id, it);
-      itemByName.set((it.name || '').trim().toLowerCase(), it);
-    });
+    const beginMap = toCountMap(beginning);
+    const endMap = toCountMap(ending);
 
-    let beginMap = toCountMap(beginning, itemById, itemByName);
-    const endMap = toCountMap(ending, itemById, itemByName);
-
-    // If beginning and ending are the same count, use the previous count for beginning when available
-    if (beginning && ending && beginning.id === ending.id) {
-      const earlier = countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) < new Date(beginning.count_date || beginning.created_date || 0));
-      if (earlier.length > 0) {
-        beginning = earlier[earlier.length - 1];
-        beginMap = toCountMap(beginning, itemById, itemByName);
-      }
-    }
-
-    // If beginning and ending refer to the same count, pick previous count for beginning when available
-    if (beginning && ending && beginning.id === ending.id) {
-      const earlier = countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) < new Date(beginning.count_date || beginning.created_date || 0));
-      if (earlier.length > 0) {
-        beginning = earlier[earlier.length - 1];
-        const tmpBegin = toCountMap(beginning, itemById, itemByName);
-        beginMap.clear();
-        for (const [k, v] of tmpBegin.entries()) beginMap.set(k, v);
-      }
-    }
-
-    // If beginning and ending refer to the same count, pick previous count for beginning when available
-    if (beginning && ending && beginning.id === ending.id) {
-      const earlier = countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) < new Date(beginning.count_date || beginning.created_date || 0));
-      if (earlier.length > 0) {
-        beginning = earlier[earlier.length - 1];
-        const tmpBegin = toCountMap(beginning, itemById, itemByName);
-        beginMap.clear();
-        for (const [k, v] of tmpBegin.entries()) beginMap.set(k, v);
-      }
-    }
-
-    // Supply Receipts in range (actual purchases received)
-    const receiptsInRange = (allReceipts || []).filter((r) => {
-      const d = new Date(r.received_date || r.created_date || r.updated_date || 0);
+    // Orders in range (purchases)
+    const ordersInRange = (allOrders || []).filter((o) => {
+      const d = new Date(o.created_date || o.delivery_date || o.updated_date || 0);
       return d >= start && d <= end;
     });
-
-    // Purchases aggregation from receipts (key by item id or normalized name)
     const purchasesMap = new Map();
-    receiptsInRange.forEach((r) => {
-      const vitems = Array.isArray(r.verified_items) ? r.verified_items : [];
-      vitems.forEach((it) => {
-        const itemDef = it.item_id ? itemById.get(it.item_id) : (it.item_name ? itemByName.get(normalize(it.item_name)) : null);
-        const baseUnit = it.unit || itemDef?.unit || '';
-        const rawQty = Number(it.received_quantity ?? it.certificate_quantity ?? it.ordered_quantity ?? it.quantity ?? 0) || 0;
-        let qty = rawQty;
-        if (baseUnit === 'case' && itemDef?.units_per_package) {
-          qty = rawQty * Number(itemDef.units_per_package);
-        }
-        const key = (itemDef?.id) || it.item_id || normalize(it.item_name || it.item) || '—';
-        const name = it.item_name || itemDef?.name || key;
-        const unit = baseUnit === 'case' && itemDef?.unit ? itemDef.unit : baseUnit;
+    ordersInRange.forEach((o) => {
+      const items = Array.isArray(o.items) ? o.items : [];
+      items.forEach((it) => {
+        const key = it.item_id || it.item_name || it.item || '—';
+        const name = it.item_name || key;
+        const qty = Number(it.quantity) || 0;
+        const unit = it.unit || '';
         const prev = purchasesMap.get(key) || { name, qty: 0, unit };
         prev.qty += qty;
         if (!prev.unit && unit) prev.unit = unit;
         purchasesMap.set(key, prev);
       });
     });
-
-    // Ensure beginning and ending counts are distinct; if same, pick next earlier for beginning
-    if (beginning && ending && (beginning.id === ending.id)) {
-      const earlier = countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) < new Date(beginning.count_date || beginning.created_date || 0));
-      if (earlier.length > 0) {
-        beginning = earlier[earlier.length - 1];
-        // Rebuild beginMap with the adjusted beginning
-        const tmp = toCountMap(beginning, itemById, itemByName);
-        beginMap.clear();
-        for (const [k,v] of tmp.entries()) beginMap.set(k, v);
-      }
-    }
-
-    // Ensure beginning and ending counts are distinct; if same, pick next earlier for beginning
-    if (beginning && ending && (beginning.id === ending.id)) {
-      const earlier = countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) < new Date(beginning.count_date || beginning.created_date || 0));
-      if (earlier.length > 0) {
-        beginning = earlier[earlier.length - 1];
-        const tmp = toCountMap(beginning, itemById, itemByName);
-        beginMap.clear();
-        for (const [k,v] of tmp.entries()) beginMap.set(k, v);
-      }
-    }
 
     // Union of all item keys
     const keys = new Set([
@@ -179,13 +98,6 @@ Deno.serve(async (req) => {
     // Build rows
     const header = ['Item', 'Unit', 'Beginning Qty', 'Purchases Qty', 'Ending Qty', 'Usage Qty'];
     const rows = [header];
-    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
-    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
-    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
-    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
-
-    // Helper for consistent name display (prefer Item entity name)
-    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key; // prefer consistent names
     let totalBegin = 0, totalPurch = 0, totalEnd = 0, totalUsage = 0;
 
     Array.from(keys).sort((a, b) => {
@@ -193,7 +105,7 @@ Deno.serve(async (req) => {
       const bn = (beginMap.get(b)?.name || purchasesMap.get(b)?.name || endMap.get(b)?.name || '').toLowerCase();
       return an.localeCompare(bn);
     }).forEach((key) => {
-      const name = displayName(key);
+      const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
       const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
       const b = Number(beginMap.get(key)?.qty || 0);
       const p = Number(purchasesMap.get(key)?.qty || 0);
@@ -210,7 +122,7 @@ Deno.serve(async (req) => {
     const buildUsageRows = () => {
       const uRows = [['Item', 'Unit', 'Usage Qty']];
       Array.from(keys).forEach((key) => {
-        const name = displayName(key);
+        const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
         const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
         const b = Number(beginMap.get(key)?.qty || 0);
         const p = Number(purchasesMap.get(key)?.qty || 0);
@@ -285,7 +197,7 @@ Deno.serve(async (req) => {
     // 2) Build Usage rows (Item, Unit, Usage)
     const usageOnly = [['Item', 'Unit', 'Usage']];
     Array.from(keys).forEach((key) => {
-      const name = displayName(key);
+      const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
       const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
       const b = Number(beginMap.get(key)?.qty || 0);
       const p = Number(purchasesMap.get(key)?.qty || 0);
@@ -296,11 +208,6 @@ Deno.serve(async (req) => {
     const hdr = usageOnly.shift();
     usageOnly.sort((a,b) => Number(b[2]) - Number(a[2]));
     usageOnly.unshift(hdr);
-    usageOnly.unshift([`Period: ${formatDateYYYYMMDD(start)} to ${formatDateYYYYMMDD(end)}`, '', '']);
-    usageOnly.unshift([`Period: ${formatDateYYYYMMDD(start)} to ${formatDateYYYYMMDD(end)}`, '', '']);
-
-    // Prepend a header row with the date range for clarity
-    usageOnly.unshift([`Period: ${formatDateYYYYMMDD(start)} to ${formatDateYYYYMMDD(end)}`, '', '']);
 
     // 3) Write values
     const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
@@ -334,7 +241,7 @@ Deno.serve(async (req) => {
     }
 
     const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
-    return Response.json({ success: true, spreadsheetId, spreadsheetUrl, debug: { counts: { beginId: beginning?.id || null, endId: ending?.id || null }, range: { start: startDate, end: endDate } } });
+    return Response.json({ success: true, spreadsheetId, spreadsheetUrl });
   } catch (error) {
     // Last-resort CSV fallback if anything unexpected happens
     try {
