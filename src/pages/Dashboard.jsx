@@ -49,6 +49,7 @@ export default function DashboardPage() {
   const [exportingMonthly, setExportingMonthly] = useState(false);
   const [inventoryCounts, setInventoryCounts] = useState([]);
 const [monthReceipts, setMonthReceipts] = useState([]);
+        const [monthOrders, setMonthOrders] = useState([]);
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
   const [lastAfcSheetId, setLastAfcSheetId] = useState(null);
@@ -100,10 +101,11 @@ const [monthReceipts, setMonthReceipts] = useState([]);
       const monthEnd = moment(selectedMonth).endOf('month');
       const endDate = today.isBefore(monthEnd) && today.isAfter(monthStart) ? today : monthEnd;
 
-      const [allDashboardData, allSchedules, allReceipts, incomingTransfers, outgoingTransfers, allCounts] = await Promise.all([
+      const [allDashboardData, allSchedules, allReceipts, allOrders, incomingTransfers, outgoingTransfers, allCounts] = await Promise.all([
         base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: selectedMonth }),
         base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
         base44.entities.SupplyReceipt.filter({ created_by: workingEmail }),
+        base44.entities.Order.filter({ created_by: workingEmail }),
         base44.entities.InventoryTransfer.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }),
         base44.entities.InventoryTransfer.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' }),
         base44.entities.InventoryCount.filter({ created_by: workingEmail }, "-count_date")
@@ -248,6 +250,12 @@ const [monthReceipts, setMonthReceipts] = useState([]);
 
       setCalculatedFoodCost(adjustedFoodCost);
       setMonthReceipts(filteredReceipts);
+
+      const filteredOrders = (allOrders || []).filter(o => {
+        const d = moment(o.delivery_date || o.created_date);
+        return d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate);
+      });
+      setMonthOrders(filteredOrders);
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -523,28 +531,28 @@ const [monthReceipts, setMonthReceipts] = useState([]);
     };
     const begin = countMap(startCount);
     const end = countMap(endCount);
-    const receipts = new Map();
-    (monthReceipts || []).forEach(r => {
-      const items = Array.isArray(r.verified_items) ? r.verified_items : [];
+    const ordered = new Map();
+    (monthOrders || []).forEach(o => {
+      const items = Array.isArray(o.items) ? o.items : [];
       items.forEach(it => {
         const key = it.item_id || cn(it.item_name || it.item);
         const name = it.item_name || it.item || '';
         const unit = it.unit || '';
-        const qty = Number(it.received_quantity ?? it.certificate_quantity ?? it.ordered_quantity ?? 0) || 0;
-        const prev = receipts.get(key) || { name, unit, qty: 0 };
+        const qty = Number(it.quantity || 0) || 0;
+        const prev = ordered.get(key) || { name, unit, qty: 0 };
         prev.qty += qty;
         if (!prev.unit && unit) prev.unit = unit;
         if (!prev.name && name) prev.name = name;
-        receipts.set(key, prev);
+        ordered.set(key, prev);
       });
     });
     const keys = Array.from(begin.keys()).filter(k => end.has(k));
     const rows = keys.map(k => {
       const b = Number(begin.get(k)?.qty || 0);
       const e = Number(end.get(k)?.qty || 0);
-      const p = Number(receipts.get(k)?.qty || 0);
-      const name = begin.get(k)?.name || receipts.get(k)?.name || end.get(k)?.name || '';
-      const unit = begin.get(k)?.unit || receipts.get(k)?.unit || end.get(k)?.unit || '';
+      const p = Number(ordered.get(k)?.qty || 0);
+      const name = begin.get(k)?.name || ordered.get(k)?.name || end.get(k)?.name || '';
+      const unit = begin.get(k)?.unit || ordered.get(k)?.unit || end.get(k)?.unit || '';
       const u = Math.max(0, b + p - e);
       return { name, unit, b, p, e, u };
     }).sort((a, b) => b.u - a.u);
@@ -1350,7 +1358,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                           <TableHead>{language === 'he' ? 'פריט' : 'Item'}</TableHead>
                           <TableHead className="w-24">{language === 'he' ? 'יחידה' : 'Unit'}</TableHead>
                           <TableHead className="text-right">{language === 'he' ? 'פתיחה' : 'Begin'}</TableHead>
-                          <TableHead className="text-right">{language === 'he' ? 'קבלות' : 'Receipts'}</TableHead>
+                          <TableHead className="text-right">{language === 'he' ? 'הזמנות' : 'Orders'}</TableHead>
                           <TableHead className="text-right">{language === 'he' ? 'סגירה' : 'End'}</TableHead>
                           <TableHead className="text-right">{language === 'he' ? 'שימוש' : 'Usage'}</TableHead>
                         </TableRow>
