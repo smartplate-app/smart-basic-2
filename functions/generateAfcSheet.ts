@@ -87,6 +87,17 @@ Deno.serve(async (req) => {
     const beginMap = toCountMap(beginning, itemById, itemByName);
     const endMap = toCountMap(ending, itemById, itemByName);
 
+    // If beginning and ending refer to the same count, pick previous count for beginning when available
+    if (beginning && ending && beginning.id === ending.id) {
+      const earlier = countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) < new Date(beginning.count_date || beginning.created_date || 0));
+      if (earlier.length > 0) {
+        beginning = earlier[earlier.length - 1];
+        const tmpBegin = toCountMap(beginning, itemById, itemByName);
+        beginMap.clear();
+        for (const [k, v] of tmpBegin.entries()) beginMap.set(k, v);
+      }
+    }
+
     // Supply Receipts in range (actual purchases received)
     const receiptsInRange = (allReceipts || []).filter((r) => {
       const d = new Date(r.received_date || r.created_date || r.updated_date || 0);
@@ -148,6 +159,7 @@ Deno.serve(async (req) => {
     // Build rows
     const header = ['Item', 'Unit', 'Beginning Qty', 'Purchases Qty', 'Ending Qty', 'Usage Qty'];
     const rows = [header];
+    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
 
     // Helper for consistent name display (prefer Item entity name)
     const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key; // prefer consistent names
