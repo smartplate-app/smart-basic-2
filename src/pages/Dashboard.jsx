@@ -47,6 +47,7 @@ export default function DashboardPage() {
   const [hasScheduleData, setHasScheduleData] = useState(false);
   const [exportingMonthly, setExportingMonthly] = useState(false);
   const [inventoryCounts, setInventoryCounts] = useState([]);
+const [monthReceipts, setMonthReceipts] = useState([]);
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
   const [lastAfcSheetId, setLastAfcSheetId] = useState(null);
@@ -228,14 +229,15 @@ export default function DashboardPage() {
 
       // Calculate food cost (remove VAT from receipts since invoice_total includes VAT)
       const VAT_RATE = 1.17;
+      const filteredReceipts = (allReceipts || []).filter(r => {
+        const d = moment(r.received_date);
+        return d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate);
+      });
       let totalFoodCost = 0;
-      allReceipts.forEach(receipt => {
-        const receiptDate = moment(receipt.received_date);
-        if (receiptDate.isSameOrAfter(monthStart) && receiptDate.isSameOrBefore(endDate)) {
-          const receiptTotal = receipt.invoice_total || receipt.calculated_total || 0;
-          // Remove VAT from receipt total
-          totalFoodCost += receiptTotal / VAT_RATE;
-        }
+      filteredReceipts.forEach(receipt => {
+        const receiptTotal = receipt.invoice_total || receipt.calculated_total || 0;
+        // Remove VAT from receipt total
+        totalFoodCost += receiptTotal / VAT_RATE;
       });
 
       // Branch transfers: add incoming, subtract outgoing (costs assumed excl. VAT)
@@ -244,6 +246,7 @@ export default function DashboardPage() {
       const adjustedFoodCost = totalFoodCost + incomingTransfersTotal - outgoingTransfersTotal;
 
       setCalculatedFoodCost(adjustedFoodCost);
+      setMonthReceipts(filteredReceipts);
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -496,6 +499,56 @@ export default function DashboardPage() {
   const suppliesAccepted = calculatedFoodCost; // Already excl. VAT and adjusted for transfers
   const afcUsage = Math.max(0, startVal + suppliesAccepted - endVal);
   const afcPercent = actualSalesExVAT > 0 ? (afcUsage / actualSalesExVAT) * 100 : 0;
+
+  // Build per-item usage rows (only items with both begin and end counts)
+  const itemUsageRows = (() => {
+    if (!startCount || !endCount) return [];
+    const cn = (s) => (s ? String(s).toLowerCase().replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim() : '');
+    const countMap = (count) => {
+      const m = new Map();
+      const items = Array.isArray(count?.items) ? count.items : [];
+      items.forEach(it => {
+        const key = it.item_id || cn(it.item_name || it.item);
+        const name = it.item_name || it.item || '';
+        const unit = it.unit || '';
+        const qty = Number(it.counted_quantity) || 0;
+        const prev = m.get(key) || { name, unit, qty: 0 };
+        prev.qty += qty;
+        if (!prev.unit && unit) prev.unit = unit;
+        if (!prev.name && name) prev.name = name;
+        m.set(key, prev);
+      });
+      return m;
+    };
+    const begin = countMap(startCount);
+    const end = countMap(endCount);
+    const receipts = new Map();
+    (monthReceipts || []).forEach(r => {
+      const items = Array.isArray(r.verified_items) ? r.verified_items : [];
+      items.forEach(it => {
+        const key = it.item_id || cn(it.item_name || it.item);
+        const name = it.item_name || it.item || '';
+        const unit = it.unit || '';
+        const qty = Number(it.received_quantity ?? it.certificate_quantity ?? it.ordered_quantity ?? 0) || 0;
+        const prev = receipts.get(key) || { name, unit, qty: 0 };
+        prev.qty += qty;
+        if (!prev.unit && unit) prev.unit = unit;
+        if (!prev.name && name) prev.name = name;
+        receipts.set(key, prev);
+      });
+    });
+    const keys = Array.from(begin.keys()).filter(k => end.has(k));
+    const rows = keys.map(k => {
+      const b = Number(begin.get(k)?.qty || 0);
+      const e = Number(end.get(k)?.qty || 0);
+      const p = Number(receipts.get(k)?.qty || 0);
+      const name = begin.get(k)?.name || receipts.get(k)?.name || end.get(k)?.name || '';
+      const unit = begin.get(k)?.unit || receipts.get(k)?.unit || end.get(k)?.unit || '';
+      const u = Math.max(0, b + p - e);
+      return { name, unit, b, p, e, u };
+    }).sort((a, b) => b.u - a.u);
+    return rows;
+  })();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-8" dir={isRTL ? 'rtl' : 'ltr'}>
