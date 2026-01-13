@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
         beginning = earlier[earlier.length - 1];
         // Rebuild beginMap with the adjusted beginning
         const tmp = toCountMap(beginning, itemById, itemByName);
+        beginMap.clear();
         for (const [k,v] of tmp.entries()) beginMap.set(k, v);
       }
     }
@@ -138,7 +139,7 @@ Deno.serve(async (req) => {
     const rows = [header];
 
     // Helper for consistent name display (prefer Item entity name)
-    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
+    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key; // prefer consistent names
     let totalBegin = 0, totalPurch = 0, totalEnd = 0, totalUsage = 0;
 
     Array.from(keys).sort((a, b) => {
