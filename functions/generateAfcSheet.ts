@@ -136,6 +136,9 @@ Deno.serve(async (req) => {
     // Build rows
     const header = ['Item', 'Unit', 'Beginning Qty', 'Purchases Qty', 'Ending Qty', 'Usage Qty'];
     const rows = [header];
+
+    // Helper for consistent name display (prefer Item entity name)
+    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
     let totalBegin = 0, totalPurch = 0, totalEnd = 0, totalUsage = 0;
 
     Array.from(keys).sort((a, b) => {
