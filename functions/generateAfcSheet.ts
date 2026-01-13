@@ -28,9 +28,9 @@ Deno.serve(async (req) => {
     const end = new Date(endDate);
 
     // Load inventory counts and orders for this user
-    const [allCounts, allOrders] = await Promise.all([
+    const [allCounts, allReceipts] = await Promise.all([
       base44.entities.InventoryCount.filter({ created_by: effectiveEmail }),
-      base44.entities.Order.filter({ created_by: effectiveEmail }),
+      base44.entities.SupplyReceipt.filter({ created_by: effectiveEmail }),
     ]);
 
     // Sort counts by date ascending
@@ -40,13 +40,24 @@ Deno.serve(async (req) => {
       return ad - bd;
     });
 
-    // Find beginning (latest count <= start) and ending (latest count <= end)
+    // Find beginning (latest count <= start) and ending (prefer earliest >= end; else latest <= end)
     let beginning = null;
     let ending = null;
     for (const c of countsSorted) {
       const cd = new Date(c.count_date || c.created_date || 0);
       if (cd <= start) beginning = c;
-      if (cd <= end) ending = c;
+    }
+    // Ending: first count on/after end; fallback to latest on/before end
+    ending = countsSorted.find(c => {
+      const cd = new Date(c.count_date || c.created_date || 0);
+      return cd >= end;
+    }) || countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) <= end).pop() || null;
+    // Ensure distinct counts when possible
+    if (beginning && ending && beginning.id === ending.id) {
+      const idx = countsSorted.findIndex(c => c.id === beginning.id);
+      if (idx >= 0 && idx + 1 < countsSorted.length) {
+        ending = countsSorted[idx + 1];
+      }
     }
 
     const toCountMap = (countRec) => {
@@ -68,23 +79,23 @@ Deno.serve(async (req) => {
     const beginMap = toCountMap(beginning);
     const endMap = toCountMap(ending);
 
-    // Orders in range (purchases)
-    const ordersInRange = (allOrders || []).filter((o) => {
-      const d = new Date(o.created_date || o.delivery_date || o.updated_date || 0);
+    // Supply receipts in range (purchases actually received)
+    const receiptsInRange = (allReceipts || []).filter((r) => {
+      const d = new Date(r.received_date || r.created_date || 0);
       return d >= start && d <= end;
     });
-    const purchasesMap = new Map();
-    ordersInRange.forEach((o) => {
-      const items = Array.isArray(o.items) ? o.items : [];
+    const receiptsMap = new Map();
+    receiptsInRange.forEach((r) => {
+      const items = Array.isArray(r.verified_items) ? r.verified_items : [];
       items.forEach((it) => {
         const key = it.item_id || it.item_name || it.item || '—';
         const name = it.item_name || key;
-        const qty = Number(it.quantity) || 0;
+        const qty = Number(it.received_quantity ?? it.certificate_quantity ?? it.ordered_quantity ?? 0) || 0;
         const unit = it.unit || '';
-        const prev = purchasesMap.get(key) || { name, qty: 0, unit };
+        const prev = receiptsMap.get(key) || { name, qty: 0, unit };
         prev.qty += qty;
         if (!prev.unit && unit) prev.unit = unit;
-        purchasesMap.set(key, prev);
+        receiptsMap.set(key, prev);
       });
     });
 
@@ -92,17 +103,17 @@ Deno.serve(async (req) => {
     const keys = new Set([
       ...Array.from(beginMap.keys()),
       ...Array.from(endMap.keys()),
-      ...Array.from(purchasesMap.keys()),
+      ...Array.from(receiptsMap.keys()),
     ]);
 
     // Build rows
-    const header = ['Item', 'Unit', 'Beginning Qty', 'Purchases Qty', 'Ending Qty', 'Usage Qty'];
+    const header = ['Item', 'Unit', 'Beginning Qty', 'Receipts Qty', 'Ending Qty', 'Usage Qty'];
     const rows = [header];
     let totalBegin = 0, totalPurch = 0, totalEnd = 0, totalUsage = 0;
 
     Array.from(keys).sort((a, b) => {
-      const an = (beginMap.get(a)?.name || purchasesMap.get(a)?.name || endMap.get(a)?.name || '').toLowerCase();
-      const bn = (beginMap.get(b)?.name || purchasesMap.get(b)?.name || endMap.get(b)?.name || '').toLowerCase();
+      const an = (beginMap.get(a)?.name || receiptsMap.get(a)?.name || endMap.get(a)?.name || '').toLowerCase();
+      const bn = (beginMap.get(b)?.name || receiptsMap.get(b)?.name || endMap.get(b)?.name || '').toLowerCase();
       return an.localeCompare(bn);
     }).forEach((key) => {
       const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
@@ -139,7 +150,7 @@ Deno.serve(async (req) => {
     const buildSummaryRows = () => ([
       ['Metric', 'Value'],
       ['Beginning Qty', totalBegin],
-      ['Purchases Qty', totalPurch],
+      ['Receipts Qty', totalPurch],
       ['Ending Qty', totalEnd],
       ['Usage Qty', totalUsage],
     ]);
