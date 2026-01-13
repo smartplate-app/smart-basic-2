@@ -33,6 +33,30 @@ Deno.serve(async (req) => {
       base44.entities.SupplyReceipt.filter({ created_by: effectiveEmail }),
     ]);
 
+    // Canonicalize item names and unify keys across counts and receipts
+    const canonicalizeName = (s) => {
+      const str = String(s || '').toLowerCase();
+      // remove text in parentheses and collapse spaces
+      return str.replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
+    };
+
+    // Map canonical name -> item_id (when available) so all sources aggregate to the same key
+    const nameAlias = new Map();
+    const registerAlias = (name, id) => {
+      const cn = canonicalizeName(name);
+      if (!cn) return;
+      if (id) nameAlias.set(cn, id);
+    };
+    // Pre-scan all items to register aliases
+    (allCounts || []).forEach(c => {
+      const items = Array.isArray(c.items) ? c.items : [];
+      items.forEach(it => registerAlias(it.item_name || it.item, it.item_id));
+    });
+    (allReceipts || []).forEach(r => {
+      const items = Array.isArray(r.verified_items) ? r.verified_items : [];
+      items.forEach(it => registerAlias(it.item_name || it.item, it.item_id));
+    });
+
     // Sort counts by date ascending
     const countsSorted = (allCounts || []).slice().sort((a, b) => {
       const ad = new Date(a.count_date || a.created_date || 0).getTime();
@@ -64,8 +88,11 @@ Deno.serve(async (req) => {
       const map = new Map();
       const items = Array.isArray(countRec?.items) ? countRec.items : [];
       items.forEach((it) => {
-        const key = it.item_id || it.item_name || it.item || '—';
-        const name = it.item_name || key;
+        const rawName = it.item_name || it.item || '—';
+        const cn = canonicalizeName(rawName);
+        const preferredKey = nameAlias.get(cn);
+        const key = preferredKey || it.item_id || cn;
+        const name = rawName;
         const qty = Number(it.counted_quantity) || 0;
         const unit = it.unit || '';
         const prev = map.get(key) || { name, qty: 0, unit };
@@ -88,8 +115,11 @@ Deno.serve(async (req) => {
     receiptsInRange.forEach((r) => {
       const items = Array.isArray(r.verified_items) ? r.verified_items : [];
       items.forEach((it) => {
-        const key = it.item_id || it.item_name || it.item || '—';
-        const name = it.item_name || key;
+        const rawName = it.item_name || it.item || '—';
+        const cn = canonicalizeName(rawName);
+        const preferredKey = nameAlias.get(cn);
+        const key = preferredKey || it.item_id || cn;
+        const name = rawName;
         const qty = Number(it.received_quantity ?? it.certificate_quantity ?? it.ordered_quantity ?? 0) || 0;
         const unit = it.unit || '';
         const prev = receiptsMap.get(key) || { name, qty: 0, unit };
