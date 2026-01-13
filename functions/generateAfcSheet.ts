@@ -182,6 +182,7 @@ Deno.serve(async (req) => {
     const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
     const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
     const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
+    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
 
     // Helper for consistent name display (prefer Item entity name)
     const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key; // prefer consistent names
