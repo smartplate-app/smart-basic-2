@@ -48,6 +48,8 @@ export default function DashboardPage() {
   const [inventoryCounts, setInventoryCounts] = useState([]);
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
+  const [lastAfcSheetId, setLastAfcSheetId] = useState(null);
+  const [lastAfcSheetUrl, setLastAfcSheetUrl] = useState(null);
 
   // Projection (sales)
   const [projectedMonthlySales, setProjectedMonthlySales] = useState(0);
@@ -365,13 +367,31 @@ export default function DashboardPage() {
 
 
 
+  const openSheetsApp = (sheetId, browserUrl) => {
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const appUrl = `googlesheets://?id=${sheetId}`;
+    if (isiOS && sheetId) {
+      const start = Date.now();
+      window.location.href = appUrl;
+      setTimeout(() => {
+        if (Date.now() - start < 1500 && browserUrl) {
+          window.open(browserUrl, '_blank');
+        }
+      }, 1200);
+    } else if (browserUrl) {
+      window.open(browserUrl, '_blank');
+    }
+  };
+
   const handleGenerateAfcSheet = async () => {
     try {
       const startDate = moment(selectedMonth, 'YYYY-MM').startOf('month').format('YYYY-MM-DD');
       const endDate = moment(selectedMonth, 'YYYY-MM').endOf('month').format('YYYY-MM-DD');
       const { data } = await base44.functions.invoke('generateAfcSheet', { startDate, endDate });
-      if (data?.spreadsheetUrl) {
-        window.open(data.spreadsheetUrl, '_blank');
+      if (data?.spreadsheetId || data?.spreadsheetUrl) {
+        setLastAfcSheetId(data.spreadsheetId || null);
+        setLastAfcSheetUrl(data.spreadsheetUrl || null);
+        openSheetsApp(data.spreadsheetId, data.spreadsheetUrl);
         return;
       }
       if (data?.csvContent) {
@@ -1113,6 +1133,12 @@ export default function DashboardPage() {
                     <FileSpreadsheet className="w-4 h-4" />
                     {language === 'he' ? 'צור גיליון AFC' : 'Generate AFC Sheet'}
                   </Button>
+                  {lastAfcSheetId && (
+                    <Button variant="outline" onClick={() => openSheetsApp(lastAfcSheetId, lastAfcSheetUrl)} className="gap-2 h-9">
+                      <FileSpreadsheet className="w-4 h-4" />
+                      {language === 'he' ? 'פתח באפליקציית Sheets' : 'Open in Sheets App'}
+                    </Button>
+                  )}
                   <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
                     {language === 'he' ? 'דוח AFC' : 'AFC Report'}
                   </CardTitle>
