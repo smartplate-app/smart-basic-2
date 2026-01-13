@@ -250,6 +250,9 @@ Deno.serve(async (req) => {
     usageOnly.sort((a,b) => Number(b[2]) - Number(a[2]));
     usageOnly.unshift(hdr);
 
+    // Prepend a header row with the date range for clarity
+    usageOnly.unshift([`Period: ${formatDateYYYYMMDD(start)} to ${formatDateYYYYMMDD(end)}`, '', '']);
+
     // 3) Write values
     const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
       method: 'POST',
