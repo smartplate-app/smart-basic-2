@@ -181,6 +181,7 @@ Deno.serve(async (req) => {
     const rows = [header];
     const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
     const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
+    const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
 
     // Helper for consistent name display (prefer Item entity name)
     const displayName = (key) => beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key; // prefer consistent names
@@ -294,6 +295,7 @@ Deno.serve(async (req) => {
     const hdr = usageOnly.shift();
     usageOnly.sort((a,b) => Number(b[2]) - Number(a[2]));
     usageOnly.unshift(hdr);
+    usageOnly.unshift([`Period: ${formatDateYYYYMMDD(start)} to ${formatDateYYYYMMDD(end)}`, '', '']);
     usageOnly.unshift([`Period: ${formatDateYYYYMMDD(start)} to ${formatDateYYYYMMDD(end)}`, '', '']);
 
     // Prepend a header row with the date range for clarity
