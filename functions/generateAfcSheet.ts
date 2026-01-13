@@ -285,7 +285,7 @@ Deno.serve(async (req) => {
     }
 
     const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
-    return Response.json({ success: true, spreadsheetId, spreadsheetUrl });
+    return Response.json({ success: true, spreadsheetId, spreadsheetUrl, debug: { counts: { beginId: beginning?.id || null, endId: ending?.id || null }, range: { start: startDate, end: endDate } } });
   } catch (error) {
     // Last-resort CSV fallback if anything unexpected happens
     try {
