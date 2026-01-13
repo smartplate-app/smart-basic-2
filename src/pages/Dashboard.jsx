@@ -1324,9 +1324,55 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                     </CardContent>
                   </Card>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardContent>
+                </Card>
+
+                <Card>
+                <CardHeader>
+                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                  {language === 'he' ? 'פירוט שימוש לפי פריט' : 'Per-Item Usage Breakdown'}
+                </CardTitle>
+                </CardHeader>
+                <CardContent>
+                {(!selectedStartCountId || !selectedEndCountId) ? (
+                  <div className={isRTL ? 'text-right text-gray-500' : 'text-left text-gray-500'}>
+                    {language === 'he' ? 'בחר ספירת פתיחה וסיום כדי לראות פירוט לפי פריט' : 'Choose start and end counts to see per-item usage'}
+                  </div>
+                ) : (itemUsageRows.length === 0 ? (
+                  <div className={isRTL ? 'text-right text-gray-500' : 'text-left text-gray-500'}>
+                    {language === 'he' ? 'אין פריטים להצגה' : 'No items to display'}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{language === 'he' ? 'פריט' : 'Item'}</TableHead>
+                          <TableHead className="w-24">{language === 'he' ? 'יחידה' : 'Unit'}</TableHead>
+                          <TableHead className="text-right">{language === 'he' ? 'פתיחה' : 'Begin'}</TableHead>
+                          <TableHead className="text-right">{language === 'he' ? 'קבלות' : 'Receipts'}</TableHead>
+                          <TableHead className="text-right">{language === 'he' ? 'סגירה' : 'End'}</TableHead>
+                          <TableHead className="text-right">{language === 'he' ? 'שימוש' : 'Usage'}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {itemUsageRows.map((r, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell className="whitespace-nowrap">{r.name}</TableCell>
+                            <TableCell className="whitespace-nowrap">{r.unit}</TableCell>
+                            <TableCell className="text-right">{Number(r.b).toLocaleString()}</TableCell>
+                            <TableCell className="text-right">{Number(r.p).toLocaleString()}</TableCell>
+                            <TableCell className="text-right">{Number(r.e).toLocaleString()}</TableCell>
+                            <TableCell className="text-right font-semibold">{Number(r.u).toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ))}
+                </CardContent>
+                </Card>
+                </TabsContent>
           </Tabs>
       </div>
     </div>
