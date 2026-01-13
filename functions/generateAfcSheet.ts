@@ -93,24 +93,21 @@ Deno.serve(async (req) => {
       return d >= start && d <= end;
     });
 
-    // Map item definitions for optional unit conversions
-    const itemById = new Map();
-    (allItems || []).forEach((it) => itemById.set(it.id, it));
-
+    // Purchases aggregation from receipts (key by item id or normalized name)
     const purchasesMap = new Map();
     receiptsInRange.forEach((r) => {
       const vitems = Array.isArray(r.verified_items) ? r.verified_items : [];
       vitems.forEach((it) => {
-        const key = it.item_id || it.item_name || it.item || '—';
-        const name = it.item_name || key;
-        const itemDef = it.item_id ? itemById.get(it.item_id) : null;
-        const unit = it.unit || itemDef?.unit || '';
+        const itemDef = it.item_id ? itemById.get(it.item_id) : (it.item_name ? itemByName.get(normalize(it.item_name)) : null);
+        const baseUnit = it.unit || itemDef?.unit || '';
         const rawQty = Number(it.received_quantity ?? it.certificate_quantity ?? it.ordered_quantity ?? it.quantity ?? 0) || 0;
         let qty = rawQty;
-        // Convert cases to units when units_per_package is known
-        if (unit === 'case' && itemDef?.units_per_package) {
+        if (baseUnit === 'case' && itemDef?.units_per_package) {
           qty = rawQty * Number(itemDef.units_per_package);
         }
+        const key = (itemDef?.id) || it.item_id || normalize(it.item_name || it.item) || '—';
+        const name = it.item_name || itemDef?.name || key;
+        const unit = baseUnit === 'case' && itemDef?.unit ? itemDef.unit : baseUnit;
         const prev = purchasesMap.get(key) || { name, qty: 0, unit };
         prev.qty += qty;
         if (!prev.unit && unit) prev.unit = unit;
