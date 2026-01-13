@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
       const bn = (beginMap.get(b)?.name || purchasesMap.get(b)?.name || endMap.get(b)?.name || '').toLowerCase();
       return an.localeCompare(bn);
     }).forEach((key) => {
-      const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
+      const name = displayName(key);
       const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
       const b = Number(beginMap.get(key)?.qty || 0);
       const p = Number(purchasesMap.get(key)?.qty || 0);
