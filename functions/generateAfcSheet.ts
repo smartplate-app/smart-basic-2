@@ -50,14 +50,25 @@ Deno.serve(async (req) => {
       if (cd <= end) ending = c;
     }
 
-    const toCountMap = (countRec) => {
+    const normalize = (s) => String(s || '').trim().toLowerCase();
+
+    const toCountMap = (countRec, itemById, itemByName) => {
       const map = new Map();
       const items = Array.isArray(countRec?.items) ? countRec.items : [];
       items.forEach((it) => {
-        const key = it.item_id || it.item_name || it.item || '—';
-        const name = it.item_name || key;
-        const qty = Number(it.counted_quantity) || 0;
-        const unit = it.unit || '';
+        const byId = it.item_id && itemById.get(it.item_id);
+        const byName = !byId ? itemByName.get(normalize(it.item_name || it.item)) : null;
+        const itemDef = byId || byName || null;
+        const baseUnit = it.unit || itemDef?.unit || '';
+        const rawQty = Number(it.counted_quantity) || 0;
+        let qty = rawQty;
+        // Convert cases to base units when possible
+        if (baseUnit === 'case' && itemDef?.units_per_package) {
+          qty = rawQty * Number(itemDef.units_per_package);
+        }
+        const key = (itemDef?.id) || it.item_id || normalize(it.item_name || it.item) || '—';
+        const name = it.item_name || itemDef?.name || it.item || key;
+        const unit = baseUnit === 'case' && itemDef?.unit ? itemDef.unit : baseUnit;
         const prev = map.get(key) || { name, qty: 0, unit };
         prev.qty += qty;
         if (!prev.unit && unit) prev.unit = unit;
@@ -66,8 +77,15 @@ Deno.serve(async (req) => {
       return map;
     };
 
-    const beginMap = toCountMap(beginning);
-    const endMap = toCountMap(ending);
+    const itemById = new Map();
+    const itemByName = new Map();
+    (allItems || []).forEach((it) => {
+      itemById.set(it.id, it);
+      itemByName.set((it.name || '').trim().toLowerCase(), it);
+    });
+
+    const beginMap = toCountMap(beginning, itemById, itemByName);
+    const endMap = toCountMap(ending, itemById, itemByName);
 
     // Supply Receipts in range (actual purchases received)
     const receiptsInRange = (allReceipts || []).filter((r) => {
