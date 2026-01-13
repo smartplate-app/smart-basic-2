@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
       const b = Number(beginMap.get(key)?.qty || 0);
       const p = Number(receiptsMap.get(key)?.qty || 0);
       const e = Number(endMap.get(key)?.qty || 0);
-      const u = b + p - e;
+      const u = Math.max(0, b + p - e);
       usageOnly.push([name, unit, u]);
     });
     const hdr = usageOnly.shift();
