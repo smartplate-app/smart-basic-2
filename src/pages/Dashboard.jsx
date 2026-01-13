@@ -369,17 +369,18 @@ export default function DashboardPage() {
 
   const openSheetsApp = (sheetId, browserUrl) => {
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const appUrl = `googlesheets://?id=${sheetId}`;
-    if (isiOS && sheetId) {
+    const webUrl = browserUrl || (sheetId ? `https://docs.google.com/spreadsheets/d/${sheetId}` : null);
+    const appUrl = webUrl ? `googlesheets://${webUrl}` : null;
+    if (isiOS && appUrl) {
       const start = Date.now();
       window.location.href = appUrl;
       setTimeout(() => {
-        if (Date.now() - start < 1500 && browserUrl) {
-          window.open(browserUrl, '_blank');
+        if (Date.now() - start < 1500 && webUrl) {
+          window.open(webUrl, '_blank');
         }
       }, 1200);
-    } else if (browserUrl) {
-      window.open(browserUrl, '_blank');
+    } else if (webUrl) {
+      window.open(webUrl, '_blank');
     }
   };
 
