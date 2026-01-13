@@ -278,8 +278,8 @@ const AppLayout = ({ children, currentPageName }) => {
                   if (isIncognito || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')))) {
                     // do not override incognito/public welcome
                   } else if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-                    console.log("[Layout] Redirecting to Weekly Schedule (LaborCost) page");
-                    window.location.href = createPageUrl("LaborCost");
+                    console.log("[Layout] Redirecting to Dashboard page");
+                    window.location.href = createPageUrl("Dashboard");
                   }
       
       setAuthLoading(false);
