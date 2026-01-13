@@ -84,8 +84,17 @@ Deno.serve(async (req) => {
       itemByName.set((it.name || '').trim().toLowerCase(), it);
     });
 
-    const beginMap = toCountMap(beginning, itemById, itemByName);
+    let beginMap = toCountMap(beginning, itemById, itemByName);
     const endMap = toCountMap(ending, itemById, itemByName);
+
+    // If beginning and ending are the same count, use the previous count for beginning when available
+    if (beginning && ending && beginning.id === ending.id) {
+      const earlier = countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) < new Date(beginning.count_date || beginning.created_date || 0));
+      if (earlier.length > 0) {
+        beginning = earlier[earlier.length - 1];
+        beginMap = toCountMap(beginning, itemById, itemByName);
+      }
+    }
 
     // If beginning and ending refer to the same count, pick previous count for beginning when available
     if (beginning && ending && beginning.id === ending.id) {
