@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -610,6 +611,13 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    {dashboardData && (dashboardData.updated_date || dashboardData.created_date) && (
+                      <div className={`mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        <Badge variant="outline" className="text-xs">
+                          {language === 'he' ? 'עודכן:' : 'Updated:'} {moment(dashboardData.updated_date || dashboardData.created_date).format('YYYY-MM-DD')}
+                        </Badge>
+                      </div>
+                    )}
                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>
                       {language === 'he' ? 'סה״כ מכירות עד עכשיו (כולל מע״מ)' : 'Total sales till now (incl. VAT)'}
                     </Label>
