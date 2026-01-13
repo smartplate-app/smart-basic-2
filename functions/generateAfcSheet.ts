@@ -116,10 +116,10 @@ Deno.serve(async (req) => {
       const bn = (beginMap.get(b)?.name || receiptsMap.get(b)?.name || endMap.get(b)?.name || '').toLowerCase();
       return an.localeCompare(bn);
     }).forEach((key) => {
-      const name = beginMap.get(key)?.name || purchasesMap.get(key)?.name || endMap.get(key)?.name || key;
-      const unit = beginMap.get(key)?.unit || purchasesMap.get(key)?.unit || endMap.get(key)?.unit || '';
+      const name = beginMap.get(key)?.name || receiptsMap.get(key)?.name || endMap.get(key)?.name || key;
+      const unit = beginMap.get(key)?.unit || receiptsMap.get(key)?.unit || endMap.get(key)?.unit || '';
       const b = Number(beginMap.get(key)?.qty || 0);
-      const p = Number(purchasesMap.get(key)?.qty || 0);
+      const p = Number(receiptsMap.get(key)?.qty || 0);
       const e = Number(endMap.get(key)?.qty || 0);
       const u = b + p - e;
       totalBegin += b; totalPurch += p; totalEnd += e; totalUsage += u;
