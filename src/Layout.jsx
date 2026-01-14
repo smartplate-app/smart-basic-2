@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight } from "lucide-react";
+import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Share } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import UserSwitcher from "./components/UserSwitcher";
 import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
@@ -12,6 +12,7 @@ import OfflineNotification from "./components/OfflineNotification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { RefreshCw, WifiOff, Copy, ExternalLink } from "lucide-react";
 
 const AppLayout = ({ children, currentPageName }) => {
@@ -27,6 +28,11 @@ const AppLayout = ({ children, currentPageName }) => {
       const { t, language } = useLanguage();
   const [navSearchTerm, setNavSearchTerm] = useState("");
   const [isIncognito, setIsIncognito] = useState(false);
+  // PWA install (global)
+  const [installPromptEvent, setInstallPromptEvent] = useState(null);
+  const [isPwaInstalled, setIsPwaInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIosGuide, setShowIosGuide] = useState(false);
 
 
 
@@ -48,6 +54,42 @@ const AppLayout = ({ children, currentPageName }) => {
       } catch {}
     })();
   }, []);
+
+  // Global PWA install listeners (iOS guide when no prompt)
+  useEffect(() => {
+    const checkInstalled = () => {
+      const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+      // @ts-ignore - iOS Safari only
+      const iosStandalone = 'standalone' in navigator && navigator.standalone;
+      setIsPwaInstalled(Boolean(standalone || iosStandalone));
+      const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      setIsIOS(Boolean(isiOS));
+    };
+    checkInstalled();
+
+    const onBeforeInstall = (e) => {
+      e.preventDefault();
+      setInstallPromptEvent(e);
+    };
+    const onAppInstalled = () => {
+      setIsPwaInstalled(true);
+      setInstallPromptEvent(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstall);
+    window.addEventListener('appinstalled', onAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+      window.removeEventListener('appinstalled', onAppInstalled);
+    };
+  }, []);
+
+  const handlePwaInstall = async () => {
+    if (!installPromptEvent) return;
+    installPromptEvent.prompt();
+    try { await installPromptEvent.userChoice; } finally { setInstallPromptEvent(null); }
+  };
 
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
   useEffect(() => {
@@ -661,6 +703,31 @@ const AppLayout = ({ children, currentPageName }) => {
             <LanguageSwitcher />
           </div>
 
+          {!isPwaInstalled && (
+            <div className="p-4 border-b border-gray-200">
+              {installPromptEvent ? (
+                <Button
+                  variant="outline"
+                  onClick={handlePwaInstall}
+                  className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                  {language === 'he' ? 'התקן אפליקציה' : 'Install App'}
+                </Button>
+              ) : (
+                isIOS && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowIosGuide(true)}
+                    className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                  >
+                    <Share className="w-4 h-4" />
+                    {language === 'he' ? 'הוסף למסך הבית' : 'Add to Home Screen'}
+                  </Button>
+                )
+              )}
+            </div>
+          )}
+
           {user?.role === 'admin' && (
             <div className="p-4 border-b border-gray-200">
               <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} gap-2`}>
@@ -783,6 +850,28 @@ const AppLayout = ({ children, currentPageName }) => {
 
                       {/* Offline notification for data-sensitive pages */}
                       <OfflineNotification pageName={currentPageName} />
+
+                      <Dialog open={showIosGuide} onOpenChange={setShowIosGuide}>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>{language === 'he' ? 'הוספת האפליקציה למסך הבית' : 'Add the app to your Home Screen'}</DialogTitle>
+                            <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
+                              {language === 'he' ? 'באייפון/iPad אין כפתור התקנה אוטומטי. עקבו אחרי השלבים:' : 'On iPhone/iPad there is no automatic install prompt. Follow these steps:'}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className={`space-y-3 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                            <div className="flex items-center gap-3">
+                              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png" alt="App Icon" className="h-10 w-10 rounded-lg border" />
+                              <span className="text-gray-600">{language === 'he' ? 'האייקון שיופיע במסך הבית' : 'This is the icon that will appear on your home screen.'}</span>
+                            </div>
+                            <ol className="list-decimal ml-5 space-y-2 rtl:mr-5 rtl:ml-0">
+                              <li>{language === 'he' ? 'לחצו על כפתור השיתוף בספארי (ריבוע עם חץ למעלה).' : 'Tap the Share button in Safari (square with an up arrow).'}</li>
+                              <li>{language === 'he' ? 'גללו ובחרו "הוסף למסך הבית".' : 'Scroll and choose "Add to Home Screen".'}</li>
+                              <li>{language === 'he' ? 'אשרו עם "הוסף".' : 'Confirm by tapping "Add".'}</li>
+                            </ol>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
 
       </div>
     </div>
