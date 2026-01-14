@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet, Download } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet, Download, Share } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
@@ -58,6 +59,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   // PWA install prompt
   const [installPromptEvent, setInstallPromptEvent] = useState(null);
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIosGuide, setShowIosGuide] = useState(false);
 
   // Projection (sales)
   const [projectedMonthlySales, setProjectedMonthlySales] = useState(0);
@@ -78,6 +81,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
       const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
       const iosStandalone = 'standalone' in navigator && navigator.standalone;
       setIsPwaInstalled(Boolean(standalone || iosStandalone));
+      const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      setIsIOS(Boolean(isiOS));
     };
     checkInstalled();
 
@@ -614,15 +619,28 @@ const [monthReceipts, setMonthReceipts] = useState([]);
             </p>
           </div>
           <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            {!isPwaInstalled && installPromptEvent && (
-              <Button
-                variant="outline"
-                onClick={handlePwaInstall}
-                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-              >
-                <Download className="w-4 h-4" />
-                {language === 'he' ? 'התקן אפליקציה' : 'Install App'}
-              </Button>
+            {!isPwaInstalled && (
+              installPromptEvent ? (
+                <Button
+                  variant="outline"
+                  onClick={handlePwaInstall}
+                  className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                  <Download className="w-4 h-4" />
+                  {language === 'he' ? 'התקן אפליקציה' : 'Install App'}
+                </Button>
+              ) : (
+                isIOS && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowIosGuide(true)}
+                    className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                  >
+                    <Share className="w-4 h-4" />
+                    {language === 'he' ? 'הוסף למסך הבית' : 'Add to Home Screen'}
+                  </Button>
+                )
+              )
             )}
             <select
               value={selectedMonth}
@@ -651,6 +669,28 @@ const [monthReceipts, setMonthReceipts] = useState([]);
             )}
           </div>
         </div>
+
+        <Dialog open={showIosGuide} onOpenChange={setShowIosGuide}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{language === 'he' ? 'הוספת האפליקציה למסך הבית' : 'Add the app to your Home Screen'}</DialogTitle>
+              <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
+                {language === 'he' ? 'באייפון/iPad אין כפתור התקנה אוטומטי. עקבו אחרי השלבים:' : 'On iPhone/iPad there is no automatic install prompt. Follow these steps:'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className={`space-y-3 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="flex items-center gap-3">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png" alt="App Icon" className="h-10 w-10 rounded-lg border" />
+                <span className="text-gray-600">{language === 'he' ? 'האייקון שיופיע במסך הבית' : 'This is the icon that will appear on your home screen.'}</span>
+              </div>
+              <ol className="list-decimal ml-5 space-y-2 rtl:mr-5 rtl:ml-0">
+                <li>{language === 'he' ? 'לחצו על כפתור השיתוף בספארי (ריבוע עם חץ למעלה).' : 'Tap the Share button in Safari (square with an up arrow).'}</li>
+                <li>{language === 'he' ? 'גללו ובחרו "הוסף למסך הבית".' : 'Scroll and choose "Add to Home Screen".'}</li>
+                <li>{language === 'he' ? 'אשרו עם "הוסף".' : 'Confirm by tapping "Add".'}</li>
+              </ol>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 max-w-4xl">
