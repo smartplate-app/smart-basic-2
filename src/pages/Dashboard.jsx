@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet } from "lucide-react";
+import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet, Download } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
@@ -55,6 +55,10 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   const [lastAfcSheetId, setLastAfcSheetId] = useState(null);
   const [lastAfcSheetUrl, setLastAfcSheetUrl] = useState(null);
 
+  // PWA install prompt
+  const [installPromptEvent, setInstallPromptEvent] = useState(null);
+  const [isPwaInstalled, setIsPwaInstalled] = useState(false);
+
   // Projection (sales)
   const [projectedMonthlySales, setProjectedMonthlySales] = useState(0);
   const [projectionDaysElapsed, setProjectionDaysElapsed] = useState(0);
@@ -67,6 +71,43 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   useEffect(() => {
     loadData();
   }, [selectedMonth]);
+
+  // Setup PWA install prompt listeners
+  useEffect(() => {
+    const checkInstalled = () => {
+      const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+      const iosStandalone = 'standalone' in navigator && navigator.standalone;
+      setIsPwaInstalled(Boolean(standalone || iosStandalone));
+    };
+    checkInstalled();
+
+    const onBeforeInstall = (e) => {
+      e.preventDefault();
+      setInstallPromptEvent(e);
+    };
+    const onAppInstalled = () => {
+      setIsPwaInstalled(true);
+      setInstallPromptEvent(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstall);
+    window.addEventListener('appinstalled', onAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+      window.removeEventListener('appinstalled', onAppInstalled);
+    };
+  }, []);
+
+  const handlePwaInstall = async () => {
+    if (!installPromptEvent) return;
+    installPromptEvent.prompt();
+    try {
+      await installPromptEvent.userChoice;
+    } finally {
+      setInstallPromptEvent(null);
+    }
+  };
 
   const loadData = async (retryCount = 0) => {
     try {
@@ -573,6 +614,16 @@ const [monthReceipts, setMonthReceipts] = useState([]);
             </p>
           </div>
           <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            {!isPwaInstalled && installPromptEvent && (
+              <Button
+                variant="outline"
+                onClick={handlePwaInstall}
+                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+              >
+                <Download className="w-4 h-4" />
+                {language === 'he' ? 'התקן אפליקציה' : 'Install App'}
+              </Button>
+            )}
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
