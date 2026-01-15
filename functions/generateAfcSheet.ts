@@ -18,6 +18,8 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const startDate = body.startDate;
     const endDate = body.endDate;
+    const startCountId = body.startCountId || body.beginCountId || null;
+    const endCountId = body.endCountId || body.finishCountId || null;
 
     if (!startDate || !endDate) {
       return Response.json({ error: 'startDate and endDate are required (YYYY-MM-DD)' }, { status: 400 });
@@ -64,23 +66,28 @@ Deno.serve(async (req) => {
       return ad - bd;
     });
 
-    // Find beginning (latest count <= start) and ending (prefer earliest >= end; else latest <= end)
+    // Find beginning and ending counts: use explicit IDs if provided; otherwise derive from dates
     let beginning = null;
     let ending = null;
-    for (const c of countsSorted) {
-      const cd = new Date(c.count_date || c.created_date || 0);
-      if (cd <= start) beginning = c;
-    }
-    // Ending: first count on/after end; fallback to latest on/before end
-    ending = countsSorted.find(c => {
-      const cd = new Date(c.count_date || c.created_date || 0);
-      return cd >= end;
-    }) || countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) <= end).pop() || null;
-    // Ensure distinct counts when possible
-    if (beginning && ending && beginning.id === ending.id) {
-      const idx = countsSorted.findIndex(c => c.id === beginning.id);
-      if (idx >= 0 && idx + 1 < countsSorted.length) {
-        ending = countsSorted[idx + 1];
+    if (startCountId || endCountId) {
+      beginning = (allCounts || []).find(c => c.id === startCountId) || null;
+      ending = (allCounts || []).find(c => c.id === endCountId) || null;
+    } else {
+      for (const c of countsSorted) {
+        const cd = new Date(c.count_date || c.created_date || 0);
+        if (cd <= start) beginning = c;
+      }
+      // Ending: first count on/after end; fallback to latest on/before end
+      ending = countsSorted.find(c => {
+        const cd = new Date(c.count_date || c.created_date || 0);
+        return cd >= end;
+      }) || countsSorted.filter(c => new Date(c.count_date || c.created_date || 0) <= end).pop() || null;
+      // Ensure distinct counts when possible
+      if (beginning && ending && beginning.id === ending.id) {
+        const idx = countsSorted.findIndex(c => c.id === beginning.id);
+        if (idx >= 0 && idx + 1 < countsSorted.length) {
+          ending = countsSorted[idx + 1];
+        }
       }
     }
 

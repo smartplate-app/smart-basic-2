@@ -498,7 +498,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
     try {
       const startDate = moment(selectedMonth, 'YYYY-MM').startOf('month').format('YYYY-MM-DD');
       const endDate = moment(selectedMonth, 'YYYY-MM').endOf('month').format('YYYY-MM-DD');
-      const { data } = await base44.functions.invoke('generateAfcSheet', { startDate, endDate });
+      const { data } = await base44.functions.invoke('generateAfcSheet', { startDate, endDate, startCountId: selectedStartCountId, endCountId: selectedEndCountId });
       if (data?.spreadsheetId || data?.spreadsheetUrl) {
         setLastAfcSheetId(data.spreadsheetId || null);
         setLastAfcSheetUrl(data.spreadsheetUrl || null);
