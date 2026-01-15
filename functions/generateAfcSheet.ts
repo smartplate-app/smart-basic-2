@@ -28,9 +28,9 @@ Deno.serve(async (req) => {
     const end = new Date(endDate);
 
     // Load inventory counts and orders for this user
-    const [allCounts, allReceipts] = await Promise.all([
+    const [allCounts, allOrders] = await Promise.all([
       base44.entities.InventoryCount.filter({ created_by: effectiveEmail }),
-      base44.entities.SupplyReceipt.filter({ created_by: effectiveEmail }),
+      base44.entities.Order.filter({ created_by: effectiveEmail }),
     ]);
 
     // Canonicalize item names and unify keys across counts and receipts
@@ -52,8 +52,8 @@ Deno.serve(async (req) => {
       const items = Array.isArray(c.items) ? c.items : [];
       items.forEach(it => registerAlias(it.item_name || it.item, it.item_id));
     });
-    (allReceipts || []).forEach(r => {
-      const items = Array.isArray(r.verified_items) ? r.verified_items : [];
+    (allOrders || []).forEach(o => {
+      const items = Array.isArray(o.items) ? o.items : [];
       items.forEach(it => registerAlias(it.item_name || it.item, it.item_id));
     });
 
@@ -106,35 +106,31 @@ Deno.serve(async (req) => {
     const beginMap = toCountMap(beginning);
     const endMap = toCountMap(ending);
 
-    // Supply receipts in range (purchases actually received)
-    const receiptsInRange = (allReceipts || []).filter((r) => {
-      const d = new Date(r.received_date || r.created_date || 0);
+    // Orders in range (purchases recorded as orders, like GUI)
+    const ordersInRange = (allOrders || []).filter((o) => {
+      const d = new Date(o.delivery_date || o.created_date || 0);
       return d >= start && d <= end;
     });
-    const receiptsMap = new Map();
-    receiptsInRange.forEach((r) => {
-      const items = Array.isArray(r.verified_items) ? r.verified_items : [];
+    const ordersMap = new Map();
+    ordersInRange.forEach((o) => {
+      const items = Array.isArray(o.items) ? o.items : [];
       items.forEach((it) => {
         const rawName = it.item_name || it.item || '—';
         const cn = canonicalizeName(rawName);
         const preferredKey = nameAlias.get(cn);
         const key = preferredKey || it.item_id || cn;
         const name = rawName;
-        const qty = Number(it.received_quantity ?? it.certificate_quantity ?? it.ordered_quantity ?? 0) || 0;
+        const qty = Number(it.quantity || 0) || 0;
         const unit = it.unit || '';
-        const prev = receiptsMap.get(key) || { name, qty: 0, unit };
+        const prev = ordersMap.get(key) || { name, qty: 0, unit };
         prev.qty += qty;
         if (!prev.unit && unit) prev.unit = unit;
-        receiptsMap.set(key, prev);
+        ordersMap.set(key, prev);
       });
     });
 
-    // Union of all item keys
-    const keys = new Set([
-      ...Array.from(beginMap.keys()),
-      ...Array.from(endMap.keys()),
-      ...Array.from(receiptsMap.keys()),
-    ]);
+    // Use only items present in both begin and end counts (align with GUI)
+    const keys = new Set(Array.from(beginMap.keys()).filter((k) => endMap.has(k)));
 
     // Build rows
     const header = ['Item', 'Unit', 'Beginning Qty', 'Receipts Qty', 'Ending Qty', 'Usage Qty'];
@@ -142,8 +138,8 @@ Deno.serve(async (req) => {
     let totalBegin = 0, totalPurch = 0, totalEnd = 0, totalUsage = 0;
 
     Array.from(keys).sort((a, b) => {
-      const an = (beginMap.get(a)?.name || receiptsMap.get(a)?.name || endMap.get(a)?.name || '').toLowerCase();
-      const bn = (beginMap.get(b)?.name || receiptsMap.get(b)?.name || endMap.get(b)?.name || '').toLowerCase();
+      const an = (beginMap.get(a)?.name || ordersMap.get(a)?.name || endMap.get(a)?.name || '').toLowerCase();
+      const bn = (beginMap.get(b)?.name || ordersMap.get(b)?.name || endMap.get(b)?.name || '').toLowerCase();
       return an.localeCompare(bn);
     }).forEach((key) => {
       const name = beginMap.get(key)?.name || receiptsMap.get(key)?.name || endMap.get(key)?.name || key;
@@ -163,10 +159,10 @@ Deno.serve(async (req) => {
     const buildUsageRows = () => {
       const uRows = [['Item', 'Unit', 'Usage Qty']];
       Array.from(keys).forEach((key) => {
-        const name = beginMap.get(key)?.name || receiptsMap.get(key)?.name || endMap.get(key)?.name || key;
-        const unit = beginMap.get(key)?.unit || receiptsMap.get(key)?.unit || endMap.get(key)?.unit || '';
+        const name = beginMap.get(key)?.name || ordersMap.get(key)?.name || endMap.get(key)?.name || key;
+        const unit = beginMap.get(key)?.unit || ordersMap.get(key)?.unit || endMap.get(key)?.unit || '';
         const b = Number(beginMap.get(key)?.qty || 0);
-        const p = Number(receiptsMap.get(key)?.qty || 0);
+        const p = Number(ordersMap.get(key)?.qty || 0);
         const e = Number(endMap.get(key)?.qty || 0);
         const u = Math.max(0, b + p - e);
         uRows.push([name, unit, u]);
@@ -238,10 +234,10 @@ Deno.serve(async (req) => {
     // 2) Build Usage rows (Item, Unit, Usage)
     const usageOnly = [['Item', 'Unit', 'Usage']];
     Array.from(keys).forEach((key) => {
-      const name = beginMap.get(key)?.name || receiptsMap.get(key)?.name || endMap.get(key)?.name || key;
-      const unit = beginMap.get(key)?.unit || receiptsMap.get(key)?.unit || endMap.get(key)?.unit || '';
+      const name = beginMap.get(key)?.name || ordersMap.get(key)?.name || endMap.get(key)?.name || key;
+      const unit = beginMap.get(key)?.unit || ordersMap.get(key)?.unit || endMap.get(key)?.unit || '';
       const b = Number(beginMap.get(key)?.qty || 0);
-      const p = Number(receiptsMap.get(key)?.qty || 0);
+      const p = Number(ordersMap.get(key)?.qty || 0);
       const e = Number(endMap.get(key)?.qty || 0);
       const u = Math.max(0, b + p - e);
       usageOnly.push([name, unit, u]);
