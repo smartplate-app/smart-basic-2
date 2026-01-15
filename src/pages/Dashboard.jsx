@@ -789,6 +789,23 @@ const [monthReceipts, setMonthReceipts] = useState([]);
               </CardContent>
             </Card>
 
+            {/* Daily Average (MTD) */}
+            <Card>
+              <CardContent className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className="text-sm font-semibold text-gray-700">
+                  {language === 'he' ? 'ממוצע יומי (עד כה)' : 'Average Daily Sales (MTD)'}
+                </div>
+                <div className="text-2xl font-extrabold text-gray-900 mt-1">
+                  {formatCurrency(projectionAvgPerDay)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {language === 'he'
+                    ? `חושב לפי ${projectionDaysElapsed} ימים`
+                    : `Computed over ${projectionDaysElapsed} days`}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Sales and Tips Input */}
             <Card>
               <CardHeader className={`flex flex-row items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
