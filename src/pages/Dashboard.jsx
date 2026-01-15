@@ -36,6 +36,11 @@ export default function DashboardPage() {
   const [foodGoalPercent, setFoodGoalPercent] = useState(30);
   const [managementSalary, setManagementSalary] = useState(0);
 
+  // Footfall prediction fields
+  const [dailyCustomers, setDailyCustomers] = useState(0);
+  const [avgPerPerson, setAvgPerPerson] = useState(0);
+  const [isKosher, setIsKosher] = useState(false);
+
   // Actual Performance fields
   const [actualSales, setActualSales] = useState(0);
   const [calculatedLaborCost, setCalculatedLaborCost] = useState(0);
@@ -574,6 +579,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   if (!user) return null;
 
   // Goal calculations
+  const operatingDays = isKosher ? 26 : 31;
+  const footfallMonthlyPrediction = (dailyCustomers || 0) * (avgPerPerson || 0) * operatingDays;
   const predictedSalesExVAT = predictedSales / 1.17;
   const combinedGoalPercent = laborGoalPercent + foodGoalPercent;
   const laborGoalAmount = predictedSalesExVAT * (laborGoalPercent / 100);
@@ -1055,6 +1062,47 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                   <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {language === 'he' ? 'ללא מע"מ:' : 'Excl. VAT:'} {formatCurrency(predictedSalesExVAT)}
                   </p>
+                </div>
+
+                {/* Footfall-based prediction */}
+                <div className="rounded-lg border p-4 bg-blue-50">
+                  <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Label className="font-semibold">{language === 'he' ? 'חישוב לפי לקוחות' : 'Footfall-based Prediction'}</Label>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Switch checked={isKosher} onCheckedChange={setIsKosher} />
+                      <span className="text-sm text-gray-700">{language === 'he' ? 'כשר (סגור שבת)' : 'Kosher (closed Sat)'}</span>
+                    </div>
+                  </div>
+                  <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                    <div className="space-y-1">
+                      <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                        {language === 'he' ? 'לקוחות ביום' : 'Customers per day'}
+                      </Label>
+                      <Input type="number" value={dailyCustomers} onChange={(e) => setDailyCustomers(parseFloat(e.target.value) || 0)} placeholder="0" className={isRTL ? 'text-right' : 'text-left'} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                        {language === 'he' ? 'ממוצע לסועד (₪)' : 'Avg spend per person (₪)'}
+                      </Label>
+                      <Input type="number" value={avgPerPerson} onChange={(e) => setAvgPerPerson(parseFloat(e.target.value) || 0)} placeholder="0" className={isRTL ? 'text-right' : 'text-left'} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                        {language === 'he' ? 'ימי פעולה בחודש' : 'Operating days this month'}
+                      </Label>
+                      <Input type="number" value={operatingDays} readOnly className={`bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} />
+                      <p className={`text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? (isKosher ? 'כשר: 26 ימים' : 'לא כשר: 31 ימים') : (isKosher ? 'Kosher: 26 days' : 'Non-kosher: 31 days')}</p>
+                    </div>
+                  </div>
+                  <div className={`mt-3 flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div>
+                      <div className="text-sm text-gray-600">{language === 'he' ? 'תחזית חודשית' : 'Monthly prediction'}</div>
+                      <div className="text-xl font-bold">{formatCurrency(footfallMonthlyPrediction)}</div>
+                    </div>
+                    <Button variant="outline" onClick={() => setPredictedSales(Math.round(footfallMonthlyPrediction))} className={isRTL ? 'flex-row-reverse' : ''}>
+                      {language === 'he' ? 'החל כיעד מכירות' : 'Use as Predicted Sales'}
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Goal Percentages */}
