@@ -116,16 +116,39 @@ const [monthReceipts, setMonthReceipts] = useState([]);
 
   const loadData = async (retryCount = 0) => {
     try {
-      setLoading(true);
       setError(null);
-      
+
       // Add delay for retries
       if (retryCount > 0) {
         await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
       }
-      
+
       const currentUser = await base44.auth.me();
       setUser(currentUser);
+
+      // Bootstrap fast render from cache (especially helpful when installed as PWA)
+      const cacheKey = `dashboard_cache_${currentUser.email || 'me'}_${selectedMonth}`;
+      const cached = (() => { try { return JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch { return null; } })();
+      if (cached) {
+        setDashboardData(cached.dashboardData || null);
+        setPredictedSales(cached.predictedSales || 0);
+        setLaborGoalPercent(cached.laborGoalPercent ?? 25);
+        setFoodGoalPercent(cached.foodGoalPercent ?? 30);
+        setManagementSalary(cached.managementSalary || 0);
+        setActualSales(cached.actualSales || 0);
+        setTotalTips(cached.totalTips || 0);
+        setManualLaborCost(cached.manualLaborCost || 0);
+        setUseManualLabor(Boolean(cached.useManualLabor));
+        setCalculatedLaborCost(cached.calculatedLaborCost || 0);
+        setCalculatedFoodCost(cached.calculatedFoodCost || 0);
+        setPredictedLaborToDate(cached.predictedLaborToDate || 0);
+        setPredictedSalesToDate(cached.predictedSalesToDate || 0);
+        setPredictedMonthlyLabor(cached.predictedMonthlyLabor || 0);
+        setHasScheduleData(Boolean(cached.hasScheduleData));
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
 
       // Use controlled user's email if admin is controlling; otherwise own
       let workingEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
@@ -302,6 +325,29 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         return d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate);
       });
       setMonthOrders(filteredOrders);
+
+      // Save lightweight cache snapshot for fast next startup
+      try {
+        const snapshot = {
+          dashboardData: existingData || null,
+          predictedSales,
+          laborGoalPercent,
+          foodGoalPercent,
+          managementSalary,
+          actualSales,
+          totalTips,
+          manualLaborCost,
+          useManualLabor,
+          calculatedLaborCost: Math.round(mtdLabor),
+          calculatedFoodCost: adjustedFoodCost,
+          predictedLaborToDate,
+          predictedSalesToDate,
+          predictedMonthlyLabor,
+          hasScheduleData
+        };
+        localStorage.setItem(`dashboard_cache_${workingEmail}_${selectedMonth}`, JSON.stringify(snapshot));
+      } catch (_) {}
+
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
