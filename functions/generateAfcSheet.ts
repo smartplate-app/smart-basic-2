@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     const keys = new Set(Array.from(beginMap.keys()).filter((k) => endMap.has(k)));
 
     // Build rows
-    const header = ['Item', 'Unit', 'Beginning Qty', 'Receipts Qty', 'Ending Qty', 'Usage Qty'];
+    const header = ['Item', 'Unit', 'Beginning Qty', 'Orders Qty', 'Ending Qty', 'Usage Qty'];
     const rows = [header];
     let totalBegin = 0, totalPurch = 0, totalEnd = 0, totalUsage = 0;
 
@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
     const buildSummaryRows = () => ([
       ['Metric', 'Value'],
       ['Beginning Qty', totalBegin],
-      ['Receipts Qty', totalPurch],
+      ['Orders Qty', totalPurch],
       ['Ending Qty', totalEnd],
       ['Usage Qty', totalUsage],
     ]);
