@@ -74,6 +74,7 @@ const AppLayout = ({ children, currentPageName }) => {
     const onAppInstalled = () => {
       setIsPwaInstalled(true);
       setInstallPromptEvent(null);
+      try { localStorage.setItem('b44_installed', '1'); } catch {}
     };
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
@@ -83,6 +84,19 @@ const AppLayout = ({ children, currentPageName }) => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstall);
       window.removeEventListener('appinstalled', onAppInstalled);
     };
+  }, []);
+
+  // Fast boot: hydrate user from cache to skip initial loader (especially for PWA)
+  useEffect(() => {
+    if (user) return;
+    try {
+      const s = localStorage.getItem('b44_user_cache');
+      if (s) {
+        const cached = JSON.parse(s);
+        setUser(cached);
+        setAuthLoading(false);
+      }
+    } catch {}
   }, []);
 
   const handlePwaInstall = async () => {
@@ -169,7 +183,10 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const loadAuth = async (attemptNumber = 0) => {
         try {
-          setAuthLoading(true);
+          const fastBoot = (isPwaInstalled || isIOS || localStorage.getItem('b44_installed') === '1') && localStorage.getItem('b44_user_cache');
+          if (!fastBoot) {
+            setAuthLoading(true);
+          }
           setError(null);
           setRetryCount(attemptNumber);
 
@@ -184,6 +201,7 @@ const AppLayout = ({ children, currentPageName }) => {
           let currentUser = await base44.auth.me();
 
           setUser(currentUser);
+                  try { localStorage.setItem('b44_user_cache', JSON.stringify(currentUser)); } catch {}
                   setError(null);
                   setRetryCount(0);
 
