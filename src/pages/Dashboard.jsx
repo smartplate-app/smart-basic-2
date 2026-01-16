@@ -76,6 +76,10 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   const [useManualLabor, setUseManualLabor] = useState(false);
   const [manualLaborCost, setManualLaborCost] = useState(0);
 
+  // Category scan (Sales BI image)
+  const [categoryScanLoading, setCategoryScanLoading] = useState(false);
+  const [categoryChart, setCategoryChart] = useState([]);
+
   useEffect(() => {
     loadData();
   }, [selectedMonth]);
@@ -520,6 +524,47 @@ const [monthReceipts, setMonthReceipts] = useState([]);
       alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
     } catch (e) {
       alert(language === 'he' ? 'כשל ביצירת הדוח' : 'Failed to generate sheet');
+    }
+  };
+
+  // Upload & parse BI category image/pdf -> build percent-of-total chart
+  const handleCategoryImageChange = async (file) => {
+    setCategoryScanLoading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const json_schema = {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            category: { type: 'string' },
+            sales: { type: 'number' },
+            percentage: { type: 'number' }
+          },
+          required: ['category']
+        }
+      };
+      const res = await base44.integrations.Core.ExtractDataFromUploadedFile({ file_url, json_schema });
+      if (res.status !== 'success' || !res.output) {
+        throw new Error(res.details || 'Extraction failed');
+      }
+      const arr = Array.isArray(res.output) ? res.output : [];
+      const normalized = arr.map((r) => ({
+        name: r.category || r.name || r.Category || '',
+        sales: Number(r.sales ?? r.amount ?? r.Sales ?? 0),
+        percentage: (r.percentage != null) ? Number(r.percentage) : null
+      })).filter(x => x.name);
+      const total = normalized.reduce((s, x) => s + (isFinite(x.sales) ? x.sales : 0), 0);
+      const withPerc = normalized.map((x) => ({
+        name: x.name,
+        value: (x.percentage != null) ? x.percentage : (total > 0 ? (x.sales / total) * 100 : 0)
+      }));
+      setCategoryChart(withPerc);
+    } catch (err) {
+      console.error('Category scan failed:', err);
+      alert(language === 'he' ? 'נכשלה קריאת הדוח. נסו תמונה ברורה או PDF.' : 'Failed to read the report. Try a clear image or PDF.');
+    } finally {
+      setCategoryScanLoading(false);
     }
   };
 
