@@ -1031,56 +1031,61 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {(calculatedLaborCost > 0 || calculatedFoodCost > 0) ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ResponsiveContainer width="100%" height={250}>
+            ...
+              </CardContent>
+            </Card>
+
+            {/* Category Report (Image/PDF → Percent of Total) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                  {language === 'he' ? 'דוח קטגוריות (מתמונה/‏PDF)' : 'Category Report (from Image/PDF)'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleCategoryImageChange(e.target.files[0]);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                  {categoryScanLoading && <Loader className="w-4 h-4 animate-spin text-blue-600" />}
+                </div>
+
+                {categoryChart.length > 0 ? (
+                  <div className="mt-6">
+                    <ResponsiveContainer width="100%" height={260}>
                       <PieChart>
                         <Pie
-                          data={costBreakdownData}
+                          data={categoryChart}
+                          dataKey="value"
+                          nameKey="name"
                           cx="50%"
                           cy="50%"
-                          labelLine={false}
-                          label={(entry) => `${entry.value > 0 ? formatCurrency(entry.value) : ''}`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
+                          outerRadius={90}
+                          label={(entry) => `${entry.name}: ${entry.value.toFixed(1)}%`}
                         >
-                          {costBreakdownData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          {categoryChart.map((_, idx) => (
+                            <Cell key={idx} fill={["#1f2937","#6b7280","#0ea5e9","#22c55e","#f59e0b","#ef4444","#8b5cf6","#14b8a6","#f97316","#a3e635"][idx % 10]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value) => formatCurrency(value)} />
+                        <Tooltip formatter={(v) => `${Number(v).toFixed(1)}%`} />
                       </PieChart>
                     </ResponsiveContainer>
-                    <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      <div className={`flex justify-between items-center p-3 bg-gray-100 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-gray-600">{language === 'he' ? 'עלות עבודה' : 'Labor Cost'}:</span>
-                        <div className={isRTL ? 'text-left' : 'text-right'}>
-                          <span className="font-bold text-gray-900">{formatCurrency(effectiveLaborCost)}</span>
-                          <span className="text-sm text-gray-500 mr-2 rtl:ml-2 rtl:mr-0">({actualLaborPercent.toFixed(1)}%)</span>
-                        </div>
-                      </div>
-                      <div className={`flex justify-between items-center p-3 bg-gray-100 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-gray-600">{language === 'he' ? 'עלות מזון' : 'Food Cost'}:</span>
-                        <div className={isRTL ? 'text-left' : 'text-right'}>
-                          <span className="font-bold text-gray-700">{formatCurrency(calculatedFoodCost)}</span>
-                          <span className="text-sm text-gray-500 mr-2 rtl:ml-2 rtl:mr-0">({actualFoodPercent.toFixed(1)}%)</span>
-                        </div>
-                      </div>
-                      <div className={`flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <span className="font-semibold">{language === 'he' ? 'סה"כ עלויות' : 'Total Costs'}:</span>
-                        <span className="font-bold text-lg text-blue-700">{formatCurrency(effectiveLaborCost + calculatedFoodCost)}</span>
-                      </div>
-                    </div>
                   </div>
                 ) : (
-                  <div className="h-[200px] flex items-center justify-center text-gray-400">
-                    <p>{language === 'he' ? 'אין נתונים להצגה' : 'No data to display'}</p>
-                  </div>
+                  <p className={`text-sm text-gray-500 mt-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {language === 'he' ? 'העלה צילום/‏PDF של דוח קטגוריות כדי לראות פילוח באחוזים' : 'Upload a BI category report image/PDF to see percent-of-total breakdown.'}
+                  </p>
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
 
           {/* Goal Setting Tab */}
           <TabsContent value="goals" className="space-y-6">
