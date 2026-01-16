@@ -286,6 +286,21 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
     return null;
   };
 
+  const matchGuideFromText = (text) => {
+    const msg = (text || '').toLowerCase();
+    const phrases = [
+      // Hebrew
+      'איך מקבלים חשבונית','איך מקבלים חשבוניות','איך לקבל חשבוניות','איך לקבל חשבונית',
+      'סרוק חשבונית','סריקת חשבונית','סריקת חשבוניות','קבלת חשבוניות','קבלת חשבונית',
+      'קליטת אספקה','לקלוט אספקה','קבלת סחורה','איך לקבל סחורה','איך מקבלים סחורה',
+      'תעודת משלוח','תעודות משלוח',
+      // English
+      'invoice','invoices','scan invoice','scanning invoice','receive supply','supply receipt','delivery note','delivery notes'
+    ];
+    if (phrases.some(p => msg.includes(p))) return 'receive_supply';
+    return null;
+  };
+
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{ role: 'assistant', content: t.welcome }]);
@@ -336,25 +351,40 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
         return;
       }
 
+      const directTopic = matchGuideFromText(userMessage);
+      if (directTopic) {
+        const guide = (appGuide[language] || appGuide.en)[directTopic];
+        if (guide) {
+          const pageUrl = createPageUrl(guide.link);
+          setMessages(prev => [...prev, { role: 'assistant', content: `📖 ${guide.title}\n\n${guide.steps}`, link: { url: pageUrl, label: t.goToPage } }]);
+          setLoading(false);
+          return;
+        }
+      }
+
       const guideTopics = Object.keys(appGuide[language] || appGuide.en);
       
       // Use LLM to understand intent
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this user message and determine the intent.
+        prompt: `אתה מסייע למשתמשים בעברית (והבנה באנגלית). נתח את הודעת המשתמש וקבע כוונה.
 
-User message: "${userMessage}"
+      הודעת משתמש: "${userMessage}"
 
-Available help topics: ${guideTopics.join(', ')}
-${isSupplierPage ? `Available suppliers: ${suppliers?.map(s => s.name).join(', ') || 'None'}` : ''}
+      נושאי עזרה זמינים: ${guideTopics.join(', ')}
+      ${isSupplierPage ? `ספקים זמינים: ${suppliers?.map(s => s.name).join(', ') || 'אין'}` : ''}
 
-Determine if the user wants:
-1. Help/question about how to use the app (action: "help", topic: one of the available topics)
-2. ${isSupplierPage ? 'Add a supplier (action: "add_supplier", extract: name, phone, email, contact_person)' : ''}
-3. ${isSupplierPage ? 'Add an item to a supplier (action: "add_item", extract: item_name, supplier_name, catalog_number, unit, price)' : ''}
-4. Get a numeric metric summary (action: "metric", metric: one of ["labor_cost_mtd","food_cost_mtd","combined_cost_mtd","labor_percent","food_percent"], month: optional YYYY-MM)
-5. Unknown request (action: "unknown")
+      כללים חשובים לקליטת אספקה/חשבוניות:
+      - אם ההודעה כוללת מילים כמו: "חשבונית", "חשבוניות", "קבלת סחורה", "קליטת אספקה", "תעודת משלוח", "Delivery Note", "Supply Receipt", "Invoice" → בחר action="help" ו-topic="receive_supply".
+      - אל תפנה לייבוא אקסל עבור בקשות "חשבוניות".
 
-Return JSON with action and relevant data.`,
+      אפשרויות פעולה:
+      1) עזרה/שאלה על שימוש (action: "help", topic: אחד מהנושאים)
+      2) ${isSupplierPage ? 'הוספת ספק (action: "add_supplier", extract: name, phone, email, contact_person)' : ''}
+      3) ${isSupplierPage ? 'הוספת פריט לספק (action: "add_item", extract: item_name, supplier_name, catalog_number, unit, price)' : ''}
+      4) תקציר מספרי (action: "metric", metric: אחד מ-["labor_cost_mtd","food_cost_mtd","combined_cost_mtd","labor_percent","food_percent"], month: אופציונלי YYYY-MM)
+      5) לא ידוע (action: "unknown")
+
+      החזר JSON בלבד עם action ושדות רלוונטיים.`,
         response_json_schema: {
           type: "object",
           properties: {
