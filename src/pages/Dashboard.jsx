@@ -561,10 +561,11 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         required: ['rows']
       };
       const res = await base44.integrations.Core.ExtractDataFromUploadedFile({ file_url, json_schema });
-      if (res.status !== 'success' || !res.output) {
-        throw new Error(res.details || 'Extraction failed');
+      let extracted = null;
+      if (res.status === 'success' && res.output) {
+        extracted = res.output;
       }
-      const arr = Array.isArray(res.output) ? res.output : (Array.isArray(res.output?.rows) ? res.output.rows : []);
+      const arr = Array.isArray(extracted) ? extracted : (Array.isArray(extracted?.rows) ? extracted.rows : []);
       const parseNumber = (v) => {
         if (typeof v === 'number' && isFinite(v)) return v;
         if (v == null) return 0;
@@ -595,6 +596,51 @@ const [monthReceipts, setMonthReceipts] = useState([]);
           name: x.name,
           value: (x.percentage != null && isFinite(x.percentage)) ? x.percentage : (total > 0 ? (x.sales / total) * 100 : 0)
         }));
+
+      if (withPerc.length === 0) {
+        const schemaLLM = {
+          type: 'object',
+          properties: {
+            items: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  category: { type: 'string' },
+                  percentage: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+                  amount: { anyOf: [{ type: 'number' }, { type: 'string' }] }
+                },
+                required: ['name']
+              }
+            }
+          },
+          required: ['items']
+        };
+        const llm = await base44.integrations.Core.InvokeLLM({
+          prompt: 'You are given a screenshot or PDF of a sales category report. Extract all categories with either percentage of total sales (preferred) or raw amounts. Return JSON with items: [{name, percentage?, amount?}] only.',
+          response_json_schema: schemaLLM,
+          file_urls: [file_url]
+        });
+        const items = Array.isArray(llm?.items) ? llm.items : (Array.isArray(llm?.data?.items) ? llm.data.items : []);
+        const toNum = (v) => {
+          if (typeof v === 'number' && isFinite(v)) return v;
+          if (v == null) return 0;
+          const s = String(v).replace(/%/g, '').replace(/[^0-9,.-]/g, '').replace(/,/g, '');
+          const n = parseFloat(s);
+          return isNaN(n) ? 0 : n;
+        };
+        const totalLLM = items.reduce((s, it) => s + toNum(it.amount), 0);
+        const fromLLM = items.map((it) => ({
+          name: it.name || it.category || '',
+          value: (it.percentage != null && isFinite(toNum(it.percentage))) ? toNum(it.percentage) : (totalLLM > 0 ? (toNum(it.amount) / totalLLM) * 100 : 0)
+        })).filter(x => x.name);
+        if (fromLLM.length > 0) {
+          setCategoryChart(fromLLM);
+          return;
+        }
+      }
+
       setCategoryChart(withPerc);
     } catch (err) {
       console.error('Category scan failed:', err);
