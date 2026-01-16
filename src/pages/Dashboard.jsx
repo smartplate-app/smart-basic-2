@@ -536,12 +536,21 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         type: 'array',
         items: {
           type: 'object',
+          additionalProperties: true,
           properties: {
             category: { type: 'string' },
-            sales: { type: 'number' },
-            percentage: { type: 'number' }
-          },
-          required: ['category']
+            Category: { type: 'string' },
+            name: { type: 'string' },
+            '\u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4': { type: 'string' }, // "קטגוריה"
+            '\u05E9\u05DD': { type: 'string' }, // "שם"
+            sales: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+            amount: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+            Sales: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+            '\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA': { anyOf: [{ type: 'number' }, { type: 'string' }] }, // "מכירות"
+            percentage: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+            '\u05D0\u05D7\u05D5\u05D6': { anyOf: [{ type: 'number' }, { type: 'string' }] }, // "אחוז"
+            '\u05D0\u05D7\u05D5\u05D6\u05D9\u05DD': { anyOf: [{ type: 'number' }, { type: 'string' }] } // "אחוזים"
+          }
         }
       };
       const res = await base44.integrations.Core.ExtractDataFromUploadedFile({ file_url, json_schema });
@@ -549,16 +558,36 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         throw new Error(res.details || 'Extraction failed');
       }
       const arr = Array.isArray(res.output) ? res.output : [];
-      const normalized = arr.map((r) => ({
-        name: r.category || r.name || r.Category || '',
-        sales: Number(r.sales ?? r.amount ?? r.Sales ?? 0),
-        percentage: (r.percentage != null) ? Number(r.percentage) : null
-      })).filter(x => x.name);
+      const parseNumber = (v) => {
+        if (typeof v === 'number' && isFinite(v)) return v;
+        if (v == null) return 0;
+        const s = String(v).replace(/%/g, '').replace(/[^0-9,.-]/g, '').replace(/,/g, '');
+        const n = parseFloat(s);
+        return isNaN(n) ? 0 : n;
+      };
+      const pick = (obj, keys) => {
+        for (const k of keys) { if (obj[k] != null && obj[k] !== '') return obj[k]; }
+        return null;
+      };
+      const normalized = arr.map((r) => {
+        const name = pick(r, ['category','Category','name','\u05E9\u05DD','\u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4']) || '';
+        const salesRaw = pick(r, ['sales','amount','Sales','\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA']);
+        const percRaw = pick(r, ['percentage','\u05D0\u05D7\u05D5\u05D6','\u05D0\u05D7\u05D5\u05D6\u05D9\u05DD']);
+        const sales = parseNumber(salesRaw);
+        let percentage = percRaw != null ? parseNumber(percRaw) : null;
+        if (percentage != null) {
+          // If value looks like a fraction (0-1), convert to percent
+          if (percentage > 0 && percentage <= 1) percentage = percentage * 100;
+        }
+        return { name, sales, percentage };
+      }).filter(x => x.name);
       const total = normalized.reduce((s, x) => s + (isFinite(x.sales) ? x.sales : 0), 0);
-      const withPerc = normalized.map((x) => ({
-        name: x.name,
-        value: (x.percentage != null) ? x.percentage : (total > 0 ? (x.sales / total) * 100 : 0)
-      }));
+      const withPerc = normalized
+        .filter(x => (x.percentage != null && isFinite(x.percentage)) || (isFinite(x.sales) && x.sales > 0))
+        .map((x) => ({
+          name: x.name,
+          value: (x.percentage != null && isFinite(x.percentage)) ? x.percentage : (total > 0 ? (x.sales / total) * 100 : 0)
+        }));
       setCategoryChart(withPerc);
     } catch (err) {
       console.error('Category scan failed:', err);
@@ -1080,7 +1109,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                   </div>
                 ) : (
                   <p className={`text-sm text-gray-500 mt-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'העלה צילום/‏PDF של דוח קטגוריות כדי לראות פילוח באחוזים' : 'Upload a BI category report image/PDF to see percent-of-total breakdown.'}
+                    {language === 'he' ? 'העלה צילום/‏PDF ברור של דוח קטגוריות (כולל שמות קטגוריות וסכומים/אחוזים) כדי לראות פילוח באחוזים' : 'Upload a clear image/PDF of the category report (with category names and amounts/percents) to see percent-of-total breakdown.'}
                   </p>
                 )}
               </CardContent>
