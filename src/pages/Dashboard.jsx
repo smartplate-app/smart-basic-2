@@ -533,31 +533,38 @@ const [monthReceipts, setMonthReceipts] = useState([]);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       const json_schema = {
-        type: 'array',
-        items: {
-          type: 'object',
-          additionalProperties: true,
-          properties: {
-            category: { type: 'string' },
-            Category: { type: 'string' },
-            name: { type: 'string' },
-            '\u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4': { type: 'string' }, // "קטגוריה"
-            '\u05E9\u05DD': { type: 'string' }, // "שם"
-            sales: { anyOf: [{ type: 'number' }, { type: 'string' }] },
-            amount: { anyOf: [{ type: 'number' }, { type: 'string' }] },
-            Sales: { anyOf: [{ type: 'number' }, { type: 'string' }] },
-            '\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA': { anyOf: [{ type: 'number' }, { type: 'string' }] }, // "מכירות"
-            percentage: { anyOf: [{ type: 'number' }, { type: 'string' }] },
-            '\u05D0\u05D7\u05D5\u05D6': { anyOf: [{ type: 'number' }, { type: 'string' }] }, // "אחוז"
-            '\u05D0\u05D7\u05D5\u05D6\u05D9\u05DD': { anyOf: [{ type: 'number' }, { type: 'string' }] } // "אחוזים"
+        type: 'object',
+        additionalProperties: true,
+        properties: {
+          rows: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: true,
+              properties: {
+                category: { type: 'string' },
+                Category: { type: 'string' },
+                name: { type: 'string' },
+                '\u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4': { type: 'string' }, // "קטגוריה"
+                '\u05E9\u05DD': { type: 'string' }, // "שם"
+                sales: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+                amount: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+                Sales: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+                '\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA': { anyOf: [{ type: 'number' }, { type: 'string' }] }, // "מכירות"
+                percentage: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+                '\u05D0\u05D7\u05D5\u05D6': { anyOf: [{ type: 'number' }, { type: 'string' }] }, // "אחוז"
+                '\u05D0\u05D7\u05D5\u05D6\u05D9\u05DD': { anyOf: [{ type: 'number' }, { type: 'string' }] } // "אחוזים"
+              }
+            }
           }
-        }
+        },
+        required: ['rows']
       };
       const res = await base44.integrations.Core.ExtractDataFromUploadedFile({ file_url, json_schema });
       if (res.status !== 'success' || !res.output) {
         throw new Error(res.details || 'Extraction failed');
       }
-      const arr = Array.isArray(res.output) ? res.output : [];
+      const arr = Array.isArray(res.output) ? res.output : (Array.isArray(res.output?.rows) ? res.output.rows : []);
       const parseNumber = (v) => {
         if (typeof v === 'number' && isFinite(v)) return v;
         if (v == null) return 0;
