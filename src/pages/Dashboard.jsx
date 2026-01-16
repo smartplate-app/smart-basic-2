@@ -534,6 +534,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
     setCategoryScanError(null);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // OCR schema for structured extraction (Hebrew + English labels)
       const json_schema = {
         type: 'object',
         additionalProperties: true,
@@ -547,27 +548,61 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                 category: { type: 'string' },
                 Category: { type: 'string' },
                 name: { type: 'string' },
-                '\u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4': { type: 'string' }, // "קטגוריה"
-                '\u05E9\u05DD': { type: 'string' }, // "שם"
+                '\u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4': { type: 'string' },
+                '\u05E9\u05DD': { type: 'string' },
                 sales: { anyOf: [{ type: 'number' }, { type: 'string' }] },
                 amount: { anyOf: [{ type: 'number' }, { type: 'string' }] },
                 Sales: { anyOf: [{ type: 'number' }, { type: 'string' }] },
-                '\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA': { anyOf: [{ type: 'number' }, { type: 'string' }] }, // "מכירות"
+                '\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA': { anyOf: [{ type: 'number' }, { type: 'string' }] },
                 percentage: { anyOf: [{ type: 'number' }, { type: 'string' }] },
-                '\u05D0\u05D7\u05D5\u05D6': { anyOf: [{ type: 'number' }, { type: 'string' }] }, // "אחוז"
-                '\u05D0\u05D7\u05D5\u05D6\u05D9\u05DD': { anyOf: [{ type: 'number' }, { type: 'string' }] } // "אחוזים"
+                '\u05D0\u05D7\u05D5\u05D6': { anyOf: [{ type: 'number' }, { type: 'string' }] },
+                '\u05D0\u05D7\u05D5\u05D6\u05D9\u05DD': { anyOf: [{ type: 'number' }, { type: 'string' }] }
               }
             }
           }
         },
         required: ['rows']
       };
-      const res = await base44.integrations.Core.ExtractDataFromUploadedFile({ file_url, json_schema });
-      let extracted = null;
-      if (res.status === 'success' && res.output) {
-        extracted = res.output;
-      }
-      const arr = Array.isArray(extracted) ? extracted : (Array.isArray(extracted?.rows) ? extracted.rows : []);
+
+      // Run OCR extraction and a Hebrew-tuned LLM in parallel
+      const extractPromise = base44.integrations.Core.ExtractDataFromUploadedFile({ file_url, json_schema });
+
+      const schemaLLM = {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                category: { type: 'string' },
+                percentage: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+                amount: { anyOf: [{ type: 'number' }, { type: 'string' }] }
+              },
+              required: ['name']
+            }
+          }
+        },
+        required: ['items']
+      };
+      const hebrewPrompt = `אתה מומחה לחילוץ מידע מדוחות מכירה בעברית.
+קיבלת תמונה/‏PDF של דוח "מכירות לפי קטגוריה". הוצא את כל הקטגוריות עם אחוז מכלל המכירות (מועדף) או סכום בשקלים אם אין אחוז.
+הנחיות חשובות:
+- תמוך בעברית (כיווניות RTL), סימן % ותווי ₪/פסיקים.
+- תתעלם מקישוטים/כותרות. החזר רק קטגוריות אמיתיות.
+- אם יש רק סכומים – חשב אחוזים יחסית לסכום הכולל.
+- ודא שהאחוזים סוכמים בערך ל-100% (סטייה קטנה מותרת).
+החזר JSON בלבד במבנה items: [{name, percentage?, amount?}].`;
+      const llmPromise = base44.integrations.Core.InvokeLLM({
+        prompt: hebrewPrompt,
+        response_json_schema: schemaLLM,
+        file_urls: [file_url]
+      });
+
+      const [resExtract, resLLM] = await Promise.all([extractPromise, llmPromise]);
+
+      // Helpers
       const parseNumber = (v) => {
         if (typeof v === 'number' && isFinite(v)) return v;
         if (v == null) return 0;
@@ -575,75 +610,55 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         const n = parseFloat(s);
         return isNaN(n) ? 0 : n;
       };
-      const pick = (obj, keys) => {
-        for (const k of keys) { if (obj[k] != null && obj[k] !== '') return obj[k]; }
-        return null;
+      const pick = (obj, keys) => { for (const k of keys) { if (obj[k] != null && obj[k] !== '') return obj[k]; } return null; };
+      const normalizeTo100 = (arr) => {
+        const sum = arr.reduce((s, x) => s + (isFinite(x.value) ? Math.max(0, x.value) : 0), 0);
+        if (sum > 0) return arr.map(x => ({ ...x, value: (Math.max(0, x.value) / sum) * 100 }));
+        return arr;
       };
-      const normalized = arr.map((r) => {
+
+      // Build candidates from OCR
+      let ocrRows = null;
+      if (resExtract?.status === 'success' && resExtract?.output) ocrRows = resExtract.output;
+      const arrOcr = Array.isArray(ocrRows) ? ocrRows : (Array.isArray(ocrRows?.rows) ? ocrRows.rows : []);
+      const normOcr = arrOcr.map((r) => {
         const name = pick(r, ['category','Category','name','\u05E9\u05DD','\u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4']) || '';
         const salesRaw = pick(r, ['sales','amount','Sales','\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA']);
         const percRaw = pick(r, ['percentage','\u05D0\u05D7\u05D5\u05D6','\u05D0\u05D7\u05D5\u05D6\u05D9\u05DD']);
         const sales = parseNumber(salesRaw);
         let percentage = percRaw != null ? parseNumber(percRaw) : null;
-        if (percentage != null) {
-          // If value looks like a fraction (0-1), convert to percent
-          if (percentage > 0 && percentage <= 1) percentage = percentage * 100;
-        }
+        if (percentage != null && percentage > 0 && percentage <= 1) percentage *= 100;
         return { name, sales, percentage };
       }).filter(x => x.name);
-      const total = normalized.reduce((s, x) => s + (isFinite(x.sales) ? x.sales : 0), 0);
-      const withPerc = normalized
+      const totalOcr = normOcr.reduce((s, x) => s + (isFinite(x.sales) ? x.sales : 0), 0);
+      const withPercOcr = normOcr
         .filter(x => (x.percentage != null && isFinite(x.percentage)) || (isFinite(x.sales) && x.sales > 0))
-        .map((x) => ({
-          name: x.name,
-          value: (x.percentage != null && isFinite(x.percentage)) ? x.percentage : (total > 0 ? (x.sales / total) * 100 : 0)
-        }));
+        .map(x => ({ name: x.name, value: (x.percentage != null && isFinite(x.percentage)) ? x.percentage : (totalOcr > 0 ? (x.sales / totalOcr) * 100 : 0) }));
 
-      if (withPerc.length === 0) {
-        const schemaLLM = {
-          type: 'object',
-          properties: {
-            items: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  name: { type: 'string' },
-                  category: { type: 'string' },
-                  percentage: { anyOf: [{ type: 'number' }, { type: 'string' }] },
-                  amount: { anyOf: [{ type: 'number' }, { type: 'string' }] }
-                },
-                required: ['name']
-              }
-            }
-          },
-          required: ['items']
-        };
-        const llm = await base44.integrations.Core.InvokeLLM({
-          prompt: 'You are given a screenshot or PDF of a sales category report. Extract all categories with either percentage of total sales (preferred) or raw amounts. Return JSON with items: [{name, percentage?, amount?}] only.',
-          response_json_schema: schemaLLM,
-          file_urls: [file_url]
-        });
-        const items = Array.isArray(llm?.items) ? llm.items : (Array.isArray(llm?.data?.items) ? llm.data.items : []);
-        const toNum = (v) => {
-          if (typeof v === 'number' && isFinite(v)) return v;
-          if (v == null) return 0;
-          const s = String(v).replace(/%/g, '').replace(/[^0-9,.-]/g, '').replace(/,/g, '');
-          const n = parseFloat(s);
-          return isNaN(n) ? 0 : n;
-        };
-        const totalLLM = items.reduce((s, it) => s + toNum(it.amount), 0);
-        const fromLLM = items.map((it) => ({
-          name: it.name || it.category || '',
-          value: (it.percentage != null && isFinite(toNum(it.percentage))) ? toNum(it.percentage) : (totalLLM > 0 ? (toNum(it.amount) / totalLLM) * 100 : 0)
-        })).filter(x => x.name);
-        if (fromLLM.length > 0) {
-          setCategoryChart(fromLLM);
-          return;
-        }
+      // Build candidates from LLM
+      const itemsLLM = Array.isArray(resLLM?.items) ? resLLM.items : (Array.isArray(resLLM?.data?.items) ? resLLM.data.items : []);
+      const withPercLLM = (itemsLLM || []).map(it => {
+        const amount = parseNumber(it.amount);
+        let perc = it.percentage != null ? parseNumber(it.percentage) : null;
+        if (perc != null && perc > 0 && perc <= 1) perc *= 100;
+        return { name: it.name || it.category || '', value: (perc != null && isFinite(perc)) ? perc : amount };
+      }).filter(x => x.name);
+
+      // Prefer LLM for Hebrew if it found anything; otherwise fall back to OCR
+      let chosen = (language === 'he' && withPercLLM.length > 0) ? withPercLLM : (withPercLLM.length >= withPercOcr.length ? withPercLLM : withPercOcr);
+
+      // If chosen contains raw amounts (not percents), normalize to 100%
+      const sumChosen = chosen.reduce((s, x) => s + (isFinite(x.value) ? x.value : 0), 0);
+      if (sumChosen > 0 && sumChosen > 120) { // likely raw amounts
+        chosen = chosen.map(x => ({ ...x, value: (x.value / sumChosen) * 100 }));
       }
+      // Final normalization to sum ~100
+      const chosenNorm = normalizeTo100(chosen).sort((a,b) => b.value - a.value);
 
-      setCategoryChart(withPerc);
+      if (chosenNorm.length === 0) {
+        setCategoryScanError(language === 'he' ? 'לא נמצא מידע קריא בתמונה/‏PDF. נסו תמונה חדה יותר או דו"ח עם שמות קטגוריות וסכומים/אחוזים.' : 'Couldn’t read categories from the image/PDF. Try a clearer shot or a report that shows category names and amounts/percents.');
+      }
+      setCategoryChart(chosenNorm);
       if (withPerc.length === 0) {
         setCategoryScanError(language === 'he' ? 'לא נמצא מידע קריא בתמונה/‏PDF. נסו תמונה חדה יותר או דו"ח עם שמות קטגוריות וסכומים/אחוזים.' : 'Couldn’t read categories from the image/PDF. Try a clearer shot or a report that shows category names and amounts/percents.');
       }
