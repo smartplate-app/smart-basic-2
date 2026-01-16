@@ -79,6 +79,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   // Category scan (Sales BI image)
   const [categoryScanLoading, setCategoryScanLoading] = useState(false);
   const [categoryChart, setCategoryChart] = useState([]);
+  const [categoryScanError, setCategoryScanError] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -530,6 +531,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   // Upload & parse BI category image/pdf -> build percent-of-total chart
   const handleCategoryImageChange = async (file) => {
     setCategoryScanLoading(true);
+    setCategoryScanError(null);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       const json_schema = {
@@ -642,9 +644,12 @@ const [monthReceipts, setMonthReceipts] = useState([]);
       }
 
       setCategoryChart(withPerc);
+      if (withPerc.length === 0) {
+        setCategoryScanError(language === 'he' ? 'לא נמצא מידע קריא בתמונה/‏PDF. נסו תמונה חדה יותר או דו"ח עם שמות קטגוריות וסכומים/אחוזים.' : 'Couldn’t read categories from the image/PDF. Try a clearer shot or a report that shows category names and amounts/percents.');
+      }
     } catch (err) {
       console.error('Category scan failed:', err);
-      alert(language === 'he' ? 'נכשלה קריאת הדוח. נסו תמונה ברורה או PDF.' : 'Failed to read the report. Try a clear image or PDF.');
+      setCategoryScanError(language === 'he' ? 'נכשלה קריאת הדוח. נסו תמונה ברורה או PDF.' : 'Failed to read the report. Try a clear image or PDF.');
     } finally {
       setCategoryScanLoading(false);
     }
@@ -1138,6 +1143,9 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                   />
                   {categoryScanLoading && <Loader className="w-4 h-4 animate-spin text-blue-600" />}
                 </div>
+                {categoryScanError && (
+                  <p className={`mt-2 text-sm text-red-600 ${isRTL ? 'text-right' : 'text-left'}`}>{categoryScanError}</p>
+                )}
 
                 {categoryChart.length > 0 ? (
                   <div className="mt-6">
