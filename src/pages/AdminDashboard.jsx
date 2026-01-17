@@ -10,6 +10,7 @@ import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calend
 import { useLanguage } from "../components/LanguageProvider";
 import AppHelpChat from "../components/AppHelpChat";
 import InstagramCampaign from "@/components/marketing/InstagramCampaign";
+import InstagramCampaignDE from "@/components/marketing/InstagramCampaignDE";
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
   const [chainStores, setChainStores] = useState([]);
   const [showChainsView, setShowChainsView] = useState(false);
   const [showMarketingView, setShowMarketingView] = useState(false);
+  const [marketingLocale, setMarketingLocale] = useState('en');
 
   useEffect(() => {
     loadAdminData();
@@ -589,10 +591,16 @@ export default function AdminDashboard() {
             {showMarketingView && (
               <Card className="mb-6 border-2 border-purple-200">
                 <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
-                  <CardTitle>Instagram Campaign</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Instagram Campaign</span>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant={marketingLocale==='en' ? 'secondary' : 'outline'} onClick={() => setMarketingLocale('en')}>English (UK+US)</Button>
+                      <Button size="sm" variant={marketingLocale==='de' ? 'secondary' : 'outline'} onClick={() => setMarketingLocale('de')}>Deutsch (DE)</Button>
+                    </div>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
-                  <InstagramCampaign />
+                  {marketingLocale === 'de' ? <InstagramCampaignDE /> : <InstagramCampaign />}
                 </CardContent>
               </Card>
             )}
