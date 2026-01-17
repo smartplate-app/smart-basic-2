@@ -484,6 +484,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex gap-2">
+                  {/* Marketing */}
                   <Button
                     onClick={() => setShowChainsView(!showChainsView)}
                     variant={showChainsView ? "default" : "outline"}
