@@ -11,6 +11,7 @@ import { useLanguage } from "../components/LanguageProvider";
 import AppHelpChat from "../components/AppHelpChat";
 import InstagramCampaign from "@/components/marketing/InstagramCampaign";
 import InstagramCampaignDE from "@/components/marketing/InstagramCampaignDE";
+import InstagramCampaignHE from "@/components/marketing/InstagramCampaignHE";
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
@@ -596,11 +597,12 @@ export default function AdminDashboard() {
                     <div className="flex gap-2">
                       <Button size="sm" variant={marketingLocale==='en' ? 'secondary' : 'outline'} onClick={() => setMarketingLocale('en')}>English (UK+US)</Button>
                       <Button size="sm" variant={marketingLocale==='de' ? 'secondary' : 'outline'} onClick={() => setMarketingLocale('de')}>Deutsch (DE)</Button>
+                      <Button size="sm" variant={marketingLocale==='he' ? 'secondary' : 'outline'} onClick={() => setMarketingLocale('he')}>עברית (IL)</Button>
                     </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
-                  {marketingLocale === 'de' ? <InstagramCampaignDE /> : <InstagramCampaign />}
+                  {marketingLocale === 'de' ? <InstagramCampaignDE /> : marketingLocale === 'he' ? <InstagramCampaignHE /> : <InstagramCampaign />}
                 </CardContent>
               </Card>
             )}
