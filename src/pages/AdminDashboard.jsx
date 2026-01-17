@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn } from "lucide-react";
+import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import AppHelpChat from "../components/AppHelpChat";
+import InstagramCampaign from "../components/marketing/InstagramCampaign";
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
@@ -25,6 +26,7 @@ export default function AdminDashboard() {
   const [chains, setChains] = useState([]);
   const [chainStores, setChainStores] = useState([]);
   const [showChainsView, setShowChainsView] = useState(false);
+  const [showMarketingView, setShowMarketingView] = useState(false);
 
   useEffect(() => {
     loadAdminData();
@@ -491,6 +493,14 @@ export default function AdminDashboard() {
                     {language === 'he' ? 'ניהול רשתות' : 'Chain Management'}
                     {chains.length > 0 && <Badge variant="secondary">{chains.length}</Badge>}
                   </Button>
+                  <Button
+                    onClick={() => setShowMarketingView(!showMarketingView)}
+                    variant={showMarketingView ? "default" : "outline"}
+                    className="flex items-center gap-2"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    {language === 'he' ? 'קמפיין אינסטגרם' : 'Instagram Campaign'}
+                  </Button>
                 </div>
               </div>
 
@@ -571,6 +581,17 @@ export default function AdminDashboard() {
                       })}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {showMarketingView && (
+              <Card className="mb-6 border-2 border-purple-200">
+                <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+                  <CardTitle>Instagram Campaign</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <InstagramCampaign />
                 </CardContent>
               </Card>
             )}
