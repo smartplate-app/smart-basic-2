@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import AppHelpChat from "../components/AppHelpChat";
-import InstagramCampaign from "../components/marketing/InstagramCampaign";
+import InstagramCampaign from "@/components/marketing/InstagramCampaign";
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
