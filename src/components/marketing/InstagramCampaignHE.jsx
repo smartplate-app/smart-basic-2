@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Copy, PlayCircle, Hash, Palette } from "lucide-react";
+import StoryKPIExampleHE from "./StoryKPIExampleHE";
 
 const brand = {
   name: "SmartPlate Basic",
@@ -224,6 +225,35 @@ export default function InstagramCampaignHE() {
           <p>• שבוע 1: ב/ד/ו — רילז 1, 2, 3</p>
           <p>• שבוע 2: ב/ד/ו — רילז 4, 5, 6</p>
           <p>בימים שבין לבין – סטוריז עם KPI אחד (עלות מזון / עלות עבודה / משולב). רקע גרדיאנט ולוגו קטן.</p>
+        </CardContent>
+      </Card>
+
+      {/* Story Example */}
+      <Card>
+        <CardHeader>
+          <CardTitle>דוגמה לסטורי KPI</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <StoryKPIExampleHE
+              kpiLabel="עלות מזון"
+              value={28.4}
+              unit="%"
+              footnote="מטרה: ≤ 30%"
+              logoUrl={brand.logo}
+              primary={brand.colors.primary}
+              secondary={brand.colors.secondary}
+            />
+            <StoryKPIExampleHE
+              kpiLabel="עלות עבודה"
+              value={25.1}
+              unit="%"
+              footnote="יעד: 25%"
+              logoUrl={brand.logo}
+              primary={brand.colors.secondary}
+              secondary={brand.colors.primary}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
