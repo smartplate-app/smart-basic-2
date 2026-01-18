@@ -7,10 +7,10 @@ import { Copy, Download, PlayCircle, Hash, Palette } from "lucide-react";
 const brand = {
   name: "SmartPlate Simple",
   colors: {
-    primary: "#7c3aed", // purple-600
-    secondary: "#2563eb", // blue-600
-    dark: "#111827", // gray-900
-    light: "#F8FAFC", // slate-50
+    primary: "#059669", // emerald-600
+    secondary: "#0ea5a4", // teal-500
+    dark: "#0f172a", // slate-900
+    light: "#F6FAF7", // soft light
   },
   logo: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg",
 };
@@ -123,8 +123,8 @@ export default function InstagramCampaign() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="overflow-hidden border-2 border-purple-200">
-        <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+      <Card className="overflow-hidden border-2 border-emerald-200">
+        <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
           <CardTitle className="flex items-center justify-between">
             <span>Instagram Reels Campaign · {brand.name}</span>
             <img src={brand.logo} alt="SmartPlate Logo" className="h-10 w-10 rounded-lg object-contain bg-white/10 p-1" />
@@ -134,11 +134,11 @@ export default function InstagramCampaign() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <p className="text-gray-700 text-sm leading-relaxed">
-                Objective: Launch the English SmartPlate Simple with a 6‑reel series that educates and converts restaurant owners. Tone: clear, operator‑centric, no fluff. Visuals: bold gradient (purple→blue), dark text, logo lock‑ups.
+                Objective: Launch the English SmartPlate Simple with a 6‑reel series that educates and converts restaurant owners. Tone: clear, operator‑centric, no fluff. Visuals: bold gradient (emerald→teal), dark text, logo lock‑ups.
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
-                <Badge className="bg-purple-600">Awareness</Badge>
-                <Badge className="bg-blue-600">Education</Badge>
+                <Badge className="bg-emerald-600">Awareness</Badge>
+                <Badge className="bg-teal-600">Education</Badge>
                 <Badge variant="outline" className="text-gray-700 border-gray-300">Conversion</Badge>
               </div>
             </div>
@@ -175,7 +175,7 @@ export default function InstagramCampaign() {
           const caption = `${r.hook}\n\n${r.caption}\n\n${hashtagBlock}`;
           return (
             <Card key={idx} className="overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-purple-600/80 to-blue-600/80 text-white">
+              <CardHeader className="bg-gradient-to-r from-emerald-600/80 to-teal-600/80 text-white">
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2"><PlayCircle className="w-4 h-4" /> {idx+1}. {r.title}</span>
                   <Badge variant="secondary" className="bg-white/20">Reel</Badge>
