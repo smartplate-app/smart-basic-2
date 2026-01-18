@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, PlayCircle, Hash, Palette } from "lucide-react";
 
 const brand = {
-  name: "SmartPlate Basic",
+  name: "SmartPlate Simple",
   colors: {
     primary: "#7c3aed", // purple-600
     secondary: "#2563eb", // blue-600
@@ -16,7 +16,7 @@ const brand = {
 };
 
 const defaultHashtags = [
-  "#SmartPlate", "#SmartPlateBasic", "#Gastronomie", "#RestaurantManagement",
+  "#SmartPlate", "#SmartPlateSimple", "#Gastronomie", "#RestaurantManagement",
   "#Lebensmittelkosten", "#Personalkosten", "#Inventur", "#Schichtplan",
   "#Kostenkontrolle", "#Gastgewerbe", "#Gastro", "#Café", "#Bar",
   "#Betriebsführung", "#Mittelstand", "#Unternehmer", "#DEGastro"
@@ -38,9 +38,9 @@ const reelsPlan = [
     ],
     script:
       "Start im hektischen Küchenalltag. Schnitt aufs SmartPlate‑Dashboard mit Wareneinsatz%. Voiceover: ‚Hör auf zu raten. Belege scannen, echten Wareneinsatz sehen – heute.‘ Abschluss mit Farbverlauf + Logo.",
-    cta: "Jetzt SmartPlate Basic testen – kostenlos starten.",
+    cta: "Jetzt SmartPlate Simple testen – kostenlos starten.",
     caption:
-      "Wareneinsatz darf kein Rätsel sein. Scannen, verfolgen, handeln – in Minuten. SmartPlate Basic hält es schlank, damit du liefern kannst.",
+      "Wareneinsatz darf kein Rätsel sein. Scannen, verfolgen, handeln – in Minuten. SmartPlate Simple hält es schlank, damit du liefern kannst.",
   },
   {
     title: "Personalkosten im Griff",
@@ -59,7 +59,7 @@ const reelsPlan = [
       "Zeige Dienstplankacheln. Voiceover: ‚Plane die Woche, sieh den Monat. Personalkosten beim Erstellen prognostizieren.‘ Close mit Kombi‑Kosten‑Karte.",
     cta: "Ziel setzen und einhalten.",
     caption:
-      "Vom Wochenplan zur Monatsklarheit – SmartPlate Basic macht Personalkosten planbar und schlank.",
+      "Vom Wochenplan zur Monatsklarheit – SmartPlate Simple macht Personalkosten planbar und schlank.",
   },
   {
     title: "Inventur, aber einfach",
@@ -74,7 +74,7 @@ const reelsPlan = [
       "Lagerraum. ‚Neue Zählung‘ tippen, ein paar Artikel hinzufügen. Schnitt zur AFC‑Karte. Voiceover: ‚Wissen, was verbraucht wurde – nicht nur, was gekauft wurde.‘",
     cta: "Mach den Inventurabend schmerzfrei.",
     caption:
-      "Verbrauch über Zeit erzählt die wahre Geschichte. SmartPlate Basic spricht Ergebnisse.",
+      "Verbrauch über Zeit erzählt die wahre Geschichte. SmartPlate Simple spricht Ergebnisse.",
   },
   {
     title: "Vom Beleg zur Erkenntnis",
@@ -85,7 +85,7 @@ const reelsPlan = [
       "Beleg scannen, sofort Summen und Kategorie‑Einfluss zeigen. ‚Von Papier zu Entscheidungen in Sekunden.‘",
     cta: "Papierkram in Profit verwandeln.",
     caption:
-      "Papier rein, Insight raus. Das ist SmartPlate Basic.",
+      "Papier rein, Insight raus. Das ist SmartPlate Simple.",
   },
   {
     title: "Die 60%‑Regel",
@@ -100,18 +100,18 @@ const reelsPlan = [
       "Einfache Grafik zur 60%‑Kombiregel. ‚Einmal Ziele setzen. Wir tracken den Rest.‘",
     cta: "Dein Ziel konstant erreichen.",
     caption:
-      "Einfache Regel. Große Wirkung. Halte die Kombikosten unter 60% mit SmartPlate Basic.",
+      "Einfache Regel. Große Wirkung. Halte die Kombikosten unter 60% mit SmartPlate Simple.",
   },
   {
-    title: "Warum ‚Basic‘ gewinnt",
+    title: "Warum ‚Simple‘ gewinnt",
     hook: "Komplexe Tools bremsen Gastronomie aus.",
     overlays: ["Schnell", "Fokussiert", "Operator‑first"],
     shots: ["Tap‑Flows", "Aufgeräumtes UI", "Logo‑Lockup"],
     script:
-      "Zeige schnelle Tap‑Flows. ‚SmartPlate Basic ist zweckmäßig: genau das, was du jeden Tag brauchst.‘",
+      "Zeige schnelle Tap‑Flows. ‚SmartPlate Simple ist zweckmäßig: genau das, was du jeden Tag brauchst.‘",
     cta: "Zurück zum Wesentlichen – da gewinnt Ausführung.",
     caption:
-      "Schlank schlägt komplex. Jedes Mal. #SmartPlateBasic",
+      "Schlank schlägt komplex. Jedes Mal. #SmartPlateSimple",
   }
 ];
 

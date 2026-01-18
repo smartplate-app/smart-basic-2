@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, Download, PlayCircle, Hash, Palette } from "lucide-react";
 
 const brand = {
-  name: "SmartPlate Basic",
+  name: "SmartPlate Simple",
   colors: {
     primary: "#7c3aed", // purple-600
     secondary: "#2563eb", // blue-600
@@ -16,7 +16,7 @@ const brand = {
 };
 
 const defaultHashtags = [
-  "#SmartPlate", "#SmartPlateBasic", "#RestaurantManagement", "#FoodCost",
+  "#SmartPlate", "#SmartPlateSimple", "#RestaurantManagement", "#FoodCost",
   "#LaborCost", "#InventoryCount", "#Hospitality", "#SmallBusiness",
   "#RestaurantOwner", "#KitchenOps", "#FandB", "#POS", "#MenuEngineering",
   "#CostControl", "#ShiftScheduling", "#CafeOwner", "#BarOwner"
@@ -37,10 +37,10 @@ const reelsPlan = [
       "Pie chart of categories animating"
     ],
     script:
-      "Open with a busy kitchen. Cut to SmartPlate Basic dashboard showing food cost%. \nVoiceover: ‘Stop guessing. Scan receipts, see real food cost, today.’\nEnd on brand gradient with logo.",
-    cta: "Try SmartPlate Basic — free to start.",
+      "Open with a busy kitchen. Cut to SmartPlate Simple dashboard showing food cost%. \nVoiceover: ‘Stop guessing. Scan receipts, see real food cost, today.’\nEnd on brand gradient with logo.",
+    cta: "Try SmartPlate Simple — free to start.",
     caption:
-      "Food cost shouldn’t be a mystery. Scan, track, and act — in minutes. \nSmartPlate Basic keeps it simple so you can keep cooking.\n",
+      "Food cost shouldn’t be a mystery. Scan, track, and act — in minutes. \nSmartPlate Simple keeps it simple so you can keep cooking.\n",
   },
   {
     title: "Labor Cost Under Control",
@@ -59,7 +59,7 @@ const reelsPlan = [
       "Show schedule tiles. Voiceover: ‘Plan your week, see your month. Forecast labor cost as you build the schedule.’\nClose with combined-cost card.",
     cta: "Set your target and stick to it.",
     caption:
-      "From weekly schedules to monthly clarity — SmartPlate Basic keeps labor predictable and lean.",
+      "From weekly schedules to monthly clarity — SmartPlate Simple keeps labor predictable and lean.",
   },
   {
     title: "Inventory, Simplified",
@@ -74,7 +74,7 @@ const reelsPlan = [
       "Open storeroom. Tap ‘New Count’. Add a few items. Cut to AFC card. Voiceover: ‘Know what you used — not just what you bought.’",
     cta: "Make inventory night painless.",
     caption:
-      "Usage over time tells the story. SmartPlate Basic speaks your language — results.",
+      "Usage over time tells the story. SmartPlate Simple speaks your language — results.",
   },
   {
     title: "From Receipt to Insight",
@@ -85,7 +85,7 @@ const reelsPlan = [
       "Film the phone scanning a receipt. Instantly show totals and category impact on the chart. ‘From paper to decisions in seconds.’",
     cta: "Turn paperwork into profit.",
     caption:
-      "Paper in, insight out. That’s SmartPlate Basic.",
+      "Paper in, insight out. That’s SmartPlate Simple.",
   },
   {
     title: "The 60% Rule",
@@ -100,18 +100,18 @@ const reelsPlan = [
       "Explain the 60% combined rule with clean graphics. ‘Set your goals once. We track the rest.’",
     cta: "Hit your target consistently.",
     caption:
-      "Simple rule. Serious impact. Keep combined cost under 60% with SmartPlate Basic.",
+      "Simple rule. Serious impact. Keep combined cost under 60% with SmartPlate Simple.",
   },
   {
-    title: "Why ‘Basic’ Wins",
+    title: "Why ‘Simple’ Wins",
     hook: "Complex tools slow restaurants down.",
     overlays: ["Fast", "Focused", "Operator-first"],
     shots: ["Tap, done animations", "No clutter UI", "Logo lockup"],
     script:
-      "Show quick tap flows. ‘SmartPlate Basic is purpose-built: the essentials you need every single day.’",
-    cta: "Back to basics — where execution wins.",
+      "Show quick tap flows. ‘SmartPlate Simple is purpose-built: the essentials you need every single day.’",
+    cta: "Back to simple — where execution wins.",
     caption:
-      "Lean beats complex. Every time. #SmartPlateBasic",
+      "Lean beats complex. Every time. #SmartPlateSimple",
   }
 ];
 
@@ -134,7 +134,7 @@ export default function InstagramCampaign() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <p className="text-gray-700 text-sm leading-relaxed">
-                Objective: Launch the English SmartPlate Basic with a 6‑reel series that educates and converts restaurant owners. Tone: clear, operator‑centric, no fluff. Visuals: bold gradient (purple→blue), dark text, logo lock‑ups.
+                Objective: Launch the English SmartPlate Simple with a 6‑reel series that educates and converts restaurant owners. Tone: clear, operator‑centric, no fluff. Visuals: bold gradient (purple→blue), dark text, logo lock‑ups.
               </p>
               <div className="flex flex-wrap gap-2 mt-3">
                 <Badge className="bg-purple-600">Awareness</Badge>
