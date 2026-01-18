@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, PlayCircle, Hash, Palette } from "lucide-react";
 import StoryKPIExampleHE from "./StoryKPIExampleHE";
 import Reel2FirstScreenHE from "./Reel2FirstScreenHE";
+import SimpleLogo from "@/components/branding/SimpleLogo";
 
 const brand = {
   name: "SmartPlate Simple",
@@ -126,11 +127,11 @@ export default function InstagramCampaignHE() {
       {/* Header */}
       <Card className="overflow-hidden border-2 border-emerald-200">
         <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
-          <CardTitle className="flex items-center justify-between">
-            <span>קמפיין רילז לאינסטגרם · {brand.name}</span>
-            <img src={brand.logo} alt="SmartPlate Logo" className="h-10 w-10 rounded-lg object-contain bg-white/10 p-1" />
-          </CardTitle>
-        </CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <span>קמפיין רילז לאינסטגרם</span>
+                          <SimpleLogo logoUrl={brand.logo} primary={brand.colors.primary} secondary={brand.colors.secondary} background="transparent" />
+                        </CardTitle>
+                      </CardHeader>
         <CardContent className="p-5 bg-white">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
