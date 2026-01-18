@@ -228,13 +228,14 @@ export default function InstagramCampaignHE() {
         </CardContent>
       </Card>
 
-      {/* Story Example */}
+      {/* Reel 2 - First Screen Preview */}
       <Card>
         <CardHeader>
-          <CardTitle>דוגמה לסטורי KPI</CardTitle>
+          <CardTitle>מסך פתיחה לריל #2</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Reel2FirstScreenHE logoUrl={brand.logo} primary={brand.colors.primary} secondary={brand.colors.secondary} />
             <StoryKPIExampleHE
               kpiLabel="עלות מזון"
               value={28.4}
