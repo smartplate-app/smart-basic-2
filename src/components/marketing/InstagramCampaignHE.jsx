@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Copy, PlayCircle, Hash, Palette } from "lucide-react";
 import StoryKPIExampleHE from "./StoryKPIExampleHE";
+import Reel2FirstScreenHE from "./Reel2FirstScreenHE";
 
 const brand = {
   name: "SmartPlate Simple",
