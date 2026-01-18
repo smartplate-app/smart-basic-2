@@ -164,18 +164,17 @@ Deno.serve(async (req) => {
 
     // Fallback CSV builder (in case Google APIs fail)
     const buildUsageRows = () => {
-      const uRows = [['Item', 'Unit', 'Usage Qty']];
+      const uRows = [['Item', 'Usage Qty']];
       Array.from(keys).forEach((key) => {
         const name = beginMap.get(key)?.name || ordersMap.get(key)?.name || endMap.get(key)?.name || key;
-        const unit = beginMap.get(key)?.unit || ordersMap.get(key)?.unit || endMap.get(key)?.unit || '';
         const b = Number(beginMap.get(key)?.qty || 0);
         const p = Number(ordersMap.get(key)?.qty || 0);
         const e = Number(endMap.get(key)?.qty || 0);
         const u = Math.max(0, b + p - e);
-        uRows.push([name, unit, u]);
+        uRows.push([name, u]);
       });
       const header = uRows.shift();
-      uRows.sort((a,b) => Number(b[2]) - Number(a[2]));
+      uRows.sort((a,b) => Number(b[1]) - Number(a[1]));
       uRows.unshift(header);
       return uRows;
     };
@@ -214,7 +213,7 @@ Deno.serve(async (req) => {
     };
 
 
-    // Create Google Sheet (single sheet, 3 columns) — same pattern as other exports
+    // Create Google Sheet (single sheet, 2 columns: Item + Usage) — minimal as requested
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
     if (!accessToken) {
       return await returnFallbackCSV('Google Sheets token missing.');
@@ -238,24 +237,25 @@ Deno.serve(async (req) => {
     const sheetId = first.sheetId;
     const sheetTitle = first.title || 'Sheet1';
 
-    // 2) Build Usage-only single column (match GUI values)
-    const usageOnly = [['Usage']];
+    // 2) Build Usage-only two columns: Item + Usage (sorted by Usage desc)
+    const usageOnly = [['Item', 'Usage']];
     Array.from(keys).forEach((key) => {
+      const name = beginMap.get(key)?.name || ordersMap.get(key)?.name || endMap.get(key)?.name || String(key);
       const b = Number(beginMap.get(key)?.qty || 0);
       const p = Number(ordersMap.get(key)?.qty || 0);
       const e = Number(endMap.get(key)?.qty || 0);
       const u = Math.max(0, b + p - e);
-      usageOnly.push([u]);
+      usageOnly.push([name, u]);
     });
     const hdr = usageOnly.shift();
-    usageOnly.sort((a,b) => Number(b[0]) - Number(a[0]));
+    usageOnly.sort((a,b) => Number(b[1]) - Number(a[1]));
     usageOnly.unshift(hdr);
 
     // 3) Write values
     const valuesRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ valueInputOption: 'USER_ENTERED', data: [{ range: `${sheetTitle}!A1:A${usageOnly.length}`, values: usageOnly }] })
+      body: JSON.stringify({ valueInputOption: 'USER_ENTERED', data: [{ range: `${sheetTitle}!A1:B${usageOnly.length}`, values: usageOnly }] })
     });
     if (!valuesRes.ok) {
       const errText = await valuesRes.text();
@@ -267,9 +267,9 @@ Deno.serve(async (req) => {
       requests: [
         { updateSheetProperties: { properties: { sheetId, title: 'AFC' }, fields: 'title' } },
         { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
-        { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1 }, cell: { userEnteredFormat: { textFormat: { bold: true } } }, fields: 'userEnteredFormat.textFormat.bold' } },
-        { repeatCell: { range: { sheetId, startRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1 }, cell: { userEnteredFormat: { numberFormat: { type: 'NUMBER', pattern: '#,##0.###' } } }, fields: 'userEnteredFormat.numberFormat' } },
-        { autoResizeDimensions: { dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 } } },
+        { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 2 }, cell: { userEnteredFormat: { textFormat: { bold: true } } }, fields: 'userEnteredFormat.textFormat.bold' } },
+        { repeatCell: { range: { sheetId, startRowIndex: 1, startColumnIndex: 1, endColumnIndex: 2 }, cell: { userEnteredFormat: { numberFormat: { type: 'NUMBER', pattern: '#,##0.###' } } }, fields: 'userEnteredFormat.numberFormat' } },
+        { autoResizeDimensions: { dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 2 } } },
       ]
     };
     const fmtRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
