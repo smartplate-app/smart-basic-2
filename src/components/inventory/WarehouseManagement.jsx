@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Warehouse } from "@/entities/Warehouse";
 import { Item } from "@/entities/Item";
-import { X, Plus, Edit, Trash2, Package } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
+import { X, Plus, Edit, Trash2, Package, Bell } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -17,13 +19,17 @@ export default function WarehouseManagement({ warehouses, onClose }) {
   const [showForm, setShowForm] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState(null);
   const [showItemSelection, setShowItemSelection] = useState(null);
+  const [itemSelectionMode, setItemSelectionMode] = useState('daily'); // 'daily' | 'catalog'
   const [allItems, setAllItems] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     location: "",
     description: "",
     is_active: true,
-    catalog_items: []
+    catalog_items: [],
+    daily_count_enabled: false,
+    daily_count_time: "16:00",
+    daily_count_items: []
   });
 
   useEffect(() => {
@@ -72,46 +78,61 @@ export default function WarehouseManagement({ warehouses, onClose }) {
       location: warehouse.location || "",
       description: warehouse.description || "",
       is_active: warehouse.is_active !== false,
-      catalog_items: warehouse.catalog_items || []
+      catalog_items: warehouse.catalog_items || [],
+      daily_count_enabled: warehouse.daily_count_enabled || false,
+      daily_count_time: warehouse.daily_count_time || "16:00",
+      daily_count_items: warehouse.daily_count_items || []
     });
     setShowForm(true);
   };
 
   const handleManageItems = (warehouse) => {
+    setItemSelectionMode('catalog');
     setShowItemSelection(warehouse);
     setFormData({
       ...warehouse,
-      catalog_items: warehouse.catalog_items || []
+      catalog_items: warehouse.catalog_items || [],
+      daily_count_items: warehouse.daily_count_items || []
     });
   };
 
-  const toggleItemInCatalog = (itemId) => {
+  const handleManageDailyItems = (warehouse) => {
+    setItemSelectionMode('daily');
+    setShowItemSelection(warehouse);
+    setFormData({
+      ...warehouse,
+      catalog_items: warehouse.catalog_items || [],
+      daily_count_items: warehouse.daily_count_items || []
+    });
+  };
+
+  const toggleItemInSelection = (itemId) => {
     setFormData(prev => {
-      const catalog = prev.catalog_items || [];
-      const exists = catalog.includes(itemId);
-      
+      const key = itemSelectionMode === 'daily' ? 'daily_count_items' : 'catalog_items';
+      const list = prev[key] || [];
+      const exists = list.includes(itemId);
       return {
         ...prev,
-        catalog_items: exists 
-          ? catalog.filter(id => id !== itemId)
-          : [...catalog, itemId]
+        [key]: exists ? list.filter(id => id !== itemId) : [...list, itemId]
       };
     });
   };
 
   const saveCatalogItems = async () => {
     try {
-      await Warehouse.update(showItemSelection.id, {
-        ...showItemSelection,
-        catalog_items: formData.catalog_items
-      });
-      
+      const payload = { ...showItemSelection };
+      if (itemSelectionMode === 'daily') {
+        payload.daily_count_items = formData.daily_count_items;
+      } else {
+        payload.catalog_items = formData.catalog_items;
+      }
+      await Warehouse.update(showItemSelection.id, payload);
       const updatedWarehouses = await Warehouse.list();
       setLocalWarehouses(updatedWarehouses);
       setShowItemSelection(null);
-      alert(t('save') + ' ' + t('items') + ' ✓');
+      alert('Saved ✓');
     } catch (error) {
-      console.error("Error saving catalog items:", error);
+      console.error("Error saving items:", error);
       alert(t('error_saving'));
     }
   };
@@ -159,26 +180,75 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                               <p className="text-sm text-gray-500 mt-1">{warehouse.description}</p>
                             )}
                             {warehouse.catalog_items && warehouse.catalog_items.length > 0 && (
-                              <Badge variant="outline" className="mt-2">
+                              <Badge variant="outline" className="mt-2 mr-2">
                                 <Package className="w-3 h-3 mr-1" />
                                 {warehouse.catalog_items.length} {t('items')}
                               </Badge>
                             )}
+                            {warehouse.daily_count_items && warehouse.daily_count_items.length > 0 && (
+                              <Badge variant="outline" className="mt-2">
+                                <Bell className="w-3 h-3 mr-1" />
+                                {warehouse.daily_count_items.length} Daily
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleManageItems(warehouse)}
-                            >
-                              <Package className="w-4 h-4 ml-1" />
-                              {t('items')}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(warehouse)}
-                            >
+                          <div className="flex gap-2 flex-wrap">
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => handleManageDailyItems(warehouse)}
+                             >
+                               <Bell className="w-4 h-4 ml-1" />
+                               Daily Items
+                             </Button>
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => handleManageItems(warehouse)}
+                             >
+                               <Package className="w-4 h-4 ml-1" />
+                               {t('items')}
+                             </Button>
+                             {warehouse.daily_count_enabled && (warehouse.daily_count_items?.length || 0) > 0 && (
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={async () => {
+                                   try {
+                                     const itemsMap = new Map(allItems.map(i => [i.id, i]));
+                                     const selected = (warehouse.daily_count_items || []).map(id => itemsMap.get(id)).filter(Boolean);
+                                     const today = new Date();
+                                     const dateStr = today.toISOString().slice(0,10);
+                                     const payload = {
+                                       warehouse_id: warehouse.id,
+                                       warehouse_name: warehouse.name,
+                                       count_date: dateStr,
+                                       count_type: 'daily',
+                                       items: selected.map(it => ({
+                                         item_id: it.id,
+                                         item_name: it.name,
+                                         supplier_name: it.supplier_name,
+                                         counted_quantity: 0,
+                                         unit: it.unit,
+                                         price_per_unit: it.price || 0,
+                                         total_cost: 0
+                                       }))
+                                     };
+                                     const created = await base44.entities.InventoryCount.create(payload);
+                                     window.location.href = createPageUrl('MonthlyCount');
+                                   } catch (e) {
+                                     alert('Failed to start daily count');
+                                   }
+                                 }}
+                               >
+                                 Start Daily Count
+                               </Button>
+                             )}
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               onClick={() => handleEdit(warehouse)}
+                             >
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
@@ -243,6 +313,27 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                 />
               </div>
 
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="daily_enabled"
+                    checked={formData.daily_count_enabled}
+                    onCheckedChange={(v) => setFormData(prev => ({ ...prev, daily_count_enabled: !!v }))}
+                  />
+                  <Label htmlFor="daily_enabled">Enable Daily Count & Reminders</Label>
+                </div>
+                {formData.daily_count_enabled && (
+                  <div className="space-y-2">
+                    <Label htmlFor="daily_time">Reminder Time (HH:mm)</Label>
+                    <Input
+                      id="daily_time"
+                      type="time"
+                      value={formData.daily_count_time || "16:00"}
+                      onChange={(e) => setFormData(prev => ({ ...prev, daily_count_time: e.target.value }))}
+                    />
+                  </div>
+                )}
+
               <div className="flex gap-3 justify-end">
                 <Button
                   type="button"
@@ -266,7 +357,7 @@ export default function WarehouseManagement({ warehouses, onClose }) {
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-lg">
-                  {t('items')} - {showItemSelection.name}
+                  {itemSelectionMode === 'daily' ? 'Daily Count Items' : t('items')} - {showItemSelection.name}
                 </h3>
                 <Button
                   variant="ghost"
@@ -279,7 +370,7 @@ export default function WarehouseManagement({ warehouses, onClose }) {
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <p className="text-sm text-blue-800">
-                  {t('select')} {t('items')} {t('for')} {t('warehouse')}. {t('when')} {t('new_count')}, {t('these')} {t('items')} {t('will')} {t('be')} {t('automatically')} {t('loaded')}.
+                  {itemSelectionMode === 'daily' ? 'Select items to always include in the Daily Count for this warehouse.' : 'Select catalog items for this warehouse.'}
                 </p>
               </div>
 
@@ -290,8 +381,8 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                   allItems.map(item => (
                     <div key={item.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
                       <Checkbox
-                        checked={(formData.catalog_items || []).includes(item.id)}
-                        onCheckedChange={() => toggleItemInCatalog(item.id)}
+                       checked={(itemSelectionMode === 'daily' ? (formData.daily_count_items || []) : (formData.catalog_items || [])).includes(item.id)}
+                       onCheckedChange={() => toggleItemInSelection(item.id)}
                       />
                       <div className="flex-1">
                         <div className="font-medium">{item.name}</div>
@@ -304,7 +395,12 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                 )}
               </div>
 
-              <div className="flex gap-3 justify-end pt-4 border-t">
+              <div className="flex gap-3 justify-between items-center pt-4 border-t">
+                <div className="text-sm text-gray-500">
+                  Mode:
+                  <Button variant={itemSelectionMode==='daily' ? 'default' : 'outline'} size="sm" className="ml-2" onClick={() => setItemSelectionMode('daily')}>Daily</Button>
+                  <Button variant={itemSelectionMode==='catalog' ? 'default' : 'outline'} size="sm" className="ml-2" onClick={() => setItemSelectionMode('catalog')}>{t('items')}</Button>
+                </div>
                 <Button
                   variant="outline"
                   onClick={() => setShowItemSelection(null)}
@@ -312,10 +408,10 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                   {t('cancel')}
                 </Button>
                 <Button
-                  onClick={saveCatalogItems}
-                  className="bg-indigo-600 hover:bg-indigo-700"
+                 onClick={saveCatalogItems}
+                 className="bg-indigo-600 hover:bg-indigo-700"
                 >
-                  {t('save')} {t('items')}
+                 {t('save')}
                 </Button>
               </div>
             </div>
