@@ -38,7 +38,6 @@ export default function WasteReports() {
         </div>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Waste Reports</h1>
-          <Button onClick={()=>setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-700 gap-2"><Plus className="w-4 h-4"/> New Report</Button>
         </div>
 
         {showForm ? (
