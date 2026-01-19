@@ -65,6 +65,16 @@ export default function WasteReports() {
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{(r.items||[]).slice(0,3).map(i=>i.item_name).join(', ')}{(r.items||[]).length>3?'…':''}</Badge>
                       <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={()=>{
+                          setShowForm({ edit: true, report: r });
+                        }}
+                      >
+                        <Pencil className="w-3 h-3"/> Edit
+                      </Button>
+                      <Button
                         variant="ghost"
                         size="icon"
                         onClick={async ()=>{
