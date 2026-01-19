@@ -156,7 +156,7 @@ export default function DailySummaryTab() {
                   <TableCell className="text-right">{diff.toFixed(2)}</TableCell>
                 </TableRow>
               );
-            })
+            })}
           </TableBody>
         </Table>
         <div className="text-sm text-gray-600">{L.footnote}</div>
