@@ -169,6 +169,34 @@ export default function DailySummaryTab() {
         const rec = await base44.entities.WasteReport.create(payload);
         setEodReportId(rec.id);
       }
+
+      // Auto-log REAL WASTE items into the standard daily waste report
+      const realWasteItems = (eodItems||[])
+        .filter(it => it.disposition === 'real_waste' && Number(it.end_qty||0) > 0)
+        .map(it => ({
+          item_id: it.item_id,
+          item_name: it.item_name,
+          unit: it.unit,
+          quantity: Number(it.end_qty||0),
+          reason: 'end_of_day_real_waste'
+        }));
+      if (realWasteItems.length > 0) {
+        const existing = await base44.entities.WasteReport.filter({ warehouse_id: warehouseId, report_date: date, report_kind: 'waste' });
+        if (existing && existing[0]) {
+          const ex = existing[0];
+          await base44.entities.WasteReport.update(ex.id, { ...ex, items: [ ...(ex.items||[]), ...realWasteItems ] });
+        } else {
+          await base44.entities.WasteReport.create({
+            warehouse_id: warehouseId,
+            warehouse_name: wh?.name || '',
+            report_date: date,
+            shift: 'daily',
+            report_kind: 'waste',
+            items: realWasteItems,
+            notes: 'Auto-created from End of Day'
+          });
+        }
+      }
     } finally {
       setSavingEod(false);
     }
