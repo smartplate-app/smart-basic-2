@@ -7,13 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Calendar as CalendarIcon, Save, Settings } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-export default function WasteReportForm({ warehouses, items, onCancel, onSaved }) {
-  const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id || "");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0,10));
-  const [shift, setShift] = useState("daily");
-  const [mode, setMode] = useState("preset"); // preset | free
-  const [rows, setRows] = useState([]);
-  const [note, setNote] = useState("");
+export default function WasteReportForm({ warehouses, items, onCancel, onSaved, report }) {
+  const [warehouseId, setWarehouseId] = useState(report?.warehouse_id || warehouses[0]?.id || "");
+  const [date, setDate] = useState(() => report?.report_date || new Date().toISOString().slice(0,10));
+  const [shift, setShift] = useState(report?.shift || "daily");
+  const [mode, setMode] = useState(report ? "free" : "preset"); // preset | free
+  const [rows, setRows] = useState(report?.items || []);
+  const [note, setNote] = useState(report?.notes || "");
   const [saving, setSaving] = useState(false);
   const selectedWarehouse = useMemo(() => warehouses.find(w => w.id === warehouseId), [warehouseId, warehouses]);
 
@@ -58,7 +58,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved }
         ...r,
         total_cost: Number(r.quantity||0) * Number(r.price_per_unit||0)
       }));
-      const wr = await base44.entities.WasteReport.create({
+      const payload = {
         warehouse_id: warehouseId,
         warehouse_name: selectedWarehouse?.name || "",
         report_date: date,
@@ -66,7 +66,13 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved }
         items: cleanItems,
         total_waste_value: cleanItems.reduce((s,x)=>s+(x.total_cost||0),0),
         notes: note
-      });
+      };
+      let wr;
+      if (report?.id) {
+        wr = await base44.entities.WasteReport.update(report.id, payload);
+      } else {
+        wr = await base44.entities.WasteReport.create(payload);
+      }
       onSaved?.(wr);
     } catch (e) {
       alert('Failed to save');
@@ -88,7 +94,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved }
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>New Waste Report</span>
+          <span>{report ? 'Edit Waste Report' : 'New Waste Report'}</span>
           <Badge variant="outline">{total.toFixed(2)} total</Badge>
         </CardTitle>
       </CardHeader>
@@ -182,7 +188,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved }
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onCancel}>Cancel</Button>
           <Button onClick={save} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
-            <Save className="w-4 h-4 mr-1"/> Save Report
+            <Save className="w-4 h-4 mr-1"/> {report ? 'Update Report' : 'Save Report'}
           </Button>
         </div>
       </CardContent>
