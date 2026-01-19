@@ -4511,6 +4511,58 @@ const translations = {
         "view_as_cards": "Προβολή ως Κάρτες",
         "view_as_list": "Προβολή ως Λίστα",
         "final_price": "Τελική Τιμή",
+    },
+    sr: {
+        // General
+        "save": "Sačuvaj",
+        "cancel": "Otkaži",
+        "edit": "Uredi",
+        "delete": "Obriši",
+        "search": "Pretraga...",
+        "loading": "Učitavanje...",
+        "required_fields": "Obavezna polja",
+        "created_at": "Kreirano",
+        "logout": "Odjava",
+        "logging_out": "Odjavljivanje...",
+        "saving": "Čuvanje",
+        "switch_user": "Promeni korisnika",
+        "error_saving": "Greška pri čuvanju. Pokušajte ponovo.",
+        
+        // Layout & Navigation
+        "system_title": "FOOD COST - LABOR COST",
+        "system_subtitle": "Kompletan sistem upravljanja",
+        "dashboard": "Kontrolna tabla",
+        "nav_suppliers": "Dobavljači",
+        "nav_items": "Artikli",
+        "nav_orders": "Narudžbine",
+        "nav_receipts": "Prijemnice",
+        "nav_monthly_count": "Mesejni popis",
+        "nav_users": "Korisnici",
+        "user_profile": "Korisnički profil",
+        
+        // Common pages
+        "suppliers_title": "Upravljanje dobavljačima",
+        "items_title": "Katalog artikala",
+        "orders_title": "Upravljanje narudžbinama",
+        "receipts_title": "Prijemnice",
+        "monthly_dashboard": "Mesečni pregled",
+        
+        // Buttons / actions
+        "add": "Dodaj",
+        "update": "Ažuriraj",
+        "send": "Pošalji",
+        "download": "Preuzmi",
+        
+        // Inventory / schedule basics
+        "workers": "Radnici",
+        "weekly_schedule": "Nedeljni raspored",
+        "save_schedule": "Sačuvaj raspored",
+        
+        // Misc
+        "year": "Godina",
+        "month": "Mesec",
+        "print": "Štampa",
+        "no_items_to_display": "Nema stavki za prikaz",
     }
 };
 

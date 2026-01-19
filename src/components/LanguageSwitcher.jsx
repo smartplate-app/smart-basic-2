@@ -17,6 +17,7 @@ const languages = [
   { code: 'el', name: 'Ελληνικά', flag: '🇬🇷' },
   { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'sr', name: 'Srpski', flag: '🇷🇸' },
 ];
 
 export default function LanguageSwitcher() {
