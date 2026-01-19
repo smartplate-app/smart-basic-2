@@ -40,6 +40,7 @@ export default function WasteReports() {
           <WasteReportForm
             warehouses={warehouses}
             items={items}
+            report={showForm?.edit ? showForm.report : null}
             onCancel={()=>setShowForm(false)}
             onSaved={()=>{ setShowForm(false); loadAll(); }}
           />
