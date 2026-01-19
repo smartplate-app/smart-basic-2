@@ -127,17 +127,24 @@ export default function DailySummaryTab() {
                     {isHE ? 'דוגמה (להמחשה): כך ייראה הסיכום כשיש ספירת פתיחה וסיום' : 'Example (for illustration): how the summary looks with begin and end counts'}
                   </TableCell>
                 </TableRow>
-                {sampleRows.map((s, i) => {
-                  const d = Number(s.begin) - Number(s.end);
-                  return (
-                    <TableRow key={'ex'+i} className="opacity-80">
-                      <TableCell className="italic text-gray-600">{s.item_name}</TableCell>
-                      <TableCell className="text-right text-gray-600">{Number(s.begin).toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-gray-600">{Number(s.end).toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-gray-800 font-medium">{d.toFixed(2)}</TableCell>
-                    </TableRow>
-                  );
-                })}
+                <TableRow className="opacity-80">
+                  <TableCell className="italic text-gray-600">{isHE ? 'חלה לבנה' : 'White Bread'}</TableCell>
+                  <TableCell className="text-right text-gray-600">8.00</TableCell>
+                  <TableCell className="text-right text-gray-600">5.00</TableCell>
+                  <TableCell className="text-right text-gray-800 font-medium">3.00</TableCell>
+                </TableRow>
+                <TableRow className="opacity-80">
+                  <TableCell className="italic text-gray-600">{isHE ? 'קמח 1 קילו' : 'Flour 1kg'}</TableCell>
+                  <TableCell className="text-right text-gray-600">6.00</TableCell>
+                  <TableCell className="text-right text-gray-600">4.50</TableCell>
+                  <TableCell className="text-right text-gray-800 font-medium">1.50</TableCell>
+                </TableRow>
+                <TableRow className="opacity-80">
+                  <TableCell className="italic text-gray-600">{isHE ? 'חלב 3% (1 ליטר)' : 'Milk 3% 1L'}</TableCell>
+                  <TableCell className="text-right text-gray-600">12.00</TableCell>
+                  <TableCell className="text-right text-gray-600">8.50</TableCell>
+                  <TableCell className="text-right text-gray-800 font-medium">3.50</TableCell>
+                </TableRow>
               </>
             ) : rows.map((r, i) => {
               const diff = Number(r.begin||0) - Number(r.end||0);
