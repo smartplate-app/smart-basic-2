@@ -154,6 +154,7 @@ const AppLayout = ({ children, currentPageName }) => {
   { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
   { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
   { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false, workerHidden: false },
+  { title: language === 'he' ? 'דיווח בזבוז' : 'Waste', url: createPageUrl("WasteReports"), icon: TrendingDown, adminOnly: false, workerHidden: false },
   { title: language === 'he' ? 'רשימת משימות' : 'To-Do List', url: createPageUrl("ToDoList"), icon: ChefHat, adminOnly: false, workerHidden: false },
   { title: language === 'he' ? 'העברות מלאי' : 'Inventory Transfers', url: createPageUrl("InventoryTransfers"), icon: ArrowLeftRight, adminOnly: false, workerHidden: true },
   { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
