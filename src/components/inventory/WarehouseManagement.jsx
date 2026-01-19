@@ -350,6 +350,7 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                   {editingWarehouse ? t('update') : t('save')}
                 </Button>
               </div>
+            </div>
             </form>
           )}
 
