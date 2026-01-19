@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import WasteReportForm from "../components/waste/WasteReportForm";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil, ListChecks } from "lucide-react";
 
 export default function WasteReports() {
   const [warehouses, setWarehouses] = useState([]);
