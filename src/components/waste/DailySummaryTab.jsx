@@ -90,7 +90,7 @@ export default function DailySummaryTab() {
             </Select>
           </div>
           <div>
-            <label className="text-sm text-gray-600">{L.date}</label>
+            <label className={`text-sm text-gray-600 ${isHE ? 'block text-right' : ''}`}>{L.date}</label>
             <input type="date" className="w-full border rounded h-9 px-3" value={date} onChange={e=>setDate(e.target.value)} />
           </div>
         </div>
