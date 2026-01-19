@@ -22,6 +22,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
   }, [warehouses, warehouseId]);
 
   useEffect(() => {
+    if (report?.id) return; // do not auto-populate when editing existing report
     if (mode === 'preset') {
       const presetIds = selectedWarehouse?.waste_preset_items || [];
       const map = new Map(items.map(i => [i.id, i]));
@@ -36,7 +37,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
     } else {
       setRows([]);
     }
-  }, [mode, warehouseId, selectedWarehouse, items]);
+  }, [mode, warehouseId, selectedWarehouse, items, report]);
 
   const addFreeRow = () => {
     setRows(r => ([...r, { item_id: "", item_name: "", unit: "unit", price_per_unit: 0, quantity: 0, reason: "" }]));
