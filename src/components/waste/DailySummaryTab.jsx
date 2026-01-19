@@ -73,6 +73,18 @@ export default function DailySummaryTab() {
     return Array.from(map.values());
   }, [beginCount, endCount, wastes]);
 
+  const sampleRows = useMemo(() => (
+    isHE ? [
+      { item_name: 'חלה לבנה', begin: 8, end: 5, unit: 'יח׳' },
+      { item_name: 'קמח לבן קילו', begin: 6, end: 4.5, unit: 'ק"ג' },
+      { item_name: 'חלב 3% 1ל׳', begin: 12, end: 8.5, unit: 'ל׳' },
+    ] : [
+      { item_name: 'White Bread', begin: 8, end: 5, unit: 'unit' },
+      { item_name: 'Flour 1kg', begin: 6, end: 4.5, unit: 'kg' },
+      { item_name: 'Milk 3% 1L', begin: 12, end: 8.5, unit: 'L' },
+    ]
+  ), [isHE]);
+
   return (
     <Card>
       <CardHeader>
@@ -106,7 +118,27 @@ export default function DailySummaryTab() {
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="text-center text-gray-500">{L.noData}</TableCell></TableRow>
+              <>
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-gray-500">{L.noData}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={4} className="text-xs text-gray-500">
+                    {isHE ? 'דוגמה (להמחשה): כך ייראה הסיכום כשיש ספירת פתיחה וסיום' : 'Example (for illustration): how the summary looks with begin and end counts'}
+                  </TableCell>
+                </TableRow>
+                {sampleRows.map((s, i) => {
+                  const d = Number(s.begin) - Number(s.end);
+                  return (
+                    <TableRow key={'ex'+i} className="opacity-80">
+                      <TableCell className="italic text-gray-600">{s.item_name}</TableCell>
+                      <TableCell className="text-right text-gray-600">{Number(s.begin).toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-gray-600">{Number(s.end).toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-gray-800 font-medium">{d.toFixed(2)}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </>
             ) : rows.map((r, i) => {
               const diff = Number(r.begin||0) - Number(r.end||0);
               return (
@@ -117,7 +149,7 @@ export default function DailySummaryTab() {
                   <TableCell className="text-right">{diff.toFixed(2)}</TableCell>
                 </TableRow>
               );
-            })}
+            })
           </TableBody>
         </Table>
         <div className="text-sm text-gray-600">{L.footnote}</div>
