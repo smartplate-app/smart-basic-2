@@ -82,7 +82,7 @@ export default function WasteReports() {
                           setShowForm({ edit: true, report: r });
                         }}
                       >
-                        <Pencil className="w-3 h-3"/> Edit
+                        <Pencil className="w-3 h-3"/> {isHE ? 'עריכה' : 'Edit'}
                       </Button>
                       <Button
                         variant="ghost"
