@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ListChecks } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export default function DailySummaryTab() {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0,10));
@@ -11,6 +12,20 @@ export default function DailySummaryTab() {
   const [warehouseId, setWarehouseId] = useState("");
   const [counts, setCounts] = useState([]);
   const [wastes, setWastes] = useState([]);
+
+  const { language } = useLanguage();
+  const isHE = language === 'he';
+  const L = {
+    header: isHE ? 'סיכום ספירה יומית' : 'Daily Count Summary',
+    date: isHE ? 'תאריך' : 'Date',
+    warehouse: isHE ? 'מחסן' : 'Warehouse',
+    item: isHE ? 'פריט' : 'Item',
+    begin: isHE ? 'תחילה' : 'Begin',
+    end: isHE ? 'סיום' : 'End',
+    diff: isHE ? 'הפרש' : 'Difference',
+    noData: isHE ? 'אין נתונים ליום זה' : 'No data for this day',
+    footnote: isHE ? 'ההפרש אמור לשקף את הכמות שנצרכה או נמכרה במהלך היום.' : 'Difference should equal what was used or sold during the day.',
+  };
 
   useEffect(() => {
     (async () => {
@@ -61,12 +76,12 @@ export default function DailySummaryTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><ListChecks className="w-4 h-4"/> Daily Count Summary</CardTitle>
+        <CardTitle className="flex items-center gap-2"><ListChecks className="w-4 h-4"/> {L.header}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="text-sm text-gray-600">Warehouse</label>
+            <label className="text-sm text-gray-600">{L.warehouse}</label>
             <Select value={warehouseId} onValueChange={setWarehouseId}>
               <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
@@ -75,7 +90,7 @@ export default function DailySummaryTab() {
             </Select>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Date</label>
+            <label className="text-sm text-gray-600">{L.date}</label>
             <input type="date" className="w-full border rounded h-9 px-3" value={date} onChange={e=>setDate(e.target.value)} />
           </div>
         </div>
@@ -83,15 +98,15 @@ export default function DailySummaryTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead className="text-right">Begin</TableHead>
-              <TableHead className="text-right">End</TableHead>
-              <TableHead className="text-right">Difference</TableHead>
+              <TableHead>{L.item}</TableHead>
+              <TableHead className="text-right">{L.begin}</TableHead>
+              <TableHead className="text-right">{L.end}</TableHead>
+              <TableHead className="text-right">{L.diff}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="text-center text-gray-500">No data for this day</TableCell></TableRow>
+              <TableRow><TableCell colSpan={4} className="text-center text-gray-500">{L.noData}</TableCell></TableRow>
             ) : rows.map((r, i) => {
               const diff = Number(r.begin||0) - Number(r.end||0);
               return (
@@ -105,7 +120,7 @@ export default function DailySummaryTab() {
             })}
           </TableBody>
         </Table>
-        <div className="text-sm text-gray-600">Difference should equal what was used or sold during the day.</div>
+        <div className="text-sm text-gray-600">{L.footnote}</div>
       </CardContent>
     </Card>
   );

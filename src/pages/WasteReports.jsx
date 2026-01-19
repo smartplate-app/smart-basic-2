@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import WasteReportForm from "../components/waste/WasteReportForm";
 import DailySummaryTab from "../components/waste/DailySummaryTab";
 import { Plus, Trash2, Pencil, ListChecks } from "lucide-react";
+import { useLanguage } from "../components/LanguageProvider";
 
 export default function WasteReports() {
   const [warehouses, setWarehouses] = useState([]);
@@ -13,6 +14,8 @@ export default function WasteReports() {
   const [reports, setReports] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { language } = useLanguage();
+  const isHE = language === 'he';
 
   const loadAll = async () => {
     setLoading(true);
@@ -33,11 +36,11 @@ export default function WasteReports() {
     <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex gap-2">
-          <Button variant={!showForm ? 'default' : 'outline'} onClick={()=>setShowForm(false)}>Daily Summary</Button>
-          <Button variant={showForm ? 'default' : 'outline'} onClick={()=>setShowForm(true)}>New Report</Button>
+          <Button variant={!showForm ? 'default' : 'outline'} onClick={()=>setShowForm(false)}>{isHE ? 'סיכום יומי' : 'Daily Summary'}</Button>
+          <Button variant={showForm ? 'default' : 'outline'} onClick={()=>setShowForm(true)}>{isHE ? 'דוח חדש' : 'New Report'}</Button>
         </div>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Waste Reports</h1>
+          <h1 className="text-2xl font-bold">{isHE ? 'דוחות בזבוז' : 'Waste Reports'}</h1>
         </div>
 
         {showForm ? (
@@ -54,20 +57,20 @@ export default function WasteReports() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Reports</CardTitle>
+            <CardTitle>{isHE ? 'דוחות אחרונים' : 'Recent Reports'}</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-gray-500">Loading...</div>
+              <div className="text-gray-500">{isHE ? 'טוען...' : 'Loading...'}</div>
             ) : reports.length === 0 ? (
-              <div className="text-gray-500">No reports yet.</div>
+              <div className="text-gray-500">{isHE ? 'אין עדיין דוחות.' : 'No reports yet.'}</div>
             ) : (
               <div className="space-y-3">
                 {reports.map(r => (
                   <div key={r.id} className="p-3 rounded-lg border flex items-center justify-between">
                     <div>
                       <div className="font-medium">{r.warehouse_name} • {r.report_date} • {r.shift}</div>
-                      <div className="text-sm text-gray-600">{r.items?.length || 0} items • Total {Number(r.total_waste_value||0).toFixed(2)}</div>
+                      <div className="text-sm text-gray-600">{r.items?.length || 0} {isHE ? 'פריטים' : 'items'} • {isHE ? 'סה"כ' : 'Total'} {Number(r.total_waste_value||0).toFixed(2)}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{(r.items||[]).slice(0,3).map(i=>i.item_name).join(', ')}{(r.items||[]).length>3?'…':''}</Badge>
@@ -85,7 +88,7 @@ export default function WasteReports() {
                         variant="ghost"
                         size="icon"
                         onClick={async ()=>{
-                          if (!confirm('Delete this report?')) return;
+                          if (!confirm(isHE ? 'למחוק את הדוח?' : 'Delete this report?')) return;
                           await base44.entities.WasteReport.delete(r.id);
                           setReports(reports.filter(x=>x.id!==r.id));
                         }}
