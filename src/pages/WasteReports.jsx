@@ -41,7 +41,7 @@ export default function WasteReports() {
           <Button onClick={()=>setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-700 gap-2"><Plus className="w-4 h-4"/> New Report</Button>
         </div>
 
-        {showForm && (
+        {showForm ? (
           <WasteReportForm
             warehouses={warehouses}
             items={items}
@@ -49,6 +49,8 @@ export default function WasteReports() {
             onCancel={()=>setShowForm(false)}
             onSaved={()=>{ setShowForm(false); loadAll(); }}
           />
+        ) : (
+          <DailySummaryTab />
         )}
 
         <Card>
