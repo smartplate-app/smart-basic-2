@@ -83,7 +83,7 @@ export default function DailySummaryTab() {
           <div>
             <label className="text-sm text-gray-600">{L.warehouse}</label>
             <Select value={warehouseId} onValueChange={setWarehouseId}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder={isHE ? 'בחר' : 'Select'} /></SelectTrigger>
               <SelectContent>
                 {warehouses.map(w => (<SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>))}
               </SelectContent>
