@@ -81,7 +81,7 @@ export default function DailySummaryTab() {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="text-sm text-gray-600">{L.warehouse}</label>
+            <label className={`text-sm text-gray-600 ${isHE ? 'block text-right' : ''}`}>{L.warehouse}</label>
             <Select value={warehouseId} onValueChange={setWarehouseId}>
               <SelectTrigger className="w-full"><SelectValue placeholder={isHE ? 'בחר' : 'Select'} /></SelectTrigger>
               <SelectContent>
