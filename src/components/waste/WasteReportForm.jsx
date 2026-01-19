@@ -15,6 +15,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
   const [rows, setRows] = useState(report?.items || []);
   const [note, setNote] = useState(report?.notes || "");
   const [saving, setSaving] = useState(false);
+  const [reportType, setReportType] = useState('start');
   const selectedWarehouse = useMemo(() => warehouses.find(w => w.id === warehouseId), [warehouseId, warehouses]);
 
   useEffect(() => {
@@ -118,17 +119,15 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
             </div>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Shift</label>
-            <Select value={shift} onValueChange={setShift}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Shift" /></SelectTrigger>
+            <label className="text-sm text-gray-600">Report Type</label>
+            <Select value={reportType} onValueChange={setReportType}>
+              <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="morning">Morning</SelectItem>
-                <SelectItem value="midday">Midday</SelectItem>
-                <SelectItem value="evening">Evening</SelectItem>
-                <SelectItem value="night">Night</SelectItem>
+                <SelectItem value="start">Start of day</SelectItem>
+                <SelectItem value="end">End of day</SelectItem>
               </SelectContent>
             </Select>
+            <div className="text-xs text-gray-500 mt-1">End of day marking is done in Daily Summary.</div>
           </div>
           <div className="flex items-end gap-2">
             <Button variant={mode==='preset'? 'default':'outline'} onClick={()=>setMode('preset')}>Preset</Button>
