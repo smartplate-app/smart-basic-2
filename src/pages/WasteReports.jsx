@@ -32,6 +32,10 @@ export default function WasteReports() {
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex gap-2">
+          <Button variant={!showForm ? 'default' : 'outline'} onClick={()=>setShowForm(false)}>Daily Summary</Button>
+          <Button variant={showForm ? 'default' : 'outline'} onClick={()=>setShowForm(true)}>New Report</Button>
+        </div>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Waste Reports</h1>
           <Button onClick={()=>setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-700 gap-2"><Plus className="w-4 h-4"/> New Report</Button>
