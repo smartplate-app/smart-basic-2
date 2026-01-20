@@ -16,7 +16,7 @@ export default function ToDoListPage() {
   
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState("month"); // month, list, schedule
+  const [viewMode, setViewMode] = useState("list"); // month, list, schedule
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
