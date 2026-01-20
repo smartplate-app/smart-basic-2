@@ -309,26 +309,7 @@ export default function ToDoListPage() {
           </Card>
         )}
 
-        {/* Navigation */}
-        {viewMode === 'month' && (
-          <div className={`flex items-center justify-between mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentDate(subMonths(currentDate, 1))}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <h2 className="text-xl font-bold">
-              {format(currentDate, 'MMMM yyyy')}
-            </h2>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentDate(addMonths(currentDate, 1))}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
+
 
         {/* List View */}
         {viewMode === 'list' && (
