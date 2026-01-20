@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) {
   const { t, language } = useLanguage();
@@ -83,7 +85,15 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             <span>{t('monthly_report') || 'Monthly Report'}</span>
             <div className="flex items-center gap-3">
               <label className="text-sm text-gray-600">{t('month') || 'Month'}</label>
-              <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-40" />
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button variant="outline" size="icon" onClick={() => setMonth(moment(month + '-01').subtract(1, 'month').format('YYYY-MM'))}>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-40" />
+                <Button variant="outline" size="icon" onClick={() => setMonth(moment(month + '-01').add(1, 'month').format('YYYY-MM'))}>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
               <Button
                 disabled={uploading}
                 onClick={async () => {
