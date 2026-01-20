@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) {
   const { t, language } = useLanguage();
