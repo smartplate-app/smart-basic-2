@@ -214,7 +214,7 @@ export default function ToDoListPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="month">{isRTL ? 'לוח שנה' : 'Calendar'}</SelectItem>
+                
                 <SelectItem value="list">{isRTL ? 'רשימה' : 'List'}</SelectItem>
                 <SelectItem value="schedule">{isRTL ? 'סיכום חודשי' : 'Monthly Summary'}</SelectItem>
               </SelectContent>
