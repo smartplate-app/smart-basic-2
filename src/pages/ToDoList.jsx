@@ -386,7 +386,7 @@ export default function ToDoListPage() {
         )}
 
         {/* Month View */}
-        {viewMode === 'month' && (
+        {false && (
           <div className="grid grid-cols-7 gap-2">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
               <div key={day} className="text-center font-bold text-sm py-2">
