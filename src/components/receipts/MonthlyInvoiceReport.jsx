@@ -26,8 +26,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [targetUser, setTargetUser] = useState(null);
   const [targetEmail, setTargetEmail] = useState('');
   const [sortMode, setSortMode] = useState('supplier_asc');
-  const [sortMode, setSortMode] = useState('supplier_asc');
-  const [sortMode, setSortMode] = useState('supplier_asc');
 
   React.useEffect(() => {
     (async () => {
