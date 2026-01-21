@@ -114,6 +114,34 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   </SelectContent>
                 </Select>
               </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
+                <Select value={sortMode} onValueChange={setSortMode}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder={t('sort_by') || 'Sort'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
+                    <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
+                    <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
+                    <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
+                <Select value={sortMode} onValueChange={setSortMode}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder={t('sort_by') || 'Sort'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
+                    <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
+                    <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
+                    <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button
                 disabled={uploading}
                 onClick={async () => {
