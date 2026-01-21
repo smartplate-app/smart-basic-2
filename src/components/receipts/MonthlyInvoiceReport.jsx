@@ -4,6 +4,7 @@ import { useLanguage } from "../LanguageProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { base44 } from "@/api/base44Client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -24,6 +25,8 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [connectEmail, setConnectEmail] = useState('');
   const [targetUser, setTargetUser] = useState(null);
   const [targetEmail, setTargetEmail] = useState('');
+  const [sortMode, setSortMode] = useState('supplier_asc');
+  const [sortMode, setSortMode] = useState('supplier_asc');
 
   React.useEffect(() => {
     (async () => {
@@ -71,8 +74,13 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
       map[key].receipts.push(r);
       map[key].total += Number(r.invoice_total || 0);
     });
-    return Object.values(map).sort((a, b) => a.supplier_name.localeCompare(b.supplier_name));
-  }, [monthReceipts, supplierById, t]);
+    const arr = Object.values(map);
+    if (sortMode === 'supplier_desc') arr.sort((a, b) => b.supplier_name.localeCompare(a.supplier_name));
+    else if (sortMode === 'total_desc') arr.sort((a, b) => b.total - a.total);
+    else if (sortMode === 'total_asc') arr.sort((a, b) => a.total - b.total);
+    else arr.sort((a, b) => a.supplier_name.localeCompare(b.supplier_name));
+    return arr;
+  }, [monthReceipts, supplierById, t, sortMode]);
 
   const grandTotal = useMemo(() => grouped.reduce((sum, g) => sum + g.total, 0), [grouped]);
 
@@ -92,6 +100,34 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 <Button variant="outline" size="icon" onClick={() => setMonth(moment(month + '-01').add(1, 'month').format('YYYY-MM'))}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
+                <Select value={sortMode} onValueChange={setSortMode}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder={t('sort_by') || 'Sort'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
+                    <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
+                    <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
+                    <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
+                <Select value={sortMode} onValueChange={setSortMode}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder={t('sort_by') || 'Sort'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
+                    <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
+                    <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
+                    <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button
                 disabled={uploading}
