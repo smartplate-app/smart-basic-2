@@ -217,6 +217,12 @@ export default function SupplyReceiptsPage() {
   });
 
   const sortedReceipts = React.useMemo(() => {
+    if (sortBy === 'supplier_asc') {
+      return [...filteredReceipts].sort((a,b) => (a.supplier_name || '').localeCompare(b.supplier_name || ''));
+    }
+    if (sortBy === 'supplier_desc') {
+      return [...filteredReceipts].sort((a,b) => (b.supplier_name || '').localeCompare(a.supplier_name || ''));
+    }
     if (sortBy === 'amount_asc') {
       return [...filteredReceipts].sort((a,b) => (parseFloat(a.invoice_total||0) - parseFloat(b.invoice_total||0)));
     }
@@ -416,6 +422,8 @@ export default function SupplyReceiptsPage() {
                   <SelectItem value="none">{t('no_sort') || 'ללא מיון'}</SelectItem>
                   <SelectItem value="amount_asc">{t('amount_low_to_high') || 'סכום: נמוך → גבוה'}</SelectItem>
                   <SelectItem value="amount_desc">{t('amount_high_to_low') || 'סכום: גבוה → נמוך'}</SelectItem>
+                  <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
+                  <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
                 </SelectContent>
               </Select>
 
