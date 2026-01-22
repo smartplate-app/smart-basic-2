@@ -78,7 +78,7 @@ export default function SuppliersPage() {
                     suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
                     const allItems = [...ownerItems, ...storeItems];
                     itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
-                  } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore) {
+                  } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore || currentUser.acting_as_user_email) {
                     // Branch store - get suppliers from chain head + own (with fallbacks)
                     let effectiveChainId = currentUser.chain_id;
                     if (!effectiveChainId) {
