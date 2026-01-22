@@ -229,10 +229,11 @@ export default function SuppliersPage() {
             // New supplier: create and then auto-open Items add form preselected to this supplier
             let newSupplierId = null;
 
-            if (user.acting_as_store_email || user.store_user_owner_email) {
+            const targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email;
+            if (targetEmail) {
               const { data } = await base44.functions.invoke('createSupplierForStore', {
                 supplierData,
-                storeEmail: user.acting_as_store_email || user.store_user_owner_email
+                storeEmail: targetEmail
               });
               newSupplierId = data?.supplier?.id || data?.created?.id || data?.supplier_id || data?.id || null;
             } else {
@@ -299,7 +300,7 @@ export default function SuppliersPage() {
       setLoadingReport(true);
       setShowReport(true);
       
-      const workingEmail = user.acting_as_store_email || user.email;
+      const workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.email;
       
       // Calculate date range
       let filterStartDate, filterEndDate;
