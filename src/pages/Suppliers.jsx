@@ -128,6 +128,39 @@ export default function SuppliersPage() {
                     itemsData = ownItems;
                   }
 
+                  // Ensure we only show suppliers belonging to the TARGET context (controlled user/store)
+                  const allowedEmails = new Set([workingEmail]);
+                  if (storeOwnerEmail) allowedEmails.add(storeOwnerEmail);
+                  try {
+                    let effChainId = null;
+                    try {
+                      const stores2 = await base44.entities.ChainStore.filter({ user_email: workingEmail });
+                      if (stores2?.length) effChainId = stores2[0].chain_id;
+                    } catch {}
+                    if (!effChainId && workingEmail === (currentUser.email || '')) {
+                      effChainId = currentUser.chain_id || null;
+                    }
+                    if (effChainId) {
+                      try {
+                        const chainRec2 = await base44.entities.Chain.filter({ id: effChainId });
+                        let headEmail2 = chainRec2?.[0]?.head_store_user_email || null;
+                        if (!headEmail2) {
+                          const storesInChain2 = await base44.entities.ChainStore.filter({ chain_id: effChainId });
+                          const headStore2 = storesInChain2?.find(s => s.is_head_store);
+                          headEmail2 = headStore2?.user_email || null;
+                        }
+                        if (headEmail2) allowedEmails.add(headEmail2);
+                      } catch {}
+                    }
+                  } catch {}
+
+                  suppliersData = suppliersData.filter((s) =>
+                    allowedEmails.has(s.created_by) || (s.store_owner_email && allowedEmails.has(s.store_owner_email))
+                  );
+                  itemsData = itemsData.filter((it) =>
+                    allowedEmails.has(it.created_by) || (it.store_owner_email && allowedEmails.has(it.store_owner_email))
+                  );
+
                   setSuppliers(suppliersData);
                   setAllItems(itemsData);
 
