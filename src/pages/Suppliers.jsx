@@ -52,12 +52,19 @@ export default function SuppliersPage() {
                   let itemsData = [];
 
                   // Determine which email to use (acting as store or own)
-                  const workingEmail = currentUser.acting_as_store_email || currentUser.email;
+                  const targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
+                  const workingEmail = targetEmail;
                   const isActingAsStore = !!currentUser.acting_as_store_email;
                   
-                  // Check if user is a store_user (worker/manager invited to someone else's store)
-                  const isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
-                  const storeOwnerEmail = currentUser.store_user_owner_email;
+                  // Resolve if TARGET user is a store user (when admin controls someone, use their records)
+                  let storeOwnerEmail = null;
+                  try {
+                    const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: targetEmail, is_active: true });
+                    if (Array.isArray(storeUserRecords) && storeUserRecords.length > 0) {
+                      storeOwnerEmail = storeUserRecords[0].owner_email;
+                    }
+                  } catch {}
+                  const isStoreUser = !!storeOwnerEmail;
 
                   if (isStoreUser && storeOwnerEmail) {
                     // Store user - load suppliers from the store owner + ones with store_owner_email
