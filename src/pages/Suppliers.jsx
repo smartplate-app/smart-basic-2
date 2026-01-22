@@ -78,7 +78,7 @@ export default function SuppliersPage() {
                     suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
                     const allItems = [...ownerItems, ...storeItems];
                     itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
-                  } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore || currentUser.acting_as_user_email) {
+                  } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore) {
                     // Branch store - get suppliers from chain head + own (with fallbacks)
                     // Derive chain by TARGET email first; only fallback to current user's chain when not controlling
                     let effectiveChainId = null;
