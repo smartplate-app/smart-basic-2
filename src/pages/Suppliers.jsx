@@ -115,7 +115,7 @@ export default function SuppliersPage() {
                       }
                     }
                   } else {
-                    // Head store or no chain - load own suppliers + any with store_owner_email
+                    // Head store or no chain - load TARGET user's suppliers + any with store_owner_email
                     const [ownSuppliers, ownItems, storeSuppliers] = await Promise.all([
                       base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
                       base44.entities.Item.filter({ created_by: workingEmail }),
