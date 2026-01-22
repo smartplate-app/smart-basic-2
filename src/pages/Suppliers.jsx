@@ -80,12 +80,14 @@ export default function SuppliersPage() {
                     itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
                   } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore || currentUser.acting_as_user_email) {
                     // Branch store - get suppliers from chain head + own (with fallbacks)
-                    let effectiveChainId = currentUser.chain_id;
-                    if (!effectiveChainId) {
-                      try {
-                        const myStores = await base44.entities.ChainStore.filter({ user_email: workingEmail });
-                        if (myStores?.length) effectiveChainId = myStores[0].chain_id;
-                      } catch {}
+                    // Derive chain by TARGET email first; only fallback to current user's chain when not controlling
+                    let effectiveChainId = null;
+                    try {
+                      const myStores = await base44.entities.ChainStore.filter({ user_email: workingEmail });
+                      if (myStores?.length) effectiveChainId = myStores[0].chain_id;
+                    } catch {}
+                    if (!effectiveChainId && workingEmail === (currentUser.email || '')) {
+                      effectiveChainId = currentUser.chain_id || null;
                     }
                     if (effectiveChainId) {
                       let headEmail = null;
