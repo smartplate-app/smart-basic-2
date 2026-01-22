@@ -522,6 +522,12 @@ export default function SuppliersPage() {
           </div>
         </div>
 
+        {(user?.role === 'admin' && (user?.acting_as_store_email || user?.acting_as_user_email)) && (
+          <div className="mb-2 text-xs text-amber-700">
+            Viewing suppliers for: {user.acting_as_store_email || user.acting_as_user_email}
+          </div>
+        )}
+
         {/* Orders vs Receipts Report */}
         {showReport && (
           <div className="mb-6 bg-white border rounded-lg shadow-lg p-6">
