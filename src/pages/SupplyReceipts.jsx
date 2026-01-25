@@ -191,12 +191,8 @@ export default function SupplyReceiptsPage() {
 
   const handleDeleteReceipt = async (receipt) => {
     try {
-      if (receipt.status !== 'verified') {
-        alert(t('only_delete_verified') || 'Only verified (accepted) receipts can be deleted.');
-        return;
-      }
       const details = `${receipt.supplier_name || ''} • ${receipt.invoice_number || '-'} • ${receipt.received_date || ''}`;
-      const ok = window.confirm((t('confirm_delete_receipt') || 'Delete this accepted receipt?') + '\n' + details);
+      const ok = window.confirm((t('confirm_delete_receipt') || 'Delete this receipt?') + '\n' + details);
       if (!ok) return;
       await base44.entities.SupplyReceipt.delete(receipt.id);
       setReceipts(prev => prev.filter(r => r.id !== receipt.id));
@@ -375,6 +371,7 @@ export default function SupplyReceiptsPage() {
                     setShowForm(false);
                     setEditingReceipt(null);
                   }}
+                  onDelete={handleDeleteReceipt}
                 />
               )}
 

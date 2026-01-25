@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2 } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
-export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, noOrderMode = false }) {
+export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false }) {
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
   
@@ -740,18 +740,29 @@ Return JSON:
                     )}
 
                     <div className="flex gap-3 pt-4">
-                    <Button 
-                      type="submit" 
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      disabled={!formData.invoice_number || formData.invoice_total === 0 || formData.receipt_images.length === 0 || duplicateExists}
-                    >
-                      <PackageCheck className="w-4 h-4 ml-2" />
-                      {t('save_receipt')}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                      {t('cancel')}
-                    </Button>
-                  </div>
+                      <Button 
+                        type="submit" 
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        disabled={!formData.invoice_number || formData.invoice_total === 0 || formData.receipt_images.length === 0 || duplicateExists}
+                      >
+                        <PackageCheck className="w-4 h-4 ml-2" />
+                        {t('save_receipt')}
+                      </Button>
+                      {receipt && onDelete && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          onClick={() => onDelete(receipt)}
+                          className="flex-1"
+                        >
+                          <Trash2 className="w-4 h-4 ml-2" />
+                          {t('delete') || 'Delete'}
+                        </Button>
+                      )}
+                      <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+                        {t('cancel')}
+                      </Button>
+                    </div>
                 </>
               )}
             </>
