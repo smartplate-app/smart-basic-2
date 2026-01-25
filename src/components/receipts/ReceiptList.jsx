@@ -125,6 +125,17 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
                 <Button size="sm" variant="outline" onClick={() => onEdit && onEdit(r)}>
                   {t('edit') || 'Edit'}
                 </Button>
+                {onDelete && r.status === 'verified' && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="ml-2"
+                    onClick={() => onDelete(r)}
+                    title={t('delete') || 'Delete'}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" /> {t('delete') || 'Delete'}
+                  </Button>
+                )}
               </div>
             </div>
           ))
