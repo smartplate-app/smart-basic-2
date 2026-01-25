@@ -14,6 +14,7 @@ import Orders from './pages/Orders';
 import PublicOrder from './pages/PublicOrder';
 import Register from './pages/Register';
 import RestaurantInvite from './pages/RestaurantInvite';
+import SalesPerHour from './pages/SalesPerHour';
 import SalesPrediction from './pages/SalesPrediction';
 import SignIn from './pages/SignIn';
 import StoreLogin from './pages/StoreLogin';
@@ -33,7 +34,6 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import SalesPerHour from './pages/SalesPerHour';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +54,7 @@ export const PAGES = {
     "PublicOrder": PublicOrder,
     "Register": Register,
     "RestaurantInvite": RestaurantInvite,
+    "SalesPerHour": SalesPerHour,
     "SalesPrediction": SalesPrediction,
     "SignIn": SignIn,
     "StoreLogin": StoreLogin,
@@ -73,7 +74,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "SalesPerHour": SalesPerHour,
 }
 
 export const pagesConfig = {

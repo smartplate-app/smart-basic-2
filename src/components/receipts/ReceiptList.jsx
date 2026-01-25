@@ -2,9 +2,9 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 
-export default function ReceiptList({ receipts = [], onEdit, loading = false }) {
+export default function ReceiptList({ receipts = [], onEdit, onDelete, loading = false }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
 

@@ -189,6 +189,23 @@ export default function SupplyReceiptsPage() {
     setSelectedOrder(null); // Clear any pre-selected order
   };
 
+  const handleDeleteReceipt = async (receipt) => {
+    try {
+      if (receipt.status !== 'verified') {
+        alert(t('only_delete_verified') || 'Only verified (accepted) receipts can be deleted.');
+        return;
+      }
+      const details = `${receipt.supplier_name || ''} • ${receipt.invoice_number || '-'} • ${receipt.received_date || ''}`;
+      const ok = window.confirm((t('confirm_delete_receipt') || 'Delete this accepted receipt?') + '\n' + details);
+      if (!ok) return;
+      await base44.entities.SupplyReceipt.delete(receipt.id);
+      setReceipts(prev => prev.filter(r => r.id !== receipt.id));
+      alert(t('deleted_successfully') || 'Deleted successfully');
+    } catch (e) {
+      alert((t('delete_failed') || 'Delete failed') + ': ' + (e?.message || e));
+    }
+  };
+
   const filteredReceipts = receipts.filter(receipt => {
     const matchesSearch = receipt.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -490,10 +507,11 @@ export default function SupplyReceiptsPage() {
 
             {viewMode === 'list' ? (
               <ReceiptList
-              receipts={sortedReceipts}
-              onEdit={handleEditReceipt}
-              loading={loading}
-              />
+               receipts={sortedReceipts}
+               onEdit={handleEditReceipt}
+               onDelete={handleDeleteReceipt}
+               loading={loading}
+               />
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
                 <AnimatePresence>
