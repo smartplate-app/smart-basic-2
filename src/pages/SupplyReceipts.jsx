@@ -103,9 +103,10 @@ export default function SupplyReceiptsPage() {
           let storeOwnerEmail = currentUser.store_user_owner_email;
           if (!storeOwnerEmail) {
             try {
-              const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
-              if (storeUserRecords.length > 0) {
-                storeOwnerEmail = storeUserRecords[0].owner_email;
+              const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email });
+              if (Array.isArray(storeUserRecords) && storeUserRecords.length > 0) {
+                const activeRec = storeUserRecords.find(r => r.is_active !== false) || storeUserRecords[0];
+                storeOwnerEmail = activeRec?.owner_email || null;
               }
             } catch (e) {
               console.log("Could not fetch store user records");
