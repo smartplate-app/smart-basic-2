@@ -48,19 +48,36 @@ export default function SupplyReceiptsPage() {
       // Artificial delay for demonstration/testing, remove in production if not needed
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // If store user, load suppliers from owner but receipts/orders from working email
-      const suppliersEmail = storeOwnerEmail || userEmail;
-      
-      const [receiptsData, ordersData, suppliersData] = await Promise.all([
-        base44.entities.SupplyReceipt.filter({ created_by: suppliersEmail }, "-received_date"),
-        base44.entities.Order.filter({ created_by: suppliersEmail }, "-created_date"),
-        base44.entities.Supplier.filter({ created_by: suppliersEmail }, "name")
+      // If store user, load suppliers from owner + head store; receipts/orders from working email
+      const suppliersEmails = new Set([userEmail]);
+      if (storeOwnerEmail) suppliersEmails.add(storeOwnerEmail);
+      try {
+        const ownerStores = storeOwnerEmail ? await base44.entities.ChainStore.filter({ user_email: storeOwnerEmail }) : [];
+        const effChainId = ownerStores?.[0]?.chain_id || null;
+        if (effChainId) {
+          const chainRec = await base44.entities.Chain.filter({ id: effChainId });
+          let headEmail = chainRec?.[0]?.head_store_user_email || null;
+          if (!headEmail) {
+            const storesInChain = await base44.entities.ChainStore.filter({ chain_id: effChainId });
+            const headStore = storesInChain?.find(s => s.is_head_store);
+            headEmail = headStore?.user_email || null;
+          }
+          if (headEmail) suppliersEmails.add(headEmail);
+        }
+      } catch {}
+
+      const supplierFetches = Array.from(suppliersEmails).map(e => base44.entities.Supplier.filter({ created_by: e }, "-created_date"));
+      const [receiptsData, ordersData, ...supplierLists] = await Promise.all([
+        base44.entities.SupplyReceipt.filter({ created_by: userEmail }, "-received_date"),
+        base44.entities.Order.filter({ created_by: userEmail }, "-created_date"),
+        ...supplierFetches
       ]);
+      const mergedSuppliers = supplierLists.flat().filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
       setReceipts(receiptsData);
       setOrders(ordersData);
-      setSuppliers(suppliersData);
+      setSuppliers(mergedSuppliers);
       
-      console.log(`[SupplyReceipts] Loaded ${suppliersData.length} suppliers from ${suppliersEmail}`);
+      console.log(`[SupplyReceipts] Loaded ${mergedSuppliers.length} suppliers from ${Array.from(suppliersEmails).join(', ')}`);
     } catch (error) {
       console.error("Error loading data:", error);
 
