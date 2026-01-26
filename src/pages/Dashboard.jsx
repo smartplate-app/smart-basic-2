@@ -914,16 +914,35 @@ const [monthReceipts, setMonthReceipts] = useState([]);
 
           {/* Actual Performance Tab */}
           <TabsContent value="actual" className="space-y-6">
-            <div className={`flex justify-end ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Button 
-                onClick={handleExportMonthlyReport}
-                disabled={exportingMonthly}
-                variant="outline"
-                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-              >
-                {exportingMonthly ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-                {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
-              </Button>
+            <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="text-sm text-gray-600">
+                {language === 'he' ? 'בחר חודש:' : 'Select month:'}
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="w-36 cursor-pointer px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  {Array.from({ length: 18 }, (_, i) => {
+                    const date = moment().subtract(i, 'months');
+                    return (
+                      <option key={date.format('YYYY-MM')} value={date.format('YYYY-MM')}>
+                        {date.format('YYYY-MM')}
+                      </option>
+                    );
+                  })}
+                </select>
+                <Button 
+                  onClick={handleExportMonthlyReport}
+                  disabled={exportingMonthly}
+                  variant="outline"
+                  className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                  {exportingMonthly ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                  {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
+                </Button>
+              </div>
             </div>
 
             {/* Projected Monthly Sales Banner */}
