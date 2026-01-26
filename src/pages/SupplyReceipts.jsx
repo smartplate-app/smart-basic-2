@@ -66,7 +66,11 @@ export default function SupplyReceiptsPage() {
         }
       } catch {}
 
-      const supplierFetches = Array.from(suppliersEmails).map(e => base44.entities.Supplier.filter({ created_by: e }, "-created_date"));
+      const supplierFetches = [];
+      Array.from(suppliersEmails).forEach(e => {
+        supplierFetches.push(base44.entities.Supplier.filter({ created_by: e }, "-created_date"));
+        supplierFetches.push(base44.entities.Supplier.filter({ store_owner_email: e }, "-created_date"));
+      });
       const [receiptsData, ordersData, ...supplierLists] = await Promise.all([
         base44.entities.SupplyReceipt.filter({ created_by: userEmail }, "-received_date"),
         base44.entities.Order.filter({ created_by: userEmail }, "-created_date"),
