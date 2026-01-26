@@ -671,7 +671,7 @@ const AppLayout = ({ children, currentPageName }) => {
                               </>
                             )}
                           </div>
-                          <span className="text-sm font-bold text-black tracking-wide">SIMPLE</span>
+                          <span className="text-sm font-bold text-black tracking-wide">BASIC</span>
                         </div>
                         <div style={{ width: '40px' }}></div>
                       </header>
@@ -706,7 +706,7 @@ const AppLayout = ({ children, currentPageName }) => {
                                   </>
                                 )}
                               </div>
-                              <span className="text-lg font-bold text-black mt-2 tracking-wide">SIMPLE</span>
+                              <span className="text-lg font-bold text-black mt-2 tracking-wide">BASIC</span>
                             </div>
                             <div className="w-8"></div>
                           </div>
