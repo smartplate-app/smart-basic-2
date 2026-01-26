@@ -1054,6 +1054,9 @@ const [monthReceipts, setMonthReceipts] = useState([]);
               </CardContent>
             </Card>
 
+            {/* Hourly Sales (moved from sidebar page) */}
+            <HourlySalesWidget />
+
             {/* Calculated Costs Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="bg-gradient-to-br from-gray-800 to-gray-900 text-white">
