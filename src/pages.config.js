@@ -24,7 +24,6 @@ import SupplyReceipts from './pages/SupplyReceipts';
 import TestInviteLinks from './pages/TestInviteLinks';
 import TestInvites from './pages/TestInvites';
 import Tips from './pages/Tips';
-import ToDoList from './pages/ToDoList';
 import UserProfile from './pages/UserProfile';
 import Users from './pages/Users';
 import Warehouses from './pages/Warehouses';
@@ -64,7 +63,6 @@ export const PAGES = {
     "TestInviteLinks": TestInviteLinks,
     "TestInvites": TestInvites,
     "Tips": Tips,
-    "ToDoList": ToDoList,
     "UserProfile": UserProfile,
     "Users": Users,
     "Warehouses": Warehouses,
