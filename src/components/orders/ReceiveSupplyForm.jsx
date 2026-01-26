@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false }) {
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
+  const [availableSuppliers, setAvailableSuppliers] = useState(Array.isArray(suppliers) ? suppliers : []);
   
   // Initialize form data from receipt (for editing) or empty (for new)
   const [formData, setFormData] = useState(() => {
@@ -90,8 +91,66 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     loadData();
   }, []);
 
+  // Keep availableSuppliers in sync with parent prop
+  useEffect(() => {
+    if (Array.isArray(suppliers)) {
+      setAvailableSuppliers(suppliers);
+    }
+  }, [suppliers]);
+
+  // Fallback: if no suppliers provided, fetch from owner/head context so workers/managers can select
+  useEffect(() => {
+    const fetchFallbackSuppliers = async () => {
+      try {
+        if (availableSuppliers && availableSuppliers.length > 0) return;
+        const u = await base44.auth.me();
+        const workingEmail = u.acting_as_store_email || u.email;
+        let ownerEmail = u.store_user_owner_email || null;
+        if (!ownerEmail) {
+          try {
+            const recs = await base44.entities.StoreUser.filter({ user_email: workingEmail });
+            if (Array.isArray(recs) && recs.length > 0) {
+              const activeRec = recs.find(r => r.is_active !== false) || recs[0];
+              ownerEmail = activeRec?.owner_email || null;
+            }
+          } catch {}
+        }
+        const emails = new Set([workingEmail]);
+        if (ownerEmail) emails.add(ownerEmail);
+        // Try to include chain head email (if exists)
+        try {
+          if (ownerEmail) {
+            const stores = await base44.entities.ChainStore.filter({ user_email: ownerEmail });
+            const effChainId = stores?.[0]?.chain_id || null;
+            if (effChainId) {
+              const chainRec = await base44.entities.Chain.filter({ id: effChainId });
+              let headEmail = chainRec?.[0]?.head_store_user_email || null;
+              if (!headEmail) {
+                const storesInChain = await base44.entities.ChainStore.filter({ chain_id: effChainId });
+                const headStore = storesInChain?.find(s => s.is_head_store);
+                headEmail = headStore?.user_email || null;
+              }
+              if (headEmail) emails.add(headEmail);
+            }
+          }
+        } catch {}
+
+        const fetches = [];
+        emails.forEach(e => {
+          fetches.push(base44.entities.Supplier.filter({ created_by: e }, '-created_date'));
+          fetches.push(base44.entities.Supplier.filter({ store_owner_email: e }, '-created_date'));
+        });
+        const lists = await Promise.all(fetches);
+        const merged = lists.flat().filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+        setAvailableSuppliers(merged);
+      } catch (e) {
+        console.error('Fallback supplier load failed', e);
+      }
+    };
+    fetchFallbackSuppliers();
+  }, [availableSuppliers]);
   const handleSupplierSelect = (supplierId) => {
-    const supplier = suppliers.find(s => s.id === supplierId);
+    const supplier = availableSuppliers.find(s => s.id === supplierId);
     if (supplier) {
       setFormData(prev => ({
         ...prev,
@@ -460,10 +519,10 @@ Return JSON:
                     <SelectValue placeholder={t('select_supplier')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {suppliers.length === 0 ? (
+                    {(!availableSuppliers || availableSuppliers.length === 0) ? (
                       <SelectItem value="none" disabled>{t('no_suppliers')}</SelectItem>
                     ) : (
-                      suppliers.map(supplier => (
+                      availableSuppliers.map(supplier => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name}
                         </SelectItem>
