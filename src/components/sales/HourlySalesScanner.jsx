@@ -117,7 +117,20 @@ export default function HourlySalesScanner({ onSaved }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
           <div>
             <label className="block text-sm text-gray-600 mb-1">{language === 'he' ? 'חודש' : 'Month'}</label>
-            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+            <select
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="w-full cursor-pointer px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              {Array.from({ length: 18 }, (_, i) => {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const ym = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+                return (
+                  <option key={ym} value={ym}>{ym}</option>
+                );
+              })}
+            </select>
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">{language === 'he' ? 'קובץ (תמונה/‏PDF)' : 'File (image/PDF)'}</label>
