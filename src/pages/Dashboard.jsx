@@ -14,7 +14,7 @@ import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, Bar
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, BarChart, Bar } from "recharts";
 import moment from "moment";
-import HourlySalesWidget from "../components/sales/HourlySalesWidget";
+
 import { notifyOS } from "../components/notifications/notify";
 
 
@@ -1080,8 +1080,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
               </CardContent>
             </Card>
 
-            {/* Hourly Sales (moved from sidebar page) */}
-            <HourlySalesWidget />
+
 
             {/* Calculated Costs Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
