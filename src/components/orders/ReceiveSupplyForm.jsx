@@ -201,7 +201,17 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const checkDuplicateInvoice = async (invoiceNum, supplierId, excludeId) => {
   if (!invoiceNum || !supplierId) { setDuplicateExists(false); setDuplicateReceipts([]); return false; }
   try {
-    const results = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId, invoice_number: invoiceNum });
+    // Align duplicate check with what the list shows: only receipts created by the current working user
+    const me = await base44.auth.me();
+    const workingEmail = me.acting_as_store_email || me.email;
+    const normalizedNumber = String(invoiceNum).trim();
+
+    const results = await base44.entities.SupplyReceipt.filter({
+      supplier_id: supplierId,
+      invoice_number: normalizedNumber,
+      created_by: workingEmail
+    });
+
     const filtered = (results || []).filter(r => !excludeId || r.id !== excludeId);
     if (filtered.length > 0) {
       setDuplicateExists(true);
