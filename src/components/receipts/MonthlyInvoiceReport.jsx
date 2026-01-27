@@ -26,6 +26,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [targetUser, setTargetUser] = useState(null);
   const [targetEmail, setTargetEmail] = useState('');
   const [sortMode, setSortMode] = useState('supplier_asc');
+  const [itemSearch, setItemSearch] = useState('');
 
   React.useEffect(() => {
     (async () => {
@@ -57,13 +58,19 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const monthEnd = useMemo(() => moment(month + '-01').endOf('month'), [month]);
 
   const monthReceipts = useMemo(() => {
-    return (receipts || []).filter(r => {
+    const inRange = (receipts || []).filter(r => {
       const dateStr = r.invoice_date || r.received_date;
       if (!dateStr) return false;
       const d = moment(dateStr, [moment.ISO_8601, 'YYYY-MM-DD', 'DD/MM/YYYY']);
       return d.isValid() && d.isBetween(monthStart, monthEnd, undefined, '[]');
-    }).sort((a, b) => (a.invoice_date || a.received_date || '').localeCompare(b.invoice_date || b.received_date || ''));
-  }, [receipts, monthStart, monthEnd]);
+    });
+    const term = (itemSearch || '').trim().toLowerCase();
+    const filtered = term ? inRange.filter(r => {
+      const items = Array.isArray(r.verified_items) ? r.verified_items : [];
+      return items.some(it => String(it.item_name || it.name || '').toLowerCase().includes(term));
+    }) : inRange;
+    return filtered.sort((a, b) => (a.invoice_date || a.received_date || '').localeCompare(b.invoice_date || b.received_date || ''));
+  }, [receipts, monthStart, monthEnd, itemSearch]);
 
   const grouped = useMemo(() => {
     const map = {};
@@ -100,7 +107,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="flex items-center gap-2">
+               <div className="flex items-center gap-2">
                 <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
                 <Select value={sortMode} onValueChange={setSortMode}>
                   <SelectTrigger className="w-40">
@@ -115,32 +122,13 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
-                <Select value={sortMode} onValueChange={setSortMode}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder={t('sort_by') || 'Sort'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
-                    <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
-                    <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
-                    <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
-                <Select value={sortMode} onValueChange={setSortMode}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder={t('sort_by') || 'Sort'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
-                    <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
-                    <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
-                    <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-sm text-gray-600">{t('search') || 'Search'}</label>
+                <Input
+                  value={itemSearch}
+                  onChange={(e) => setItemSearch(e.target.value)}
+                  placeholder={language === 'he' ? 'חפש פריט לפי שם' : 'Search item name'}
+                  className="w-56"
+                />
               </div>
               <Button
                 disabled={uploading}
@@ -296,12 +284,24 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                         onDoubleClick={() => setSelected(r)}
                         title={t('double_click_to_view') || 'Double click to view'}
                       >
-                        <td className="border p-2 text-sm">{group.supplier_name}</td>
+                        <td className="border p-2 text-sm">
+                          <div>{group.supplier_name}</div>
+                          {itemSearch && Array.isArray(r.verified_items) && (
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-[240px]">
+                              {(r.verified_items || [])
+                                .map(it => it.item_name)
+                                .filter(Boolean)
+                                .filter(n => n.toLowerCase().includes(itemSearch.toLowerCase()))
+                                .slice(0,3)
+                                .join(', ')}
+                            </div>
+                          )}
+                        </td>
                         <td className="border p-2 text-sm font-medium">{r.invoice_number || '-'}</td>
                         <td className="border p-2 text-sm">{moment(r.invoice_date || r.received_date).format('DD/MM/YYYY')}</td>
                         <td className="border p-2 text-sm">₪{Number(r.invoice_total || 0).toFixed(2)}</td>
                       </tr>
-                    ))}
+                    ))
                   </React.Fragment>
                 ))}
 

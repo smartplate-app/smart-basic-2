@@ -12,6 +12,8 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
   const [scannedItems, setScannedItems] = useState([]);
   const [imageUrl, setImageUrl] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [fileResults, setFileResults] = useState([]); // [{name,url,status:'pending'|'processing'|'done'|'error', items:[]}]
+  const [dragActive, setDragActive] = useState(false);
   const { t } = useLanguage();
 
   const handleImageUpload = async (e) => {
@@ -208,12 +210,18 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
           </div>
         </div>
 
-        {!imageUrl && (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+        {fileResults.length === 0 && (
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+          >
             <input
               type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
+              accept="image/*,application/pdf"
+              multiple
+              onChange={onFileInputChange}
               className="hidden"
               id="invoice-upload"
               disabled={uploading || scanning}
@@ -226,7 +234,7 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
                 <>
                   <Loader className="w-12 h-12 text-gray-400 animate-spin" />
                   <p className="text-gray-600">
-                    {language === 'he' ? 'מעבד תמונה...' : 'Processing image...'}
+                    {language === 'he' ? 'מעבד קבצים...' : 'Processing files...'}
                   </p>
                 </>
               ) : (
@@ -234,15 +242,38 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
                   <ImagePlus className="w-12 h-12 text-gray-400" />
                   <div>
                     <p className="font-medium text-gray-700">
-                      {language === 'he' ? 'לחץ להעלאת צילום מסך או תמונה' : 'Click to upload screenshot or image'}
+                      {language === 'he' ? 'גרור ושחרר תמונות או PDF כאן, או לחץ לבחירה' : 'Drag & drop images or PDFs here, or click to choose'}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      {language === 'he' ? 'תמונות של רשימות פריטים / טבלאות' : 'Images of item lists / tables'}
+                      {language === 'he' ? 'תמונות/PDF של רשימות פריטים / טבלאות' : 'Images/PDFs of item lists / tables'}
                     </p>
                   </div>
                 </>
               )}
             </label>
+          </div>
+        )}
+
+        {fileResults.length > 0 && (
+          <div className="space-y-3">
+            <div className="text-sm text-gray-600">
+              {language === 'he' ? 'קבצים שנסרקו' : 'Scanned files'}
+            </div>
+            <div className="space-y-2 max-h-56 overflow-y-auto">
+              {fileResults.map((f, i) => (
+                <div key={i} className="flex items-center justify-between bg-gray-50 border rounded px-3 py-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium truncate max-w-[220px]" title={f.name}>{f.name}</span>
+                    {f.status === 'processing' && <span className="text-xs text-blue-600 flex items-center gap-1"><Loader className="w-3 h-3 animate-spin" /> {language === 'he' ? 'מעבד' : 'Processing'}</span>}
+                    {f.status === 'done' && <span className="text-xs text-green-700 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {language === 'he' ? 'הושלם' : 'Done'}</span>}
+                    {f.status === 'error' && <span className="text-xs text-red-600 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {language === 'he' ? 'שגיאה' : 'Error'}</span>}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {(f.items || []).length} {language === 'he' ? 'פריטים' : 'items'}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
