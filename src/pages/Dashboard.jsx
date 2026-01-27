@@ -957,19 +957,19 @@ const [monthReceipts, setMonthReceipts] = useState([]);
               </div>
             </div>
 
-            {/* Projected Monthly Sales Banner */}
+            {/* Total Sales To Date Banner */}
             <Card className="bg-gradient-to-br from-amber-100 to-yellow-100 border border-amber-200">
               <CardContent className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                 <div className="text-sm font-semibold text-amber-800">
-                  {language === 'he' ? 'תחזית מכירות לכל החודש' : 'Projected Sales for Full Month'}
+                  {language === 'he' ? 'סה״כ מכירות (עד כה)' : 'Total Sales (to date)'}
                 </div>
                 <div className="text-3xl font-extrabold text-amber-900 mt-1">
-                  {formatCurrency(projectedMonthlySales)}
+                  {formatCurrency(actualSales)}
                 </div>
                 <div className="text-xs text-amber-700 mt-1">
                   {language === 'he'
-                    ? `מבוסס על ${projectionDaysElapsed} ימים עד אתמול · ממוצע יומי ${formatCurrency(projectionAvgPerDay)}`
-                    : `Based on ${projectionDaysElapsed} days till yesterday · Avg/day ${formatCurrency(projectionAvgPerDay)}`}
+                    ? 'כולל מסעדה + משלוחים (כולל מע״מ)'
+                    : 'Dine-in + delivery (incl. VAT)'}
                 </div>
               </CardContent>
             </Card>
