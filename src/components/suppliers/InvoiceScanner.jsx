@@ -187,6 +187,102 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
 
   const { language } = useLanguage();
   
+  // Multi-file handlers (images/PDFs) + drag & drop
+  const handleFiles = async (fileList) => {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    setUploading(true);
+    setScanning(true);
+    setFileResults(prev => ([
+      ...prev,
+      ...files.map(f => ({ name: f.name, url: null, status: 'pending', items: [] }))
+    ]));
+
+    try {
+      // Upload all files
+      const uploaded = await Promise.all(files.map(async (file) => {
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          return { file, file_url };
+        } catch (e) {
+          return { file, error: e };
+        }
+      }));
+
+      // Update to processing
+      setFileResults(prev => prev.map(entry => {
+        const hit = uploaded.find(u => u.file && u.file.name === entry.name);
+        if (!hit) return entry;
+        if (hit.error) return { ...entry, status: 'error' };
+        return { ...entry, url: hit.file_url, status: 'processing' };
+      }));
+
+      // Hebrew extraction per file
+      const schema = {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                catalog_number: { type: 'string' },
+                unit: { type: 'string' },
+                price: { type: 'number' },
+                discount: { type: 'number' }
+              }
+            }
+          }
+        }
+      };
+      const prompt = `חלץ רשימת פריטים מהקובץ (תמונה או PDF) בעברית עבור הספק: ${supplier.name}\n\nזוהי רשימת פריטים (טבלה) עם עמודות כמו: שם פריט, יחידה, מחיר, הנחה %.\nחשוב מאוד: החזר JSON תקין בלבד במבנה items:[{name,catalog_number,unit,price,discount}].\nיחידות: המר ל- kg | liter | unit | case ("יחידה"/unit=unit, ק"ג/קילו=kg, ליטר=liter, קרטון/ארגז=case).\nמספרים בלבד למחיר/הנחה (ללא ₪/%).\nברירת מחדל אם חסר: name="", catalog_number="", unit="unit", price=0, discount=0`;
+
+      const extracted = await Promise.all(uploaded.map(async (u) => {
+        if (!u || u.error || !u.file_url) return { name: u?.file?.name, items: [], error: u?.error };
+        try {
+          const res = await base44.integrations.Core.InvokeLLM({
+            prompt,
+            file_urls: [u.file_url],
+            response_json_schema: schema
+          });
+          const items = Array.isArray(res?.items) ? res.items : Array.isArray(res?.data?.items) ? res.data.items : [];
+          return { name: u.file.name, url: u.file_url, items };
+        } catch (e) {
+          return { name: u.file.name, url: u.file_url, items: [], error: e };
+        }
+      }));
+
+      // Merge all items and update fileResults
+      let allItems = [];
+      setFileResults(prev => prev.map(entry => {
+        const hit = extracted.find(x => x.name === entry.name);
+        if (!hit) return entry;
+        if (hit.error) return { ...entry, status: 'error' };
+        allItems = allItems.concat(hit.items || []);
+        return { ...entry, status: 'done', items: hit.items || [] };
+      }));
+
+      // De-duplicate by catalog_number or name
+      const keyOf = (it) => (it.catalog_number || '').trim().toLowerCase() || (it.name || '').trim().toLowerCase();
+      const map = new Map();
+      (allItems || []).forEach(it => {
+        const k = keyOf(it);
+        if (!k) return;
+        if (!map.has(k)) map.set(k, it);
+      });
+      setScannedItems(Array.from(map.values()));
+    } finally {
+      setUploading(false);
+      setScanning(false);
+    }
+  };
+
+  const onFileInputChange = (e) => handleFiles(e.target.files);
+  const onDrop = (e) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); if (e.dataTransfer?.files?.length) handleFiles(e.dataTransfer.files); };
+  const onDragOver = (e) => { e.preventDefault(); e.stopPropagation(); setDragActive(true); };
+  const onDragLeave = (e) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); };
+  
   return (
     <Card className="mb-6">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -277,7 +373,7 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
           </div>
         )}
 
-        {imageUrl && scannedItems.length > 0 && (
+        {scannedItems.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-lg">
@@ -289,6 +385,7 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
                 onClick={() => {
                   setImageUrl(null);
                   setScannedItems([]);
+                  setFileResults([]);
                 }}
               >
                 <X className="w-4 h-4 mr-2" />
