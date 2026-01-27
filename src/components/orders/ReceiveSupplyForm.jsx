@@ -522,7 +522,10 @@ Return JSON:
                     {(!availableSuppliers || availableSuppliers.length === 0) ? (
                       <SelectItem value="none" disabled>{t('no_suppliers')}</SelectItem>
                     ) : (
-                      availableSuppliers.map(supplier => (
+                    [...availableSuppliers]
+                      .slice()
+                      .sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }))
+                      .map(supplier => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name}
                         </SelectItem>

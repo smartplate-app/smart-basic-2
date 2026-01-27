@@ -485,11 +485,14 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                     <SelectValue placeholder={language === 'he' ? 'בחר ספק' : 'Select Supplier'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {suppliers.map(supplier => (
-                      <SelectItem key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </SelectItem>
-                    ))}
+                    {[...suppliers]
+                      .slice()
+                      .sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }))
+                      .map(supplier => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
