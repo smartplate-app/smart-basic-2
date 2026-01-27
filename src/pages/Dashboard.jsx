@@ -162,6 +162,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         setPredictedSalesToDate(cached.predictedSalesToDate || 0);
         setPredictedMonthlyLabor(cached.predictedMonthlyLabor || 0);
         setHasScheduleData(Boolean(cached.hasScheduleData));
+        // goal is fixed at 60%; ignore cached combinedGoalPercent if present
         setLoading(false);
       } else {
         setLoading(true);
@@ -367,7 +368,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
           predictedLaborToDate,
           predictedSalesToDate,
           predictedMonthlyLabor,
-          hasScheduleData
+          hasScheduleData,
+          combinedGoalPercent: 60
         };
         localStorage.setItem(`dashboard_cache_${workingEmail}_${selectedMonth}`, JSON.stringify(snapshot));
       } catch (_) {}
@@ -689,7 +691,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   // OS notification when combined cost exceeds goal (before early returns)
   useEffect(() => {
     const predictedSalesExVATLocal = (predictedSales || 0) / 1.17;
-    const combinedGoalPercentLocal = (laborGoalPercent || 0) + (foodGoalPercent || 0);
+    const combinedGoalPercentLocal = 60;
     const actualSalesExVATLocal = (actualSales || 0) / 1.17;
     const effectiveLaborCostLocal = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
     const actualLaborPercentLocal = actualSalesExVATLocal > 0 ? (effectiveLaborCostLocal / actualSalesExVATLocal) * 100 : 0;
@@ -745,7 +747,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   const operatingDays = isKosher ? 26 : 31;
   const footfallMonthlyPrediction = (dailyCustomers || 0) * (avgPerPerson || 0) * operatingDays;
   const predictedSalesExVAT = predictedSales / 1.17;
-  const combinedGoalPercent = laborGoalPercent + foodGoalPercent;
+  const combinedGoalPercent = 60;
   const laborGoalAmount = predictedSalesExVAT * (laborGoalPercent / 100);
   const foodGoalAmount = predictedSalesExVAT * (foodGoalPercent / 100);
 
