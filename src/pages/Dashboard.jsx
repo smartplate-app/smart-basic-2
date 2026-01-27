@@ -47,6 +47,8 @@ export default function DashboardPage() {
   const [calculatedLaborCost, setCalculatedLaborCost] = useState(0);
   const [calculatedFoodCost, setCalculatedFoodCost] = useState(0);
   const [totalTips, setTotalTips] = useState(0);
+  const [restaurantSales, setRestaurantSales] = useState(0);
+  const [deliverySales, setDeliverySales] = useState(0);
   
   // Predicted values based on weekly schedules
   const [predictedLaborToDate, setPredictedLaborToDate] = useState(0);
@@ -85,6 +87,10 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   useEffect(() => {
     loadData();
   }, [selectedMonth]);
+
+  useEffect(() => {
+    setActualSales((Number(restaurantSales)||0) + (Number(deliverySales)||0));
+  }, [restaurantSales, deliverySales]);
 
   // Setup PWA install prompt listeners
   useEffect(() => {
@@ -201,7 +207,12 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         setLaborGoalPercent(existingData.labor_goal_percent || 25);
         setFoodGoalPercent(existingData.food_goal_percent || 30);
         setManagementSalary(existingData.management_salary || 0);
-        setActualSales(existingData.total_sales || 0);
+        // Sales & tips
+        const dineIn = Number(existingData.restaurant_sales || 0);
+        const dta = Number(existingData.delivery_takeaway_sales || 0);
+        setRestaurantSales(dineIn);
+        setDeliverySales(dta);
+        setActualSales((dineIn + dta) || (existingData.total_sales || 0));
         setTotalTips(existingData.total_tips || 0);
         // Manual labor override
         const mlc = Number(existingData.manual_labor_cost || 0);
@@ -216,6 +227,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         setManagementSalary(0);
         setActualSales(0);
         setTotalTips(0);
+        setRestaurantSales(0);
+        setDeliverySales(0);
         setManualLaborCost(0);
         setUseManualLabor(false);
       }
@@ -391,7 +404,9 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         labor_goal_percent: parseFloat(laborGoalPercent) || 25,
         food_goal_percent: parseFloat(foodGoalPercent) || 30,
         management_salary: parseFloat(managementSalary) || 0,
-        total_sales: parseFloat(actualSales) || 0,
+        total_sales: (Number(restaurantSales) || 0) + (Number(deliverySales) || 0),
+        restaurant_sales: Number(restaurantSales) || 0,
+        delivery_takeaway_sales: Number(deliverySales) || 0,
         total_tips: parseFloat(totalTips) || 0,
         manual_labor_cost: useManualLabor ? (parseFloat(manualLaborCost) || 0) : 0,
         manual_food_cost: calculatedFoodCost
@@ -1009,18 +1024,29 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                       </div>
                     )}
                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>
-                      {language === 'he' ? 'סה״כ מכירות עד עכשיו (כולל מע״מ)' : 'Total sales till now (incl. VAT)'}
+                      {language === 'he' ? 'מכירות מסעדה (כולל מע"מ)' : 'Restaurant (Dine-in) Sales (incl. VAT)'}
                     </Label>
                     <Input
                       type="number"
-                      value={actualSales}
-                      onChange={(e) => setActualSales(parseFloat(e.target.value) || 0)}
+                      value={restaurantSales}
+                      onChange={(e) => setRestaurantSales(parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
+                      disabled={!editMode}
+                    />
+                    <Label className={isRTL ? 'text-right block mt-3' : 'text-left block mt-3'}>
+                      {language === 'he' ? 'משלוחים + טייק אווי (כולל מע"מ)' : 'Delivery + Takeaway (incl. VAT)'}
+                    </Label>
+                    <Input
+                      type="number"
+                      value={deliverySales}
+                      onChange={(e) => setDeliverySales(parseFloat(e.target.value) || 0)}
                       placeholder="0"
                       className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
                       disabled={!editMode}
                     />
                     <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {language === 'he' ? 'ללא מע"מ:' : 'Excl. VAT:'} {formatCurrency(actualSalesExVAT)}
+                      {language === 'he' ? 'סה"כ (ללא מע"מ):' : 'Total (excl. VAT):'} {formatCurrency(actualSalesExVAT)}
                     </p>
                   </div>
 
@@ -1037,7 +1063,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                       disabled={!editMode}
                     />
                     <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                      {actualSales > 0 ? `${((totalTips / actualSales) * 100).toFixed(1)}%` : '0%'} {language === 'he' ? 'מהמכירות' : 'of sales'}
+                      {restaurantSales > 0 ? `${((totalTips / restaurantSales) * 100).toFixed(1)}%` : '0%'} {language === 'he' ? 'מהמכירות במסעדה' : 'of restaurant sales'}
                     </p>
                   </div>
                 </div>
