@@ -914,10 +914,6 @@ const [monthReceipts, setMonthReceipts] = useState([]);
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
             </TabsTrigger>
-            <TabsTrigger value="goals" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              {language === 'he' ? 'הגדרת יעדים' : 'Goal Setting'}
-            </TabsTrigger>
             <TabsTrigger value="labor" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
               {language === 'he' ? 'יעד עבודה' : 'Labor Goals'}
