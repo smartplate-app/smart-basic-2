@@ -158,7 +158,8 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
         supplier_id: supplier.id,
         supplier_name: supplier.name,
         supplier_email: supplier.email || "",
-        order_number: `MANUAL-${Date.now()}`
+        order_number: `MANUAL-${Date.now()}`,
+        manual_entry_mode: true // ensure form stays visible and no navigation occurs
       }));
     }
   };
