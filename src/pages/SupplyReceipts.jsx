@@ -230,7 +230,8 @@ export default function SupplyReceiptsPage() {
   const filteredReceipts = receipts.filter(receipt => {
     const matchesSearch = receipt.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || receipt.status === statusFilter;
+    const matchesStatus = statusFilter === "all" ||
+      (statusFilter === 'refund' ? !!receipt.is_refund : receipt.status === statusFilter);
     const matchesSupplier = supplierFilter === "all" || receipt.supplier_name === supplierFilter;
 
     // Date range filter (inclusive)
