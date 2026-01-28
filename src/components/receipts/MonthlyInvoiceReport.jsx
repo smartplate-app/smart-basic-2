@@ -119,7 +119,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-               <div className="flex items-center gap-2">
+               <div className="flex items-center gap-2 shrink-0">
                 <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
                 <Select value={sortMode} onValueChange={setSortMode}>
                   <SelectTrigger className="w-40">
@@ -133,7 +133,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-[220px]">
                 <label className="text-sm text-gray-600">{t('search') || 'Search'}</label>
                 <Input
                   value={itemSearch}
@@ -188,28 +188,30 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 {uploading ? (t('uploading') || 'Uploading...') : (t('upload_to_drive') || 'Upload to Drive')}
               </Button>
               <Button
-                variant="outline"
-                disabled={uploading}
-                onClick={async () => {
-                  try {
-                    const { data } = await base44.functions.invoke('checkDriveAuth', {});
-                    setDriveAuthorized(!!data?.authorized);
-                    alert(data?.authorized ? (t('drive_connected') || 'Google Drive is connected') : (t('drive_not_connected') || 'Google Drive is not connected'));
-                  } catch (e) {
-                    setDriveAuthorized(false);
-                    alert(t('drive_not_connected') || 'Google Drive is not connected');
-                  }
-                }}
+                 variant="outline"
+                 disabled={uploading}
+                 className="shrink-0"
+                 onClick={async () => {
+                   try {
+                     const { data } = await base44.functions.invoke('checkDriveAuth', {});
+                     setDriveAuthorized(!!data?.authorized);
+                     alert(data?.authorized ? (t('drive_connected') || 'Google Drive is connected') : (t('drive_not_connected') || 'Google Drive is not connected'));
+                   } catch (e) {
+                     setDriveAuthorized(false);
+                     alert(t('drive_not_connected') || 'Google Drive is not connected');
+                   }
+                 }}
               >
                 {t('check_drive') || 'Check Drive'}
               </Button>
               <Button
-                variant="outline"
-                disabled={uploading}
-                onClick={async () => {
-                  try {
-                    // Auth check
-                    let isAuth = false;
+                 variant="outline"
+                 disabled={uploading}
+                 className="shrink-0"
+                 onClick={async () => {
+                   try {
+                     // Auth check
+                     let isAuth = false;
                     try {
                       const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
                       isAuth = !!auth?.authorized;
