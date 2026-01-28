@@ -582,7 +582,12 @@ Return JSON:
 
                   <div className="space-y-2">
                     <Label>{t('receipt_images')} *</Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-4 ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
+                      onDragOver={onDragOverUpload}
+                      onDragLeave={onDragLeaveUpload}
+                      onDrop={onDropUpload}
+                    >
                       <input
                         type="file"
                         accept="image/*,application/pdf"
