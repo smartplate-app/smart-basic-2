@@ -29,6 +29,8 @@ export default function SupplyReceiptsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [sortBy, setSortBy] = useState("none");
+  const [refundReceivedOnly, setRefundReceivedOnly] = useState(false);
+  const [reviewedOnly, setReviewedOnly] = useState(false);
   const [datePreset, setDatePreset] = useState("all"); // all | week | month | year | custom
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -184,6 +186,9 @@ export default function SupplyReceiptsPage() {
         review_note: receiptData.review_note || "",
         refund_received: !!receiptData.refund_received,
         reviewed: !!receiptData.reviewed,
+        linked_receipt_id: receiptData.linked_receipt_id || "",
+        refund_received: !!receiptData.refund_received,
+        reviewed: !!receiptData.reviewed,
         linked_receipt_id: receiptData.linked_receipt_id || ""
       };
 
@@ -228,6 +233,13 @@ export default function SupplyReceiptsPage() {
     } catch (e) {
       alert((t('delete_failed') || 'Delete failed') + ': ' + (e?.message || e));
     }
+  };
+
+  const handleQuickUpdate = async (id, patch) => {
+    try {
+      await base44.entities.SupplyReceipt.update(id, patch);
+      setReceipts(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
+    } catch (e) { alert((t('error_saving') || 'Error saving') + ': ' + (e?.message || e)); }
   };
 
   const filteredReceipts = receipts.filter(receipt => {
