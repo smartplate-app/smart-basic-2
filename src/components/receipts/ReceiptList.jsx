@@ -94,18 +94,6 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
                 <Badge variant={statusVariant(r.status)}>
                   {t(`status_${r.status}`) || r.status || '-'}
                 </Badge>
-                {r.refund_received && (
-                  <Badge className="bg-emerald-100 text-emerald-800">{t('credit_received') || 'Credit received'}</Badge>
-                )}
-                {r.reviewed && (
-                  <Badge className="bg-blue-100 text-blue-800">{t('reviewed') || 'Reviewed'}</Badge>
-                )}
-                {r.refund_received && (
-                  <Badge className="bg-emerald-100 text-emerald-800">{t('credit_received') || 'Credit received'}</Badge>
-                )}
-                {r.reviewed && (
-                  <Badge className="bg-blue-100 text-blue-800">{t('reviewed') || 'Reviewed'}</Badge>
-                )}
                 {r.is_refund && (
                   <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
                 )}
