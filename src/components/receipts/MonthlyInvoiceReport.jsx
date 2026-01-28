@@ -109,51 +109,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
           <CardTitle className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <span>{t('monthly_report') || 'Monthly Report'}</span>
-              <Button
-                disabled={uploading}
-                onClick={async () => {
-                  setUploadResult(null);
-                  try {
-                    // Quick auth check
-                    let isAuth = false;
-                    try {
-                      const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
-                      isAuth = !!auth?.authorized;
-                      setDriveAuthorized(isAuth);
-                    } catch (authErr) {
-                      isAuth = false;
-                      setDriveAuthorized(false);
-                    }
-                    if (!isAuth) {
-                      alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
-                      return;
-                    }
-
-                    // Require per-user share email for non-admins
-                    let me = null;
-                    try { me = await base44.auth.me(); } catch {}
-                    if ((me?.role !== 'admin') && !me?.drive_share_email) {
-                      setShowConnect(true);
-                      return;
-                    }
-
-                    // Lookup the Google Drive account tied to this token
-                    try {
-                      const { data } = await base44.functions.invoke('driveWhoAmI', {});
-                      setDriveAccount(data?.user || null);
-                    } catch {}
-                    setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
-
-                    // Show confirmation dialog before uploading
-                    setShowDriveConfirm(true);
-                  } catch (e) {
-                    alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
-                  }
-                }}
-                className="bg-green-600 hover:bg-green-700 shrink-0"
-              >
-                {uploading ? (t('uploading') || 'Uploading...') : (t('upload_to_drive') || 'Upload to Drive')}
-              </Button>
+              {/* upload button moved next to title */}
             </div>
             <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
               <label className="text-sm text-gray-600">{t('month') || 'Month'}</label>
