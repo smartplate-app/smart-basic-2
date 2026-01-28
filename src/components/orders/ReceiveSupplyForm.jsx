@@ -280,38 +280,52 @@ const handleAutoScan = async () => {
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `Scan this Hebrew invoice/receipt and extract ONLY the header information:
 
-Extract ONLY these 3 fields:
-1. Invoice number (מספר חשבונית or חשבונית מס')
-2. Invoice date (תאריך or תאריך חשבונית) - return in YYYY-MM-DD format
-3. Invoice total (סה"כ לתשלום or סה"כ כולל מע"ם)
+        Extract ONLY these fields:
+        1. Invoice number (מספר חשבונית or חשבונית מס')
+        2. Invoice date (תאריך or תאריך חשבונית) - return in YYYY-MM-DD format
+        3. Invoice total (סה"כ לתשלום or סה"כ כולל מע"ם)
 
-DO NOT extract individual line items or products.
+        DO NOT extract individual line items or products.
 
-Return JSON:
-{
-  "invoice_number": "string",
-  "invoice_date": "YYYY-MM-DD",
-  "invoice_total": number
-}`,
+        CRITICAL: If this is a refund/credit invoice (contains the Hebrew words "זיכוי" or "החזר" anywhere), you MUST:
+        - set "is_refund": true
+        - return "invoice_total" as a NEGATIVE number (use the absolute value you read, then apply negative sign)
+
+        Otherwise, set "is_refund": false and return a positive "invoice_total".
+
+        Return JSON:
+        {
+        "invoice_number": "string",
+        "invoice_date": "YYYY-MM-DD",
+        "invoice_total": number,
+        "is_refund": boolean
+        }`,
         file_urls: formData.receipt_images,
         response_json_schema: {
           type: "object",
           properties: {
             invoice_number: { type: "string" },
             invoice_date: { type: "string" },
-            invoice_total: { type: "number" }
+            invoice_total: { type: "number" },
+            is_refund: { type: "boolean" }
           }
         }
       });
 
       console.log('Scanned invoice header data:', response);
 
+      const responseIsRefund = Boolean(response.is_refund) || (typeof response.invoice_total === 'number' && response.invoice_total < 0);
+      const adjustedInvoiceTotal = typeof response.invoice_total === 'number'
+        ? (responseIsRefund ? -Math.abs(response.invoice_total) : Math.abs(response.invoice_total))
+        : 0;
+
       if (noOrderMode) {
         setFormData(prev => ({
           ...prev,
           invoice_number: response.invoice_number || "",
           invoice_date: response.invoice_date || prev.received_date,
-          invoice_total: response.invoice_total || 0,
+          invoice_total: adjustedInvoiceTotal,
+          is_refund: responseIsRefund,
           calculated_total: 0, // Reset calculated total as items are not scanned yet
           totals_match: false, // Reset totals match
           manual_entry_mode: true // Automatically switch to manual entry mode to allow editing/adding
@@ -327,7 +341,7 @@ Return JSON:
 
       } else {
         // Original flow for orders - only update invoice details from scan
-        const invoiceTotal = response.invoice_total || 0;
+        const invoiceTotal = adjustedInvoiceTotal;
         // Recalculate totals based on existing items and newly scanned invoice total
         const { calculatedTotal, totalsMatch } = recalculateTotals(formData.verified_items, invoiceTotal);
 
@@ -336,6 +350,7 @@ Return JSON:
           invoice_number: response.invoice_number || "",
           invoice_date: response.invoice_date || prev.received_date,
           invoice_total: invoiceTotal,
+          is_refund: responseIsRefund,
           calculated_total: calculatedTotal,
           totals_match: totalsMatch
         }));
