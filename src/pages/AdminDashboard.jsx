@@ -132,6 +132,23 @@ export default function AdminDashboard() {
     setActiveSection("dashboard");
   };
 
+  // Admin-only: create Google Sheet for item alias matching
+  const handleCreateAliasSheet = async () => {
+    try {
+      setLoading(true);
+      const { data } = await base44.functions.invoke('createItemAliasSheet', { locale: language });
+      if (data?.success && data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        alert((language === 'he' ? 'שגיאה ביצירת גיליון' : 'Failed to create sheet') + (data?.error ? `: ${data.error}` : ''));
+      }
+    } catch (e) {
+      alert((language === 'he' ? 'שגיאה ביצירת גיליון' : 'Error creating sheet') + `: ${e?.message || e}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Switch to control a user's account (impersonate)
   const switchToUser = async (user) => {
     try {
@@ -504,6 +521,14 @@ export default function AdminDashboard() {
                   >
                     <Instagram className="w-4 h-4" />
                     {language === 'he' ? 'קמפיין אינסטגרם' : 'Instagram Campaign'}
+                  </Button>
+                  <Button
+                    onClick={handleCreateAliasSheet}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    {language === 'he' ? 'גיליון התאמות פריטים' : 'Item Matching Sheet'}
                   </Button>
                 </div>
               </div>
