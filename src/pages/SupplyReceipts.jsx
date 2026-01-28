@@ -186,9 +186,6 @@ export default function SupplyReceiptsPage() {
         review_note: receiptData.review_note || "",
         refund_received: !!receiptData.refund_received,
         reviewed: !!receiptData.reviewed,
-        linked_receipt_id: receiptData.linked_receipt_id || "",
-        refund_received: !!receiptData.refund_received,
-        reviewed: !!receiptData.reviewed,
         linked_receipt_id: receiptData.linked_receipt_id || ""
       };
 
