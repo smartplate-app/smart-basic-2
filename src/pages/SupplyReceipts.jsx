@@ -176,9 +176,12 @@ export default function SupplyReceiptsPage() {
         received_date: receiptData.received_date || new Date().toISOString().split('T')[0],
         verified_items: receiptData.verified_items || [],
         receipt_images: receiptData.receipt_images || [],
-        invoice_total: parseFloat(receiptData.invoice_total) || 0,
+        invoice_total: parseFloat(receiptData.invoice_total),
         calculated_total: parseFloat(receiptData.calculated_total) || 0,
-        status: receiptData.status || "pending"
+        status: receiptData.status || "pending",
+        is_refund: !!receiptData.is_refund,
+        needs_review: !!receiptData.needs_review,
+        review_note: receiptData.review_note || ""
       };
 
       if (editingReceipt) {

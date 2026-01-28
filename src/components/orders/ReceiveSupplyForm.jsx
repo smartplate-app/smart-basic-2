@@ -37,6 +37,9 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
         totals_match: receipt.totals_match || false,
         notes: receipt.notes || "",
         status: receipt.status || "pending",
+        is_refund: !!receipt.is_refund,
+        needs_review: !!receipt.needs_review,
+        review_note: receipt.review_note || "",
         manual_entry_mode: true // Already has data, show edit mode
       };
     }
@@ -59,6 +62,9 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       totals_match: false,
       notes: "",
       status: "pending",
+      is_refund: false,
+      needs_review: false,
+      review_note: "",
       manual_entry_mode: false
     };
   });
@@ -753,6 +759,39 @@ Return JSON:
                             </div>
                           )}
                         </div>
+                      </div>
+
+                      <div className="bg-white border rounded-lg p-3 mt-3 space-y-3">
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={!!formData.is_refund}
+                              onChange={(e) => setFormData(prev => ({ ...prev, is_refund: e.target.checked }))}
+                              className="rounded"
+                            />
+                            <span>{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={!!formData.needs_review}
+                              onChange={(e) => setFormData(prev => ({ ...prev, needs_review: e.target.checked }))}
+                              className="rounded"
+                            />
+                            <span>{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</span>
+                          </label>
+                        </div>
+                        {formData.needs_review && (
+                          <div>
+                            <Label className="text-xs text-gray-600">{language === 'he' ? 'סיבת בדיקה (אופציונלי)' : 'Review reason (optional)'} </Label>
+                            <Input
+                              value={formData.review_note}
+                              onChange={(e) => setFormData(prev => ({ ...prev, review_note: e.target.value }))}
+                              placeholder={language === 'he' ? 'מה לבדוק?' : 'What to check?'}
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-4">

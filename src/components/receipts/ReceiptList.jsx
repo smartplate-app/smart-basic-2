@@ -88,10 +88,16 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
               </div>
 
               {/* Status */}
-              <div>
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant={statusVariant(r.status)}>
                   {t(`status_${r.status}`) || r.status || '-'}
                 </Badge>
+                {r.is_refund && (
+                  <Badge className="bg-purple-100 text-purple-800">{language === 'he' ? 'זיכוי' : 'Refund'}</Badge>
+                )}
+                {r.needs_review && (
+                  <Badge className="bg-amber-100 text-amber-800">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                )}
               </div>
 
               {/* Files / images */}
