@@ -63,6 +63,11 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     };
   });
 
+  const [invoiceTotalInput, setInvoiceTotalInput] = useState(String((typeof formData.invoice_total === 'number' && !isNaN(formData.invoice_total)) ? formData.invoice_total : (formData.invoice_total || '')));
+  useEffect(() => {
+    setInvoiceTotalInput(String((typeof formData.invoice_total === 'number' && !isNaN(formData.invoice_total)) ? formData.invoice_total : (formData.invoice_total || '')));
+  }, [formData.invoice_total]);
+
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -705,14 +710,31 @@ Return JSON:
                           <div>
                             <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</Label>
                             <Input
-                              type="number"
-                              step="0.01"
-                              value={formData.invoice_total}
-                              onChange={(e) => setFormData(prev => {
-                                const newInvoiceTotal = parseFloat(e.target.value) || 0;
-                                const { calculatedTotal, totalsMatch } = recalculateTotals(prev.verified_items, newInvoiceTotal);
-                                return { ...prev, invoice_total: newInvoiceTotal, calculated_total: calculatedTotal, totals_match: totalsMatch };
-                              })}
+                              type="text"
+                              inputMode="decimal"
+                              value={invoiceTotalInput}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                setInvoiceTotalInput(raw);
+                                const normalized = raw.replace(',', '.');
+                                const parsed = parseFloat(normalized);
+                                if (!isNaN(parsed) && isFinite(parsed)) {
+                                  setFormData(prev => {
+                                    const { calculatedTotal, totalsMatch } = recalculateTotals(prev.verified_items, parsed);
+                                    return { ...prev, invoice_total: parsed, calculated_total: calculatedTotal, totals_match: totalsMatch };
+                                  });
+                                }
+                              }}
+                              onBlur={() => {
+                                const normalized = String(invoiceTotalInput || '').replace(',', '.');
+                                const parsed = parseFloat(normalized);
+                                const finalVal = (!isNaN(parsed) && isFinite(parsed)) ? parsed : 0;
+                                setInvoiceTotalInput(String(finalVal));
+                                setFormData(prev => {
+                                  const { calculatedTotal, totalsMatch } = recalculateTotals(prev.verified_items, finalVal);
+                                  return { ...prev, invoice_total: finalVal, calculated_total: calculatedTotal, totals_match: totalsMatch };
+                                });
+                              }}
                               className="mt-1 font-bold text-lg text-blue-700"
                               placeholder="0.00"
                               required
