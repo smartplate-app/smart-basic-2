@@ -265,7 +265,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full">
             <table className="w-full min-w-[700px] border-collapse">
               <thead>
                 <tr className="bg-gray-50">
