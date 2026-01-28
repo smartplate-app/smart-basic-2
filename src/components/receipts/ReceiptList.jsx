@@ -27,9 +27,8 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
 
   // Detect PDF by URL extension
   const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
-  // Safari often shows a blank box for embedded PDFs; use Google viewer there
-  const isSafari = typeof navigator !== 'undefined' && /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
-  const pdfViewerUrl = (url) => `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}`;
+  // Use Google viewer for consistent PDF thumbnails across browsers
+  const pdfViewerUrl = (url) => `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}&rm=minimal`;
 
   const statusVariant = (status) => {
     if (status === 'verified') return 'default';
@@ -115,25 +114,12 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
                       title={(t('open_file') || 'Open file')}
                     >
                       {isPdf(r.receipt_images[0]) ? (
-                        isSafari ? (
-                          <iframe
-                            src={pdfViewerUrl(r.receipt_images[0])}
-                            className="w-full h-full pointer-events-none"
-                            title="pdf-preview"
-                          />
-                        ) : (
-                          <object
-                            data={`${r.receipt_images[0]}#toolbar=0&navpanes=0&scrollbar=0`}
-                            type="application/pdf"
-                            className="w-full h-full pointer-events-none"
-                          >
-                            <iframe
-                              src={pdfViewerUrl(r.receipt_images[0])}
-                              className="w-full h-full pointer-events-none"
-                              title="pdf-preview"
-                            />
-                          </object>
-                        )
+                        <iframe
+                          src={pdfViewerUrl(r.receipt_images[0])}
+                          className="w-full h-full pointer-events-none bg-gray-50"
+                          title="pdf-preview"
+                          loading="lazy"
+                        />
                       ) : (
                         <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover pointer-events-none" />
                       )}

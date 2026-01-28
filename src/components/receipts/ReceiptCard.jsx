@@ -11,7 +11,7 @@ export default function ReceiptCard({ receipt, onEdit }) {
   
   const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
   const isSafari = typeof navigator !== 'undefined' && /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
-  const pdfViewerUrl = (url) => `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}`;
+  const pdfViewerUrl = (url) => `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}&rm=minimal`;
   
   const statusConfig = {
     verified: { 
@@ -138,13 +138,7 @@ export default function ReceiptCard({ receipt, onEdit }) {
                   className="w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-green-500 transition-colors"
                 >
                   {isPdf(imageUrl) ? (
-                    isSafari ? (
-                      <iframe src={pdfViewerUrl(imageUrl)} className="w-full h-full pointer-events-none" title={`pdf-${index}`} />
-                    ) : (
-                      <object data={`${imageUrl}#toolbar=0&navpanes=0&scrollbar=0`} type="application/pdf" className="w-full h-full pointer-events-none">
-                        <iframe src={pdfViewerUrl(imageUrl)} className="w-full h-full pointer-events-none" title={`pdf-${index}`}></iframe>
-                      </object>
-                    )
+                    <iframe src={pdfViewerUrl(imageUrl)} className="w-full h-full pointer-events-none bg-gray-50" title={`pdf-${index}`} loading="lazy" />
                   ) : (
                     <img 
                       src={imageUrl} 
