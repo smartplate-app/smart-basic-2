@@ -363,25 +363,22 @@ export default function SupplyReceiptsPage() {
            </Button>
            <Button
              variant="outline"
-             onClick={() => {
-               const rows = (sortedReceipts || []).filter(r => r.is_refund || r.needs_review);
-               if (!rows.length) { alert(t('no_refund_review_found') || 'No refund/review invoices in current view.'); return; }
+             onClick={async () => {
+               const list = (sortedReceipts || []).filter(r => r.is_refund || r.needs_review);
+               if (!list.length) { alert(t('no_refund_review_found') || 'No refund/review invoices in current view.'); return; }
                const header = ['supplier','invoice_number','received_date','amount','flags','review_note'];
-               const esc = (s) => String(s ?? '').replace(/"/g, '""');
-               const csv = [header.join(',')].concat(rows.map(r => {
+               const esc = (s) => String(s ?? '').replace(/\"/g, '\\"');
+               const rows = list.map(r => {
                  const flags = [r.is_refund ? 'refund' : null, r.needs_review ? 'review' : null].filter(Boolean).join('|');
-                 const vals = [esc(r.supplier_name), esc(r.invoice_number), r.received_date, (r.invoice_total ?? 0), flags, esc(r.review_note || '')];
-                 return vals.map(v => `"${v}"`).join(',');
-               })).join('\n');
-               const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-               const url = URL.createObjectURL(blob);
-               const a = document.createElement('a');
-               a.href = url;
-               a.download = 'refund_review_report.csv';
-               document.body.appendChild(a);
-               a.click();
-               URL.revokeObjectURL(url);
-               a.remove();
+                 return [r.supplier_name || '', r.invoice_number || '', r.received_date || '', (r.invoice_total ?? 0), flags, r.review_note || ''];
+               });
+               const title = `Refund_Review_${new Date().toISOString().slice(0,10)}`;
+               const { data } = await base44.functions.invoke('createRefundReviewSheet', { header, rows, title });
+               if (data?.url) {
+                 window.open(data.url, '_blank');
+               } else {
+                 alert((t('export_failed') || 'Export failed') + (data?.error ? `: ${data.error}` : ''));
+               }
              }}
              className="flex items-center gap-2"
            >
