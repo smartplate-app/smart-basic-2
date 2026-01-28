@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText } from "lucide-react";
+import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -357,28 +357,6 @@ export default function SupplyReceiptsPage() {
              <AlertTriangle className="w-5 h-5 ml-2" />
              {t('check_duplicate_invoices') || 'Check Duplicate Invoices'}
            </Button>
-           {user?.role === 'admin' && (
-             <Button
-               variant="outline"
-               onClick={async () => {
-                 const { data } = await base44.functions.invoke('generateHebrewInvoicePdf', {});
-                 const blob = new Blob([data], { type: 'application/pdf' });
-                 const url = window.URL.createObjectURL(blob);
-                 const a = document.createElement('a');
-                 a.href = url;
-                 a.download = 'hebrew-invoice-sample.pdf';
-                 document.body.appendChild(a);
-                 a.click();
-                 window.URL.revokeObjectURL(url);
-                 a.remove();
-               }}
-               className="flex items-center gap-2"
-               title="Generate Hebrew sample invoice PDF (admin)"
-             >
-               <FileText className="w-5 h-5 ml-2" />
-               צור חשבונית לדוגמה (עברית)
-             </Button>
-           )}
             <Button
               onClick={() => {
                 setShowNoOrderForm(true); // Open the no-order receipt creation form
