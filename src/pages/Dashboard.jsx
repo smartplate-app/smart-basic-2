@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet, Download, Share } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
+import CreditBalancesWidget from "../components/dashboard/CreditBalancesWidget";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, BarChart, Bar } from "recharts";
 import moment from "moment";
 
