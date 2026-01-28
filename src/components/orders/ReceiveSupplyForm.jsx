@@ -548,7 +548,7 @@ Return JSON:
             <>
               <div className="space-y-2">
                 <Label>{t('select_supplier')} *</Label>
-                <Select onValueChange={handleSupplierSelect} value={formData.supplier_id}>
+                <Select onValueChange={(val) => { handleSupplierSelect(val); }} value={formData.supplier_id}>
                   <SelectTrigger>
                     <SelectValue placeholder={t('select_supplier')} />
                   </SelectTrigger>
