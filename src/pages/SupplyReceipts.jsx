@@ -519,12 +519,12 @@ export default function SupplyReceiptsPage() {
               {/* Credit status filter */}
               <Select value={refundStatus} onValueChange={setRefundStatus}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('credit_status') || 'Credit status'} />
+                  <SelectValue placeholder={t('credit_status') || 'סטטוס זיכוי'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('all') || 'All'}</SelectItem>
-                  <SelectItem value="received">{t('credit_received') || 'Credit received'}</SelectItem>
-                  <SelectItem value="not_received">{t('credit_not_received') || 'Credit not received'}</SelectItem>
+                  <SelectItem value="all">{t('all') || 'הכל'}</SelectItem>
+                  <SelectItem value="received">{t('credit_received') || 'התקבל זיכוי'}</SelectItem>
+                  <SelectItem value="not_received">{t('credit_not_received') || 'זיכויים לטיפול'}</SelectItem>
                 </SelectContent>
               </Select>
 
