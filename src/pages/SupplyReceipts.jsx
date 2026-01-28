@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText, CheckCircle2, Check } from "lucide-react";
+import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -28,8 +28,6 @@ export default function SupplyReceiptsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
-  const [refundStatus, setRefundStatus] = useState("all"); // all | received | not_received
-  const [reviewStatus, setReviewStatus] = useState("all"); // all | needs_review | reviewed
   const [sortBy, setSortBy] = useState("none");
   const [datePreset, setDatePreset] = useState("all"); // all | week | month | year | custom
   const [dateFrom, setDateFrom] = useState("");
@@ -41,7 +39,6 @@ export default function SupplyReceiptsPage() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('receipts');
   const [viewMode, setViewMode] = useState('list');
-  const [selectedIds, setSelectedIds] = useState(new Set());
 
   const loadData = async (userEmail, storeOwnerEmail = null, retryCount = 0) => {
     try {
@@ -184,10 +181,7 @@ export default function SupplyReceiptsPage() {
         status: receiptData.status || "pending",
         is_refund: !!receiptData.is_refund,
         needs_review: !!receiptData.needs_review,
-        review_note: receiptData.review_note || "",
-        refund_received: !!receiptData.refund_received,
-        reviewed: !!receiptData.reviewed,
-        linked_receipt_id: receiptData.linked_receipt_id || ""
+        review_note: receiptData.review_note || ""
       };
 
       if (editingReceipt) {
@@ -233,46 +227,16 @@ export default function SupplyReceiptsPage() {
     }
   };
 
-  // Selection & quick toggles
-  const toggleSelect = (id) => {
-    setSelectedIds(prev => {
-      const s = new Set(prev);
-      if (s.has(id)) s.delete(id); else s.add(id);
-      return s;
-    });
-  };
-  const toggleSelectAll = (selectAll) => {
-    setSelectedIds(selectAll ? new Set(sortedReceipts.map(r => r.id)) : new Set());
-  };
-  const handleToggleRefundReceived = async (rec) => {
-    await base44.entities.SupplyReceipt.update(rec.id, { refund_received: !rec.refund_received });
-    setReceipts(prev => prev.map(r => r.id === rec.id ? { ...r, refund_received: !rec.refund_received } : r));
-  };
-  const handleToggleReviewed = async (rec) => {
-    await base44.entities.SupplyReceipt.update(rec.id, { reviewed: !rec.reviewed, needs_review: rec.reviewed ? rec.needs_review : false });
-    setReceipts(prev => prev.map(r => r.id === rec.id ? { ...r, reviewed: !rec.reviewed, needs_review: rec.reviewed ? rec.needs_review : false } : r));
-  };
-  const bulkUpdateSelected = async (patch) => {
-    const ids = Array.from(selectedIds);
-    if (!ids.length) return;
-    await Promise.all(ids.map(id => base44.entities.SupplyReceipt.update(id, patch)));
-    setReceipts(prev => prev.map(r => ids.includes(r.id) ? { ...r, ...patch } : r));
-    setSelectedIds(new Set());
-  };
-
-   const filteredReceipts = receipts.filter(receipt => {
+  const filteredReceipts = receipts.filter(receipt => {
     const matchesSearch = receipt.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" ||
       (statusFilter === 'refund' ? !!receipt.is_refund : receipt.status === statusFilter);
     const matchesSupplier = supplierFilter === "all" || receipt.supplier_name === supplierFilter;
 
-    const matchesRefund = refundStatus === "all" || (refundStatus === "received" ? (receipt.is_refund && !!receipt.refund_received) : (receipt.is_refund && !receipt.refund_received));
-    const matchesReview = reviewStatus === "all" || (reviewStatus === "needs_review" ? !!receipt.needs_review : !!receipt.reviewed);
-
-     // Date range filter (inclusive)
-     let matchesDate = true;
-     if (dateFrom || dateTo) {
+    // Date range filter (inclusive)
+    let matchesDate = true;
+    if (dateFrom || dateTo) {
       const recDate = new Date(receipt.received_date);
       if (!isNaN(recDate)) {
         if (dateFrom) {
@@ -288,7 +252,7 @@ export default function SupplyReceiptsPage() {
       }
     }
 
-    return matchesSearch && matchesStatus && matchesSupplier && matchesRefund && matchesReview && matchesDate;
+    return matchesSearch && matchesStatus && matchesSupplier && matchesDate;
   });
 
   const sortedReceipts = React.useMemo(() => {
@@ -306,8 +270,6 @@ export default function SupplyReceiptsPage() {
     }
     return filteredReceipts;
   }, [filteredReceipts, sortBy]);
-
-  const allSelected = sortedReceipts.length > 0 && selectedIds.size === sortedReceipts.length;
 
   if (authLoading) {
     return (
@@ -516,31 +478,7 @@ export default function SupplyReceiptsPage() {
                 </SelectContent>
               </Select>
 
-              {/* Credit status filter */}
-              <Select value={refundStatus} onValueChange={setRefundStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('credit_status') || 'סטטוס זיכוי'} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('all') || 'הכל'}</SelectItem>
-                  <SelectItem value="received">{t('credit_received') || 'התקבל זיכוי'}</SelectItem>
-                  <SelectItem value="not_received">{t('credit_not_received') || 'זיכויים לטיפול'}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Review status filter */}
-              <Select value={reviewStatus} onValueChange={setReviewStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('review_status') || 'Review status'} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('all') || 'All'}</SelectItem>
-                  <SelectItem value="needs_review">{t('needs_review') || 'Needs review'}</SelectItem>
-                  <SelectItem value="reviewed">{t('reviewed') || 'Reviewed'}</SelectItem>
-                </SelectContent>
-              </Select>
-
-               {/* Sort by amount */}
+              {/* Sort by amount */}
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('sort') || 'מיון'} />
@@ -616,34 +554,12 @@ export default function SupplyReceiptsPage() {
             </div>
 
             {viewMode === 'list' ? (
-              <>
-                {selectedIds.size > 0 && (
-                  <div className="mb-3 p-3 bg-white border rounded-lg flex items-center gap-2">
-                    <div className="text-sm text-gray-700">{t('selected') || 'Selected'}: {selectedIds.size}</div>
-                    <Button size="sm" variant="outline" onClick={() => bulkUpdateSelected({ refund_received: true })}>
-                      <CheckCircle2 className="w-4 h-4 ml-1" /> {t('credit_received') || 'Credit received'}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => bulkUpdateSelected({ reviewed: true, needs_review: false })}>
-                      <Check className="w-4 h-4 ml-1" /> {t('reviewed') || 'Reviewed'}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
-                      {t('clear') || 'Clear'}
-                    </Button>
-                  </div>
-                )}
-                <ReceiptList
-                  receipts={sortedReceipts}
-                  onEdit={handleEditReceipt}
-                  onDelete={handleDeleteReceipt}
-                  loading={loading}
-                  selectedIds={selectedIds}
-                  onToggleSelect={toggleSelect}
-                  onToggleSelectAll={toggleSelectAll}
-                  allSelected={allSelected}
-                  onToggleRefundReceived={handleToggleRefundReceived}
-                  onToggleReviewed={handleToggleReviewed}
-                />
-              </>
+              <ReceiptList
+               receipts={sortedReceipts}
+               onEdit={handleEditReceipt}
+               onDelete={handleDeleteReceipt}
+               loading={loading}
+               />
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
                 <AnimatePresence>

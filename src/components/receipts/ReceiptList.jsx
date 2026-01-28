@@ -1,23 +1,11 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "../LanguageProvider";
-import { Download, Trash2, CheckCircle2, Check } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import PdfThumbnail from "./PdfThumbnail";
 
-export default function ReceiptList({
-  receipts = [],
-  onEdit,
-  onDelete,
-  loading = false,
-  selectedIds = new Set(),
-  onToggleSelect = () => {},
-  onToggleSelectAll = () => {},
-  allSelected = false,
-  onToggleRefundReceived = () => {},
-  onToggleReviewed = () => {}
-}) {
+export default function ReceiptList({ receipts = [], onEdit, onDelete, loading = false }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
 
@@ -50,10 +38,7 @@ export default function ReceiptList({
 
   return (
     <div className="bg-white rounded-lg border overflow-hidden">
-      <div className={`hidden md:grid grid-cols-9 gap-2 px-4 py-2 text-xs font-semibold text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-        <div>
-          <Checkbox checked={allSelected} onCheckedChange={(v) => onToggleSelectAll(Boolean(v))} />
-        </div>
+      <div className={`hidden md:grid grid-cols-8 gap-2 px-4 py-2 text-xs font-semibold text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
         <div>{t('supplier') || 'Supplier'}</div>
         <div>{t('order_number') || 'Order #'}</div>
         <div>{t('invoice_number') || 'Invoice #'}</div>
@@ -75,12 +60,9 @@ export default function ReceiptList({
           receipts.map((r) => (
             <div
               key={r.id}
-              className={`px-4 py-3 flex flex-col md:grid md:grid-cols-9 md:items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
+              className={`px-4 py-3 flex flex-col md:grid md:grid-cols-8 md:items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
             >
-              {/* Select + Supplier */}
-              <div className="hidden md:block">
-                <Checkbox checked={selectedIds?.has(r.id)} onCheckedChange={() => onToggleSelect(r.id)} />
-              </div>
+              {/* Supplier + items count (if any) */}
               <div>
                 <div className="font-medium">{r.supplier_name || '-'}</div>
                 {Array.isArray(r.verified_items) && r.verified_items.length > 0 && (
@@ -115,14 +97,8 @@ export default function ReceiptList({
                 {r.is_refund && (
                   <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
                 )}
-                {r.refund_received && (
-                  <Badge className="bg-emerald-100 text-emerald-800">{t('credit_received') || 'Credit received'}</Badge>
-                )}
                 {r.needs_review && (
                   <Badge className="bg-amber-100 text-amber-800">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
-                )}
-                {r.reviewed && (
-                  <Badge className="bg-blue-100 text-blue-800">{t('reviewed') || 'Reviewed'}</Badge>
                 )}
               </div>
 
@@ -160,13 +136,7 @@ export default function ReceiptList({
               </div>
 
               {/* Actions */}
-              <div className={`flex items-center gap-1 md:justify-end ${isRTL ? 'md:justify-start' : ''}`}>
-                <Button size="icon" variant="ghost" title={t('credit_received') || 'Credit received'} onClick={() => onToggleRefundReceived && onToggleRefundReceived(r)}>
-                  <CheckCircle2 className={`w-4 h-4 ${r.refund_received ? 'text-emerald-600' : 'text-gray-400'}`} />
-                </Button>
-                <Button size="icon" variant="ghost" title={t('reviewed') || 'Reviewed'} onClick={() => onToggleReviewed && onToggleReviewed(r)}>
-                  <Check className={`w-4 h-4 ${r.reviewed ? 'text-blue-600' : 'text-gray-400'}`} />
-                </Button>
+              <div className={`flex md:justify-end ${isRTL ? 'md:justify-start' : ''}`}>
                 <Button size="sm" variant="outline" onClick={() => onEdit && onEdit(r)}>
                   {t('edit') || 'Edit'}
                 </Button>

@@ -710,11 +710,6 @@ const translations = {
         "rescan_updates": "💡 סריקה חוזרת תעדכן את הפריטים הקיימים (כולל הנחות!)",
         "scan_catalog": "סרוק קטלוג",
         "catalog_scan_instructions": "העלה תמונה של קטלוג הספק. המערכת תחלץ שמות, מק\"ט, מחירים והנחות.",
-
-        "credit_status": "סטטוס זיכוי",
-        "all": "הכל",
-        "credit_received": "התקבל זיכוי",
-        "credit_not_received": "זיכויים לטיפול",
     },
     en: {
         // General
@@ -1426,11 +1421,6 @@ const translations = {
         "rescan_updates": "💡 Re-scanning will UPDATE existing items (including discounts!)",
         "scan_catalog": "Scan Catalog",
         "catalog_scan_instructions": "Upload supplier catalog image. System will extract names, codes, prices and discounts.",
-
-        "credit_status": "Credit Status",
-        "all": "All",
-        "credit_received": "Credit Received",
-        "credit_not_received": "Credit Not Received",
     },
     es: {
         // General
