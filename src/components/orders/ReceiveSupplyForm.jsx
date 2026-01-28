@@ -209,7 +209,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers = [], onSu
                       />
                     </div>
                     <div>
-                      <Label className="text-xs text-gray-600">{t('invoice_date') || 'Invoice date'} *</nLabel>
+                      <Label className="text-xs text-gray-600">{t('invoice_date') || 'Invoice date'} *</Label>
                       <Input type="date" value={formData.invoice_date} onChange={(e) => setFormData(prev => ({ ...prev, invoice_date: e.target.value }))} className="mt-1 font-semibold" required />
                     </div>
                     <div>
