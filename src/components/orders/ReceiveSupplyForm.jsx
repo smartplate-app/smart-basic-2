@@ -43,6 +43,9 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       refund_received: !!receipt.refund_received,
       reviewed: !!receipt.reviewed,
       linked_receipt_id: receipt.linked_receipt_id || "",
+      refund_received: !!receipt.refund_received,
+      reviewed: !!receipt.reviewed,
+      linked_receipt_id: receipt.linked_receipt_id || "",
       manual_entry_mode: true // Already has data, show edit mode
       };
     }
@@ -68,6 +71,9 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       is_refund: false,
       needs_review: false,
       review_note: "",
+      refund_received: false,
+      reviewed: false,
+      linked_receipt_id: "",
       refund_received: false,
       reviewed: false,
       linked_receipt_id: "",
@@ -841,7 +847,7 @@ const handleAutoScan = async () => {
                       </div>
 
                       <div className="bg-white border rounded-lg p-3 mt-3 space-y-3">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 flex-wrap">
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
@@ -860,7 +866,49 @@ const handleAutoScan = async () => {
                             />
                             <span>{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</span>
                           </label>
+                          {formData.is_refund && (
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={!!formData.refund_received}
+                                onChange={(e) => setFormData(prev => ({ ...prev, refund_received: e.target.checked }))}
+                                className="rounded"
+                              />
+                              <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
+                            </label>
+                          )}
+                          {formData.needs_review && (
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={!!formData.reviewed}
+                                onChange={(e) => setFormData(prev => ({ ...prev, reviewed: e.target.checked }))}
+                                className="rounded"
+                              />
+                              <span>{language === 'he' ? 'נבדק' : 'Reviewed'}</span>
+                            </label>
+                          )}
                         </div>
+                        {formData.is_refund && (
+                          <div className="mt-3">
+                            <Label className="text-xs text-gray-600">{language === 'he' ? 'קשר לחשבונית המקורית (אופציונלי)' : 'Link to original receipt (optional)'} </Label>
+                            <Select
+                              value={formData.linked_receipt_id || ''}
+                              onValueChange={(val) => setFormData(prev => ({ ...prev, linked_receipt_id: val }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={language === 'he' ? 'בחר קבלה לקישור' : 'Select receipt to link'} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(previousReceipts || []).slice(0,200).map(r => (
+                                  <SelectItem key={r.id} value={r.id}>
+                                    {(r.order_number || r.invoice_number || r.id)} • {new Date(r.received_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} • {r.supplier_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
                         {formData.needs_review && (
                           <div>
                             <Label className="text-xs text-gray-600">{language === 'he' ? 'סיבת בדיקה (אופציונלי)' : 'Review reason (optional)'} </Label>
