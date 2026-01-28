@@ -96,7 +96,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
                   {t(`status_${r.status}`) || r.status || '-'}
                 </Badge>
                 {r.is_refund && (
-                  <Badge className="bg-purple-100 text-purple-800">{language === 'he' ? 'זיכוי' : 'Refund'}</Badge>
+                  <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
                 )}
                 {r.needs_review && (
                   <Badge className="bg-amber-100 text-amber-800">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
