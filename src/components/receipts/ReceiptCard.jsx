@@ -48,6 +48,12 @@ export default function ReceiptCard({ receipt, onEdit }) {
                   <StatusIcon className="w-3 h-3" />
                   {status.label}
                 </Badge>
+                {receipt.is_refund && (
+                  <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
+                )}
+                {receipt.needs_review && (
+                  <Badge className="bg-amber-100 text-amber-800">{t('needs_review') || 'Review'}</Badge>
+                )}
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-gray-600">

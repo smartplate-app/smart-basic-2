@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid } from "lucide-react";
+import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -359,6 +359,33 @@ export default function SupplyReceiptsPage() {
            >
              <AlertTriangle className="w-5 h-5 ml-2" />
              {t('check_duplicate_invoices') || 'Check Duplicate Invoices'}
+           </Button>
+           <Button
+             variant="outline"
+             onClick={() => {
+               const rows = (sortedReceipts || []).filter(r => r.is_refund || r.needs_review);
+               if (!rows.length) { alert(t('no_refund_review_found') || 'No refund/review invoices in current view.'); return; }
+               const header = ['supplier','invoice_number','received_date','amount','flags','review_note'];
+               const esc = (s) => String(s ?? '').replace(/"/g, '""');
+               const csv = [header.join(',')].concat(rows.map(r => {
+                 const flags = [r.is_refund ? 'refund' : null, r.needs_review ? 'review' : null].filter(Boolean).join('|');
+                 const vals = [esc(r.supplier_name), esc(r.invoice_number), r.received_date, (r.invoice_total ?? 0), flags, esc(r.review_note || '')];
+                 return vals.map(v => `"${v}"`).join(',');
+               })).join('\n');
+               const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+               const url = URL.createObjectURL(blob);
+               const a = document.createElement('a');
+               a.href = url;
+               a.download = 'refund_review_report.csv';
+               document.body.appendChild(a);
+               a.click();
+               URL.revokeObjectURL(url);
+               a.remove();
+             }}
+             className="flex items-center gap-2"
+           >
+             <FileText className="w-5 h-5 ml-2" />
+             {t('refund_review_report') || 'Refund/Review report'}
            </Button>
             <Button
               onClick={() => {
