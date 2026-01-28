@@ -44,7 +44,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
         reviewed: !!receipt.reviewed,
         linked_receipt_id: receipt.linked_receipt_id || "",
         manual_entry_mode: true // Already has data, show edit mode
-      ;
+        };
     }
     // New receipt
     return {
@@ -169,24 +169,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     };
     fetchFallbackSuppliers();
   }, [availableSuppliers]);
-
-  useEffect(() => {
-    const loadLinkables = async () => {
-      try {
-        if (!formData.is_refund) { setLinkableReceipts([]); return; }
-        const supplierId = formData.supplier_id || (receipt?.supplier_id || "");
-        if (!supplierId) { setLinkableReceipts([]); return; }
-        const me = await base44.auth.me();
-        const workingEmail = me.acting_as_store_email || me.email;
-        const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId, created_by: workingEmail }, "-received_date");
-        const candidates = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
-        setLinkableReceipts(candidates);
-      } catch (e) {
-        console.error("Failed loading linkable receipts", e);
-      }
-    };
-    loadLinkables();
-  }, [formData.is_refund, formData.supplier_id]);
 
   useEffect(() => {
     const loadLinkables = async () => {
