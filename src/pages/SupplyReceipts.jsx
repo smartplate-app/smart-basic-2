@@ -28,6 +28,8 @@ export default function SupplyReceiptsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
+  const [refundStatus, setRefundStatus] = useState("all"); // all | received | not_received
+  const [reviewStatus, setReviewStatus] = useState("all"); // all | needs_review | reviewed
   const [sortBy, setSortBy] = useState("none");
   const [datePreset, setDatePreset] = useState("all"); // all | week | month | year | custom
   const [dateFrom, setDateFrom] = useState("");
@@ -181,7 +183,10 @@ export default function SupplyReceiptsPage() {
         status: receiptData.status || "pending",
         is_refund: !!receiptData.is_refund,
         needs_review: !!receiptData.needs_review,
-        review_note: receiptData.review_note || ""
+        review_note: receiptData.review_note || "",
+        refund_received: !!receiptData.refund_received,
+        reviewed: !!receiptData.reviewed,
+        linked_receipt_id: receiptData.linked_receipt_id || ""
       };
 
       if (editingReceipt) {
@@ -234,9 +239,12 @@ export default function SupplyReceiptsPage() {
       (statusFilter === 'refund' ? !!receipt.is_refund : receipt.status === statusFilter);
     const matchesSupplier = supplierFilter === "all" || receipt.supplier_name === supplierFilter;
 
-    // Date range filter (inclusive)
-    let matchesDate = true;
-    if (dateFrom || dateTo) {
+    const matchesRefund = refundStatus === "all" || (refundStatus === "received" ? (receipt.is_refund && !!receipt.refund_received) : (receipt.is_refund && !receipt.refund_received));
+    const matchesReview = reviewStatus === "all" || (reviewStatus === "needs_review" ? !!receipt.needs_review : !!receipt.reviewed);
+
+     // Date range filter (inclusive)
+     let matchesDate = true;
+     if (dateFrom || dateTo) {
       const recDate = new Date(receipt.received_date);
       if (!isNaN(recDate)) {
         if (dateFrom) {
@@ -252,7 +260,7 @@ export default function SupplyReceiptsPage() {
       }
     }
 
-    return matchesSearch && matchesStatus && matchesSupplier && matchesDate;
+    return matchesSearch && matchesStatus && matchesSupplier && matchesRefund && matchesReview && matchesDate;
   });
 
   const sortedReceipts = React.useMemo(() => {
@@ -478,7 +486,31 @@ export default function SupplyReceiptsPage() {
                 </SelectContent>
               </Select>
 
-              {/* Sort by amount */}
+              {/* Credit status filter */}
+              <Select value={refundStatus} onValueChange={setRefundStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('credit_status') || 'Credit status'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all') || 'All'}</SelectItem>
+                  <SelectItem value="received">{t('credit_received') || 'Credit received'}</SelectItem>
+                  <SelectItem value="not_received">{t('credit_not_received') || 'Credit not received'}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Review status filter */}
+              <Select value={reviewStatus} onValueChange={setReviewStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('review_status') || 'Review status'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all') || 'All'}</SelectItem>
+                  <SelectItem value="needs_review">{t('needs_review') || 'Needs review'}</SelectItem>
+                  <SelectItem value="reviewed">{t('reviewed') || 'Reviewed'}</SelectItem>
+                </SelectContent>
+              </Select>
+
+               {/* Sort by amount */}
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger>
                   <SelectValue placeholder={t('sort') || 'מיון'} />

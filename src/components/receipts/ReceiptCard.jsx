@@ -56,8 +56,14 @@ export default function ReceiptCard({ receipt, onEdit }) {
                 {receipt.is_refund && (
                   <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
                 )}
+                {receipt.refund_received && (
+                  <Badge className="bg-emerald-100 text-emerald-800">{t('credit_received') || 'Credit received'}</Badge>
+                )}
                 {receipt.needs_review && (
                   <Badge className="bg-amber-100 text-amber-800">{t('needs_review') || 'Review'}</Badge>
+                )}
+                {receipt.reviewed && (
+                  <Badge className="bg-blue-100 text-blue-800">{t('reviewed') || 'Reviewed'}</Badge>
                 )}
               </div>
               <div className="space-y-1">

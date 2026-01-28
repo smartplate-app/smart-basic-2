@@ -40,8 +40,11 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
         is_refund: !!receipt.is_refund,
         needs_review: !!receipt.needs_review,
         review_note: receipt.review_note || "",
+        refund_received: !!receipt.refund_received,
+        reviewed: !!receipt.reviewed,
+        linked_receipt_id: receipt.linked_receipt_id || "",
         manual_entry_mode: true // Already has data, show edit mode
-      };
+      ;
     }
     // New receipt
     return {
@@ -65,6 +68,9 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       is_refund: false,
       needs_review: false,
       review_note: "",
+      refund_received: false,
+      reviewed: false,
+      linked_receipt_id: "",
       manual_entry_mode: false
     };
   });
@@ -80,6 +86,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [dragActive, setDragActive] = useState(false);
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
+  const [linkableReceipts, setLinkableReceipts] = useState([]);
   const { t, language } = useLanguage();
 
   useEffect(() => {
@@ -162,6 +169,42 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     };
     fetchFallbackSuppliers();
   }, [availableSuppliers]);
+
+  useEffect(() => {
+    const loadLinkables = async () => {
+      try {
+        if (!formData.is_refund) { setLinkableReceipts([]); return; }
+        const supplierId = formData.supplier_id || (receipt?.supplier_id || "");
+        if (!supplierId) { setLinkableReceipts([]); return; }
+        const me = await base44.auth.me();
+        const workingEmail = me.acting_as_store_email || me.email;
+        const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId, created_by: workingEmail }, "-received_date");
+        const candidates = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
+        setLinkableReceipts(candidates);
+      } catch (e) {
+        console.error("Failed loading linkable receipts", e);
+      }
+    };
+    loadLinkables();
+  }, [formData.is_refund, formData.supplier_id]);
+
+  useEffect(() => {
+    const loadLinkables = async () => {
+      try {
+        if (!formData.is_refund) { setLinkableReceipts([]); return; }
+        const supplierId = formData.supplier_id || (receipt?.supplier_id || "");
+        if (!supplierId) { setLinkableReceipts([]); return; }
+        const me = await base44.auth.me();
+        const workingEmail = me.acting_as_store_email || me.email;
+        const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId, created_by: workingEmail }, "-received_date");
+        const candidates = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
+        setLinkableReceipts(candidates);
+      } catch (e) {
+        console.error("Failed loading linkable receipts", e);
+      }
+    };
+    loadLinkables();
+  }, [formData.is_refund, formData.supplier_id]);
   const handleSupplierSelect = (supplierId) => {
     const supplier = availableSuppliers.find(s => s.id === supplierId);
     if (supplier) {
@@ -821,7 +864,7 @@ const handleAutoScan = async () => {
                       </div>
 
                       <div className="bg-white border rounded-lg p-3 mt-3 space-y-3">
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-4">
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
@@ -834,13 +877,56 @@ const handleAutoScan = async () => {
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
+                              checked={!!formData.refund_received}
+                              onChange={(e) => setFormData(prev => ({ ...prev, refund_received: e.target.checked }))}
+                              className="rounded"
+                            />
+                            <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
                               checked={!!formData.needs_review}
                               onChange={(e) => setFormData(prev => ({ ...prev, needs_review: e.target.checked }))}
                               className="rounded"
                             />
                             <span>{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</span>
                           </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={!!formData.reviewed}
+                              onChange={(e) => setFormData(prev => ({ ...prev, reviewed: e.target.checked }))}
+                              className="rounded"
+                            />
+                            <span>{language === 'he' ? 'נבדק' : 'Reviewed'}</span>
+                          </label>
                         </div>
+
+                        {formData.is_refund && (
+                          <div className="grid sm:grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs text-gray-600">{language === 'he' ? 'קישור לקבלה מקורית' : 'Link to original receipt'}</Label>
+                              <Select value={formData.linked_receipt_id || ""} onValueChange={(v) => setFormData(prev => ({ ...prev, linked_receipt_id: v }))}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={language === 'he' ? 'בחר קבלה' : 'Select receipt'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {linkableReceipts.length === 0 ? (
+                                    <SelectItem value="none" disabled>{language === 'he' ? 'אין קבלות זמינות' : 'No receipts available'}</SelectItem>
+                                  ) : (
+                                    linkableReceipts.map(r => (
+                                      <SelectItem key={r.id} value={r.id}>
+                                        {(r.invoice_number || r.order_number || '-')} • {(r.received_date || '')} • {(r.supplier_name || '')}
+                                      </SelectItem>
+                                    ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        )}
+
                         {formData.needs_review && (
                           <div>
                             <Label className="text-xs text-gray-600">{language === 'he' ? 'סיבת בדיקה (אופציונלי)' : 'Review reason (optional)'} </Label>
