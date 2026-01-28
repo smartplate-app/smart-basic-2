@@ -77,7 +77,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [matching, setMatching] = useState(false);
-  const [matching, setMatching] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
@@ -417,50 +416,7 @@ const handleAutoScan = async () => {
       }
     };
 
-    const handleScanAndMatchItems = async () => {
-      if (!formData.receipt_images.length) { alert(t('click_to_upload_images')); return; }
-      if (noOrderMode && !formData.supplier_id) { alert(t('supplier_required')); return; }
-      try {
-        setMatching(true);
-        const { data } = await base44.functions.invoke('scanAndMatchReceipt', {
-          file_urls: formData.receipt_images,
-          supplier_id: formData.supplier_id || null,
-        });
-        const rows = Array.isArray(data?.items) ? data.items : [];
-        const mapped = rows.map(r => ({
-          item_id: r.item_id || "",
-          item_name: r.item_name || r.name_extracted || r.name || "",
-          ordered_quantity: 0,
-          certificate_quantity: 0,
-          received_quantity: Number(r.quantity || 0),
-          unit: r.unit || "unit",
-          catalog_price: 0,
-          catalog_discount: 0,
-          actual_price: Number(r.price || 0),
-          actual_discount: 0,
-          price_changed: false,
-          discount_changed: false,
-          has_issue: !r.item_id || Number(r.match_confidence || 0) < 0.6,
-          issue_note: (!r.item_id || Number(r.match_confidence || 0) < 0.6) ? 'Low confidence match' : '',
-          units_per_package: 1,
-          price_after_discount: 0,
-        }));
-        const { calculatedTotal, totalsMatch } = recalculateTotals(mapped, formData.invoice_total);
-        setFormData(prev => ({
-          ...prev,
-          verified_items: mapped,
-          calculated_total: calculatedTotal,
-          totals_match: totalsMatch,
-          manual_entry_mode: true,
-        }));
-      } catch (e) {
-        alert((language === 'he' ? 'שגיאה בהתאמת פריטים' : 'Error matching items') + ': ' + (e?.message || e));
-      } finally {
-        setMatching(false);
-      }
-    };
-
-    const handleSkipScanAndEnterManually = () => {
+     const handleSkipScanAndEnterManually = () => {
     // When user clicks "Enter Manually", show the form with empty fields
     // This allows them to manually add items
     // The invoice details section will show because we set a flag
@@ -759,26 +715,16 @@ const handleAutoScan = async () => {
                         </Button>
                         
                         <Button
-                          type="button"
-                          onClick={handleScanAndMatchItems}
-                          disabled={matching}
-                          variant="outline"
-                          className="flex-1"
-                        >
-                          <FileText className="w-4 h-4 ml-2" />
-                          {language === 'he' ? 'התאם פריטים' : 'Match items'}
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={handleScanAndMatchItems}
-                          disabled={matching}
-                          variant="outline"
-                          className="flex-1"
-                        >
-                          <FileText className="w-4 h-4 ml-2" />
-                          {language === 'he' ? 'התאם פריטים' : 'Match items'}
-                        </Button>
-                        {!formData.manual_entry_mode && (
+                            type="button"
+                            onClick={handleScanAndMatchItems}
+                            disabled={matching}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            <FileText className="w-4 h-4 ml-2" />
+                            {language === 'he' ? 'התאם פריטים' : 'Match items'}
+                          </Button>
+                          {!formData.manual_entry_mode && (
                           <Button
                             type="button"
                             onClick={handleSkipScanAndEnterManually}
