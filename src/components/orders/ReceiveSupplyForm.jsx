@@ -86,6 +86,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [dragActive, setDragActive] = useState(false);
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
+  const [previousReceipts, setPreviousReceipts] = useState([]);
   const { t, language } = useLanguage();
 
   useEffect(() => {
@@ -269,6 +270,19 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     return false;
   }
 };
+
+// Load previous non-refund receipts for linking when refund toggled and supplier selected
+useEffect(() => {
+  (async () => {
+    try {
+      if (!formData.is_refund || !(formData.supplier_id || receipt?.supplier_id)) { setPreviousReceipts([]); return; }
+      const supplierId = formData.supplier_id || receipt?.supplier_id;
+      const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
+      const filtered = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
+      setPreviousReceipts(filtered.slice(0, 200));
+    } catch (e) { setPreviousReceipts([]); }
+  })();
+}, [formData.is_refund, formData.supplier_id]);
 
 const handleAutoScan = async () => {
     if (!formData.receipt_images.length) {
