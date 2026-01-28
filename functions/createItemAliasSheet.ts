@@ -7,9 +7,48 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
 
-    // Fetch items for reference sheet
-    const items = await base44.entities.Item.list();
-    const itemRows = (items || []).map(it => [it.id || '', it.name || '', it.supplier_name || '']);
+    // Fetch items across all users and seed alias candidates from orders/receipts
+    const normalize = (s) => String(s || '').trim().replace(/\s+/g, ' ');
+    const isHebrew = (s) => /[\u0590-\u05FF]/.test(String(s || ''));
+
+    const itemsAll = await base44.asServiceRole.entities.Item.list();
+    const itemRows = (itemsAll || []).map(it => [it.id || '', it.name || '', it.supplier_name || '']);
+
+    const knownNames = new Set((itemsAll || []).map(it => normalize(it.name).toLowerCase()));
+
+    let aliasCandidates = [];
+    try {
+      const orders = await base44.asServiceRole.entities.Order.list();
+      (orders || []).forEach(o => {
+        (o.items || []).forEach(it => {
+          const nm = normalize(it.item_name || it.name);
+          if (!nm) return;
+          const key = nm.toLowerCase();
+          if (!knownNames.has(key)) {
+            aliasCandidates.push({ alias: nm, lang: isHebrew(nm) ? 'he' : 'en', normalized: key, note: 'source: order' });
+          }
+        });
+      });
+    } catch {}
+
+    try {
+      const receipts = await base44.asServiceRole.entities.SupplyReceipt.list();
+      (receipts || []).forEach(r => {
+        (r.verified_items || []).forEach(it => {
+          const nm = normalize(it.item_name || it.name);
+          if (!nm) return;
+          const key = nm.toLowerCase();
+          if (!knownNames.has(key)) {
+            aliasCandidates.push({ alias: nm, lang: isHebrew(nm) ? 'he' : 'en', normalized: key, note: 'source: receipt' });
+          }
+        });
+      });
+    } catch {}
+
+    const uniqueMap = new Map();
+    aliasCandidates.forEach(a => { if (!uniqueMap.has(a.normalized)) uniqueMap.set(a.normalized, a); });
+    const uniqueAliases = Array.from(uniqueMap.values()).slice(0, 5000);
+    const aliasRows = uniqueAliases.map(a => [a.alias, a.lang, a.normalized, '', '', '', a.note]);
 
     // Google Sheets OAuth token via app connector (already authorized)
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
@@ -71,7 +110,8 @@ Deno.serve(async (req) => {
           { range: 'Instructions!A1', values: instructions },
           { range: 'Aliases!A1:G1', values: headerAliases },
           { range: 'Items!A1:C1', values: headerItems },
-          ...(itemRows.length ? [{ range: `Items!A2:C${itemRows.length + 1}`, values: itemRows }] : [])
+          ...(itemRows.length ? [{ range: `Items!A2:C${itemRows.length + 1}`, values: itemRows }] : []),
+          ...(aliasRows.length ? [{ range: `Aliases!A2:G${aliasRows.length + 1}`, values: aliasRows }] : [])
         ]
       })
     });
