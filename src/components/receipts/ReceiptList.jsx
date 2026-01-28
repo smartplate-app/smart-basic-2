@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
 import { Download, Trash2 } from "lucide-react";
+import PdfThumbnail from "./PdfThumbnail";
 
 export default function ReceiptList({ receipts = [], onEdit, onDelete, loading = false }) {
   const { t, language } = useLanguage();
@@ -27,8 +28,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
 
   // Detect PDF by URL extension
   const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
-  // Use Google viewer for consistent PDF thumbnails across browsers
-  const pdfViewerUrl = (url) => `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}&rm=minimal`;
+  // (Replaced by real image thumbnails via PdfThumbnail component)
 
   const statusVariant = (status) => {
     if (status === 'verified') return 'default';
@@ -114,12 +114,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
                       title={(t('open_file') || 'Open file')}
                     >
                       {isPdf(r.receipt_images[0]) ? (
-                        <iframe
-                          src={pdfViewerUrl(r.receipt_images[0])}
-                          className="w-full h-full pointer-events-none bg-gray-50"
-                          title="pdf-preview"
-                          loading="lazy"
-                        />
+                        <PdfThumbnail url={r.receipt_images[0]} size={48} />
                       ) : (
                         <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover pointer-events-none" />
                       )}

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, Calendar, Package, CheckCircle, AlertCircle, Clock, Edit } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
+import PdfThumbnail from "./PdfThumbnail";
 
 export default function ReceiptCard({ receipt, onEdit }) {
   const { t } = useLanguage();
@@ -138,7 +139,7 @@ export default function ReceiptCard({ receipt, onEdit }) {
                   className="w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-green-500 transition-colors"
                 >
                   {isPdf(imageUrl) ? (
-                    <iframe src={pdfViewerUrl(imageUrl)} className="w-full h-full pointer-events-none bg-gray-50" title={`pdf-${index}`} loading="lazy" />
+                    <PdfThumbnail url={imageUrl} size={80} />
                   ) : (
                     <img 
                       src={imageUrl} 
