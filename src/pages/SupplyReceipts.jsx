@@ -181,7 +181,10 @@ export default function SupplyReceiptsPage() {
         status: receiptData.status || "pending",
         is_refund: !!receiptData.is_refund,
         needs_review: !!receiptData.needs_review,
-        review_note: receiptData.review_note || ""
+        review_note: receiptData.review_note || "",
+        refund_received: !!receiptData.refund_received,
+        reviewed: !!receiptData.reviewed,
+        linked_receipt_id: receiptData.linked_receipt_id || ""
       };
 
       if (editingReceipt) {
@@ -252,7 +255,12 @@ export default function SupplyReceiptsPage() {
       }
     }
 
-    return matchesSearch && matchesStatus && matchesSupplier && matchesDate;
+    if (matchesSearch && matchesStatus && matchesSupplier && matchesDate) {
+      if (statusFilter === 'refund' && refundReceivedOnly && !receipt.refund_received) return false;
+      if (statusFilter === 'has_issues' && reviewedOnly && !receipt.reviewed) return false;
+      return true;
+    }
+    return false;
   });
 
   const sortedReceipts = React.useMemo(() => {
@@ -463,6 +471,20 @@ export default function SupplyReceiptsPage() {
                 </SelectContent>
               </Select>
 
+              {/* Extra filters for refunds/review */}
+              {statusFilter === 'refund' && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
+                  <span>{t('credit_received') || 'Credit received'}</span>
+                </label>
+              )}
+              {statusFilter === 'has_issues' && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
+                  <span>{t('reviewed') || 'Reviewed'}</span>
+                </label>
+              )}
+
               {/* Supplier filter */}
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
                 <SelectTrigger>
@@ -558,6 +580,7 @@ export default function SupplyReceiptsPage() {
                receipts={sortedReceipts}
                onEdit={handleEditReceipt}
                onDelete={handleDeleteReceipt}
+               onQuickUpdate={handleQuickUpdate}
                loading={loading}
                />
             ) : (

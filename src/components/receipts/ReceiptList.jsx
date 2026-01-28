@@ -95,10 +95,33 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   {t(`status_${r.status}`) || r.status || '-'}
                 </Badge>
                 {r.is_refund && (
-                  <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
+                  <>
+                    <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
+                    <label className="flex items-center gap-1 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={!!r.refund_received}
+                        onChange={(e) => onQuickUpdate && onQuickUpdate(r.id, { refund_received: e.target.checked })}
+                      />
+                      <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
+                    </label>
+                  </>
                 )}
                 {r.needs_review && (
-                  <Badge className="bg-amber-100 text-amber-800">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                  <>
+                    <Badge className="bg-amber-100 text-amber-800">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                    <label className="flex items-center gap-1 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={!!r.reviewed}
+                        onChange={(e) => onQuickUpdate && onQuickUpdate(r.id, { reviewed: e.target.checked })}
+                      />
+                      <span>{language === 'he' ? 'נבדק' : 'Reviewed'}</span>
+                    </label>
+                  </>
+                )}
+                {r.linked_receipt_id && (
+                  <Badge className="bg-blue-100 text-blue-800">{language === 'he' ? 'מקושר' : 'Linked'}</Badge>
                 )}
               </div>
 

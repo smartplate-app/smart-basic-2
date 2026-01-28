@@ -49,7 +49,6 @@
  */
 import AdminDashboard from './pages/AdminDashboard';
 import ChainManagement from './pages/ChainManagement';
-import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import InventoryTransfers from './pages/InventoryTransfers';
 import InviteUser from './pages/InviteUser';
@@ -69,7 +68,6 @@ import SignIn from './pages/SignIn';
 import StoreLogin from './pages/StoreLogin';
 import StoreUsers from './pages/StoreUsers';
 import Suppliers from './pages/Suppliers';
-import SupplyReceipts from './pages/SupplyReceipts';
 import TestInviteLinks from './pages/TestInviteLinks';
 import TestInvites from './pages/TestInvites';
 import Tips from './pages/Tips';
@@ -82,13 +80,14 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
+import Dashboard from './pages/Dashboard';
+import SupplyReceipts from './pages/SupplyReceipts';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminDashboard": AdminDashboard,
     "ChainManagement": ChainManagement,
-    "Dashboard": Dashboard,
     "Home": Home,
     "InventoryTransfers": InventoryTransfers,
     "InviteUser": InviteUser,
@@ -108,7 +107,6 @@ export const PAGES = {
     "StoreLogin": StoreLogin,
     "StoreUsers": StoreUsers,
     "Suppliers": Suppliers,
-    "SupplyReceipts": SupplyReceipts,
     "TestInviteLinks": TestInviteLinks,
     "TestInvites": TestInvites,
     "Tips": Tips,
@@ -121,6 +119,8 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
+    "Dashboard": Dashboard,
+    "SupplyReceipts": SupplyReceipts,
 }
 
 export const pagesConfig = {
