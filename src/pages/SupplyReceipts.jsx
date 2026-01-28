@@ -457,10 +457,11 @@ export default function SupplyReceiptsPage() {
                   <SelectValue placeholder={t('receipt_status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('all_statuses')}</SelectItem>
-                  <SelectItem value="verified">{t('status_verified')}</SelectItem>
-                  <SelectItem value="has_issues">{t('status_has_issues')}</SelectItem>
-                  <SelectItem value="pending">{t('status_pending')}</SelectItem>
+                 <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                 <SelectItem value="verified">{t('status_verified')}</SelectItem>
+                 <SelectItem value="has_issues">{t('status_has_issues')}</SelectItem>
+                 <SelectItem value="refund">{t('refund') || 'Refund'}</SelectItem>
+                 <SelectItem value="pending">{t('status_pending')}</SelectItem>
                 </SelectContent>
               </Select>
 
