@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2 } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +65,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
 
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
   const { t } = useLanguage();
@@ -165,24 +166,46 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
 
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     try {
       setUploading(true);
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      
-      setFormData(prev => ({
-        ...prev,
-        receipt_images: [...prev.receipt_images, file_url]
+      const uploadedUrls = await Promise.all(files.map(async (file) => {
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          return file_url;
+        } catch (err) {
+          console.error('Upload failed for file', file?.name, err);
+          return null;
+        }
       }));
+      const urls = uploadedUrls.filter(Boolean);
+      if (urls.length) {
+        setFormData(prev => ({
+          ...prev,
+          receipt_images: [...prev.receipt_images, ...urls]
+        }));
+      }
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading images:", error);
       alert(t('error_uploading_images'));
     } finally {
       setUploading(false);
     }
   };
+
+  // Drag & drop handlers (desktop)
+  const onDropUpload = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const files = e.dataTransfer?.files ? Array.from(e.dataTransfer.files) : [];
+    if (!files.length) return;
+    const eventLike = { target: { files } };
+    await handleImageUpload(eventLike);
+  };
+  const onDragOverUpload = (e) => { e.preventDefault(); e.stopPropagation(); setDragActive(true); };
+  const onDragLeaveUpload = (e) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); };
 
   // Helper function to recalculate totals
   const recalculateTotals = (items, invoiceTotal) => {
