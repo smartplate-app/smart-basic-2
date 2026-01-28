@@ -607,6 +607,9 @@ Return JSON:
                         )}
                         <span className="text-sm text-gray-600">{t('click_to_upload_images')}</span>
                         <span className="text-xs text-gray-500">{t('supports_images_pdf')}</span>
+                        <span className="text-xs text-gray-500">
+                          {language === 'he' ? 'או גררו ושחררו כאן קבצים (תמונות/PDF)' : 'or drag & drop files here (images/PDF)'}
+                        </span>
                       </label>
                     </div>
 
