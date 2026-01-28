@@ -5,7 +5,7 @@ import { useLanguage } from "../LanguageProvider";
 import { Download, Trash2 } from "lucide-react";
 import PdfThumbnail from "./PdfThumbnail";
 
-export default function ReceiptList({ receipts = [], onEdit, onDelete, loading = false }) {
+export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
 
