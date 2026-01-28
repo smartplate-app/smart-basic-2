@@ -25,6 +25,9 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
     );
   };
 
+  // Detect PDF by URL extension
+  const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
+
   const statusVariant = (status) => {
     if (status === 'verified') return 'default';
     if (status === 'has_issues') return 'destructive';
@@ -99,10 +102,18 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
                       href={r.receipt_images[0]}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="relative block w-12 h-12 rounded-md overflow-hidden border"
+                      className="relative block w-12 h-12 rounded-md overflow-hidden border bg-white"
                       title={(t('open_file') || 'Open file')}
                     >
-                      <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover" />
+                      {isPdf(r.receipt_images[0]) ? (
+                        <embed
+                          src={`${r.receipt_images[0]}#toolbar=0&navpanes=0&scrollbar=0`}
+                          type="application/pdf"
+                          className="w-full h-full pointer-events-none"
+                        />
+                      ) : (
+                        <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover pointer-events-none" />
+                      )}
                       {r.receipt_images.length > 1 && (
                         <span className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[10px] px-1 rounded-tl">
                           +{r.receipt_images.length - 1}
