@@ -993,8 +993,21 @@ const [monthReceipts, setMonthReceipts] = useState([]);
               </CardContent>
             </Card>
 
-            {/* Sales and Tips Input */}
+            {/* Credit Balances Widget */}
             <Card>
+              <CardHeader>
+                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                  {language === 'he' ? 'יתרות זיכוי' : 'Credit Balances'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="lg:col-span-1">
+                    {/* Inline widget */}
+                    <div id="credit-widget-inline"></div>
+                  </div>
+                  <div className="lg:col-span-2">
+                
               <CardHeader className={`flex flex-row items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
                   {language === 'he' ? 'מכירות וטיפים בפועל החודש' : 'Actual Sales & Tips This Month'}
