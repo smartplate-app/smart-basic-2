@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -597,16 +598,6 @@ const handleAutoScan = async () => {
 
               {(formData.supplier_id || receipt) && (
                 <>
-                  <div className="space-y-2">
-                    <Label>{t('received_date')} *</Label>
-                    <Input
-                      type="date"
-                      value={formData.received_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, received_date: e.target.value }))}
-                      required
-                    />
-                  </div>
-
                   <div className="space-y-2">
                     <Label>{t('receipt_images')} *</Label>
                     <div
