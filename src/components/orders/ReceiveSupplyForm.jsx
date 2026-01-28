@@ -68,7 +68,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [dragActive, setDragActive] = useState(false);
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     const loadData = async () => {
