@@ -9,6 +9,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { base44 } from "@/api/base44Client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+function normalizeText(str) {
+  if (!str) return '';
+  try {
+    const s = String(str).toLowerCase();
+    const noNiq = s.replace(/[\u0591-\u05C7]/g, ''); // remove Hebrew niqqud
+    const noPunct = noNiq.replace(/[^\p{L}\p{N}\s]/gu, ' '); // keep letters, numbers, spaces
+    return noPunct.replace(/\s+/g, ' ').trim();
+  } catch {
+    return String(str).toLowerCase().trim();
+  }
+}
+
 export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
@@ -64,10 +76,10 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
       const d = moment(dateStr, [moment.ISO_8601, 'YYYY-MM-DD', 'DD/MM/YYYY']);
       return d.isValid() && d.isBetween(monthStart, monthEnd, undefined, '[]');
     });
-    const term = (itemSearch || '').trim().toLowerCase();
+    const term = normalizeText(itemSearch || '');
     const filtered = term ? inRange.filter(r => {
       const items = Array.isArray(r.verified_items) ? r.verified_items : [];
-      return items.some(it => String(it.item_name || it.name || '').toLowerCase().includes(term));
+      return items.some(it => normalizeText(String(it.item_name || it.name || '')).includes(term));
     }) : inRange;
     return filtered.sort((a, b) => (a.invoice_date || a.received_date || '').localeCompare(b.invoice_date || b.received_date || ''));
   }, [receipts, monthStart, monthEnd, itemSearch]);
@@ -291,7 +303,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                               {(r.verified_items || [])
                                 .map(it => it.item_name)
                                 .filter(Boolean)
-                                .filter(n => n.toLowerCase().includes(itemSearch.toLowerCase()))
+                                .filter(n => normalizeText(n).includes(normalizeText(itemSearch)))
                                 .slice(0,3)
                                 .join(', ')}
                             </div>
