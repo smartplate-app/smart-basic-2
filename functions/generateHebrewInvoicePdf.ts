@@ -1,16 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { jsPDF } from 'npm:jspdf@4.0.0';
-
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode.apply(null, chunk);
-  }
-  return btoa(binary);
-}
 
 Deno.serve(async (req) => {
   try {
@@ -24,68 +12,148 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Generate a Hebrew invoice-like image using the Core image generator
-    const prompt = `Create a clean, single-page invoice image in Hebrew (RTL). White background, black text.
-Title: "חשבונית מס/קבלה" bold.
-Header fields (right aligned):
-- מספר חשבונית: 123456
-- תאריך: 2026-01-28
-- ספק: שוק מחנה יהודה
-- ח.פ: 515555555
+    // Use Google Drive connector (already authorized) to create a Google Doc from HTML and export as PDF
+    const accessToken = await base44.asServiceRole.connectors.getAccessToken('googledrive');
 
-Items table (right aligned, with light row lines):
-- טחינה גולמית 1 ק"ג | כמות: 3 | מחיר ליחידה: 24.90 | סה"כ: 74.70
-- שמן זית כתית מעולה 750 מ"ל | כמות: 2 | מחיר ליחידה: 39.90 | סה"כ: 79.80
-- מיץ לימון סחוט טבעי 1 ל' | כמות: 1 | מחיר ליחידה: 18.00 | סה"כ: 18.00
-- כמון טחון 500 גרם | כמות: 1 | מחיר ליחידה: 14.90 | סה"כ: 14.90
+    const now = new Date();
+    const name = `Hebrew_Invoice_Sample_${now.toISOString().slice(0,10)}.doc`;
 
-Footer (right aligned):
-- סה"כ ביניים: 187.40
-- מע"מ (17%): 31.86
-- סה"כ לתשלום: 219.26
+    const html = `<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: Arial, Helvetica, 'Noto Sans Hebrew', sans-serif; direction: rtl; margin: 36pt; }
+    .title { font-weight: 700; font-size: 20pt; text-align: right; margin-bottom: 8pt; }
+    .meta { text-align: right; font-size: 11pt; line-height: 1.5; margin-bottom: 12pt; }
+    table { width: 100%; border-collapse: collapse; direction: rtl; }
+    th, td { border: 1px solid #ddd; padding: 6pt 8pt; text-align: right; font-size: 11pt; }
+    th { background: #f3f4f6; }
+    .totals { margin-top: 12pt; width: 50%; float: left; }
+    .totals td { border: none; padding: 4pt 0; font-size: 12pt; }
+    .bold { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="title">חשבונית מס/קבלה</div>
+  <div class="meta">
+    <div>מספר חשבונית: <span class="bold">123456</span></div>
+    <div>תאריך: <span class="bold">${now.toISOString().slice(0,10)}</span></div>
+    <div>ספק: <span class="bold">שוק מחנה יהודה</span></div>
+    <div>ח.פ: <span class="bold">515555555</span></div>
+  </div>
 
-Use crisp Hebrew fonts and keep the layout realistic.`;
+  <table>
+    <thead>
+      <tr>
+        <th>שם פריט</th>
+        <th>כמות</th>
+        <th>מחיר ליחידה</th>
+        <th>סה"כ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>טחינה גולמית 1 ק"ג</td>
+        <td>3</td>
+        <td>24.90</td>
+        <td>74.70</td>
+      </tr>
+      <tr>
+        <td>שמן זית כתית מעולה 750 מ"ל</td>
+        <td>2</td>
+        <td>39.90</td>
+        <td>79.80</td>
+      </tr>
+      <tr>
+        <td>מיץ לימון סחוט טבעי 1 ל'</td>
+        <td>1</td>
+        <td>18.00</td>
+        <td>18.00</td>
+      </tr>
+      <tr>
+        <td>כמון טחון 500 גרם</td>
+        <td>1</td>
+        <td>14.90</td>
+        <td>14.90</td>
+      </tr>
+    </tbody>
+  </table>
 
-    const imgRes = await base44.asServiceRole.integrations.Core.GenerateImage({
-      prompt,
+  <table class="totals">
+    <tr>
+      <td>סה"כ ביניים:</td>
+      <td class="bold">187.40</td>
+    </tr>
+    <tr>
+      <td>מע"מ (17%):</td>
+      <td class="bold">31.86</td>
+    </tr>
+    <tr>
+      <td>סה"כ לתשלום:</td>
+      <td class="bold">219.26</td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    // Create a Google Doc from the HTML (Drive conversion)
+    const boundary = 'b44-' + Math.random().toString(16).slice(2);
+    const metadata = JSON.stringify({ name, mimeType: 'application/vnd.google-apps.document' });
+    const multipartBody =
+      `--${boundary}\r\n` +
+      'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+      metadata + '\r\n' +
+      `--${boundary}\r\n` +
+      'Content-Type: text/html; charset=UTF-8\r\n\r\n' +
+      html + '\r\n' +
+      `--${boundary}--`;
+
+    const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': `multipart/related; boundary=${boundary}`,
+      },
+      body: multipartBody,
     });
 
-    const imageUrl = imgRes?.url || imgRes?.data?.url || imgRes?.image_url;
-    if (!imageUrl) {
-      return Response.json({ error: 'Image generation failed' }, { status: 500 });
+    if (!createRes.ok) {
+      const txt = await createRes.text();
+      return Response.json({ error: 'Drive create failed', details: txt }, { status: 502 });
     }
 
-    const fetchRes = await fetch(imageUrl);
-    if (!fetchRes.ok) {
-      return Response.json({ error: 'Failed to fetch generated image' }, { status: 502 });
+    const created = await createRes.json();
+    const fileId = created.id;
+
+    // Export the Google Doc as PDF
+    const exportRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!exportRes.ok) {
+      const txt = await exportRes.text();
+      return Response.json({ error: 'Drive export failed', details: txt }, { status: 502 });
     }
-    const contentType = fetchRes.headers.get('content-type') || 'image/jpeg';
-    const ab = await fetchRes.arrayBuffer();
-    const b64 = arrayBufferToBase64(ab);
-    const dataUrl = `data:${contentType};base64,${b64}`;
 
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 24; // 24pt margin
+    const pdfBytes = await exportRes.arrayBuffer();
 
-    // Add image sized to fit within page while preserving aspect ratio
-    // Assume image is portrait; compute size based on A4 minus margins
-    const maxW = pageWidth - margin * 2;
-    const maxH = pageHeight - margin * 2;
-    // jsPDF needs width/height; we don't know the image size — try full width and centered vertically
-    // Most generated images are square-ish; fit to width and keep some top margin
-    const imgW = maxW;
-    const imgH = maxH; // fill available area
+    // Optional cleanup: delete the temporary doc
+    try {
+      await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+    } catch { /* ignore cleanup errors */ }
 
-    doc.addImage(dataUrl, undefined, margin, margin, imgW, imgH);
-
-    const pdfBytes = doc.output('arraybuffer');
     return new Response(pdfBytes, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename=hebrew_invoice_sample.pdf',
+        'Content-Disposition': 'attachment; filename=hebrew-invoice-sample.pdf',
       },
     });
   } catch (error) {
