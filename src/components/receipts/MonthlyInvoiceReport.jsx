@@ -106,15 +106,15 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
     <div className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <span>{t('monthly_report') || 'Monthly Report'}</span>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
               <label className="text-sm text-gray-600">{t('month') || 'Month'}</label>
               <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Button variant="outline" size="icon" onClick={() => setMonth(moment(month + '-01').subtract(1, 'month').format('YYYY-MM'))}>
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-40" />
+                <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-32 sm:w-36 md:w-40" />
                 <Button variant="outline" size="icon" onClick={() => setMonth(moment(month + '-01').add(1, 'month').format('YYYY-MM'))}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -139,7 +139,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   value={itemSearch}
                   onChange={(e) => setItemSearch(e.target.value)}
                   placeholder={language === 'he' ? 'חפש פריט לפי שם' : 'Search item name'}
-                  className="w-56"
+                  className="w-full md:w-56"
                 />
               </div>
               <Button
@@ -183,7 +183,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                     alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
                   }
                 }}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 shrink-0"
               >
                 {uploading ? (t('uploading') || 'Uploading...') : (t('upload_to_drive') || 'Upload to Drive')}
               </Button>
@@ -255,7 +255,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 {t('export_sheet') || 'Export Sheet'}
               </Button>
               {(me?.role !== 'admin' || me?.acting_as_store_email || me?.acting_as_user_email) && (
-                <Button variant="outline" disabled={uploading} onClick={() => setShowConnect(true)}>
+                <Button variant="outline" disabled={uploading} onClick={() => setShowConnect(true)} className="shrink-0">
                   {t('connect_drive') || 'Connect Drive'}
                 </Button>
               )}
