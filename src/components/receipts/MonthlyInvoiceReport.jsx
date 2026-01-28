@@ -301,8 +301,8 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                         <td className="border p-2 text-sm">{moment(r.invoice_date || r.received_date).format('DD/MM/YYYY')}</td>
                         <td className="border p-2 text-sm">₪{Number(r.invoice_total || 0).toFixed(2)}</td>
                       </tr>
-                    ))
-                  </React.Fragment>
+                    ))}
+                    </React.Fragment>
                 ))}
 
                 {grouped.length > 0 && (
