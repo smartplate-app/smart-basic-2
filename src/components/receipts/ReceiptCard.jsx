@@ -9,6 +9,10 @@ import { useLanguage } from "../LanguageProvider";
 export default function ReceiptCard({ receipt, onEdit }) {
   const { t } = useLanguage();
   
+  const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
+  const isSafari = typeof navigator !== 'undefined' && /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+  const pdfViewerUrl = (url) => `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}`;
+  
   const statusConfig = {
     verified: { 
       label: t('status_verified'), 
@@ -133,11 +137,21 @@ export default function ReceiptCard({ receipt, onEdit }) {
                   rel="noopener noreferrer"
                   className="w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-green-500 transition-colors"
                 >
-                  <img 
-                    src={imageUrl} 
-                    alt={`Receipt ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                  {isPdf(imageUrl) ? (
+                    isSafari ? (
+                      <iframe src={pdfViewerUrl(imageUrl)} className="w-full h-full pointer-events-none" title={`pdf-${index}`} />
+                    ) : (
+                      <object data={`${imageUrl}#toolbar=0&navpanes=0&scrollbar=0`} type="application/pdf" className="w-full h-full pointer-events-none">
+                        <iframe src={pdfViewerUrl(imageUrl)} className="w-full h-full pointer-events-none" title={`pdf-${index}`}></iframe>
+                      </object>
+                    )
+                  ) : (
+                    <img 
+                      src={imageUrl} 
+                      alt={`Receipt ${index + 1}`}
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+                  )}
                 </a>
               ))}
             </div>

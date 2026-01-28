@@ -27,6 +27,9 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
 
   // Detect PDF by URL extension
   const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
+  // Safari often shows a blank box for embedded PDFs; use Google viewer there
+  const isSafari = typeof navigator !== 'undefined' && /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+  const pdfViewerUrl = (url) => `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}`;
 
   const statusVariant = (status) => {
     if (status === 'verified') return 'default';
@@ -112,11 +115,25 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, loading =
                       title={(t('open_file') || 'Open file')}
                     >
                       {isPdf(r.receipt_images[0]) ? (
-                        <embed
-                          src={`${r.receipt_images[0]}#toolbar=0&navpanes=0&scrollbar=0`}
-                          type="application/pdf"
-                          className="w-full h-full pointer-events-none"
-                        />
+                        isSafari ? (
+                          <iframe
+                            src={pdfViewerUrl(r.receipt_images[0])}
+                            className="w-full h-full pointer-events-none"
+                            title="pdf-preview"
+                          />
+                        ) : (
+                          <object
+                            data={`${r.receipt_images[0]}#toolbar=0&navpanes=0&scrollbar=0`}
+                            type="application/pdf"
+                            className="w-full h-full pointer-events-none"
+                          >
+                            <iframe
+                              src={pdfViewerUrl(r.receipt_images[0])}
+                              className="w-full h-full pointer-events-none"
+                              title="pdf-preview"
+                            />
+                          </object>
+                        )
                       ) : (
                         <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover pointer-events-none" />
                       )}
