@@ -18,15 +18,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
   // Prefer ID-based preview for sent orders; use inline payload for drafts to avoid edge cases
   const fallbackNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-  const minimalOrder = {
-    n: fallbackNumber,
-    s: order.supplier_name,
-    r: order.restaurant_name,
-    a: order.restaurant_address,
-    d: order.delivery_date,
-    i: (order.items || []).map(item => ({ n: item.item_name, q: item.quantity, u: item.unit })),
-    t: order.notes
-  };
+  // minimalOrder prepared after total calculation
 
   // Compute total amount (no per-line money shown, only total)
   const computeItemTotal = (it) => {
@@ -41,6 +33,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const effectiveTotal = rawItemsTotal > 0 ? rawItemsTotal : Number(order.total_cost || 0);
   const formattedTotal = effectiveTotal.toLocaleString(language === 'he' ? 'he-IL' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  const minimalOrder = {
+    n: fallbackNumber,
+    s: order.supplier_name,
+    r: order.restaurant_name,
+    a: order.restaurant_address,
+    d: order.delivery_date,
+    i: (order.items || []).map(item => ({ n: item.item_name, q: item.quantity, u: item.unit })),
+    t: order.notes,
+    m: effectiveTotal
+  };
   const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
   let orderUrl = '';
   const isDraft = (order.status === 'draft');

@@ -25,7 +25,8 @@ export default function PublicOrderPage() {
                             restaurant_address: parsed.a,
                             delivery_date: parsed.d,
                             items: (parsed.i || []).map(item => ({ item_name: item.n, quantity: item.q, unit: item.u })),
-                            notes: parsed.t
+                            notes: parsed.t,
+                            total_cost: Number(parsed.m ?? parsed.total_cost ?? 0)
                         };
                         setOrder(fullOrder);
                         return;
