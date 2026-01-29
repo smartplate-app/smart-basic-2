@@ -37,8 +37,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     if (!isNaN(p) && isFinite(p) && !isNaN(q) && isFinite(q)) return p * q;
     return 0;
   };
-  const orderTotal = (order.items || []).reduce((sum, it) => sum + computeItemTotal(it), 0);
-  const formattedTotal = orderTotal.toLocaleString(language === 'he' ? 'he-IL' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const rawItemsTotal = (order.items || []).reduce((sum, it) => sum + computeItemTotal(it), 0);
+  const effectiveTotal = rawItemsTotal > 0 ? rawItemsTotal : Number(order.total_cost || 0);
+  const formattedTotal = effectiveTotal.toLocaleString(language === 'he' ? 'he-IL' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
   let orderUrl = '';
