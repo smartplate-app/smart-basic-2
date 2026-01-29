@@ -28,6 +28,26 @@ export default function PublicOrderPage() {
                             notes: parsed.t,
                             total_cost: Number(parsed.m ?? parsed.total_cost ?? 0)
                         };
+                        // If payload already includes total, use it
+                        if (fullOrder.total_cost > 0) {
+                            setOrder(fullOrder);
+                            return;
+                        }
+                        // Otherwise, if an id is present, fetch and merge DB total
+                        const idInUrl = urlParams.get('id');
+                        if (idInUrl) {
+                            const res2 = await fetch('/functions/getPublicOrder', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ orderId: idInUrl })
+                            });
+                            const json2 = await res2.json();
+                            if (res2.ok && json2?.order) {
+                                const merged = { ...fullOrder, total_cost: Number(json2.order.total_cost || 0) };
+                                setOrder(merged);
+                                return;
+                            }
+                        }
                         setOrder(fullOrder);
                         return;
                     } catch (e) {
