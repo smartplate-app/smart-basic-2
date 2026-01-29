@@ -88,6 +88,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
   const [previousReceipts, setPreviousReceipts] = useState([]);
   const { t, language } = useLanguage();
+  const [scannedDocs, setScannedDocs] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -297,6 +298,56 @@ const handleAutoScan = async () => {
 
     try {
       setScanning(true);
+
+      if (formData.receipt_images.length > 1) {
+        const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
+        const results = await Promise.all(
+          formData.receipt_images.map(async (url) => {
+            const resp = await base44.integrations.Core.InvokeLLM({
+              prompt: `Scan this Hebrew invoice/receipt and extract ONLY the header information:
+
+              Extract ONLY these fields:
+              1. Invoice number (מספר חשבונית or חשבונית מס')
+              2. Invoice date (תאריך or תאריך חשבונית) - return in YYYY-MM-DD format
+              3. Invoice total (סה"כ לתשלום or סה"כ כולל מע"ם)
+
+              DO NOT extract individual line items or products.
+
+              CRITICAL: If this is a refund/credit invoice (contains the Hebrew words "זיכוי" or "החזר" anywhere), you MUST:
+              - set "is_refund": true
+              - return "invoice_total" as a NEGATIVE number (use the absolute value you read, then apply negative sign)
+
+              Otherwise, set "is_refund": false and return a positive "invoice_total".
+
+              Return JSON:
+              {
+              "invoice_number": "string",
+              "invoice_date": "YYYY-MM-DD",
+              "invoice_total": number,
+              "is_refund": boolean
+              }`,
+              file_urls: [url],
+              response_json_schema: {
+                type: "object",
+                properties: {
+                  invoice_number: { type: "string" },
+                  invoice_date: { type: "string" },
+                  invoice_total: { type: "number" },
+                  is_refund: { type: "boolean" }
+                }
+              }
+            });
+            const isRefund = Boolean(resp.is_refund) || (typeof resp.invoice_total === 'number' && resp.invoice_total < 0);
+            const total = typeof resp.invoice_total === 'number' ? (isRefund ? -Math.abs(resp.invoice_total) : Math.abs(resp.invoice_total)) : 0;
+            const dup = supplierId ? await checkDuplicateInvoice(resp.invoice_number || '', supplierId, receipt?.id) : false;
+            return { file_url: url, invoice_number: resp.invoice_number || '', invoice_date: resp.invoice_date || formData.received_date, invoice_total: total, is_refund: isRefund, duplicate: dup };
+          })
+        );
+        setScannedDocs(results);
+        setFormData(prev => ({ ...prev, manual_entry_mode: true }));
+        alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים לכל חשבונית.');
+        return;
+      }
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `Scan this Hebrew invoice/receipt and extract ONLY the header information:
@@ -759,7 +810,109 @@ const handleAutoScan = async () => {
                     )}
                   </div>
 
-                  {(formData.receipt_images.length > 0) && (
+                  {scannedDocs.length > 1 ? (
+                    <>
+                      <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                        <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                          <Scan className="w-5 h-5" />
+                          {t('invoice_details') || 'פרטי חשבונית'}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {scannedDocs.map((doc, idx) => (
+                            <Card key={doc.file_url || idx} className="overflow-hidden">
+                              <CardContent className="pt-4 space-y-3">
+                                <div className="aspect-video bg-white/40 rounded border">
+                                  <img src={doc.file_url} alt={`Invoice ${idx+1}`} className="w-full h-full object-contain" />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-gray-600">{t('invoice_number')} *</nLabel>
+                                  <Input
+                                    value={doc.invoice_number}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setScannedDocs(prev => {
+                                        const copy = [...prev];
+                                        copy[idx] = { ...copy[idx], invoice_number: val };
+                                        return copy;
+                                      });
+                                      const supplierId = (formData.supplier_id || (receipt?.supplier_id));
+                                      if (supplierId) {
+                                        checkDuplicateInvoice(val, supplierId, receipt?.id).then(dup => {
+                                          setScannedDocs(prev => {
+                                            const copy = [...prev];
+                                            copy[idx] = { ...copy[idx], duplicate: dup };
+                                            return copy;
+                                          });
+                                        });
+                                      }
+                                    }}
+                                    className="mt-1 font-semibold"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-gray-600">{t('invoice_date')} *</nLabel>
+                                  <Input
+                                    type="date"
+                                    value={doc.invoice_date}
+                                    onChange={(e) => setScannedDocs(prev => {
+                                      const copy = [...prev];
+                                      copy[idx] = { ...copy[idx], invoice_date: e.target.value };
+                                      return copy;
+                                    })}
+                                    className="mt-1 font-semibold"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</nLabel>
+                                  <Input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={String(doc.invoice_total ?? '')}
+                                    onChange={(e) => {
+                                      const raw = e.target.value;
+                                      const normalized = raw.replace(',', '.');
+                                      const parsed = parseFloat(normalized);
+                                      setScannedDocs(prev => {
+                                        const copy = [...prev];
+                                        copy[idx] = { ...copy[idx], invoice_total: (!isNaN(parsed) && isFinite(parsed)) ? parsed : 0 };
+                                        return copy;
+                                      });
+                                    }}
+                                    className="mt-1 font-bold text-lg text-blue-700"
+                                    placeholder="0.00"
+                                    required
+                                  />
+                                </div>
+                                <label className="flex items-center gap-2 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!doc.is_refund}
+                                    onChange={(e) => setScannedDocs(prev => {
+                                      const copy = [...prev];
+                                      const val = e.target.checked;
+                                      copy[idx] = { ...copy[idx], is_refund: val, invoice_total: typeof copy[idx].invoice_total === 'number' ? (val ? -Math.abs(copy[idx].invoice_total) : Math.abs(copy[idx].invoice_total)) : copy[idx].invoice_total };
+                                      return copy;
+                                    })}
+                                    className="rounded"
+                                  />
+                                  <span>{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</span>
+                                </label>
+                                {doc.duplicate && (
+                                  <Alert variant="destructive">
+                                    <AlertDescription>
+                                      {t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.'}
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (formData.receipt_images.length > 0) && (
                     <>
                       <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
@@ -1026,28 +1179,87 @@ const handleAutoScan = async () => {
                     )}
 
                     <div className="flex gap-3 pt-4">
-                      <Button 
-                        type="submit" 
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                        disabled={!formData.invoice_number || formData.invoice_total === 0 || formData.receipt_images.length === 0 || duplicateExists}
-                      >
-                        <PackageCheck className="w-4 h-4 ml-2" />
-                        {t('save_receipt')}
-                      </Button>
-                      {receipt && onDelete && (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          onClick={() => onDelete(receipt)}
-                          className="flex-1"
-                        >
-                          <Trash2 className="w-4 h-4 ml-2" />
-                          {t('delete') || 'Delete'}
-                        </Button>
+                      {scannedDocs.length > 1 ? (
+                        <>
+                          <Button
+                            type="button"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date || !d.invoice_total || d.duplicate)}
+                            onClick={async () => {
+                              const baseData = {
+                                supplier_id: formData.supplier_id,
+                                supplier_name: formData.supplier_name,
+                                supplier_email: formData.supplier_email,
+                                received_date: formData.received_date,
+                                verified_items: [],
+                                price_changes_summary: [],
+                                has_price_changes: false,
+                                notes: formData.notes || "",
+                                status: "pending",
+                                needs_review: !!formData.needs_review,
+                                review_note: formData.review_note || ""
+                              };
+                              const payloads = scannedDocs.map((d, i) => ({
+                                ...baseData,
+                                order_id: "",
+                                order_number: `MANUAL-${Date.now()}-${i+1}`,
+                                receipt_images: [d.file_url],
+                                invoice_number: d.invoice_number,
+                                invoice_date: d.invoice_date,
+                                invoice_total: d.invoice_total,
+                                calculated_total: 0,
+                                totals_match: false,
+                                is_refund: !!d.is_refund,
+                                refund_received: !!(d.is_refund && formData.refund_received),
+                                reviewed: !!(formData.needs_review && formData.reviewed),
+                                linked_receipt_id: formData.linked_receipt_id || ""
+                              }));
+                              try {
+                                if (base44.entities.SupplyReceipt.bulkCreate) {
+                                  await base44.entities.SupplyReceipt.bulkCreate(payloads);
+                                } else {
+                                  await Promise.all(payloads.map(p => base44.entities.SupplyReceipt.create(p)));
+                                }
+                                alert(language === 'he' ? 'נשמרו כל החשבוניות' : 'All invoices saved');
+                                onCancel && onCancel();
+                              } catch (e) {
+                                alert((language === 'he' ? 'שמירה נכשלה' : 'Save failed') + ': ' + (e?.message || e));
+                              }
+                            }}
+                          >
+                            <PackageCheck className="w-4 h-4 ml-2" />
+                            {language === 'he' ? 'שמור הכל' : 'Save all'}
+                          </Button>
+                          <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+                            {t('cancel')}
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button 
+                            type="submit" 
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            disabled={!formData.invoice_number || formData.invoice_total === 0 || formData.receipt_images.length === 0 || duplicateExists}
+                          >
+                            <PackageCheck className="w-4 h-4 ml-2" />
+                            {t('save_receipt')}
+                          </Button>
+                          {receipt && onDelete && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              onClick={() => onDelete(receipt)}
+                              className="flex-1"
+                            >
+                              <Trash2 className="w-4 h-4 ml-2" />
+                              {t('delete') || 'Delete'}
+                            </Button>
+                          )}
+                          <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+                            {t('cancel')}
+                          </Button>
+                        </>
                       )}
-                      <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                        {t('cancel')}
-                      </Button>
                     </div>
                 </>
               )}
