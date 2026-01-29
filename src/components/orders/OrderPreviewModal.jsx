@@ -269,6 +269,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold text-gray-900">{t('order_preview')}</h2>
+            {effectiveTotal > 0 && (
+              <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold text-sm">
+                ₪{formattedTotal}
+              </div>
+            )}
             <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
               <Button
                 variant={viewMode === 'mobile' ? 'default' : 'ghost'}
