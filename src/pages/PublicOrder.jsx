@@ -304,24 +304,15 @@ export default function PublicOrderPage() {
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-
-                    {/* Total Summary (no per-line prices shown) */}
-                    {formattedTotal && (
-                        <div style={{
-                            backgroundColor: '#ecfeff',
-                            borderRadius: '12px',
-                            padding: '16px',
-                            marginBottom: '20px',
-                            border: '2px solid #06b6d4',
-                            textAlign: 'center'
-                        }}>
-                            <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0e7490' }}>
-                                {language === 'he' ? 'סה״כ הזמנה:' : 'Order Total:'} ₪{formattedTotal}
-                            </p>
-                        </div>
-                    )}
+                            </div>
+                            {formattedTotal && (
+                            <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#dcfce7', borderRadius: '8px', border: '1px solid #16a34a', textAlign: 'center' }}>
+                                <span style={{ fontSize: '18px', fontWeight: 700, color: '#166534' }}>
+                                    {language === 'he' ? 'סה״כ הזמנה:' : 'Order Total:'} ₪{formattedTotal}
+                                </span>
+                            </div>
+                            )}
+                            </div>
 
                     {/* Notes */}
                     {order.notes && (
