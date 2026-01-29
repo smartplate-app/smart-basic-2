@@ -27,6 +27,19 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     i: (order.items || []).map(item => ({ n: item.item_name, q: item.quantity, u: item.unit })),
     t: order.notes
   };
+
+  // Compute total amount (no per-line money shown, only total)
+  const computeItemTotal = (it) => {
+    const tot = Number(it.total);
+    if (!isNaN(tot) && isFinite(tot) && tot > 0) return tot;
+    const p = Number(it.price);
+    const q = Number(it.quantity);
+    if (!isNaN(p) && isFinite(p) && !isNaN(q) && isFinite(q)) return p * q;
+    return 0;
+  };
+  const orderTotal = (order.items || []).reduce((sum, it) => sum + computeItemTotal(it), 0);
+  const formattedTotal = orderTotal.toLocaleString(language === 'he' ? 'he-IL' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
   let orderUrl = '';
   const isDraft = (order.status === 'draft');
@@ -136,7 +149,13 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </div>
         </div>
 
-        ${order.notes ? `
+         <div style="background: #ecfeff; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #06b6d4; text-align: center;">
+           <p style="margin: 0; font-size: 18px; font-weight: 700; color: #0e7490;">
+             ${language === 'he' ? 'סה״כ הזמנה:' : 'Order Total:'} ₪${formattedTotal}
+           </p>
+         </div>
+
+         ${order.notes ? `
         <div style="background: #fef7cd; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #f59e0b;">
           <h3 style="font-size: 16px; font-weight: bold; color: #92400e; margin: 0 0 8px 0;">
             📝 ${language === 'he' ? 'הערות' : 'Notes'}
@@ -178,7 +197,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         }
 
         const msgNumber = ensuredNumber;
-        const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${msgNumber}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`;
+        const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${msgNumber}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}\n${language === 'he' ? 'סה״כ:' : 'Total:'} ₪${formattedTotal}`;
         const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
         // Try to copy image to clipboard
