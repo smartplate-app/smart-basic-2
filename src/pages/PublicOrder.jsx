@@ -61,6 +61,19 @@ export default function PublicOrderPage() {
 
     const isRTL = language === 'he';
 
+    // Calculate total: prefer sum of item totals/prices, fallback to stored total_cost
+    const computeItemTotal = (it) => {
+        const tot = Number(it?.total);
+        if (!isNaN(tot) && isFinite(tot) && tot > 0) return tot;
+        const p = Number(it?.price);
+        const q = Number(it?.quantity);
+        if (!isNaN(p) && isFinite(p) && !isNaN(q) && isFinite(q) && q > 0) return p * q;
+        return 0;
+    };
+    const itemsTotal = (order?.items || []).reduce((sum, it) => sum + computeItemTotal(it), 0);
+    const effectiveTotal = itemsTotal > 0 ? itemsTotal : Number(order?.total_cost || 0);
+    const formattedTotal = effectiveTotal > 0 ? effectiveTotal.toLocaleString(language === 'he' ? 'he-IL' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
+
     const handleDownloadImage = async () => {
         try {
             setDownloading(true);
@@ -293,6 +306,22 @@ export default function PublicOrderPage() {
                             </table>
                         </div>
                     </div>
+
+                    {/* Total Summary (no per-line prices shown) */}
+                    {formattedTotal && (
+                        <div style={{
+                            backgroundColor: '#ecfeff',
+                            borderRadius: '12px',
+                            padding: '16px',
+                            marginBottom: '20px',
+                            border: '2px solid #06b6d4',
+                            textAlign: 'center'
+                        }}>
+                            <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#0e7490' }}>
+                                {language === 'he' ? 'סה״כ הזמנה:' : 'Order Total:'} ₪{formattedTotal}
+                            </p>
+                        </div>
+                    )}
 
                     {/* Notes */}
                     {order.notes && (
