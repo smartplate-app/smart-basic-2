@@ -825,7 +825,7 @@ const handleAutoScan = async () => {
                                   <img src={doc.file_url} alt={`Invoice ${idx+1}`} className="w-full h-full object-contain" />
                                 </div>
                                 <div>
-                                  <Label className="text-xs text-gray-600">{t('invoice_number')} *</nLabel>
+                                  <Label className="text-xs text-gray-600">{t('invoice_number')} *</Label>
                                   <Input
                                     value={doc.invoice_number}
                                     onChange={(e) => {
@@ -851,7 +851,7 @@ const handleAutoScan = async () => {
                                   />
                                 </div>
                                 <div>
-                                  <Label className="text-xs text-gray-600">{t('invoice_date')} *</nLabel>
+                                  <Label className="text-xs text-gray-600">{t('invoice_date')} *</Label>
                                   <Input
                                     type="date"
                                     value={doc.invoice_date}
@@ -865,7 +865,7 @@ const handleAutoScan = async () => {
                                   />
                                 </div>
                                 <div>
-                                  <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</nLabel>
+                                  <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</Label>
                                   <Input
                                     type="text"
                                     inputMode="decimal"
