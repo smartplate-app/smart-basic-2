@@ -695,6 +695,21 @@ const [monthReceipts, setMonthReceipts] = useState([]);
     }
   };
 
+  // Derived KPIs for consulting banner (computed early for hooks below)
+  const actualSalesExVAT = actualSales / 1.17;
+  const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
+  const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT) * 100 : 0;
+  const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT) * 100 : 0;
+  const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
+  const daysInMonthForProjection = moment(selectedMonth).daysInMonth();
+  const projectedSalesInclVAT = (actualSales > 0 && projectionDaysElapsed > 0)
+    ? (actualSales / projectionDaysElapsed) * daysInMonthForProjection
+    : projectedMonthlySales;
+  const rentPercentOfSales = projectedSalesInclVAT > 0 ? (monthlyRent / projectedSalesInclVAT) * 100 : 0;
+  const isRentAbove7 = rentPercentOfSales > 7;
+  const isCombinedAbove60 = actualCombinedPercent > 60;
+  const showConsulting = isRentAbove7 || isCombinedAbove60;
+
   // OS notification when combined cost exceeds goal (before early returns)
   useEffect(() => {
     const predictedSalesExVATLocal = (predictedSales || 0) / 1.17;
@@ -774,20 +789,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   const foodGoalAmount = predictedSalesExVAT * (foodGoalPercent / 100);
 
   // Actual calculations
-  const actualSalesExVAT = actualSales / 1.17;
-  const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
-  const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT * 100) : 0;
-  const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
-  const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
   const isOverGoal = actualCombinedPercent > combinedGoalPercent;
-  const daysInMonthForProjection = moment(selectedMonth).daysInMonth();
-  const projectedSalesInclVAT = (actualSales > 0 && projectionDaysElapsed > 0)
-    ? (actualSales / projectionDaysElapsed) * daysInMonthForProjection
-    : projectedMonthlySales;
-  const rentPercentOfSales = projectedSalesInclVAT > 0 ? (monthlyRent / projectedSalesInclVAT) * 100 : 0;
-  const isRentAbove7 = rentPercentOfSales > 7;
-  const isCombinedAbove60 = actualCombinedPercent > 60;
-  const showConsulting = isRentAbove7 || isCombinedAbove60;
 
   const costBreakdownData = [
     { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },
