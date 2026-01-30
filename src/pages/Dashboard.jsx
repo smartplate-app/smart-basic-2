@@ -1122,16 +1122,6 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                     </p>
                   </div>
                 </div>
-                {editMode && (
-                  <Button 
-                    onClick={handleSave} 
-                    disabled={saving}
-                    className="bg-green-600 hover:bg-green-700 mt-4 w-full"
-                  >
-                    {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    {' '}{language === 'he' ? 'שמור' : 'Save'}
-                  </Button>
-                )}
               </CardContent>
             </Card>
 
@@ -1219,9 +1209,6 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                         placeholder="0"
                         className={`w-48 bg-white/10 border-white/20 ${isRTL ? 'text-right' : 'text-left'}`}
                       />
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={handleSave}>
-                        {t('save')}
-                      </Button>
                     </div>
                     {useManualLabor && (
                       <div className={`text-xs text-yellow-300 ${isRTL ? 'text-right' : 'text-left'}`}>
