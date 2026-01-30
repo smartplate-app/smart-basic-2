@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, Target, BarChart3, FileSpreadsheet, Download, Share } from "lucide-react";
+import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, BarChart3, FileSpreadsheet, Download, Share } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, BarChart, Bar } from "recharts";
 import moment from "moment";
