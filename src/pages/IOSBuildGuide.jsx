@@ -80,7 +80,8 @@ export default function IOSBuildGuide() {
       ],
       copy: "نسخ",
     };
-    return language === "he" ? he : language === "ar" ? ar : en;
+    const dict = language === "he" ? he : language === "ar" ? ar : en;
+    return dict[key];
   };
 
   const codeBlock = (lines) => (
