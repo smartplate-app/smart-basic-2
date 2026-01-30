@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [laborGoalPercent, setLaborGoalPercent] = useState(25);
   const [foodGoalPercent, setFoodGoalPercent] = useState(30);
   const [managementSalary, setManagementSalary] = useState(0);
+  const [monthlyRent, setMonthlyRent] = useState(0);
 
   // Footfall prediction fields
   const [dailyCustomers, setDailyCustomers] = useState(0);
@@ -362,6 +363,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
           laborGoalPercent,
           foodGoalPercent,
           managementSalary,
+          monthlyRent,
           actualSales,
           totalTips,
           manualLaborCost,
@@ -414,7 +416,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         delivery_takeaway_sales: Number(deliverySales) || 0,
         total_tips: parseFloat(totalTips) || 0,
         manual_labor_cost: useManualLabor ? (parseFloat(manualLaborCost) || 0) : 0,
-        manual_food_cost: calculatedFoodCost
+        manual_food_cost: calculatedFoodCost,
+        monthly_rent_incl_vat: parseFloat(monthlyRent) || 0
       };
 
       if (dashboardData && dashboardData.id) {
@@ -761,6 +764,12 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT * 100) : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
   const isOverGoal = actualCombinedPercent > combinedGoalPercent;
+  const daysInMonthForProjection = moment(selectedMonth).daysInMonth();
+  const projectedSalesInclVAT = (actualSales > 0 && projectionDaysElapsed > 0)
+    ? (actualSales / projectionDaysElapsed) * daysInMonthForProjection
+    : projectedMonthlySales;
+  const rentPercentOfSales = projectedSalesInclVAT > 0 ? (monthlyRent / projectedSalesInclVAT) * 100 : 0;
+  const isRentAbove7 = rentPercentOfSales > 7;
 
   const costBreakdownData = [
     { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },
