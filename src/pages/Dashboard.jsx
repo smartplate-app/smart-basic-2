@@ -770,6 +770,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
     : projectedMonthlySales;
   const rentPercentOfSales = projectedSalesInclVAT > 0 ? (monthlyRent / projectedSalesInclVAT) * 100 : 0;
   const isRentAbove7 = rentPercentOfSales > 7;
+  const isCombinedAbove60 = actualCombinedPercent > 60;
+  const showConsulting = isRentAbove7 && isCombinedAbove60;
 
   const costBreakdownData = [
     { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },
@@ -971,22 +973,35 @@ const [monthReceipts, setMonthReceipts] = useState([]);
               </div>
             </div>
 
-            {/* Total Sales To Date Banner */}
-            <Card className="bg-gradient-to-br from-amber-100 to-yellow-100 border border-amber-200">
-              <CardContent className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <div className="text-sm font-semibold text-amber-800">
-                  {language === 'he' ? 'סה״כ מכירות (עד כה)' : 'Total Sales (to date)'}
+            {/* Sales banner + advisory */}
+            <div className={`flex flex-col md:flex-row ${isRTL ? 'md:flex-row-reverse' : ''} gap-4`}>
+              {/* Advisory box (left of sales on desktop) */}
+              {showConsulting && (
+                <div className="md:w-1/2 w-full">
+                  <div className="h-full bg-rose-50 border border-rose-200 rounded-lg p-4 flex items-center">
+                    <p className="text-rose-700 text-sm">
+                      If your rent is more than 7% and your food cost + labor cost is more than 60%, consider using our consulting service — for more details email us: admin@smartplate.org
+                    </p>
+                  </div>
                 </div>
-                <div className="text-3xl font-extrabold text-amber-900 mt-1">
-                  {formatCurrency(actualSales)}
-                </div>
-                <div className="text-xs text-amber-700 mt-1">
-                  {language === 'he'
-                    ? 'כולל מסעדה + משלוחים (כולל מע״מ)'
-                    : 'Dine-in + delivery (incl. VAT)'}
-                </div>
-              </CardContent>
-            </Card>
+              )}
+              {/* Sales banner */}
+              <div className={showConsulting ? "md:w-1/2 w-full" : "w-full"}>
+                <Card className="bg-gradient-to-br from-amber-100 to-yellow-100 border border-amber-200">
+                  <CardContent className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="text-sm font-semibold text-amber-800">
+                      {language === 'he' ? 'סה״כ מכירות (עד כה)' : 'Total Sales (to date)'}
+                    </div>
+                    <div className="text-3xl font-extrabold text-amber-900 mt-1">
+                      {formatCurrency(actualSales)}
+                    </div>
+                    <div className="text-xs text-amber-700 mt-1">
+                      {language === 'he' ? 'כולל מסעדה + משלוחים (כולל מע״מ)' : 'Dine-in + delivery (incl. VAT)'}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
             {/* Daily Average (MTD) */}
             <Card>
