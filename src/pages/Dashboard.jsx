@@ -152,6 +152,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         setLaborGoalPercent(cached.laborGoalPercent ?? 25);
         setFoodGoalPercent(cached.foodGoalPercent ?? 30);
         setManagementSalary(cached.managementSalary || 0);
+        setMonthlyRent(cached.monthlyRent || 0);
         setActualSales(cached.actualSales || 0);
         setTotalTips(cached.totalTips || 0);
         setManualLaborCost(cached.manualLaborCost || 0);
@@ -208,6 +209,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         setLaborGoalPercent(existingData.labor_goal_percent || 25);
         setFoodGoalPercent(existingData.food_goal_percent || 30);
         setManagementSalary(existingData.management_salary || 0);
+        setMonthlyRent(existingData.monthly_rent_incl_vat || 0);
         // Sales & tips
         const dineIn = Number(existingData.restaurant_sales || 0);
         const dta = Number(existingData.delivery_takeaway_sales || 0);
@@ -226,6 +228,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         setLaborGoalPercent(25);
         setFoodGoalPercent(30);
         setManagementSalary(0);
+        setMonthlyRent(0);
         setActualSales(0);
         setTotalTips(0);
         setRestaurantSales(0);
@@ -1079,6 +1082,58 @@ const [monthReceipts, setMonthReceipts] = useState([]);
             </Card>
 
 
+
+            {/* Monthly Rent (incl. VAT) + 7% Check */}
+            <Card>
+              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
+                <CardTitle>{language === 'he' ? 'שכר דירה חודשי (כולל מע"מ)' : 'Monthly Rent (incl. VAT)'}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                  <div className="space-y-2">
+                    <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                      {language === 'he' ? 'סכום שכר דירה' : 'Rent Amount'}
+                    </Label>
+                    <Input
+                      type="number"
+                      value={monthlyRent}
+                      onChange={(e) => setMonthlyRent(parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                      className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
+                      disabled={!editMode}
+                    />
+                    {editMode && (
+                      <Button onClick={handleSave} disabled={saving} className="mt-2">
+                        {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {language === 'he' ? ' שמור' : ' Save'}
+                      </Button>
+                    )}
+                  </div>
+                  <div className={`bg-gray-50 rounded-lg p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="text-sm text-gray-600">
+                      {language === 'he' ? 'תחזית מכירות (כולל מע"מ)' : 'Projected Sales (incl. VAT)'}
+                    </div>
+                    <div className="text-2xl font-bold">{formatCurrency(projectedSalesInclVAT)}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {language === 'he' ? `חושב לפי ${projectionDaysElapsed} ימים מדווחים` : `Based on ${projectionDaysElapsed} reported days`}
+                    </div>
+                  </div>
+                  <div className={`${isRentAbove7 ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'} rounded-lg p-3 border`}>
+                    <div className={`text-sm ${isRentAbove7 ? 'text-red-700' : 'text-green-700'}`}>
+                      {language === 'he' ? 'שכר דירה כאחוז מהמכירות' : 'Rent as % of sales'}
+                    </div>
+                    <div className={`text-2xl font-extrabold ${isRentAbove7 ? 'text-red-700' : 'text-green-700'}`}>
+                      {rentPercentOfSales.toFixed(1)}%
+                    </div>
+                    <div className="mt-1">
+                      <Badge className={isRentAbove7 ? 'bg-red-600 text-white' : 'bg-green-600 text-white'}>
+                        {isRentAbove7 ? (language === 'he' ? 'מעל 7%' : 'Above 7%') : (language === 'he' ? 'מתחת ל-7%' : 'Within 7%')}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Calculated Costs Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
