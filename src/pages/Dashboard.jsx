@@ -955,14 +955,10 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         </Dialog>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-4xl">
+          <TabsList className="grid w-full grid-cols-2 max-w-4xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
-            </TabsTrigger>
-            <TabsTrigger value="labor" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              {language === 'he' ? 'יעד עבודה' : 'Labor Goals'}
             </TabsTrigger>
             <TabsTrigger value="afc" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
