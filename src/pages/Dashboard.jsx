@@ -84,6 +84,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   const [categoryScanLoading, setCategoryScanLoading] = useState(false);
   const [categoryChart, setCategoryChart] = useState([]);
   const [categoryScanError, setCategoryScanError] = useState(null);
+  const [consultPopupOpen, setConsultPopupOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -715,6 +716,21 @@ const [monthReceipts, setMonthReceipts] = useState([]);
     localStorage.setItem(key, '1');
   }, [predictedSales, laborGoalPercent, foodGoalPercent, actualSales, useManualLabor, manualLaborCost, calculatedLaborCost, calculatedFoodCost, selectedMonth, language]);
 
+  // Show one-time consulting popup per month when thresholds exceeded
+  useEffect(() => {
+    if (showConsulting) {
+      try {
+        const key = `consult_popup_${selectedMonth}`;
+        if (!localStorage.getItem(key)) {
+          setConsultPopupOpen(true);
+          localStorage.setItem(key, '1');
+        }
+      } catch (_) {
+        setConsultPopupOpen(true);
+      }
+    }
+  }, [showConsulting, selectedMonth]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -771,7 +787,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   const rentPercentOfSales = projectedSalesInclVAT > 0 ? (monthlyRent / projectedSalesInclVAT) * 100 : 0;
   const isRentAbove7 = rentPercentOfSales > 7;
   const isCombinedAbove60 = actualCombinedPercent > 60;
-  const showConsulting = isRentAbove7 && isCombinedAbove60;
+  const showConsulting = isRentAbove7 || isCombinedAbove60;
 
   const costBreakdownData = [
     { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },
@@ -921,6 +937,20 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                 <li>{language === 'he' ? 'אשרו עם "הוסף".' : 'Confirm by tapping "Add".'}</li>
               </ol>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={consultPopupOpen} onOpenChange={setConsultPopupOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{language === 'he' ? 'המלצה לייעוץ' : 'Consider our consulting service'}</DialogTitle>
+              <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
+                {language === 'he' ? 'שכר הדירה מעל 7% או עלות מזון + עבודה מעל 60%.' : 'Your rent is above 7% or food cost + labor cost is above 60%.'}
+              </DialogDescription>
+            </DialogHeader>
+            <p className={isRTL ? 'text-right' : 'text-left'}>
+              {language === 'he' ? 'למידע נוסף: ' : 'For more details: '}<a href="mailto:admin@smartplate.org" className="text-blue-600 underline">admin@smartplate.org</a>
+            </p>
           </DialogContent>
         </Dialog>
 
