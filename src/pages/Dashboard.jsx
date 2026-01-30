@@ -1007,8 +1007,10 @@ const [monthReceipts, setMonthReceipts] = useState([]);
               {showConsulting && (
                 <div className="md:w-1/2 w-full">
                   <div className="h-full bg-rose-50 border border-rose-200 rounded-lg p-4 flex items-center">
-                    <p className="text-rose-700 text-sm">
-                      If your rent is more than 7% and your food cost + labor cost is more than 60%, consider using our consulting service — for more details email us: admin@smartplate.org
+                    <p className={`text-rose-700 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {language === 'he'
+                        ? 'אם שכר הדירה גבוה מ-7% או עלות המזון + עלות העבודה מעל 60%, שקלו להשתמש בשירות הייעוץ שלנו — לפרטים נוספים: admin@smartplate.org'
+                        : 'If your rent is above 7% or food cost + labor cost is above 60%, consider using our consulting service — for more details email us: admin@smartplate.org'}
                     </p>
                   </div>
                 </div>
