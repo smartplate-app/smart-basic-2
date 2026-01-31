@@ -1258,7 +1258,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           </div>
 
           {/* Goal Comparison */}
-          {laborGoals.shiftWorkersGoalWeekly > 0 && (
+          {false && (
             <div className={`p-4 rounded-lg border-2 ${
               totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly 
                 ? 'bg-green-50 border-green-300' 
