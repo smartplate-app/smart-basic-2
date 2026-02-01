@@ -191,7 +191,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         const number = ensuredNumber;
         const file = new File([jpegBlob], `order-${number}.jpg`, { type: 'image/jpeg' });
 
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
 
         // Mobile/iPad: ALWAYS use native app chooser when available; never open browser
         if (isMobile && navigator.share) {
