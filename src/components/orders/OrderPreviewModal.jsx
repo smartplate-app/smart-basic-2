@@ -87,6 +87,20 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
       }
 
+      // Try immediate native share on mobile to keep user gesture context
+      const isIOSiPadEarly = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isMobileEarly = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPadEarly;
+      if (isMobileEarly && navigator.share) {
+        try {
+          setDownloading(false);
+          await navigator.share({
+            title: `${language === 'he' ? 'הזמנה' : 'Order'} #${ensuredNumber}`,
+            url: orderUrl
+          });
+          return;
+        } catch (_) { /* fall through to image generation */ }
+      }
+
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
@@ -438,12 +452,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </Button>
 
           <Button
-            onClick={async () => {
-              try {
-                const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-                await base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber });
-              } catch (_) {}
+            onClick={() => {
+              // Call share immediately to preserve user gesture on iOS/iPadOS
               handleDownloadImage();
+              // Fire-and-forget status update so it doesn't block share sheet
+              (async () => {
+                try {
+                  const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+                  await base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber });
+                } catch (_) {}
+              })();
             }}
             className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm disabled:opacity-50"
             disabled={downloading}
