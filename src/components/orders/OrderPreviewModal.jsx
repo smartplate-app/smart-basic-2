@@ -191,48 +191,26 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         const number = ensuredNumber;
         const file = new File([jpegBlob], `order-${number}.jpg`, { type: 'image/jpeg' });
 
-        // Format phone for WhatsApp
-        let phone = order.supplier_phone || '';
-        phone = phone.replace(/\D/g, '');
-        if (phone.startsWith('0')) {
-          phone = '972' + phone.substring(1);
-        } else if (!phone.startsWith('972')) {
-          phone = '972' + phone;
-        }
-
-        const msgNumber = ensuredNumber;
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const whatsappUrl = isMobile 
-          ? `whatsapp://send`
-          : `https://web.whatsapp.com/`;
 
-        // Try to use Web Share API (native share sheet)
-        if (navigator.share) {
+        // Mobile/iPad: ALWAYS use native app chooser when available; never open browser
+        if (isMobile && navigator.share) {
           try {
             if (!navigator.canShare || navigator.canShare({ files: [file] })) {
-              // Stop showing loader before opening system sheet so it doesn't look stuck
               setDownloading(false);
-              await navigator.share({
-                files: [file],
-                title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}`,
-                text: `${language === 'he' ? 'שיתוף הזמנה' : 'Sharing order'} #${number}`
-              });
+              await navigator.share({ files: [file], title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}` });
               return;
             } else {
-              // Fallback to text+URL share to still open the chooser on browsers without file-sharing
+              // Some Safari versions can't share files — still open chooser with link/text
               setDownloading(false);
-              await navigator.share({
-                title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}`,
-                text: `${language === 'he' ? 'צפה בפרטי הזמנה' : 'View order details'} #${number}`,
-                url: orderUrl
-              });
+              await navigator.share({ title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}`, url: orderUrl });
               return;
             }
-          } catch (_) {}
+          } catch (_) { /* fallthrough to download */ }
         }
 
-        // If user requested share-only and Web Share isn't available, fallback to download (no clipboard/WhatsApp)
-        if (shareOnly) {
+        // If shareOnly requested on unsupported devices OR desktop, just save the JPG for manual attach
+        if (shareOnly || !isMobile) {
           const url = window.URL.createObjectURL(jpegBlob);
           const a = document.createElement('a');
           a.href = url;
@@ -245,52 +223,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           return;
         }
 
-        // Desktop/web: try to copy image to clipboard. First JPEG, then PNG fallback.
-        const canClipboard = typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write;
-        let copiedOk = false;
-        if (canClipboard) {
-          try {
-            await navigator.clipboard.write([ new ClipboardItem({ 'image/jpeg': jpegBlob }) ]);
-            copiedOk = true;
-          } catch (_) {
-            // retry as PNG
-            copiedOk = await new Promise((resolve) => {
-              try {
-                canvas.toBlob(async (pngBlob) => {
-                  if (!pngBlob) return resolve(false);
-                  try {
-                    await navigator.clipboard.write([ new ClipboardItem({ 'image/png': pngBlob }) ]);
-                    resolve(true);
-                  } catch (_) {
-                    resolve(false);
-                  }
-                }, 'image/png');
-              } catch (_) {
-                resolve(false);
-              }
-            });
-          }
-        }
-
-        const openWhatsApp = () => window.open(whatsappUrl, '_blank');
-
-        if (copiedOk) {
-          // Small delay helps some browsers keep the clipboard before switching tabs
-          setTimeout(() => {
-            openWhatsApp();
-            setDownloading(false);
-          }, 150);
-          return;
-        }
-
-        // Fallback: open WhatsApp and instruct manual paste or download
-        openWhatsApp();
-        try {
-          alert(language === 'he'
-            ? 'לא הצלחנו להעתיק את התמונה אוטומטית. בחלון הצ\'אט לחצו Ctrl/Cmd+V, או השתמשו ב-"הורד תמונה".'
-            : 'Couldn\'t auto-copy the image. In the chat window press Ctrl/Cmd+V, or use "Download JPG".');
-        } catch (_) {}
+        // Mobile without Web Share support: save JPG and show brief hint
+        const url = window.URL.createObjectURL(jpegBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `order-${number}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        try { alert(language === 'he' ? 'התמונה נשמרה. פתח את האפליקציה ובחר את הקובץ מהגלריה.' : 'Image saved. Open your app and pick the file from Photos.'); } catch (_) {}
         setDownloading(false);
+        return;
       }, 'image/jpeg', 0.95);
 
     } catch (err) {
