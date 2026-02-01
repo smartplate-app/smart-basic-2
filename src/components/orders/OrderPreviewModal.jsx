@@ -202,8 +202,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         const msgNumber = ensuredNumber;
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const whatsappUrl = isMobile 
-          ? `whatsapp://send?phone=${phone}`
-          : `https://wa.me/${phone}`;
+          ? `whatsapp://send`
+          : `https://web.whatsapp.com/`;
 
         // Try to use Web Share API on mobile (sends file directly into WhatsApp share sheet)
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
