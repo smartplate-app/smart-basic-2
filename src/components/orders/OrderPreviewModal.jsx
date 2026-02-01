@@ -205,24 +205,24 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           ? `whatsapp://send?phone=${phone}`
           : `https://wa.me/${phone}`;
 
-        // Try to copy image to clipboard
-        try {
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              'image/jpeg': blob
-            })
-          ]);
-
-          // Open WhatsApp after copying
-          window.open(whatsappUrl, '_blank');
-          setDownloading(false);
-          alert(language === 'he' ? 'התמונה הועתקה! הדבק אותה ב-WhatsApp' : 'Image copied! Paste it in WhatsApp');
-          return;
-        } catch (clipboardErr) {
-          console.log('Clipboard not supported, trying share API');
+        // Try to use Web Share API on mobile (sends file directly into WhatsApp share sheet)
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file] });
+            setDownloading(false);
+            return;
+          } catch (_) {}
         }
 
-        // Open WhatsApp even if clipboard/share are unavailable (no downloads)
+        // Clipboard image copy (desktop WhatsApp Web: user pastes with Ctrl/Cmd+V)
+        try {
+          await navigator.clipboard.write([ new ClipboardItem({ 'image/jpeg': blob }) ]);
+          window.open(whatsappUrl, '_blank');
+          setDownloading(false);
+          return;
+        } catch (_) {}
+
+        // Fallback: open WhatsApp and rely on user paste from OS picker
         window.open(whatsappUrl, '_blank');
         setDownloading(false);
       }, 'image/jpeg', 0.95);
