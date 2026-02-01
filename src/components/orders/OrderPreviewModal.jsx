@@ -220,34 +220,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           console.log('Clipboard not supported, trying share API');
         }
 
-        // Try Web Share API for mobile
-        if (navigator.share) {
-          try {
-            await navigator.share({
-              files: [file],
-              text: message
-            });
-            setDownloading(false);
-            return;
-          } catch (shareErr) {
-            console.log('Share cancelled');
-          }
-        }
-
-        // Fallback: Download as JPG
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `order-${ensuredNumber}.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        setTimeout(() => {
-          window.open(whatsappUrl, '_blank');
-          setDownloading(false);
-        }, 500);
+        // Open WhatsApp even if clipboard/share are unavailable (no downloads)
+        window.open(whatsappUrl, '_blank');
+        setDownloading(false);
       }, 'image/jpeg', 0.95);
 
     } catch (err) {
