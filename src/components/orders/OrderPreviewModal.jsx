@@ -218,6 +218,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 text: `${language === 'he' ? 'שיתוף הזמנה' : 'Sharing order'} #${number}`
               });
               return;
+            } else {
+              // Fallback to text+URL share to still open the chooser on browsers without file-sharing
+              setDownloading(false);
+              await navigator.share({
+                title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}`,
+                text: `${language === 'he' ? 'צפה בפרטי הזמנה' : 'View order details'} #${number}`,
+                url: orderUrl
+              });
+              return;
             }
           } catch (_) {}
         }
