@@ -209,8 +209,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           } catch (_) { /* fallthrough to download */ }
         }
 
-        // If shareOnly requested on unsupported devices OR desktop, just save the JPG for manual attach
-        if (shareOnly || !isMobile) {
+        // Desktop devices: save the JPG for manual attach
+        if (!isMobile) {
           const url = window.URL.createObjectURL(jpegBlob);
           const a = document.createElement('a');
           a.href = url;
@@ -442,7 +442,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
                 await base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber });
               } catch (_) {}
-              handleDownloadImage({ shareOnly: true });
+              handleDownloadImage();
             }}
             className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm disabled:opacity-50"
             disabled={downloading}
