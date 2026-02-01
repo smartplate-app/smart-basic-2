@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { X, Smartphone, Monitor, Copy, Check, Download, Send } from 'lucide-react';
+import { X, Smartphone, Monitor, Copy, Check, Download, Share } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
@@ -65,7 +65,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     }
   };
 
-  const handleDownloadImage = async () => {
+  const handleDownloadImage = async (opts = {}) => {
+          const shareOnly = !!opts.shareOnly;
     try {
       setDownloading(true);
 
