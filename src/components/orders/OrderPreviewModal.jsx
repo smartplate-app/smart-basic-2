@@ -185,10 +185,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       // Remove temp container
       document.body.removeChild(tempContainer);
 
-      // Convert to blob and try to copy to clipboard
-      canvas.toBlob(async (blob) => {
+      // Convert to blob and try to copy to clipboard (improved: JPEG then PNG)
+      canvas.toBlob(async (jpegBlob) => {
         const number = ensuredNumber;
-        const file = new File([blob], `order-${number}.jpg`, { type: 'image/jpeg' });
+        const file = new File([jpegBlob], `order-${number}.jpg`, { type: 'image/jpeg' });
 
         // Format phone for WhatsApp
         let phone = order.supplier_phone || '';
@@ -214,17 +214,51 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           } catch (_) {}
         }
 
-        // Clipboard image copy (desktop WhatsApp Web: user pastes with Ctrl/Cmd+V)
-        try {
-          await navigator.clipboard.write([ new ClipboardItem({ 'image/jpeg': blob }) ]);
-          // Open WhatsApp without preselecting a recipient so user can pick the contact
-          window.open(whatsappUrl, '_blank');
-          setDownloading(false);
-          return;
-        } catch (_) {}
+        // Desktop/web: try to copy image to clipboard. First JPEG, then PNG fallback.
+        const canClipboard = typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write;
+        let copiedOk = false;
+        if (canClipboard) {
+          try {
+            await navigator.clipboard.write([ new ClipboardItem({ 'image/jpeg': jpegBlob }) ]);
+            copiedOk = true;
+          } catch (_) {
+            // retry as PNG
+            copiedOk = await new Promise((resolve) => {
+              try {
+                canvas.toBlob(async (pngBlob) => {
+                  if (!pngBlob) return resolve(false);
+                  try {
+                    await navigator.clipboard.write([ new ClipboardItem({ 'image/png': pngBlob }) ]);
+                    resolve(true);
+                  } catch (_) {
+                    resolve(false);
+                  }
+                }, 'image/png');
+              } catch (_) {
+                resolve(false);
+              }
+            });
+          }
+        }
 
-        // Fallback: open WhatsApp and let the user pick the contact
-        window.open(whatsappUrl, '_blank');
+        const openWhatsApp = () => window.open(whatsappUrl, '_blank');
+
+        if (copiedOk) {
+          // Small delay helps some browsers keep the clipboard before switching tabs
+          setTimeout(() => {
+            openWhatsApp();
+            setDownloading(false);
+          }, 150);
+          return;
+        }
+
+        // Fallback: open WhatsApp and instruct manual paste or download
+        openWhatsApp();
+        try {
+          alert(language === 'he'
+            ? 'לא הצלחנו להעתיק את התמונה אוטומטית. בחלון הצ\'אט לחצו Ctrl/Cmd+V, או השתמשו ב-"הורד תמונה".'
+            : 'Couldn\'t auto-copy the image. In the chat window press Ctrl/Cmd+V, or use "Download JPG".');
+        } catch (_) {}
         setDownloading(false);
       }, 'image/jpeg', 0.95);
 
