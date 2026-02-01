@@ -217,12 +217,13 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         // Clipboard image copy (desktop WhatsApp Web: user pastes with Ctrl/Cmd+V)
         try {
           await navigator.clipboard.write([ new ClipboardItem({ 'image/jpeg': blob }) ]);
+          // Open WhatsApp without preselecting a recipient so user can pick the contact
           window.open(whatsappUrl, '_blank');
           setDownloading(false);
           return;
         } catch (_) {}
 
-        // Fallback: open WhatsApp and rely on user paste from OS picker
+        // Fallback: open WhatsApp and let the user pick the contact
         window.open(whatsappUrl, '_blank');
         setDownloading(false);
       }, 'image/jpeg', 0.95);
