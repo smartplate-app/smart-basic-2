@@ -177,7 +177,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
       // Capture the element
       const canvas = await html2canvas(tempContainer, {
-        scale: 2,
+        scale: shareOnly ? 1 : 2,
         backgroundColor: '#ffffff',
         logging: false,
         useCORS: true
@@ -206,12 +206,19 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           ? `whatsapp://send`
           : `https://web.whatsapp.com/`;
 
-        // Try to use Web Share API on mobile (sends file directly into WhatsApp share sheet)
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        // Try to use Web Share API (native share sheet)
+        if (navigator.share) {
           try {
-            await navigator.share({ files: [file] });
-            setDownloading(false);
-            return;
+            if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+              // Stop showing loader before opening system sheet so it doesn't look stuck
+              setDownloading(false);
+              await navigator.share({
+                files: [file],
+                title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}`,
+                text: `${language === 'he' ? 'שיתוף הזמנה' : 'Sharing order'} #${number}`
+              });
+              return;
+            }
           } catch (_) {}
         }
 
@@ -484,7 +491,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               } catch (_) {}
               handleDownloadImage({ shareOnly: true });
             }}
-            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm"
+            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm disabled:opacity-50"
             disabled={downloading}
           >
             <Share className="w-5 h-5 mr-2" />
