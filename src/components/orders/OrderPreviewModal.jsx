@@ -238,16 +238,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           return;
         }
 
-        // Mobile without Web Share support: save JPG and show brief hint
-        const url = window.URL.createObjectURL(jpegBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `order-${number}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-        try { alert(language === 'he' ? 'התמונה נשמרה. פתח את האפליקציה ובחר את הקובץ מהגלריה.' : 'Image saved. Open your app and pick the file from Photos.'); } catch (_) {}
+        // Mobile without Web Share support: show guidance (no forced download to avoid browser prompt)
+        try {
+          alert(language === 'he'
+            ? 'בשיתוף דרך הדפדפן: השתמש בכפתור השיתוף של Safari (הריבוע עם החץ) כדי לבחור אפליקציה.'
+            : 'Sharing from browser: use Safari’s Share button (square with up arrow) to choose an app.');
+        } catch (_) {}
         setDownloading(false);
         return;
       }, 'image/jpeg', 0.95);
