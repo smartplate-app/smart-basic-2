@@ -200,8 +200,22 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         }
 
         const msgNumber = ensuredNumber;
-        const message = `${language === 'he' ? 'הזמנה' : 'Order'} #${msgNumber}\n${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}\n${language === 'he' ? 'סה״כ:' : 'Total:'} ₪${formattedTotal}`;
-        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        const linkLine = `${language === 'he' ? 'קישור להזמנה:' : 'Order link:'} ${orderUrl}`;
+        const itemsLines = (order.items || [])
+          .map((it) => `• ${it.item_name} — ${it.quantity} ${it.unit || ''}`)
+          .slice(0, 30)
+          .join('\n');
+        const message = [
+          `${language === 'he' ? 'הזמנה' : 'Order'} #${msgNumber}`,
+          `${language === 'he' ? 'מסעדה:' : 'Restaurant:'} ${order.restaurant_name}`,
+          `${language === 'he' ? 'סה״כ:' : 'Total:'} ₪${formattedTotal}`,
+          linkLine,
+          itemsLines
+        ].join('\n');
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const whatsappUrl = isMobile 
+          ? `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`
+          : `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
         // Try to copy image to clipboard
         try {
