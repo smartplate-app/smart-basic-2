@@ -87,19 +87,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
       }
 
-      // Try immediate native share on mobile to keep user gesture context
-      const isIOSiPadEarly = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const isMobileEarly = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPadEarly;
-      if (isMobileEarly && navigator.share) {
-        try {
-          setDownloading(false);
-          await navigator.share({
-            title: `${language === 'he' ? 'הזמנה' : 'Order'} #${ensuredNumber}`,
-            url: orderUrl
-          });
-          return;
-        } catch (_) { /* fall through to image generation */ }
-      }
+      // Removed early link-sharing on mobile; always generate image first and share the JPG file instead
+
 
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
@@ -216,9 +205,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               await navigator.share({ files: [file], title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}` });
               return;
             } else {
-              // Some Safari versions can't share files — still open chooser with link/text
+              // Some Safari versions can't share files — show guidance instead of sending a link
               setDownloading(false);
-              await navigator.share({ title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}`, url: orderUrl });
+              alert(language === 'he'
+                ? 'iOS בגרסאות ישנות לא מאפשר שיתוף תמונה מהדפדפן. הוסף את האפליקציה למסך הבית או עדכן iOS כדי לשתף את התמונה ישירות.'
+                : 'Older iOS versions cannot share an image from the browser. Add the app to your Home Screen or update iOS to share the JPG directly.');
               return;
             }
           } catch (_) { /* fallthrough to download */ }
