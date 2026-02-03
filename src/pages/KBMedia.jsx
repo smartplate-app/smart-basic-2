@@ -204,6 +204,32 @@ export default function KBMedia() {
                   ) : null}
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Category</div>
+                    <Select value={(edits[a.id]?.category) ?? (a.category || 'other')} onValueChange={(v)=>setEdits(prev=>({...prev, [a.id]: {...prev[a.id], category: v}}))}>
+                      <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="getting_started">Getting started</SelectItem>
+                        <SelectItem value="orders">Orders</SelectItem>
+                        <SelectItem value="receipts">Receipts</SelectItem>
+                        <SelectItem value="labor">Labor</SelectItem>
+                        <SelectItem value="account">Account</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <div className="text-xs text-gray-500 mb-1">Tags (comma separated)</div>
+                    <Input value={(edits[a.id]?.tags) ?? (Array.isArray(a.tags) ? a.tags.join(', ') : '')} onChange={(e)=>setEdits(prev=>({...prev, [a.id]: {...prev[a.id], tags: e.target.value}}))} />
+                  </div>
+                  <div className="md:col-span-3">
+                    <Button size="sm" variant="outline" onClick={()=>handleSaveMeta(a)} disabled={savingId===a.id}>
+                      {savingId===a.id ? 'Saving…' : 'Save meta'}
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Video preview</div>
                   {a.media_video_url ? (
