@@ -57,11 +57,13 @@ Deno.serve(async (req) => {
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
 
     const rawMessage =
-`From: ${fromName} <me>\n` +
+`From: ${fromHeaderName} <me>\n` +
 `To: ${full_name} <${email}>\n` +
-`Subject: ${subject}\n` +
+`${subjectHeader}\n` +
 `MIME-Version: 1.0\n` +
 `Content-Type: text/plain; charset=UTF-8\n` +
+`Content-Transfer-Encoding: 8bit\n` +
+`Content-Language: ${language}\n` +
 `\n` +
 `${bodyText}`;
 
