@@ -43,8 +43,11 @@ export default function ChatbotPanel() {
         setImgLoading(true);
         const lang = (navigator.language || 'he').startsWith('he') ? 'he' : 'en';
         const related = kb.find(a => a.language === lang && (a.title?.toLowerCase().includes('order') || a.category === 'orders')) || kb[0];
+        const kbVideo = related?.media_video_url;
         const kbImage = related?.media_images?.[0];
-        if (kbImage) {
+        if (kbVideo) {
+          setMessages(prev => [...prev, { role: 'assistant', content: lang === 'he' ? 'תצוגת וידאו מהמערכת:' : 'In‑app video preview:', videoUrl: kbVideo }]);
+        } else if (kbImage) {
           setMessages(prev => [...prev, { role: 'assistant', content: lang === 'he' ? 'תצוגה מהמערכת:' : 'In-app preview:', imageUrl: kbImage }]);
         }
       } catch (_) {
@@ -71,6 +74,11 @@ export default function ChatbotPanel() {
               <div className={`inline-block px-3 py-2 rounded-lg ${m.role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-100'}`}>
                 {m.content}
               </div>
+              {m.videoUrl && (
+                <div className={`mt-2 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
+                  <video src={m.videoUrl} controls className="max-h-72 rounded-lg border shadow-sm bg-black" />
+                </div>
+              )}
               {m.imageUrl && (
                 <div className={`mt-2 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
                   <a href={m.imageUrl} target="_blank" rel="noopener noreferrer">
