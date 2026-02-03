@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     // Build login link (Google sign-in preferred) - force custom domain
     const preferredOrigin = Deno.env.get('PUBLIC_APP_URL') || 'https://smartplatebasic.com';
     const origin = preferredOrigin.replace(/\/$/, '');
-    const loginUrl = `${origin}/#/pages/Welcome`;
+    const loginUrl = `${origin}/functions/welcomePublic?lang=${language}`;
 
     // Prepare localized content
     const fromName = me.full_name || 'Smart Plate';
