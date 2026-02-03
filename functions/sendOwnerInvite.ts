@@ -34,13 +34,66 @@ Deno.serve(async (req) => {
 
     // Prepare localized content
     const fromName = me.full_name || 'Smart Plate';
-    const subject = language === 'he'
-      ? `הזמנה להצטרף כבעלים ל${restaurant_name}`
-      : `Invitation to join as owner at ${restaurant_name}`;
+    // Subject always in English (ASCII-safe)
+    const subject = `Invitation to join as owner at ${restaurant_name}`;
 
-    const bodyText = language === 'he'
-      ? `שלום ${full_name},\n\nהוזמנת לפתוח חשבון כבעלים באפליקציה עבור \"${restaurant_name}\".\n\nכניסה מהירה עם Google:\n${loginUrl}\n\nלאחר ההתחברות תוכל/י להגדיר את פרטי העסק ולהתחיל לעבוד.\n\nבברכה,\n${fromName}`
-      : `Hello ${full_name},\n\nYou've been invited to create an owner account for \"${restaurant_name}\".\n\nQuick sign-in with Google:\n${loginUrl}\n\nAfter signing in you can set up your business details and get started.\n\nBest regards,\n${fromName}`;
+    const dir = (language === 'he' || language === 'ar') ? 'rtl' : 'ltr';
+    const strings = language === 'he' ? {
+      greeting: `שלום ${full_name},`,
+      line1: `הוזמנת לפתוח חשבון כבעלים באפליקציה עבור \"${restaurant_name}\".`,
+      cta: 'כניסה מהירה עם Google',
+      after: 'לאחר ההתחברות תוכל/י להגדיר את פרטי העסק ולהתחיל לעבוד.',
+      regards: 'בברכה,',
+      brand: fromName
+    } : {
+      greeting: `Hello ${full_name},`,
+      line1: `You've been invited to create an owner account for \"${restaurant_name}\".`,
+      cta: 'Quick sign‑in with Google',
+      after: 'After signing in you can set up your business details and get started.',
+      regards: 'Best regards,',
+      brand: fromName
+    };
+    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg';
+    const htmlBody = `<!doctype html>
+<html lang="${language}" dir="${dir}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${subject}</title>
+</head>
+<body style="margin:0;background:#f6f8fb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;direction:${dir};text-align:${dir==='rtl'?'right':'left'};">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f8fb;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width:640px;background:#ffffff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.05);overflow:hidden" cellspacing="0" cellpadding="0">
+          <tr>
+            <td style="background:linear-gradient(135deg,#111827,#334155);padding:24px;text-align:center;">
+              <img src="${logoUrl}" alt="Smart Plate" style="height:56px;object-fit:contain;display:inline-block" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 28px 8px 28px;color:#0f172a;font-size:18px;line-height:1.6;">${strings.greeting}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px;color:#334155;font-size:16px;line-height:1.7;">${strings.line1}</td>
+          </tr>
+          <tr>
+            <td style="padding:20px 28px;text-align:${dir==='rtl'?'left':'right'};">
+              <a href="${loginUrl}" style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;">${strings.cta}</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 28px 28px;color:#334155;font-size:14px;line-height:1.7;">${strings.after}</td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 32px 28px;color:#64748b;font-size:13px;">${strings.regards}<br/>${strings.brand}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
     // RFC 2047 encode headers for non-ASCII characters (e.g., Hebrew)
     const toBase64 = (str) => {
@@ -61,11 +114,11 @@ Deno.serve(async (req) => {
 `To: ${full_name} <${email}>\n` +
 `${subjectHeader}\n` +
 `MIME-Version: 1.0\n` +
-`Content-Type: text/plain; charset=UTF-8\n` +
+`Content-Type: text/html; charset=UTF-8\n` +
 `Content-Transfer-Encoding: 8bit\n` +
 `Content-Language: ${language}\n` +
 `\n` +
-`${bodyText}`;
+`${htmlBody}`;
 
     // base64url encode
     const base64Url = (str) => {
