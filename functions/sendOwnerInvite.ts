@@ -131,43 +131,51 @@ Deno.serve(async (req) => {
     const fromHeaderName = /[^\x00-\x7F]/.test(fromName) ? encodeWord(fromName) : fromName;
     const subjectHeader = `Subject: ${encodeWord(subject)}`;
 
-    // Send via Gmail connector
-    const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
+    // Try Gmail connector first; fall back to platform email if it fails
+    try {
+      const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
 
-    const rawMessage =
-`From: ${fromHeaderName} <me>\n` +
-`To: ${full_name} <${email}>\n` +
-`${subjectHeader}\n` +
-`MIME-Version: 1.0\n` +
-`Content-Type: text/html; charset=UTF-8\n` +
-`Content-Transfer-Encoding: 8bit\n` +
-`Content-Language: ${language}\n` +
-`\n` +
-`${htmlBody}`;
+      // Omit explicit From header to let Gmail set it to the authorized account
+      const rawMessage =
+    `To: ${full_name} <${email}>\n` +
+    `Subject: ${subject}\n` +
+    `MIME-Version: 1.0\n` +
+    `Content-Type: text/html; charset=UTF-8\n` +
+    `Content-Language: ${language}\n` +
+    `\n` +
+    `${htmlBody}`;
 
-    // base64url encode
-    const base64Url = (str) => {
-      const utf8 = new TextEncoder().encode(str);
-      let binary = '';
-      for (let i = 0; i < utf8.length; i++) binary += String.fromCharCode(utf8[i]);
-      let b64 = btoa(binary);
-      return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    };
+      // base64url encode
+      const base64Url = (str) => {
+        const utf8 = new TextEncoder().encode(str);
+        let binary = '';
+        for (let i = 0; i < utf8.length; i++) binary += String.fromCharCode(utf8[i]);
+        let b64 = btoa(binary);
+        return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      };
 
-    const raw = base64Url(rawMessage);
+      const raw = base64Url(rawMessage);
 
-    const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ raw })
-    });
+      const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ raw })
+      });
 
-    if (!resp.ok) {
-      const errText = await resp.text();
-      return Response.json({ success: false, error: `Gmail send failed: ${errText}` }, { status: 502 });
+      if (!resp.ok) {
+        throw new Error(await resp.text());
+      }
+    } catch (e) {
+      // Fallback: use Base44 email integration
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: email,
+        from_name: fromName,
+        subject,
+        body: htmlBody
+      });
     }
 
     return Response.json({ success: true });
