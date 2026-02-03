@@ -38,14 +38,14 @@ export default function ChatbotPanel() {
       const content = typeof result === 'string' ? result : (typeof result?.output === 'string' ? result.output : JSON.stringify(result));
       setMessages(prev => [...prev, { role: 'assistant', content: content || 'לא נמצאה תשובה כרגע, נסו לנסח אחרת.' }]);
 
-      // Generate visual preview (image) of the steps
+      // Instead of generic mockups, try to fetch a relevant app screenshot from KB media
       try {
         setImgLoading(true);
-        const imgPrompt = `Create a clean app-like UI mock screenshot (no real logos) that visually shows step-by-step how to perform: "${q}". Use the same language as this instruction if possible. Minimal text labels, light background, numbered steps, arrows, and simple interface elements. Brand-agnostic.`;
-        const res = await base44.integrations.Core.GenerateImage({ prompt: imgPrompt });
-        const imgUrl = res?.url;
-        if (imgUrl) {
-          setMessages(prev => [...prev, { role: 'assistant', content: 'תצוגה גרפית:', imageUrl: imgUrl }]);
+        const lang = (navigator.language || 'he').startsWith('he') ? 'he' : 'en';
+        const related = kb.find(a => a.language === lang && (a.title?.toLowerCase().includes('order') || a.category === 'orders')) || kb[0];
+        const kbImage = related?.media_images?.[0];
+        if (kbImage) {
+          setMessages(prev => [...prev, { role: 'assistant', content: lang === 'he' ? 'תצוגה מהמערכת:' : 'In-app preview:', imageUrl: kbImage }]);
         }
       } catch (_) {
         // ignore preview errors
