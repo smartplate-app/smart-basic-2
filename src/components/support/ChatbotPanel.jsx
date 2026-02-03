@@ -42,9 +42,28 @@ export default function ChatbotPanel() {
       try {
         setImgLoading(true);
         const lang = (navigator.language || 'he').startsWith('he') ? 'he' : 'en';
-        const related = kb.find(a => a.language === lang && (a.title?.toLowerCase().includes('order') || a.category === 'orders')) || kb[0];
-        const kbVideo = related?.media_video_url;
-        const kbImage = related?.media_images?.[0];
+        const norm = (s) => (s || '').toString().toLowerCase();
+        const ql = norm(q);
+        const keywords = ql.split(/[^a-zA-Z\u0590-\u05FF0-9]+/).filter(Boolean);
+        const candidates = kb.filter(a => a.language === lang);
+        const scored = candidates.map(a => {
+          const t = norm(a.title);
+          const ex = norm(a.excerpt);
+          const cat = norm(a.category);
+          const tags = (a.tags || []).map(norm).join(' ');
+          let score = 0;
+          keywords.forEach(k => {
+            if (!k) return;
+            if (t.includes(k)) score += 5;
+            if (tags.includes(k)) score += 4;
+            if (cat.includes(k)) score += 2;
+            if (ex.includes(k)) score += 1;
+          });
+          return { a, score };
+        }).sort((x, y) => y.score - x.score);
+        const best = (scored[0]?.score > 0) ? scored[0].a : null;
+        const kbVideo = best?.media_video_url;
+        const kbImage = best?.media_images?.[0];
         if (kbVideo) {
           setMessages(prev => [...prev, { role: 'assistant', content: lang === 'he' ? 'תצוגת וידאו מהמערכת:' : 'In‑app video preview:', videoUrl: kbVideo }]);
         } else if (kbImage) {
