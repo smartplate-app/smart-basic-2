@@ -164,12 +164,10 @@ export default function AdminDashboard() {
     }
     try {
       setSendingInvite(true);
-      const restaurantName = currentUser?.business_name || 'Smart Plate';
       const { data } = await base44.functions.invoke('sendOwnerInvite', {
         email: inviteEmail.trim(),
         full_name: inviteName.trim(),
-        language: inviteLang,
-        restaurant_name: restaurantName
+        language: inviteLang
       });
       if (data?.success) {
         alert(language === 'he' ? 'הזמנה נשלחה בהצלחה' : 'Invite sent successfully');

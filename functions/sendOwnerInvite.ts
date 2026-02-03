@@ -30,26 +30,25 @@ Deno.serve(async (req) => {
     // Build login link (Google sign-in preferred) - force custom domain
     const preferredOrigin = Deno.env.get('PUBLIC_APP_URL') || 'https://smartplatebasic.com';
     const origin = preferredOrigin.replace(/\/$/, '');
-    const next = encodeURIComponent(`${origin}/#/pages/Welcome`);
-    const loginUrl = `${origin}/auth/login?provider=google&next=${next}`;
+    const loginUrl = `${origin}/#/pages/Welcome`;
 
     // Prepare localized content
     const fromName = me.full_name || 'Smart Plate';
     // Subject always in English (ASCII-safe)
-    const subject = `Invitation to join as owner at ${restaurant_name}`;
+    const subject = `Invitation to join Smart Plate BASIC`;
 
     const dir = (language === 'he' || language === 'ar') ? 'rtl' : 'ltr';
     const strings = language === 'he' ? {
       greeting: `שלום ${full_name},`,
-      line1: `הוזמנת לפתוח חשבון כבעלים באפליקציה עבור \"${restaurant_name}\".`,
-      cta: 'כניסה מהירה עם Google',
-      after: 'לאחר ההתחברות תוכל/י להגדיר את פרטי העסק ולהתחיל לעבוד.',
+      line1: `הוזמנת להצטרף ל־Smart Plate BASIC כבעלים.`,
+      cta: 'התחילו עכשיו',
+      after: 'לאחר ההתחברות תוכלו להגדיר את פרטי העסק ולהתחיל לעבוד.',
       regards: 'בברכה,',
       brand: fromName
     } : {
       greeting: `Hello ${full_name},`,
-      line1: `You've been invited to create an owner account for \"${restaurant_name}\".`,
-      cta: 'Quick sign‑in with Google',
+      line1: `You've been invited to join Smart Plate BASIC as an owner.`,
+      cta: 'Get started',
       after: 'After signing in you can set up your business details and get started.',
       regards: 'Best regards,',
       brand: fromName
