@@ -33,8 +33,9 @@ export default function ChatbotPanel() {
     try {
       const kbContext = kb.slice(0, 10).map(a => `# ${a.title}\n${(a.excerpt || '').slice(0,200)}\n`).join('\n');
       const prompt = `You are a helpful support assistant for Smart Plate BASIC. Answer in the user's language (Hebrew or English) concisely. Use the following knowledge if relevant. If unsure, say you'll escalate to human support.\n\nKnowledge Base:\n${kbContext}\n\nUser question: ${q}`;
-      const { data } = await base44.integrations.Core.InvokeLLM({ prompt });
-      setMessages(prev => [...prev, { role: 'assistant', content: typeof data === 'string' ? data : JSON.stringify(data) }]);
+      const result = await base44.integrations.Core.InvokeLLM({ prompt });
+      const content = typeof result === 'string' ? result : (typeof result?.output === 'string' ? result.output : JSON.stringify(result));
+      setMessages(prev => [...prev, { role: 'assistant', content: content || 'לא נמצאה תשובה כרגע, נסו לנסח אחרת.' }]);
     } catch (e) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'מצטער, הייתה שגיאה בעיבוד הבקשה. נסו שוב או פנו לתמיכה.' }]);
     } finally {
