@@ -56,6 +56,7 @@ import InventoryTransfers from './pages/InventoryTransfers';
 import InviteUser from './pages/InviteUser';
 import Items from './pages/Items';
 import JoinRestaurant from './pages/JoinRestaurant';
+import KBMedia from './pages/KBMedia';
 import LaborCost from './pages/LaborCost';
 import LinkChecker from './pages/LinkChecker';
 import MonthlyCount from './pages/MonthlyCount';
@@ -84,7 +85,6 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import KBMedia from './pages/KBMedia';
 import __Layout from './Layout.jsx';
 
 
@@ -98,6 +98,7 @@ export const PAGES = {
     "InviteUser": InviteUser,
     "Items": Items,
     "JoinRestaurant": JoinRestaurant,
+    "KBMedia": KBMedia,
     "LaborCost": LaborCost,
     "LinkChecker": LinkChecker,
     "MonthlyCount": MonthlyCount,
@@ -126,7 +127,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "KBMedia": KBMedia,
 }
 
 export const pagesConfig = {
