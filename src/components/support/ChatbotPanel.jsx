@@ -68,6 +68,8 @@ export default function ChatbotPanel() {
           setMessages(prev => [...prev, { role: 'assistant', content: lang === 'he' ? 'תצוגת וידאו מהמערכת:' : 'In‑app video preview:', videoUrl: kbVideo }]);
         } else if (kbImage) {
           setMessages(prev => [...prev, { role: 'assistant', content: lang === 'he' ? 'תצוגה מהמערכת:' : 'In-app preview:', imageUrl: kbImage }]);
+        } else {
+          setMessages(prev => [...prev, { role: 'assistant', content: lang === 'he' ? 'אין תצוגה גרפית זמינה עדיין לנושא הזה.' : 'No in‑app preview available yet for this topic.' }]);
         }
       } catch (_) {
         // ignore preview errors
@@ -95,7 +97,7 @@ export default function ChatbotPanel() {
               </div>
               {m.videoUrl && (
                 <div className={`mt-2 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
-                  <video src={m.videoUrl} controls className="max-h-72 rounded-lg border shadow-sm bg-black" />
+                  <video src={m.videoUrl} autoPlay muted loop playsInline controls className="max-h-72 rounded-lg border shadow-sm bg-black" />
                 </div>
               )}
               {m.imageUrl && (
