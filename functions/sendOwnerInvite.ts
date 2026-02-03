@@ -42,6 +42,17 @@ Deno.serve(async (req) => {
       ? `שלום ${full_name},\n\nהוזמנת לפתוח חשבון כבעלים באפליקציה עבור \"${restaurant_name}\".\n\nכניסה מהירה עם Google:\n${loginUrl}\n\nלאחר ההתחברות תוכל/י להגדיר את פרטי העסק ולהתחיל לעבוד.\n\nבברכה,\n${fromName}`
       : `Hello ${full_name},\n\nYou've been invited to create an owner account for \"${restaurant_name}\".\n\nQuick sign-in with Google:\n${loginUrl}\n\nAfter signing in you can set up your business details and get started.\n\nBest regards,\n${fromName}`;
 
+    // RFC 2047 encode headers for non-ASCII characters (e.g., Hebrew)
+    const toBase64 = (str) => {
+      const utf8 = new TextEncoder().encode(str);
+      let binary = '';
+      for (let i = 0; i < utf8.length; i++) binary += String.fromCharCode(utf8[i]);
+      return btoa(binary); // standard Base64
+    };
+    const encodeWord = (str) => `=?UTF-8?B?${toBase64(str)}?=`;
+    const fromHeaderName = /[^\x00-\x7F]/.test(fromName) ? encodeWord(fromName) : fromName;
+    const subjectHeader = `Subject: ${encodeWord(subject)}`;
+
     // Send via Gmail connector
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
 
