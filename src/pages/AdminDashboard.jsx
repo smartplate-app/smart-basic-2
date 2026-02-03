@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram, Mail } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
-import AppHelpChat from "../components/AppHelpChat";
+
 import InstagramCampaign from "@/components/marketing/InstagramCampaign";
 import InstagramCampaignDE from "@/components/marketing/InstagramCampaignDE";
 import InstagramCampaignHE from "@/components/marketing/InstagramCampaignHE";
@@ -1069,13 +1069,7 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Help Chat */}
-      <AppHelpChat 
-        currentPage="AdminDashboard"
-        suppliers={suppliers}
-        onSupplierAdded={loadAdminData}
-        onItemAdded={() => {}}
-      />
+
     </div>
   );
 }

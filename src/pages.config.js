@@ -71,6 +71,7 @@ import StoreLogin from './pages/StoreLogin';
 import StoreUsers from './pages/StoreUsers';
 import Suppliers from './pages/Suppliers';
 import SupplyReceipts from './pages/SupplyReceipts';
+import Support from './pages/Support';
 import TestInviteLinks from './pages/TestInviteLinks';
 import TestInvites from './pages/TestInvites';
 import Tips from './pages/Tips';
@@ -83,7 +84,6 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import Support from './pages/Support';
 import __Layout from './Layout.jsx';
 
 
@@ -112,6 +112,7 @@ export const PAGES = {
     "StoreUsers": StoreUsers,
     "Suppliers": Suppliers,
     "SupplyReceipts": SupplyReceipts,
+    "Support": Support,
     "TestInviteLinks": TestInviteLinks,
     "TestInvites": TestInvites,
     "Tips": Tips,
@@ -124,7 +125,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "Support": Support,
 }
 
 export const pagesConfig = {
