@@ -13,10 +13,35 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { email, full_name, language = 'he' } = await req.json();
+    // Parse body robustly (JSON or form) and normalize fields
+    let body = {};
+    const contentType = req.headers.get('content-type') || '';
+    try {
+      if (contentType.includes('application/json')) {
+        body = await req.json();
+      } else if (contentType.includes('application/x-www-form-urlencoded')) {
+        const form = await req.formData();
+        body = Object.fromEntries([...form.entries()].map(([k, v]) => [k, String(v)]));
+      } else {
+        // Try JSON anyway; if fails, treat as empty
+        body = await req.json().catch(() => ({}));
+      }
+    } catch (_) {
+      body = {};
+    }
 
-    if (!email || !full_name) {
-      return Response.json({ success: false, error: 'Missing required fields (email, full_name)' }, { status: 400 });
+    const emailRaw = body.email || body.userEmail || body.to || body.recipient || '';
+    const nameRaw = body.full_name || body.fullName || body.name || '';
+    const language = (body.language === 'en') ? 'en' : 'he';
+
+    const email = String(emailRaw).trim();
+    let full_name = String(nameRaw).trim();
+    if (!full_name && email) {
+      full_name = email.split('@')[0]; // fallback name from email local-part
+    }
+
+    if (!email) {
+      return Response.json({ success: false, error: 'Missing required field: email' }, { status: 400 });
     }
 
     // Grant this email access to the app so they can sign in immediately

@@ -51,7 +51,7 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
       </label>
       <div class="actions">
         <button type="submit" class="btn primary">${t('שלח בקשה', 'Request access')}</button>
-        <a class="btn" href="/pages/Welcome">${t('התחברות', 'Sign in')}</a>
+        <a class="btn" href="/#/pages/Welcome">${t('התחברות', 'Sign in')}</a>
       </div>
     </form>
   `;
