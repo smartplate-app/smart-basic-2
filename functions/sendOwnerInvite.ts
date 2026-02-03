@@ -27,8 +27,9 @@ Deno.serve(async (req) => {
       console.log('[sendOwnerInvite] addAppUser warning:', e?.message || e);
     }
 
-    // Build login link (Google sign-in preferred)
-    const origin = req.headers.get('origin') || 'https://app.base44.com';
+    // Build login link (Google sign-in preferred) - force custom domain
+    const preferredOrigin = Deno.env.get('PUBLIC_APP_URL') || 'https://smartplatebasic.com';
+    const origin = preferredOrigin.replace(/\/$/, '');
     const next = encodeURIComponent(`${origin}/#/pages/Welcome`);
     const loginUrl = `${origin}/auth/login?provider=google&next=${next}`;
 
