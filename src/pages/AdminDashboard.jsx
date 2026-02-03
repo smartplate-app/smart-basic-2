@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram, Mail } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import AppHelpChat from "../components/AppHelpChat";
 import InstagramCampaign from "@/components/marketing/InstagramCampaign";
@@ -30,6 +32,11 @@ export default function AdminDashboard() {
   const [showChainsView, setShowChainsView] = useState(false);
   const [showMarketingView, setShowMarketingView] = useState(false);
   const [marketingLocale, setMarketingLocale] = useState('en');
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteLang, setInviteLang] = useState('he');
+  const [sendingInvite, setSendingInvite] = useState(false);
 
   useEffect(() => {
     loadAdminData();
@@ -146,6 +153,37 @@ export default function AdminDashboard() {
       alert((language === 'he' ? 'שגיאה ביצירת גיליון' : 'Error creating sheet') + `: ${e?.message || e}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Send Owner Invite
+  const handleSendOwnerInvite = async () => {
+    if (!inviteEmail || !inviteName) {
+      alert(language === 'he' ? 'נא למלא אימייל ושם מלא' : 'Please enter email and full name');
+      return;
+    }
+    try {
+      setSendingInvite(true);
+      const restaurantName = currentUser?.business_name || 'Smart Plate';
+      const { data } = await base44.functions.invoke('sendOwnerInvite', {
+        email: inviteEmail.trim(),
+        full_name: inviteName.trim(),
+        language: inviteLang,
+        restaurant_name: restaurantName
+      });
+      if (data?.success) {
+        alert(language === 'he' ? 'הזמנה נשלחה בהצלחה' : 'Invite sent successfully');
+        setShowInviteModal(false);
+        setInviteEmail('');
+        setInviteName('');
+        setInviteLang('he');
+      } else {
+        throw new Error(data?.error || 'Failed to send invite');
+      }
+    } catch (e) {
+      alert((language === 'he' ? 'שגיאה בשליחת ההזמנה' : 'Failed to send invite') + `: ${e?.message || e}`);
+    } finally {
+      setSendingInvite(false);
     }
   };
 
@@ -529,6 +567,13 @@ export default function AdminDashboard() {
                   >
                     <FileText className="w-4 h-4" />
                     {language === 'he' ? 'גיליון התאמות פריטים' : 'Item Matching Sheet'}
+                  </Button>
+                  <Button
+                    onClick={() => setShowInviteModal(true)}
+                    className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800"
+                  >
+                    <Mail className="w-4 h-4" />
+                    {language === 'he' ? 'שליחת הזמנת בעלים' : 'Send Owner Invite'}
                   </Button>
                 </div>
               </div>
@@ -982,6 +1027,49 @@ export default function AdminDashboard() {
         </>
         )}
       </div>
+
+      <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{language === 'he' ? 'שליחת הזמנת בעלים' : 'Send Owner Invite'}</DialogTitle>
+            <DialogDescription>
+              {language === 'he' ? 'שלח הזמנה לבעלים להצטרף למערכת' : 'Invite an owner to join the system'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder={language === 'he' ? 'אימייל' : 'Email'}
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+            />
+            <Input
+              placeholder={language === 'he' ? 'שם מלא' : 'Full name'}
+              value={inviteName}
+              onChange={(e) => setInviteName(e.target.value)}
+            />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">{language === 'he' ? 'שפה:' : 'Language:'}</span>
+              <Select value={inviteLang} onValueChange={setInviteLang}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="he">עברית</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowInviteModal(false)}>
+              {language === 'he' ? 'ביטול' : 'Cancel'}
+            </Button>
+            <Button onClick={handleSendOwnerInvite} disabled={sendingInvite} className="bg-gray-900 hover:bg-gray-800">
+              {sendingInvite ? (language === 'he' ? 'שולח...' : 'Sending...') : (language === 'he' ? 'שלח הזמנה' : 'Send Invite')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Help Chat */}
       <AppHelpChat 

@@ -51,6 +51,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ChainManagement from './pages/ChainManagement';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
+import IOSBuildGuide from './pages/IOSBuildGuide';
 import InventoryTransfers from './pages/InventoryTransfers';
 import InviteUser from './pages/InviteUser';
 import Items from './pages/Items';
@@ -82,7 +83,6 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import IOSBuildGuide from './pages/IOSBuildGuide';
 import __Layout from './Layout.jsx';
 
 
@@ -91,6 +91,7 @@ export const PAGES = {
     "ChainManagement": ChainManagement,
     "Dashboard": Dashboard,
     "Home": Home,
+    "IOSBuildGuide": IOSBuildGuide,
     "InventoryTransfers": InventoryTransfers,
     "InviteUser": InviteUser,
     "Items": Items,
@@ -122,7 +123,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "IOSBuildGuide": IOSBuildGuide,
 }
 
 export const pagesConfig = {
