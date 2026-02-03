@@ -541,7 +541,7 @@ export default function AdminDashboard() {
                     {language === 'he' ? 'צפה ונהל את כל המשתמשים והנתונים' : 'View and manage all users and data'}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 justify-end md:justify-start">
                   {/* Marketing */}
                   <Button
                     onClick={() => setShowChainsView(!showChainsView)}
