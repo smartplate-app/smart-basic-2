@@ -13,10 +13,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { email, full_name, restaurant_name, language = 'he' } = await req.json();
+    const { email, full_name, language = 'he' } = await req.json();
 
-    if (!email || !full_name || !restaurant_name) {
-      return Response.json({ success: false, error: 'Missing required fields (email, full_name, restaurant_name)' }, { status: 400 });
+    if (!email || !full_name) {
+      return Response.json({ success: false, error: 'Missing required fields (email, full_name)' }, { status: 400 });
     }
 
     // Grant this email access to the app so they can sign in immediately
