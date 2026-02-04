@@ -696,7 +696,7 @@ const AppLayout = ({ children, currentPageName }) => {
                               </>
                             )}
                           </div>
-                          <span className="text-sm font-bold text-black tracking-wide">BASIC</span>
+                          <span className="text-sm font-bold text-black dark:text-white tracking-wide">BASIC</span>
                         </div>
                         <div className="flex items-center">
                           {typeof window !== 'undefined' && window.history.length > 1 ? (
@@ -714,7 +714,7 @@ const AppLayout = ({ children, currentPageName }) => {
                       </header>
 
       <div className="flex">
-        <aside data-viewer={isViewer ? '1' : '0'} className={`z-50 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 h-screen w-52 sm:w-56 md:w-64 lg:w-72 transition-transform duration-300 ${sidebarOpen ? `fixed top-0 ${isRTL ? 'right-0' : 'left-0'} translate-x-0 flex flex-col` : 'hidden'} md:sticky md:top-0 md:flex md:flex-col`}>
+        <aside data-viewer={isViewer ? '1' : '0'} className={`z-50 bg-white dark:bg-[#0b1530] border-${isRTL ? 'l' : 'r'} border-gray-200 dark:border-[#1e2a55] h-screen w-52 sm:w-56 md:w-64 lg:w-72 transition-transform duration-300 ${sidebarOpen ? `fixed top-0 ${isRTL ? 'right-0' : 'left-0'} translate-x-0 flex flex-col` : 'hidden'} md:sticky md:top-0 md:flex md:flex-col`}>
           <div className="p-4 border-b border-gray-200 hidden md:flex md:flex-row md:items-center md:justify-between">
                             <Button
                               variant="ghost"
@@ -743,7 +743,7 @@ const AppLayout = ({ children, currentPageName }) => {
                                   </>
                                 )}
                               </div>
-                              <span className="text-lg font-bold text-black mt-2 tracking-wide">BASIC</span>
+                              <span className="text-lg font-bold text-black dark:text-white mt-2 tracking-wide">BASIC</span>
                             </div>
                             <div className="w-8"></div>
                           </div>
@@ -845,8 +845,8 @@ const AppLayout = ({ children, currentPageName }) => {
                     href={item.url}
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isRTL ? 'flex-row-reverse text-right' : ''} ${
-                      location.pathname === item.url || location.pathname.includes(item.url.split('/').pop()) ? 'bg-gray-900 text-white font-bold' : 'text-gray-900 hover:bg-gray-100'
-                    }`}
+                                                (location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-indigo-600 text-white font-bold dark:bg-indigo-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-white/10'
+                                              }`
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.title}</span>
@@ -896,10 +896,10 @@ const AppLayout = ({ children, currentPageName }) => {
                 --app-text: #0f172a;
               }
               .dark:root {
-                --app-bg: #0b1220;
-                --app-card: #0f172a;
-                --app-text: #e2e8f0;
-              }
+                                    --app-bg: linear-gradient(135deg, #07122b 0%, #0b1530 100%);
+                                    --app-card: #0e1d3d;
+                                    --app-text: #e8eefc;
+                                  }
               html, body, #root { background: var(--app-bg); color: var(--app-text); }
 
               /* Disable text selection on UI controls */
@@ -935,7 +935,7 @@ const AppLayout = ({ children, currentPageName }) => {
         </main>
 
         {/* Mobile Bottom Tab Bar */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 border-t bg-white/95 dark:bg-gray-900/95 backdrop-blur pb-safe z-40">
+        <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40">
           <div className={`grid grid-cols-4 text-xs ${isRTL ? 'text-right' : 'text-center'}`}>
             <a href={createPageUrl('Dashboard')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
               <BarChart2 className="h-5 w-5" />
