@@ -90,6 +90,14 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const { t, language } = useLanguage();
   const [scannedDocs, setScannedDocs] = useState([]);
 
+  // Ensure no English keys show in Hebrew when translations are missing
+  const safeT = (key, fallbackHe, fallbackEn) => {
+    const v = t(key);
+    if (language === 'he' && (v === key || !v)) return fallbackHe;
+    if (v === key || !v) return fallbackEn ?? key;
+    return v;
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -853,16 +861,17 @@ const handleAutoScan = async () => {
                                 <div>
                                   <Label className="text-xs text-gray-600">{t('invoice_date')} *</Label>
                                   <Input
-                                    type="date"
-                                    value={doc.invoice_date}
-                                    onChange={(e) => setScannedDocs(prev => {
-                                      const copy = [...prev];
-                                      copy[idx] = { ...copy[idx], invoice_date: e.target.value };
-                                      return copy;
-                                    })}
-                                    className="mt-1 font-semibold"
-                                    required
-                                  />
+                                     type="date"
+                                     value={doc.invoice_date}
+                                     onChange={(e) => setScannedDocs(prev => {
+                                       const copy = [...prev];
+                                       copy[idx] = { ...copy[idx], invoice_date: e.target.value };
+                                       return copy;
+                                     })}
+                                     lang={language === 'he' ? 'he-IL' : undefined}
+                                     className="mt-1 font-semibold"
+                                     required
+                                   />
                                 </div>
                                 <div>
                                   <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</Label>
@@ -941,6 +950,7 @@ const handleAutoScan = async () => {
                               type="date"
                               value={formData.invoice_date}
                               onChange={(e) => setFormData(prev => ({ ...prev, invoice_date: e.target.value }))}
+                              lang={language === 'he' ? 'he-IL' : undefined}
                               className="mt-1 font-semibold"
                               required
                             />
