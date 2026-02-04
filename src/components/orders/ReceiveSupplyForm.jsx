@@ -769,7 +769,7 @@ const handleAutoScan = async () => {
         </Button>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
           {(noOrderMode || order) ? (
             <>
               <div className="space-y-2">
@@ -850,7 +850,7 @@ const handleAutoScan = async () => {
                     )}
 
                     {formData.receipt_images.length > 0 && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 sticky bottom-20 z-50 bg-white/95 backdrop-blur md:static md:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
                         <Button
                           type="button"
                           onClick={handleAutoScan}
