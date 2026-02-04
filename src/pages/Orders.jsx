@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 import OrderForm from "../components/orders/OrderForm";
+import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
 import OrderPreviewModal from "../components/orders/OrderPreviewModal";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import { offlineQueue } from "../components/offline/offlineQueue";
@@ -37,6 +38,8 @@ export default function OrdersPage() {
   const startYRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [showReceiveForm, setShowReceiveForm] = useState(false);
+  const [receiveOrder, setReceiveOrder] = useState(null);
 
 
   const loadData = async (currentUser, retryAttempt = 0) => {
@@ -533,6 +536,37 @@ export default function OrdersPage() {
     }
   };
 
+  const handleReceiveSubmit = async (receiptData) => {
+    try {
+      const cleanData = {
+        ...receiptData,
+        order_id: receiveOrder?.id || receiptData.order_id || null,
+        order_number: receiveOrder?.order_number || receiptData.order_number || `INV-${Date.now()}`,
+        supplier_name: receiveOrder?.supplier_name || receiptData.supplier_name || "Unknown",
+        received_date: receiptData.received_date || new Date().toISOString().split('T')[0],
+        verified_items: receiptData.verified_items || [],
+        receipt_images: receiptData.receipt_images || [],
+        invoice_total: parseFloat(receiptData.invoice_total),
+        calculated_total: parseFloat(receiptData.calculated_total) || 0,
+        status: receiptData.status || "pending",
+        is_refund: !!receiptData.is_refund,
+        needs_review: !!receiptData.needs_review,
+        review_note: receiptData.review_note || "",
+        refund_received: !!receiptData.refund_received,
+        reviewed: !!receiptData.reviewed,
+        linked_receipt_id: receiptData.linked_receipt_id || ""
+      };
+      await base44.entities.SupplyReceipt.create(cleanData);
+      alert(t('receipt_saved_successfully'));
+      setShowReceiveForm(false);
+      setReceiveOrder(null);
+    } catch (e) {
+      console.error('Save receipt failed', e);
+      alert((t('error_saving') || 'Error saving') + ': ' + (e?.message || e));
+      throw e;
+    }
+  };
+
   const handleEdit = (order) => {
     setEditingOrder(order);
     setShowForm(true);
@@ -797,7 +831,18 @@ export default function OrdersPage() {
             )}
             </AnimatePresence>
 
-        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {showReceiveForm && receiveOrder && (
+              <ReceiveSupplyForm
+                order={receiveOrder}
+                receipt={null}
+                suppliers={suppliers}
+                noOrderMode={false}
+                onSubmit={handleReceiveSubmit}
+                onCancel={() => { setShowReceiveForm(false); setReceiveOrder(null); }}
+              />
+            )}
+
+            <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
@@ -950,8 +995,18 @@ export default function OrdersPage() {
                           </svg>
                           WhatsApp
                         </button>
-                      )}
-                      {!isViewer && (
+                                                        )}
+                                                        {!isViewer && order.status === 'sent' && (
+                                                          <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                                                            className="border-green-300 text-green-700 hover:bg-green-50"
+                                                          >
+                                                            {t('receive_scan') || 'קבלה/סריקה'}
+                                                          </Button>
+                                                        )}
+                                                        {!isViewer && (
                         <>
                           <Button
                             variant="outline"
@@ -1109,8 +1164,16 @@ export default function OrdersPage() {
                                 </svg>
                                 WhatsApp
                               </button>
-                            )}
-                            {!isViewer && (
+                                                      )}
+                                                      {!isViewer && order.status === 'sent' && (
+                                                        <Button
+                                                          onClick={() => { setReceiveOrder(order); setShowReceiveForm(true); }}
+                                                          className="flex-1 h-11 rounded-lg text-base bg-green-600 hover:bg-green-700 text-white"
+                                                        >
+                                                          {t('receive_scan') || 'קבלה/סריקה'}
+                                                        </Button>
+                                                      )}
+                                                      {!isViewer && (
                               <>
                                 <Button
                                   variant="outline"

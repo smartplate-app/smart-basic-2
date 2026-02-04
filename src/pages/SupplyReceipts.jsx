@@ -502,34 +502,7 @@ export default function SupplyReceiptsPage() {
               )}
             </AnimatePresence>
 
-            {showReceiveForm && (
-              <div className="mb-6 bg-white rounded-xl p-4 shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold">{language === 'he' ? 'בחר הזמנה שנשלחה' : 'Select a sent order'}</h3>
-                  <Button variant="outline" onClick={() => setShowReceiveForm(false)}>{t('cancel') || (language === 'he' ? 'בטל' : 'Cancel')}</Button>
-                </div>
-                <div className="grid gap-2">
-                  {orders.filter(o => o.status === 'sent').length === 0 ? (
-                    <div className="text-sm text-gray-500">{language === 'he' ? 'אין הזמנות שנשלחו' : 'No sent orders'}</div>
-                  ) : (
-                    orders.filter(o => o.status === 'sent').map(o => (
-                      <div key={o.id} className="border rounded-lg p-3 flex items-center justify-between">
-                        <div className="text-sm">
-                          <div className="font-medium">{o.supplier_name || '-'}</div>
-                          <div className="text-gray-500">{(o.order_number || o.id)} • {o.delivery_date || ''}</div>
-                        </div>
-                        <Button
-                          onClick={() => { setSelectedOrder(o); setShowForm(true); setShowReceiveForm(false); }}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          {language === 'he' ? 'בחר' : 'Select'}
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+
 
             {/* Mobile Filters Drawer trigger */}
          <div className="md:hidden mb-4">
