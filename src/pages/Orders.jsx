@@ -1012,7 +1012,7 @@ export default function OrdersPage() {
           </DrawerContent>
         </Drawer>
 
-        {/* Desktop View */
+        {/* Desktop View */}
         <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-auto max-h-[70vh] md:max-h-[75vh]">
             <table className="w-full min-w-max">
