@@ -399,6 +399,7 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                   type="date"
                   value={formData.invoice_date || ''}
                   onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
+                  lang={language === 'he' ? 'he-IL' : undefined}
                 />
               </div>
             </div>
