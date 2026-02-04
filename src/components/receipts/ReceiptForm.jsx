@@ -466,7 +466,7 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                   ) : (
                     orders.map(order => (
                       <SelectItem key={order.id} value={order.id}>
-                        {order.order_number} - {order.supplier_name} ({new Date(order.created_date).toLocaleDateString()})
+                        {order.order_number} - {order.supplier_name} ({new Date(order.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : (language === 'ar' ? 'ar-IL' : 'en-US'))})
                       </SelectItem>
                     ))
                   )}
