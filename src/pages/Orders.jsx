@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2 } from "lucide-react";
@@ -8,6 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "../components/LanguageProvider";
 import { Card, CardContent } from "@/components/ui/card";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 import OrderForm from "../components/orders/OrderForm";
 import OrderPreviewModal from "../components/orders/OrderPreviewModal";
@@ -32,6 +33,10 @@ export default function OrdersPage() {
 
   const [isViewer, setIsViewer] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const startYRef = useRef(0);
+  const [pullDist, setPullDist] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
 
   const loadData = async (currentUser, retryAttempt = 0) => {
@@ -725,8 +730,17 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div
+      className="min-h-screen bg-gray-50 p-4 md:p-8"
+      onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
+      onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
+      onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); await loadData(user || (await base44.auth.me())); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
+    >
       <div className="w-full">
+        {/* Pull to Refresh Indicator (mobile) */}
+        <div className="md:hidden flex items-center justify-center text-xs text-gray-500 h-8 transition-transform" style={{ transform: `translateY(${pullDist}px)` }}>
+          {refreshing ? (<><Loader className="w-3 h-3 mr-1 animate-spin" /> {t('refreshing') || 'Refreshing...'}</>) : (pullDist > 0 ? (t('pull_to_refresh') || 'Pull to refresh') : null)}
+        </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('orders_title')}</h1>
@@ -761,6 +775,13 @@ export default function OrdersPage() {
           </div>
         </div>
 
+        {/* Mobile Filters Drawer trigger */}
+        <div className="md:hidden mb-4">
+          <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
+            {t('filters') || 'Filters'}
+          </Button>
+        </div>
+
         <AnimatePresence>
             {showForm && !isViewer && (
               <OrderForm
@@ -776,7 +797,7 @@ export default function OrdersPage() {
             )}
             </AnimatePresence>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
@@ -958,7 +979,40 @@ export default function OrdersPage() {
           )}
         </div>
 
-        {/* Desktop View */}
+        {/* Mobile Filters Drawer */}
+        <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>{t('filters') || 'Filters'}</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4 space-y-4">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  placeholder={t('search_orders')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10 h-11 text-base rounded-lg"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-11 rounded-lg">
+                  <SelectValue placeholder={t('order_status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                  <SelectItem value="draft">{t('status_draft')}</SelectItem>
+                  <SelectItem value="sent">{t('status_sent')}</SelectItem>
+                  <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
+                  <SelectItem value="delivered">{t('status_delivered')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={() => setFiltersOpen(false)} className="w-full">{t('apply') || 'Apply'}</Button>
+            </div>
+          </DrawerContent>
+        </Drawer>
+
+        {/* Desktop View */
         <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-auto max-h-[70vh] md:max-h-[75vh]">
             <table className="w-full min-w-max">

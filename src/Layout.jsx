@@ -909,6 +909,28 @@ const AppLayout = ({ children, currentPageName }) => {
             `}</style>
         </main>
 
+        {/* Mobile Bottom Tab Bar */}
+        <nav className="md:hidden fixed bottom-0 inset-x-0 border-t bg-white/95 dark:bg-gray-900/95 backdrop-blur pb-safe z-40">
+          <div className={`grid grid-cols-4 text-xs ${isRTL ? 'text-right' : 'text-center'}`}>
+            <a href={createPageUrl('Dashboard')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+              <BarChart2 className="h-5 w-5" />
+              <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
+            </a>
+            <a href={createPageUrl('Orders')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+              <ShoppingCart className="h-5 w-5" />
+              <span>{language === 'he' ? 'הזמנות' : 'Orders'}</span>
+            </a>
+            <a href={createPageUrl('Suppliers')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+              <Users className="h-5 w-5" />
+              <span>{language === 'he' ? 'ספקים' : 'Suppliers'}</span>
+            </a>
+            <a href={createPageUrl('UserProfile')} className={`flex flex-col items-center py-2 ${location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+              <UserCircle className="h-5 w-5" />
+              <span>{language === 'he' ? 'פרופיל' : 'Profile'}</span>
+            </a>
+          </div>
+        </nav>
+
         {/* Offline notification for data-sensitive pages */}
                               <OfflineNotification pageName={currentPageName} />
 

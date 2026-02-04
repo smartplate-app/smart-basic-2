@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText } from "lucide-react";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import MonthlyInvoiceReport from "../components/receipts/MonthlyInvoiceReport";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
@@ -41,6 +42,11 @@ export default function SupplyReceiptsPage() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('receipts');
   const [viewMode, setViewMode] = useState('list');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const startYRef = useRef(0);
+  const [pullDist, setPullDist] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [storeOwnerEmailState, setStoreOwnerEmailState] = useState(null);
 
   const loadData = async (userEmail, storeOwnerEmail = null, retryCount = 0) => {
     try {
@@ -137,6 +143,7 @@ export default function SupplyReceiptsPage() {
           }
           
           // Pass store owner email separately so we can load suppliers from owner
+          setStoreOwnerEmailState(storeOwnerEmail || null);
           await loadData(workingEmail, storeOwnerEmail);
         }
       } catch (error) {
@@ -313,8 +320,17 @@ export default function SupplyReceiptsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 md:p-8">
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 md:p-8"
+      onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
+      onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
+      onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); await loadData(user.email, storeOwnerEmailState); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
+    >
       <div className="w-full">
+        {/* Pull to Refresh Indicator (mobile) */}
+        <div className="md:hidden flex items-center justify-center text-xs text-gray-500 h-8 transition-transform" style={{ transform: `translateY(${pullDist}px)` }}>
+          {refreshing ? (<><Loader className="w-3 h-3 mr-1 animate-spin" /> {t('refreshing') || 'Refreshing...'}</>) : (pullDist > 0 ? (t('pull_to_refresh') || 'Pull to refresh') : null)}
+        </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('receipts_title')}</h1>
@@ -457,7 +473,14 @@ export default function SupplyReceiptsPage() {
               )}
             </AnimatePresence>
 
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+            {/* Mobile Filters Drawer trigger */}
+         <div className="md:hidden mb-4">
+           <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
+             {t('filters') || 'Filters'}
+           </Button>
+         </div>
+
+         <div className="hidden md:grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
@@ -583,6 +606,39 @@ export default function SupplyReceiptsPage() {
                 disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
               />
             </div>
+
+            {/* Mobile Filters Drawer */}
+            <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>{t('filters') || 'Filters'}</DrawerTitle>
+                </DrawerHeader>
+                <div className="p-4 space-y-4">
+                  <div className="relative">
+                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      placeholder={t('search_receipts')}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pr-10"
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('receipt_status')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                      <SelectItem value="verified">{t('status_verified')}</SelectItem>
+                      <SelectItem value="has_issues">{t('status_has_issues')}</SelectItem>
+                      <SelectItem value="refund">{t('refund') || 'Refund'}</SelectItem>
+                      <SelectItem value="pending">{t('status_pending')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={() => setFiltersOpen(false)} className="w-full">{t('apply') || 'Apply'}</Button>
+                </div>
+              </DrawerContent>
+            </Drawer>
 
             {viewMode === 'list' ? (
               <ReceiptList
