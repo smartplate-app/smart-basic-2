@@ -671,7 +671,7 @@ const AppLayout = ({ children, currentPageName }) => {
               </div>
             </div>
           )}
-          <header className={`bg-white dark:bg-gray-900 border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <header className={'bg-white dark:bg-gray-900 border-b px-4 py-3 flex items-center justify-between md:hidden sticky ' + (isAdminControllingUser ? 'top-10' : 'top-0') + ' z-30 ' + (isRTL ? 'flex-row-reverse' : '')} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
                         <button 
                           onClick={() => setSidebarOpen(!sidebarOpen)}
                           className="p-2 rounded-lg hover:bg-gray-100"
@@ -714,7 +714,7 @@ const AppLayout = ({ children, currentPageName }) => {
                       </header>
 
       <div className="flex">
-        <aside data-viewer={isViewer ? '1' : '0'} className={`z-50 bg-white dark:bg-[#0b1530] border-${isRTL ? 'l' : 'r'} border-gray-200 dark:border-[#1e2a55] h-screen w-52 sm:w-56 md:w-64 lg:w-72 transition-transform duration-300 ${sidebarOpen ? (isRTL ? 'fixed top-0 right-0 translate-x-0 flex flex-col' : 'fixed top-0 left-0 translate-x-0 flex flex-col') : 'hidden'} md:sticky md:top-0 md:flex md:flex-col`}>
+        <aside data-viewer={isViewer ? '1' : '0'} className={'z-50 bg-white dark:bg-[#0b1530] ' + (isRTL ? 'border-l' : 'border-r') + ' border-gray-200 dark:border-[#1e2a55] h-screen w-52 sm:w-56 md:w-64 lg:w-72 transition-transform duration-300 ' + (sidebarOpen ? (isRTL ? 'fixed top-0 right-0 translate-x-0 flex flex-col' : 'fixed top-0 left-0 translate-x-0 flex flex-col') : 'hidden') + ' md:sticky md:top-0 md:flex md:flex-col'}>
           <div className="p-4 border-b border-gray-200 hidden md:flex md:flex-row md:items-center md:justify-between">
                             <Button
                               variant="ghost"
@@ -801,7 +801,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
           {user?.role === 'admin' && (
             <div className="p-4 border-b border-gray-200">
-              <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} gap-2`}>
+              <div className={'flex ' + (isRTL ? 'flex-row-reverse' : '') + ' gap-2'}>
                 <Button
                   variant="outline"
                   className="flex-1"
@@ -826,13 +826,13 @@ const AppLayout = ({ children, currentPageName }) => {
 
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
-              <Search className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400`} />
+              <Search className={'absolute top-2.5 ' + (isRTL ? 'right-3' : 'left-3') + ' h-4 w-4 text-gray-400'} />
               <Input
                 type="text"
                 placeholder={language === 'he' ? 'חפש דף...' : 'Search page...'}
                 value={navSearchTerm}
                 onChange={(e) => setNavSearchTerm(e.target.value)}
-                className={`text-sm h-9 ${isRTL ? 'pr-9' : 'pl-9'}`}
+                className={'text-sm h-9 ' + (isRTL ? 'pr-9' : 'pl-9')}
               />
             </div>
           </div>
@@ -896,20 +896,20 @@ const AppLayout = ({ children, currentPageName }) => {
 
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40">
-          <div className={`grid grid-cols-4 text-xs ${isRTL ? 'text-right' : 'text-center'}`}>
-            <a href={createPageUrl('Dashboard')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+          <div className={'grid grid-cols-4 text-xs ' + (isRTL ? 'text-right' : 'text-center')}>
+            <a href={createPageUrl('Dashboard')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
             </a>
-            <a href={createPageUrl('Orders')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+            <a href={createPageUrl('Orders')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <ShoppingCart className="h-5 w-5" />
               <span>{language === 'he' ? 'הזמנות' : 'Orders'}</span>
             </a>
-            <a href={createPageUrl('Suppliers')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+            <a href={createPageUrl('Suppliers')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <Users className="h-5 w-5" />
               <span>{language === 'he' ? 'ספקים' : 'Suppliers'}</span>
             </a>
-            <a href={createPageUrl('UserProfile')} className={`flex flex-col items-center py-2 ${location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+            <a href={createPageUrl('UserProfile')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <UserCircle className="h-5 w-5" />
               <span>{language === 'he' ? 'פרופיל' : 'Profile'}</span>
             </a>
