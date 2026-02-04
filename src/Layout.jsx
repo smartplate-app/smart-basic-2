@@ -871,7 +871,7 @@ const AppLayout = ({ children, currentPageName }) => {
             variant="outline"
             size="sm"
             onClick={() => setShowDesktopSidebar(true)}
-            className={`hidden md:flex fixed ${isRTL ? 'right-4' : 'left-4'} top-4 z-30 shadow-lg bg-white hover:bg-gray-50`}
+            className={isRTL ? 'hidden md:flex fixed right-4 top-4 z-30 shadow-lg bg-white hover:bg-gray-50' : 'hidden md:flex fixed left-4 top-4 z-30 shadow-lg bg-white hover:bg-gray-50'}
           >
             <Menu className="h-4 w-4 mr-2" />
             {language === 'he' ? 'תפריט' : 'Menu'}
