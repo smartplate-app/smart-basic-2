@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Video, Share } from "lucide-react";
+import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Video, Share, Sun, Moon } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import UserSwitcher from "./components/UserSwitcher";
 import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
@@ -12,6 +12,7 @@ import OfflineNotification from "./components/OfflineNotification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { RefreshCw, WifiOff, Copy, ExternalLink } from "lucide-react";
 
@@ -33,6 +34,7 @@ const AppLayout = ({ children, currentPageName }) => {
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [theme, setTheme] = useState('light');
 
 
 
@@ -183,19 +185,28 @@ const AppLayout = ({ children, currentPageName }) => {
             document.documentElement.lang = language;
           }, [language]);
 
-          // System dark mode support
+          // Theme: dark/light with saved preference
           useEffect(() => {
-            const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-            const apply = () => {
-              if (mq.matches) {
-                document.documentElement.classList.add('dark');
+            let initial = 'light';
+            try {
+              const saved = localStorage.getItem('b44_theme');
+              if (saved === 'dark' || saved === 'light') {
+                initial = saved;
               } else {
-                document.documentElement.classList.remove('dark');
+                const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+                initial = (mq && mq.matches) ? 'dark' : 'light';
               }
-            };
-            try { apply(); mq.addEventListener('change', apply); } catch { apply(); mq.addListener(apply); }
-            return () => { try { mq.removeEventListener('change', apply); } catch { mq.removeListener(apply); } };
+            } catch {}
+            setTheme(initial);
+            if (initial === 'dark') document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
           }, []);
+
+          useEffect(() => {
+            try { localStorage.setItem('b44_theme', theme); } catch {}
+            if (theme === 'dark') document.documentElement.classList.add('dark');
+            else document.documentElement.classList.remove('dark');
+          }, [theme]);
 
   const loadAuth = async (attemptNumber = 0) => {
         try {
@@ -749,6 +760,20 @@ const AppLayout = ({ children, currentPageName }) => {
             <LanguageSwitcher />
           </div>
 
+          <div className="p-4 border-b border-gray-200">
+            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="flex items-center gap-2 text-gray-700">
+                <Sun className="h-4 w-4" />
+                <span className="text-sm">{language === 'he' ? 'מצב בהיר/כהה' : 'Light/Dark Mode'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sun className="h-4 w-4 text-yellow-500" />
+                <Switch checked={theme === 'dark'} onCheckedChange={(v) => setTheme(v ? 'dark' : 'light')} />
+                <Moon className="h-4 w-4 text-indigo-600" />
+              </div>
+            </div>
+          </div>
+
           {!isPwaInstalled && (
             <div className="p-4 border-b border-gray-200">
               {installPromptEvent ? (
@@ -866,7 +891,7 @@ const AppLayout = ({ children, currentPageName }) => {
             </div>
             <style>{`
               :root {
-                --app-bg: #f9fafb;
+                --app-bg: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
                 --app-card: #ffffff;
                 --app-text: #0f172a;
               }
