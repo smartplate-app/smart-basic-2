@@ -527,7 +527,7 @@ export default function SupplyReceiptsPage() {
               </div>
             )}
 
-            {/* Mobile Filters Drawer trigger */
+            {/* Mobile Filters Drawer trigger */}
          <div className="md:hidden mb-4">
            <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
              {(t('filters') === 'filters' ? (language === 'he' ? 'מסננים' : 'Filters') : t('filters'))}
