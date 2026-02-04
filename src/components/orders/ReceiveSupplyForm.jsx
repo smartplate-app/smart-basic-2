@@ -429,7 +429,7 @@ Return JSON strictly as:
         }));
 
         const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
-        const isDup = await checkDuplicateInvoice(response.invoice_number || '', supplierId, receipt?.id);
+        const isDup = await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
         if (isDup) {
           alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.');
         } else {
@@ -453,7 +453,7 @@ Return JSON strictly as:
         }));
 
         const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
-        const isDup = await checkDuplicateInvoice(response.invoice_number || '', supplierId, receipt?.id);
+        const isDup = await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
         if (isDup) {
           alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.');
         } else {
