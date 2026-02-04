@@ -789,7 +789,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   <Button
                     variant="outline"
                     onClick={() => setShowIosGuide(true)}
-                    className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''`}}
+                    className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
                   >
                     <Share className="w-4 h-4" />
                     {language === 'he' ? 'הוסף למסך הבית' : 'Add to Home Screen'}
