@@ -616,7 +616,7 @@ const AppLayout = ({ children, currentPageName }) => {
               <p className="font-semibold mb-2">
                 {language === 'he' ? 'פתרונות אפשריים:' : language === 'ar' ? 'حلول ممكنة:' : 'Possible solutions:'}
               </p>
-              <ul className={`list-disc space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
+              <ul className={`list-disc space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'`}}>
                 <li>{language === 'he' ? 'בדוק את חיבור האינטרנט שלך' : language === 'ar' ? 'تحقق من اتصال الإنترنت' : 'Check your internet connection'}</li>
                 <li>{language === 'he' ? 'כבה VPN אם פעיל' : language === 'ar' ? 'أوقف تشغيل VPN إذا كان نشطًا' : 'Disable VPN if active'}</li>
                 <li>{language === 'he' ? 'נסה דפדפן אחר (Chrome מומלץ)' : language === 'ar' ? 'جرب متصفحًا آخر (يُنصح بـ Chrome)' : 'Try a different browser (Chrome recommended)'}</li>
@@ -633,7 +633,7 @@ const AppLayout = ({ children, currentPageName }) => {
               }} 
               className="w-full bg-gray-900 hover:bg-gray-800"
             >
-              <RefreshCw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <RefreshCw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'`}} />
               {language === 'he' ? 'רענן את הדף' : language === 'ar' ? 'إعادة تحميل الصفحة' : 'Reload Page'}
             </Button>
           </CardContent>
@@ -647,7 +647,7 @@ const AppLayout = ({ children, currentPageName }) => {
           {/* Admin Control Banner */}
           {isAdminControllingUser && (
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-40">
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''`}}>
                 <span className="text-lg">🎮</span>
                 <span className="font-bold">
                   {language === 'he' ? 'שולט כעת ב:' : 'Controlling:'} {user.acting_as_user_name}
@@ -665,13 +665,13 @@ const AppLayout = ({ children, currentPageName }) => {
 
           {isViewer && (
             <div className="bg-amber-50 text-amber-800 px-4 py-2 flex items-center justify-between sticky top-0 z-40 border-b border-amber-200">
-              <div className={`text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`text-sm ${isRTL ? 'text-right' : 'text-left'`}}>
                 <span className="font-semibold">{language === 'he' ? 'מצב צפייה בלבד' : 'View-only access'}</span>
                 <span className="text-amber-700 ml-2 rtl:mr-2 rtl:ml-0">{language === 'he' ? 'ניתן לצפות בכל הדפים אך לא לבצע שינויים' : 'You can view all pages but cannot make changes.'}</span>
               </div>
             </div>
           )}
-          <header className={`bg-white dark:bg-gray-900 border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <header className={`bg-white dark:bg-gray-900 border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''`}} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
                         <button 
                           onClick={() => setSidebarOpen(!sidebarOpen)}
                           className="p-2 rounded-lg hover:bg-gray-100"
@@ -725,7 +725,7 @@ const AppLayout = ({ children, currentPageName }) => {
                             >
                               {isRTL ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
                             </Button>
-                            <div className={`flex flex-col items-center justify-center flex-1 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                            <div className={`flex flex-col items-center justify-center flex-1 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'`}}>
                               <div className="flex items-center gap-3">
                                 <img 
                                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
@@ -761,7 +761,7 @@ const AppLayout = ({ children, currentPageName }) => {
           </div>
 
           <div className="p-4 border-b border-gray-200">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''`}}>
               <div className="flex items-center gap-2 text-gray-700">
                 <Sun className="h-4 w-4" />
                 <span className="text-sm">{language === 'he' ? 'מצב בהיר/כהה' : 'Light/Dark Mode'}</span>
@@ -780,7 +780,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 <Button
                   variant="outline"
                   onClick={handlePwaInstall}
-                  className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                  className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''`}}
                 >
                   {language === 'he' ? 'התקן אפליקציה' : 'Install App'}
                 </Button>
@@ -789,7 +789,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   <Button
                     variant="outline"
                     onClick={() => setShowIosGuide(true)}
-                    className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                    className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''`}}
                   >
                     <Share className="w-4 h-4" />
                     {language === 'he' ? 'הוסף למסך הבית' : 'Add to Home Screen'}
@@ -832,7 +832,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 placeholder={language === 'he' ? 'חפש דף...' : 'Search page...'}
                 value={navSearchTerm}
                 onChange={(e) => setNavSearchTerm(e.target.value)}
-                className={`text-sm h-9 ${isRTL ? 'pr-9' : 'pl-9'}`}
+                className={`text-sm h-9 ${isRTL ? 'pr-9' : 'pl-9'`}}
               />
             </div>
           </div>
@@ -846,7 +846,7 @@ const AppLayout = ({ children, currentPageName }) => {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isRTL ? 'flex-row-reverse text-right' : ''} ${
                                                 (location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-indigo-600 text-white font-bold dark:bg-indigo-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-white/10'
-                                              }`
+                                              `}
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.title}</span>
@@ -886,7 +886,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 </div>
               </div>
             )}
-            <div className={`${showDesktopSidebar ? '' : 'sidebar-hidden'} ${isViewer ? 'viewer-readonly' : ''}`}>
+            <div className={`${showDesktopSidebar ? '' : 'sidebar-hidden'} ${isViewer ? 'viewer-readonly' : ''`}}>
               {children}
             </div>
             <style>{`
@@ -936,20 +936,20 @@ const AppLayout = ({ children, currentPageName }) => {
 
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40">
-          <div className={`grid grid-cols-4 text-xs ${isRTL ? 'text-right' : 'text-center'}`}>
-            <a href={createPageUrl('Dashboard')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+          <div className={`grid grid-cols-4 text-xs ${isRTL ? 'text-right' : 'text-center'`}}>
+            <a href={createPageUrl('Dashboard')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'`}}>
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
             </a>
-            <a href={createPageUrl('Orders')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+            <a href={createPageUrl('Orders')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'`}}>
               <ShoppingCart className="h-5 w-5" />
               <span>{language === 'he' ? 'הזמנות' : 'Orders'}</span>
             </a>
-            <a href={createPageUrl('Suppliers')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+            <a href={createPageUrl('Suppliers')} className={`flex flex-col items-center py-2 ${location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'`}}>
               <Users className="h-5 w-5" />
               <span>{language === 'he' ? 'ספקים' : 'Suppliers'}</span>
             </a>
-            <a href={createPageUrl('UserProfile')} className={`flex flex-col items-center py-2 ${location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'}`}>
+            <a href={createPageUrl('UserProfile')} className={`flex flex-col items-center py-2 ${location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300'`}}>
               <UserCircle className="h-5 w-5" />
               <span>{language === 'he' ? 'פרופיל' : 'Profile'}</span>
             </a>
@@ -967,7 +967,7 @@ const AppLayout = ({ children, currentPageName }) => {
                               {language === 'he' ? 'באייפון/iPad אין כפתור התקנה אוטומטי. עקבו אחרי השלבים:' : 'On iPhone/iPad there is no automatic install prompt. Follow these steps:'}
                             </DialogDescription>
                           </DialogHeader>
-                          <div className={`space-y-3 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={`space-y-3 text-sm ${isRTL ? 'text-right' : 'text-left'`}}>
                             <div className="flex items-center gap-3">
                               <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png" alt="App Icon" className="h-10 w-10 rounded-lg border" />
                               <span className="text-gray-600">{language === 'he' ? 'האייקון שיופיע במסך הבית' : 'This is the icon that will appear on your home screen.'}</span>
