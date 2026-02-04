@@ -633,7 +633,7 @@ const AppLayout = ({ children, currentPageName }) => {
               }} 
               className="w-full bg-gray-900 hover:bg-gray-800"
             >
-              <RefreshCw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'`}} />
+              <RefreshCw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {language === 'he' ? 'רענן את הדף' : language === 'ar' ? 'إعادة تحميل الصفحة' : 'Reload Page'}
             </Button>
           </CardContent>
@@ -780,8 +780,8 @@ const AppLayout = ({ children, currentPageName }) => {
                 <Button
                   variant="outline"
                   onClick={handlePwaInstall}
-                  className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''`}}
-                >
+                  className={`w-full flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                                    >
                   {language === 'he' ? 'התקן אפליקציה' : 'Install App'}
                 </Button>
               ) : (
