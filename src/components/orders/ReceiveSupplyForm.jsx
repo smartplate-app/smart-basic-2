@@ -369,7 +369,12 @@ Return JSON strictly as:
         );
         setScannedDocs(results);
         setFormData(prev => ({ ...prev, manual_entry_mode: true }));
-        alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים לכל חשבונית.');
+        const missingCount = results.filter(d => !d.invoice_total || Number(d.invoice_total) === 0).length;
+        if (missingCount > 0) {
+          alert(language === 'he' ? `לא נמצא סכום ב-${missingCount} חשבוניות; הסכום נקבע ל-0. ניתן לערוך ידנית.` : `No total found on ${missingCount} invoice(s); amount set to 0. You can edit manually.`);
+        } else {
+          alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים לכל חשבונית.');
+        }
         return;
       }
 
@@ -416,6 +421,8 @@ Return JSON strictly as:
 
       const invoiceNum = sanitizeInvoiceNumber(response.invoice_number || '');
 
+      const noTotalFound = !(typeof response.invoice_total === 'number') || !isFinite(response.invoice_total) || Math.abs(response.invoice_total) === 0;
+
       if (noOrderMode) {
         setFormData(prev => ({
           ...prev,
@@ -433,7 +440,11 @@ Return JSON strictly as:
         if (isDup) {
           alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.');
         } else {
-          alert(t('scanning_complete') || 'סריקה הושלמה! הוסף פריטים ידנית.');
+          if (noTotalFound) {
+            alert(language === 'he' ? 'לא נמצא סכום בחשבונית; הסכום נקבע ל-0. ניתן לערוך ידנית.' : 'No total found on the invoice; amount set to 0. You can edit it manually.');
+          } else {
+            alert(t('scanning_complete') || 'סריקה הושלמה! הוסף פריטים ידנית.');
+          }
         }
 
       } else {
@@ -457,7 +468,11 @@ Return JSON strictly as:
         if (isDup) {
           alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.');
         } else {
-          alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים.');
+          if (noTotalFound) {
+            alert(language === 'he' ? 'לא נמצא סכום בחשבונית; הסכום נקבע ל-0. ניתן לערוך ידנית.' : 'No total found on the invoice; amount set to 0. You can edit it manually.');
+          } else {
+            alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים.');
+          }
         }
       }
 
@@ -617,8 +632,8 @@ Return JSON strictly as:
         alert(t('supplier_required'));
         return;
       }
-      if (!formData.invoice_number || formData.invoice_total === 0) { // Check for 0 as well
-        alert(t('invoice_details_required'));
+      if (!formData.invoice_number) {
+        alert(t('invoice_number_required') || 'יש לציין מספר חשבונית.');
         return;
       }
       if (formData.receipt_images.length === 0) {
@@ -1211,7 +1226,7 @@ Return JSON strictly as:
                           <Button
                             type="button"
                             className="flex-1 bg-green-600 hover:bg-green-700"
-                            disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date || !d.invoice_total || d.duplicate)}
+                            disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date || d.duplicate)
                             onClick={async () => {
                               const baseData = {
                                 supplier_id: formData.supplier_id,
@@ -1266,7 +1281,7 @@ Return JSON strictly as:
                           <Button 
                             type="submit" 
                             className="flex-1 bg-green-600 hover:bg-green-700"
-                            disabled={!formData.invoice_number || formData.invoice_total === 0 || formData.receipt_images.length === 0 || duplicateExists}
+                            disabled={!formData.invoice_number || formData.receipt_images.length === 0 || duplicateExists)
                           >
                             <PackageCheck className="w-4 h-4 ml-2" />
                             {t('save_receipt')}
