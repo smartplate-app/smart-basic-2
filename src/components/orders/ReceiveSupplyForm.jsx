@@ -127,6 +127,21 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     }
   }, [suppliers]);
 
+  // Prefill from selected order
+  useEffect(() => {
+    if (order && !formData.order_id) {
+      setFormData(prev => ({
+        ...prev,
+        order_id: order.id || prev.order_id,
+        order_number: order.order_number || prev.order_number || `ORD-${Date.now()}`,
+        supplier_id: order.supplier_id || prev.supplier_id,
+        supplier_name: order.supplier_name || prev.supplier_name,
+        supplier_email: order.supplier_email || prev.supplier_email,
+        manual_entry_mode: true
+      }));
+    }
+  }, [order]);
+
   // Fallback: if no suppliers provided, fetch from owner/head context so workers/managers can select
   useEffect(() => {
     const fetchFallbackSuppliers = async () => {

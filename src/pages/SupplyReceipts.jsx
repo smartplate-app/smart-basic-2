@@ -39,7 +39,7 @@ export default function SupplyReceiptsPage() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [networkError, setNetworkError] = useState(false);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('receipts');
   const [viewMode, setViewMode] = useState('list');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -431,6 +431,19 @@ export default function SupplyReceiptsPage() {
               <PackageCheck className="w-5 h-5 ml-2" />
               {t('supply_without_order')}
             </Button>
+            <Button
+              onClick={() => {
+                setShowReceiveForm(true);
+                setShowForm(false);
+                setShowNoOrderForm(false);
+                setEditingReceipt(null);
+                setSelectedOrder(null);
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <PackageCheck className="w-5 h-5 ml-2" />
+              {language === 'he' ? 'קבלה לפי הזמנה שנשלחה' : 'Receive from sent order'}
+            </Button>
           </div>
         </div>
 
@@ -458,8 +471,20 @@ export default function SupplyReceiptsPage() {
                 />
               )}
 
-              {/* Supply Without Order Form */}
-              {showNoOrderForm && (
+              {/* Receive from Sent Order Form */}
+               {showForm && selectedOrder && !editingReceipt && (
+                 <ReceiveSupplyForm
+                   order={selectedOrder}
+                   receipt={null}
+                   suppliers={suppliers}
+                   noOrderMode={false}
+                   onSubmit={handleReceiptSubmit}
+                   onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
+                 />
+               )}
+
+               {/* Supply Without Order Form */}
+               {showNoOrderForm && (
                 <ReceiveSupplyForm
                   order={null}
                   receipt={null}
@@ -473,10 +498,39 @@ export default function SupplyReceiptsPage() {
               )}
             </AnimatePresence>
 
-            {/* Mobile Filters Drawer trigger */}
+            {showReceiveForm && (
+              <div className="mb-6 bg-white rounded-xl p-4 shadow">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold">{language === 'he' ? 'בחר הזמנה שנשלחה' : 'Select a sent order'}</h3>
+                  <Button variant="outline" onClick={() => setShowReceiveForm(false)}>{t('cancel') || (language === 'he' ? 'בטל' : 'Cancel')}</Button>
+                </div>
+                <div className="grid gap-2">
+                  {orders.filter(o => o.status === 'sent').length === 0 ? (
+                    <div className="text-sm text-gray-500">{language === 'he' ? 'אין הזמנות שנשלחו' : 'No sent orders'}</div>
+                  ) : (
+                    orders.filter(o => o.status === 'sent').map(o => (
+                      <div key={o.id} className="border rounded-lg p-3 flex items-center justify-between">
+                        <div className="text-sm">
+                          <div className="font-medium">{o.supplier_name || '-'}</div>
+                          <div className="text-gray-500">{(o.order_number || o.id)} • {o.delivery_date || ''}</div>
+                        </div>
+                        <Button
+                          onClick={() => { setSelectedOrder(o); setShowForm(true); setShowReceiveForm(false); }}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {language === 'he' ? 'בחר' : 'Select'}
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Mobile Filters Drawer trigger */
          <div className="md:hidden mb-4">
            <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
-             {t('filters') || 'Filters'}
+             {(t('filters') === 'filters' ? (language === 'he' ? 'מסננים' : 'Filters') : t('filters'))}
            </Button>
          </div>
 
@@ -611,7 +665,7 @@ export default function SupplyReceiptsPage() {
             <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DrawerContent>
                 <DrawerHeader>
-                  <DrawerTitle>{t('filters') || 'Filters'}</DrawerTitle>
+                  <DrawerTitle>{(t('filters') === 'filters' ? (language === 'he' ? 'מסננים' : 'Filters') : t('filters'))}</DrawerTitle>
                 </DrawerHeader>
                 <div className="p-4 space-y-4">
                   <div className="relative">
