@@ -742,7 +742,7 @@ Return JSON strictly as:
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {noOrderMode ? (
+          {(noOrderMode || order) ? (
             <>
               <div className="space-y-2">
                 <Label>{t('select_supplier')} *</Label>
