@@ -64,7 +64,7 @@ export default function ChatbotPanel() {
         `ענה בעברית בלבד. ספק צעדים ממוספרים, קצרים וברורים, המשתמשים בשמות הדפים בדיוק מהרשימה: ${navPages.join(', ')}.\n` +
         `כאשר צריך ניווט—ציין איפה ללחוץ ומה למלא. אם המידע לא קיים בידע שסופק—אל תמציא; אמור שאינך בטוח והצע לפנות לתמיכה.\n\n` +
         `ידע רלוונטי (תקצירים):\n${kbContext}${articleContext}\n\n` +
-        `שאלת המשתמש: ${q}`;}},{
+        `שאלת המשתמש: ${q}`;
 
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
       const content = typeof result === 'string' ? result : (typeof result?.output === 'string' ? result.output : JSON.stringify(result));
@@ -126,7 +126,7 @@ export default function ChatbotPanel() {
               {m.linkUrl && (
                 <div className={`mt-2 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
                   <Link to={m.linkUrl} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-gray-900 text-white hover:bg-gray-800">
-                    {m.linkLabel || 'Open related section'}
+                    {m.linkLabel || 'פתח קישור רלוונטי'}
                   </Link>
                 </div>
               )}
