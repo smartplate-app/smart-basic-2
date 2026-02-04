@@ -435,19 +435,7 @@ export default function SupplyReceiptsPage() {
               <PackageCheck className="w-5 h-5 ml-2" />
               {tt('supply_without_order','קבלה ללא הזמנה','Supply without order')}
             </Button>
-            <Button
-              onClick={() => {
-                setShowReceiveForm(true);
-                setShowForm(false);
-                setShowNoOrderForm(false);
-                setEditingReceipt(null);
-                setSelectedOrder(null);
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <PackageCheck className="w-5 h-5 ml-2" />
-              {language === 'he' ? 'קבלה לפי הזמנה שנשלחה' : 'Receive from sent order'}
-            </Button>
+
           </div>
         </div>
 
