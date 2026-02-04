@@ -886,7 +886,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 </div>
               </div>
             )}
-            <div className={`${showDesktopSidebar ? '' : 'sidebar-hidden'} ${isViewer ? 'viewer-readonly' : ''}`}>
+            <div className={(showDesktopSidebar ? '' : 'sidebar-hidden') + ' ' + (isViewer ? 'viewer-readonly' : '')}>
               {children}
             </div>
             <style>{`
