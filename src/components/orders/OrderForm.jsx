@@ -308,6 +308,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               type="date"
               value={currentOrder.delivery_date}
               onChange={(e) => setCurrentOrder({...currentOrder, delivery_date: e.target.value})}
+              lang={language === 'he' ? 'he-IL' : undefined}
             />
           </div>
         </div>
