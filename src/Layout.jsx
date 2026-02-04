@@ -889,49 +889,9 @@ const AppLayout = ({ children, currentPageName }) => {
             <div className={(showDesktopSidebar ? '' : 'sidebar-hidden') + ' ' + (isViewer ? 'viewer-readonly' : '')}>
               {children}
             </div>
-            <style>{`
-              :root {
-                --app-bg: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
-                --app-card: #ffffff;
-                --app-text: #0f172a;
-              }
-              .dark:root {
-                                    --app-bg: linear-gradient(135deg, #07122b 0%, #0b1530 100%);
-                                    --app-card: #0e1d3d;
-                                    --app-text: #e8eefc;
-                                  }
-              html, body, #root { background: var(--app-bg); color: var(--app-text); }
-
-              /* Disable text selection on UI controls */
-              button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .viewer-readonly {
-                -webkit-user-select: none; -ms-user-select: none; user-select: none;
-              }
-
-              /* Safe area helpers */
-              .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-              .pt-safe { padding-top: env(safe-area-inset-top); }
-
-              .sidebar-hidden > * {
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-              }
-              /* Viewer read-only hard guard: disables interactive controls within page content */
-              .viewer-readonly button,
-              .viewer-readonly [type="submit"],
-              .viewer-readonly input,
-              .viewer-readonly select,
-              .viewer-readonly textarea,
-              .viewer-readonly [role="switch"],
-              .viewer-readonly [role="button"] {
-                pointer-events: none !important;
-                opacity: 0.6 !important;
-                cursor: not-allowed !important;
-              }
-              .viewer-readonly .ql-toolbar,
-              .viewer-readonly .ql-editor {
-                pointer-events: none !important;
-              }
-            `}</style>
+            <style
+              dangerouslySetInnerHTML={{ __html: ':root { --app-bg: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); --app-card: #ffffff; --app-text: #0f172a; }\n.dark:root { --app-bg: linear-gradient(135deg, #07122b 0%, #0b1530 100%); --app-card: #0e1d3d; --app-text: #e8eefc; }\nhtml, body, #root { background: var(--app-bg); color: var(--app-text); }\n\n/* Disable text selection on UI controls */\nbutton, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .viewer-readonly { -webkit-user-select: none; -ms-user-select: none; user-select: none; }\n\n/* Safe area helpers */\n.pb-safe { padding-bottom: env(safe-area-inset-bottom); }\n.pt-safe { padding-top: env(safe-area-inset-top); }\n\n.sidebar-hidden > * { padding-left: 0 !important; padding-right: 0 !important; }\n/* Viewer read-only hard guard: disables interactive controls within page content */\n.viewer-readonly button, .viewer-readonly [type="submit"], .viewer-readonly input, .viewer-readonly select, .viewer-readonly textarea, .viewer-readonly [role="switch"], .viewer-readonly [role="button"] { pointer-events: none !important; opacity: 0.6 !important; cursor: not-allowed !important; }\n.viewer-readonly .ql-toolbar, .viewer-readonly .ql-editor { pointer-events: none !important; }' }}
+            />
         </main>
 
         {/* Mobile Bottom Tab Bar */}
