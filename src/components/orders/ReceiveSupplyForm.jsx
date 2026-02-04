@@ -250,6 +250,22 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     return { calculatedTotal, totalsMatch };
   };
 
+  // Sanitize invoice number: avoid times and strip spaces/punctuation; keep common prefixes (e.g., I2600000777)
+  const sanitizeInvoiceNumber = (raw) => {
+    if (!raw) return '';
+    const s = String(raw).trim();
+    // HH:MM or HH.MM
+    if (/^\d{1,2}[:.]\d{2}$/.test(s)) return '';
+    // 4-digit time-like (e.g., 2325)
+    if (/^\d{4}$/.test(s)) {
+      const hh = parseInt(s.slice(0, 2), 10);
+      const mm = parseInt(s.slice(2), 10);
+      if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) return '';
+    }
+    // Remove spaces and non word chars except dash and slash
+    return s.replace(/\s+/g, '').replace(/[^\w\-\/]/g, '');
+  };
+
   const checkDuplicateInvoice = async (invoiceNum, supplierId, excludeId) => {
   if (!invoiceNum || !supplierId) { setDuplicateExists(false); setDuplicateReceipts([]); return false; }
   try {
@@ -312,28 +328,27 @@ const handleAutoScan = async () => {
         const results = await Promise.all(
           formData.receipt_images.map(async (url) => {
             const resp = await base44.integrations.Core.InvokeLLM({
-              prompt: `Scan this Hebrew invoice/receipt and extract ONLY the header information:
+              prompt: `You are extracting header fields from a HEBREW supplier invoice image.
 
-              Extract ONLY these fields:
-              1. Invoice number (מספר חשבונית or חשבונית מס')
-              2. Invoice date (תאריך or תאריך חשבונית) - return in YYYY-MM-DD format
-              3. Invoice total (סה"כ לתשלום or סה"כ כולל מע"ם)
+STRICT RULES:
+- Only use HEBREW labels. Ignore any ENGLISH words like "invoice".
+- For invoice_number: find the Hebrew term closest to the number: "מספר חשבונית", "חשבונית מס'", "מס' חשבונית", or the standalone word "חשבונית" followed immediately by a number/code. Capture the exact token right after it (may include letters like "I", digits, '/', or '-').
+- Never use times or print times (e.g., "שעת הדפסה"). If you see a time like HH:MM (e.g., 23:25) or a 4-digit value that looks like a time (2325), DO NOT return it as invoice_number.
+- For invoice_date: use "תאריך חשבונית" (or equivalent), not "תאריך הדפסה". Return YYYY-MM-DD.
+- For invoice_total: use totals labeled in Hebrew such as "סה"כ לתשלום" or "סה"כ כולל מע"מ".
+- DO NOT extract line items.
 
-              DO NOT extract individual line items or products.
+REFUND LOGIC:
+- If the document contains "זיכוי" or "החזר" → is_refund=true and invoice_total must be NEGATIVE.
+- Otherwise is_refund=false and invoice_total POSITIVE.
 
-              CRITICAL: If this is a refund/credit invoice (contains the Hebrew words "זיכוי" or "החזר" anywhere), you MUST:
-              - set "is_refund": true
-              - return "invoice_total" as a NEGATIVE number (use the absolute value you read, then apply negative sign)
-
-              Otherwise, set "is_refund": false and return a positive "invoice_total".
-
-              Return JSON:
-              {
-              "invoice_number": "string",
-              "invoice_date": "YYYY-MM-DD",
-              "invoice_total": number,
-              "is_refund": boolean
-              }`,
+Return JSON strictly as:
+{
+  "invoice_number": "string",
+  "invoice_date": "YYYY-MM-DD",
+  "invoice_total": number,
+  "is_refund": boolean
+}`,
               file_urls: [url],
               response_json_schema: {
                 type: "object",
@@ -347,8 +362,9 @@ const handleAutoScan = async () => {
             });
             const isRefund = Boolean(resp.is_refund) || (typeof resp.invoice_total === 'number' && resp.invoice_total < 0);
             const total = typeof resp.invoice_total === 'number' ? (isRefund ? -Math.abs(resp.invoice_total) : Math.abs(resp.invoice_total)) : 0;
-            const dup = supplierId ? await checkDuplicateInvoice(resp.invoice_number || '', supplierId, receipt?.id) : false;
-            return { file_url: url, invoice_number: resp.invoice_number || '', invoice_date: resp.invoice_date || formData.received_date, invoice_total: total, is_refund: isRefund, duplicate: dup };
+            const inv = sanitizeInvoiceNumber(resp.invoice_number || '');
+            const dup = supplierId ? await checkDuplicateInvoice(inv, supplierId, receipt?.id) : false;
+            return { file_url: url, invoice_number: inv, invoice_date: resp.invoice_date || formData.received_date, invoice_total: total, is_refund: isRefund, duplicate: dup };
           })
         );
         setScannedDocs(results);
@@ -358,28 +374,27 @@ const handleAutoScan = async () => {
       }
 
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `Scan this Hebrew invoice/receipt and extract ONLY the header information:
+        prompt: `You are extracting header fields from a HEBREW supplier invoice image.
 
-        Extract ONLY these fields:
-        1. Invoice number (מספר חשבונית or חשבונית מס')
-        2. Invoice date (תאריך or תאריך חשבונית) - return in YYYY-MM-DD format
-        3. Invoice total (סה"כ לתשלום or סה"כ כולל מע"ם)
+STRICT RULES:
+- Only use HEBREW labels. Ignore any ENGLISH words like "invoice".
+- For invoice_number: find the Hebrew term closest to the number: "מספר חשבונית", "חשבונית מס'", "מס' חשבונית", or the standalone word "חשבונית" followed immediately by a number/code. Capture the exact token right after it (may include letters like "I", digits, '/', or '-').
+- Never use times or print times (e.g., "שעת הדפסה"). If you see a time like HH:MM (e.g., 23:25) or a 4-digit value that looks like a time (2325), DO NOT return it as invoice_number.
+- For invoice_date: use "תאריך חשבונית" (or equivalent), not "תאריך הדפסה". Return YYYY-MM-DD.
+- For invoice_total: use totals labeled in Hebrew such as "סה"כ לתשלום" or "סה"כ כולל מע"מ".
+- DO NOT extract line items.
 
-        DO NOT extract individual line items or products.
+REFUND LOGIC:
+- If the document contains "זיכוי" or "החזר" → is_refund=true and invoice_total must be NEGATIVE.
+- Otherwise is_refund=false and invoice_total POSITIVE.
 
-        CRITICAL: If this is a refund/credit invoice (contains the Hebrew words "זיכוי" or "החזר" anywhere), you MUST:
-        - set "is_refund": true
-        - return "invoice_total" as a NEGATIVE number (use the absolute value you read, then apply negative sign)
-
-        Otherwise, set "is_refund": false and return a positive "invoice_total".
-
-        Return JSON:
-        {
-        "invoice_number": "string",
-        "invoice_date": "YYYY-MM-DD",
-        "invoice_total": number,
-        "is_refund": boolean
-        }`,
+Return JSON strictly as:
+{
+  "invoice_number": "string",
+  "invoice_date": "YYYY-MM-DD",
+  "invoice_total": number,
+  "is_refund": boolean
+}`,
         file_urls: formData.receipt_images,
         response_json_schema: {
           type: "object",
@@ -398,6 +413,8 @@ const handleAutoScan = async () => {
       const adjustedInvoiceTotal = typeof response.invoice_total === 'number'
         ? (responseIsRefund ? -Math.abs(response.invoice_total) : Math.abs(response.invoice_total))
         : 0;
+
+      const invoiceNum = sanitizeInvoiceNumber(response.invoice_number || '');
 
       if (noOrderMode) {
         setFormData(prev => ({
@@ -427,7 +444,7 @@ const handleAutoScan = async () => {
 
         setFormData(prev => ({
           ...prev,
-          invoice_number: response.invoice_number || "",
+          invoice_number: invoiceNum,
           invoice_date: response.invoice_date || prev.received_date,
           invoice_total: invoiceTotal,
           is_refund: responseIsRefund,
