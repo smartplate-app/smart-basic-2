@@ -419,7 +419,7 @@ Return JSON strictly as:
       if (noOrderMode) {
         setFormData(prev => ({
           ...prev,
-          invoice_number: response.invoice_number || "",
+          invoice_number: invoiceNum,
           invoice_date: response.invoice_date || prev.received_date,
           invoice_total: adjustedInvoiceTotal,
           is_refund: responseIsRefund,
