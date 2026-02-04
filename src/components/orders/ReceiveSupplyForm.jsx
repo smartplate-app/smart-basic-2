@@ -90,13 +90,17 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const { t, language } = useLanguage();
   const [scannedDocs, setScannedDocs] = useState([]);
   const invoiceDetailsRef = useRef(null);
+  const invoiceNumberRef = useRef(null);
+  const firstDocInvoiceRef = useRef(null);
   const scrollToDetails = () => {
     try {
+      const el = invoiceDetailsRef?.current;
+      if (!el) return;
+      const y = Math.max(0, (el.getBoundingClientRect().top + window.scrollY) - 100);
+      window.scrollTo({ top: y, behavior: 'smooth' });
       setTimeout(() => {
-        if (invoiceDetailsRef?.current) {
-          invoiceDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 50);
+        (invoiceNumberRef?.current || firstDocInvoiceRef?.current)?.focus?.();
+      }, 350);
     } catch {}
   };
 
@@ -865,7 +869,7 @@ const handleAutoScan = async () => {
                     )}
 
                     {formData.receipt_images.length > 0 && (
-                      <div className="flex gap-2 sticky bottom-20 z-50 bg-white/95 backdrop-blur md:static md:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
+                      <div className="flex gap-2 sticky bottom-0 pb-safe z-50 bg-white/95 backdrop-blur md:static md:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
                         <Button
                           type="button"
                           onClick={handleAutoScan}
@@ -912,7 +916,7 @@ const handleAutoScan = async () => {
 
                   {scannedDocs.length > 1 ? (
                     <>
-                      <div ref={invoiceDetailsRef} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                      <div ref={invoiceDetailsRef} style={{ scrollMarginTop: '96px' }} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                           <Scan className="w-5 h-5" />
                           {t('invoice_details') || 'פרטי חשבונית'}
@@ -927,6 +931,7 @@ const handleAutoScan = async () => {
                                 <div>
                                   <Label className="text-xs text-gray-600">{t('invoice_number')} *</Label>
                                   <Input
+                                    ref={idx === 0 ? firstDocInvoiceRef : null}
                                     value={doc.invoice_number}
                                     onChange={(e) => {
                                       const val = e.target.value;
@@ -1015,7 +1020,7 @@ const handleAutoScan = async () => {
                     </>
                   ) : (formData.receipt_images.length > 0) && (
                     <>
-                      <div ref={invoiceDetailsRef} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                      <div ref={invoiceDetailsRef} style={{ scrollMarginTop: '96px' }} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                           <Scan className="w-5 h-5" />
                           {t('invoice_details') || 'פרטי חשבונית'}
@@ -1024,6 +1029,7 @@ const handleAutoScan = async () => {
                           <div>
                             <Label className="text-xs text-gray-600">{t('invoice_number')} *</Label>
                             <Input
+                              ref={invoiceNumberRef}
                               value={formData.invoice_number}
                               onChange={(e) => {
                                 const val = e.target.value;
