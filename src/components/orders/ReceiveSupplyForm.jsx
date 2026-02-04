@@ -421,6 +421,8 @@ Return JSON strictly as:
 
       const invoiceNum = sanitizeInvoiceNumber(response.invoice_number || '');
 
+      setInvoiceTotalInput(String(adjustedInvoiceTotal));
+
       const noTotalFound = !(typeof response.invoice_total === 'number') || !isFinite(response.invoice_total) || Math.abs(response.invoice_total) === 0;
 
       if (noOrderMode) {
@@ -1281,7 +1283,7 @@ Return JSON strictly as:
                           <Button 
                             type="submit" 
                             className="flex-1 bg-green-600 hover:bg-green-700"
-                            disabled={!formData.invoice_number || formData.receipt_images.length === 0 || duplicateExists)
+                                                         disabled={!formData.invoice_number || formData.receipt_images.length === 0 || duplicateExists}
                           >
                             <PackageCheck className="w-4 h-4 ml-2" />
                             {t('save_receipt')}
