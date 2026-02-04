@@ -34,7 +34,7 @@ export default function ChatbotPanel() {
     setInput('');
     setLoading(true);
     try {
-      const lang = (navigator.language || 'he').startsWith('he') ? 'he' : 'en';
+      const lang = 'he';
       // Choose most relevant KB article first
       const norm = (s) => (s || '').toString().toLowerCase();
       const ql = norm(q);
@@ -72,11 +72,13 @@ export default function ChatbotPanel() {
 
       // Prepare link to related section (page)
       const pageMap = { getting_started: 'Dashboard', orders: 'Orders', receipts: 'SupplyReceipts', labor: 'LaborCost', account: 'UserProfile', other: 'Support' };
+      const hePageNames = { Dashboard: 'לוח בקרה', Orders: 'הזמנות', SupplyReceipts: 'חשבוניות ספק', Suppliers: 'ספקים', Items: 'מוצרים', Warehouses: 'מחסנים', MonthlyCount: 'ספירה חודשית', LaborCost: 'עלויות כח אדם', Support: 'תמיכה', UserProfile: 'פרופיל משתמש' };
       const targetPageName = best?.related_page || (best?.category ? pageMap[best.category] : null);
       const linkUrl = targetPageName ? createPageUrl(targetPageName) : null;
-      const linkLabel = targetPageName ? (lang === 'he' ? `פתח ${targetPageName}` : `Open ${targetPageName}`) : null;
+      const linkLabel = targetPageName ? `פתח ${hePageNames[targetPageName] || targetPageName}` : null;
+      const contentWithPath = (content || 'לא נמצאה תשובה כרגע.') + (targetPageName ? `\n\nנתיב: תפריט > ${hePageNames[targetPageName] || targetPageName}` : '');
 
-      setMessages(prev => [...prev, { role: 'assistant', content: content || (lang === 'he' ? 'לא נמצאה תשובה כרגע.' : 'No answer found.'), linkUrl, linkLabel }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: contentWithPath, linkUrl, linkLabel }]);
 
       // Visual preview from KB media
       try {
@@ -92,7 +94,7 @@ export default function ChatbotPanel() {
         setImgLoading(false);
       }
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'מצטער, הייתה שגיאה בעיבוד הבקשה. נסו שוב או פנו לתמיכה.' }]);
+    setMessages(prev => [...prev, { role: 'assistant', content: 'מצטער, הייתה שגיאה בעיבוד הבקשה. נסו שוב או פנו לתמיכה.' }]);
     } finally {
       setLoading(false);
     }
@@ -134,7 +136,7 @@ export default function ChatbotPanel() {
         </div>
         {imgLoading && (
           <div className="text-xs text-gray-500 flex items-center gap-2 mb-2">
-            <Loader2 className="h-3 w-3 animate-spin" /> Generating visual preview...
+            <Loader2 className="h-3 w-3 animate-spin" /> מכין תצוגה ויזואלית...
           </div>
         )}
         <div className="flex gap-2">
