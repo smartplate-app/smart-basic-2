@@ -40,6 +40,10 @@ export default function SupplyReceiptsPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [networkError, setNetworkError] = useState(false);
   const { t, language } = useLanguage();
+  const tt = (key, he, en) => {
+    const s = t(key);
+    return (!s || s === key) ? (language === 'he' ? he : (en || key)) : s;
+  };
   const [activeTab, setActiveTab] = useState('receipts');
   const [viewMode, setViewMode] = useState('list');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -305,7 +309,7 @@ export default function SupplyReceiptsPage() {
             className="h-20 object-contain animate-pulse"
           />
           <Loader className="w-12 h-12 animate-spin text-gray-600" />
-          <p className="text-lg text-gray-700">{t('loading')}</p>
+          <p className="text-lg text-gray-700">{tt('loading','טוען...','Loading')}</p>
         </div>
       </div>
     );
@@ -343,7 +347,7 @@ export default function SupplyReceiptsPage() {
                 size="icon"
                 onClick={() => setViewMode('list')}
                 className={viewMode === 'list' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
-                title={t('list') || 'List'}
+                title={tt('list','רשימה','List')}
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -352,7 +356,7 @@ export default function SupplyReceiptsPage() {
                 size="icon"
                 onClick={() => setViewMode('grid')}
                 className={viewMode === 'grid' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
-                title={t('grid') || 'Grid'}
+                title={tt('grid','כרטיסים','Grid')}
               >
                 <LayoutGrid className="w-4 h-4" />
               </Button>
@@ -392,7 +396,7 @@ export default function SupplyReceiptsPage() {
              className="flex items-center gap-2 border-red-300 text-red-700 hover:bg-red-50"
            >
              <AlertTriangle className="w-5 h-5 ml-2" />
-             {t('check_duplicate_invoices') || 'Check Duplicate Invoices'}
+             {tt('check_duplicate_invoices','בדיקת כפילויות חשבוניות','Check Duplicate Invoices')}
            </Button>
            <Button
              variant="outline"
@@ -416,7 +420,7 @@ export default function SupplyReceiptsPage() {
              className="flex items-center gap-2"
            >
              <FileText className="w-5 h-5 ml-2" />
-             {t('refund_review_report') || 'Refund/Review report'}
+             {tt('refund_review_report','דוח זיכויים/בדיקה','Refund/Review report')}
            </Button>
             <Button
               onClick={() => {
@@ -429,7 +433,7 @@ export default function SupplyReceiptsPage() {
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               <PackageCheck className="w-5 h-5 ml-2" />
-              {t('supply_without_order')}
+              {tt('supply_without_order','קבלה ללא הזמנה','Supply without order')}
             </Button>
             <Button
               onClick={() => {
@@ -449,8 +453,8 @@ export default function SupplyReceiptsPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
-            <TabsTrigger value="receipts">{t('receipts_tab') || 'Receipts'}</TabsTrigger>
-            <TabsTrigger value="monthly_report">{t('monthly_report') || 'Monthly Report'}</TabsTrigger>
+            <TabsTrigger value="receipts">{tt('receipts_tab','קבלות','Receipts')}</TabsTrigger>
+            <TabsTrigger value="monthly_report">{tt('monthly_report','דוח חודשי','Monthly Report')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="receipts">
@@ -530,7 +534,7 @@ export default function SupplyReceiptsPage() {
             {/* Mobile Filters Drawer trigger */}
          <div className="md:hidden mb-4">
            <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
-             {(t('filters') === 'filters' ? (language === 'he' ? 'מסננים' : 'Filters') : t('filters'))}
+             {tt('filters','מסננים','Filters')}
            </Button>
          </div>
 
@@ -538,7 +542,7 @@ export default function SupplyReceiptsPage() {
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
-                  placeholder={t('search_receipts')}
+                  placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pr-10"
@@ -546,14 +550,14 @@ export default function SupplyReceiptsPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('receipt_status')} />
+                  <SelectValue placeholder={tt('receipt_status','סטטוס קבלה','Receipt status')} />
                 </SelectTrigger>
                 <SelectContent>
-                 <SelectItem value="all">{t('all_statuses')}</SelectItem>
-                 <SelectItem value="verified">{t('status_verified')}</SelectItem>
-                 <SelectItem value="has_issues">{t('status_has_issues')}</SelectItem>
-                 <SelectItem value="refund">{t('refund') || 'Refund'}</SelectItem>
-                 <SelectItem value="pending">{t('status_pending')}</SelectItem>
+                 <SelectItem value="all">{tt('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
+                 <SelectItem value="verified">{tt('status_verified','מאומת','Verified')}</SelectItem>
+                 <SelectItem value="has_issues">{tt('status_has_issues','יש בעיות','Has issues')}</SelectItem>
+                 <SelectItem value="refund">{tt('refund','זיכוי','Refund')}</SelectItem>
+                 <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -561,23 +565,23 @@ export default function SupplyReceiptsPage() {
               {statusFilter === 'refund' && (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
-                  <span>{t('credit_received') || 'Credit received'}</span>
+                  <span>{tt('credit_received','התקבל זיכוי','Credit received')}</span>
                 </label>
               )}
               {statusFilter === 'has_issues' && (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
-                  <span>{t('reviewed') || 'Reviewed'}</span>
+                  <span>{tt('reviewed','נסקר','Reviewed')}</span>
                 </label>
               )}
 
               {/* Supplier filter */}
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('supplier') || 'Supplier'} />
+                  <SelectValue placeholder={tt('supplier','ספק','Supplier')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('all_suppliers') || 'All suppliers'}</SelectItem>
+                  <SelectItem value="all">{tt('all_suppliers','כל הספקים','All suppliers')}</SelectItem>
                   {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
                     .sort((a,b) => a.localeCompare(b))
                     .map(name => (
@@ -589,14 +593,14 @@ export default function SupplyReceiptsPage() {
               {/* Sort by amount */}
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('sort') || 'מיון'} />
+                  <SelectValue placeholder={tt('sort','מיון','Sort')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t('no_sort') || 'ללא מיון'}</SelectItem>
-                  <SelectItem value="amount_asc">{t('amount_low_to_high') || 'סכום: נמוך → גבוה'}</SelectItem>
-                  <SelectItem value="amount_desc">{t('amount_high_to_low') || 'סכום: גבוה → נמוך'}</SelectItem>
-                  <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
-                  <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
+                  <SelectItem value="none">{tt('no_sort','ללא מיון','No sort')}</SelectItem>
+                  <SelectItem value="amount_asc">{tt('amount_low_to_high','סכום: נמוך → גבוה','Amount: Low → High')}</SelectItem>
+                  <SelectItem value="amount_desc">{tt('amount_high_to_low','סכום: גבוה → נמוך','Amount: High → Low')}</SelectItem>
+                  <SelectItem value="supplier_asc">{tt('supplier_az','ספק א→ת','Supplier A–Z')}</SelectItem>
+                  <SelectItem value="supplier_desc">{tt('supplier_za','ספק ת→א','Supplier Z–A')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -633,14 +637,14 @@ export default function SupplyReceiptsPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('timeframe') || 'Timeframe'} />
+                  <SelectValue placeholder={tt('timeframe','טווח זמן','Timeframe')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('all_time') || 'All time'}</SelectItem>
-                  <SelectItem value="week">{t('current_week') || 'Current week'}</SelectItem>
-                  <SelectItem value="month">{t('current_month') || 'Current month'}</SelectItem>
-                  <SelectItem value="year">{t('current_year') || 'Current year'}</SelectItem>
-                  <SelectItem value="custom">{t('custom_range') || 'Custom range'}</SelectItem>
+                  <SelectItem value="all">{tt('all_time','כל הזמן','All time')}</SelectItem>
+                  <SelectItem value="week">{tt('current_week','שבוע נוכחי','Current week')}</SelectItem>
+                  <SelectItem value="month">{tt('current_month','חודש נוכחי','Current month')}</SelectItem>
+                  <SelectItem value="year">{tt('current_year','שנה נוכחית','Current year')}</SelectItem>
+                  <SelectItem value="custom">{tt('custom_range','טווח מותאם','Custom range')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -649,14 +653,14 @@ export default function SupplyReceiptsPage() {
                 type="date"
                 value={dateFrom}
                 onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); }}
-                placeholder={t('from_date') || 'From date'}
+                placeholder={tt('from_date','מתאריך','From date')}
                 disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
               />
               <Input
                 type="date"
                 value={dateTo}
                 onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); }}
-                placeholder={t('to_date') || 'To date'}
+                placeholder={tt('to_date','עד תאריך','To date')}
                 disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
               />
             </div>
@@ -665,13 +669,13 @@ export default function SupplyReceiptsPage() {
             <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DrawerContent>
                 <DrawerHeader>
-                  <DrawerTitle>{(t('filters') === 'filters' ? (language === 'he' ? 'מסננים' : 'Filters') : t('filters'))}</DrawerTitle>
+                  <DrawerTitle>{tt('filters','מסננים','Filters')}</DrawerTitle>
                 </DrawerHeader>
                 <div className="p-4 space-y-4">
                   <div className="relative">
                     <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <Input
-                      placeholder={t('search_receipts')}
+                      placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pr-10"
@@ -679,14 +683,14 @@ export default function SupplyReceiptsPage() {
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('receipt_status')} />
+                      <SelectValue placeholder={tt('receipt_status','סטטוס קבלה','Receipt status')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t('all_statuses')}</SelectItem>
-                      <SelectItem value="verified">{t('status_verified')}</SelectItem>
-                      <SelectItem value="has_issues">{t('status_has_issues')}</SelectItem>
-                      <SelectItem value="refund">{t('refund') || 'Refund'}</SelectItem>
-                      <SelectItem value="pending">{t('status_pending')}</SelectItem>
+                      <SelectItem value="all">{tt('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
+                      <SelectItem value="verified">{tt('status_verified','מאומת','Verified')}</SelectItem>
+                      <SelectItem value="has_issues">{tt('status_has_issues','יש בעיות','Has issues')}</SelectItem>
+                      <SelectItem value="refund">{tt('refund','זיכוי','Refund')}</SelectItem>
+                      <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button onClick={() => setFiltersOpen(false)} className="w-full">{t('apply') || 'Apply'}</Button>
@@ -728,8 +732,8 @@ export default function SupplyReceiptsPage() {
 
             {!loading && sortedReceipts.length === 0 && (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-lg mb-2">{t('no_receipts_to_display')}</div>
-                <div className="text-gray-500">{t('start_by_creating_receipt')}</div>
+                <div className="text-gray-400 text-lg mb-2">{tt('no_receipts_to_display','אין קבלות להצגה','No receipts to display')}</div>
+                <div className="text-gray-500">{tt('start_by_creating_receipt','התחל ביצירת קבלה','Start by creating a receipt')}</div>
               </div>
             )}
           </TabsContent>
