@@ -390,6 +390,7 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
                   type="date"
                   value={formData.received_date}
                   onChange={(e) => setFormData({ ...formData, received_date: e.target.value })}
+                  lang={language === 'he' ? 'he-IL' : undefined}
                 />
               </div>
               <div className="space-y-2">
