@@ -179,9 +179,23 @@ const AppLayout = ({ children, currentPageName }) => {
   }, [currentPageName]);
   
   useEffect(() => {
-    document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
-  }, [language]);
+            document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = language;
+          }, [language]);
+
+          // System dark mode support
+          useEffect(() => {
+            const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+            const apply = () => {
+              if (mq.matches) {
+                document.documentElement.classList.add('dark');
+              } else {
+                document.documentElement.classList.remove('dark');
+              }
+            };
+            try { apply(); mq.addEventListener('change', apply); } catch { apply(); mq.addListener(apply); }
+            return () => { try { mq.removeEventListener('change', apply); } catch { mq.removeListener(apply); } };
+          }, []);
 
   const loadAuth = async (attemptNumber = 0) => {
         try {
@@ -646,7 +660,7 @@ const AppLayout = ({ children, currentPageName }) => {
               </div>
             </div>
           )}
-          <header className={`bg-white border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <header className={`bg-white dark:bg-gray-900 border-b px-4 py-3 flex items-center justify-between md:hidden sticky ${isAdminControllingUser ? 'top-10' : 'top-0'} z-30 ${isRTL ? 'flex-row-reverse' : ''}`} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
                         <button 
                           onClick={() => setSidebarOpen(!sidebarOpen)}
                           className="p-2 rounded-lg hover:bg-gray-100"
@@ -673,7 +687,19 @@ const AppLayout = ({ children, currentPageName }) => {
                           </div>
                           <span className="text-sm font-bold text-black tracking-wide">BASIC</span>
                         </div>
-                        <div style={{ width: '40px' }}></div>
+                        <div className="flex items-center">
+                          {typeof window !== 'undefined' && window.history.length > 1 ? (
+                            <button 
+                              onClick={() => window.history.back()}
+                              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                              title={language === 'he' ? 'חזרה' : 'Back'}
+                            >
+                              {isRTL ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+                            </button>
+                          ) : (
+                            <div style={{ width: '40px' }}></div>
+                          )}
+                        </div>
                       </header>
 
       <div className="flex">
@@ -839,6 +865,27 @@ const AppLayout = ({ children, currentPageName }) => {
               {children}
             </div>
             <style>{`
+              :root {
+                --app-bg: #f9fafb;
+                --app-card: #ffffff;
+                --app-text: #0f172a;
+              }
+              .dark:root {
+                --app-bg: #0b1220;
+                --app-card: #0f172a;
+                --app-text: #e2e8f0;
+              }
+              html, body, #root { background: var(--app-bg); color: var(--app-text); }
+
+              /* Disable text selection on UI controls */
+              button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .viewer-readonly {
+                -webkit-user-select: none; -ms-user-select: none; user-select: none;
+              }
+
+              /* Safe area helpers */
+              .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+              .pt-safe { padding-top: env(safe-area-inset-top); }
+
               .sidebar-hidden > * {
                 padding-left: 0 !important;
                 padding-right: 0 !important;
@@ -859,7 +906,6 @@ const AppLayout = ({ children, currentPageName }) => {
               .viewer-readonly .ql-editor {
                 pointer-events: none !important;
               }
-
             `}</style>
         </main>
 
