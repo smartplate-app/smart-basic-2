@@ -345,41 +345,56 @@ const handleAutoScan = async () => {
             const resp = await base44.integrations.Core.InvokeLLM({
               prompt: `You are extracting header fields from a HEBREW supplier invoice image.
 
-STRICT RULES:
-- Only use HEBREW labels. Ignore any ENGLISH words like "invoice".
-- For invoice_number: find the Hebrew term closest to the number: "מספר חשבונית", "חשבונית מס'", "מס' חשבונית", or the standalone word "חשבונית" followed immediately by a number/code. Capture the exact token right after it (may include letters like "I", digits, '/', or '-').
-- Never use times or print times (e.g., "שעת הדפסה"). If you see a time like HH:MM (e.g., 23:25) or a 4-digit value that looks like a time (2325), DO NOT return it as invoice_number.
-- For invoice_date: use "תאריך חשבונית" (or equivalent), not "תאריך הדפסה". Return YYYY-MM-DD.
-- For invoice_total: use totals labeled in Hebrew such as "סה"כ לתשלום" or "סה"כ כולל מע"מ".
-- DO NOT extract line items.
+            EXTRACTION RULES (HEBREW ONLY):
+            - Prefer invoice date labeled "תאריך חשבונית" or "תאריך מסמך". Do NOT use "תאריך הדפסה" or "שעת הדפסה".
+            - Extract both dates if present: invoice_date_invoice and invoice_date_printed.
+            - Totals: extract all three if available:
+            • total_excl_vat = סכום ללא מע"מ / מחיר כולל (before VAT)
+            • vat_amount = מע"מ
+            • total_incl_vat = סה"כ לתשלום OR סה"כ כולל מע"מ (after VAT). Prefer the bold bottom number.
+            - Invoice number: number/code following "מספר חשבונית" / "חשבונית מס'" / "מס' חשבונית" / "חשבונית".
+            - Values may contain commas or dots.
 
-REFUND LOGIC:
-- If the document contains "זיכוי" or "החזר" → is_refund=true and invoice_total must be NEGATIVE.
-- Otherwise is_refund=false and invoice_total POSITIVE.
+            Return valid JSON:
+            {
+            "invoice_number": "string",
+            "invoice_date_invoice": "YYYY-MM-DD",
+            "invoice_date_printed": "YYYY-MM-DD",
+            "total_excl_vat": number,
+            "vat_amount": number,
+            "total_incl_vat": number,
+            "is_refund": boolean
+            }
 
-Return JSON strictly as:
-{
-  "invoice_number": "string",
-  "invoice_date": "YYYY-MM-DD",
-  "invoice_total": number,
-  "is_refund": boolean
-}`,
+            NOTES:
+            - If the document includes "זיכוי" or "החזר", set is_refund=true.
+            - Dates must be YYYY-MM-DD. If only DD/MM/YY present, convert to YYYY-MM-DD.
+            - Do not include line items.`,
               file_urls: [url],
               response_json_schema: {
                 type: "object",
                 properties: {
                   invoice_number: { type: "string" },
-                  invoice_date: { type: "string" },
-                  invoice_total: { type: "number" },
+                  invoice_date_invoice: { type: "string" },
+                  invoice_date_printed: { type: "string" },
+                  total_excl_vat: { type: "number" },
+                  vat_amount: { type: "number" },
+                  total_incl_vat: { type: "number" },
                   is_refund: { type: "boolean" }
                 }
               }
             });
-            const isRefund = Boolean(resp.is_refund) || (typeof resp.invoice_total === 'number' && resp.invoice_total < 0);
-            const total = typeof resp.invoice_total === 'number' ? (isRefund ? -Math.abs(resp.invoice_total) : Math.abs(resp.invoice_total)) : 0;
+            const isRefund = Boolean(resp.is_refund);
+            const incl = Number(resp.total_incl_vat);
+            const excl = Number(resp.total_excl_vat);
+            const vat = Number(resp.vat_amount);
+            let totalCandidate = (isFinite(incl) && incl > 0) ? incl : ((isFinite(excl) && isFinite(vat)) ? (excl + vat) : Number(resp.invoice_total || 0));
+            let total = (typeof totalCandidate === 'number' && isFinite(totalCandidate)) ? totalCandidate : 0;
+            total = isRefund ? -Math.abs(total) : Math.abs(total);
             const inv = sanitizeInvoiceNumber(resp.invoice_number || '');
+            const dateChosen = resp.invoice_date_invoice || resp.invoice_date || resp.invoice_date_printed || formData.received_date;
             const dup = supplierId ? await checkDuplicateInvoice(inv, supplierId, receipt?.id) : false;
-            return { file_url: url, invoice_number: inv, invoice_date: resp.invoice_date || formData.received_date, invoice_total: total, is_refund: isRefund, duplicate: dup };
+            return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, duplicate: dup };
           })
         );
         setScannedDocs(results);
@@ -396,32 +411,41 @@ Return JSON strictly as:
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `You are extracting header fields from a HEBREW supplier invoice image.
 
-STRICT RULES:
-- Only use HEBREW labels. Ignore any ENGLISH words like "invoice".
-- For invoice_number: find the Hebrew term closest to the number: "מספר חשבונית", "חשבונית מס'", "מס' חשבונית", or the standalone word "חשבונית" followed immediately by a number/code. Capture the exact token right after it (may include letters like "I", digits, '/', or '-').
-- Never use times or print times (e.g., "שעת הדפסה"). If you see a time like HH:MM (e.g., 23:25) or a 4-digit value that looks like a time (2325), DO NOT return it as invoice_number.
-- For invoice_date: use "תאריך חשבונית" (or equivalent), not "תאריך הדפסה". Return YYYY-MM-DD.
-- For invoice_total: use totals labeled in Hebrew such as "סה"כ לתשלום" or "סה"כ כולל מע"מ".
-- DO NOT extract line items.
+      EXTRACTION RULES (HEBREW ONLY):
+      - Prefer invoice date labeled "תאריך חשבונית" or "תאריך מסמך". Do NOT use "תאריך הדפסה" or "שעת הדפסה".
+      - Extract both dates if present: invoice_date_invoice and invoice_date_printed.
+      - Totals: extract all three if available:
+      • total_excl_vat = סכום ללא מע"מ / מחיר כולל (before VAT)
+      • vat_amount = מע"מ
+      • total_incl_vat = סה"כ לתשלום OR סה"כ כולל מע"מ (after VAT). Prefer the bold bottom number.
+      - Invoice number: number/code following "מספר חשבונית" / "חשבונית מס'" / "מס' חשבונית" / "חשבונית".
+      - Values may contain commas or dots.
 
-REFUND LOGIC:
-- If the document contains "זיכוי" or "החזר" → is_refund=true and invoice_total must be NEGATIVE.
-- Otherwise is_refund=false and invoice_total POSITIVE.
+      Return valid JSON:
+      {
+      "invoice_number": "string",
+      "invoice_date_invoice": "YYYY-MM-DD",
+      "invoice_date_printed": "YYYY-MM-DD",
+      "total_excl_vat": number,
+      "vat_amount": number,
+      "total_incl_vat": number,
+      "is_refund": boolean
+      }
 
-Return JSON strictly as:
-{
-  "invoice_number": "string",
-  "invoice_date": "YYYY-MM-DD",
-  "invoice_total": number,
-  "is_refund": boolean
-}`,
+      NOTES:
+      - If the document includes "זיכוי" or "החזר", set is_refund=true.
+      - Dates must be YYYY-MM-DD. If only DD/MM/YY present, convert to YYYY-MM-DD.
+      - Do not include line items.`,
         file_urls: formData.receipt_images,
         response_json_schema: {
           type: "object",
           properties: {
             invoice_number: { type: "string" },
-            invoice_date: { type: "string" },
-            invoice_total: { type: "number" },
+            invoice_date_invoice: { type: "string" },
+            invoice_date_printed: { type: "string" },
+            total_excl_vat: { type: "number" },
+            vat_amount: { type: "number" },
+            total_incl_vat: { type: "number" },
             is_refund: { type: "boolean" }
           }
         }
@@ -429,22 +453,26 @@ Return JSON strictly as:
 
       console.log('Scanned invoice header data:', response);
 
-      const responseIsRefund = Boolean(response.is_refund) || (typeof response.invoice_total === 'number' && response.invoice_total < 0);
-      const adjustedInvoiceTotal = typeof response.invoice_total === 'number'
-        ? (responseIsRefund ? -Math.abs(response.invoice_total) : Math.abs(response.invoice_total))
-        : 0;
+      const responseIsRefund = Boolean(response.is_refund);
+      const incl = Number(response.total_incl_vat);
+      const excl = Number(response.total_excl_vat);
+      const vat = Number(response.vat_amount);
+      let totalCandidate = (isFinite(incl) && incl > 0) ? incl : ((isFinite(excl) && isFinite(vat)) ? (excl + vat) : Number(response.invoice_total || 0));
+      let adjustedInvoiceTotal = (typeof totalCandidate === 'number' && isFinite(totalCandidate)) ? totalCandidate : 0;
+      adjustedInvoiceTotal = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
 
       const invoiceNum = sanitizeInvoiceNumber(response.invoice_number || '');
+      const chosenDate = response.invoice_date_invoice || response.invoice_date || response.invoice_date_printed || formData.received_date;
 
       setInvoiceTotalInput(String(adjustedInvoiceTotal));
 
-      const noTotalFound = !(typeof response.invoice_total === 'number') || !isFinite(response.invoice_total) || Math.abs(response.invoice_total) === 0;
+      const noTotalFound = !isFinite(adjustedInvoiceTotal) || Math.abs(adjustedInvoiceTotal) === 0;
 
       if (noOrderMode) {
         setFormData(prev => ({
           ...prev,
           invoice_number: invoiceNum,
-          invoice_date: response.invoice_date || prev.received_date,
+          invoice_date: chosenDate,
           invoice_total: adjustedInvoiceTotal,
           is_refund: responseIsRefund,
           calculated_total: 0, // Reset calculated total as items are not scanned yet
@@ -473,7 +501,7 @@ Return JSON strictly as:
         setFormData(prev => ({
           ...prev,
           invoice_number: invoiceNum,
-          invoice_date: response.invoice_date || prev.received_date,
+          invoice_date: chosenDate,
           invoice_total: invoiceTotal,
           is_refund: responseIsRefund,
           calculated_total: calculatedTotal,
