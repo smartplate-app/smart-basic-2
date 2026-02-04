@@ -616,7 +616,7 @@ const AppLayout = ({ children, currentPageName }) => {
               <p className="font-semibold mb-2">
                 {language === 'he' ? 'פתרונות אפשריים:' : language === 'ar' ? 'حلول ممكنة:' : 'Possible solutions:'}
               </p>
-              <ul className={`list-disc space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
+              <ul className={'list-disc space-y-1 ' + (isRTL ? 'list-inside mr-4' : 'list-inside ml-4')}>
                 <li>{language === 'he' ? 'בדוק את חיבור האינטרנט שלך' : language === 'ar' ? 'تحقق من اتصال الإنترنت' : 'Check your internet connection'}</li>
                 <li>{language === 'he' ? 'כבה VPN אם פעיל' : language === 'ar' ? 'أوقف تشغيل VPN إذا كان نشطًا' : 'Disable VPN if active'}</li>
                 <li>{language === 'he' ? 'נסה דפדפן אחר (Chrome מומלץ)' : language === 'ar' ? 'جرب متصفحًا آخر (يُنصح بـ Chrome)' : 'Try a different browser (Chrome recommended)'}</li>
@@ -725,7 +725,7 @@ const AppLayout = ({ children, currentPageName }) => {
                             >
                               {isRTL ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
                             </Button>
-                            <div className={`flex flex-col items-center justify-center flex-1 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+                            <div className={'flex flex-col items-center justify-center flex-1 ' + (isRTL ? 'flex-row-reverse text-right' : 'text-left')}>
                               <div className="flex items-center gap-3">
                                 <img 
                                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
@@ -761,7 +761,7 @@ const AppLayout = ({ children, currentPageName }) => {
           </div>
 
           <div className="p-4 border-b border-gray-200">
-            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={'flex items-center justify-between ' + (isRTL ? 'flex-row-reverse' : '')}>
               <div className="flex items-center gap-2 text-gray-700">
                 <Sun className="h-4 w-4" />
                 <span className="text-sm">{language === 'he' ? 'מצב בהיר/כהה' : 'Light/Dark Mode'}</span>
@@ -844,9 +844,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   <a 
                     href={item.url}
                     onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isRTL ? 'flex-row-reverse text-right' : ''} ${
-                                                (location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-indigo-600 text-white font-bold dark:bg-indigo-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-white/10'
-                                              `}
+                    className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-indigo-600 text-white font-bold dark:bg-indigo-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-white/10')}
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.title}</span>
@@ -927,7 +925,7 @@ const AppLayout = ({ children, currentPageName }) => {
                               {language === 'he' ? 'באייפון/iPad אין כפתור התקנה אוטומטי. עקבו אחרי השלבים:' : 'On iPhone/iPad there is no automatic install prompt. Follow these steps:'}
                             </DialogDescription>
                           </DialogHeader>
-                          <div className={`space-y-3 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <div className={'space-y-3 text-sm ' + (isRTL ? 'text-right' : 'text-left')}>
                             <div className="flex items-center gap-3">
                               <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png" alt="App Icon" className="h-10 w-10 rounded-lg border" />
                               <span className="text-gray-600">{language === 'he' ? 'האייקון שיופיע במסך הבית' : 'This is the icon that will appear on your home screen.'}</span>
