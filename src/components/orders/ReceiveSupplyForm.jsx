@@ -1228,7 +1228,7 @@ Return JSON strictly as:
                           <Button
                             type="button"
                             className="flex-1 bg-green-600 hover:bg-green-700"
-                            disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date || d.duplicate)
+                            disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date || d.duplicate)}
                             onClick={async () => {
                               const baseData = {
                                 supplier_id: formData.supplier_id,
