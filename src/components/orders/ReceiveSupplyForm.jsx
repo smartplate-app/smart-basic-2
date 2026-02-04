@@ -745,7 +745,7 @@ const handleAutoScan = async () => {
                         ) : (
                           <Upload className="w-8 h-8 text-gray-400" />
                         )}
-                        <span className="text-sm text-gray-600">{t('click_to_upload_images')}</span>
+                        <span className="text-sm text-gray-600">{safeT('click_to_upload_images', '\u05dc\u05d7\u05e6\u05d5 \u05dc\u05d4\u05e2\u05dc\u05d0\u05ea \u05ea\u05de\u05d5\u05e0\u05d5\u05ea', 'Click to upload images')}</span>
                         <span className="text-xs text-gray-500">{t('supports_images_pdf')}</span>
                         <span className="text-xs text-gray-500">
                           {language === 'he' ? 'או גררו ושחררו כאן קבצים (תמונות/PDF)' : 'or drag & drop files here (images/PDF)'}
@@ -1083,7 +1083,7 @@ const handleAutoScan = async () => {
                           <Label className="text-lg font-semibold">
                             {formData.verified_items.length > 0 
                               ? (t('items') || 'פריטים') + ` (${formData.verified_items.length})`
-                              : (t('add_items') || 'הוסף פריטים')
+                              : (safeT('add_items', '\u05d4\u05d5\u05e1\u05e3 \u05e4\u05e8\u05d9\u05d8\u05d9\u05dd', 'Add items') || 'הוסף פריטים')
                             }
                           </Label>
                           <Button
