@@ -60,12 +60,11 @@ export default function ChatbotPanel() {
       const kbContext = kb.slice(0, 10).map(a => `# ${a.title}\n${(a.excerpt || '').slice(0,200)}\n`).join('\n');
       const articleContext = best?.content ? `\n\nTop relevant article (${best.title}):\n${best.content.slice(0, 1500)}` : '';
       const navPages = ['Dashboard','Orders','Supply Receipts','Suppliers','Items','Warehouses','Monthly Count','Labor Cost','Support','User Profile'];
-      const prompt = `You are the in-app assistant for Smart Plate BASIC. Answer strictly about how to use this app, not general industry advice, unless explicitly asked.\n` +
-        `Provide concise, numbered step-by-step instructions using the exact page names from this list: ${navPages.join(', ')}.\n` +
-        `If the action requires navigation, say where to click and what to fill. Keep it short and actionable.\n\n` +
-        `Knowledge Base (summaries):\n${kbContext}${articleContext}\n\n` +
-        `User question: ${q}\n\n` +
-        `Respond in ${lang === 'he' ? 'Hebrew' : 'English'}.`;
+      const prompt = `אתה עוזר בתוך האפליקציה Smart Plate BASIC. ענה רק על שימוש באפליקציה, לא עצות כלליות (אלא אם התבקש מפורשות).\n` +
+        `ענה בעברית בלבד. ספק צעדים ממוספרים, קצרים וברורים, המשתמשים בשמות הדפים בדיוק מהרשימה: ${navPages.join(', ')}.\n` +
+        `כאשר צריך ניווט—ציין איפה ללחוץ ומה למלא. אם המידע לא קיים בידע שסופק—אל תמציא; אמור שאינך בטוח והצע לפנות לתמיכה.\n\n` +
+        `ידע רלוונטי (תקצירים):\n${kbContext}${articleContext}\n\n` +
+        `שאלת המשתמש: ${q}`;}},{
 
       const result = await base44.integrations.Core.InvokeLLM({ prompt });
       const content = typeof result === 'string' ? result : (typeof result?.output === 'string' ? result.output : JSON.stringify(result));
