@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,6 +89,16 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [previousReceipts, setPreviousReceipts] = useState([]);
   const { t, language } = useLanguage();
   const [scannedDocs, setScannedDocs] = useState([]);
+  const invoiceDetailsRef = useRef(null);
+  const scrollToDetails = () => {
+    try {
+      setTimeout(() => {
+        if (invoiceDetailsRef?.current) {
+          invoiceDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 50);
+    } catch {}
+  };
 
   // Ensure no English keys show in Hebrew when translations are missing
   const safeT = (key, fallbackHe, fallbackEn) => {
@@ -398,6 +408,7 @@ const handleAutoScan = async () => {
           })
         );
         setScannedDocs(results);
+        scrollToDetails();
         setFormData(prev => ({ ...prev, manual_entry_mode: true }));
         const missingCount = results.filter(d => !d.invoice_total || Number(d.invoice_total) === 0).length;
         if (missingCount > 0) {
@@ -480,6 +491,8 @@ const handleAutoScan = async () => {
           manual_entry_mode: true // Automatically switch to manual entry mode to allow editing/adding
         }));
 
+        scrollToDetails();
+
         const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
         const isDup = await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
         if (isDup) {
@@ -507,6 +520,8 @@ const handleAutoScan = async () => {
           calculated_total: calculatedTotal,
           totals_match: totalsMatch
         }));
+
+        scrollToDetails();
 
         const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
         const isDup = await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
@@ -897,7 +912,7 @@ const handleAutoScan = async () => {
 
                   {scannedDocs.length > 1 ? (
                     <>
-                      <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                      <div ref={invoiceDetailsRef} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                           <Scan className="w-5 h-5" />
                           {t('invoice_details') || 'פרטי חשבונית'}
@@ -1000,7 +1015,7 @@ const handleAutoScan = async () => {
                     </>
                   ) : (formData.receipt_images.length > 0) && (
                     <>
-                      <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                      <div ref={invoiceDetailsRef} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                           <Scan className="w-5 h-5" />
                           {t('invoice_details') || 'פרטי חשבונית'}
