@@ -149,6 +149,7 @@ const AppLayout = ({ children, currentPageName }) => {
   { title: language === 'he' ? 'עלויות כח אדם' : 'Labor Cost', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
   // Dashboard second
   { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
+  ...(user?.is_chain_head ? [{ title: language === 'he' ? 'דשבורד רשת' : 'Chain Dashboard', url: createPageUrl("ChainDashboard"), icon: BarChart2, adminOnly: false, workerHidden: false }] : []),
   // Then the rest
   { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
   { title: t('nav_receipts'), url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false, workerHidden: false },
