@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AdminDashboard from './pages/AdminDashboard';
+import ChainDashboard from './pages/ChainDashboard';
 import ChainManagement from './pages/ChainManagement';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
@@ -85,12 +86,12 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import ChainDashboard from './pages/ChainDashboard';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminDashboard": AdminDashboard,
+    "ChainDashboard": ChainDashboard,
     "ChainManagement": ChainManagement,
     "Dashboard": Dashboard,
     "Home": Home,
@@ -128,7 +129,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "ChainDashboard": ChainDashboard,
 }
 
 export const pagesConfig = {

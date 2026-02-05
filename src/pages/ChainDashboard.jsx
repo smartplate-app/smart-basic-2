@@ -13,6 +13,7 @@ export default function ChainDashboard() {
   const [error, setError] = useState("");
   const [stores, setStores] = useState([]);
   const [rows, setRows] = useState([]);
+  const [accessGranted, setAccessGranted] = useState(false);
   const [month, setMonth] = useState(() => {
     const d = new Date();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -27,11 +28,38 @@ export default function ChainDashboard() {
         setLoading(true);
         const me = await base44.auth.me();
         setUser(me);
-        if (!me?.is_chain_head || !me?.chain_id) {
+
+        // Resolve effective chain context: if admin is controlling another user, use that user's chain head context
+        const effectiveEmail = me?.acting_as_user_email || me?.email;
+        let resolvedChainId = me?.chain_id || null;
+        let resolvedIsHead = !!me?.is_chain_head;
+
+        if (me?.acting_as_user_email) {
+          try {
+            const myStores = await base44.entities.ChainStore.filter({ user_email: effectiveEmail });
+            const head = (myStores || []).find(s => s.is_head_store);
+            if (head) {
+              resolvedChainId = head.chain_id;
+              resolvedIsHead = true;
+            } else {
+              // Fallback: check Chain where this email is marked as head_store_user_email
+              const chains = await base44.entities.Chain.filter({ head_store_user_email: effectiveEmail });
+              if (chains && chains[0]) {
+                resolvedChainId = chains[0].id || chains[0].chain_id || resolvedChainId;
+                resolvedIsHead = true;
+              }
+            }
+          } catch {}
+        }
+
+        if (!resolvedIsHead || !resolvedChainId) {
+          setAccessGranted(false);
           setLoading(false);
           return;
         }
-        const list = await base44.entities.ChainStore.filter({ chain_id: me.chain_id });
+
+        setAccessGranted(true);
+        const list = await base44.entities.ChainStore.filter({ chain_id: resolvedChainId });
         setStores(list || []);
       } catch (e) {
         setError(e?.message || 'Failed to load');
@@ -74,13 +102,12 @@ export default function ChainDashboard() {
   };
 
   useEffect(() => {
-    if (stores.length > 0 && user?.is_chain_head) {
+    if (stores.length > 0 && accessGranted) {
       loadMonthData(month);
-    } else if (user && (!user.is_chain_head || !user.chain_id)) {
+    } else if (user && !accessGranted) {
       setRows([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stores, month, user?.is_chain_head, user?.chain_id]);
+  }, [stores, month, accessGranted, user]);
 
   const totals = useMemo(() => {
     const totalSales = rows.reduce((s, r) => s + (Number(r.totalSales) || 0), 0);
@@ -99,7 +126,7 @@ export default function ChainDashboard() {
     );
   }
 
-  if (!user?.is_chain_head || !user?.chain_id) {
+  if (!accessGranted) {
     return (
       <div className="p-6">
         <Card className="max-w-xl mx-auto">
