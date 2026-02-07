@@ -413,9 +413,24 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             <div className={`${viewMode === 'mobile' ? 'h-[667px]' : 'h-[600px]'} w-full`}>
               <iframe
                 src={orderUrl}
-                className="w-full h-full border-0"
+                className="w-full h-full border-0 [image-rendering:auto] [text-rendering:optimizeLegibility]"
                 title={t('order_preview')}
                 sandbox="allow-same-origin allow-scripts"
+                ref={(el) => {
+                  if (!el) return;
+                  try {
+                    el.addEventListener('load', () => {
+                      const doc = el.contentDocument;
+                      if (!doc) return;
+                      const style = doc.createElement('style');
+                      style.textContent = `
+                        html, body { -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; }
+                        img, canvas { image-rendering: auto !important; }
+                      `;
+                      doc.head.appendChild(style);
+                    });
+                  } catch (_) {}
+                }}
               />
             </div>
           </div>
