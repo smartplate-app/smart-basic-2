@@ -409,9 +409,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </Button>
         </div>
 
-        <div className="flex-1 bg-gray-100 p-4 overflow-auto">
+        <div className="flex-1 bg-gray-100 p-4 overflow-auto" aria-busy={!frameLoaded} aria-live="polite">
           <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
-            <div className={`${viewMode === 'mobile' ? 'h?[667px]' : 'h?[600px]'} w-full`.replace('?','[').replace('?','[')}>
+            <div className={`${viewMode === 'mobile' ? 'h?[667px]' : 'h?[600px]'} w-full relative`.replace('?','[').replace('?','[')}>
               {!frameLoaded && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white">
                   <div className="h-6 w-6 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
