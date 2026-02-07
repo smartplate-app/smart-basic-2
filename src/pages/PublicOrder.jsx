@@ -316,7 +316,7 @@ export default function PublicOrderPage() {
                                     {order.items && order.items.map((item, index) => (
                                         <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9fafb' }}>
                                             <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{index + 1}</td>
-                                            <td style={{ padding: '12px', fontWeight: '500', borderBottom: '1px solid #e5e7eb' }}>{item.item_name}</td>
+                                            <td style={{ padding: '12px', fontWeight: '500', borderBottom: '1px solid #e5e7eb' }}>{item.item_name || item.item || item.name}</td>
                                             <td style={{ padding: '12px', fontWeight: '600', color: '#059669', borderBottom: '1px solid #e5e7eb' }}>{item.quantity}</td>
                                             <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{item.unit}</td>
                                         </tr>
