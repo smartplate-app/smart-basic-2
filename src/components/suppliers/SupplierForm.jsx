@@ -214,10 +214,10 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
             </div>
 
             <div className="md:col-span-2 flex gap-3 justify-end">
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button type="button" variant="outline" onClick={onCancel} className="dark:border-gray-600 dark:text-gray-100">
                 {t('cancel')}
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white">
                 {supplier ? t('update_supplier') : t('save_supplier')}
               </Button>
             </div>

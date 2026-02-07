@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
@@ -24,12 +24,25 @@ Deno.serve(async (req) => {
     const actingAsStoreEmail = user.acting_as_store_email || null;
     const storeOwnerEmail = user.store_user_owner_email || null;
 
-    const allowed = (
+    let allowed = (
       user.email === ownerEmail ||
       (actingAsStoreEmail && actingAsStoreEmail === ownerEmail) ||
       (storeOwnerEmail && (storeOwnerEmail === ownerEmail)) ||
       user.role === 'admin'
     );
+
+    // Extend permission: users in the same chain as the owner (head/branch) can delete
+    if (!allowed) {
+      try {
+        if (user.chain_id) {
+          const stores = await base44.asServiceRole.entities.ChainStore.filter({ chain_id: user.chain_id });
+          const ownerInChain = Array.isArray(stores) && stores.some((s) => s.user_email === ownerEmail);
+          if (ownerInChain) {
+            allowed = true;
+          }
+        }
+      } catch (_) {}
+    }
 
     if (!allowed) {
       return Response.json({ success: false, error: 'Forbidden' }, { status: 403 });
