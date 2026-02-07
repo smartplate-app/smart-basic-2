@@ -24,7 +24,7 @@ export default function PublicOrderPage() {
                             restaurant_name: parsed.r,
                             restaurant_address: parsed.a,
                             delivery_date: parsed.d,
-                            items: (parsed.i || []).map(item => ({ item_name: item.n, quantity: item.q, unit: item.u })),
+                            items: (parsed.i || []).map(it => ({ item_name: (it.n || it.item_name || it.name || ''), quantity: it.q ?? it.quantity, unit: it.u ?? it.unit })),
                             notes: parsed.t,
                             total_cost: Number(parsed.m ?? parsed.total_cost ?? 0)
                         };
@@ -89,7 +89,7 @@ export default function PublicOrderPage() {
         if (!isNaN(p) && isFinite(p) && !isNaN(q) && isFinite(q) && q > 0) return p * q;
         return 0;
     };
-    const itemsTotal = (order?.items || []).reduce((sum, it) => sum + computeItemTotal(it), 0);
+    const itemsTotal = (order?.items || []).reduce((sum, it) => sum + computeItemTotal({ ...it, price: it.price ?? it.p, quantity: it.quantity ?? it.q, total: it.total ?? it.t }), 0);
     const effectiveTotal = itemsTotal > 0 ? itemsTotal : Number(order?.total_cost || 0);
     const formattedTotal = effectiveTotal > 0 ? effectiveTotal.toLocaleString(language === 'he' ? 'he-IL' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null;
 
