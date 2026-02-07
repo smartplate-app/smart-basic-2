@@ -409,7 +409,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         </div>
 
         <div className="flex-1 bg-gray-100 p-4 overflow-auto">
-          <div className={`mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
+          <div className={`order-preview-embed mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
             <div className={`${viewMode === 'mobile' ? 'h-[667px]' : 'h-[600px]'} w-full`}>
               <iframe
                 src={orderUrl}
