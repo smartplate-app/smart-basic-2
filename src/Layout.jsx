@@ -644,7 +644,7 @@ const AppLayout = ({ children, currentPageName }) => {
   }
 
   return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#050a1a]">
           {/* Admin Control Banner */}
           {isAdminControllingUser && (
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-40">
