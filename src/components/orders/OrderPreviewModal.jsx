@@ -411,7 +411,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
         <div className="flex-1 bg-gray-100 p-4 overflow-auto" aria-busy={!frameLoaded} aria-live="polite">
           <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
-            <div className={`${viewMode === 'mobile' ? 'h?[667px]' : 'h?[600px]'} w-full relative`.replace('?','[').replace('?','[')}>
+            <div className={`${viewMode === 'mobile' ? 'h-[667px]' : 'h-[600px]'} w-full relative`}>
               {!frameLoaded && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white">
                   <div className="h-6 w-6 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
@@ -422,28 +422,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 className="w-full h-full border-0 [image-rendering:auto] [text-rendering:optimizeLegibility]"
                 title={t('order_preview')}
                 sandbox="allow-same-origin allow-scripts"
-                style={{ backgroundColor: '#ffffff', opacity: frameLoaded ? 1 : 0 }}
+                style={{ backgroundColor: '#ffffff', opacity: frameLoaded ? 1 : 0, willChange: 'opacity' }}
                 onLoad={() => setFrameLoaded(true)}
-                ref={(el) => {
-                  if (!el) return;
-                  try {
-                    el.addEventListener('load', () => {
-                      const doc = el.contentDocument;
-                      if (!doc) return;
-                      const style = doc.createElement('style');
-                      style.textContent = `
-                        :root, html { color-scheme: light !important; }
-                        html, body { background: #ffffff !important; color: #0f172a !important; -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; }
-                        img, canvas { image-rendering: auto !important; }
-                      `;
-                      doc.head.appendChild(style);
-                      try {
-                        doc.documentElement.classList.remove('dark');
-                        doc.documentElement.style.colorScheme = 'light';
-                      } catch (e) {}
-                    });
-                  } catch (_) {}
-                }}
               />
             </div>
           </div>
