@@ -190,6 +190,11 @@ export default function PublicOrderPage() {
                 @keyframes spin {
                     to { transform: rotate(360deg); }
                 }
+
+                /* Dark-mode only smoothing for crisp text */
+                @media (prefers-color-scheme: dark) {
+                    body, #order-content { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+                }
             `}</style>
             
             <div style={{
@@ -197,8 +202,6 @@ export default function PublicOrderPage() {
                 background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
                 padding: '16px',
                 fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-                WebkitFontSmoothing: 'antialiased',
-                MozOsxFontSmoothing: 'grayscale',
                 direction: isRTL ? 'rtl' : 'ltr'
             }}>
                 {/* Language Toggle */}

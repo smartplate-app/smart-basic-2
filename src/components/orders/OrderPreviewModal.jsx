@@ -374,7 +374,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
       >
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10" style={{ WebkitFontSmoothing: 'antialiased' }}>
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold text-gray-900">{t('order_preview')}</h2>
             {effectiveTotal > 0 && (
@@ -408,8 +408,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </Button>
         </div>
 
-        <div className="flex-1 bg-gray-100 p-4 overflow-auto" style={{ WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
-          <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`} style={{ WebkitFontSmoothing: 'antialiased', fontSmoothing: 'antialiased' }}>
+        <div className="flex-1 bg-gray-100 p-4 overflow-auto">
+          <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
             <div className={`${viewMode === 'mobile' ? 'h-[667px]' : 'h-[600px]'} w-full`}>
               <iframe
                 src={orderUrl}

@@ -926,6 +926,7 @@ html, body, #root { background: var(--app-bg); color: var(--app-text); }
 .dark .order-preview-embed [class*=\"border-\"], 
 .dark .order-preview-embed .border { border-color: #e5e7eb !important; }
 .dark .order-preview-embed iframe { filter: none !important; opacity: 1 !important; -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; image-rendering: auto !important; backface-visibility: visible !important; transform: none !important; }
+.dark .order-preview-embed, .dark .order-preview-embed .sticky { -webkit-font-smoothing: antialiased !important; -moz-osx-font-smoothing: grayscale !important; text-rendering: optimizeLegibility !important; }
 /* Force dark for light grays and whites */
 .dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-gray-200, .dark .bg-slate-50, .dark .bg-zinc-50, .dark .bg-neutral-50, .dark .bg-stone-50 { background-color: var(--app-surface) !important; }
 /* Any gradient backgrounds → dark gradient */
