@@ -424,10 +424,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                       if (!doc) return;
                       const style = doc.createElement('style');
                       style.textContent = `
-                        html, body { -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; }
+                        :root, html { color-scheme: light !important; }
+                        html, body { background: #ffffff !important; color: #0f172a !important; -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; }
                         img, canvas { image-rendering: auto !important; }
                       `;
                       doc.head.appendChild(style);
+                      try {
+                        doc.documentElement.classList.remove('dark');
+                        doc.documentElement.style.colorScheme = 'light';
+                      } catch (e) {}
                     });
                   } catch (_) {}
                 }}

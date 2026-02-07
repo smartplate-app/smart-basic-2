@@ -78,6 +78,15 @@ export default function PublicOrderPage() {
         })();
     }, []);
 
+    useEffect(() => {
+        try {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
+            document.body.style.background = '#ffffff';
+            document.body.style.color = '#0f172a';
+        } catch {}
+    }, []);
+
     const isRTL = language === 'he';
 
     // Calculate total: prefer sum of item totals/prices, fallback to stored total_cost
@@ -191,10 +200,9 @@ export default function PublicOrderPage() {
                     to { transform: rotate(360deg); }
                 }
 
-                /* Dark-mode only smoothing for crisp text */
-                @media (prefers-color-scheme: dark) {
-                    body, #order-content { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
-                }
+                /* Force light color scheme for this page */
+                :root, html { color-scheme: light !important; }
+                html, body { background: #ffffff !important; color: #0f172a !important; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
             `}</style>
             
             <div style={{
