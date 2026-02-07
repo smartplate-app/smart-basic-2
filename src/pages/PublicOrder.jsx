@@ -203,6 +203,7 @@ export default function PublicOrderPage() {
                 /* Force light color scheme for this page */
                 :root, html { color-scheme: light !important; }
                 html, body { background: #ffffff !important; color: #0f172a !important; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+                #order-content { background: #ffffff !important; }
             `}</style>
             
             <div style={{

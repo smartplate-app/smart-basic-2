@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { X, Smartphone, Monitor, Copy, Check, Download, Share } from 'lucide-react';
@@ -45,16 +45,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     m: effectiveTotal
   };
   const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
-  let orderUrl = '';
-  const isDraft = (order.status === 'draft');
-  if (order.id) {
-    // Always include both id and payload for robustness (drafts included)
-    const qs = `id=${order.id}&d=${orderData}`;
-    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?${qs}`)}&ts=${Date.now()}`;
-  } else {
-    // Unsaved orders: embed minimal payload
-    orderUrl = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}&ts=${Date.now()}`;
+  const urlRef = useRef('');
+  if (!urlRef.current) {
+    if (order.id) {
+      const qs = `id=${order.id}&d=${orderData}`;
+      urlRef.current = `${window.location.origin}${createPageUrl(`PublicOrder?${qs}`)}`;
+    } else {
+      urlRef.current = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
+    }
   }
+  const orderUrl = urlRef.current;
 
   const handleCopyLink = async () => {
     try {
