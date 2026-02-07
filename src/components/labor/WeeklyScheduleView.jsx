@@ -1408,7 +1408,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                               <div className="text-xs text-gray-500 font-normal">
                                 {dayDate.format('DD/MM')}
                               </div>
-                              {dayShiftsCount > 0 && (
+                              {false && (
                                 <Button
                                   size="sm"
                                   variant="outline"
