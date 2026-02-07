@@ -408,7 +408,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </Button>
         </div>
 
-        <div className="flex-1 bg-gray-100 p-4 overflow-auto">
+        <div className="flex-1 bg-gray-100 p-4 overflow-auto" style={{ WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
           <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`} style={{ WebkitFontSmoothing: 'antialiased', fontSmoothing: 'antialiased' }}>
             <div className={`${viewMode === 'mobile' ? 'h-[667px]' : 'h-[600px]'} w-full`}>
               <iframe
