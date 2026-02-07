@@ -207,7 +207,7 @@ export default function PublicOrderPage() {
             
             <div style={{
                 minHeight: '100vh',
-                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                background: '#ffffff',
                 padding: '16px',
                 fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
                 direction: isRTL ? 'rtl' : 'ltr'

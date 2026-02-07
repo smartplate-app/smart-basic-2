@@ -13,6 +13,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [frameLoaded, setFrameLoaded] = useState(false);
   
   if (!isOpen || !order) return null;
 
@@ -410,12 +411,19 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
         <div className="flex-1 bg-gray-100 p-4 overflow-auto">
           <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
-            <div className={`${viewMode === 'mobile' ? 'h-[667px]' : 'h-[600px]'} w-full`}>
+            <div className={`${viewMode === 'mobile' ? 'h?[667px]' : 'h?[600px]'} w-full`.replace('?','[').replace('?','[')}>
+              {!frameLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white">
+                  <div className="h-6 w-6 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+                </div>
+              )}
               <iframe
                 src={orderUrl}
                 className="w-full h-full border-0 [image-rendering:auto] [text-rendering:optimizeLegibility]"
                 title={t('order_preview')}
                 sandbox="allow-same-origin allow-scripts"
+                style={{ backgroundColor: '#ffffff', opacity: frameLoaded ? 1 : 0 }}
+                onLoad={() => setFrameLoaded(true)}
                 ref={(el) => {
                   if (!el) return;
                   try {
