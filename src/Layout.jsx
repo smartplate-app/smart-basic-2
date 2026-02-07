@@ -845,7 +845,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   <a 
                     href={item.url}
                     onClick={() => setSidebarOpen(false)}
-                    className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-indigo-600 text-white font-bold dark:bg-indigo-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-white/10')}
+                    className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-indigo-600 text-white font-bold dark:bg-indigo-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]')}
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.title}</span>
