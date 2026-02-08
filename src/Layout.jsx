@@ -132,9 +132,13 @@ const AppLayout = ({ children, currentPageName }) => {
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
       base44.auth.isAuthenticated().then((auth) => {
                 if (!auth) {
-                  let suppress = false;
-                  try { suppress = sessionStorage.getItem('b44_login_redirect') === '1'; } catch {}
-                  if (suppress || isPwaInstalled) {
+                  let suppress = false; let cooldownUntil = 0;
+                  try {
+                    suppress = sessionStorage.getItem('b44_login_redirect') === '1';
+                    cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || '0');
+                  } catch {}
+                  const inCooldown = cooldownUntil > Date.now();
+                  if (suppress || isPwaInstalled || inCooldown) {
                     setTimeout(async () => {
                       try {
                         const again = await base44.auth.isAuthenticated();
@@ -148,7 +152,7 @@ const AppLayout = ({ children, currentPageName }) => {
                         if (preview === '1') url.searchParams.set('preview', '1');
                         window.location.replace(url.pathname + url.search);
                       }
-                    }, 1200);
+                    }, 1500);
                   } else {
                     const url = new URL(createPageUrl('Welcome'), window.location.origin);
                     if (preview === '1') url.searchParams.set('preview', '1');
@@ -156,14 +160,18 @@ const AppLayout = ({ children, currentPageName }) => {
                   }
                 }
               }).catch(() => {
-                let suppress = false;
-                try { suppress = sessionStorage.getItem('b44_login_redirect') === '1'; } catch {}
-                if (suppress || isPwaInstalled) {
+                let suppress = false; let cooldownUntil = 0;
+                try {
+                  suppress = sessionStorage.getItem('b44_login_redirect') === '1';
+                  cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || '0');
+                } catch {}
+                const inCooldown = cooldownUntil > Date.now();
+                if (suppress || isPwaInstalled || inCooldown) {
                   setTimeout(() => {
                     const url = new URL(createPageUrl('Welcome'), window.location.origin);
                     if (preview === '1') url.searchParams.set('preview', '1');
                     window.location.replace(url.pathname + url.search);
-                  }, 1200);
+                  }, 1500);
                 } else {
                   const url = new URL(createPageUrl('Welcome'), window.location.origin);
                   if (preview === '1') url.searchParams.set('preview', '1');
@@ -258,7 +266,7 @@ const AppLayout = ({ children, currentPageName }) => {
           let currentUser = await base44.auth.me();
 
           setUser(currentUser);
-                  try { sessionStorage.removeItem('b44_login_redirect'); } catch {}
+                  try { sessionStorage.removeItem('b44_login_redirect'); sessionStorage.removeItem('b44_login_cooldown_until'); } catch {}
                   try { localStorage.setItem('b44_user_cache', JSON.stringify(currentUser)); } catch {}
                   setError(null);
                   setRetryCount(0);
@@ -431,8 +439,11 @@ const AppLayout = ({ children, currentPageName }) => {
       // Redirect unauthenticated users to Welcome (access request page)
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED';
       if (unauthorized) {
-        if (attemptNumber < 2) {
-          setTimeout(() => loadAuth(attemptNumber + 1), 800);
+        let cooldownUntil = 0;
+        try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
+        const inCooldown = cooldownUntil > Date.now();
+        if (attemptNumber < 2 || inCooldown) {
+          setTimeout(() => loadAuth(attemptNumber + 1), 1200);
           return;
         }
         window.location.replace(createPageUrl('Welcome'));
