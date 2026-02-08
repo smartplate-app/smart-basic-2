@@ -17,7 +17,8 @@ export default function Welcome() {
     // Otherwise redirect to login and back
     try {
       sessionStorage.setItem('b44_login_redirect', '1');
-      sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 6000));
+      sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 8000));
+      localStorage.setItem('b44_login_cooldown_until', String(Date.now() + 8000));
     } catch {}
     const nextUrl = new URL('/pages/LaborCost', window.location.origin).toString();
     await base44.auth.redirectToLogin(nextUrl);

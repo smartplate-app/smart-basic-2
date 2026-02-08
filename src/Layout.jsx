@@ -135,7 +135,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   let suppress = false; let cooldownUntil = 0;
                   try {
                     suppress = sessionStorage.getItem('b44_login_redirect') === '1';
-                    cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || '0');
+                    cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0');
                   } catch {}
                   const inCooldown = cooldownUntil > Date.now();
                   if (suppress || isPwaInstalled || inCooldown) {
@@ -163,7 +163,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 let suppress = false; let cooldownUntil = 0;
                 try {
                   suppress = sessionStorage.getItem('b44_login_redirect') === '1';
-                  cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || '0');
+                  cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0');
                 } catch {}
                 const inCooldown = cooldownUntil > Date.now();
                 if (suppress || isPwaInstalled || inCooldown) {
@@ -266,7 +266,7 @@ const AppLayout = ({ children, currentPageName }) => {
           let currentUser = await base44.auth.me();
 
           setUser(currentUser);
-                  try { sessionStorage.removeItem('b44_login_redirect'); sessionStorage.removeItem('b44_login_cooldown_until'); } catch {}
+                  try { sessionStorage.removeItem('b44_login_redirect'); sessionStorage.removeItem('b44_login_cooldown_until'); localStorage.removeItem('b44_login_cooldown_until'); } catch {}
                   try { localStorage.setItem('b44_user_cache', JSON.stringify(currentUser)); } catch {}
                   setError(null);
                   setRetryCount(0);
@@ -440,10 +440,12 @@ const AppLayout = ({ children, currentPageName }) => {
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED';
       if (unauthorized) {
         let cooldownUntil = 0;
-        try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
+        try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
         const inCooldown = cooldownUntil > Date.now();
-        if (attemptNumber < 2 || inCooldown) {
-          setTimeout(() => loadAuth(attemptNumber + 1), 1200);
+        const params = new URLSearchParams(window.location.search);
+        const oauthBack = params.has('code') || params.has('state');
+        if (attemptNumber < 5 || inCooldown || oauthBack || isPwaInstalled) {
+          setTimeout(() => loadAuth(attemptNumber + 1), 1500);
           return;
         }
         window.location.replace(createPageUrl('Welcome'));
