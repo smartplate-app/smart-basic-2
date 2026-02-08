@@ -10,7 +10,7 @@ export default function Welcome() {
     try {
       const isAuth = await base44.auth.isAuthenticated();
       if (isAuth) {
-        window.location.href = '/pages/LaborCost';
+        window.location.replace('/pages/LaborCost');
         return;
       }
     } catch {}
