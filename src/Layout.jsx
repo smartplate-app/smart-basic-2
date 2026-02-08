@@ -401,7 +401,11 @@ const AppLayout = ({ children, currentPageName }) => {
       // Redirect unauthenticated users to Welcome (access request page)
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED';
       if (unauthorized) {
-        window.location.href = createPageUrl('Welcome');
+        if (attemptNumber < 2) {
+          setTimeout(() => loadAuth(attemptNumber + 1), 800);
+          return;
+        }
+        window.location.replace(createPageUrl('Welcome'));
         return;
       }
       
