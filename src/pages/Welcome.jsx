@@ -15,6 +15,7 @@ export default function Welcome() {
       }
     } catch {}
     // Otherwise redirect to login and back
+    try { sessionStorage.setItem('b44_login_redirect', '1'); } catch {}
     const nextUrl = new URL('/pages/LaborCost', window.location.origin).toString();
     await base44.auth.redirectToLogin(nextUrl);
   };

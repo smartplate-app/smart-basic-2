@@ -131,16 +131,45 @@ const AppLayout = ({ children, currentPageName }) => {
     }
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
       base44.auth.isAuthenticated().then((auth) => {
-        if (!auth) {
-          const url = new URL(createPageUrl('Welcome'), window.location.origin);
-          if (preview === '1') url.searchParams.set('preview', '1');
-          window.location.replace(url.pathname + url.search);
-        }
-      }).catch(() => {
-        const url = new URL(createPageUrl('Welcome'), window.location.origin);
-        if (preview === '1') url.searchParams.set('preview', '1');
-        window.location.replace(url.pathname + url.search);
-      });
+                if (!auth) {
+                  let suppress = false;
+                  try { suppress = sessionStorage.getItem('b44_login_redirect') === '1'; } catch {}
+                  if (suppress || isPwaInstalled) {
+                    setTimeout(async () => {
+                      try {
+                        const again = await base44.auth.isAuthenticated();
+                        if (!again) {
+                          const url = new URL(createPageUrl('Welcome'), window.location.origin);
+                          if (preview === '1') url.searchParams.set('preview', '1');
+                          window.location.replace(url.pathname + url.search);
+                        }
+                      } catch {
+                        const url = new URL(createPageUrl('Welcome'), window.location.origin);
+                        if (preview === '1') url.searchParams.set('preview', '1');
+                        window.location.replace(url.pathname + url.search);
+                      }
+                    }, 1200);
+                  } else {
+                    const url = new URL(createPageUrl('Welcome'), window.location.origin);
+                    if (preview === '1') url.searchParams.set('preview', '1');
+                    window.location.replace(url.pathname + url.search);
+                  }
+                }
+              }).catch(() => {
+                let suppress = false;
+                try { suppress = sessionStorage.getItem('b44_login_redirect') === '1'; } catch {}
+                if (suppress || isPwaInstalled) {
+                  setTimeout(() => {
+                    const url = new URL(createPageUrl('Welcome'), window.location.origin);
+                    if (preview === '1') url.searchParams.set('preview', '1');
+                    window.location.replace(url.pathname + url.search);
+                  }, 1200);
+                } else {
+                  const url = new URL(createPageUrl('Welcome'), window.location.origin);
+                  if (preview === '1') url.searchParams.set('preview', '1');
+                  window.location.replace(url.pathname + url.search);
+                }
+              });
     }
   }, [location.pathname, isIncognito]);
 
@@ -229,6 +258,7 @@ const AppLayout = ({ children, currentPageName }) => {
           let currentUser = await base44.auth.me();
 
           setUser(currentUser);
+                  try { sessionStorage.removeItem('b44_login_redirect'); } catch {}
                   try { localStorage.setItem('b44_user_cache', JSON.stringify(currentUser)); } catch {}
                   setError(null);
                   setRetryCount(0);
