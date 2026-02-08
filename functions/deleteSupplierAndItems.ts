@@ -31,14 +31,45 @@ Deno.serve(async (req) => {
       user.role === 'admin'
     );
 
-    // Extend permission: users in the same chain as the owner (head/branch) can delete
+    // Chain manager policy: allow only managers (not workers/viewers) in the same chain as the supplier's owner
     if (!allowed) {
       try {
-        if (user.chain_id) {
-          const stores = await base44.asServiceRole.entities.ChainStore.filter({ chain_id: user.chain_id });
-          const ownerInChain = Array.isArray(stores) && stores.some((s) => s.user_email === ownerEmail);
-          if (ownerInChain) {
+        // Determine the chain of the supplier owner
+        let ownerChainId = null;
+        const ownerStores = await base44.asServiceRole.entities.ChainStore.filter({ user_email: ownerEmail });
+        if (Array.isArray(ownerStores) && ownerStores.length > 0) {
+          ownerChainId = ownerStores[0].chain_id || null;
+        }
+        if (!ownerChainId) {
+          const chains = await base44.asServiceRole.entities.Chain.filter({ head_store_user_email: ownerEmail });
+          if (Array.isArray(chains) && chains.length > 0) {
+            ownerChainId = chains[0].id || null;
+          }
+        }
+
+        if (ownerChainId) {
+          // Head-store user of this chain is always allowed
+          const chainRec = await base44.asServiceRole.entities.Chain.filter({ id: ownerChainId });
+          const headEmail = chainRec?.[0]?.head_store_user_email || null;
+          if (headEmail && user.email === headEmail) {
             allowed = true;
+          }
+
+          // Managers of any store in this chain are allowed (exclude workers/viewers)
+          if (!allowed) {
+            const storesInChain = await base44.asServiceRole.entities.ChainStore.filter({ chain_id: ownerChainId });
+            const ownerEmailsInChain = new Set((storesInChain || []).map((s) => s.user_email).filter(Boolean));
+
+            const myStoreUserRecs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email });
+            const isManagerInChain = Array.isArray(myStoreUserRecs) && myStoreUserRecs.some((rec) =>
+              rec.is_active !== false &&
+              rec.role === 'manager' &&
+              ownerEmailsInChain.has(rec.owner_email)
+            );
+
+            if (isManagerInChain) {
+              allowed = true;
+            }
           }
         }
       } catch (_) {}
