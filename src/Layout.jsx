@@ -134,12 +134,12 @@ const AppLayout = ({ children, currentPageName }) => {
         if (!auth) {
           const url = new URL(createPageUrl('Welcome'), window.location.origin);
           if (preview === '1') url.searchParams.set('preview', '1');
-          window.location.href = url.pathname + url.search;
+          window.location.replace(url.pathname + url.search);
         }
       }).catch(() => {
         const url = new URL(createPageUrl('Welcome'), window.location.origin);
         if (preview === '1') url.searchParams.set('preview', '1');
-        window.location.href = url.pathname + url.search;
+        window.location.replace(url.pathname + url.search);
       });
     }
   }, [location.pathname, isIncognito]);
@@ -367,7 +367,7 @@ const AppLayout = ({ children, currentPageName }) => {
                     // do not override incognito/public welcome
                   } else if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
                     console.log("[Layout] Redirecting to Dashboard page");
-                    window.location.href = createPageUrl("Dashboard");
+                    window.location.replace(createPageUrl("Dashboard"));
                   }
       
       setAuthLoading(false);

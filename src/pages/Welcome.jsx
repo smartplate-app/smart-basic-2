@@ -15,7 +15,8 @@ export default function Welcome() {
       }
     } catch {}
     // Otherwise redirect to login and back
-    await base44.auth.redirectToLogin('/pages/LaborCost');
+    const nextUrl = new URL('/pages/LaborCost', window.location.origin).toString();
+    await base44.auth.redirectToLogin(nextUrl);
   };
 
   // Auto-redirect authenticated users away from the access page
@@ -35,7 +36,7 @@ export default function Welcome() {
             }
           }
           // Non-admins (or admin without preview) get redirected
-          window.location.href = '/pages/LaborCost';
+          window.location.replace('/pages/LaborCost');
         }
       } catch {}
     })();
