@@ -889,16 +889,7 @@ const handleAutoScan = async () => {
                           )}
                         </Button>
                         
-                        <Button
-                            type="button"
-                            onClick={handleScanAndMatchItems}
-                            disabled={matching}
-                            variant="outline"
-                            className="flex-1"
-                          >
-                            <FileText className="w-4 h-4 ml-2" />
-                            {language === 'he' ? 'התאם פריטים' : 'Match items'}
-                          </Button>
+                        {/* Match items button removed per request */}
                           {!formData.manual_entry_mode && (
                           <Button
                             type="button"
