@@ -596,7 +596,7 @@ export default function OrdersPage() {
       setOrders(prev => prev.map(o => {
         if (o.id !== (updated.id || order.id)) return o;
         const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num };
+        return { ...o, status: 'sent', order_number: num, sent_via: 'email' };
       }));
 
       // Send email and show confirmation
@@ -1311,8 +1311,8 @@ export default function OrdersPage() {
       <Dialog open={showSendOptions} onOpenChange={setShowSendOptions}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('choose_send_method') || 'Choose how to send'}</DialogTitle>
-            <DialogDescription>{t('send_method_hint') || 'Supplier has an email saved. Pick a method:'}</DialogDescription>
+            <DialogTitle>{t('choose_send_method') === 'choose_send_method' ? 'בחר דרך שליחה' : t('choose_send_method')}</DialogTitle>
+            <DialogDescription>{t('send_method_hint') === 'send_method_hint' ? 'לספק יש אימייל שמור. בחרו אופן שליחה:' : t('send_method_hint')}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setShowSendOptions(false)}>{t('cancel') || 'Cancel'}</Button>
