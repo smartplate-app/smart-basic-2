@@ -193,7 +193,6 @@ export default function SupplyReceiptsPage() {
         calculated_total: parseFloat(receiptData.calculated_total) || 0,
         status: receiptData.status || "pending",
         is_refund: !!receiptData.is_refund,
-        awaiting_credit: !!receiptData.awaiting_credit,
         needs_review: !!receiptData.needs_review,
         review_note: receiptData.review_note || "",
         refund_received: !!receiptData.refund_received,
@@ -255,9 +254,7 @@ export default function SupplyReceiptsPage() {
     const matchesSearch = receipt.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" ||
-      (statusFilter === 'refund' ? !!receipt.is_refund
-        : statusFilter === 'awaiting_credit' ? !!receipt.awaiting_credit
-        : receipt.status === statusFilter);
+      (statusFilter === 'refund' ? !!receipt.is_refund : receipt.status === statusFilter);
     const matchesSupplier = supplierFilter === "all" || receipt.supplier_name === supplierFilter;
 
     // Date range filter (inclusive)
@@ -521,7 +518,7 @@ export default function SupplyReceiptsPage() {
                  <SelectItem value="verified">{tt('status_verified','מאומת','Verified')}</SelectItem>
                  <SelectItem value="has_issues">{tt('status_has_issues','יש בעיות','Has issues')}</SelectItem>
                  <SelectItem value="refund">{tt('refund','זיכוי','Refund')}</SelectItem>
-                 <SelectItem value="awaiting_credit">{tt('awaiting_credit','ממתין','Awaiting')}</SelectItem>
+                 <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -654,7 +651,7 @@ export default function SupplyReceiptsPage() {
                       <SelectItem value="verified">{tt('status_verified','מאומת','Verified')}</SelectItem>
                       <SelectItem value="has_issues">{tt('status_has_issues','יש בעיות','Has issues')}</SelectItem>
                       <SelectItem value="refund">{tt('refund','זיכוי','Refund')}</SelectItem>
-                      <SelectItem value="awaiting_credit">{tt('awaiting_credit','ממתין','Awaiting')}</SelectItem>
+                      <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button onClick={() => setFiltersOpen(false)} className="w-full">{t('apply') || 'Apply'}</Button>

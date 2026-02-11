@@ -555,7 +555,6 @@ export default function OrdersPage() {
         calculated_total: parseFloat(receiptData.calculated_total) || 0,
         status: receiptData.status || "pending",
         is_refund: !!receiptData.is_refund,
-        awaiting_credit: !!receiptData.awaiting_credit,
         needs_review: !!receiptData.needs_review,
         review_note: receiptData.review_note || "",
         refund_received: !!receiptData.refund_received,
