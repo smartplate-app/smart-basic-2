@@ -7,47 +7,90 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const supplierName = (body?.supplierName || '').trim();
+    const rawSupplier = (body?.supplierName || '').trim();
     const toEmail = (body?.toEmail || '').trim();
+    const orderNumberHint = (body?.orderNumber || '').trim();
 
-    if (!supplierName) return Response.json({ error: 'supplierName is required' }, { status: 400 });
+    if (!rawSupplier && !orderNumberHint) return Response.json({ error: 'supplierName or orderNumber is required' }, { status: 400 });
     if (!toEmail) return Response.json({ error: 'toEmail is required' }, { status: 400 });
 
-    // Find latest order for this supplier (service role to allow chain/sub-user data)
-    let orders = await base44.asServiceRole.entities.Order.filter({ supplier_name: supplierName }, '-created_date');
-    if (!orders || orders.length === 0) {
-      // Fallback: try by -updated_date
-      orders = await base44.asServiceRole.entities.Order.filter({ supplier_name: supplierName }, '-updated_date');
-    }
-    if (!orders || orders.length === 0) {
-      return Response.json({ success: false, error: `No orders found for supplier ${supplierName}` }, { status: 404 });
+    const norm = (s) => (s || '').toString().trim().toLowerCase();
+
+    // 1) If orderNumber provided, try that first (exact then fuzzy)
+    let targetOrder = null;
+    if (orderNumberHint) {
+      try {
+        const exact = await base44.asServiceRole.entities.Order.filter({ order_number: orderNumberHint }, '-created_date');
+        if (exact && exact.length > 0) targetOrder = exact[0];
+      } catch (_) {}
+      if (!targetOrder) {
+        try {
+          const recent = await base44.asServiceRole.entities.Order.list('-created_date', 200);
+          targetOrder = (recent || []).find(o => norm(o.order_number).includes(norm(orderNumberHint)));
+        } catch (_) {}
+      }
     }
 
-    const order = orders[0];
+    // 2) If still not found, try supplier name -> supplier_id -> orders
+    if (!targetOrder) {
+      let supplier = null;
+      if (rawSupplier) {
+        try {
+          const suppliers = await base44.asServiceRole.entities.Supplier.list('name', 200);
+          const byExact = suppliers.find(s => norm(s.name) === norm(rawSupplier));
+          const byStarts = suppliers.find(s => norm(s.name).startsWith(norm(rawSupplier)));
+          const byIncludes = suppliers.find(s => norm(s.name).includes(norm(rawSupplier)));
+          supplier = byExact || byStarts || byIncludes || null;
+        } catch (_) {}
+      }
 
-    // Reuse existing email sender (ensures CC + Reply-To, Gmail connector, etc.)
+      // Prefer orders by supplier_id when we have it
+      if (supplier?.id) {
+        try {
+          const byId = await base44.asServiceRole.entities.Order.filter({ supplier_id: supplier.id }, '-created_date');
+          if (byId && byId.length > 0) targetOrder = byId[0];
+        } catch (_) {}
+      }
+
+      // Fallback: scan recent orders and match supplier_name loosely
+      if (!targetOrder && rawSupplier) {
+        try {
+          const recent = await base44.asServiceRole.entities.Order.list('-created_date', 300);
+          const byExact = recent.find(o => norm(o.supplier_name) === norm(rawSupplier));
+          const byStarts = recent.find(o => norm(o.supplier_name).startsWith(norm(rawSupplier)));
+          const byIncludes = recent.find(o => norm(o.supplier_name).includes(norm(rawSupplier)));
+          targetOrder = byExact || byStarts || byIncludes || null;
+        } catch (_) {}
+      }
+    }
+
+    if (!targetOrder) {
+      return Response.json({ success: false, error: `No matching order found for ${orderNumberHint || rawSupplier}` }, { status: 404 });
+    }
+
+    // 3) Send email using existing sender (adds CC to admin, Reply-To, Gmail connector)
     const sendRes = await base44.asServiceRole.functions.invoke('sendOrderEmail', {
-      orderId: order.id,
+      orderId: targetOrder.id,
       to: toEmail
     });
 
-    const ok = sendRes?.status >= 200 && sendRes?.status < 300 && !!sendRes?.data;
-    if (!ok || sendRes?.data?.success === false) {
+    const ok = sendRes?.status >= 200 && sendRes?.status < 300 && !!sendRes?.data && sendRes?.data?.success !== false;
+    if (!ok) {
       return Response.json({
         success: false,
         error: 'Failed to send email',
         details: sendRes?.data || null,
-        order_id: order.id,
-        order_number: order.order_number || null
+        order_id: targetOrder.id,
+        order_number: targetOrder.order_number || null
       }, { status: 500 });
     }
 
     return Response.json({
       success: true,
       to: toEmail,
-      supplier: supplierName,
-      order_id: order.id,
-      order_number: order.order_number || null,
+      supplier: rawSupplier || targetOrder.supplier_name,
+      order_id: targetOrder.id,
+      order_number: targetOrder.order_number || null,
       email: sendRes.data
     });
   } catch (error) {
