@@ -594,6 +594,26 @@ export default function OrdersPage() {
         return { ...o, status: 'sent', order_number: num };
       }));
 
+      // Fire-and-forget: email supplier if email exists on supplier record
+      try {
+        const supplierById = suppliers.find(s => s.id === (order.supplier_id || updated.supplier_id));
+        const supplierByName = suppliers.find(s => s.name === (order.supplier_name || updated.supplier_name));
+        const supplierEmail = (supplierById?.email || supplierByName?.email || updated.supplier_email || order.supplier_email || '').trim();
+        if (supplierEmail) {
+          base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id })
+            .then((res) => {
+              if (res?.data?.success) {
+                console.log('[Email] Order emailed to supplier');
+              } else {
+                console.warn('[Email] Failed to email order:', res?.data);
+              }
+            })
+            .catch((err) => console.warn('[Email] Error emailing order:', err?.message || err));
+        }
+      } catch (e) {
+        console.warn('[Email] Skipped emailing supplier:', e?.message || e);
+      }
+
       // Close preview and refresh list
       setPreviewOrder(null);
       await loadData(user);

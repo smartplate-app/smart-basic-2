@@ -184,15 +184,16 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
             </div>
             
             {supplier.email && (
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="w-4 h-4 text-blue-600" />
-                <a 
-                  href={`mailto:${supplier.email}`} 
-                  className="text-blue-600 hover:underline"
-                >
-                  {supplier.email}
-                </a>
-              </div>
+             <div className="flex items-center gap-2 text-sm">
+               <Mail className="w-4 h-4 text-blue-600" />
+               <a 
+                 href={`mailto:${supplier.email}`} 
+                 className="text-blue-600 hover:underline"
+                 title={language === 'he' ? 'ישלחו הזמנות למייל זה בלחיצה על שלח בהזמנה' : 'Orders will be emailed here when you click Send in Orders'}
+               >
+                 {supplier.email}
+               </a>
+             </div>
             )}
 
             {supplier.grant_notes && (
