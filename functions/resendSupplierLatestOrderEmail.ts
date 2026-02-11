@@ -52,14 +52,20 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Fallback: scan recent orders and match supplier_name loosely
-      if (!targetOrder && rawSupplier) {
+      // Fallback: scan recent orders and match by supplier_name OR restaurant_name; then by supplier_email
+      if (!targetOrder) {
         try {
-          const recent = await base44.asServiceRole.entities.Order.list('-created_date', 300);
-          const byExact = recent.find(o => norm(o.supplier_name) === norm(rawSupplier));
-          const byStarts = recent.find(o => norm(o.supplier_name).startsWith(norm(rawSupplier)));
-          const byIncludes = recent.find(o => norm(o.supplier_name).includes(norm(rawSupplier)));
-          targetOrder = byExact || byStarts || byIncludes || null;
+          const recent = await base44.asServiceRole.entities.Order.list('-created_date', 500);
+          if (rawSupplier) {
+            const byExact = recent.find(o => norm(o.supplier_name) === norm(rawSupplier) || norm(o.restaurant_name) === norm(rawSupplier));
+            const byStarts = recent.find(o => norm(o.supplier_name).startsWith(norm(rawSupplier)) || norm(o.restaurant_name).startsWith(norm(rawSupplier)));
+            const byIncludes = recent.find(o => norm(o.supplier_name).includes(norm(rawSupplier)) || norm(o.restaurant_name).includes(norm(rawSupplier)));
+            targetOrder = byExact || byStarts || byIncludes || null;
+          }
+          // As a final fallback, match by supplier_email (useful when name is in different language/script)
+          if (!targetOrder && toEmail) {
+            targetOrder = recent.find(o => norm(o.supplier_email) === norm(toEmail)) || null;
+          }
         } catch (_) {}
       }
     }
