@@ -791,6 +791,19 @@ const handleAutoScan = async () => {
         <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
           {(noOrderMode || order) ? (
             <>
+              {/* PDF guidance banner */}
+              <Alert variant={formData.is_refund ? "destructive" : "default"} className={formData.is_refund ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}>
+                <FileText className="h-4 w-4" />
+                <AlertDescription>
+                  {language === 'he'
+                    ? (formData.is_refund
+                       ? 'חשבונית זיכוי: אנא העלו PDF בלבד (לא תמונות).'
+                       : 'מומלץ להעלות קובץ PDF ברור לסריקה מיטבית. בזיכויים – רק PDF.')
+                    : (formData.is_refund
+                       ? 'Refund invoice: Please upload PDF only (no images).'
+                       : 'Tip: For best results, upload a clear PDF. For refunds – PDF only.')}
+                </AlertDescription>
+              </Alert>
               <div className="space-y-2">
                 <Label>{t('select_supplier')} *</Label>
                 <Select onValueChange={(val) => { handleSupplierSelect(val); }} value={formData.supplier_id}>
