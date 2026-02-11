@@ -797,11 +797,11 @@ const handleAutoScan = async () => {
                 <AlertDescription>
                   {language === 'he'
                     ? (formData.is_refund
-                       ? 'חשבונית זיכוי: אנא העלו PDF בלבד (לא תמונות).'
-                       : 'מומלץ להעלות קובץ PDF ברור לסריקה מיטבית. בזיכויים – רק PDF.')
+                       ? 'לקבלת זיכוי במערכת מומלץ להעלות קובץ PDF. בהעלאת תמונה יש לתקן את הסכום ידנית'
+                       : 'מומלץ להעלות קובץ PDF ברור לסריקה מיטבית')
                     : (formData.is_refund
-                       ? 'Refund invoice: Please upload PDF only (no images).'
-                       : 'Tip: For best results, upload a clear PDF. For refunds – PDF only.')}
+                       ? 'For credit invoices, we recommend uploading a PDF. If you upload an image, please correct the total manually.'
+                       : 'Tip: For best results, upload a clear PDF.')}
                 </AlertDescription>
               </Alert>
               <div className="space-y-2">
