@@ -29,20 +29,24 @@ Deno.serve(async (req) => {
     const order = await base44.asServiceRole.entities.Order.get(orderId);
     if (!order) return Response.json({ error: 'Order not found' }, { status: 404 });
 
-    // Determine recipient email
-    let to = overrideTo || (order.supplier_email || '').trim();
-    if (!to) {
-      try {
-        if (order.supplier_id) {
-          const supplier = await base44.asServiceRole.entities.Supplier.get(order.supplier_id);
-          to = (supplier?.email || '').trim();
-        }
-      } catch (_) { /* ignore */ }
+    // Build recipients: override, order email, supplier card email (dedupe), always CC admin
+    const recipientsSet = new Set();
+    const pushEmail = (s) => { const e = (s || '').toString().trim(); if (e && e.includes('@')) recipientsSet.add(e.toLowerCase()); };
+    pushEmail(overrideTo);
+    pushEmail(order.supplier_email);
+    let supplierEmail = '';
+    try {
+      if (order.supplier_id) {
+        const supplier = await base44.asServiceRole.entities.Supplier.get(order.supplier_id);
+        supplierEmail = (supplier?.email || '').trim();
+        pushEmail(supplierEmail);
+      }
+    } catch (_) { /* ignore */ }
+    const recipients = Array.from(recipientsSet);
+    if (recipients.length === 0) {
+      return Response.json({ success: false, error: 'No recipient email found on order or supplier record' }, { status: 400 });
     }
-
-    if (!to) {
-      return Response.json({ success: false, error: 'Supplier email not found on order or supplier record' }, { status: 400 });
-    }
+    const toHeader = recipients.join(', ');
 
     // Compose email
     const subject = 'a new order has send to you from smart plate basic';
@@ -114,7 +118,7 @@ Deno.serve(async (req) => {
 
     // Build raw MIME message
     const headers = [
-      `To: ${to}`,
+      `To: ${toHeader}`,
       `Cc: ${adminCc}`,
       `Reply-To: ${replyTo}`,
       `Subject: ${subject}`,
@@ -146,7 +150,7 @@ Deno.serve(async (req) => {
     }
 
     const data = await resp.json();
-    return Response.json({ success: true, messageId: data?.id || null, to, cc: adminCc });
+    return Response.json({ success: true, messageId: data?.id || null, to: recipients, cc: adminCc });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
   }
