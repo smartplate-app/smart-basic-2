@@ -893,16 +893,18 @@ const handleAutoScan = async () => {
                           className="flex-1 bg-purple-600 hover:bg-purple-700"
                         >
                           {scanning ? (
-                            <>
-                              <Loader className="w-4 h-4 ml-2 animate-spin" />
-                              {t('scanning_invoice')}
-                            </>
-                          ) : (
-                            <>
-                              <Scan className="w-4 h-4 ml-2" />
-                              {formData.manual_entry_mode ? (t('re_scan_header') || 'סרוק מחדש') : t('auto_scan')}
-                            </>
-                          )}
+                              <>
+                                <Loader className="w-4 h-4 ml-2 animate-spin" />
+                                {t('scanning_invoice')}
+                              </>
+                            ) : (
+                              <>
+                                <Scan className="w-4 h-4 ml-2" />
+                                {formData.manual_entry_mode 
+                                  ? safeT('re_scan_header', 'סריקה מחדש', 'Rescan header') 
+                                  : safeT('auto_scan', 'סריקה אוטומטית', 'Auto scan')}
+                              </>
+                            )}
                         </Button>
                         
                         {/* Match items button removed per request */}
