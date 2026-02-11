@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2 } from "lucide-react";
+import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -9,6 +9,7 @@ import { createPageUrl } from "@/utils";
 import { useLanguage } from "../components/LanguageProvider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 import OrderForm from "../components/orders/OrderForm";
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
@@ -40,6 +41,9 @@ export default function OrdersPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [showReceiveForm, setShowReceiveForm] = useState(false);
   const [receiveOrder, setReceiveOrder] = useState(null);
+  // Send options chooser
+  const [showSendOptions, setShowSendOptions] = useState(false);
+  const [sendOptionOrder, setSendOptionOrder] = useState(null);
 
 
   const loadData = async (currentUser, retryAttempt = 0) => {
@@ -576,10 +580,9 @@ export default function OrdersPage() {
     setPreviewOrder(order);
   };
 
-  const handleSendNow = async (order) => {
+  const doEmailSend = async (order) => {
     try {
       if (!order) return;
-
       // Mark as sent via service-role so sub-users can update owner orders
       const { data } = await base44.functions.invoke('markOrderSent', {
         orderId: order.id,
@@ -594,22 +597,17 @@ export default function OrdersPage() {
         return { ...o, status: 'sent', order_number: num };
       }));
 
-      // Fire-and-forget: email supplier if email exists on supplier record
+      // Fire-and-forget: email supplier (sendOrderEmail handles dedup + CC)
       try {
-        const supplierById = suppliers.find(s => s.id === (order.supplier_id || updated.supplier_id));
-        const supplierByName = suppliers.find(s => s.name === (order.supplier_name || updated.supplier_name));
-        const supplierEmail = (supplierById?.email || supplierByName?.email || updated.supplier_email || order.supplier_email || '').trim();
-        if (supplierEmail) {
-          base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id, to: supplierEmail })
-            .then((res) => {
-              if (res?.data?.success) {
-                console.log('[Email] Order emailed to supplier and CC to admin@smartplate.org');
-              } else {
-                console.warn('[Email] Failed to email order:', res?.data);
-              }
-            })
-            .catch((err) => console.warn('[Email] Error emailing order:', err?.message || err));
-        }
+        base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id })
+          .then((res) => {
+            if (res?.data?.success) {
+              console.log('[Email] Order emailed (recipients merged, CC admin)');
+            } else {
+              console.warn('[Email] Failed to email order:', res?.data);
+            }
+          })
+          .catch((err) => console.warn('[Email] Error emailing order:', err?.message || err));
       } catch (e) {
         console.warn('[Email] Skipped emailing supplier:', e?.message || e);
       }
@@ -621,6 +619,21 @@ export default function OrdersPage() {
       console.error('Failed to send order:', e);
       alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
     }
+  };
+
+  const handleSendNow = async (order) => {
+    if (!order) return;
+    // If supplier card has an email, show chooser (Email or WhatsApp)
+    const supplierById = suppliers.find(s => s.id === (order.supplier_id || ''));
+    const supplierByName = suppliers.find(s => s.name === (order.supplier_name || ''));
+    const supplierEmailOnCard = (supplierById?.email || supplierByName?.email || '').trim();
+    if (supplierEmailOnCard) {
+      setSendOptionOrder(order);
+      setShowSendOptions(true);
+      return;
+    }
+    // Default to previous behavior (email flow)
+    await doEmailSend(order);
   };
 
   const sendOrderToWhatsApp = (order) => {
@@ -654,6 +667,40 @@ export default function OrdersPage() {
     const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodedMessage}`;
 
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleConfirmSendEmail = async () => {
+    if (!sendOptionOrder) return;
+    const order = sendOptionOrder;
+    setShowSendOptions(false);
+    await doEmailSend(order);
+    setSendOptionOrder(null);
+  };
+
+  const handleConfirmSendWhatsApp = async () => {
+    if (!sendOptionOrder) return;
+    const order = sendOptionOrder;
+    setShowSendOptions(false);
+    try {
+      const { data } = await base44.functions.invoke('markOrderSent', {
+        orderId: order.id,
+        orderNumber: order.order_number
+      });
+      const updated = data?.order || {};
+      setOrders(prev => prev.map(o => {
+        if (o.id !== (updated.id || order.id)) return o;
+        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      sendOrderToWhatsApp(updated.id ? updated : order);
+      setPreviewOrder(null);
+      await loadData(user);
+    } catch (e) {
+      console.error('Failed to mark as sent (WhatsApp):', e);
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
+    } finally {
+      setSendOptionOrder(null);
+    }
   };
 
   const handleDelete = async (order) => {
@@ -1238,6 +1285,25 @@ export default function OrdersPage() {
           )}
         </div>
       </div>
+
+      {/* Send options chooser */}
+      <Dialog open={showSendOptions} onOpenChange={setShowSendOptions}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('choose_send_method') || 'Choose how to send'}</DialogTitle>
+            <DialogDescription>{t('send_method_hint') || 'Supplier has an email saved. Pick a method:'}</DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowSendOptions(false)}>{t('cancel') || 'Cancel'}</Button>
+            <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
+              <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
+            </Button>
+            <Button onClick={handleConfirmSendEmail} className="bg-gray-900 hover:bg-gray-800 text-white">
+              <Mail className="w-4 h-4 mr-2" /> {t('email') || 'Email'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {previewOrder && (
         <OrderPreviewModal
