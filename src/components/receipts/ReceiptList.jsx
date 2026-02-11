@@ -120,6 +120,9 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                     </label>
                   </>
                 )}
+                {r.awaiting_credit && (
+                  <Badge className="bg-sky-100 text-sky-800">{language === 'he' ? 'ממתין' : 'Awaiting'}</Badge>
+                )}
                 {r.linked_receipt_id && (
                   <Badge className="bg-blue-100 text-blue-800">{language === 'he' ? 'מקושר' : 'Linked'}</Badge>
                 )}
