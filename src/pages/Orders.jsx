@@ -600,10 +600,10 @@ export default function OrdersPage() {
         const supplierByName = suppliers.find(s => s.name === (order.supplier_name || updated.supplier_name));
         const supplierEmail = (supplierById?.email || supplierByName?.email || updated.supplier_email || order.supplier_email || '').trim();
         if (supplierEmail) {
-          base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id })
+          base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id, to: supplierEmail })
             .then((res) => {
               if (res?.data?.success) {
-                console.log('[Email] Order emailed to supplier');
+                console.log('[Email] Order emailed to supplier and CC to admin@smartplate.org');
               } else {
                 console.warn('[Email] Failed to email order:', res?.data);
               }
