@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       let supplier = null;
       if (rawSupplier) {
         try {
-          const suppliers = await base44.asServiceRole.entities.Supplier.list('name', 200);
+          const suppliers = await base44.asServiceRole.entities.Supplier.list('name', 1000);
           const byExact = suppliers.find(s => norm(s.name) === norm(rawSupplier));
           const byStarts = suppliers.find(s => norm(s.name).startsWith(norm(rawSupplier)));
           const byIncludes = suppliers.find(s => norm(s.name).includes(norm(rawSupplier)));
