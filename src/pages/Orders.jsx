@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -587,8 +586,7 @@ export default function OrdersPage() {
       // Mark as sent via service-role so sub-users can update owner orders
       const { data } = await base44.functions.invoke('markOrderSent', {
         orderId: order.id,
-        orderNumber: order.order_number,
-        sentVia: 'email'
+        orderNumber: order.order_number
       });
       const updated = data?.order || {};
 
@@ -596,19 +594,22 @@ export default function OrdersPage() {
       setOrders(prev => prev.map(o => {
         if (o.id !== (updated.id || order.id)) return o;
         const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num, sent_via: 'email' };
+        return { ...o, status: 'sent', order_number: num };
       }));
 
-      // Send email and show confirmation
+      // Fire-and-forget: email supplier (sendOrderEmail handles dedup + CC)
       try {
-        const res = await base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id });
-        if (res?.data?.success) {
-          alert(language === 'he' ? 'ההזמנה נשלחה באימייל' : 'Order sent by Email');
-        } else {
-          alert((language === 'he' ? 'שליחת האימייל נכשלה' : 'Email sending failed') + (res?.data?.error ? `: ${res.data.error}` : ''));
-        }
+        base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id })
+          .then((res) => {
+            if (res?.data?.success) {
+              console.log('[Email] Order emailed (recipients merged, CC admin)');
+            } else {
+              console.warn('[Email] Failed to email order:', res?.data);
+            }
+          })
+          .catch((err) => console.warn('[Email] Error emailing order:', err?.message || err));
       } catch (e) {
-        alert((language === 'he' ? 'שגיאה בשליחת אימייל' : 'Error sending email') + ': ' + (e?.message || e));
+        console.warn('[Email] Skipped emailing supplier:', e?.message || e);
       }
 
       // Close preview and refresh list
@@ -683,17 +684,15 @@ export default function OrdersPage() {
     try {
       const { data } = await base44.functions.invoke('markOrderSent', {
         orderId: order.id,
-        orderNumber: order.order_number,
-        sentVia: 'whatsapp'
+        orderNumber: order.order_number
       });
       const updated = data?.order || {};
       setOrders(prev => prev.map(o => {
         if (o.id !== (updated.id || order.id)) return o;
         const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num, sent_via: 'whatsapp' };
+        return { ...o, status: 'sent', order_number: num };
       }));
       sendOrderToWhatsApp(updated.id ? updated : order);
-      alert(language === 'he' ? 'ההזמנה נשלחה ב-WhatsApp' : 'Order sent via WhatsApp');
       setPreviewOrder(null);
       await loadData(user);
     } catch (e) {
@@ -1038,16 +1037,6 @@ export default function OrdersPage() {
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
                         {statusLabels[order.status] || order.status}
                       </span>
-                      {order.sent_via === 'email' && (
-                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                          <Mail className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />{language === 'he' ? 'אימייל' : 'Email'}
-                        </Badge>
-                      )}
-                      {order.sent_via === 'whatsapp' && (
-                        <Badge className="bg-green-100 text-green-800 border-green-200">
-                          <MessageCircle className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />WhatsApp
-                        </Badge>
-                      )}
                     </div>
                     
                     {order.delivery_date && (
@@ -1216,20 +1205,10 @@ export default function OrdersPage() {
                         <td className="px-4 py-3 text-right text-sm font-bold text-green-600">
                           ₪{(order.total_cost || 0).toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-right space-x-2 rtl:space-x-reverse">
+                        <td className="px-4 py-3 text-right">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
                             {statusLabels[order.status] || order.status}
                           </span>
-                          {order.sent_via === 'email' && (
-                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                              <Mail className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />{language === 'he' ? 'אימייל' : 'Email'}
-                            </Badge>
-                          )}
-                          {order.sent_via === 'whatsapp' && (
-                            <Badge className="bg-green-100 text-green-800 border-green-200">
-                              <MessageCircle className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />WhatsApp
-                            </Badge>
-                          )}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-2 pointer-events-auto">
@@ -1311,8 +1290,8 @@ export default function OrdersPage() {
       <Dialog open={showSendOptions} onOpenChange={setShowSendOptions}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('choose_send_method') === 'choose_send_method' ? 'בחר דרך שליחה' : t('choose_send_method')}</DialogTitle>
-            <DialogDescription>{t('send_method_hint') === 'send_method_hint' ? 'לספק יש אימייל שמור. בחרו אופן שליחה:' : t('send_method_hint')}</DialogDescription>
+            <DialogTitle>{t('choose_send_method') || 'Choose how to send'}</DialogTitle>
+            <DialogDescription>{t('send_method_hint') || 'Supplier has an email saved. Pick a method:'}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setShowSendOptions(false)}>{t('cancel') || 'Cancel'}</Button>
