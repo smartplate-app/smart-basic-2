@@ -9,7 +9,6 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const orderId = body?.orderId;
     const providedNumber = body?.orderNumber;
-    const sentVia = body?.sentVia;
     if (!orderId) return Response.json({ error: 'orderId is required' }, { status: 400 });
 
     // Load order with service role
@@ -33,7 +32,6 @@ Deno.serve(async (req) => {
     const updated = await base44.asServiceRole.entities.Order.update(order.id, {
       status: 'sent',
       order_number: orderNumber,
-      sent_via: sentVia || order.sent_via || undefined,
     });
 
     return Response.json({ success: true, order: updated });
