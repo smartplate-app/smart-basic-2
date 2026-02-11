@@ -108,10 +108,10 @@ Deno.serve(async (req) => {
           </thead>
           <tbody>${itemsRows || ''}</tbody>
         </table>
-        ${publicUrl ? `<p style="margin:16px 0 0 0;">View online: <a href="${publicUrl}">${publicUrl}</a></p>` : ''}
+
         <p style="margin:16px 0 0 0;color:#6b7280;font-size:12px;">Please reply to this email for any questions or confirmations.</p>
       </div>
-      <div style="padding:12px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">Sent by Smart Plate basic</div>
+      <div style="padding:12px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">The order was sent from #BASIC - smartplatebasic.com</div>
     </div>
   </body>
 </html>`;
