@@ -778,7 +778,8 @@ const handleAutoScan = async () => {
   };
 
   return (
-    <Card className="mb-8 shadow-lg">
+    <div dir={language === 'he' ? 'rtl' : undefined} className={language === 'he' ? 'text-right' : ''}>
+      <Card className="mb-8 shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle className="text-xl font-bold">
           {noOrderMode ? t('supply_without_order') : t('receive')}
@@ -1380,5 +1381,6 @@ const handleAutoScan = async () => {
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 }
