@@ -20,31 +20,32 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     if (receipt) {
       // Editing existing receipt
       return {
-      order_id: receipt.order_id || "",
-      order_number: receipt.order_number || "",
-      supplier_name: receipt.supplier_name || "",
-      supplier_id: receipt.supplier_id || "",
-      supplier_email: receipt.supplier_email || "",
-      received_date: receipt.received_date || new Date().toISOString().split('T')[0],
-      receipt_images: receipt.receipt_images || [],
-      verified_items: receipt.verified_items || [],
-      price_changes_summary: receipt.price_changes_summary || [],
-      has_price_changes: receipt.has_price_changes || false,
-      invoice_number: receipt.invoice_number || "",
-      invoice_date: receipt.invoice_date || "",
-      invoice_total: receipt.invoice_total || 0,
-      calculated_total: receipt.calculated_total || 0,
-      totals_match: receipt.totals_match || false,
-      notes: receipt.notes || "",
-      status: receipt.status || "pending",
-      is_refund: !!receipt.is_refund,
-      needs_review: !!receipt.needs_review,
-      review_note: receipt.review_note || "",
-      refund_received: !!receipt.refund_received,
-      reviewed: !!receipt.reviewed,
-      linked_receipt_id: receipt.linked_receipt_id || "",
-      manual_entry_mode: true // Already has data, show edit mode
-      };
+        order_id: receipt.order_id || "",
+        order_number: receipt.order_number || "",
+        supplier_name: receipt.supplier_name || "",
+        supplier_id: receipt.supplier_id || "",
+        supplier_email: receipt.supplier_email || "",
+        received_date: receipt.received_date || new Date().toISOString().split('T')[0],
+        receipt_images: receipt.receipt_images || [],
+        verified_items: receipt.verified_items || [],
+        price_changes_summary: receipt.price_changes_summary || [],
+        has_price_changes: receipt.has_price_changes || false,
+        invoice_number: receipt.invoice_number || "",
+        invoice_date: receipt.invoice_date || "",
+        invoice_total: receipt.invoice_total || 0,
+        calculated_total: receipt.calculated_total || 0,
+        totals_match: receipt.totals_match || false,
+        notes: receipt.notes || "",
+        status: receipt.status || "pending",
+        is_refund: !!receipt.is_refund,
+        awaiting_credit: !!receipt.awaiting_credit,
+        needs_review: !!receipt.needs_review,
+        review_note: receipt.review_note || "",
+        refund_received: !!receipt.refund_received,
+        reviewed: !!receipt.reviewed,
+        linked_receipt_id: receipt.linked_receipt_id || "",
+        manual_entry_mode: true // Already has data, show edit mode
+        };
     }
     // New receipt
     return {
@@ -66,6 +67,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       notes: "",
       status: "pending",
       is_refund: false,
+      awaiting_credit: false,
       needs_review: false,
       review_note: "",
       refund_received: false,
@@ -1137,6 +1139,15 @@ const handleAutoScan = async () => {
                               <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
                             </label>
                           )}
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={!!formData.awaiting_credit}
+                              onChange={(e) => setFormData(prev => ({ ...prev, awaiting_credit: e.target.checked }))}
+                              className="rounded"
+                            />
+                            <span>{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</span>
+                          </label>
                           {formData.needs_review && (
                             <label className="flex items-center gap-2 text-sm">
                               <input
@@ -1310,7 +1321,8 @@ const handleAutoScan = async () => {
                                 notes: formData.notes || "",
                                 status: "pending",
                                 needs_review: !!formData.needs_review,
-                                review_note: formData.review_note || ""
+                                review_note: formData.review_note || "",
+                                awaiting_credit: !!formData.awaiting_credit
                               };
                               const payloads = scannedDocs.map((d, i) => ({
                                 ...baseData,
