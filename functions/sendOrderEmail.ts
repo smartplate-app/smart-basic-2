@@ -1,8 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 function b64UrlEncode(str) {
-  // Encode UTF-8 safely, then convert to base64url
-  // unescape is deprecated but available; fine for small payloads
   const b64 = btoa(unescape(encodeURIComponent(str)));
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
@@ -84,7 +82,7 @@ function renderOrderHtml({ order, supplierEmail, user }) {
       </tfoot>
     </table>
 
-    ${order.notes ? `<div style="margin-top:12px; padding:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px;"><strong>הערות:</strong><br>${order.notes}</div>` : ''}
+    ${order.notes ? `<div style=\"margin-top:12px; padding:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px;\"><strong>הערות:</strong><br>${order.notes}</div>` : ''}
 
     <p style="margin-top:18px; color:#64748b; font-size:12px;">נשלח אוטומטית ממערכת Smart Plate basic. השיבו למייל זה לתקשורת עם המסעדה.</p>
   </div>`;
@@ -104,14 +102,12 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'orderId is required' }, { status: 400 });
     }
 
-    // Load order (service role for cross-context safety)
     const orders = await base44.asServiceRole.entities.Order.filter({ id: orderId });
     const order = orders?.[0];
     if (!order) {
       return Response.json({ success: false, error: 'Order not found' }, { status: 404 });
     }
 
-    // Resolve supplier email
     let supplierEmail = order.supplier_email || '';
     if (!supplierEmail && order.supplier_id) {
       try {
@@ -123,17 +119,14 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Supplier email not set' }, { status: 400 });
     }
 
-    // Get Gmail access token and sender address
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
     if (!accessToken) {
       return Response.json({ success: false, error: 'Gmail connector not authorized' }, { status: 500 });
     }
 
-    // Determine from-name and reply-to from the restaurant user profile
     const fromName = user.email_sender_name || user.business_name || user.full_name || 'Smart Plate basic';
     const replyTo = (user.reply_to_email || user.email || '').trim();
 
-    // Fetch Gmail profile to know the actual sending account email
     const profResp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
