@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     const toHeader = recipients.join(', ');
 
     // Compose email
-    const subject = 'a new order has send to you from smart plate basic';
+    const subject = 'קיבלת הזמנה חדשה באמצעות SMART PLATE BASIC — איזה כיף!';
     const adminCc = 'admin@smartplate.org';
     const replyTo = user.email || 'no-reply@smartplate.org';
     const fromDisplay = 'Smart Plate basic';
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       </div>
       <div style="padding:20px;">
         <p style="margin:0 0 12px 0;">Hello${order.supplier_name ? ' ' + order.supplier_name : ''},</p>
-        <p style="margin:0 0 12px 0;">You have received a new order.</p>
+        <p style="margin:0 0 12px 0;">קיבלת הזמנה חדשה באמצעות SMART PLATE BASIC — איזה כיף!</p>
         <div style="margin:16px 0;padding:12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;">
           <div style="margin:4px 0;"><strong>From:</strong> ${restaurantName || '-'}</div>
           <div style="margin:4px 0;"><strong>Order #:</strong> ${orderNumber}</div>
