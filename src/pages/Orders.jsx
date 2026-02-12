@@ -18,6 +18,7 @@ import OrderPreviewModal from "../components/orders/OrderPreviewModal";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import { offlineQueue } from "../components/offline/offlineQueue";
 import { notifyOS } from "../components/notifications/notify";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -46,6 +47,16 @@ export default function OrdersPage() {
   const [showSendOptions, setShowSendOptions] = useState(false);
   const [sendOptionOrder, setSendOptionOrder] = useState(null);
 
+
+  // Hydrate from cache for instant UI, then optionally revalidate
+  useEffect(() => {
+    const c = getCache('orders_v1');
+    if (c?.data) {
+      setOrders(c.data.orders || []);
+      setSuppliers(c.data.suppliers || []);
+      setLoading(false);
+    }
+  }, []);
 
   const loadData = async (currentUser, retryAttempt = 0) => {
     try {
@@ -223,6 +234,7 @@ export default function OrdersPage() {
       console.log(`[Orders] Successfully loaded ${uniq.length} orders (after merging drafts), ${suppliersData.length} suppliers`);
       setOrders(uniq);
       setSuppliers(suppliersData);
+      setCache('orders_v1', { orders: uniq, suppliers: suppliersData });
 
       setError(null);
       setRetryCount(0);
@@ -272,7 +284,9 @@ export default function OrdersPage() {
       try {
         if (!mounted) return;
         
-        setAuthLoading(true);
+        const _cache = getCache('orders_v1');
+        const _hasCache = !!(_cache && _cache.data);
+        setAuthLoading(!_hasCache);
         setError(null);
         setRetryCount(retryAttempt);
         
@@ -322,7 +336,11 @@ export default function OrdersPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         if (mounted) {
-          await loadData(currentUser);
+          const c = getCache('orders_v1');
+          const stale = isStale(c, 180000);
+          if (stale) {
+            await loadData(currentUser);
+          }
         }
         
       } catch (error) {

@@ -13,6 +13,7 @@ import SupplierCard from "../components/suppliers/SupplierCard";
 import SuppliersSheetsImport from "../components/suppliers/SuppliersSheetsImport";
 import AppHelpChat from "../components/AppHelpChat";
 import SupplierItemsExcel from "../components/suppliers/SupplierItemsExcel";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState([]);
@@ -36,6 +37,15 @@ export default function SuppliersPage() {
   const { t, language } = useLanguage();
 
   const [isViewer, setIsViewer] = useState(false);
+
+  // Hydrate from cache for instant UI, then only fetch if stale
+  useEffect(() => {
+    const c = getCache('suppliers_v1');
+    if (c?.data) {
+      setSuppliers(c.data.suppliers || []);
+      setLoading(false);
+    }
+  }, []);
 
   const loadData = async (currentUser, retryCount = 0) => {
                 try {
@@ -193,8 +203,9 @@ export default function SuppliersPage() {
 
                   setSuppliers(suppliersData);
                   setAllItems(itemsData);
+                  setCache('suppliers_v1', { suppliers: suppliersData });
 
-          setNetworkError(null);
+                  setNetworkError(null);
         } catch (error) {
       console.error(`[Suppliers] Error loading data (attempt ${retryCount + 1}):`, error);
       console.error("Error details:", {
@@ -224,7 +235,9 @@ export default function SuppliersPage() {
             try {
               if (!mounted) return;
 
-              setAuthLoading(true);
+              const _cache = getCache('suppliers_v1');
+              const _hasCache = !!(_cache && _cache.data);
+              setAuthLoading(!_hasCache);
               setNetworkError(null);
 
               // Add delay before retry only
@@ -238,7 +251,11 @@ export default function SuppliersPage() {
                         if (mounted) {
                           setUser(currentUser);
                           setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
-                          await loadData(currentUser);
+                          const c = getCache('suppliers_v1');
+                          const stale = isStale(c, 180000);
+                          if (stale) {
+                            await loadData(currentUser);
+                          }
                         }
       } catch (error) {
         console.error(`[Suppliers] Authentication error (attempt ${retryCount + 1}):`, error);

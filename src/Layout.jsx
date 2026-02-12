@@ -261,22 +261,22 @@ const AppLayout = ({ children, currentPageName }) => {
   }, [currentPageName, location.search]);
 
   // Global OAuth completion guard (fixes loops in embedded WebView/APK)
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const oauthBack = params.has('code') || params.has('state');
-      if (!oauthBack) return;
-      (async () => {
-        try {
-          const authed = await base44.auth.isAuthenticated();
-          if (authed) {
-            try { window.history.replaceState({}, '', location.pathname); } catch {}
-            window.location.replace(createPageUrl('Dashboard'));
-          }
-        } catch {}
-      })();
-    } catch {}
-  }, [location.search]);
+          useEffect(() => {
+            try {
+              const params = new URLSearchParams(window.location.search);
+              const oauthBack = params.has('code') || params.has('state');
+              if (!oauthBack) return;
+              (async () => {
+                try {
+                  const authed = await base44.auth.isAuthenticated();
+                  if (authed) {
+                    try { window.history.replaceState({}, '', location.pathname); } catch {}
+                    window.location.replace(createPageUrl('Dashboard'));
+                  }
+                } catch {}
+              })();
+            } catch {}
+          }, [location.search]);
   
   useEffect(() => {
             document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
