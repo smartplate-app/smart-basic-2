@@ -66,6 +66,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     }
   };
 
+  // deprecated in favor of parent-controlled chooser
   const handleDownloadImage = async (opts = {}) => {
           const shareOnly = !!opts.shareOnly;
     try {
