@@ -277,6 +277,26 @@ const AppLayout = ({ children, currentPageName }) => {
               })();
             } catch {}
           }, [location.search]);
+
+        // Post-login fallback (WebView/APK) – ensure we land on Dashboard after OAuth
+        useEffect(() => {
+          try {
+            const params = new URLSearchParams(window.location.search);
+            const oauthBack = params.has('code') || params.has('state');
+            const hasHashTarget = window.location.hash && window.location.hash.startsWith('#/pages/');
+            if (hasHashTarget) return;
+            (async () => {
+              try {
+                const authed = await base44.auth.isAuthenticated();
+                const atRoot = location.pathname === '/' || location.pathname === '' || location.pathname === '/pages' || location.pathname === '/pages/';
+                if (authed && (oauthBack || atRoot)) {
+                  try { window.history.replaceState({}, '', createPageUrl('Dashboard')); } catch {}
+                  window.location.replace(createPageUrl('Dashboard'));
+                }
+              } catch {}
+            })();
+          } catch {}
+        }, [location.pathname, location.search]);
   
   useEffect(() => {
             document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
