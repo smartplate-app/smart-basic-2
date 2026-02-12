@@ -129,6 +129,7 @@ const AppLayout = ({ children, currentPageName }) => {
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
     }
+    if ((currentPath || '').includes('/pages/OAuthCallback')) return;
     if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
       // Avoid redirect loops on Android Chrome after Google login
@@ -227,37 +228,22 @@ const AppLayout = ({ children, currentPageName }) => {
   ];
 
   useEffect(() => {
-    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite' && currentPageName !== 'Welcome' && currentPageName !== 'PublicOrder') {
+    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite' && currentPageName !== 'Welcome' && currentPageName !== 'PublicOrder' && currentPageName !== 'OAuthCallback') {
       loadAuth();
     } else {
       setAuthLoading(false);
     }
   }, [currentPageName]);
 
-  // Fix OAuth login loop on some Android devices (Google screen bouncing)
-  // When returning to Welcome with ?code/state, finalize auth and go to Dashboard
+  // OAuth return: from Welcome with ?code/state → hand off to lightweight finalizer page
   useEffect(() => {
     try {
       if (currentPageName !== 'Welcome') return;
       const params = new URLSearchParams(window.location.search);
       const oauthBack = params.has('code') || params.has('state');
       if (!oauthBack) return;
-      (async () => {
-        try {
-          // Sometimes isAuthenticated settles faster than me()
-          const authed = await base44.auth.isAuthenticated();
-          if (authed) {
-            window.location.replace(createPageUrl('Dashboard'));
-            return;
-          }
-          const u = await base44.auth.me();
-          if (u) {
-            window.location.replace(createPageUrl('Dashboard'));
-          }
-        } catch {
-          // swallow to avoid loops; Welcome stays visible
-        }
-      })();
+      const target = createPageUrl('OAuthCallback') + window.location.search;
+      window.location.replace(target);
     } catch {}
   }, [currentPageName, location.search]);
 
@@ -279,24 +265,15 @@ const AppLayout = ({ children, currentPageName }) => {
           }
         } catch {}
         try { window.history.replaceState({}, '', location.pathname); } catch {}
-        const target = createPageUrl('Dashboard');
-        // Primary redirect
+        const target = createPageUrl('OAuthCallback') + window.location.search;
+        // Primary redirect to lightweight OAuth finalizer page
         window.location.href = target;
-        // Fallbacks for older WebViews/Chrome
+        // Hash fallback for older WebViews/Chrome
         setTimeout(() => {
-          if (!(location.pathname || '').includes('Dashboard')) {
-            window.location.href = '/#/pages/Dashboard';
+          if (!(location.pathname || '').includes('OAuthCallback')) {
+            window.location.href = '/#/pages/OAuthCallback' + window.location.search;
           }
         }, 1200);
-        setTimeout(() => {
-          // If still stuck on a blank screen, force reload
-          if (document.visibilityState === 'visible') {
-            try {
-              const hasContent = document.body && document.body.children && document.body.children.length > 0;
-              if (!hasContent) window.location.reload();
-            } catch { window.location.reload(); }
-          }
-        }, 2500);
         // Clear flag after a short grace period
         setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); } catch {} }, 4000);
       })();
@@ -676,7 +653,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite' || currentPageName === 'Welcome' || currentPageName === 'WelcomePublic' || currentPageName === 'PublicOrder') {
+  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite' || currentPageName === 'Welcome' || currentPageName === 'WelcomePublic' || currentPageName === 'PublicOrder' || currentPageName === 'OAuthCallback') {
         return <>{children}</>;
       }
 
