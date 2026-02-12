@@ -217,6 +217,33 @@ const AppLayout = ({ children, currentPageName }) => {
       setAuthLoading(false);
     }
   }, [currentPageName]);
+
+  // Fix OAuth login loop on some Android devices (Google screen bouncing)
+  // When returning to Welcome with ?code/state, finalize auth and go to Dashboard
+  useEffect(() => {
+    try {
+      if (currentPageName !== 'Welcome') return;
+      const params = new URLSearchParams(window.location.search);
+      const oauthBack = params.has('code') || params.has('state');
+      if (!oauthBack) return;
+      (async () => {
+        try {
+          // Sometimes isAuthenticated settles faster than me()
+          const authed = await base44.auth.isAuthenticated();
+          if (authed) {
+            window.location.replace(createPageUrl('Dashboard'));
+            return;
+          }
+          const u = await base44.auth.me();
+          if (u) {
+            window.location.replace(createPageUrl('Dashboard'));
+          }
+        } catch {
+          // swallow to avoid loops; Welcome stays visible
+        }
+      })();
+    } catch {}
+  }, [currentPageName, location.search]);
   
   useEffect(() => {
             document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
