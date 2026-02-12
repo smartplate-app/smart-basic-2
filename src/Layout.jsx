@@ -129,6 +129,7 @@ const AppLayout = ({ children, currentPageName }) => {
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
     }
+    if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
       // Avoid redirect loops on Android Chrome after Google login
       const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
@@ -260,23 +261,47 @@ const AppLayout = ({ children, currentPageName }) => {
     } catch {}
   }, [currentPageName, location.search]);
 
-  // Global OAuth completion guard (fixes loops in embedded WebView/APK)
-          useEffect(() => {
+  // Consolidated OAuth return stabilizer (older Android/Chrome safe)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const oauthBack = params.has('code') || params.has('state');
+      if (!oauthBack) return;
+      if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
+      sessionStorage.setItem('b44_oauth_in_progress', '1');
+      (async () => {
+        try {
+          // Retry auth a few times (slow WebViews)
+          for (let i = 0; i < 5; i++) {
+            const authed = await base44.auth.isAuthenticated();
+            if (authed) break;
+            await new Promise(r => setTimeout(r, 400 * Math.pow(1.5, i)));
+          }
+        } catch {}
+        try { window.history.replaceState({}, '', location.pathname); } catch {}
+        const target = createPageUrl('Dashboard');
+        // Primary redirect
+        window.location.href = target;
+        // Fallbacks for older WebViews/Chrome
+        setTimeout(() => {
+          if (!(location.pathname || '').includes('Dashboard')) {
+            window.location.href = '/#/pages/Dashboard';
+          }
+        }, 1200);
+        setTimeout(() => {
+          // If still stuck on a blank screen, force reload
+          if (document.visibilityState === 'visible') {
             try {
-              const params = new URLSearchParams(window.location.search);
-              const oauthBack = params.has('code') || params.has('state');
-              if (!oauthBack) return;
-              (async () => {
-                try {
-                  const authed = await base44.auth.isAuthenticated();
-                  if (authed) {
-                    try { window.history.replaceState({}, '', location.pathname); } catch {}
-                    window.location.replace(createPageUrl('Dashboard'));
-                  }
-                } catch {}
-              })();
-            } catch {}
-          }, [location.search]);
+              const hasContent = document.body && document.body.children && document.body.children.length > 0;
+              if (!hasContent) window.location.reload();
+            } catch { window.location.reload(); }
+          }
+        }, 2500);
+        // Clear flag after a short grace period
+        setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); } catch {} }, 4000);
+      })();
+    } catch {}
+  }, [location.search]);
 
         // Post-login fallback (WebView/APK) – ensure we land on Dashboard after OAuth
         useEffect(() => {
@@ -285,6 +310,7 @@ const AppLayout = ({ children, currentPageName }) => {
             const oauthBack = params.has('code') || params.has('state');
             const hasHashTarget = window.location.hash && window.location.hash.startsWith('#/pages/');
             if (hasHashTarget) return;
+            if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
             (async () => {
               try {
                 const authed = await base44.auth.isAuthenticated();
