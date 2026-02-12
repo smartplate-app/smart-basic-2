@@ -130,6 +130,21 @@ const AppLayout = ({ children, currentPageName }) => {
       return; // respect hash router target to avoid loops
     }
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
+      // Avoid redirect loops on Android Chrome after Google login
+      const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
+      if (hasOauthParams) {
+        // Let the auth settle on this page; do not redirect to Welcome
+        setTimeout(async () => {
+          try {
+            const authed = await base44.auth.isAuthenticated();
+            if (authed) {
+              window.location.replace(createPageUrl('Dashboard'));
+              return;
+            }
+          } catch {}
+        }, 800);
+        return;
+      }
       base44.auth.isAuthenticated().then((auth) => {
                 if (!auth) {
                   let suppress = false; let cooldownUntil = 0;
