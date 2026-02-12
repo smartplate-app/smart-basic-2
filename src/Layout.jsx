@@ -326,6 +326,18 @@ const AppLayout = ({ children, currentPageName }) => {
             else document.documentElement.classList.remove('dark');
           }, [theme]);
 
+          // Enable lite mode for low-memory devices or very old Chrome versions
+          useEffect(() => {
+            try {
+              let lite = false;
+              const dm = (navigator && 'deviceMemory' in navigator) ? navigator.deviceMemory : null;
+              if (typeof dm === 'number' && dm <= 2) lite = true; // ≤2GB RAM
+              const m = (navigator.userAgent || '').match(/Chrome\/(\d+)/);
+              if (m && parseInt(m[1], 10) < 90) lite = true; // old Chrome
+              if (lite) document.documentElement.classList.add('lite');
+            } catch {}
+          }, []);
+
   const loadAuth = async (attemptNumber = 0) => {
         try {
           const fastBoot = (isPwaInstalled || isIOS || localStorage.getItem('b44_installed') === '1') && localStorage.getItem('b44_user_cache');
@@ -1075,7 +1087,12 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
 .sidebar-hidden > * { padding-left: 0 !important; padding-right: 0 !important; }
 /* Viewer read-only hard guard: disables interactive controls within page content */
 .viewer-readonly button, .viewer-readonly [type="submit"], .viewer-readonly input, .viewer-readonly select, .viewer-readonly textarea, .viewer-readonly [role="switch"], .viewer-readonly [role="button"] { pointer-events: none !important; opacity: 0.6 !important; cursor: not-allowed !important; }
-.viewer-readonly .ql-toolbar, .viewer-readonly .ql-editor { pointer-events: none !important; }` }}
+.viewer-readonly .ql-toolbar, .viewer-readonly .ql-editor { pointer-events: none !important; }
+      /* Lite mode: disable animations and heavy effects for low-memory/old Chrome */
+      .lite *, .lite *::before, .lite *::after { animation: none !important; transition: none !important; }
+      .lite .animate-spin { animation: none !important; }
+      .lite .backdrop-blur, .lite [class*="backdrop-blur"] { backdrop-filter: none !important; }
+      ` }}
             />
         </main>
 
