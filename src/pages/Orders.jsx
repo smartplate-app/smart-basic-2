@@ -26,6 +26,10 @@ export default function OrdersPage() {
   const [editingOrder, setEditingOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [supplierFilter, setSupplierFilter] = useState("all");
+  const [customerFilter, setCustomerFilter] = useState("");
+  const [dateStart, setDateStart] = useState("");
+  const [dateEnd, setDateEnd] = useState("");
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [previewOrder, setPreviewOrder] = useState(null);
@@ -775,11 +779,21 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+        const matchesSearch = (order.supplier_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+          (order.order_number || '').toLowerCase().includes((searchTerm || '').toLowerCase());
+        const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+        const matchesSupplier = supplierFilter === "all" || ((order.supplier_name || '').toLowerCase() === supplierFilter.toLowerCase());
+        const matchesCustomer = (customerFilter || '').trim() === '' || (order.restaurant_name || '').toLowerCase().includes(customerFilter.toLowerCase());
+
+        const dateStr = order.delivery_date || order.created_date || order.updated_date;
+        const ds = dateStr ? new Date(dateStr) : null;
+        const dsStr = ds ? ds.toISOString().slice(0,10) : '';
+        const afterStart = !dateStart || (dsStr && dsStr >= dateStart);
+        const beforeEnd = !dateEnd || (dsStr && dsStr <= dateEnd);
+        const matchesDate = afterStart && beforeEnd;
+
+        return matchesSearch && matchesStatus && matchesSupplier && matchesCustomer && matchesDate;
+      });
 
   const [reportMonth, setReportMonth] = useState(() => {
     const d = new Date();
@@ -961,29 +975,51 @@ export default function OrdersPage() {
               />
             )}
 
-            <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              placeholder={t('search_orders')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10 h-11 md:h-10 text-base rounded-lg"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-11 md:h-10 rounded-lg">
-              <SelectValue placeholder={t('order_status')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('all_statuses')}</SelectItem>
-              <SelectItem value="draft">{t('status_draft')}</SelectItem>
-              <SelectItem value="sent">{t('status_sent')}</SelectItem>
-              <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
-              <SelectItem value="delivered">{t('status_delivered')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  placeholder={t('search_orders')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10 h-11 md:h-10 text-base rounded-lg"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-11 md:h-10 rounded-lg">
+                  <SelectValue placeholder={t('order_status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                  <SelectItem value="draft">{t('status_draft')}</SelectItem>
+                  <SelectItem value="sent">{t('status_sent')}</SelectItem>
+                  <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
+                  <SelectItem value="delivered">{t('status_delivered')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                <SelectTrigger className="h-11 md:h-10 rounded-lg">
+                  <SelectValue placeholder={t('supplier') || 'Supplier'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all') || 'All'}</SelectItem>
+                  {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
+                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder={t('customer_name') || 'שם לקוח'}
+                value={customerFilter}
+                onChange={(e) => setCustomerFilter(e.target.value)}
+                className="h-11 md:h-10 rounded-lg"
+              />
+              <div className="flex items-center gap-2">
+                <Input type="date" value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 md:h-10 rounded-lg" />
+                <span className="text-gray-500">–</span>
+                <Input type="date" value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 md:h-10 rounded-lg" />
+              </div>
+            </div>
 
         {/* Items Quantity Report (aggregated across orders) */}
         <Card className="mb-6">
@@ -1181,6 +1217,28 @@ export default function OrdersPage() {
                   <SelectItem value="delivered">{t('status_delivered')}</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                <SelectTrigger className="h-11 rounded-lg">
+                  <SelectValue placeholder={t('supplier') || 'Supplier'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all') || 'All'}</SelectItem>
+                  {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
+                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder={t('customer_name') || 'שם לקוח'}
+                value={customerFilter}
+                onChange={(e) => setCustomerFilter(e.target.value)}
+                className="h-11 rounded-lg"
+              />
+              <div className="flex items-center gap-2">
+                <Input type="date" value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 rounded-lg" />
+                <span className="text-gray-500">–</span>
+                <Input type="date" value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg" />
+              </div>
               <Button onClick={() => setFiltersOpen(false)} className="w-full">{t('apply') || 'Apply'}</Button>
             </div>
           </DrawerContent>
