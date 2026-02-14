@@ -9,6 +9,7 @@ import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus,
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 
 export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false }) {
   const [items, setItems] = useState([]);
@@ -853,7 +854,11 @@ const handleAutoScan = async () => {
                       <div className="grid grid-cols-3 gap-2 mt-2">
                         {formData.receipt_images.map((url, index) => (
                           <div key={index} className="relative">
-                            <img src={url} alt="Receipt" className="w-full h-24 object-cover rounded" />
+                            {isPdfUrl(url) ? (
+                              <PdfThumbnail url={url} size={96} className="w-full h-24" />
+                            ) : (
+                              <img src={url} alt={language === 'he' ? 'קבלה' : 'Receipt'} className="w-full h-24 object-cover rounded" />
+                            )}
                             <Button
                               type="button"
                               variant="destructive"
@@ -874,7 +879,7 @@ const handleAutoScan = async () => {
                           type="button"
                           onClick={handleAutoScan}
                           disabled={scanning}
-                          className="flex-1 bg-purple-600 hover:bg-purple-700"
+                          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white dark:text-white"
                         >
                           {scanning ? (
                             <>
@@ -917,7 +922,11 @@ const handleAutoScan = async () => {
                             <Card key={doc.file_url || idx} className="overflow-hidden">
                               <CardContent className="pt-4 space-y-3">
                                 <div className="aspect-video bg-white/40 rounded border">
-                                  <img src={doc.file_url} alt={`Invoice ${idx+1}`} className="w-full h-full object-contain" />
+                                  {isPdfUrl(doc.file_url) ? (
+                                    <PdfThumbnail url={doc.file_url} size={160} className="w-full h-full" />
+                                  ) : (
+                                    <img src={doc.file_url} alt={`Invoice ${idx+1}`} className="w-full h-full object-contain" />
+                                  )}
                                 </div>
                                 <div>
                                   <Label className="text-xs text-gray-600">{t('invoice_number')} *</Label>
