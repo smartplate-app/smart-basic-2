@@ -71,12 +71,15 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${t('Smart Plate basic - בקשת גישה', 'Smart Plate basic - Request access')}</title>
   <meta name="description" content="${escapeHtml(metaDesc)}" />
+  <meta name="keywords" content="smart plate, basic app, basic, restaurant ordering app, supplier orders, food industry, restaurant software, invoice scanning, whatsapp orders" />
   <meta name="robots" content="index,follow" />
   <link rel="canonical" href="${pageUrl}" />
   <link rel="alternate" href="${canonical}?lang=he" hreflang="he-IL" />
   <link rel="alternate" href="${canonical}?lang=en" hreflang="en-US" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Smart Plate basic" />
+  <meta property="og:locale" content="he_IL" />
+  <meta property="og:locale:alternate" content="en_US" />
   <meta property="og:title" content="${t('Smart Plate basic - בקשת גישה', 'Smart Plate basic - Request access')}" />
   <meta property="og:description" content="${escapeHtml(metaDesc)}" />
   <meta property="og:url" content="${pageUrl}" />
@@ -86,7 +89,16 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
   <meta name="twitter:description" content="${escapeHtml(metaDesc)}" />
   <meta name="twitter:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" />
   <script type="application/ld+json">
-  ${JSON.stringify({"@context":"https://schema.org","@type":"SoftwareApplication","name":"Smart Plate basic","applicationCategory":"BusinessApplication","operatingSystem":"Web"})}
+  ${JSON.stringify({
+    "@context":"https://schema.org",
+    "@type":"SoftwareApplication",
+    "name":"Smart Plate basic",
+    "alternateName":["Smart Plate Basic","Basic","Basic App"],
+    "applicationCategory":"BusinessApplication",
+    "operatingSystem":"Web",
+    "description": metaDesc,
+    "category": ["Restaurant", "Food industry", "Supplier ordering"].join(", ")
+  })}
   </script>
   <script type="application/ld+json">
   ${JSON.stringify({"@context":"https://schema.org","@type":"Organization","name":"Smart Plate","url": canonical,"logo":"https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg","sameAs":["https://smartplate.org"]})}
