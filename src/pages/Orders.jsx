@@ -754,14 +754,23 @@ export default function OrdersPage() {
     }
 
     // 2) Best-effort: copy image to clipboard so user can Paste in WhatsApp (Web/App)
-    let copied = false;
+    let copiedImage = false;
+    let copiedText = false;
     if (file && navigator.clipboard && 'write' in navigator.clipboard) {
       try {
         // @ts-ignore ClipboardItem may not be typed in some environments
         await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
-        copied = true;
+        copiedImage = true;
       } catch (_) {
-        // ignore
+        // ignore and try copying text instead
+      }
+    }
+    if (!copiedImage && navigator.clipboard && 'writeText' in navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        copiedText = true;
+      } catch (_) {
+        // no clipboard available
       }
     }
 
