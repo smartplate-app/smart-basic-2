@@ -820,7 +820,7 @@ export default function OrdersPage() {
           : (t('whatsapp_web_hint') || 'On WhatsApp Web, you may need to paste the content or attach the file manually.');
         try { alert(msg); } catch {}
       }, 600);
-    }
+      }
   };
 
   const handleConfirmSendEmail = async () => {
