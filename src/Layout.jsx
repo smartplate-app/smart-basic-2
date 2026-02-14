@@ -1041,7 +1041,7 @@ const AppLayout = ({ children, currentPageName }) => {
           </Button>
         )}
 
-        <main className="flex-1 min-w-0 w-full overflow-x-hidden pb-20 md:pb-0 pb-safe">
+        <main className="flex-1 min-w-0 w-full overflow-x-auto pb-20 md:pb-0 pb-safe">
             {showWorkerInvite && (
               <div className="p-4 md:p-8">
                 <div className="max-w-2xl mx-auto">

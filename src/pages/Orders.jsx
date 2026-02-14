@@ -1358,8 +1358,8 @@ export default function OrdersPage() {
         </Drawer>
 
         {/* Desktop View */}
-        <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-auto max-h-[70vh] md:max-h-[75vh]">
+        <div className="hidden md:block bg-white rounded-lg shadow overflow-visible">
+          <div className="overflow-auto max-h-[70vh] md:max-h-none">
             <table className="w-full min-w-max">
               <thead className="sticky top-0 z-20 bg-white/90 supports-[backdrop-filter]:bg-white/70 backdrop-blur border-b">
                 <tr>
