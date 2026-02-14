@@ -1378,7 +1378,7 @@ export default function OrdersPage() {
                   <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {safeT('status','סטטוס','Status')}
                   </th>
-                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-64">
                     {safeT('actions', 'פעולות', 'Actions')}
                   </th>
                 </tr>
@@ -1433,8 +1433,8 @@ export default function OrdersPage() {
                             {statusLabels[order.status] || order.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-2 pointer-events-auto">
+                        <td className="px-4 py-3 min-w-[260px]">
+                          <div className="flex items-center justify-center gap-2 flex-wrap pointer-events-auto">
                             {!isViewer && order.supplier_phone && (
                               <button
                                 onClick={(e) => {
