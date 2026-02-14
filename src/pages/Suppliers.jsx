@@ -513,7 +513,7 @@ export default function SuppliersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 2xl:p-12">
       <div className="w-full">
         {/* Acting as Store Banner */}
                       {user?.acting_as_store_name && (
