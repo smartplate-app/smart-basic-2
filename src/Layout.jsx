@@ -990,14 +990,14 @@ const AppLayout = ({ children, currentPageName }) => {
             <ul className="space-y-2">
               {filteredNavigationItems.map((item) => (
                 <li key={item.title}>
-                  <a 
-                    href={item.url}
+                  <Link 
+                    to={item.url}
                     onClick={() => setSidebarOpen(false)}
                     className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-indigo-600 text-white font-bold dark:bg-indigo-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]')}
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -1108,22 +1108,22 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40 dark:backdrop-blur-0">
           <div className={'grid grid-cols-4 text-xs ' + (isRTL ? 'text-right' : 'text-center')}>
-            <a href={createPageUrl('Dashboard')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Dashboard')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
-            </a>
-            <a href={createPageUrl('Orders')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            </Link>
+            <Link to={createPageUrl('Orders')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <ShoppingCart className="h-5 w-5" />
               <span>{language === 'he' ? 'הזמנות' : 'Orders'}</span>
-            </a>
-            <a href={createPageUrl('Suppliers')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            </Link>
+            <Link to={createPageUrl('Suppliers')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <Users className="h-5 w-5" />
               <span>{language === 'he' ? 'ספקים' : 'Suppliers'}</span>
-            </a>
-            <a href={createPageUrl('UserProfile')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            </Link>
+            <Link to={createPageUrl('UserProfile')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <UserCircle className="h-5 w-5" />
               <span>{language === 'he' ? 'פרופיל' : 'Profile'}</span>
-            </a>
+            </Link>
           </div>
         </nav>
 
