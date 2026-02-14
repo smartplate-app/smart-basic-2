@@ -997,12 +997,16 @@ const AppLayout = ({ children, currentPageName }) => {
             </div>
           </div>
 
-          <nav className="p-4 flex-grow overflow-y-auto">
+          <nav className="p-4 flex-grow overflow-y-auto" onClick={(e)=>{
+            // Avoid full reload if user ctrl/cmd-clicks
+            const a = e.target.closest('a'); if (a && a.target === '_blank') e.stopPropagation();
+          }}>
             <ul className="space-y-2">
               {filteredNavigationItems.map((item) => (
                 <li key={item.title}>
                   <Link 
                     to={item.url}
+                    preventScrollReset
                     onClick={() => setSidebarOpen(false)}
                     className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-indigo-600 text-white font-bold dark:bg-indigo-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]')}
                   >
