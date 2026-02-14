@@ -1,10 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+const PUBLIC_APP_URL = Deno.env.get('PUBLIC_APP_URL') || '';
 
 // Simple HTML templates (bilingual)
 function pageTemplate({ lang = 'he', success = false, error = '', values = {} }) {
   const isHe = lang === 'he';
   const dir = isHe ? 'rtl' : 'ltr';
   const t = (he, en) => (isHe ? he : en);
+  const canonical = (PUBLIC_APP_URL ? `${PUBLIC_APP_URL}/functions/welcomePublic` : '/functions/welcomePublic');
+  const pageUrl = isHe ? `${canonical}?lang=he` : `${canonical}?lang=en`;
+  const otherUrl = isHe ? `${canonical}?lang=en` : `${canonical}?lang=he`;
+  const metaDesc = t(
+    'המערכת היעילה להזמנות מספקים, ווצאפ, סריקת חשבוניות וסידור עבודה עם דשבורד חודשי.',
+    'Efficient supplier ordering, WhatsApp ordering, invoice scanning and scheduling with a clear monthly dashboard.'
+  );
 
   const {
     full_name = '',
@@ -62,6 +70,24 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${t('Smart Plate basic - בקשת גישה', 'Smart Plate basic - Request access')}</title>
+  <meta name="description" content="${escapeHtml(metaDesc)}" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="${pageUrl}" />
+  <link rel="alternate" href="${canonical}?lang=he" hreflang="he-IL" />
+  <link rel="alternate" href="${canonical}?lang=en" hreflang="en-US" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Smart Plate basic" />
+  <meta property="og:title" content="${t('Smart Plate basic - בקשת גישה', 'Smart Plate basic - Request access')}" />
+  <meta property="og:description" content="${escapeHtml(metaDesc)}" />
+  <meta property="og:url" content="${pageUrl}" />
+  <meta property="og:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${t('Smart Plate basic - בקשת גישה', 'Smart Plate basic - Request access')}" />
+  <meta name="twitter:description" content="${escapeHtml(metaDesc)}" />
+  <meta name="twitter:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" />
+  <script type="application/ld+json">
+  ${JSON.stringify({"@context":"https://schema.org","@type":"SoftwareApplication","name":"Smart Plate basic","applicationCategory":"BusinessApplication","operatingSystem":"Web"})}
+  </script>
   <style>
     :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted:#64748b; --primary:#111827; --ring:#e5e7eb; --success:#16a34a; --error:#dc2626; }
     body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: linear-gradient(180deg, #f8fafc, #ffffff); color: var(--text); }
