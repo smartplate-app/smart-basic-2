@@ -9,6 +9,11 @@ import { base44 } from '@/api/base44Client';
 
 export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const { t, language } = useLanguage();
+  const safeT = (key, he, en) => {
+    const v = t(key);
+    if (language === 'he' && (v === key || !v)) return he;
+    return (v === key || !v) ? (en ?? key) : v;
+  };
   const [viewMode, setViewMode] = useState('mobile');
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
