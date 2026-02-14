@@ -11,7 +11,13 @@ import { useLanguage } from "../LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 
 export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSaveDraft }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const safeT = (key, he, en) => {
+    const v = t(key);
+    if (language === 'he' && (v === key || !v)) return he;
+    return (v === key || !v) ? (en ?? key) : v;
+  };
+
   const [currentOrder, setCurrentOrder] = React.useState(order || {
     supplier_id: "",
     supplier_name: "",
@@ -30,7 +36,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   const [itemQuantities, setItemQuantities] = React.useState({});
   const [currentStock, setCurrentStock] = React.useState({}); // Track current stock per item
   const [itemSearch, setItemSearch] = React.useState("");
-  const { language } = useLanguage();
+
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -341,7 +347,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
             <div className="flex items-center justify-between gap-3">
               <Label className="text-lg font-semibold">{t('items')}</Label>
               <Input
-                placeholder={t('search_items') || 'Search items'}
+                placeholder={safeT('search_items', 'חפש פריטים...', 'Search items...')}
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
                 className="max-w-xs"
@@ -505,7 +511,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
 
         <div className="flex gap-3 justify-end">
           <Button type="button" variant="outline" onClick={onCancel}>
-            {t('cancel')}
+            {safeT('cancel', 'ביטול', 'Cancel')}
           </Button>
           <Button
             type="button"
@@ -538,9 +544,9 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
             }}
             className="bg-yellow-500 hover:bg-yellow-600 text-white"
           >
-            {t('save_draft') || 'Save Draft'}
+            {safeT('save_draft', 'שמור טיוטה', 'Save Draft')}
           </Button>
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
+          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white">
             {order ? t('update_order') : t('send_order')}
           </Button>
         </div>
