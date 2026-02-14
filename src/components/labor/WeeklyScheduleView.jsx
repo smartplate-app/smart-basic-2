@@ -1181,7 +1181,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label className={`text-sm font-semibold text-green-800 ${isRTL ? 'text-right block' : 'text-left block'}`}>
-                  {language === 'he' ? 'סה״כ מכירות עד עכשיו (כולל מע״מ)' : 'Total sales till now (incl. VAT)'}
+                  {language === 'he' ? 'סה״כ מכירות עד עכשיו (כולל מע״מ)' : 'Monthly Sales (incl. VAT)'}
                 </Label>
                 <Input
                   type="number"
