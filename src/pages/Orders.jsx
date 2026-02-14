@@ -1299,7 +1299,7 @@ export default function OrdersPage() {
         <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle>{t('filters') || 'Filters'}</DrawerTitle>
+              <DrawerTitle>{safeT('filters', 'סינון', 'Filters')}</DrawerTitle>
             </DrawerHeader>
             <div className="p-4 space-y-4">
               <div className="relative">
@@ -1345,7 +1345,7 @@ export default function OrdersPage() {
                 <span className="text-gray-500">–</span>
                 <Input type="date" value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg" />
               </div>
-              <Button onClick={() => setFiltersOpen(false)} className="w-full">{t('apply') || 'Apply'}</Button>
+              <Button onClick={() => setFiltersOpen(false)} className="w-full">{safeT('apply', 'החל', 'Apply')}</Button>
             </div>
           </DrawerContent>
         </Drawer>
