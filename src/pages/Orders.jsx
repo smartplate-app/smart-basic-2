@@ -37,6 +37,11 @@ export default function OrdersPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [authLoading, setAuthLoading] = useState(true);
   const { t, language } = useLanguage();
+  const safeT = (key, he, en) => {
+    const v = t(key);
+    if (language === 'he' && (v === key || !v)) return he;
+    return (v === key || !v) ? (en ?? key) : v;
+  };
 
   const [isViewer, setIsViewer] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
@@ -1046,7 +1051,7 @@ export default function OrdersPage() {
         {/* Mobile Filters Drawer trigger */}
         <div className="md:hidden mb-4">
           <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
-            {t('filters') || 'Filters'}
+            {safeT('filters', 'סינון', 'Filters')}
           </Button>
         </div>
 
@@ -1505,12 +1510,12 @@ export default function OrdersPage() {
             <DialogDescription>{t('send_method_hint') || 'Choose a send method:'}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setShowSendOptions(false)}>{t('cancel') || 'Cancel'}</Button>
+            <Button variant="outline" onClick={() => setShowSendOptions(false)}>{safeT('cancel', 'ביטול', 'Cancel')}</Button>
             <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
               <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
             </Button>
             <Button onClick={handleConfirmSendEmail} className="bg-gray-900 hover:bg-gray-800 text-white">
-              <Mail className="w-4 h-4 mr-2" /> {t('email') || 'Email'}
+              <Mail className="w-4 h-4 mr-2" /> {safeT('email', 'אימייל', 'Email')}
             </Button>
           </div>
         </DialogContent>

@@ -1296,7 +1296,7 @@ const handleAutoScan = async () => {
                         <>
                           <Button
                             type="button"
-                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                             disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date || d.duplicate)}
                             onClick={async () => {
                               const baseData = {
@@ -1351,11 +1351,11 @@ const handleAutoScan = async () => {
                         <>
                           <Button 
                             type="submit" 
-                            className="flex-1 bg-green-600 hover:bg-green-700"
-                                                         disabled={!formData.invoice_number || formData.receipt_images.length === 0 || duplicateExists}
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                                     disabled={!formData.invoice_number || formData.receipt_images.length === 0 || duplicateExists}
                           >
                             <PackageCheck className="w-4 h-4 ml-2" />
-                            {t('save_receipt')}
+                            {safeT('save_receipt', 'שמור קבלה', 'Save receipt')}
                           </Button>
                           {receipt && onDelete && (
                             <Button
@@ -1365,7 +1365,7 @@ const handleAutoScan = async () => {
                               className="flex-1"
                             >
                               <Trash2 className="w-4 h-4 ml-2" />
-                              {t('delete') || 'Delete'}
+                              {safeT('delete', 'מחק', 'Delete')}
                             </Button>
                           )}
                           <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
