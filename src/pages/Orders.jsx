@@ -798,10 +798,17 @@ export default function OrdersPage() {
       openWithFallback(deeplink, waWeb, isIOS ? 700 : 700);
     }
 
-    if (copied) {
+    // Show contextual hint only when going to WhatsApp Web or when paste is needed
+    const goingToWeb = !isAndroid && !isIOS; // desktops/tablets typically open Web
+    if (goingToWeb || copiedImage || copiedText) {
       setTimeout(() => {
-        try { alert(t('image_copied_paste_in_whatsapp') || 'The order image is copied. In WhatsApp, tap the message box and Paste.'); } catch {}
-      }, 400);
+        const msg = copiedImage
+          ? (t('image_copied_paste_in_whatsapp') || 'The order image is copied. In WhatsApp Web, click the message box and Paste (Ctrl/Cmd+V).')
+          : copiedText
+          ? (t('text_copied_paste_in_whatsapp') || 'The order text is copied. In WhatsApp Web, Paste and attach the JPG if needed.')
+          : (t('whatsapp_web_hint') || 'On WhatsApp Web, you may need to paste the content or attach the file manually.');
+        try { alert(msg); } catch {}
+      }, 600);
     }
   };
 
