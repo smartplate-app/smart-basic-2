@@ -778,27 +778,24 @@ export default function OrdersPage() {
     }
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
-    const openWithFallback = (primaryUrl, fallbackUrl, timeout = 900) => {
+    const tryOpenChain = (urls, stepMs = 700) => {
       let switched = false;
       const onHide = () => { switched = true; };
       document.addEventListener('visibilitychange', onHide, { once: true });
-      try {
-        window.location.href = primaryUrl;
-      } catch (_) {
-        window.location.href = fallbackUrl;
-        return;
-      }
-      setTimeout(() => {
-        if (!switched) {
-          window.location.href = fallbackUrl;
-        }
-      }, timeout);
+      const tryNext = (i) => {
+        if (i >= urls.length || switched) return;
+        try { window.location.href = urls[i]; } catch {}
+        setTimeout(() => { if (!switched) tryNext(i + 1); }, stepMs);
+      };
+      tryNext(0);
     };
 
     if (isAndroid) {
-      openWithFallback(androidIntent, waWeb, 800);
+      tryOpenChain([deeplink, apiUrl, waWeb, androidIntent]);
+    } else if (isIOS) {
+      tryOpenChain([deeplink, waWeb]);
     } else {
-      openWithFallback(deeplink, waWeb, isIOS ? 700 : 700);
+      tryOpenChain([waWeb]);
     }
 
     // Show contextual hint only when going to WhatsApp Web or when paste is needed
