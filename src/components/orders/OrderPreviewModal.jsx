@@ -395,7 +395,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 className="gap-2"
               >
                 <Smartphone className="w-4 h-4" />
-                {t('mobile')}
+                {safeT('mobile','מובייל','Mobile')}
               </Button>
               <Button
                 variant={viewMode === 'desktop' ? 'default' : 'ghost'}
@@ -404,7 +404,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 className="gap-2"
               >
                 <Monitor className="w-4 h-4" />
-                {t('desktop')}
+                {safeT('desktop','דסקטופ','Desktop')}
               </Button>
             </div>
           </div>
@@ -438,7 +438,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             onClick={onClose}
             variant="outline"
           >
-            {t('close')}
+            {safeT('close','סגור','Close')}
           </Button>
 
           <Button
@@ -447,7 +447,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             className="gap-2"
             disabled={downloading}
           >
-            <Download className="w-4 h-4" /> {language === 'he' ? 'הורד תמונה' : 'Download JPG'}
+            <Download className="w-4 h-4" /> {safeT('download_image','הורד תמונה','Download JPG')}
           </Button>
 
           <Button
@@ -456,7 +456,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             disabled={downloading}
           >
             <Share className="w-5 h-5 mr-2" />
-            {language === 'he' ? 'שלח' : 'Send'}
+            {safeT('send','שלח','Send')}
           </Button>
         </div>
       </motion.div>
