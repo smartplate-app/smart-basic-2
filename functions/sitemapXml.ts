@@ -18,6 +18,10 @@ Deno.serve(async (req) => {
     <xhtml:link rel="alternate" hreflang="he-IL" href="${base}/functions/welcomePublic?lang=he" />
     <xhtml:link rel="alternate" hreflang="en-US" href="${base}/functions/welcomePublic?lang=en" />
   </url>
+  <url>
+    <loc>${base}/functions/basic</loc>
+    <lastmod>${lastmod}</lastmod>
+  </url>
 </urlset>`;
     return new Response(xml, { status: 200, headers: { 'content-type': 'application/xml; charset=utf-8' } });
   } catch (e) {

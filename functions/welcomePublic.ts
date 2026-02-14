@@ -84,6 +84,7 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
   <meta property="og:description" content="${escapeHtml(metaDesc)}" />
   <meta property="og:url" content="${pageUrl}" />
   <meta property="og:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" />
+  <meta property="og:image:alt" content="Smart Plate basic – restaurant supplier ordering app" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${t('Smart Plate basic - בקשת גישה', 'Smart Plate basic - Request access')}" />
   <meta name="twitter:description" content="${escapeHtml(metaDesc)}" />
@@ -93,10 +94,14 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
     "@context":"https://schema.org",
     "@type":"SoftwareApplication",
     "name":"Smart Plate basic",
-    "alternateName":["Smart Plate Basic","Basic","Basic App"],
+    "alternateName":["Smart Plate Basic","Basic","Basic App","Basic ordering app"],
     "applicationCategory":"BusinessApplication",
     "operatingSystem":"Web",
+    "url": pageUrl,
+    "image": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg",
     "description": metaDesc,
+    "about":[{"@type":"Thing","name":"Restaurant supplier ordering"},{"@type":"Thing","name":"Food industry procurement"}],
+    "audience":{"@type":"BusinessAudience","industry":"Restaurants and food service"},
     "category": ["Restaurant", "Food industry", "Supplier ordering"].join(", ")
   })}
   </script>
@@ -154,6 +159,9 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
       </div>
 
       <div class="title">Smart Plate basic</div>
+      <h2 class="desc" style="font-weight:700;">
+        ${t('אפליקציית Basic להזמנות מספקים למסעדות ולעסקי מזון', 'Basic app for supplier orders for restaurants and the food industry')}
+      </h2>
       <p class="desc">
         ${t('המערכת הכי יעילה בישראל לביצוע הזמנות מספקים ויצירת סידור עבודה שבועי, הזמנות בווצאפ, סריקת חשבוניות, ומשלוח לרואה חשבון. דאשבורד חודשי שמראה לך בדיוק מה מצב עלויות כוח האדם והקניינות שלך מתחילת החודש והאם עברת 60% או לא. המערכת החכמה והיעילה בישראל.', 'The most efficient system for supplier orders and weekly staff scheduling, WhatsApp ordering, invoice scanning and export to your accountant. A monthly dashboard shows labor and food cost status from month start. The smart, efficient system for restaurants.')}
       </p>
