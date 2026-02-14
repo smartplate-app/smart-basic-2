@@ -257,11 +257,9 @@ export default function PublicOrderPage() {
                     <p style={{ fontSize: '16px', opacity: 0.9, margin: 0 }}>
                         {language === 'he' ? 'ספק:' : 'Supplier:'} {order.supplier_name}
                     </p>
-                    {order.delivery_date && (
-                      <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.95 }}>
-                        📅 {language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} {new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
-                      </p>
-                    )}
+                    <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.95 }}>
+                      📅 {language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : (language === 'he' ? 'לא צוין' : 'Not specified')}
+                    </p>
                 </div>
 
                 {/* Content */}
@@ -288,20 +286,18 @@ export default function PublicOrderPage() {
                     </div>
 
                     {/* Delivery Date */}
-                    {order.delivery_date && (
-                        <div style={{
-                            backgroundColor: '#fef3c7',
-                            borderRadius: '12px',
-                            padding: '16px',
-                            marginBottom: '20px',
-                            border: '2px solid #fbbf24',
-                            textAlign: 'center'
-                        }}>
-                            <p style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#92400e' }}>
-                                📅 {language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} {new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
-                            </p>
-                        </div>
-                    )}
+                    <div style={{
+                        backgroundColor: '#fef3c7',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        marginBottom: '20px',
+                        border: '2px solid #fbbf24',
+                        textAlign: 'center'
+                    }}>
+                        <p style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#92400e' }}>
+                            📅 {language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : (language === 'he' ? 'לא צוין' : 'Not specified')}
+                        </p>
+                    </div>
 
                     {/* Items List */}
                     <div style={{

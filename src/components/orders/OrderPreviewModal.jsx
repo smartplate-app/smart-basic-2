@@ -123,13 +123,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           ${order.restaurant_address ? `<p style="margin: 8px 0; font-size: 14px; color: #64748b;">📍 ${order.restaurant_address}</p>` : ''}
         </div>
 
-        ${order.delivery_date ? `
         <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #fbbf24; text-align: center;">
           <p style="margin: 0; font-size: 16px; font-weight: 600; color: #92400e;">
-            📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+            📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : (language === 'he' ? 'לא צוין' : 'Not specified')}
           </p>
         </div>
-        ` : ''}
 
         <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #22c55e;">
           <h2 style="font-size: 18px; font-weight: bold; color: #15803d; margin: 0 0 16px 0;">
@@ -284,13 +282,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 ${order.restaurant_address ? `<p style="margin: 8px 0; font-size: 14px; color: #64748b;">📍 ${order.restaurant_address}</p>` : ''}
               </div>
 
-              ${order.delivery_date ? `
               <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #fbbf24; text-align: center;">
                 <p style="margin: 0; font-size: 16px; font-weight: 600; color: #92400e;">
-                  📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+                  📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : (language === 'he' ? 'לא צוין' : 'Not specified')}
                 </p>
               </div>
-              ` : ''}
 
               <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #22c55e;">
                 <h2 style="font-size: 18px; font-weight: bold; color: #15803d; margin: 0 0 16px 0;">
