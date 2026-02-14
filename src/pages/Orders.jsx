@@ -49,9 +49,6 @@ export default function OrdersPage() {
   // Send options chooser
   const [showSendOptions, setShowSendOptions] = useState(false);
   const [sendOptionOrder, setSendOptionOrder] = useState(null);
-  // Legacy share fallback (older devices)
-  const [showLegacyShare, setShowLegacyShare] = useState(false);
-  const [legacyShareData, setLegacyShareData] = useState(null);
 
 
   // Hydrate from cache for instant UI, then optionally revalidate
@@ -759,14 +756,6 @@ export default function OrdersPage() {
       }
     }
 
-    // 1b) Very old devices: no canShare, no clipboard API
-    const lacksModernAPIs = !(navigator.share) && !(navigator.clipboard && ('write' in navigator.clipboard || 'writeText' in navigator.clipboard));
-    if (lacksModernAPIs) {
-      setLegacyShareData({ text, ensuredNumber });
-      setShowLegacyShare(true);
-      return;
-    }
-
     // 2) Best-effort: copy image to clipboard so user can Paste in WhatsApp (Web/App)
     let copiedImage = false;
     let copiedText = false;
@@ -786,6 +775,20 @@ export default function OrdersPage() {
       } catch (_) {
         // no clipboard available
       }
+    }
+
+    // Older devices: if neither image nor text were copied, offer opening image for manual save
+    if (!copiedImage && !copiedText && file) {
+      try {
+        const msg = language === 'he'
+          ? 'במכשירים ישנים שיתוף תמונה אוטומטי לא נתמך. לפתוח את התמונה בלשונית חדשה לשמירה ידנית?'
+          : 'On older devices, automatic image sharing may not be supported. Open the image in a new tab to save manually?';
+        if (window.confirm(msg)) {
+          const objUrl = URL.createObjectURL(file);
+          window.open(objUrl, '_blank');
+          setTimeout(() => URL.revokeObjectURL(objUrl), 10000);
+        }
+      } catch (_) { /* ignore */ }
     }
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
@@ -820,7 +823,7 @@ export default function OrdersPage() {
           : (t('whatsapp_web_hint') || 'On WhatsApp Web, you may need to paste the content or attach the file manually.');
         try { alert(msg); } catch {}
       }, 600);
-      }
+    }
   };
 
   const handleConfirmSendEmail = async () => {
@@ -1508,46 +1511,6 @@ export default function OrdersPage() {
             </Button>
             <Button onClick={handleConfirmSendEmail} className="bg-gray-900 hover:bg-gray-800 text-white">
               <Mail className="w-4 h-4 mr-2" /> {t('email') || 'Email'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Legacy share fallback (Android 6/Chrome 50, iOS 11 era) */}
-      <Dialog open={showLegacyShare} onOpenChange={setShowLegacyShare}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('share_on_older_device') || 'Share on older device'}</DialogTitle>
-            <DialogDescription>
-              {t('legacy_share_choose') || 'Your device lacks modern share/clipboard. How would you like to proceed?'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 text-sm">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                try { navigator.clipboard && navigator.clipboard.writeText && legacyShareData?.text && navigator.clipboard.writeText(legacyShareData.text); } catch {}
-                const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(legacyShareData?.text || '')}`;
-                window.location.href = url;
-                setShowLegacyShare(false);
-              }}
-            >
-              {t('copy_text_then_open_whatsapp') || 'Copy text, then open WhatsApp'}
-            </Button>
-            <Button
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white"
-              onClick={() => {
-                // Try to render image (may be slow on very old devices)
-                setShowLegacyShare(false);
-                alert(t('image_render_may_take_time') || 'Rendering an image may take a few seconds on this device. After it shows, attach it manually in WhatsApp.');
-                // We re-trigger the WhatsApp flow to regenerate image and attempt clipboard; if still unsupported, user proceeds manually.
-                if (sendOptionOrder) {
-                  sendOrderToWhatsApp(sendOptionOrder);
-                }
-              }}
-            >
-              {t('try_image_render') || 'Try image render'}
             </Button>
           </div>
         </DialogContent>
