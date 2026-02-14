@@ -61,6 +61,7 @@ import KBMedia from './pages/KBMedia';
 import LaborCost from './pages/LaborCost';
 import LinkChecker from './pages/LinkChecker';
 import MonthlyCount from './pages/MonthlyCount';
+import OAuthCallback from './pages/OAuthCallback';
 import OrderDetails from './pages/OrderDetails';
 import Orders from './pages/Orders';
 import PublicOrder from './pages/PublicOrder';
@@ -86,7 +87,7 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import OAuthCallback from './pages/OAuthCallback';
+import AndroidEmulator from './pages/AndroidEmulator';
 import __Layout from './Layout.jsx';
 
 
@@ -105,6 +106,7 @@ export const PAGES = {
     "LaborCost": LaborCost,
     "LinkChecker": LinkChecker,
     "MonthlyCount": MonthlyCount,
+    "OAuthCallback": OAuthCallback,
     "OrderDetails": OrderDetails,
     "Orders": Orders,
     "PublicOrder": PublicOrder,
@@ -130,7 +132,7 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "OAuthCallback": OAuthCallback,
+    "AndroidEmulator": AndroidEmulator,
 }
 
 export const pagesConfig = {

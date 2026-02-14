@@ -242,7 +242,8 @@ const AppLayout = ({ children, currentPageName }) => {
       const params = new URLSearchParams(window.location.search);
       const oauthBack = params.has('code') || params.has('state');
       if (!oauthBack) return;
-      const target = createPageUrl('OAuthCallback') + window.location.search;
+      const forceHash = localStorage.getItem('b44_emulate_force_hash') === '1';
+      const target = forceHash ? ('/#/pages/OAuthCallback' + window.location.search) : (createPageUrl('OAuthCallback') + window.location.search);
       window.location.replace(target);
     } catch {}
   }, [currentPageName, location.search]);
@@ -254,6 +255,8 @@ const AppLayout = ({ children, currentPageName }) => {
       const oauthBack = params.has('code') || params.has('state');
       if (!oauthBack) return;
       if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
+      const forceHash = localStorage.getItem('b44_emulate_force_hash') === '1';
+      const disableHistory = localStorage.getItem('b44_emulate_disable_history') === '1';
       sessionStorage.setItem('b44_oauth_in_progress', '1');
       (async () => {
         try {
@@ -264,16 +267,18 @@ const AppLayout = ({ children, currentPageName }) => {
             await new Promise(r => setTimeout(r, 400 * Math.pow(1.5, i)));
           }
         } catch {}
-        try { window.history.replaceState({}, '', location.pathname); } catch {}
-        const target = createPageUrl('OAuthCallback') + window.location.search;
+        if (!disableHistory) { try { window.history.replaceState({}, '', location.pathname); } catch {} }
+        const target = forceHash ? ('/#/pages/OAuthCallback' + window.location.search) : (createPageUrl('OAuthCallback') + window.location.search);
         // Primary redirect to lightweight OAuth finalizer page
         window.location.href = target;
-        // Hash fallback for older WebViews/Chrome
-        setTimeout(() => {
-          if (!(location.pathname || '').includes('OAuthCallback')) {
-            window.location.href = '/#/pages/OAuthCallback' + window.location.search;
-          }
-        }, 1200);
+        // Hash fallback for older WebViews/Chrome when not forcing already
+        if (!forceHash) {
+          setTimeout(() => {
+            if (!(location.pathname || '').includes('OAuthCallback')) {
+              window.location.href = '/#/pages/OAuthCallback' + window.location.search;
+            }
+          }, 1200);
+        }
         // Clear flag after a short grace period
         setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); } catch {} }, 4000);
       })();
@@ -337,6 +342,7 @@ const AppLayout = ({ children, currentPageName }) => {
               if (typeof dm === 'number' && dm <= 2) lite = true; // ≤2GB RAM
               const m = (navigator.userAgent || '').match(/Chrome\/(\d+)/);
               if (m && parseInt(m[1], 10) < 90) lite = true; // old Chrome
+              if (localStorage.getItem('b44_emulate_force_lite') === '1') lite = true; // Admin emulator flag
               if (lite) document.documentElement.classList.add('lite');
             } catch {}
           }, []);
