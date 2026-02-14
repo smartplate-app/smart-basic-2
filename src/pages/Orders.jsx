@@ -676,76 +676,49 @@ export default function OrdersPage() {
   const sendOrderToWhatsApp = async (order) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
-    const inIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+    const isAndroid = /Android/i.test(navigator.userAgent || '');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    const waWeb = 'https://wa.me/?text=' + encodeURIComponent(text);
 
-    // 1) Fast path: Web Share API (text-only first to keep user gesture and avoid blockers)
+    // 1) Use native share if available
     if (navigator.share) {
       try {
         await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
         return;
       } catch (_) {
-        // ignore and continue to next fallback
+        // continue to app/web fallbacks
       }
     }
 
-    // 2) Try deep link (app) and WhatsApp Web immediately (still within user gesture)
-    try { window.open('whatsapp://send?text=' + encodeURIComponent(text), '_blank'); } catch (_) {}
-    const openedWeb = window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
-    if (openedWeb) return;
-
-    // 3) Last resort: generate image and download (no alert inside preview iframe)
-    const temp = document.createElement('div');
-    temp.style.position = 'fixed';
-    temp.style.left = '-9999px';
-    temp.style.top = '0';
-    temp.style.width = '800px';
-    temp.style.background = 'white';
-    temp.style.padding = '32px';
-    temp.style.fontFamily = 'system-ui, sans-serif';
-    temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
-    temp.innerHTML = `
-      <div style="background: linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:24px;border-radius:16px 16px 0 0;margin:-32px -32px 16px -32px;text-align:center;">
-        <div style="font-size:24px;font-weight:800;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
-        <div style="opacity:.9;margin-top:4px;">${t('supplier') || 'Supplier'}: ${order.supplier_name || ''}</div>
-      </div>
-      <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
-        <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
-        ${order.restaurant_address ? `<div style=\"color:#334155\">${order.restaurant_address}</div>` : ''}
-        ${order.delivery_date ? `<div style=\"margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;\">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
-      </div>
-      <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
-        <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
-        <table style="width:100%;border-collapse:collapse;">
-          <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
-          <tbody>
-            ${(order.items || []).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-    document.body.appendChild(temp);
-    try {
-      const { default: html2canvas } = await import('html2canvas');
-      const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
-      document.body.removeChild(temp);
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-      if (!blob) throw new Error('Failed to create image');
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `order-${ensuredNumber}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
-      if (!inIframe) {
-        alert(t('share_not_supported_use_download') || 'Sharing not supported on this device. The JPG was downloaded for manual attach.');
+    // Helper: try primary URL and fallback to WhatsApp Web if it fails (app not installed)
+    const openWithFallback = (primaryUrl, timeout = 900) => {
+      let switched = false;
+      const onHide = () => { switched = true; };
+      document.addEventListener('visibilitychange', onHide, { once: true });
+      try {
+        // Using location.href works reliably inside PWA/WebView/APK
+        window.location.href = primaryUrl;
+      } catch (_) {
+        window.location.href = waWeb;
+        return;
       }
-    } catch (e) {
-      document.body.removeChild(temp);
-      console.error('[WhatsApp Share] Failed:', e);
-      if (!inIframe) alert(t('error_saving') || 'Error');
+      setTimeout(() => {
+        if (!switched) {
+          window.location.href = waWeb;
+        }
+      }, timeout);
+    };
+
+    if (isAndroid) {
+      // Prefer Android intent to open WhatsApp app if installed; fallback goes to WhatsApp Web
+      const intent = `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
+      openWithFallback(intent, 800);
+      return;
     }
+
+    // iOS/others: try deep link, then fall back to WhatsApp Web
+    const deeplink = `whatsapp://send?text=${encodeURIComponent(text)}`;
+    openWithFallback(deeplink, isIOS ? 700 : 700);
   };
 
   const handleConfirmSendEmail = async () => {
