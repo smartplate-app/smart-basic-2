@@ -1344,7 +1344,7 @@ const handleAutoScan = async () => {
                             {language === 'he' ? 'שמור הכל' : 'Save all'}
                           </Button>
                           <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                            {t('cancel')}
+                            {safeT('cancel', 'ביטול', 'Cancel')}
                           </Button>
                         </>
                       ) : (
@@ -1369,7 +1369,7 @@ const handleAutoScan = async () => {
                             </Button>
                           )}
                           <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                            {t('cancel')}
+                            {safeT('cancel', 'ביטול', 'Cancel')}
                           </Button>
                         </>
                       )}
