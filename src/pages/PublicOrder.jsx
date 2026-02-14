@@ -257,6 +257,11 @@ export default function PublicOrderPage() {
                     <p style={{ fontSize: '16px', opacity: 0.9, margin: 0 }}>
                         {language === 'he' ? 'ספק:' : 'Supplier:'} {order.supplier_name}
                     </p>
+                    {order.delivery_date && (
+                      <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.95 }}>
+                        📅 {language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} {new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+                      </p>
+                    )}
                 </div>
 
                 {/* Content */}
