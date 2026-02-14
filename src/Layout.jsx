@@ -140,7 +140,7 @@ const AppLayout = ({ children, currentPageName }) => {
           try {
             const authed = await base44.auth.isAuthenticated();
             if (authed) {
-              window.location.replace(createPageUrl('Dashboard'));
+              window.location.replace(createPageUrl('Orders'));
               return;
             }
           } catch {}
@@ -300,7 +300,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 const atRoot = location.pathname === '/' || location.pathname === '' || location.pathname === '/pages' || location.pathname === '/pages/';
                 if (authed && (oauthBack || atRoot)) {
                   try { window.history.replaceState({}, '', createPageUrl('Orders')); } catch {}
-                  window.location.replace(createPageUrl('Dashboard'));
+                  window.location.replace(createPageUrl('Orders'));
                 }
               } catch {}
             })();
@@ -1124,7 +1124,7 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40 dark:backdrop-blur-0">
           <div className={'grid grid-cols-4 text-xs ' + (isRTL ? 'text-right' : 'text-center')}>
-            <Link to={createPageUrl('Dashboard')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Orders')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
             </Link>
