@@ -4656,3 +4656,13 @@ export const useLanguage = () => {
     }
     return context;
 };
+
+// Helper: safe translation with Hebrew override to avoid English fallbacks
+export const useSafeT = () => {
+    const { t, language } = useLanguage();
+    return (key, he, en) => {
+        const v = t(key);
+        if (language === 'he' && (v === key || !v)) return he;
+        return (v === key || !v) ? (en ?? key) : v;
+    };
+};
