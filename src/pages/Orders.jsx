@@ -49,6 +49,9 @@ export default function OrdersPage() {
   // Send options chooser
   const [showSendOptions, setShowSendOptions] = useState(false);
   const [sendOptionOrder, setSendOptionOrder] = useState(null);
+  // Legacy share fallback (older devices)
+  const [showLegacyShare, setShowLegacyShare] = useState(false);
+  const [legacyShareData, setLegacyShareData] = useState(null);
 
 
   // Hydrate from cache for instant UI, then optionally revalidate
