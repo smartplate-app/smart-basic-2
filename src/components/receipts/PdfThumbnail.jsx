@@ -24,9 +24,9 @@ export default function PdfThumbnail({ url, size = 48, className = '' }) {
 
   return (
     <div
-      className={`relative rounded-md overflow-hidden border bg-white flex items-center justify-center ${className}`}
+      className={`relative rounded-md overflow-hidden border bg-white dark:bg-[#0b1530] flex items-center justify-center ${className}`}
       style={{ width: size, height: size }}
-      title={error ? 'Preview unavailable' : 'PDF preview'}
+      title={error ? (navigator?.language?.startsWith('he') ? 'תצוגה לא זמינה' : 'Preview unavailable') : (navigator?.language?.startsWith('he') ? 'תצוגת PDF' : 'PDF preview')}
     >
       {thumb ? (
         <img src={thumb} alt="pdf thumb" className="w-full h-full object-cover" />
