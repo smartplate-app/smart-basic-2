@@ -1077,16 +1077,25 @@ export default function OrdersPage() {
             )}
             </AnimatePresence>
 
-            {showReceiveForm && receiveOrder && (
-              <ReceiveSupplyForm
-                order={receiveOrder}
-                receipt={null}
-                suppliers={suppliers}
-                noOrderMode={false}
-                onSubmit={handleReceiveSubmit}
-                onCancel={() => { setShowReceiveForm(false); setReceiveOrder(null); }}
-              />
-            )}
+            <Dialog open={showReceiveForm} onOpenChange={(open) => { if (!open) { setShowReceiveForm(false); setReceiveOrder(null); } }}>
+              <DialogContent className="max-w-3xl md:max-w-4xl w-[96vw] p-0">
+                <DialogHeader className="sr-only">
+                  <DialogTitle>Receive / Scan</DialogTitle>
+                  <DialogDescription></DialogDescription>
+                </DialogHeader>
+                {receiveOrder && (
+                  <ReceiveSupplyForm
+                    order={receiveOrder}
+                    receipt={null}
+                    suppliers={suppliers}
+                    noOrderMode={false}
+                    onSubmit={handleReceiveSubmit}
+                    onCancel={() => { setShowReceiveForm(false); setReceiveOrder(null); }}
+                    autoOpenUpload={true}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
 
             <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
               <div className="relative">

@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 
-export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false }) {
+export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false }) {
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
   const [availableSuppliers, setAvailableSuppliers] = useState(Array.isArray(suppliers) ? suppliers : []);
@@ -161,6 +161,18 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       }));
     }
   }, [order]);
+
+  // If requested, auto-open file chooser to start the scan flow quickly
+  useEffect(() => {
+    try {
+      if (autoOpenUpload && (formData.receipt_images || []).length === 0) {
+        const input = document.getElementById('receipt-upload');
+        if (input && typeof input.click === 'function') {
+          setTimeout(() => { try { input.click(); } catch {} }, 250);
+        }
+      }
+    } catch {}
+  }, [autoOpenUpload, formData.receipt_images]);
 
   // Fallback: if no suppliers provided, fetch from owner/head context so workers/managers can select
   useEffect(() => {
@@ -795,6 +807,13 @@ const handleAutoScan = async () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
+          {order && (
+            <div className="mb-2 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg p-3 text-sm">
+              {language === 'he'
+                ? `סריקה להזמנה ${order.order_number || '—'} • ספק: ${order.supplier_name || ''}. הקבלה תקושר להזמנה זו.`
+                : `Scanning for order ${order.order_number || '—'} • Supplier: ${order.supplier_name || ''}. This receipt will attach to this order.`}
+            </div>
+          )}
           {(noOrderMode || order) ? (
             <>
               <div className="space-y-2">
