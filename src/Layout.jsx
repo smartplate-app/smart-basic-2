@@ -610,23 +610,34 @@ const AppLayout = ({ children, currentPageName }) => {
 
 
     // Re-check viewer role on route change (keeps role up-to-date after admin edits)
+    // Throttle + run in idle time to avoid slowing navigation
     useEffect(() => {
       if (!user) return;
-      (async () => {
+      const run = () => {
         try {
-          const recs = await base44.entities.StoreUser.filter({ user_email: user.email });
-          const active = recs.filter(r => r.is_active !== false);
-          const effective =
-            active.find(r => r.role === 'viewer') ||
-            active.find(r => r.role === 'worker') ||
-            active[0];
-          setStoreUserRole(effective?.role || null);
-          if (effective?.role === 'viewer') {
-            await base44.auth.updateMe({ store_user_role: 'viewer', store_user_read_only: true });
-          }
+          const last = Number(sessionStorage.getItem('b44_role_check_ts') || '0');
+          if (Date.now() - last < 180000) return; // skip if checked in last 3 minutes
+          (async () => {
+            try {
+              const recs = await base44.entities.StoreUser.filter({ user_email: user.email });
+              const active = recs.filter(r => r.is_active !== false);
+              const effective = active.find(r => r.role === 'viewer') || active.find(r => r.role === 'worker') || active[0];
+              setStoreUserRole(effective?.role || null);
+              if (effective?.role === 'viewer') {
+                await base44.auth.updateMe({ store_user_role: 'viewer', store_user_read_only: true });
+              }
+              sessionStorage.setItem('b44_role_check_ts', String(Date.now()));
+            } catch {}
+          })();
         } catch {}
-      })();
-    }, [location.pathname]);
+      };
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        // @ts-ignore
+        window.requestIdleCallback(run, { timeout: 1500 });
+      } else {
+        setTimeout(run, 600);
+      }
+    }, [location.pathname, user?.email]);
 
               const visibleNavigationItems = navigationItems.filter(item => {
                 // Admin-only items
