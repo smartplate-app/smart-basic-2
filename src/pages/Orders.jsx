@@ -1512,7 +1512,7 @@ export default function OrdersPage() {
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setShowSendOptions(false)}>{safeT('cancel', 'ביטול', 'Cancel')}</Button>
             <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
-              <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
+              <MessageCircle className="w-4 h-4 mr-2" /> {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
             </Button>
             <Button onClick={handleConfirmSendEmail} className="bg-gray-900 hover:bg-gray-800 text-white">
               <Mail className="w-4 h-4 mr-2" /> {safeT('email', 'אימייל', 'Email')}
