@@ -58,8 +58,10 @@ export default function DashboardPage() {
   const [hasScheduleData, setHasScheduleData] = useState(false);
   const [exportingMonthly, setExportingMonthly] = useState(false);
   const [inventoryCounts, setInventoryCounts] = useState([]);
-const [monthReceipts, setMonthReceipts] = useState([]);
-        const [monthOrders, setMonthOrders] = useState([]);
+  const [monthReceipts, setMonthReceipts] = useState([]);
+  const [monthOrders, setMonthOrders] = useState([]);
+  const [latestWeeklyLaborCost, setLatestWeeklyLaborCost] = useState(0);
+  const [latestPredictedWeeklySales, setLatestPredictedWeeklySales] = useState(0);
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
   const [lastAfcSheetId, setLastAfcSheetId] = useState(null);
@@ -301,6 +303,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         const latestSchedule = schedulesWithData[0];
         const weeklyLaborCost = latestSchedule.total_cost; // Already includes employer costs
         const weeklySales = latestSchedule.predicted_weekly_sales || 0;
+        setLatestWeeklyLaborCost(weeklyLaborCost || 0);
+        setLatestPredictedWeeklySales(weeklySales || 0);
         
         // Calculate monthly prediction: weekly * 4.2 weeks
         const monthlyPredictedLabor = weeklyLaborCost * 4.2;
@@ -327,6 +331,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
         setPredictedLaborToDate(0);
         setPredictedSalesToDate(0);
         setPredictedMonthlyLabor(0);
+        setLatestWeeklyLaborCost(0);
+        setLatestPredictedWeeklySales(0);
       }
 
       // Calculate food cost (remove VAT from receipts since invoice_total includes VAT)
@@ -699,6 +705,8 @@ const [monthReceipts, setMonthReceipts] = useState([]);
   const actualSalesExVAT = actualSales / 1.17;
   const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
   const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT) * 100 : 0;
+  const weeklySalesExVAT = latestPredictedWeeklySales > 0 ? latestPredictedWeeklySales / 1.17 : 0;
+  const weeklyLaborPercent = weeklySalesExVAT > 0 ? ((latestWeeklyLaborCost || 0) / weeklySalesExVAT) * 100 : 0;
   const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT) * 100 : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
   const daysInMonthForProjection = moment(selectedMonth).daysInMonth();
@@ -1020,7 +1028,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                 <Card className="bg-gradient-to-br from-amber-100 to-yellow-100 border border-amber-200">
                   <CardContent className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                     <div className="text-sm font-semibold text-amber-800">
-                      {language === 'he' ? 'סה״כ מכירות (עד כה)' : 'Total Sales (to date)'}
+                      {language === 'he' ? 'מכירות חודשיות' : 'Monthly Sales'}
                     </div>
                     <div className="text-3xl font-extrabold text-amber-900 mt-1">
                       {formatCurrency(actualSales)}
@@ -1192,7 +1200,7 @@ const [monthReceipts, setMonthReceipts] = useState([]);
                     {formatCurrency(effectiveLaborCost)}
                   </div>
                   <div className={`text-gray-300 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {actualLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות' : 'of sales'}
+                    {weeklyLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות השבועיות (ללא מע\"מ)' : 'of weekly sales (excl. VAT)'}
                   </div>
 
                   {/* Manual override controls - always visible inside this card */}
