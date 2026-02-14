@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Save, Upload, X, CalendarPlus } from "lucide-react";
+import { Loader, Save, Upload, X, CalendarPlus, Trash2 } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function UserProfilePage() {
