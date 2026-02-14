@@ -759,6 +759,14 @@ export default function OrdersPage() {
       }
     }
 
+    // 1b) Very old devices: no canShare, no clipboard API
+    const lacksModernAPIs = !(navigator.share) && !(navigator.clipboard && ('write' in navigator.clipboard || 'writeText' in navigator.clipboard));
+    if (lacksModernAPIs) {
+      setLegacyShareData({ text, ensuredNumber });
+      setShowLegacyShare(true);
+      return;
+    }
+
     // 2) Best-effort: copy image to clipboard so user can Paste in WhatsApp (Web/App)
     let copiedImage = false;
     let copiedText = false;
