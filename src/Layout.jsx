@@ -1123,19 +1123,19 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40 dark:backdrop-blur-0">
           <div className={'grid grid-cols-4 text-xs ' + (isRTL ? 'text-right' : 'text-center')}>
-            <Link to={createPageUrl('Dashboard')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Dashboard')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
             </Link>
-            <Link to={createPageUrl('Orders')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Orders')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <ShoppingCart className="h-5 w-5" />
               <span>{language === 'he' ? 'הזמנות' : 'Orders'}</span>
             </Link>
-            <Link to={createPageUrl('Suppliers')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Suppliers')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <Users className="h-5 w-5" />
               <span>{language === 'he' ? 'ספקים' : 'Suppliers'}</span>
             </Link>
-            <Link to={createPageUrl('UserProfile')} className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('UserProfile')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <UserCircle className="h-5 w-5" />
               <span>{language === 'he' ? 'פרופיל' : 'Profile'}</span>
             </Link>
