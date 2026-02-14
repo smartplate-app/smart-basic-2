@@ -692,19 +692,27 @@ export default function OrdersPage() {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
 
-      if (isMobile && navigator.share && (!navigator.canShare || navigator.canShare({ files: [file], text }))) {
+      if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file], text }))) {
         await navigator.share({ files: [file], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+      } else if (navigator.share) {
+        // Text-only share (opens share sheet incl. WhatsApp if installed)
+        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
       } else {
-        // Fallback: download the image so it can be attached manually
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `order-${ensuredNumber}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-        alert(t('share_not_supported_use_download') || 'Sharing not supported on this device. The JPG was downloaded for manual attach.');
+        // Fallback: open WhatsApp Web with prefilled text
+        const waUrl = 'https://wa.me/?text=' + encodeURIComponent(text);
+        const opened = window.open(waUrl, '_blank', 'noopener,noreferrer');
+        if (!opened) {
+          // Last resort: download the image so it can be attached manually
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `order-${ensuredNumber}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          a.remove();
+          alert(t('share_not_supported_use_download') || 'Sharing not supported on this device. The JPG was downloaded for manual attach.');
+        }
       }
     } catch (e) {
       document.body.removeChild(temp);
