@@ -1016,7 +1016,7 @@ export default function OrdersPage() {
         </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('orders_title')}</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{safeT('orders_title', 'ניהול הזמנות', 'Orders Management')}</h1>
             <p className="text-gray-600 mt-2">{t('orders_greeting', { name: (user.acting_as_user_name || user.full_name) })}</p>
           </div>
           <div className="flex gap-3">
@@ -1042,7 +1042,7 @@ export default function OrdersPage() {
                 className="bg-gray-900 hover:bg-gray-800 text-white h-11 md:h-10 px-5 rounded-lg"
               >
                 <Plus className="w-5 h-5 ml-2" />
-                {t('new_order')}
+                {safeT('new_order', 'הזמנה חדשה', 'New Order')}
               </Button>
             )}
           </div>
@@ -1085,7 +1085,7 @@ export default function OrdersPage() {
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
-                  placeholder={t('search_orders')}
+                  placeholder={safeT('search_orders', 'חיפוש הזמנות...', 'Search orders...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pr-10 h-11 md:h-10 text-base rounded-lg"
@@ -1093,7 +1093,7 @@ export default function OrdersPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="h-11 md:h-10 rounded-lg">
-                  <SelectValue placeholder={t('order_status')} />
+                  <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('all_statuses')}</SelectItem>
@@ -1105,17 +1105,17 @@ export default function OrdersPage() {
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
                 <SelectTrigger className="h-11 md:h-10 rounded-lg">
-                  <SelectValue placeholder={t('supplier') || 'Supplier'} />
+                  <SelectValue placeholder={safeT('supplier', 'ספק', 'Supplier')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('all') || 'All'}</SelectItem>
+                  <SelectItem value="all">{safeT('all', 'הכל', 'All')}</SelectItem>
                   {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
                     <SelectItem key={name} value={name}>{name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Input
-                placeholder={t('customer_name') || 'שם לקוח'}
+                placeholder={safeT('customer_name', 'שם לקוח', 'Customer name')}
                 value={customerFilter}
                 onChange={(e) => setCustomerFilter(e.target.value)}
                 className="h-11 md:h-10 rounded-lg"
@@ -1136,7 +1136,7 @@ export default function OrdersPage() {
                 <div className="text-xs text-gray-500">{t('report_for_month_year', { month: (reportMonth || '').split('-')[1], year: (reportMonth || '').split('-')[0] }) || ''}</div>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600">{t('month')}</label>
+                <label className="text-sm text-gray-600">{safeT('month', 'חודש', 'Month')}</label>
                 <Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} className="h-9 w-44" />
                 <Button variant="outline" className="h-9" onClick={handleGenerateAfcSheet}>{safeT('generate_afc_sheet','צור גיליון AFC','Generate AFC Sheet')}</Button>
               </div>
@@ -1161,7 +1161,7 @@ export default function OrdersPage() {
               <Input
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
-                placeholder={t('search') || 'Search items...'}
+                placeholder={safeT('search', 'חיפוש פריטים...', 'Search items...')}
                 className="h-9 max-w-sm"
               />
             </div>
@@ -1170,8 +1170,8 @@ export default function OrdersPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{t('item')}</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{t('quantity')}</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('item', 'פריט', 'Item')}</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('quantity', 'כמות', 'Quantity')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1264,7 +1264,7 @@ export default function OrdersPage() {
                                                             onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
                                                             className="border-green-300 text-green-700 hover:bg-green-50"
                                                           >
-                                                            {t('receive_scan') || 'קבלה/סריקה'}
+                                                            {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
                                                           </Button>
                                                         )}
                                                         {!isViewer && (
@@ -1305,7 +1305,7 @@ export default function OrdersPage() {
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
-                  placeholder={t('search_orders')}
+                  placeholder={safeT('search_orders', 'חיפוש הזמנות...', 'Search orders...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pr-10 h-11 text-base rounded-lg"
@@ -1313,7 +1313,7 @@ export default function OrdersPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="h-11 rounded-lg">
-                  <SelectValue placeholder={t('order_status')} />
+                  <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('all_statuses')}</SelectItem>
@@ -1325,17 +1325,17 @@ export default function OrdersPage() {
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
                 <SelectTrigger className="h-11 rounded-lg">
-                  <SelectValue placeholder={t('supplier') || 'Supplier'} />
+                  <SelectValue placeholder={safeT('supplier', 'ספק', 'Supplier')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('all') || 'All'}</SelectItem>
+                  <SelectItem value="all">{safeT('all', 'הכל', 'All')}</SelectItem>
                   {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
                     <SelectItem key={name} value={name}>{name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Input
-                placeholder={t('customer_name') || 'שם לקוח'}
+                placeholder={safeT('customer_name', 'שם לקוח', 'Customer name')}
                 value={customerFilter}
                 onChange={(e) => setCustomerFilter(e.target.value)}
                 className="h-11 rounded-lg"
@@ -1372,7 +1372,7 @@ export default function OrdersPage() {
                     {t('status')}
                   </th>
                   <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    {t('actions') || 'פעולות'}
+                    {safeT('actions', 'פעולות', 'Actions')}
                   </th>
                 </tr>
               </thead>
@@ -1453,7 +1453,7 @@ export default function OrdersPage() {
                                                           onClick={() => { setReceiveOrder(order); setShowReceiveForm(true); }}
                                                           className="flex-1 h-11 rounded-lg text-base bg-green-600 hover:bg-green-700 text-white"
                                                         >
-                                                          {t('receive_scan') || 'קבלה/סריקה'}
+                                                          {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
                                                         </Button>
                                                       )}
                                                       {!isViewer && (
