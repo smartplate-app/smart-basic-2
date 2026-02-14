@@ -649,6 +649,13 @@ export default function OrdersPage() {
   const sendOrderToWhatsApp = async (order) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
 
+    // Try to deep-link to WhatsApp directly if available (Android)
+    try {
+      const testUrl = 'whatsapp://send?text=' + encodeURIComponent(`${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}`);
+      const w = window.open(testUrl, '_blank');
+      if (w) { w.close(); }
+    } catch (_) {}
+
     // Build a nice visual card for the JPG
     const temp = document.createElement('div');
     temp.style.position = 'fixed';
