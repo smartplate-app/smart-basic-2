@@ -1049,7 +1049,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 </div>
               </div>
             )}
-            <div className={(showDesktopSidebar ? '' : 'sidebar-hidden') + ' ' + (isViewer ? 'viewer-readonly' : '')}>
+            <div className={(showDesktopSidebar ? '' : 'sidebar-hidden') + ' ' + (isViewer ? 'viewer-readonly' : '') + ' app-content'}>
               {children}
             </div>
             <style
@@ -1119,7 +1119,20 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
       .lite .backdrop-blur, .lite [class*="backdrop-blur"] { backdrop-filter: none !important; }
       ` }}
             />
-        </main>
+        <style
+                    dangerouslySetInnerHTML={{ __html: `@media (min-width: 1600px) {
+  .app-content { overflow-x: visible !important; }
+  .app-content [class*=\"max-w-\"] { max-width: 100% !important; }
+  .app-content [class*=\"max-h-\"] { max-height: none !important; }
+  .app-content [class*=\"overflow-hidden\"] { overflow: visible !important; }
+  .app-content .overflow-x-hidden { overflow-x: auto !important; }
+  .app-content table { table-layout: auto !important; width: 100% !important; }
+}
+@media (min-width: 1920px) {
+  .app-content { padding-right: max(env(safe-area-inset-right), 0px); padding-left: max(env(safe-area-inset-left), 0px); }
+}` }}
+                  />
+              </main>
 
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40 dark:backdrop-blur-0">
