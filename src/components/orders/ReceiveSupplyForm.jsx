@@ -113,6 +113,11 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     return v;
   };
 
+  // Detect PDF URLs (handles query strings)
+  const isPdfUrl = (u) => {
+    try { return /\.pdf(\?|$)/i.test(String(u || '')); } catch { return false; }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -874,7 +879,7 @@ const handleAutoScan = async () => {
                     )}
 
                     {formData.receipt_images.length > 0 && (
-                      <div className="flex gap-2 sticky bottom-0 pb-safe z-50 bg-white/95 backdrop-blur md:static md:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
+                      <div className="flex gap-2 sticky bottom-0 pb-safe z-50 bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur md:static md:bg-transparent md:dark:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
                         <Button
                           type="button"
                           onClick={handleAutoScan}
@@ -889,7 +894,7 @@ const handleAutoScan = async () => {
                           ) : (
                             <>
                               <Scan className="w-4 h-4 ml-2" />
-                              {formData.manual_entry_mode ? (t('re_scan_header') || 'סרוק מחדש') : t('auto_scan')}
+                              {formData.manual_entry_mode ? (safeT('re_scan_header', 'סרוק מחדש', 'Re-scan header') || 'סרוק מחדש') : safeT('auto_scan', 'סריקה אוטומטית', 'Auto scan')}
                             </>
                           )}
                         </Button>
