@@ -446,6 +446,29 @@ export default function OrdersPage() {
     } catch (_) {}
   }, [orders]);
 
+  // Alert if no orders in last 3 days
+  useEffect(() => {
+    if (!user) return;
+    const key = 'orders_3days_alert_' + new Date().toISOString().slice(0,10);
+    try { if (localStorage.getItem(key)) return; } catch (_) {}
+    const myOrders = (orders || []).filter(o => o?.created_by === user.email);
+    let lastTs = 0;
+    myOrders.forEach(o => {
+      const d = new Date(o.delivery_date || o.created_date || o.updated_date);
+      const t = isNaN(d.getTime()) ? 0 : d.getTime();
+      if (t > lastTs) lastTs = t;
+    });
+    const threeDays = 3 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    if (myOrders.length === 0 || (lastTs > 0 && (now - lastTs) > threeDays)) {
+      const msg = language === 'he'
+        ? 'לא יצרת הזמנה ב-3 הימים האחרונים. מומלץ ליצור הזמנה חדשה.'
+        : 'You haven’t created an order in the last 3 days. Consider creating one now.';
+      alert(msg);
+      try { localStorage.setItem(key, '1'); } catch (_) {}
+    }
+  }, [orders, user, language]);
+
   const verifyDraftsNow = async () => {
     try {
       const { data } = await base44.functions.invoke('verifyDrafts', {});
