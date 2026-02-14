@@ -648,15 +648,25 @@ export default function OrdersPage() {
 
   const sendOrderToWhatsApp = async (order) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+    const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
+    const inIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
 
-    // Try to deep-link to WhatsApp directly if available (Android)
-    try {
-      const testUrl = 'whatsapp://send?text=' + encodeURIComponent(`${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}`);
-      const w = window.open(testUrl, '_blank');
-      if (w) { w.close(); }
-    } catch (_) {}
+    // 1) Fast path: Web Share API (text-only first to keep user gesture and avoid blockers)
+    if (navigator.share) {
+      try {
+        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+        return;
+      } catch (_) {
+        // ignore and continue to next fallback
+      }
+    }
 
-    // Build a nice visual card for the JPG
+    // 2) Try deep link (app) and WhatsApp Web immediately (still within user gesture)
+    try { window.open('whatsapp://send?text=' + encodeURIComponent(text), '_blank'); } catch (_) {}
+    const openedWeb = window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
+    if (openedWeb) return;
+
+    // 3) Last resort: generate image and download (no alert inside preview iframe)
     const temp = document.createElement('div');
     temp.style.position = 'fixed';
     temp.style.left = '-9999px';
@@ -687,44 +697,27 @@ export default function OrdersPage() {
       </div>
     `;
     document.body.appendChild(temp);
-
-              try {
-                const { default: html2canvas } = await import('html2canvas');
-                const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
       document.body.removeChild(temp);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
       if (!blob) throw new Error('Failed to create image');
-      const file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
-
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
-
-      if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file], text }))) {
-        await navigator.share({ files: [file], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
-      } else if (navigator.share) {
-        // Text-only share (opens share sheet incl. WhatsApp if installed)
-        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
-      } else {
-        // Fallback: open WhatsApp Web with prefilled text
-        const waUrl = 'https://wa.me/?text=' + encodeURIComponent(text);
-        const opened = window.open(waUrl, '_blank', 'noopener,noreferrer');
-        if (!opened) {
-          // Last resort: download the image so it can be attached manually
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `order-${ensuredNumber}.jpg`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          a.remove();
-          alert(t('share_not_supported_use_download') || 'Sharing not supported on this device. The JPG was downloaded for manual attach.');
-        }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `order-${ensuredNumber}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      if (!inIframe) {
+        alert(t('share_not_supported_use_download') || 'Sharing not supported on this device. The JPG was downloaded for manual attach.');
       }
     } catch (e) {
       document.body.removeChild(temp);
       console.error('[WhatsApp Share] Failed:', e);
-      alert(t('error_saving') || 'Error');
+      if (!inIframe) alert(t('error_saving') || 'Error');
     }
   };
 
