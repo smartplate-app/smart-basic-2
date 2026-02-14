@@ -692,6 +692,9 @@ export default function OrdersPage() {
     const waWeb = phone
       ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
       : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    const apiUrl = phone
+      ? `https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     const deeplink = phone
       ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`
       : `whatsapp://send?text=${encodeURIComponent(text)}`;
