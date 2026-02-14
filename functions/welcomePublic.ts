@@ -10,8 +10,8 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
   const pageUrl = isHe ? `${canonical}?lang=he` : `${canonical}?lang=en`;
   const otherUrl = isHe ? `${canonical}?lang=en` : `${canonical}?lang=he`;
   const metaDesc = t(
-    'המערכת היעילה להזמנות מספקים, ווצאפ, סריקת חשבוניות וסידור עבודה עם דשבורד חודשי.',
-    'Efficient supplier ordering, WhatsApp ordering, invoice scanning and scheduling with a clear monthly dashboard.'
+    'אפליקציה למסעדות ולענף המזון להזמנות מספקים, ווצאפ, סריקת חשבוניות, ניהול פריטים וסידור עבודה – כולל דשבורד חודשי לעלויות מזון וכוח אדם. Smart Plate basic – פתרון להזמנות בענף המסעדנות והמזון.',
+    'App for restaurants and the food industry to order from suppliers, WhatsApp ordering, invoice scanning, item management and weekly scheduling – with a monthly dashboard for food and labor cost. Smart Plate basic – supplier ordering for restaurants.'
   );
 
   const {
@@ -87,6 +87,15 @@ function pageTemplate({ lang = 'he', success = false, error = '', values = {} })
   <meta name="twitter:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" />
   <script type="application/ld+json">
   ${JSON.stringify({"@context":"https://schema.org","@type":"SoftwareApplication","name":"Smart Plate basic","applicationCategory":"BusinessApplication","operatingSystem":"Web"})}
+  </script>
+  <script type="application/ld+json">
+  ${JSON.stringify({"@context":"https://schema.org","@type":"Organization","name":"Smart Plate","url": canonical,"logo":"https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg","sameAs":["https://smartplate.org"]})}
+  </script>
+  <script type="application/ld+json">
+  ${JSON.stringify({"@context":"https://schema.org","@type":"WebSite","url": canonical,"name":"Smart Plate basic","potentialAction":{"@type":"SearchAction","target": `${canonical}?q={search_term_string}`,"query-input":"required name=search_term_string"}})}
+  </script>
+  <script type="application/ld+json">
+  ${JSON.stringify({"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How can restaurants order from suppliers?","acceptedAnswer":{"@type":"Answer","text":"Use Smart Plate basic to create and send supplier orders via WhatsApp or email, track delivery dates and costs."}},{"@type":"Question","name":"Does it support the food industry?","acceptedAnswer":{"@type":"Answer","text":"Yes, it is purpose-built for restaurants and food businesses with items, invoices, and scheduling."}}]})}
   </script>
   <style>
     :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted:#64748b; --primary:#111827; --ring:#e5e7eb; --success:#16a34a; --error:#dc2626; }
