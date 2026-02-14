@@ -571,7 +571,7 @@ export default function SuppliersPage() {
 
         {(user?.role === 'admin' && (user?.acting_as_store_email || user?.acting_as_user_email)) && (
           <div className="mb-2 text-xs text-amber-700">
-            Viewing suppliers for: {user.acting_as_store_email || user.acting_as_user_email}
+            {language === 'he' ? 'מציג ספקים עבור:' : 'Viewing suppliers for:'} {user.acting_as_store_email || user.acting_as_user_email}
           </div>
         )}
 

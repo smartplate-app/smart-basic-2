@@ -654,7 +654,7 @@ export default function SupplyReceiptsPage() {
                       <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button onClick={() => setFiltersOpen(false)} className="w-full">{t('apply') || 'Apply'}</Button>
+                  <Button onClick={() => setFiltersOpen(false)} className="w-full">{tt('apply','החל','Apply')}</Button>
                 </div>
               </DrawerContent>
             </Drawer>

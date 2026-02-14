@@ -27,7 +27,12 @@ export default function ItemsPage() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [networkError, setNetworkError] = useState(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const safeT = (key, he, en) => {
+    const v = t(key);
+    if (language === 'he' && (v === key || !v)) return he;
+    return (v === key || !v) ? (en ?? key) : v;
+  };
   const [isViewer, setIsViewer] = useState(false);
   const [viewMode, setViewMode] = useState("cards");
   const [selectedIds, setSelectedIds] = useState([]);
@@ -512,7 +517,8 @@ export default function ItemsPage() {
               className="gap-2"
             >
               {seeding ? <Loader className="w-4 h-4 animate-spin" /> : null}
-              Add 12 test items
+              ${'' /* keep placeholder for jsx */}{{}
+            /* FIXME: replaced below */}
             </Button>
              {!isViewer && (
             <Button
