@@ -3,6 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import PhonePreview from "../components/emulator/PhonePreview";
 
 export default function AndroidEmulator() {
   const [user, setUser] = useState(null);
@@ -10,6 +12,8 @@ export default function AndroidEmulator() {
   const [forceLite, setForceLite] = useState(false);
   const [disableHistory, setDisableHistory] = useState(false);
   const [forceHash, setForceHash] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/pages/Welcome') : '/pages/Welcome');
 
   useEffect(() => {
     (async () => {
@@ -108,6 +112,34 @@ export default function AndroidEmulator() {
               <Button onClick={simulateOAuthReturn}>Simulate Google Return</Button>
               <Button variant="outline" onClick={() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); alert('Cleared in-progress flag'); } catch {} }}>Clear In-Progress Flag</Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Phone Preview (Web-only)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Enable Phone Preview</div>
+                <div className="text-sm text-gray-500">Shows the app inside a Samsung-like phone frame.</div>
+              </div>
+              <Switch checked={showPreview} onCheckedChange={(v)=>setShowPreview(v)} />
+            </div>
+            {showPreview && (
+              <div className="space-y-3">
+                <div className="flex gap-2 items-center">
+                  <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/pages/Welcome" />
+                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/pages/Welcome')}>App Welcome</Button>
+                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/pages/Dashboard')}>App Dashboard</Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={()=>setPreviewUrl((u)=>{ try { const base = u.startsWith('http') ? u : (new URL(u, window.location.origin)).toString(); const url = new URL(base); url.searchParams.set('code','demo'); url.searchParams.set('state','demo'); return url.toString(); } catch { return u + (u.includes('?')?'&':'?') + 'code=demo&state=demo'; } })}>Simulate OAuth in Preview</Button>
+                </div>
+                <PhonePreview url={previewUrl} />
+              </div>
+            )}
           </CardContent>
         </Card>
 
