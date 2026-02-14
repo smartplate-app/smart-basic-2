@@ -112,6 +112,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           <p style="font-size: 16px; opacity: 0.9; margin: 0;">
             ${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}
           </p>
+          ${order.delivery_date ? `<p style="font-size: 14px; margin: 8px 0 0 0; opacity: 0.95;">📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</p>` : ''}
         </div>
 
         <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e2e8f0;">
