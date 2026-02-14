@@ -974,7 +974,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   <Copy className="w-4 h-4 mr-2" />
                   {language === 'he' ? 'העתק קישור ציבורי' : 'Copy public link'}
                 </Button>
-                <a href="/functions/welcomePublic" target="_blank" rel="noopener noreferrer" className="flex-1">
+                <a href="/functions/welcomePublic" target="_blank" rel="noopener noreferrer" className="flex-1 no-routing-reload">
                   <Button variant="outline" className="w-full">
                     <ExternalLink className="w-4 h-4 mr-2" />
                     {language === 'he' ? 'פתח דף ציבורי' : 'Open public page'}
