@@ -42,6 +42,13 @@ export default function OrdersPage() {
     if (language === 'he' && (v === key || !v)) return he;
     return (v === key || !v) ? (en ?? key) : v;
   };
+  const unitLabel = (u) => {
+    if (!u) return '';
+    if (language !== 'he') return u;
+    const map = { unit: 'יחידה', liter: 'ליטר', kg: 'ק"ג', case: 'ארגז' };
+    return map[u] || u;
+  };
+
 
   const [isViewer, setIsViewer] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
@@ -1096,7 +1103,7 @@ export default function OrdersPage() {
                   <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                  <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
                   <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
@@ -1121,9 +1128,9 @@ export default function OrdersPage() {
                 className="h-11 md:h-10 rounded-lg"
               />
               <div className="flex items-center gap-2">
-                <Input type="date" value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 md:h-10 rounded-lg" />
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 md:h-10 rounded-lg" />
                 <span className="text-gray-500">–</span>
-                <Input type="date" value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 md:h-10 rounded-lg" />
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 md:h-10 rounded-lg" />
               </div>
             </div>
 
@@ -1148,7 +1155,7 @@ export default function OrdersPage() {
                 <div className="text-xl font-bold">{reportOrders.length}</div>
               </div>
               <div>
-                <div className="text-sm text-gray-600">{t('total_cost')}</div>
+                <div className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}</div>
                 <div className="text-xl font-bold">₪{(itemsSummary.totalCost || 0).toFixed(2)}</div>
               </div>
               <div>
@@ -1183,7 +1190,7 @@ export default function OrdersPage() {
                     filteredItemRows.map((row) => (
                       <tr key={row.name} className="border-t">
                         <td className="px-3 py-2 text-right text-gray-800">{row.name}</td>
-                        <td className="px-3 py-2 text-right font-semibold">{row.quantity.toFixed(2)} {row.unit || ''}</td>
+                        <td className="px-3 py-2 text-right font-semibold">{row.quantity.toFixed(2)} {unitLabel(row.unit)}</td>
                       </tr>
                     ))
                   )}
@@ -1235,12 +1242,12 @@ export default function OrdersPage() {
                     
                     {order.delivery_date && (
                       <div className="text-sm text-gray-600">
-                        {t('delivery_date')}: {new Date(order.delivery_date).toLocaleDateString('he-IL')}
+                        {safeT('delivery_date','תאריך אספקה','Delivery date')}: {new Date(order.delivery_date).toLocaleDateString('he-IL')}
                       </div>
                     )}
                     
                     <div className="flex justify-between items-center pt-2 border-t">
-                      <span className="text-sm text-gray-600">{t('total_cost')}:</span>
+                      <span className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}:</span>
                       <span className="text-lg font-bold text-green-600">₪{(order.total_cost || 0).toFixed(2)}</span>
                     </div>
                     
@@ -1252,9 +1259,9 @@ export default function OrdersPage() {
                           style={{ backgroundColor: '#25D366' }}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+...
                           </svg>
-                          WhatsApp
+                          {safeT('whatsapp','וואטסאפ','WhatsApp')}
                         </button>
                                                         )}
                                                         {!isViewer && order.status === 'sent' && (
@@ -1316,7 +1323,7 @@ export default function OrdersPage() {
                   <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('all_statuses')}</SelectItem>
+                  <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
                   <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
@@ -1341,9 +1348,9 @@ export default function OrdersPage() {
                 className="h-11 rounded-lg"
               />
               <div className="flex items-center gap-2">
-                <Input type="date" value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 rounded-lg" />
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 rounded-lg" />
                 <span className="text-gray-500">–</span>
-                <Input type="date" value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg" />
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg" />
               </div>
               <Button onClick={() => setFiltersOpen(false)} className="w-full">{safeT('apply', 'החל', 'Apply')}</Button>
             </div>
@@ -1357,19 +1364,19 @@ export default function OrdersPage() {
               <thead className="sticky top-0 z-20 bg-white/90 supports-[backdrop-filter]:bg-white/70 backdrop-blur border-b">
                 <tr>
                   <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    {t('order_number')}
+                    {safeT('order_number','מספר הזמנה','Order #')}
                   </th>
                   <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    {t('supplier')}
+                    {safeT('supplier','ספק','Supplier')}
                   </th>
                   <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    {t('delivery_date')}
+                    {safeT('delivery_date','תאריך אספקה','Delivery date')}
                   </th>
                   <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    {t('total_cost')}
+                    {safeT('total_cost','עלות כוללת','Total cost')}
                   </th>
                   <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    {t('status')}
+                    {safeT('status','סטטוס','Status')}
                   </th>
                   <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {safeT('actions', 'פעולות', 'Actions')}
@@ -1506,8 +1513,8 @@ export default function OrdersPage() {
       <Dialog open={showSendOptions} onOpenChange={setShowSendOptions}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('choose_send_method') || 'Choose how to send'}</DialogTitle>
-            <DialogDescription>{t('send_method_hint') || 'Choose a send method:'}</DialogDescription>
+            <DialogTitle>{safeT('choose_send_method','בחר אופן שליחה','Choose how to send')}</DialogTitle>
+            <DialogDescription>{safeT('send_method_hint','בחר שיטת שליחה:','Choose a send method:')}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setShowSendOptions(false)}>{safeT('cancel', 'ביטול', 'Cancel')}</Button>
