@@ -93,9 +93,9 @@ export default function UserProfilePage() {
   const handleSaveDriveEmail = async () => {
     try {
       const email = (driveEmail || '').trim();
-      if (!email) { alert('Enter a Google email'); return; }
+      if (!email) { alert(language === 'he' ? 'הזן מייל של Google' : 'Enter a Google email'); return; }
       await base44.auth.updateMe({ drive_share_email: email });
-      alert('Saved');
+      alert(language === 'he' ? 'נשמר' : 'Saved');
       await loadUserData();
     } catch (e) {
       alert('Error: ' + (e?.message || e));
@@ -115,11 +115,11 @@ export default function UserProfilePage() {
         const target = (driveEmail || user?.email || '').trim();
         alert(`Connected. Files will be shared to ${target}.`);
       } else {
-        alert('Not connected to Google Drive');
+        alert(language === 'he' ? 'לא מחובר ל-Google Drive' : 'Not connected to Google Drive');
       }
     } catch (e) {
       setDriveAuthorized(false);
-      alert('Not connected');
+      alert(language === 'he' ? 'לא מחובר' : 'Not connected');
     } finally {
       setDriveChecking(false);
     }
@@ -432,15 +432,15 @@ export default function UserProfilePage() {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Google Drive / Sheets</CardTitle>
+            <CardTitle>{language === 'he' ? 'Google Drive / Sheets' : 'Google Drive / Sheets'}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Files are created in the app owner’s Drive and automatically shared to your Google email below.
+              {language === 'he' ? 'קבצים נוצרים בדרייב של בעל האפליקציה ומשותפים אוטומטית למייל Google שלך מטה.' : 'Files are created in the app owner’s Drive and automatically shared to your Google email below.'}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
               <div className="md:col-span-2">
-                <Label htmlFor="drive_email">Google email for sharing</Label>
+                <Label htmlFor="drive_email">{language === 'he' ? 'אימייל Google לשיתוף' : 'Google email for sharing'}</Label>
                 <Input id="drive_email" type="email" value={driveEmail} onChange={(e) => setDriveEmail(e.target.value)} placeholder="you@gmail.com" />
               </div>
               <div className="flex gap-2">

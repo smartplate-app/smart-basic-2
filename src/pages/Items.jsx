@@ -494,7 +494,7 @@ export default function ItemsPage() {
               className="gap-2"
             >
               {exporting ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-              Export to Google Sheets
+              {safeT('export_to_sheets','ייצוא ל-Google Sheets','Export to Google Sheets')}
             </Button>
             <Button
               variant="outline"
@@ -533,7 +533,7 @@ export default function ItemsPage() {
               className="border-red-300 text-red-600 hover:bg-red-50"
             >
               <Trash2 className="w-5 h-5 mr-2" />
-              Clean Orphan Items
+              {safeT('clean_orphans','ניקוי פריטים יתומים','Clean Orphan Items')}
             </Button>
             )}
 
@@ -597,7 +597,7 @@ export default function ItemsPage() {
                 <SelectValue placeholder={t('warehouse') + ' — ' + t('filter')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All warehouses</SelectItem>
+                <SelectItem value="all">{safeT('all_warehouses','כל המחסנים','All warehouses')}</SelectItem>
                 {warehouses.map(w => (
                   <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
                 ))}
@@ -699,7 +699,7 @@ export default function ItemsPage() {
         onChangeTargetWarehouse={(id) => setSelectedWarehouseId(id)}
         onAddToCurrent={async () => {
           const targetId = selectedWarehouseId;
-          if (!targetId || targetId === 'all') { alert('Select a warehouse first'); return; }
+          if (!targetId || targetId === 'all') { alert(safeT('select_warehouse_first','בחר/י מחסן תחילה','Select a warehouse first')); return; }
           const wh = warehouses.find(w => w.id === targetId);
           if (!wh) return;
           const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];

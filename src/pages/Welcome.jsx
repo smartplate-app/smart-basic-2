@@ -2,8 +2,10 @@ import React from "react";
 import { base44 } from "@/api/base44Client";
 import AccessRequestDialog from "../components/access/AccessRequestDialog";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "../components/LanguageProvider";
 
 export default function Welcome() {
+  const { language } = useLanguage();
   const [openRequest, setOpenRequest] = React.useState(false);
   const handleSignIn = async () => {
     // If already authenticated, go straight in
