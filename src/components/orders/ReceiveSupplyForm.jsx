@@ -1191,7 +1191,6 @@ const handleAutoScan = async () => {
                               </SelectContent>
                             </Select>
                             </div>
-                            </>
                             )}
                         {formData.needs_review && (
                           <div>
