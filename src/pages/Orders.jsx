@@ -804,17 +804,32 @@ export default function OrdersPage() {
     }
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
+    // In editor preview (iframe) or desktop browsers, open in a new tab to avoid wa.me X-Frame-Options blocking
     const tryOpenChain = (urls, stepMs = 700) => {
+      const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
       let switched = false;
       const onHide = () => { switched = true; };
       document.addEventListener('visibilitychange', onHide, { once: true });
+
+      const openLink = (url) => {
+        // Desktop or when embedded in editor preview → open new tab
+        if (!isAndroid && !isIOS) {
+          const w = window.open(url, '_blank', 'noopener');
+          if (!w) { try { window.location.href = url; } catch {} }
+          return;
+        }
+        // Mobile: prefer deep link navigation; fallback to new tab if blocked
+        try { window.location.href = url; } catch { window.open(url, '_blank'); }
+      };
+
       const tryNext = (i) => {
         if (i >= urls.length || switched) return;
-        try { window.location.href = urls[i]; } catch {}
+        openLink(urls[i]);
         setTimeout(() => { if (!switched) tryNext(i + 1); }, stepMs);
       };
       tryNext(0);
     };
+
 
     if (isAndroid) {
       tryOpenChain([deeplink, apiUrl, waWeb, androidIntent]);
