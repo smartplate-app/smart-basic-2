@@ -653,7 +653,7 @@ const handleCleanOrphans = async (ownerEmail) => {
                 }
               }}
             >
-              <Trash2 className="w-4 h-4 mr-2" /> Delete
+              <Trash2 className="w-4 h-4 mr-2" /> {language === 'he' ? 'מחק מחסן' : 'Delete Warehouse'}
             </Button>
           </div>
         </div>
