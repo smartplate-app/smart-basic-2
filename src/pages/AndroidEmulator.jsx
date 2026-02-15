@@ -124,21 +124,64 @@ export default function AndroidEmulator() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium">Enable Phone Preview</div>
-                <div className="text-sm text-gray-500">Shows the app inside a Samsung-like phone frame.</div>
+                <div className="text-sm text-gray-500">Simulate device viewport inside a phone frame.</div>
               </div>
               <Switch checked={showPreview} onCheckedChange={(v)=>setShowPreview(v)} />
             </div>
             {showPreview && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex gap-2 items-center">
                   <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/pages/Welcome" />
                   <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/pages/Welcome')}>App Welcome</Button>
                   <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/pages/Dashboard')}>App Dashboard</Button>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <div className="text-sm text-gray-600">Preset Device</div>
+                    <Select onValueChange={(v)=>{
+                      const preset = {
+                        'samsung-a03': { w: 720/3, h: 1600/3 },  // scaled down for preview
+                        'samsung-a14': { w: 1080/3, h: 2408/3 },
+                        'samsung-a54': { w: 1080/3, h: 2340/3 },
+                        'pixel-4': { w: 1080/3, h: 2280/3 },
+                        'iphone-14': { w: 1170/3, h: 2532/3 },
+                      }[v];
+                      if (preset) {
+                        setDimW(Math.round(preset.w));
+                        setDimH(Math.round(preset.h));
+                      }
+                    }}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a device" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="samsung-a03">Samsung A03 (720×1600)</SelectItem>
+                        <SelectItem value="samsung-a14">Samsung A14 (1080×2408)</SelectItem>
+                        <SelectItem value="samsung-a54">Samsung A54 (1080×2340)</SelectItem>
+                        <SelectItem value="pixel-4">Pixel 4 (1080×2280)</SelectItem>
+                        <SelectItem value="iphone-14">iPhone 14 (1170×2532)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 items-end">
+                    <div>
+                      <div className="text-sm text-gray-600">Custom width (px)</div>
+                      <Input type="number" value={dimW} onChange={(e)=>setDimW(Number(e.target.value||0))} />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Custom height (px)</div>
+                      <Input type="number" value={dimH} onChange={(e)=>setDimH(Number(e.target.value||0))} />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex gap-2">
                   <Button onClick={()=>setPreviewUrl((u)=>{ try { const base = u.startsWith('http') ? u : (new URL(u, window.location.origin)).toString(); const url = new URL(base); url.searchParams.set('code','demo'); url.searchParams.set('state','demo'); return url.toString(); } catch { return u + (u.includes('?')?'&':'?') + 'code=demo&state=demo'; } })}>Simulate OAuth in Preview</Button>
                 </div>
-                <PhonePreview url={previewUrl} />
+
+                <PhonePreview url={previewUrl} width={dimW} height={dimH} />
               </div>
             )}
           </CardContent>
