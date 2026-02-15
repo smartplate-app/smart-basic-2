@@ -1191,8 +1191,9 @@ const handleAutoScan = async () => {
                                 ))}
                               </SelectContent>
                             </Select>
-                          </div>
-                        )}
+                            </div>
+                            </>
+                            )}
                         {formData.needs_review && (
                           <div>
                             <Label className="text-xs text-gray-600">{language === 'he' ? 'סיבת בדיקה (אופציונלי)' : 'Review reason (optional)'} </Label>
