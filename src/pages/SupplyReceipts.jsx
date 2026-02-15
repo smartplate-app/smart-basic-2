@@ -253,8 +253,16 @@ export default function SupplyReceiptsPage() {
   const filteredReceipts = receipts.filter(receipt => {
     const matchesSearch = receipt.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" ||
-      (statusFilter === 'refund' ? !!receipt.is_refund : receipt.status === statusFilter);
+    const matchesStatus = (() => {
+      if (statusFilter === 'all') return true;
+      if (statusFilter === 'refund_invoice') return !!receipt.is_refund;
+      if (statusFilter === 'awaiting_credit') return !!receipt.awaiting_credit;
+      if (statusFilter === 'needs_review') return !!receipt.needs_review;
+      if (statusFilter === 'invoices') return receipt.document_type === 'invoice' || receipt.document_type === 'summary_invoice';
+      if (statusFilter === 'delivery_notes') return receipt.document_type === 'delivery_note';
+      if (['verified','has_issues','pending'].includes(statusFilter)) return receipt.status === statusFilter;
+      return true;
+    })();
     const matchesSupplier = supplierFilter === "all" || receipt.supplier_name === supplierFilter;
 
     // Date range filter (inclusive)
@@ -276,9 +284,9 @@ export default function SupplyReceiptsPage() {
     }
 
     if (matchesSearch && matchesStatus && matchesSupplier && matchesDate) {
-      if (statusFilter === 'refund' && refundReceivedOnly && !receipt.refund_received) return false;
-      if (statusFilter === 'has_issues' && reviewedOnly && !receipt.reviewed) return false;
-      return true;
+    if (statusFilter === 'refund_invoice' && refundReceivedOnly && !receipt.refund_received) return false;
+    if (statusFilter === 'needs_review' && reviewedOnly && !receipt.reviewed) return false;
+    return true;
     }
     return false;
   });
@@ -515,21 +523,25 @@ export default function SupplyReceiptsPage() {
                 </SelectTrigger>
                 <SelectContent>
                  <SelectItem value="all">{tt('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
+                 <SelectItem value="invoices">{language === 'he' ? 'חשבוניות מס' : 'Tax invoices'}</SelectItem>
+                 <SelectItem value="delivery_notes">{language === 'he' ? 'תעודות משלוח' : 'Delivery notes'}</SelectItem>
+                 <SelectItem value="refund_invoice">{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</SelectItem>
+                 <SelectItem value="awaiting_credit">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</SelectItem>
+                 <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</SelectItem>
                  <SelectItem value="verified">{tt('status_verified','מאומת','Verified')}</SelectItem>
                  <SelectItem value="has_issues">{tt('status_has_issues','יש בעיות','Has issues')}</SelectItem>
-                 <SelectItem value="refund">{tt('refund','זיכוי','Refund')}</SelectItem>
                  <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                 </SelectContent>
               </Select>
 
               {/* Extra filters for refunds/review */}
-              {statusFilter === 'refund' && (
+              {statusFilter === 'refund_invoice' && (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
                   <span>{tt('credit_received','התקבל זיכוי','Credit received')}</span>
                 </label>
               )}
-              {statusFilter === 'has_issues' && (
+              {statusFilter === 'needs_review' && (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
                   <span>{tt('reviewed','נסקר','Reviewed')}</span>
@@ -648,9 +660,13 @@ export default function SupplyReceiptsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{tt('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
+                      <SelectItem value="invoices">{language === 'he' ? 'חשבוניות מס' : 'Tax invoices'}</SelectItem>
+                      <SelectItem value="delivery_notes">{language === 'he' ? 'תעודות משלוח' : 'Delivery notes'}</SelectItem>
+                      <SelectItem value="refund_invoice">{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</SelectItem>
+                      <SelectItem value="awaiting_credit">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</SelectItem>
+                      <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</SelectItem>
                       <SelectItem value="verified">{tt('status_verified','מאומת','Verified')}</SelectItem>
                       <SelectItem value="has_issues">{tt('status_has_issues','יש בעיות','Has issues')}</SelectItem>
-                      <SelectItem value="refund">{tt('refund','זיכוי','Refund')}</SelectItem>
                       <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                     </SelectContent>
                   </Select>
