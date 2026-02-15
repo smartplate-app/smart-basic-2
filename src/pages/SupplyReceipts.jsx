@@ -197,7 +197,9 @@ export default function SupplyReceiptsPage() {
         review_note: receiptData.review_note || "",
         refund_received: !!receiptData.refund_received,
         reviewed: !!receiptData.reviewed,
-        linked_receipt_id: receiptData.linked_receipt_id || ""
+        linked_receipt_id: receiptData.linked_receipt_id || "",
+        document_type: receiptData.document_type || "invoice",
+        summarized_delivery_note_ids: Array.isArray(receiptData.summarized_delivery_note_ids) ? receiptData.summarized_delivery_note_ids : []
       };
 
       if (editingReceipt) {

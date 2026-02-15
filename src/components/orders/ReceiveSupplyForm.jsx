@@ -45,6 +45,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       awaiting_credit: !!receipt.awaiting_credit,
       reviewed: !!receipt.reviewed,
       linked_receipt_id: receipt.linked_receipt_id || "",
+      summarized_delivery_note_ids: receipt.summarized_delivery_note_ids || [],
       document_type: receipt.document_type || "invoice",
       manual_entry_mode: true // Already has data, show edit mode
       };
@@ -75,6 +76,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       reviewed: false,
       linked_receipt_id: "",
       awaiting_credit: false,
+      summarized_delivery_note_ids: [],
       document_type: "invoice",
       manual_entry_mode: false
     };
@@ -92,6 +94,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
   const [previousReceipts, setPreviousReceipts] = useState([]);
+  const [deliveryNotes, setDeliveryNotes] = useState([]);
   const { t, language } = useLanguage();
   const [scannedDocs, setScannedDocs] = useState([]);
   const invoiceDetailsRef = useRef(null);
@@ -359,6 +362,22 @@ useEffect(() => {
     } catch (e) { setPreviousReceipts([]); }
   })();
 }, [formData.is_refund, formData.supplier_id]);
+
+// Load delivery notes for summary invoice selection
+useEffect(() => {
+  (async () => {
+    try {
+      if (formData.document_type !== 'summary_invoice') { setDeliveryNotes([]); return; }
+      const supplierId = formData.supplier_id || receipt?.supplier_id;
+      if (!supplierId) { setDeliveryNotes([]); return; }
+      const me = await base44.auth.me();
+      const workingEmail = me.acting_as_store_email || me.email;
+      const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
+      const filtered = (list || []).filter(r => r.document_type === 'delivery_note' && r.created_by === workingEmail && (!receipt || r.id !== receipt.id));
+      setDeliveryNotes(filtered.slice(0, 200));
+    } catch (e) { setDeliveryNotes([]); }
+  })();
+}, [formData.supplier_id, formData.document_type]);
 
 const handleAutoScan = async () => {
     if (!formData.receipt_images.length) {
@@ -945,7 +964,7 @@ const handleAutoScan = async () => {
                           <Scan className="w-5 h-5" />
                           {t('invoice_details') || 'פרטי חשבונית'}
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="invoice-details-section">
                           {scannedDocs.map((doc, idx) => (
                             <Card key={doc.file_url || idx} className="overflow-hidden">
                               <CardContent className="pt-4 space-y-3">
@@ -1219,6 +1238,52 @@ const handleAutoScan = async () => {
                             </label>
                           )}
                         </div>
+                        {formData.document_type === 'summary_invoice' && (
+                          <div className="mt-2 p-3 border rounded-md bg-amber-50">
+                            <Label className="text-xs text-gray-700">{language === 'he' ? 'בחר תעודות משלוח לחיוב' : 'Select delivery notes to include'}</Label>
+                            {!formData.supplier_id ? (
+                              <div className="text-sm text-gray-600 mt-1">{language === 'he' ? 'בחר/י ספק כדי לראות תעודות משלוח' : 'Choose a supplier to see delivery notes'}</div>
+                            ) : (
+                              <>
+                                {deliveryNotes.length === 0 ? (
+                                  <div className="text-sm text-gray-600 mt-1">{language === 'he' ? 'אין תעודות משלוח לספק זה' : 'No delivery notes for this supplier'}</div>
+                                ) : (
+                                  <div className="max-h-48 overflow-auto mt-2 space-y-1">
+                                    <label className="flex items-center gap-2 text-sm mb-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={Array.isArray(formData.summarized_delivery_note_ids) && formData.summarized_delivery_note_ids.length === deliveryNotes.length}
+                                        onChange={(e) => {
+                                          const allIds = deliveryNotes.map(d => d.id);
+                                          setFormData(prev => ({ ...prev, summarized_delivery_note_ids: e.target.checked ? allIds : [] }));
+                                        }}
+                                      />
+                                      <span>{language === 'he' ? 'בחר הכל' : 'Select all'}</span>
+                                    </label>
+                                    {deliveryNotes.map(dn => (
+                                      <label key={dn.id} className="flex items-center gap-2 text-sm">
+                                        <input
+                                          type="checkbox"
+                                          checked={Array.isArray(formData.summarized_delivery_note_ids) && formData.summarized_delivery_note_ids.includes(dn.id)}
+                                          onChange={(e) => {
+                                            setFormData(prev => {
+                                              const cur = Array.isArray(prev.summarized_delivery_note_ids) ? [...prev.summarized_delivery_note_ids] : [];
+                                              if (e.target.checked) { if (!cur.includes(dn.id)) cur.push(dn.id); }
+                                              else { const i = cur.indexOf(dn.id); if (i >= 0) cur.splice(i,1); }
+                                              return { ...prev, summarized_delivery_note_ids: cur };
+                                            });
+                                          }}
+                                        />
+                                        <span className="flex-1">{(dn.order_number || dn.invoice_number || dn.id)} • {new Date(dn.received_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} • {dn.supplier_name}</span>
+                                        <span className="text-xs text-gray-600">{dn.invoice_total ?? 0}</span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
                         {formData.is_refund && (
                           <>
                             <Alert variant="default" className="bg-amber-50 border-amber-200 mb-2">
