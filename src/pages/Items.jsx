@@ -615,6 +615,15 @@ const handleCleanOrphans = async (ownerEmail) => {
             </SelectContent>
           </Select>
           <div className="flex gap-2">
+            <Button
+              variant="destructive"
+              disabled={selectedIds.length === 0}
+              onClick={() => setShowDeleteDialog(true)}
+              className="min-w-[120px]"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {language === 'he' ? 'מחיקה' : 'Delete'}
+            </Button>
             <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
               <SelectTrigger>
                 <SelectValue placeholder={t('warehouse') + ' — ' + t('filter')} />
