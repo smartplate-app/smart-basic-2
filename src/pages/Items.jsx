@@ -493,7 +493,7 @@ const handleCleanOrphans = async (ownerEmail) => {
             <h1 className="text-3xl font-bold text-gray-900">{t('items_title')}</h1>
             <p className="text-gray-600 mt-2">{t('items_greeting', { name: user.full_name })}</p>
           </div>
-          <div className="flex gap-3 flex-wrap">
+          <div className="w-full overflow-x-auto"><div className="flex gap-3 flex-nowrap items-center min-w-max">
             <div className="flex bg-white rounded-lg shadow-sm border">
               <Button
                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
@@ -572,7 +572,7 @@ const handleCleanOrphans = async (ownerEmail) => {
               {t('add_new_item')}
             </Button>
             )}
-          </div>
+          </div></div>
         </div>
 
         <AnimatePresence>
@@ -614,7 +614,7 @@ const handleCleanOrphans = async (ownerEmail) => {
               ))}
             </SelectContent>
           </Select>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full">
             <Button
               variant="destructive"
               disabled={selectedIds.length === 0}
