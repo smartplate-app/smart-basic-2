@@ -1,11 +1,9 @@
 import React from "react";
 
-export default function PhonePreview({ url }) {
-  // Use a fixed 20:9 frame approximating Samsung A54 viewport
-  // Visible size scaled for desktop preview
-  const frameW = 390; // px
-  const frameH = 844; // px (approx 20:9)
-
+export default function PhonePreview({ url, width, height }) {
+  // Device frame size (defaults to iPhone 14 if not provided)
+  const frameW = typeof width === 'number' ? width : 390; // px
+  const frameH = typeof height === 'number' ? height : 844; // px
   return (
     <div className="w-full flex justify-center">
       <div
