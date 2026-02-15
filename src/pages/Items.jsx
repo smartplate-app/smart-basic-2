@@ -13,6 +13,7 @@ import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import ItemEditModal from "../components/items/ItemEditModal";
 import ItemListView from "../components/items/ItemListView";
 import SelectionBar from "../components/items/SelectionBar";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function ItemsPage() {
   const [items, setItems] = useState([]);
@@ -40,6 +41,8 @@ export default function ItemsPage() {
   const [defaultSupplierId, setDefaultSupplierId] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -377,7 +380,28 @@ export default function ItemsPage() {
     }
   };
 
-  const handleCleanOrphans = async (ownerEmail) => {
+  const handleBulkDelete = async () => {
+    if (isViewer) return;
+    if (selectedIds.length === 0) { setShowDeleteDialog(false); return; }
+    setDeleting(true);
+    try {
+      if (user?.store_user_owner_email || user?.acting_as_store_email) {
+        await Promise.all(selectedIds.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
+      } else {
+        await Promise.all(selectedIds.map(id => base44.entities.Item.delete(id)));
+      }
+      setSelectedIds([]);
+      await loadData(user);
+      setShowDeleteDialog(false);
+    } catch (e) {
+      console.error("Bulk delete failed:", e);
+      alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete items'));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+const handleCleanOrphans = async (ownerEmail) => {
     if (isViewer) return;
     const email = ownerEmail || user?.store_user_owner_email || user?.acting_as_store_email || user?.email;
     const { data } = await base44.functions.invoke('cleanOrphanItems', { targetEmail: email });
@@ -688,9 +712,28 @@ export default function ItemsPage() {
         onSave={handleModalSave}
         onWarehouseCreated={() => user && loadData(user)}
       />
-      )}
-      {!isViewer && (
-      <SelectionBar
+       )}
+
+       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>{language === 'he' ? 'מחיקת פריטים נבחרים' : 'Delete selected items'}</AlertDialogTitle>
+             <AlertDialogDescription>
+               {language === 'he' ? `האם למחוק ${selectedIds.length} פריטים שנבחרו? הפעולה אינה ניתנת לשחזור.` : `Delete ${selectedIds.length} selected items? This action cannot be undone.`}
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <AlertDialogFooter>
+             <AlertDialogCancel disabled={deleting}>{language === 'he' ? 'בטל' : 'Cancel'}</AlertDialogCancel>
+             <AlertDialogAction onClick={handleBulkDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700">
+               {deleting ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : null}
+               {language === 'he' ? 'מחק' : 'Delete'}
+             </AlertDialogAction>
+           </AlertDialogFooter>
+         </AlertDialogContent>
+       </AlertDialog>
+
+       {!isViewer && (
+       <SelectionBar
         selectedCount={selectedIds.length}
         currentWarehouseName={selectedWarehouseId !== 'all' ? (warehouses.find(w => w.id === selectedWarehouseId)?.name || '') : ''}
         warehouses={warehouses}
