@@ -813,7 +813,6 @@ const handleAutoScan = async () => {
                 ? `סריקה להזמנה ${order.order_number || '—'} • ספק: ${order.supplier_name || ''}. הקבלה תקושר להזמנה זו.`
                 : `Scanning for order ${order.order_number || '—'} • Supplier: ${order.supplier_name || ''}. This receipt will attach to this order.`}
             </div>
-            </>
             )}
           {(noOrderMode || order) ? (
             <>
