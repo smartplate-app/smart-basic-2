@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import PhonePreview from "../components/emulator/PhonePreview";
 
 export default function AndroidEmulator() {
+  const [dimW, setDimW] = useState(390);
+  const [dimH, setDimH] = useState(844);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [forceLite, setForceLite] = useState(false);
