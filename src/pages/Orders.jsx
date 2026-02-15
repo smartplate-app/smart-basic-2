@@ -685,7 +685,7 @@ export default function OrdersPage() {
     setShowSendOptions(true);
   };
 
-  const sendOrderToWhatsApp = async (order) => {
+  const sendOrderToWhatsApp = async (order, opts = {}) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
     const isAndroid = /Android/i.test(navigator.userAgent || '');
@@ -812,10 +812,19 @@ export default function OrdersPage() {
       document.addEventListener('visibilitychange', onHide, { once: true });
 
       const openLink = (url) => {
-        // Desktop or when embedded in editor preview → open new tab
         if (!isAndroid && !isIOS) {
-          const w = window.open(url, '_blank', 'noopener');
-          if (!w) { try { window.location.href = url; } catch {} }
+          // Use pre-opened tab if available to avoid blockers
+          if (preOpened && !preOpened.closed) {
+            try { preOpened.location.href = url; preOpened.focus(); return; } catch (_) {}
+          }
+          // Programmatic anchor click (safer in sandboxes)
+          const a = document.createElement('a');
+          a.href = url;
+          a.target = '_blank';
+          a.rel = 'noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
           return;
         }
         // Mobile: prefer deep link navigation; fallback to new tab if blocked
@@ -865,6 +874,13 @@ export default function OrdersPage() {
     if (!sendOptionOrder) return;
     const order = sendOptionOrder;
     setShowSendOptions(false);
+    // Pre-open a tab synchronously to avoid popup blockers and iframe embedding (Firefox/Preview)
+    const isAndroid = /Android/i.test(navigator.userAgent || '');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    let preOpenedWindow = null;
+    if (!isAndroid && !isIOS) {
+      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
+    }
     try {
       const { data } = await base44.functions.invoke('markOrderSent', {
         orderId: order.id,
@@ -876,7 +892,7 @@ export default function OrdersPage() {
         const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
         return { ...o, status: 'sent', order_number: num };
       }));
-      sendOrderToWhatsApp(updated.id ? updated : order);
+      sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
       setPreviewOrder(null);
       await loadData(user);
     } catch (e) {
@@ -888,7 +904,7 @@ export default function OrdersPage() {
         const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
         return { ...o, status: 'sent', order_number: num };
       }));
-      try { sendOrderToWhatsApp(order); } catch (_) {}
+      try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
       setPreviewOrder(null);
       // Optionally retry in background without blocking UX
       setTimeout(() => {
