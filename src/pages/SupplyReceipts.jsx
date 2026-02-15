@@ -509,14 +509,14 @@ export default function SupplyReceiptsPage() {
            </Button>
          </div>
 
-         <div className="hidden md:flex flex-wrap items-center gap-2 mb-6">
+         <div className="hidden md:flex flex-wrap items-center gap-1 mb-4">
               <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 w-3 h-3" />
                                  <Input
                   placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-9 pr-9 rounded-full text-sm"
+                  className="h-8 pr-7 rounded-md text-xs"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -538,13 +538,13 @@ export default function SupplyReceiptsPage() {
 
               {/* Extra filters for refunds/review */}
               {statusFilter === 'refund_invoice' && (
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md border border-gray-200 bg-white">
                   <input type="checkbox" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
                   <span>{tt('credit_received','התקבל זיכוי','Credit received')}</span>
                 </label>
               )}
               {statusFilter === 'needs_review' && (
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md border border-gray-200 bg-white">
                   <input type="checkbox" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
                   <span>{tt('reviewed','נסקר','Reviewed')}</span>
                 </label>
@@ -632,7 +632,7 @@ export default function SupplyReceiptsPage() {
                 className="h-9 rounded-full px-3 text-sm"
                 disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
               />
-              <span className="text-xs text-gray-500">{tt('between_dates','בין תאריכים','Between dates')}</span>
+              <span className="text-[11px] text-gray-500">{tt('between_dates','בין תאריכים','Between dates')}</span>
               <Input
                 type="date"
                 value={dateTo}
@@ -651,12 +651,12 @@ export default function SupplyReceiptsPage() {
                 </DrawerHeader>
                 <div className="p-4 space-y-4">
                   <div className="relative">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Search className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 w-3 h-3" />
                                           <Input
                       placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="h-9 pr-9 rounded-full text-sm"
+                      className="h-8 pr-7 rounded-md text-xs"
                     />
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
