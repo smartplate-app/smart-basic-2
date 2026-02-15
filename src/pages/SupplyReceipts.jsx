@@ -520,7 +520,7 @@ export default function SupplyReceiptsPage() {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                               <SelectTrigger className="h-9 rounded-full px-3 text-sm border-gray-200 shadow-none bg-white">
+                               <SelectTrigger className="h-8 rounded-md px-2 text-xs border-gray-200 shadow-none bg-white">
                   <SelectValue placeholder={tt('receipt_status','סטטוס קבלה','Receipt status')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -552,7 +552,7 @@ export default function SupplyReceiptsPage() {
 
               {/* Supplier filter */}
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
-                               <SelectTrigger className="h-9 rounded-full px-3 text-sm border-gray-200 shadow-none bg-white">
+                               <SelectTrigger className="h-8 rounded-md px-2 text-xs border-gray-200 shadow-none bg-white">
                   <SelectValue placeholder={tt('supplier','ספק','Supplier')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -567,7 +567,7 @@ export default function SupplyReceiptsPage() {
 
               {/* Sort by amount */}
               <Select value={sortBy} onValueChange={setSortBy}>
-                               <SelectTrigger className="h-9 rounded-full px-3 text-sm border-gray-200 shadow-none bg-white">
+                               <SelectTrigger className="h-8 rounded-md px-2 text-xs border-gray-200 shadow-none bg-white">
                   <SelectValue placeholder={tt('sort','מיון','Sort')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -611,7 +611,7 @@ export default function SupplyReceiptsPage() {
                   }
                 }}
               >
-                <SelectTrigger className="h-9 rounded-full px-3 text-sm border-gray-200 shadow-none bg-white">
+                <SelectTrigger className="h-8 rounded-md px-2 text-xs border-gray-200 shadow-none bg-white">
                   <SelectValue placeholder={tt('timeframe','טווח זמן','Timeframe')} />
                 </SelectTrigger>
                 <SelectContent>
