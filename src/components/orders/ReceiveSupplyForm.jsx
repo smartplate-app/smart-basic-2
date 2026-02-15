@@ -42,6 +42,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       needs_review: !!receipt.needs_review,
       review_note: receipt.review_note || "",
       refund_received: !!receipt.refund_received,
+      awaiting_credit: !!receipt.awaiting_credit,
       reviewed: !!receipt.reviewed,
       linked_receipt_id: receipt.linked_receipt_id || "",
       manual_entry_mode: true // Already has data, show edit mode
@@ -72,6 +73,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       refund_received: false,
       reviewed: false,
       linked_receipt_id: "",
+      awaiting_credit: false,
       manual_entry_mode: false
     };
   });
@@ -1139,6 +1141,15 @@ const handleAutoScan = async () => {
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
+                              checked={!!formData.awaiting_credit}
+                              onChange={(e) => setFormData(prev => ({ ...prev, awaiting_credit: e.target.checked }))}
+                              className="rounded"
+                            />
+                            <span>{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
                               checked={!!formData.needs_review}
                               onChange={(e) => setFormData(prev => ({ ...prev, needs_review: e.target.checked }))}
                               className="rounded"
@@ -1348,6 +1359,7 @@ const handleAutoScan = async () => {
                                 totals_match: false,
                                 is_refund: !!d.is_refund,
                                 refund_received: !!(d.is_refund && formData.refund_received),
+                                awaiting_credit: !!formData.awaiting_credit,
                                 reviewed: !!(formData.needs_review && formData.reviewed),
                                 linked_receipt_id: formData.linked_receipt_id || ""
                               }));
