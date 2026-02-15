@@ -591,7 +591,7 @@ const handleCleanOrphans = async (ownerEmail) => {
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-50 py-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6 bg-gray-50 py-3 px-2 md:px-3 items-start">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
