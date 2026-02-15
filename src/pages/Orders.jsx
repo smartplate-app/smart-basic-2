@@ -690,6 +690,7 @@ export default function OrdersPage() {
     const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
     const isAndroid = /Android/i.test(navigator.userAgent || '');
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    const preOpened = opts?.preOpenedWindow || null;
 
     // Normalize phone for WhatsApp (supports unsaved contacts)
     const rawPhone = String(order.supplier_phone || '').trim();
