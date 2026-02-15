@@ -516,9 +516,8 @@ export default function ItemsPage() {
               disabled={seeding}
               className="gap-2"
             >
-              {seeding ? <Loader className="w-4 h-4 animate-spin" /> : null}
-              ${'' /* keep placeholder for jsx */}{{}
-            /* FIXME: replaced below */}
+              {seeding ? <Loader className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              {safeT('seed_items','הוסף נתוני דמה','Seed sample items')}
             </Button>
              {!isViewer && (
             <Button
