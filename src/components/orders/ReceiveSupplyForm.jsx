@@ -45,6 +45,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       awaiting_credit: !!receipt.awaiting_credit,
       reviewed: !!receipt.reviewed,
       linked_receipt_id: receipt.linked_receipt_id || "",
+      document_type: receipt.document_type || "invoice",
       manual_entry_mode: true // Already has data, show edit mode
       };
     }
@@ -74,6 +75,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       reviewed: false,
       linked_receipt_id: "",
       awaiting_credit: false,
+      document_type: "invoice",
       manual_entry_mode: false
     };
   });
@@ -428,7 +430,7 @@ const handleAutoScan = async () => {
             const inv = sanitizeInvoiceNumber(resp.invoice_number || '');
             const dateChosen = resp.invoice_date_invoice || resp.invoice_date || resp.invoice_date_printed || formData.received_date;
             const dup = supplierId ? await checkDuplicateInvoice(inv, supplierId, receipt?.id) : false;
-            return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, duplicate: dup };
+            return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, duplicate: dup, document_type: 'invoice' };
           })
         );
         setScannedDocs(results);
@@ -1017,6 +1019,26 @@ const handleAutoScan = async () => {
                                     required
                                   />
                                 </div>
+                                <div>
+                                  <Label className="text-xs text-gray-600">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
+                                  <Select
+                                    value={doc.document_type || 'invoice'}
+                                    onValueChange={(val) => setScannedDocs(prev => {
+                                      const copy = [...prev];
+                                      copy[idx] = { ...copy[idx], document_type: val };
+                                      return copy;
+                                    })}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder={language === 'he' ? 'בחר סוג מסמך' : 'Select document type'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="delivery_note">{language === 'he' ? 'תעודת משלוח' : 'Delivery note'}</SelectItem>
+                                      <SelectItem value="invoice">{language === 'he' ? 'חשבונית' : 'Invoice'}</SelectItem>
+                                      <SelectItem value="summary_invoice">{language === 'he' ? 'חשבונית מרכזת' : 'Summary invoice'}</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                                 <label className="flex items-center gap-2 text-sm">
                                   <input
                                     type="checkbox"
@@ -1128,6 +1150,24 @@ const handleAutoScan = async () => {
                       </div>
 
                       <div className="bg-white border rounded-lg p-3 mt-3 space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-xs text-gray-600">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
+                            <Select
+                              value={formData.document_type || 'invoice'}
+                              onValueChange={(val) => setFormData(prev => ({ ...prev, document_type: val }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={language === 'he' ? 'בחר סוג מסמך' : 'Select document type'} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="delivery_note">{language === 'he' ? 'תעודת משלוח' : 'Delivery note'}</SelectItem>
+                                <SelectItem value="invoice">{language === 'he' ? 'חשבונית' : 'Invoice'}</SelectItem>
+                                <SelectItem value="summary_invoice">{language === 'he' ? 'חשבונית מרכזת' : 'Summary invoice'}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                         <div className="flex items-center gap-4 flex-wrap">
                           <label className="flex items-center gap-2 text-sm">
                             <input
@@ -1361,7 +1401,8 @@ const handleAutoScan = async () => {
                                 refund_received: !!(d.is_refund && formData.refund_received),
                                 awaiting_credit: !!formData.awaiting_credit,
                                 reviewed: !!(formData.needs_review && formData.reviewed),
-                                linked_receipt_id: formData.linked_receipt_id || ""
+                                linked_receipt_id: formData.linked_receipt_id || "",
+                                document_type: d.document_type || (formData.document_type || "invoice")
                               }));
                               try {
                                 if (base44.entities.SupplyReceipt.bulkCreate) {
