@@ -1169,10 +1169,11 @@ const handleAutoScan = async () => {
                           )}
                         </div>
                         {formData.is_refund && (
-                          <Alert variant="default" className="bg-amber-50 border-amber-200 mb-2">
-                            <AlertDescription>{language === 'he' ? 'בקבלת זיכוי מומלץ להעלות קובץ PDF, אחרת יש לתקן את הסכום ידנית על ידי הוספת מינוס (−).' : 'For credit invoices, we recommend uploading a PDF; otherwise adjust the amount manually by prefixing a minus (−).'}</AlertDescription>
-                          </Alert>
-                          <div className="mt-3">
+                          <>
+                            <Alert variant="default" className="bg-amber-50 border-amber-200 mb-2">
+                              <AlertDescription>{language === 'he' ? 'בקבלת זיכוי מומלץ להעלות קובץ PDF, אחרת יש לתקן את הסכום ידנית על ידי הוספת מינוס (−).' : 'For credit invoices, we recommend uploading a PDF; otherwise adjust the amount manually by prefixing a minus (−).'}</AlertDescription>
+                            </Alert>
+                            <div className="mt-3">
                             <Label className="text-xs text-gray-600">{language === 'he' ? 'קשר לחשבונית המקורית (אופציונלי)' : 'Link to original receipt (optional)'} </Label>
                             <Select
                               value={formData.linked_receipt_id || ''}
