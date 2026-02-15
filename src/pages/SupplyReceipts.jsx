@@ -509,18 +509,18 @@ export default function SupplyReceiptsPage() {
            </Button>
          </div>
 
-         <div className="hidden md:grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+         <div className="hidden md:flex flex-wrap items-center gap-2 mb-6">
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
                   placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10"
+                  className="h-9 pr-9 rounded-full text-sm"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                               <SelectTrigger className="h-9 rounded-full px-3 text-sm border-gray-200 shadow-none bg-white">
                   <SelectValue placeholder={tt('receipt_status','סטטוס קבלה','Receipt status')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -552,7 +552,7 @@ export default function SupplyReceiptsPage() {
 
               {/* Supplier filter */}
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
-                <SelectTrigger>
+                               <SelectTrigger className="h-9 rounded-full px-3 text-sm border-gray-200 shadow-none bg-white">
                   <SelectValue placeholder={tt('supplier','ספק','Supplier')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -567,7 +567,7 @@ export default function SupplyReceiptsPage() {
 
               {/* Sort by amount */}
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
+                               <SelectTrigger className="h-9 rounded-full px-3 text-sm border-gray-200 shadow-none bg-white">
                   <SelectValue placeholder={tt('sort','מיון','Sort')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -581,8 +581,8 @@ export default function SupplyReceiptsPage() {
 
               {/* Timeframe preset */}
               <Select
-                value={datePreset}
-                onValueChange={(v) => {
+                               value={datePreset}
+                               onValueChange={(v) => {
                   setDatePreset(v);
                   const now = new Date();
                   if (v === 'week') {
@@ -611,7 +611,7 @@ export default function SupplyReceiptsPage() {
                   }
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 rounded-full px-3 text-sm border-gray-200 shadow-none bg-white">
                   <SelectValue placeholder={tt('timeframe','טווח זמן','Timeframe')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -629,13 +629,16 @@ export default function SupplyReceiptsPage() {
                 value={dateFrom}
                 onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); }}
                 placeholder={tt('from_date','מתאריך','From date')}
+                className="h-9 rounded-full px-3 text-sm"
                 disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
               />
+              <span className="text-xs text-gray-500">{tt('between_dates','בין תאריכים','Between dates')}</span>
               <Input
                 type="date"
                 value={dateTo}
                 onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); }}
                 placeholder={tt('to_date','עד תאריך','To date')}
+                className="h-9 rounded-full px-3 text-sm"
                 disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
               />
             </div>
@@ -653,7 +656,7 @@ export default function SupplyReceiptsPage() {
                       placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pr-10"
+                      className="h-9 pr-9 rounded-full text-sm"
                     />
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
