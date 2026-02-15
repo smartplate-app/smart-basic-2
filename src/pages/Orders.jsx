@@ -685,6 +685,45 @@ export default function OrdersPage() {
     setShowSendOptions(true);
   };
 
+  // Desktop-only direct WhatsApp send from preview (mobile unchanged)
+  const sendWhatsAppDirect = async (order) => {
+    if (!order) return;
+    const isAndroid = /Android/i.test(navigator.userAgent || '');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    let preOpenedWindow = null;
+    if (!isAndroid && !isIOS) {
+      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
+    }
+    try {
+      const { data } = await base44.functions.invoke('markOrderSent', {
+        orderId: order.id,
+        orderNumber: order.order_number
+      });
+      const updated = data?.order || {};
+      setOrders(prev => prev.map(o => {
+        if (o.id !== (updated.id || order.id)) return o;
+        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
+      setPreviewOrder(null);
+      await loadData(user);
+    } catch (e) {
+      console.warn('markOrderSent failed, proceeding with WA fallback (direct):', e?.message || e);
+      setOrders(prev => prev.map(o => {
+        if (o.id !== order.id) return o;
+        const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
+      setPreviewOrder(null);
+      setTimeout(() => {
+        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number })
+          .catch(() => {});
+      }, 1200);
+    }
+  };
+
   const sendOrderToWhatsApp = async (order, opts = {}) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
@@ -849,17 +888,14 @@ export default function OrdersPage() {
       tryOpenChain([waWeb]);
     }
 
-    // Show contextual hint only when going to WhatsApp Web or when paste is needed
-    const goingToWeb = !isAndroid && !isIOS; // desktops/tablets typically open Web
-    if (goingToWeb || copiedImage || copiedText) {
+    // Mobile-only hint; no desktop popups
+    if ((isAndroid || isIOS) && (copiedImage || copiedText)) {
       setTimeout(() => {
         const msg = copiedImage
-          ? (t('image_copied_paste_in_whatsapp') || 'The order image is copied. In WhatsApp Web, click the message box and Paste (Ctrl/Cmd+V).')
-          : copiedText
-          ? (t('text_copied_paste_in_whatsapp') || 'The order text is copied. In WhatsApp Web, Paste and attach the JPG if needed.')
-          : (t('whatsapp_web_hint') || 'On WhatsApp Web, you may need to paste the content or attach the file manually.');
+          ? (t('image_copied_paste_in_whatsapp') || 'The image was copied. Paste in WhatsApp.')
+          : (t('text_copied_paste_in_whatsapp') || 'Text copied. Paste in WhatsApp.');
         try { alert(msg); } catch {}
-      }, 600);
+      }, 300);
     }
   };
 
@@ -1587,7 +1623,7 @@ export default function OrdersPage() {
           order={previewOrder}
           isOpen={!!previewOrder}
           onClose={() => setPreviewOrder(null)}
-          onSend={() => handleSendNow(previewOrder)}
+          onSend={() => { const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || ''); if (isMobile) { handleSendNow(previewOrder); } else { sendWhatsAppDirect(previewOrder); } }}
         />
       )}
     </div>

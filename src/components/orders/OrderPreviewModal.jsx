@@ -454,6 +454,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             onClick={() => { if (onSend) onSend(order); }}
             className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm disabled:opacity-50"
             disabled={downloading}
+            data-testid="order-preview-send"
           >
             <Share className="w-5 h-5 mr-2" />
             {safeT('send','שלח','Send')}
