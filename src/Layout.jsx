@@ -162,20 +162,15 @@ const AppLayout = ({ children, currentPageName }) => {
                       try {
                         const again = await base44.auth.isAuthenticated();
                         if (!again) {
-                          const url = new URL(createPageUrl('Welcome'), window.location.origin);
-                          if (preview === '1') url.searchParams.set('preview', '1');
-                          window.location.replace(url.pathname + url.search);
+                          // Send truly public users to public welcome (no auth loop)
+                          window.location.replace('/#/pages/WelcomePublic');
                         }
                       } catch {
-                        const url = new URL(createPageUrl('Welcome'), window.location.origin);
-                        if (preview === '1') url.searchParams.set('preview', '1');
-                        window.location.replace(url.pathname + url.search);
+                        window.location.replace('/#/pages/WelcomePublic');
                       }
                     }, 1500);
                   } else {
-                    const url = new URL(createPageUrl('Welcome'), window.location.origin);
-                    if (preview === '1') url.searchParams.set('preview', '1');
-                    window.location.replace(url.pathname + url.search);
+                    window.location.replace('/#/pages/WelcomePublic');
                   }
                 }
               }).catch(() => {
