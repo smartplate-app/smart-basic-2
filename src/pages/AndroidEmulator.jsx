@@ -16,7 +16,7 @@ export default function AndroidEmulator() {
   const [disableHistory, setDisableHistory] = useState(false);
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/AuthKick') : '/functions/welcomePublic');
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/WelcomePublic?stop=1') : '/functions/welcomePublic');
 
   useEffect(() => {
     (async () => {
@@ -59,8 +59,8 @@ export default function AndroidEmulator() {
       sessionStorage.removeItem('b44_oauth_finalized');
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
     } catch {}
-    try { await base44.auth.logout('/#/pages/AuthKick'); } catch {}
-    setTimeout(() => { window.location.replace('/#/pages/AuthKick'); }, 400);
+    try { await base44.auth.logout('/#/pages/WelcomePublic?stop=1'); } catch {}
+    setTimeout(() => { window.location.replace('/#/pages/WelcomePublic?stop=1'); }, 400);
   };
 
   if (loading) return null;
