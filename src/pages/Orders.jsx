@@ -1371,16 +1371,7 @@ export default function OrdersPage() {
                           {safeT('whatsapp','וואטסאפ','WhatsApp')}
                         </button>
                       )}
-                      {!isViewer && (
-                        <Button
-                          variant="outline"
-                          onClick={() => resendViaGuestroom(order)}
-                          className="flex-1 h-11 rounded-lg text-base"
-                        >
-                          <Mail className="w-4 h-4 mr-2" />
-                          {safeT('email_guestroom','אימייל (תיבת guestroom)','Email (Guestroom)')}
-                        </Button>
-                      )}
+
                       {!isViewer && order.status === 'sent' && (
                         <Button
                           variant="outline"
@@ -1572,20 +1563,7 @@ export default function OrdersPage() {
                                 {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
                               </button>
                             )}
-                            {!isViewer && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  resendViaGuestroom(order);
-                                }}
-                                className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                              >
-                                <Mail className="w-3 h-3 mr-1" />
-                                {safeT('email_guestroom','אימייל (תיבת guestroom)','Email (Guestroom)')}
-                              </Button>
-                            )}
+
                             {!isViewer && order.status === 'sent' && (
                               <Button
                                 onClick={() => { setReceiveOrder(order); setShowReceiveForm(true); }}
