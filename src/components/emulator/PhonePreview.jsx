@@ -27,11 +27,11 @@ export default function PhonePreview({ url, width, height, incognito = false }) 
             src={url}
             className="w-full h-full"
             style={{ border: 0 }}
-            sandbox={incognito ? "allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" : undefined}
+            sandbox={incognito ? "allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation allow-top-navigation-by-user-activation" : undefined}
             allow="clipboard-read; clipboard-write; autoplay; fullscreen"
-            referrerPolicy={incognito ? "no-referrer" : "strict-origin-when-cross-origin"}
+            referrerPolicy={incognito ? "strict-origin-when-cross-origin" : "strict-origin-when-cross-origin"}
             onLoad={() => { setLoading(false); setError(""); }}
-            onError={() => { setLoading(false); setError('Failed to load preview'); }}
+            onError={() => { setLoading(false); setError('Failed to load preview'); console.warn('[PhonePreview] iframe load error for URL:', url); }}
           />
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80">

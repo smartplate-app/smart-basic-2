@@ -17,6 +17,8 @@ export default function AndroidEmulator() {
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [incognito, setIncognito] = useState(true);
+  // ensure fresh context per run to avoid cached 403 state
+  const bust = Date.now();
   const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/PreviewLogin?incog=1') : '/#/pages/PreviewLogin?incog=1');
 
   useEffect(() => {
@@ -161,7 +163,7 @@ export default function AndroidEmulator() {
                 </div>
 
 
-                <PhonePreview url={previewUrl} width={dimW} height={dimH} incognito={incognito} />
+                <PhonePreview url={`${previewUrl}${previewUrl.includes('?') ? '&' : '?'}b=${bust}`} width={dimW} height={dimH} incognito={incognito} />
               </div>
             )}
           </CardContent>

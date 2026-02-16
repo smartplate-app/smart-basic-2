@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
+import { createPageUrl } from "@/utils";
 
 export default function PreviewLogin() {
   const [msg, setMsg] = useState("Ready for incognito login");
@@ -21,7 +22,7 @@ export default function PreviewLogin() {
   const handleLogin = async () => {
     try {
       setMsg('Opening login…');
-      await base44.auth.redirectToLogin('/pages/Orders');
+      await base44.auth.redirectToLogin(createPageUrl('Orders'));
     } catch (e) {
       setMsg(e?.message || String(e));
     }
