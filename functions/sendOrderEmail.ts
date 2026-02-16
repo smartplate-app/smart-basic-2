@@ -48,8 +48,8 @@ Deno.serve(async (req) => {
     }
     const toHeader = recipients.join(', ');
 
-    // Compose email
-    const subject = 'קיבלת הזמנה חדשה באמצעות SMART PLATE BASIC — איזה כיף!';
+    // Compose email (English-only to avoid garbled subjects)
+    const subject = 'New order from Smart Plate Basic';
     const adminCc = 'admin@smartplate.org';
     const replyTo = user.email || 'no-reply@smartplate.org';
     const fromDisplay = 'Smart Plate basic';
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
           </thead>
           <tbody>${itemsRows || ''}</tbody>
         </table>
-        ${publicUrl ? `<p style="margin:16px 0 0 0;">View online: <a href="${publicUrl}">${publicUrl}</a></p>` : ''}
+        
         <p style="margin:16px 0 0 0;color:#6b7280;font-size:12px;">Please reply to this email for any questions or confirmations.</p>
       </div>
       <div style="padding:12px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">Sent by Smart Plate basic</div>
