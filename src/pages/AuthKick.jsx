@@ -7,6 +7,7 @@ export default function AuthKick() {
   const [phase, setPhase] = useState<'logout' | 'redirect' | 'error'>('logout');
   const [err, setErr] = useState('');
   const [inIframe, setInIframe] = useState(false);
+  const [allowEmbed, setAllowEmbed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -18,6 +19,8 @@ export default function AuthKick() {
         const noAuto = params.get('stop') === '1';
         const lastTs = Number(sessionStorage.getItem('b44_authkick_once') || '0');
         const recent = Date.now() - lastTs < 5000; // 5s one-time lock
+        const allow = params.get('embed') === '1' || params.get('incog') === '1';
+        setAllowEmbed(allow);
 
         if (inFrame || noAuto || recent) {
           setPhase('error');
@@ -72,13 +75,13 @@ export default function AuthKick() {
         {phase === 'error' && (
           <div className="space-y-3">
             <p className="text-red-600 text-sm break-all">{err}</p>
-            {!inIframe && (
+            {(allowEmbed || !inIframe) && (
               <Button onClick={openLogin} className="bg-gray-900 hover:bg-gray-800 w-full">Continue to Login</Button>
             )}
           </div>
         )}
         <div className="mt-4">
-          {!inIframe && (
+          {(allowEmbed || !inIframe) && (
             <Button onClick={openLogin} variant="outline" className="w-full">Open Google Login</Button>
           )}
         </div>
