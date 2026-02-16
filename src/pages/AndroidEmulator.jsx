@@ -51,6 +51,18 @@ export default function AndroidEmulator() {
     window.location.href = url.pathname + url.search + url.hash;
   };
 
+  const safeLogout = async () => {
+    try {
+      sessionStorage.setItem('b44_logout_in_progress', '1');
+      localStorage.removeItem('b44_user_cache');
+      sessionStorage.removeItem('b44_oauth_in_progress');
+      sessionStorage.removeItem('b44_oauth_finalized');
+      sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
+    } catch {}
+    try { await base44.auth.logout('/#/pages/WelcomePublic'); } catch {}
+    setTimeout(() => { window.location.replace('/#/pages/WelcomePublic'); }, 400);
+  };
+
   if (loading) return null;
   if (!user || user.role !== 'admin') {
     return (
@@ -120,7 +132,17 @@ export default function AndroidEmulator() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Phone Preview (Web-only)</CardTitle>
+            <CardTitle>Session Controls</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button onClick={safeLogout} className="bg-red-600 hover:bg-red-700 w-full">Safe Logout & Reset</Button>
+            <div className="text-xs text-gray-600">Clears cached user, sets a short cooldown, and routes to the public welcome page.</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+           <CardHeader>
+             <CardTitle>Phone Preview (Web-only)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">

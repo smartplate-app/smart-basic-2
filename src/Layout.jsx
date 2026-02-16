@@ -132,6 +132,7 @@ const AppLayout = ({ children, currentPageName }) => {
     }
     if ((currentPath || '').includes('/pages/OAuthCallback')) return;
     if ((currentPath || '').includes('/functions/welcomePublic')) return; // public route - never redirect
+          if (sessionStorage.getItem('b44_logout_in_progress') === '1') return; // skip redirects during explicit logout
     if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
       // Avoid redirect loops on Android Chrome after Google login
@@ -570,6 +571,13 @@ const AppLayout = ({ children, currentPageName }) => {
       // Redirect unauthenticated users to WelcomePublic (avoid 403 loop when app is private)
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403;
       if (unauthorized) {
+              // If user explicitly triggered logout, don't retry; fail open immediately
+              if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
+                setAuthLoading(false);
+                try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
+                window.location.replace('/#/pages/WelcomePublic');
+                return;
+              }
         // Stop spinner immediately in APK/WebView so user isn't stuck
         setAuthLoading(false);
         let cooldownUntil = 0;

@@ -158,6 +158,18 @@ export default function Diagnostics() {
     window.location.replace('/#/pages/WelcomePublic');
   };
 
+  const safeLogout = async () => {
+    try {
+      sessionStorage.setItem('b44_logout_in_progress', '1');
+      localStorage.removeItem('b44_user_cache');
+      sessionStorage.removeItem('b44_oauth_in_progress');
+      sessionStorage.removeItem('b44_oauth_finalized');
+      sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
+    } catch {}
+    try { await base44.auth.logout('/#/pages/WelcomePublic'); } catch {}
+    setTimeout(() => { window.location.replace('/#/pages/WelcomePublic'); }, 400);
+  };
+
   const applyHashOnCurrent = () => {
     try {
       const current = new URL(window.location.href);
@@ -198,6 +210,7 @@ export default function Diagnostics() {
               <Button variant="outline" onClick={clearOAuthFlags}>Clear OAuth Flags</Button>
               <Button variant="outline" onClick={applyHashOnCurrent}>Re-open current via #/pages/...</Button>
               <Button variant="outline" onClick={restartToWelcome}>Restart to WelcomePublic</Button>
+              <Button onClick={safeLogout} className="bg-red-600 hover:bg-red-700">Safe Logout & Reset</Button>
             </div>
           </CardContent>
         </Card>
