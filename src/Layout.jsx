@@ -108,25 +108,29 @@ const AppLayout = ({ children, currentPageName }) => {
   };
 
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
-  useEffect(() => {
-    const path = location.pathname.toLowerCase();
-    if (window.location.hash && window.location.hash.startsWith('#/pages/WelcomePublic')) return;
-    if (path === '/welcome') {
-      const target = '/#/pages/WelcomePublic';
-      if (window.location.href.indexOf(target) === -1) {
-        window.location.replace(target);
-      }
-      return; // prevent further redirects on this vanity route
-    }
-  }, [location.pathname]);
+          useEffect(() => {
+            const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+            if (inIframe) return;
+            const path = location.pathname.toLowerCase();
+            if (window.location.hash && window.location.hash.startsWith('#/pages/WelcomePublic')) return;
+            if (path === '/welcome') {
+              const target = '/#/pages/WelcomePublic';
+              if (window.location.href.indexOf(target) === -1) {
+                window.location.replace(target);
+              }
+              return; // prevent further redirects on this vanity route
+            }
+          }, [location.pathname]);
 
   // Redirect unauthenticated visitors at root to the public Welcome page (preserve ?preview=1)
-  // Do not override when a hash-based page is already specified; skip entirely in incognito
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const params = new URLSearchParams(window.location.search);
-    const preview = params.get('preview');
-    if (isIncognito) return; // never redirect in incognito
+          // Do not override when a hash-based page is already specified; skip entirely in incognito
+          useEffect(() => {
+            const currentPath = location.pathname;
+            const params = new URLSearchParams(window.location.search);
+            const preview = params.get('preview');
+            const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+            if (inIframe) return; // never redirect inside embedded preview
+            if (isIncognito) return; // never redirect in incognito
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
     }
@@ -331,6 +335,8 @@ const AppLayout = ({ children, currentPageName }) => {
         // Post-login fallback (WebView/APK) – ensure we land on Dashboard after OAuth
         useEffect(() => {
           try {
+            const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+            if (inIframe) return;
             const params = new URLSearchParams(window.location.search);
             const oauthBack = params.has('code') || params.has('state');
             const hasHashTarget = window.location.hash && window.location.hash.startsWith('#/pages/');

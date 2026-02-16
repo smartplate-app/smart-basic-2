@@ -16,7 +16,7 @@ export default function AndroidEmulator() {
   const [disableHistory, setDisableHistory] = useState(false);
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/WelcomePublic?stop=1') : '/functions/welcomePublic');
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/functions/welcomePublic') : '/functions/welcomePublic');
 
   useEffect(() => {
     (async () => {
@@ -157,9 +157,10 @@ export default function AndroidEmulator() {
             {showPreview && (
               <div className="space-y-4">
                 <div className="flex gap-2 items-center">
-                  <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/#/pages/AuthKick" />
+                  <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/functions/welcomePublic" />
                   <Button variant="outline" onClick={()=>window.open(window.location.origin + '/#/pages/AuthKick?stop=1', '_blank')}>Open Login (New tab)</Button>
                   <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/Dashboard')}>App Dashboard</Button>
+                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/functions/welcomePublic')}>Public Welcome (Preview)</Button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
