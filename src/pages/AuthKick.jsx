@@ -10,6 +10,19 @@ export default function AuthKick() {
   useEffect(() => {
     (async () => {
       try {
+        // Guard: avoid endless loops in embedded previews or rapid reloads
+        const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+        const params = new URLSearchParams(window.location.search);
+        const noAuto = params.get('stop') === '1';
+        const lastTs = Number(sessionStorage.getItem('b44_authkick_once') || '0');
+        const recent = Date.now() - lastTs < 5000; // 5s one-time lock
+
+        if (inIframe || noAuto || recent) {
+          setPhase('error');
+          setErr(inIframe ? 'Login disabled in embedded preview. Use the button below.' : 'Click the button to continue to login.');
+          return;
+        }
+
         // Ensure we are fully signed out, then jump straight to the platform login screen
         try {
           sessionStorage.setItem('b44_logout_in_progress', '1');
@@ -21,8 +34,8 @@ export default function AuthKick() {
 
         try { await base44.auth.logout(); } catch {}
 
+        sessionStorage.setItem('b44_authkick_once', String(Date.now()));
         setPhase('redirect');
-        const params = new URLSearchParams(window.location.search);
         const next = params.get('next') || createPageUrl('Orders');
         await base44.auth.redirectToLogin(next);
       } catch (e) {
