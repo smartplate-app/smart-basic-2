@@ -35,7 +35,15 @@ export default function PreviewLogin() {
         <h1 className="text-xl font-bold mb-2">Incognito Login Preview</h1>
         <p className="text-gray-600 text-sm mb-4">This preview runs in a sandboxed iframe without your admin cookies.</p>
         <p className="text-xs text-gray-500 mb-4">{msg}</p>
-        <Button onClick={handleLogin} className="bg-gray-900 hover:bg-gray-800 w-full">Open Google Login</Button>
+        <div className="space-y-2">
+          <Button onClick={handleLogin} className="bg-gray-900 hover:bg-gray-800 w-full">Open Google Login (in this frame)</Button>
+          <Button variant="outline" className="w-full" onClick={() => {
+            const next = createPageUrl('Orders');
+            const url = createPageUrl('AuthKick') + '?next=' + encodeURIComponent(next);
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }}>Open Login in New Tab</Button>
+          <Button variant="ghost" className="w-full" onClick={() => window.location.reload()}>Reload Preview</Button>
+        </div>
         {!inIframe && (
           <p className="text-[11px] text-gray-500 mt-3">Tip: This page is designed for the Emulator iframe.</p>
         )}

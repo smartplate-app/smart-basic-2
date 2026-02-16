@@ -27,7 +27,7 @@ export default function PhonePreview({ url, width, height, incognito = false }) 
             src={url}
             className="w-full h-full"
             style={{ border: 0 }}
-            sandbox={incognito ? "allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation allow-top-navigation-by-user-activation" : undefined}
+            sandbox={incognito ? "allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox" : undefined}
             allow="clipboard-read; clipboard-write; autoplay; fullscreen"
             referrerPolicy={incognito ? "strict-origin-when-cross-origin" : "strict-origin-when-cross-origin"}
             onLoad={() => { setLoading(false); setError(""); }}
