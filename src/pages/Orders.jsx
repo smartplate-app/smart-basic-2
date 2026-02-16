@@ -953,6 +953,23 @@ export default function OrdersPage() {
     }
   };
 
+  // Resend via guestroom mailbox (Gmail connector)
+  const resendViaGuestroom = async (order) => {
+    try {
+      const { data } = await base44.functions.invoke('resendTempoTestEmail', {
+        target_email: 'guestroom@smartplate.org',
+        order_number: order?.order_number || ''
+      });
+      if (data?.success) {
+        alert('Email sent via guestroom mailbox');
+      } else {
+        alert('Send failed: ' + (JSON.stringify(data) || 'Unknown error'));
+      }
+    } catch (e) {
+      alert('Send failed: ' + (e?.message || 'Unknown error'));
+    }
+  };
+
   const handleDelete = async (order) => {
     if (isViewer) return;
     const input = window.prompt(`Type DELETE to confirm deletion of order ${order.order_number || '—'}`);
@@ -1349,22 +1366,32 @@ export default function OrdersPage() {
                           style={{ backgroundColor: '#25D366' }}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-...
+                    ...
                           </svg>
                           {safeT('whatsapp','וואטסאפ','WhatsApp')}
                         </button>
-                                                        )}
-                                                        {!isViewer && order.status === 'sent' && (
-                                                          <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                                                            className="border-green-300 text-green-700 hover:bg-green-50"
-                                                          >
-                                                            {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
-                                                          </Button>
-                                                        )}
-                                                        {!isViewer && (
+                      )}
+                      {!isViewer && (
+                        <Button
+                          variant="outline"
+                          onClick={() => resendViaGuestroom(order)}
+                          className="flex-1 h-11 rounded-lg text-base"
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          {safeT('email_guestroom','אימייל (תיבת guestroom)','Email (Guestroom)')}
+                        </Button>
+                      )}
+                      {!isViewer && order.status === 'sent' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                          className="border-green-300 text-green-700 hover:bg-green-50"
+                        >
+                          {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
+                        </Button>
+                      )}
+                      {!isViewer && (
                         <>
                           <Button
                             variant="outline"
@@ -1544,16 +1571,30 @@ export default function OrdersPage() {
                                 </svg>
                                 {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
                               </button>
-                                                      )}
-                                                      {!isViewer && order.status === 'sent' && (
-                                                        <Button
-                                                          onClick={() => { setReceiveOrder(order); setShowReceiveForm(true); }}
-                                                          className="flex-1 h-11 rounded-lg text-base bg-green-600 hover:bg-green-700 text-white"
-                                                        >
-                                                          {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
-                                                        </Button>
-                                                      )}
-                                                      {!isViewer && (
+                            )}
+                            {!isViewer && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  resendViaGuestroom(order);
+                                }}
+                                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                              >
+                                <Mail className="w-3 h-3 mr-1" />
+                                {safeT('email_guestroom','אימייל (תיבת guestroom)','Email (Guestroom)')}
+                              </Button>
+                            )}
+                            {!isViewer && order.status === 'sent' && (
+                              <Button
+                                onClick={() => { setReceiveOrder(order); setShowReceiveForm(true); }}
+                                className="flex-1 h-11 rounded-lg text-base bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
+                              </Button>
+                            )}
+                            {!isViewer && (
                               <>
                                 <Button
                                   variant="outline"
@@ -1564,9 +1605,9 @@ export default function OrdersPage() {
                                   }}
                                   className="border-gray-300 text-gray-700 hover:bg-gray-100"
                                 >
-                                                                        <Edit className="w-3 h-3 mr-1" />
-                                                                        {safeT('edit', 'עריכה', 'Edit')}
-                                                                      </Button>
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  {safeT('edit', 'עריכה', 'Edit')}
+                                </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1576,9 +1617,9 @@ export default function OrdersPage() {
                                   }}
                                   className="border-red-300 text-red-600 hover:bg-red-50"
                                 >
-                                                                        <Trash2 className="w-3 h-3 mr-1" />
-                                                                        {safeT('delete', 'מחק', 'Delete')}
-                                                                      </Button>
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  {safeT('delete', 'מחק', 'Delete')}
+                                </Button>
                               </>
                             )}
                           </div>
