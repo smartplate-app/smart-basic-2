@@ -683,14 +683,17 @@ const AppLayout = ({ children, currentPageName }) => {
     }, [location.pathname, user?.email]);
 
               const visibleNavigationItems = navigationItems.filter(item => {
-                // Admin-only items
-                if (item.adminOnly && user?.role !== 'admin') return false;
-                // Viewers can see all non-admin pages
-                if (isViewer) return true;
-                // Worker-hidden items
-                if (item.workerHidden && isWorker) return false;
-                return true;
-              });
+                                    // Always hide admin-only items from the sidebar (admins can access via preview switcher)
+                                    if (item.adminOnly) return false;
+                                    // Hide additional admin-related pages not flagged as adminOnly
+                                    const hideByUrl = (item.url || '').includes('ChainManagement');
+                                    if (hideByUrl) return false;
+                                    // Viewers can see all non-admin pages
+                                    if (isViewer) return true;
+                                    // Worker-hidden items
+                                    if (item.workerHidden && isWorker) return false;
+                                    return true;
+                                  });
 
   const filteredNavigationItems = visibleNavigationItems.filter(item =>
     item.title.toLowerCase().includes(navSearchTerm.toLowerCase())
