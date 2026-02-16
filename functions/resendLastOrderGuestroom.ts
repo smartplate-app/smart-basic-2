@@ -30,24 +30,15 @@ Deno.serve(async (req) => {
     let order = orders.find(o => (o?.supplier_email && String(o.supplier_email).includes('@')));
     if (!order) order = orders[0];
 
-    // Build recipients
-    const recipients = [];
-    if (order.supplier_email) recipients.push(String(order.supplier_email));
-    try {
-      if (order.supplier_id) {
-        const sup = await base44.asServiceRole.entities.Supplier.get(order.supplier_id);
-        if (sup?.email) recipients.push(String(sup.email));
-      }
-    } catch (_) {}
-
-    const dedup = Array.from(new Set(recipients.map(e => (e || '').toLowerCase()).filter(e => e && e.includes('@'))));
-    if (dedup.length === 0) {
-      // If missing, send only to admin so we can still test deliverability/postmaster
-      const placeholder = ['admin@smartplate.org'];
-      const results = [];
-      for (const r of placeholder) results.push({ to: r, ok: true, id: 'skipped-no-supplier' });
+    // New policy: primary To is order.supplier_email; CC admin and guestroom
+    const toAddress = (order.supplier_email || '').toString().trim();
+    if (!toAddress || !toAddress.includes('@')) {
+      // Fallback: send only to admin for test purposes
+      const results = [{ to: 'admin@smartplate.org', ok: true, id: 'skipped-no-supplier' }];
       return Response.json({ success: true, note: 'No supplier email; sent only to admin for test', order_id: order.id, order_number: order.order_number || null, results });
     }
+    const ccList = ['admin@smartplate.org','guestroom@smartplate.org'].filter(cc => cc.toLowerCase() !== toAddress.toLowerCase());
+    const ccHeader = ccList.join(', ');
 
     // Compose email
     const items = Array.isArray(order.items) ? order.items : [];
@@ -96,18 +87,18 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     const boundary = 'b44_boundary_' + Math.random().toString(36).slice(2);
-    const adminCc = 'admin@smartplate.org';
 
-    const sendTo = async (rcpt) => {
+    const sendEmail = async () => {
       const headers = [
         `From: Smart Plate basic <${senderEmail || 'guestroom@smartplate.org'}>`,
-        `To: ${rcpt}`,
+        `To: ${toAddress}`,
+        `${ccHeader ? `Cc: ${ccHeader}` : ''}`,
         `Reply-To: ${workingEmail}`,
         `Subject: ${subject}`,
         'MIME-Version: 1.0',
         `Content-Type: multipart/alternative; boundary="${boundary}"`,
         '',
-      ];
+      ].filter(Boolean);
       const raw = headers.join('\r\n') +
         `--${boundary}\r\n` +
         'Content-Type: text/plain; charset=UTF-8\r\n' +
@@ -124,14 +115,12 @@ Deno.serve(async (req) => {
         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ raw: encoded })
       });
-      if (!resp.ok) return { to: rcpt, ok: false, error: await resp.text() };
+      if (!resp.ok) return { to: toAddress, ok: false, error: await resp.text() };
       const data = await resp.json();
-      return { to: rcpt, ok: true, id: data?.id || null };
+      return { to: toAddress, ok: true, id: data?.id || null };
     };
 
-    const results = [];
-    for (const r of dedup) results.push(await sendTo(r));
-    results.push(await sendTo(adminCc));
+    const result = await sendEmail();
 
     const anyOk = results.some(r => r.ok);
     if (!anyOk) return Response.json({ success: false, order_id: order.id, order_number: order.order_number || null, results }, { status: 500 });

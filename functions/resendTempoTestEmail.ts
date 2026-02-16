@@ -69,27 +69,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build recipients
-    const adminCc = 'admin@smartplate.org';
-    const toRecipients = [] as string[];
-    if (toOverride) toRecipients.push(toOverride);
-
-    // As a fallback, try order.supplier_email and supplier card email
-    if (toRecipients.length === 0) {
-      if (order.supplier_email) toRecipients.push(String(order.supplier_email));
-      try {
-        if (order.supplier_id) {
-          const sup = await base44.asServiceRole.entities.Supplier.get(order.supplier_id);
-          if (sup?.email) toRecipients.push(String(sup.email));
-        }
-      } catch (_) {}
+    // New policy: primary To is order.supplier_email; CC admin and guestroom
+    const toAddress = (order.supplier_email || '').toString().trim();
+    if (!toAddress || !toAddress.includes('@')) {
+      return Response.json({ success: false, error: 'No supplier_email on order' }, { status: 400 });
     }
-
-    // Dedupe + ensure at least one
-    const dedup = Array.from(new Set(toRecipients.map(e => (e || '').toLowerCase()).filter(e => e && e.includes('@'))));
-    if (dedup.length === 0) {
-      return Response.json({ success: false, error: 'No recipient email available (provide body.to)' }, { status: 400 });
-    }
+    const ccList = ['admin@smartplate.org','guestroom@smartplate.org'].filter(cc => cc.toLowerCase() !== toAddress.toLowerCase());
+    const ccHeader = ccList.join(', ');
 
     // Compose HTML + text (based on sendOrderEmail style)
     const items = Array.isArray(order.items) ? order.items : [];
@@ -160,16 +146,17 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     const boundary = 'b44_boundary_' + Math.random().toString(36).slice(2);
-    const sendTo = async (rcpt: string) => {
+    const sendEmail = async () => {
       const headers = [
         `From: Smart Plate basic <${senderEmail || targetEmail || 'no-reply@smartplate.org'}>`,
-        `To: ${rcpt}`,
+        `To: ${toAddress}`,
+        `${ccHeader ? `Cc: ${ccHeader}` : ''}`,
         `Reply-To: ${targetEmail}`,
         `Subject: ${subject}`,
         'MIME-Version: 1.0',
         `Content-Type: multipart/alternative; boundary="${boundary}"`,
         '',
-      ];
+      ].filter(Boolean);
       const raw = headers.join('\r\n') +
         `--${boundary}\r\n` +
         'Content-Type: text/plain; charset=UTF-8\r\n' +
@@ -186,20 +173,16 @@ Deno.serve(async (req) => {
         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ raw: encoded })
       });
-      if (!resp.ok) return { to: rcpt, ok: false, error: await resp.text() };
+      if (!resp.ok) return { to: toAddress, ok: false, error: await resp.text() };
       const data = await resp.json();
-      return { to: rcpt, ok: true, id: data?.id || null };
+      return { to: toAddress, ok: true, id: data?.id || null };
     };
 
-    const results: any[] = [];
-    for (const r of dedup) { results.push(await sendTo(r)); }
-    // Separate copy to admin (not CC to avoid stricter policies)
-    results.push(await sendTo(adminCc));
+    const result = await sendEmail();
 
-    const anyOk = results.some(r => r.ok);
-    if (!anyOk) return Response.json({ success: false, results }, { status: 500 });
+    if (!result.ok) return Response.json({ success: false, result }, { status: 500 });
 
-    return Response.json({ success: true, order_id: order.id, order_number: order.order_number || null, supplier: supplierName, results });
+    return Response.json({ success: true, order_id: order.id, order_number: order.order_number || null, supplier: supplierName, result });
   } catch (error) {
     return Response.json({ error: error?.message || String(error) }, { status: 500 });
   }

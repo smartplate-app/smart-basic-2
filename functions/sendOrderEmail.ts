@@ -29,30 +29,18 @@ Deno.serve(async (req) => {
     const order = await base44.asServiceRole.entities.Order.get(orderId);
     if (!order) return Response.json({ error: 'Order not found' }, { status: 404 });
 
-    // Build recipients: override, order email, supplier card email (dedupe), always CC admin
-    const recipientsSet = new Set();
-    const pushEmail = (s) => { const e = (s || '').toString().trim(); if (e && e.includes('@')) recipientsSet.add(e.toLowerCase()); };
-    pushEmail(overrideTo);
-    pushEmail(order.supplier_email);
-    let supplierEmail = '';
-    try {
-      if (order.supplier_id) {
-        const supplier = await base44.asServiceRole.entities.Supplier.get(order.supplier_id);
-        supplierEmail = (supplier?.email || '').trim();
-        pushEmail(supplierEmail);
-      }
-    } catch (_) { /* ignore */ }
-    const recipients = Array.from(recipientsSet);
-    if (recipients.length === 0) {
-      return Response.json({ success: false, error: 'No recipient email found on order or supplier record' }, { status: 400 });
+    // Policy: primary To is order.supplier_email; CC admin and guestroom
+    const toAddress = (order.supplier_email || '').toString().trim();
+    if (!toAddress || !toAddress.includes('@')) {
+      return Response.json({ success: false, error: 'No supplier_email on order' }, { status: 400 });
     }
-    const toHeader = recipients.join(', ');
+    const ccList = ['admin@smartplate.org', 'guestroom@smartplate.org'].filter(cc => cc.toLowerCase() !== toAddress.toLowerCase());
 
     // Compose email (English-only to avoid garbled subjects)
     const subject = (body?.subject && String(body.subject)) || 'New order from Smart Plate Basic';
-    const adminCc = 'admin@smartplate.org';
     const replyTo = (body?.reply_to_override && String(body.reply_to_override)) || user.email || 'no-reply@smartplate.org';
     const fromDisplay = 'Smart Plate basic';
+    const ccHeader = ccList.join(', ');
 
     const orderNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const restaurantName = order.restaurant_name || '';
@@ -137,16 +125,17 @@ Deno.serve(async (req) => {
       senderEmail = p?.emailAddress || '';
     } catch (_) {}
 
-    const sendTo = async (rcpt) => {
+    const sendEmail = async () => {
       const headers = [
         `From: ${fromDisplay} <${senderEmail || replyTo || 'no-reply@smartplate.org'}>`,
-        `To: ${rcpt}`,
+        `To: ${toAddress}`,
+        `${ccHeader ? `Cc: ${ccHeader}` : ''}`,
         `Reply-To: ${replyTo}`,
         `Subject: ${subject}`,
         'MIME-Version: 1.0',
         `Content-Type: multipart/alternative; boundary="${boundary}"`,
         '',
-      ];
+      ].filter(Boolean);
       const raw = headers.join('\r\n') +
         `--${boundary}\r\n` +
         'Content-Type: text/plain; charset=UTF-8\r\n' +
@@ -169,28 +158,18 @@ Deno.serve(async (req) => {
       });
 
       if (!resp.ok) {
-        return { to: rcpt, ok: false, error: await resp.text() };
+        return { to: toAddress, ok: false, error: await resp.text() };
       }
       const data = await resp.json();
-      return { to: rcpt, ok: true, id: data?.id || null };
+      return { to: toAddress, ok: true, id: data?.id || null };
     };
 
-    const results = [];
-    for (const r of recipients) {
-      if (r && r.toLowerCase() !== adminCc.toLowerCase()) {
-        // eslint-disable-next-line no-await-in-loop
-        results.push(await sendTo(r));
-      }
-    }
-    // Send separate copy to admin (not CC'd) to avoid stricter policies blocking the external recipient
-    // eslint-disable-next-line no-await-in-loop
-    results.push(await sendTo(adminCc));
+    const result = await sendEmail();
 
-    const anyOk = results.some(r => r.ok);
-    if (!anyOk) {
-      return Response.json({ success: false, results }, { status: 500 });
+    if (!result.ok) {
+      return Response.json({ success: false, result }, { status: 500 });
     }
-    return Response.json({ success: true, results });
+    return Response.json({ success: true, result });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
   }
