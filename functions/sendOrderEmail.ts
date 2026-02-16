@@ -134,6 +134,16 @@ Deno.serve(async (req) => {
     if (!accessToken) {
       return Response.json({ error: 'Gmail connector not authorized' }, { status: 500 });
     }
+    // Identify sender Gmail address (used in From header)
+    let senderEmail = '';
+    try {
+      const prof = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      const p = await prof.json();
+      senderEmail = p?.emailAddress || '';
+    } catch (_) {}
+
 
     const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
       method: 'POST',
