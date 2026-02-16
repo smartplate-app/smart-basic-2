@@ -16,7 +16,7 @@ export default function AndroidEmulator() {
   const [disableHistory, setDisableHistory] = useState(false);
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/AuthKick?stop=1') : '/#/pages/AuthKick?stop=1');
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/WelcomePublic?stop=1') : '/#/pages/WelcomePublic?stop=1');
 
   useEffect(() => {
     (async () => {

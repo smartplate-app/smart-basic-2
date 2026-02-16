@@ -90,6 +90,9 @@ const AppLayout = ({ children, currentPageName }) => {
 
   // Fast boot: hydrate user from cache, but keep authLoading true until verified to avoid 403 storms
   useEffect(() => {
+    // Do not hydrate from cache inside embedded previews to avoid phantom admin sessions
+    const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+    if (inIframe) return;
     if (user) return;
     try {
       const s = localStorage.getItem('b44_user_cache');
