@@ -88,7 +88,7 @@ const AppLayout = ({ children, currentPageName }) => {
     };
   }, []);
 
-  // Fast boot: hydrate user from cache to skip initial loader (especially for PWA)
+  // Fast boot: hydrate user from cache, but keep authLoading true until verified to avoid 403 storms
   useEffect(() => {
     if (user) return;
     try {
@@ -96,7 +96,7 @@ const AppLayout = ({ children, currentPageName }) => {
       if (s) {
         const cached = JSON.parse(s);
         setUser(cached);
-        setAuthLoading(false);
+        // Do NOT setAuthLoading(false) here; wait for loadAuth() to validate session
       }
     } catch {}
   }, []);
