@@ -296,9 +296,10 @@ const AppLayout = ({ children, currentPageName }) => {
               if (currentPageName === 'Welcome') return;
               if ((location.pathname || '').includes('OAuthCallback')) return;
 
-              // New guards: prevent loops inside embedded previews and repeated handling of same query
+              // New guards: allow OAuth handling inside emulator iframe (PreviewLogin/OAuthCallback/incog)
               const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-              if (inIframe) return; // do not auto-redirect inside PhonePreview/iframe
+              const allowIframe = (currentPageName === 'OAuthCallback' || currentPageName === 'PreviewLogin' || params.get('incog') === '1' || params.get('embed') === '1');
+              if (inIframe && !allowIframe) return;
 
               const qs = window.location.search || '';
               const lastQs = sessionStorage.getItem('b44_last_oauth_qs') || '';
@@ -345,7 +346,8 @@ const AppLayout = ({ children, currentPageName }) => {
         useEffect(() => {
           try {
             const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-            if (inIframe) return;
+            const allowIframe = (currentPageName === 'OAuthCallback' || currentPageName === 'PreviewLogin');
+            if (inIframe && !allowIframe) return;
             const params = new URLSearchParams(window.location.search);
             const oauthBack = params.has('code') || params.has('state');
             const hasHashTarget = window.location.hash && window.location.hash.startsWith('#/pages/');
