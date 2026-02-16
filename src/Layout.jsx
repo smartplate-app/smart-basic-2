@@ -195,6 +195,20 @@ const AppLayout = ({ children, currentPageName }) => {
     }
   }, [location.pathname, isIncognito]);
 
+  // APK/WebView guard: if spinner lasts too long, fail open to public page (prevents stuck state)
+  useEffect(() => {
+    if (!authLoading) return;
+    const timer = setTimeout(() => {
+      try {
+        if (authLoading) {
+          sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
+          window.location.replace('/#/pages/WelcomePublic');
+        }
+      } catch {}
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [authLoading]);
+
   const navigationItems = [
           // Dashboard first
           { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
@@ -555,17 +569,19 @@ const AppLayout = ({ children, currentPageName }) => {
       // Redirect unauthenticated users to WelcomePublic (avoid 403 loop when app is private)
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403;
       if (unauthorized) {
-      let cooldownUntil = 0;
-      try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
-      const inCooldown = cooldownUntil > Date.now();
-      const params = new URLSearchParams(window.location.search);
-      const oauthBack = params.has('code') || params.has('state');
-      if (attemptNumber < 3 || inCooldown || oauthBack || isPwaInstalled) {
-      setTimeout(() => loadAuth(attemptNumber + 1), 1200);
-      return;
-      }
-      window.location.replace('/#/pages/WelcomePublic');
-      return;
+        // Stop spinner immediately in APK/WebView so user isn't stuck
+        setAuthLoading(false);
+        let cooldownUntil = 0;
+        try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
+        const inCooldown = cooldownUntil > Date.now();
+        const params = new URLSearchParams(window.location.search);
+        const oauthBack = params.has('code') || params.has('state');
+        if (attemptNumber < 3 || inCooldown || oauthBack || isPwaInstalled) {
+          setTimeout(() => loadAuth(attemptNumber + 1), 1200);
+          return;
+        }
+        window.location.replace('/#/pages/WelcomePublic');
+        return;
       }
       
       console.error("[Layout] Max retries reached or non-network error");
