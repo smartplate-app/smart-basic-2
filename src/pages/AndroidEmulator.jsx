@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PhonePreview from "../components/emulator/PhonePreview";
+import FakeWhatsApp from "../components/emulator/FakeWhatsApp";
 
 export default function AndroidEmulator() {
   const [dimW, setDimW] = useState(390);
@@ -171,7 +172,16 @@ export default function AndroidEmulator() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Environment Info</CardTitle>
+            <CardTitle>Fake WhatsApp (Emulator)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FakeWhatsApp />
+          </CardContent>
+        </Card>
+
+        <Card>
+           <CardHeader>
+             <CardTitle>Environment Info</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-gray-700 space-y-1">
             <div><span className="font-medium">User-Agent:</span> {navigator.userAgent}</div>
