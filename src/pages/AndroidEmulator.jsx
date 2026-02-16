@@ -52,7 +52,7 @@ export default function AndroidEmulator() {
     // Force a fresh browsing context, then navigate to a public page
     setPreviewUrl('about:blank');
     setTimeout(() => {
-      setPreviewUrl(`${window.location.origin}/#/pages/WelcomePublic?preview=1&incog=1&ts=${Date.now()}`);
+      setPreviewUrl(`${window.location.origin}/#/pages/PreviewLogin?incog=1&ts=${Date.now()}`);
     }, 120);
   };
 
