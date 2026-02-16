@@ -49,9 +49,11 @@
  */
 import AdminDashboard from './pages/AdminDashboard';
 import AndroidEmulator from './pages/AndroidEmulator';
+import AuthKick from './pages/AuthKick';
 import ChainDashboard from './pages/ChainDashboard';
 import ChainManagement from './pages/ChainManagement';
 import Dashboard from './pages/Dashboard';
+import Diagnostics from './pages/Diagnostics';
 import Home from './pages/Home';
 import IOSBuildGuide from './pages/IOSBuildGuide';
 import InventoryTransfers from './pages/InventoryTransfers';
@@ -88,17 +90,17 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import Diagnostics from './pages/Diagnostics';
-import AuthKick from './pages/AuthKick';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminDashboard": AdminDashboard,
     "AndroidEmulator": AndroidEmulator,
+    "AuthKick": AuthKick,
     "ChainDashboard": ChainDashboard,
     "ChainManagement": ChainManagement,
     "Dashboard": Dashboard,
+    "Diagnostics": Diagnostics,
     "Home": Home,
     "IOSBuildGuide": IOSBuildGuide,
     "InventoryTransfers": InventoryTransfers,
@@ -135,8 +137,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "Diagnostics": Diagnostics,
-    "AuthKick": AuthKick,
 }
 
 export const pagesConfig = {
