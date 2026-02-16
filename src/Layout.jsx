@@ -552,20 +552,20 @@ const AppLayout = ({ children, currentPageName }) => {
         return;
       }
       
-      // Redirect unauthenticated users to Welcome (access request page)
-      const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED';
+      // Redirect unauthenticated users to WelcomePublic (avoid 403 loop when app is private)
+      const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403;
       if (unauthorized) {
-        let cooldownUntil = 0;
-        try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
-        const inCooldown = cooldownUntil > Date.now();
-        const params = new URLSearchParams(window.location.search);
-        const oauthBack = params.has('code') || params.has('state');
-        if (attemptNumber < 5 || inCooldown || oauthBack || isPwaInstalled) {
-          setTimeout(() => loadAuth(attemptNumber + 1), 1500);
-          return;
-        }
-        window.location.replace(createPageUrl('Welcome'));
-        return;
+      let cooldownUntil = 0;
+      try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
+      const inCooldown = cooldownUntil > Date.now();
+      const params = new URLSearchParams(window.location.search);
+      const oauthBack = params.has('code') || params.has('state');
+      if (attemptNumber < 3 || inCooldown || oauthBack || isPwaInstalled) {
+      setTimeout(() => loadAuth(attemptNumber + 1), 1200);
+      return;
+      }
+      window.location.replace('/#/pages/WelcomePublic');
+      return;
       }
       
       console.error("[Layout] Max retries reached or non-network error");
