@@ -53,7 +53,7 @@ export default function AndroidEmulator() {
     setPreviewUrl('about:blank');
     setTimeout(() => {
       setPreviewUrl(`${window.location.origin}/#/pages/WelcomePublic?preview=1&ts=${Date.now()}`);
-    }, 50);
+    }, 80);
   };
 
   const simulateOAuthReturn = () => {
