@@ -10,6 +10,7 @@ export default function PreviewLogin() {
   useEffect(() => {
     const inFrame = (() => { try { return window.top !== window.self; } catch { return true; } })();
     setInIframe(inFrame);
+    if (inFrame) setMsg('Popup required: use “Open Login in New Tab”.');
     // Ensure no cached session is used in this context
     try {
       sessionStorage.setItem('b44_logout_in_progress', '1');
@@ -36,10 +37,12 @@ export default function PreviewLogin() {
         <p className="text-gray-600 text-sm mb-4">This preview runs in a sandboxed iframe without your admin cookies.</p>
         <p className="text-xs text-gray-500 mb-4">{msg}</p>
         <div className="space-y-2">
-          <Button onClick={handleLogin} className="bg-gray-900 hover:bg-gray-800 w-full">Open Google Login (in this frame)</Button>
+          {!inIframe && (
+            <Button onClick={handleLogin} className="bg-gray-900 hover:bg-gray-800 w-full">Open Google Login</Button>
+          )}
           <Button variant="outline" className="w-full" onClick={() => {
             const next = createPageUrl('Orders');
-            const url = createPageUrl('AuthKick') + '?next=' + encodeURIComponent(next);
+            const url = createPageUrl('AuthKick') + '?embed=1&incog=1&next=' + encodeURIComponent(next);
             window.open(url, '_blank', 'noopener,noreferrer');
           }}>Open Login in New Tab</Button>
           <Button variant="ghost" className="w-full" onClick={() => window.location.reload()}>Reload Preview</Button>
