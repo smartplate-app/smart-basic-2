@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function PhonePreview({ url, width, height }) {
+export default function PhonePreview({ url, width, height, incognito = false }) {
   // Device frame size (defaults to iPhone 14 if not provided)
   const frameW = typeof width === 'number' ? width : 390; // px
   const frameH = typeof height === 'number' ? height : 844; // px
@@ -19,10 +19,14 @@ export default function PhonePreview({ url, width, height }) {
 
         <div className="bg-white rounded-[28px] overflow-hidden w-full h-full">
           <iframe
+            key={`${incognito ? 'incog' : 'norm'}:${url}`}
             title="Phone Preview"
             src={url}
             className="w-full h-full"
             style={{ border: 0 }}
+            sandbox={incognito ? "allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox" : undefined}
+            allow="clipboard-read; clipboard-write; autoplay; fullscreen"
+            referrerPolicy={incognito ? "no-referrer" : "strict-origin-when-cross-origin"}
           />
         </div>
       </div>

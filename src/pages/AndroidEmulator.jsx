@@ -16,7 +16,8 @@ export default function AndroidEmulator() {
   const [disableHistory, setDisableHistory] = useState(false);
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/WelcomePublic?stop=1') : '/#/pages/WelcomePublic?stop=1');
+  const [incognito, setIncognito] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/AuthKick?stop=1') : '/#/pages/AuthKick?stop=1');
 
   useEffect(() => {
     (async () => {
@@ -28,6 +29,7 @@ export default function AndroidEmulator() {
         setForceLite(localStorage.getItem('b44_emulate_force_lite') === '1');
         setDisableHistory(localStorage.getItem('b44_emulate_disable_history') === '1');
         setForceHash(localStorage.getItem('b44_emulate_force_hash') === '1');
+        setIncognito(localStorage.getItem('b44_emulate_iframe_incognito') === '1');
       }
     })();
   }, []);
@@ -155,10 +157,19 @@ export default function AndroidEmulator() {
               <Switch checked={showPreview} onCheckedChange={(v)=>setShowPreview(v)} />
             </div>
             {showPreview && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">Incognito mode</div>
+                  <div className="text-sm text-gray-500">Sandboxed iframe: no shared cookies/localStorage; always logged out.</div>
+                </div>
+                <Switch checked={incognito} onCheckedChange={(v)=>{ setIncognito(v); try { v ? localStorage.setItem('b44_emulate_iframe_incognito','1') : localStorage.removeItem('b44_emulate_iframe_incognito'); } catch {} }} />
+              </div>
+            )}
+            {showPreview && (
               <div className="space-y-4">
                 <div className="flex gap-2 items-center flex-wrap">
                   <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/#/pages/AuthKick?stop=1" />
-                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/WelcomePublic?stop=1')}>Login in Preview</Button>
+                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/AuthKick?stop=1')}>Login in Preview</Button>
                   <Button variant="outline" onClick={()=>window.open(window.location.origin + '/#/pages/AuthKick?stop=1', '_blank')}>Open Login (New tab)</Button>
                   <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/functions/welcomePublic')}>Public Welcome (Preview)</Button>
                   <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/Dashboard')}>App Dashboard</Button>
@@ -209,7 +220,7 @@ export default function AndroidEmulator() {
                   <Button onClick={()=>setPreviewUrl((u)=>{ try { const base = u.startsWith('http') ? u : (new URL(u, window.location.origin)).toString(); const url = new URL(base); url.searchParams.set('code','demo'); url.searchParams.set('state','demo'); return url.toString(); } catch { return u + (u.includes('?')?'&':'?') + 'code=demo&state=demo'; } })}>Simulate OAuth in Preview</Button>
                 </div>
 
-                <PhonePreview url={previewUrl} width={dimW} height={dimH} />
+                <PhonePreview url={previewUrl} width={dimW} height={dimH} incognito={incognito} />
               </div>
             )}
           </CardContent>
