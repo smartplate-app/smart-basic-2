@@ -6,6 +6,7 @@ export default function PhonePreview({ url, width, height, incognito = false }) 
   const frameH = typeof height === 'number' ? height : 844; // px
   const [loading, setLoading] = React.useState(Boolean(url));
   const [error, setError] = React.useState("");
+  React.useEffect(() => { setLoading(Boolean(url)); setError(""); }, [url, incognito]);
   return (
     <div className="w-full flex justify-center">
       <div
