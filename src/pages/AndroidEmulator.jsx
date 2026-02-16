@@ -17,7 +17,7 @@ export default function AndroidEmulator() {
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [incognito, setIncognito] = useState(true);
-  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/WelcomePublic?preview=1') : '/#/pages/WelcomePublic?preview=1');
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/AuthKick?stop=1') : '/#/pages/AuthKick?stop=1');
 
   useEffect(() => {
     (async () => {
@@ -52,8 +52,8 @@ export default function AndroidEmulator() {
     // Force a fresh browsing context, then navigate to a public page
     setPreviewUrl('about:blank');
     setTimeout(() => {
-      setPreviewUrl(`${window.location.origin}/#/pages/WelcomePublic?preview=1&ts=${Date.now()}`);
-    }, 80);
+      setPreviewUrl(`${window.location.origin}/#/pages/AuthKick?stop=1&ts=${Date.now()}`);
+    }, 100);
   };
 
   const simulateOAuthReturn = () => {
