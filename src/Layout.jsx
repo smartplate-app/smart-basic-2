@@ -960,30 +960,6 @@ const AppLayout = ({ children, currentPageName }) => {
             </div>
           )}
 
-          {user?.role === 'admin' && (
-            <div className="p-4 border-b border-gray-200">
-              <div className={'flex ' + (isRTL ? 'flex-row-reverse' : '') + ' gap-2'}>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    const url = `${window.location.origin}/functions/welcomePublic`;
-                    navigator.clipboard.writeText(url);
-                    alert(language === 'he' ? 'קישור ציבורי הועתק' : 'Public link copied');
-                  }}
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  {language === 'he' ? 'העתק קישור ציבורי' : 'Copy public link'}
-                </Button>
-                <a href="/functions/welcomePublic" target="_blank" rel="noopener noreferrer" className="flex-1 no-routing-reload">
-                  <Button variant="outline" className="w-full">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    {language === 'he' ? 'פתח דף ציבורי' : 'Open public page'}
-                  </Button>
-                </a>
-              </div>
-            </div>
-          )}
 
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
