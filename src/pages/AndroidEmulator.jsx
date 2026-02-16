@@ -16,7 +16,7 @@ export default function AndroidEmulator() {
   const [disableHistory, setDisableHistory] = useState(false);
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-  const [incognito, setIncognito] = useState(false);
+  const [incognito, setIncognito] = useState(true);
   const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/WelcomePublic?preview=1') : '/#/pages/WelcomePublic?preview=1');
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function AndroidEmulator() {
         setForceLite(localStorage.getItem('b44_emulate_force_lite') === '1');
         setDisableHistory(localStorage.getItem('b44_emulate_disable_history') === '1');
         setForceHash(localStorage.getItem('b44_emulate_force_hash') === '1');
-        setIncognito(localStorage.getItem('b44_emulate_iframe_incognito') === '1');
+        setIncognito(true);
       }
     })();
   }, []);
@@ -43,6 +43,17 @@ export default function AndroidEmulator() {
 
   const applyAndReload = () => {
     window.location.reload();
+  };
+
+  const startIncognitoLogin = () => {
+    setShowPreview(true);
+    setIncognito(true);
+    try { localStorage.setItem('b44_emulate_iframe_incognito','1'); } catch {}
+    // Force a fresh browsing context, then navigate to a public page
+    setPreviewUrl('about:blank');
+    setTimeout(() => {
+      setPreviewUrl(`${window.location.origin}/#/pages/WelcomePublic?preview=1&ts=${Date.now()}`);
+    }, 30);
   };
 
   const simulateOAuthReturn = () => {
@@ -105,7 +116,7 @@ export default function AndroidEmulator() {
             {showPreview && (
               <div className="space-y-4">
                 <div className="flex gap-2 items-center flex-wrap">
-                  <Button className="bg-gray-900 hover:bg-gray-800" onClick={()=>{ setShowPreview(true); setIncognito(true); try { localStorage.setItem('b44_emulate_iframe_incognito','1'); } catch {} setPreviewUrl(`${window.location.origin}/#/pages/WelcomePublic?preview=1&ts=${Date.now()}`); }}>Incognito Login</Button>
+                  <Button className="bg-gray-900 hover:bg-gray-800" onClick={startIncognitoLogin}>Incognito Login</Button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
