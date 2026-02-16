@@ -116,6 +116,7 @@ const AppLayout = ({ children, currentPageName }) => {
       if (window.location.href.indexOf(target) === -1) {
         window.location.replace(target);
       }
+      return; // prevent further redirects on this vanity route
     }
   }, [location.pathname]);
 
