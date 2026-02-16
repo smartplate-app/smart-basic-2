@@ -151,8 +151,8 @@ export default function AndroidEmulator() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium">Enable Phone Preview</div>
-                <div className="text-sm text-gray-500">Simulate device viewport inside a phone frame.</div>
+                <div className="font-medium">Phone Preview</div>
+                <div className="text-sm text-gray-500">Login flow inside a sandboxed incognito iframe.</div>
               </div>
               <Switch checked={showPreview} onCheckedChange={(v)=>setShowPreview(v)} />
             </div>
