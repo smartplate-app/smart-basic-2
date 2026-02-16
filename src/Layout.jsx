@@ -685,9 +685,18 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  if (currentPageName === 'WorkerPortal' || currentPageName === 'OrderDetails' || currentPageName === 'Register' || currentPageName === 'RestaurantInvite' || currentPageName === 'Welcome' || currentPageName === 'WelcomePublic' || currentPageName === 'PublicOrder' || currentPageName === 'OAuthCallback') {
-        return <>{children}</>;
-      }
+  if (
+    currentPageName === 'WorkerPortal' ||
+    currentPageName === 'OrderDetails' ||
+    currentPageName === 'Register' ||
+    currentPageName === 'RestaurantInvite' ||
+    currentPageName === 'Welcome' ||
+    currentPageName === 'WelcomePublic' ||
+    currentPageName === 'PublicOrder' ||
+    currentPageName === 'OAuthCallback'
+  ) {
+    return <>{children}</>;
+  }
 
 
   
