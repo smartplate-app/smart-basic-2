@@ -274,49 +274,59 @@ const AppLayout = ({ children, currentPageName }) => {
   }, [currentPageName, location.search]);
 
   // Consolidated OAuth return stabilizer (older Android/Chrome safe)
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const oauthBack = params.has('code') || params.has('state');
-      // Avoid double-handling: let the Welcome-specific effect handle it, or if we're already on OAuthCallback
-      if (!oauthBack) return;
-      if (currentPageName === 'Welcome') return;
-      if ((location.pathname || '').includes('OAuthCallback')) return;
-      if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
-      if (sessionStorage.getItem('b44_oauth_finalized') === '1') return;
+          useEffect(() => {
+            try {
+              const params = new URLSearchParams(window.location.search);
+              const oauthBack = params.has('code') || params.has('state');
+              // Avoid double-handling: let the Welcome-specific effect handle it, or if we're already on OAuthCallback
+              if (!oauthBack) return;
+              if (currentPageName === 'Welcome') return;
+              if ((location.pathname || '').includes('OAuthCallback')) return;
 
-      const forceHash = localStorage.getItem('b44_emulate_force_hash') === '1';
-      const disableHistory = localStorage.getItem('b44_emulate_disable_history') === '1';
-      sessionStorage.setItem('b44_oauth_in_progress', '1');
-      sessionStorage.setItem('b44_oauth_finalized', '1');
+              // New guards: prevent loops inside embedded previews and repeated handling of same query
+              const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+              if (inIframe) return; // do not auto-redirect inside PhonePreview/iframe
 
-      (async () => {
-        try {
-          // Retry auth a few times (slow WebViews)
-          for (let i = 0; i < 5; i++) {
-            const authed = await base44.auth.isAuthenticated();
-            if (authed) break;
-            await new Promise(r => setTimeout(r, 400 * Math.pow(1.5, i)));
-          }
-        } catch {}
-        if (!disableHistory) { try { window.history.replaceState({}, '', location.pathname); } catch {} }
-        const target = forceHash ? ('/#/pages/OAuthCallback' + window.location.search) : (createPageUrl('OAuthCallback') + window.location.search);
-        // Primary redirect to lightweight OAuth finalizer page (use replace to avoid history loop)
-        window.location.replace(target);
-        // Hash fallback for older WebViews/Chrome when not forcing already
-        if (!forceHash) {
-          setTimeout(() => {
-            if (!(location.pathname || '').includes('OAuthCallback')) {
-              window.location.replace('/#/pages/OAuthCallback' + window.location.search);
-            }
-          }, 1200);
-        }
-        // Clear flags after a short grace period
-        setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); } catch {} }, 4000);
-        setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_finalized'); } catch {} }, 15000);
-      })();
-    } catch {}
-  }, [location.search, currentPageName]);
+              const qs = window.location.search || '';
+              const lastQs = sessionStorage.getItem('b44_last_oauth_qs') || '';
+              if (lastQs === qs) return; // already handled this return once
+              sessionStorage.setItem('b44_last_oauth_qs', qs);
+
+              if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
+              if (sessionStorage.getItem('b44_oauth_finalized') === '1') return;
+
+              const forceHash = localStorage.getItem('b44_emulate_force_hash') === '1';
+              const disableHistory = localStorage.getItem('b44_emulate_disable_history') === '1';
+              sessionStorage.setItem('b44_oauth_in_progress', '1');
+              sessionStorage.setItem('b44_oauth_finalized', '1');
+
+              (async () => {
+                try {
+                  // Retry auth a few times (slow WebViews)
+                  for (let i = 0; i < 5; i++) {
+                    const authed = await base44.auth.isAuthenticated();
+                    if (authed) break;
+                    await new Promise(r => setTimeout(r, 400 * Math.pow(1.5, i)));
+                  }
+                } catch {}
+                if (!disableHistory) { try { window.history.replaceState({}, '', location.pathname); } catch {} }
+                const target = forceHash ? ('/#/pages/OAuthCallback' + qs) : (createPageUrl('OAuthCallback') + qs);
+                // Primary redirect to lightweight OAuth finalizer page (use replace to avoid history loop)
+                window.location.replace(target);
+                // Hash fallback for older WebViews/Chrome when not forcing already
+                if (!forceHash) {
+                  setTimeout(() => {
+                    if (!(location.pathname || '').includes('OAuthCallback')) {
+                      window.location.replace('/#/pages/OAuthCallback' + qs);
+                    }
+                  }, 1200);
+                }
+                // Clear flags after a short grace period
+                setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); } catch {} }, 4000);
+                setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_finalized'); } catch {} }, 15000);
+              })();
+            } catch {}
+          }, [location.search, currentPageName]);
 
         // Post-login fallback (WebView/APK) – ensure we land on Dashboard after OAuth
         useEffect(() => {
