@@ -26,7 +26,9 @@ Deno.serve(async (req) => {
     if (!orders || orders.length === 0) {
       return Response.json({ success: false, error: `No orders found for ${workingEmail}` }, { status: 404 });
     }
-    const order = orders[0];
+    // Prefer the most recent order that has any supplier email
+    let order = orders.find(o => (o?.supplier_email && String(o.supplier_email).includes('@')));
+    if (!order) order = orders[0];
 
     // Build recipients
     const recipients = [];
