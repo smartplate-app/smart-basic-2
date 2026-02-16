@@ -21,7 +21,7 @@ export default function AuthKick() {
 
         if (inFrame || noAuto || recent) {
           setPhase('error');
-          setErr(inFrame ? 'Login disabled in embedded preview.' : 'Click the button to continue to login.');
+          setErr('Tap the button below to open Google login.');
           return;
         }
 
