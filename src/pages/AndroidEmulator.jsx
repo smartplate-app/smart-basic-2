@@ -16,7 +16,7 @@ export default function AndroidEmulator() {
   const [disableHistory, setDisableHistory] = useState(false);
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/WelcomePublic') : '/functions/welcomePublic');
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/LoginHelper') : '/functions/welcomePublic');
 
   useEffect(() => {
     (async () => {
@@ -59,8 +59,8 @@ export default function AndroidEmulator() {
       sessionStorage.removeItem('b44_oauth_finalized');
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
     } catch {}
-    try { await base44.auth.logout('/#/pages/WelcomePublic'); } catch {}
-    setTimeout(() => { window.location.replace('/#/pages/WelcomePublic'); }, 400);
+    try { await base44.auth.logout('/#/pages/LoginHelper'); } catch {}
+    setTimeout(() => { window.location.replace('/#/pages/LoginHelper'); }, 400);
   };
 
   if (loading) return null;
@@ -155,8 +155,8 @@ export default function AndroidEmulator() {
             {showPreview && (
               <div className="space-y-4">
                 <div className="flex gap-2 items-center">
-                  <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/#/pages/WelcomePublic" />
-                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/WelcomePublic')}>App Welcome</Button>
+                  <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/#/pages/LoginHelper" />
+                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/LoginHelper')}>Login (Google)</Button>
                   <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/pages/Dashboard')}>App Dashboard</Button>
                 </div>
 
