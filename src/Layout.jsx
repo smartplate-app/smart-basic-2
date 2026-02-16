@@ -752,7 +752,8 @@ const AppLayout = ({ children, currentPageName }) => {
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
     currentPageName === 'LoginHelper' ||
-    currentPageName === 'AuthKick'
+    currentPageName === 'AuthKick' ||
+    currentPageName === 'PreviewLogin'
   ) {
     return <>{children}</>;
   }
