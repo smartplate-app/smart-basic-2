@@ -17,7 +17,7 @@ export default function AndroidEmulator() {
   const [forceHash, setForceHash] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [incognito, setIncognito] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/AuthKick?stop=1') : '/#/pages/AuthKick?stop=1');
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/WelcomePublic?preview=1') : '/#/pages/WelcomePublic?preview=1');
 
   useEffect(() => {
     (async () => {
@@ -105,7 +105,7 @@ export default function AndroidEmulator() {
             {showPreview && (
               <div className="space-y-4">
                 <div className="flex gap-2 items-center flex-wrap">
-                  <Button className="bg-gray-900 hover:bg-gray-800" onClick={()=>{ setShowPreview(true); setIncognito(true); try { localStorage.setItem('b44_emulate_iframe_incognito','1'); } catch {} setPreviewUrl(window.location.origin + '/#/pages/AuthKick?stop=1'); }}>Incognito Login</Button>
+                  <Button className="bg-gray-900 hover:bg-gray-800" onClick={()=>{ setShowPreview(true); setIncognito(true); try { localStorage.setItem('b44_emulate_iframe_incognito','1'); } catch {} setPreviewUrl(`${window.location.origin}/#/pages/WelcomePublic?preview=1&ts=${Date.now()}`); }}>Incognito Login</Button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

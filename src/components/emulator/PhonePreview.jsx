@@ -27,6 +27,7 @@ export default function PhonePreview({ url, width, height, incognito = false }) 
             sandbox={incognito ? "allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox" : undefined}
             allow="clipboard-read; clipboard-write; autoplay; fullscreen"
             referrerPolicy={incognito ? "no-referrer" : "strict-origin-when-cross-origin"}
+            credentialless={incognito ? "true" : undefined}
           />
         </div>
       </div>
