@@ -156,15 +156,7 @@ export default function AndroidEmulator() {
               </div>
               <Switch checked={showPreview} onCheckedChange={(v)=>setShowPreview(v)} />
             </div>
-            {showPreview && (
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">Incognito mode</div>
-                  <div className="text-sm text-gray-500">Sandboxed iframe: no shared cookies/localStorage; always logged out.</div>
-                </div>
-                <Switch checked={incognito} onCheckedChange={(v)=>{ setIncognito(v); try { v ? localStorage.setItem('b44_emulate_iframe_incognito','1') : localStorage.removeItem('b44_emulate_iframe_incognito'); } catch {} }} />
-              </div>
-            )}
+
             {showPreview && (
               <div className="space-y-4">
                 <div className="flex gap-2 items-center flex-wrap">
