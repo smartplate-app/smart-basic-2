@@ -52,6 +52,8 @@ export default function AndroidEmulator() {
   };
 
   const safeLogout = async () => {
+    const ok = window.confirm('This will log out the current admin session in this browser. Continue?');
+    if (!ok) return;
     try {
       sessionStorage.setItem('b44_logout_in_progress', '1');
       localStorage.removeItem('b44_user_cache');
@@ -135,7 +137,7 @@ export default function AndroidEmulator() {
             <CardTitle>Session Controls</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button onClick={safeLogout} className="bg-red-600 hover:bg-red-700 w-full">Safe Logout & Reset</Button>
+            <Button onClick={safeLogout} className="bg-red-600 hover:bg-red-700 w-full">Log out (affects admin)</Button>
             <div className="text-xs text-gray-600">Clears cached user, sets a short cooldown, and routes to the public welcome page.</div>
           </CardContent>
         </Card>
@@ -156,7 +158,7 @@ export default function AndroidEmulator() {
               <div className="space-y-4">
                 <div className="flex gap-2 items-center">
                   <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/#/pages/AuthKick" />
-                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/WelcomePublic?stop=1')}>Open Login (Preview-safe)</Button>
+                  <Button variant="outline" onClick={()=>window.open(window.location.origin + '/#/pages/AuthKick?stop=1', '_blank')}>Open Login (New tab)</Button>
                   <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/Dashboard')}>App Dashboard</Button>
                 </div>
 
