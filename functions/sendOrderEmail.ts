@@ -116,18 +116,11 @@ Deno.serve(async (req) => {
   </body>
 </html>`;
 
-    // Build raw MIME message
-    const headers = [
-      `To: ${toHeader}`,
-      `Cc: ${adminCc}`,
-      `Reply-To: ${replyTo}`,
-      `Subject: ${subject}`,
-      'MIME-Version: 1.0',
-      'Content-Type: text/html; charset=UTF-8',
-      '',
-    ];
-    const raw = headers.join('\r\n') + html;
-    const encoded = base64UrlEncode(raw);
+    // Build plain text alternative (better deliverability for Exchange/Office365)
+    const itemsTxt = items.map((it) => `• ${(it.item_name || '')} — ${Number(it.quantity || 0)} ${(it.unit || '')}`).join('\n');
+    const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.`;
+
+    const boundary = 'b44_boundary_' + Math.random().toString(36).slice(2);
 
     // Gmail send via connector access token
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
@@ -144,23 +137,60 @@ Deno.serve(async (req) => {
       senderEmail = p?.emailAddress || '';
     } catch (_) {}
 
+    const sendTo = async (rcpt) => {
+      const headers = [
+        `From: ${fromDisplay} <${senderEmail || replyTo || 'no-reply@smartplate.org'}>`,
+        `To: ${rcpt}`,
+        `Reply-To: ${replyTo}`,
+        `Subject: ${subject}`,
+        'MIME-Version: 1.0',
+        `Content-Type: multipart/alternative; boundary="${boundary}"`,
+        '',
+      ];
+      const raw = headers.join('\r\n') +
+        `--${boundary}\r\n` +
+        'Content-Type: text/plain; charset=UTF-8\r\n' +
+        'Content-Transfer-Encoding: 7bit\r\n\r\n' +
+        text + '\r\n' +
+        `--${boundary}\r\n` +
+        'Content-Type: text/html; charset=UTF-8\r\n' +
+        'Content-Transfer-Encoding: 7bit\r\n\r\n' +
+        html + '\r\n' +
+        `--${boundary}--`;
+      const encoded = base64UrlEncode(raw);
 
-    const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ raw: encoded })
-    });
+      const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ raw: encoded })
+      });
 
-    if (!resp.ok) {
-      const errText = await resp.text();
-      return Response.json({ success: false, error: 'Gmail send failed', details: errText }, { status: 500 });
+      if (!resp.ok) {
+        return { to: rcpt, ok: false, error: await resp.text() };
+      }
+      const data = await resp.json();
+      return { to: rcpt, ok: true, id: data?.id || null };
+    };
+
+    const results = [];
+    for (const r of recipients) {
+      if (r && r.toLowerCase() !== adminCc.toLowerCase()) {
+        // eslint-disable-next-line no-await-in-loop
+        results.push(await sendTo(r));
+      }
     }
+    // Send separate copy to admin (not CC'd) to avoid stricter policies blocking the external recipient
+    // eslint-disable-next-line no-await-in-loop
+    results.push(await sendTo(adminCc));
 
-    const data = await resp.json();
-    return Response.json({ success: true, messageId: data?.id || null, to: recipients, cc: adminCc });
+    const anyOk = results.some(r => r.ok);
+    if (!anyOk) {
+      return Response.json({ success: false, results }, { status: 500 });
+    }
+    return Response.json({ success: true, results });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
   }
