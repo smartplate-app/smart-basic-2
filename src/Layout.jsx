@@ -251,7 +251,8 @@ const AppLayout = ({ children, currentPageName }) => {
       currentPageName !== 'WelcomePublic' &&
       currentPageName !== 'PublicOrder' &&
       currentPageName !== 'OAuthCallback' &&
-      currentPageName !== 'LoginHelper'
+      currentPageName !== 'LoginHelper' &&
+      currentPageName !== 'AuthKick'
     ) {
       loadAuth();
     } else {
@@ -722,7 +723,8 @@ const AppLayout = ({ children, currentPageName }) => {
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
-    currentPageName === 'LoginHelper'
+    currentPageName === 'LoginHelper' ||
+    currentPageName === 'AuthKick'
   ) {
     return <>{children}</>;
   }

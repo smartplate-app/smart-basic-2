@@ -89,6 +89,7 @@ import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
 import Diagnostics from './pages/Diagnostics';
+import AuthKick from './pages/AuthKick';
 import __Layout from './Layout.jsx';
 
 
@@ -135,6 +136,7 @@ export const PAGES = {
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
     "Diagnostics": Diagnostics,
+    "AuthKick": AuthKick,
 }
 
 export const pagesConfig = {
