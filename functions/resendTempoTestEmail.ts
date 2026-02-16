@@ -1,5 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+function base64UrlEncode(str) {
+  const utf8 = new TextEncoder().encode(str);
+  let binary = '';
+  for (let i = 0; i < utf8.length; i++) binary += String.fromCharCode(utf8[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -62,17 +69,137 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Resend via existing mailer with custom subject + reply-to, and optional direct "to" override
-    const payload = {
-      orderId: order.id,
-      subject,
-      reply_to_override: targetEmail,
-    } as Record<string, unknown>;
-    if (toOverride) payload.to = toOverride;
+    // Build recipients
+    const adminCc = 'admin@smartplate.org';
+    const toRecipients = [] as string[];
+    if (toOverride) toRecipients.push(toOverride);
 
-    const resp = await base44.asServiceRole.functions.invoke('sendOrderEmail', payload);
+    // As a fallback, try order.supplier_email and supplier card email
+    if (toRecipients.length === 0) {
+      if (order.supplier_email) toRecipients.push(String(order.supplier_email));
+      try {
+        if (order.supplier_id) {
+          const sup = await base44.asServiceRole.entities.Supplier.get(order.supplier_id);
+          if (sup?.email) toRecipients.push(String(sup.email));
+        }
+      } catch (_) {}
+    }
 
-    return Response.json({ success: true, order_id: order.id, order_number: order.order_number || null, supplier: supplierName, email_result: resp?.data || null });
+    // Dedupe + ensure at least one
+    const dedup = Array.from(new Set(toRecipients.map(e => (e || '').toLowerCase()).filter(e => e && e.includes('@'))));
+    if (dedup.length === 0) {
+      return Response.json({ success: false, error: 'No recipient email available (provide body.to)' }, { status: 400 });
+    }
+
+    // Compose HTML + text (based on sendOrderEmail style)
+    const items = Array.isArray(order.items) ? order.items : [];
+    const itemsRows = items.map((it: any) => `
+      <tr>
+        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${(it.item_name || '').toString()}</td>
+        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${Number(it.quantity || 0)}</td>
+        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${(it.unit || '').toString()}</td>
+        <td style="padding:6px 8px;border:1px solid #e5e7eb;">₪${Number(it.total || (Number(it.price || 0) * Number(it.quantity || 0))).toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    const totalCost = Number(order.total_cost || 0).toFixed(2);
+    const restaurantName = order.restaurant_name || '';
+    const deliveryDate = order.delivery_date || '';
+
+    const origin = (() => { try { return (new URL(req.url)).origin; } catch { return ''; }})();
+    const publicUrl = origin ? `${origin}/#/pages/OrderDetails?id=${order.id}` : '';
+
+    const html = `<!DOCTYPE html>
+<html>
+  <body style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:16px;">
+    <div style="max-width:720px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
+      <div style="background:#111827;color:#ffffff;padding:16px 20px;">
+        <div style="font-size:18px;font-weight:700;">Smart Plate basic</div>
+        <div style="font-size:13px;opacity:0.85;">New order notification</div>
+      </div>
+      <div style="padding:20px;">
+        <p style="margin:0 0 12px 0;">Hello${order.supplier_name ? ' ' + order.supplier_name : ''},</p>
+        <p style="margin:0 0 12px 0;">קיבלת הזמנה חדשה באמצעות SMART PLATE BASIC — איזה כיף!</p>
+        <div style="margin:16px 0;padding:12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;">
+          <div style="margin:4px 0;"><strong>From:</strong> ${restaurantName || '-'}</div>
+          <div style="margin:4px 0;"><strong>Order #:</strong> ${order.order_number || '-'}</div>
+          <div style="margin:4px 0;"><strong>Delivery date:</strong> ${deliveryDate || '-'}</div>
+          <div style="margin:4px 0;"><strong>Total:</strong> ₪${totalCost}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin:10px 0 16px 0;font-size:13px;">
+          <thead>
+            <tr>
+              <th style="text-align:right;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">Item</th>
+              <th style="text-align:right;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">Qty</th>
+              <th style="text-align:right;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">Unit</th>
+              <th style="text-align:right;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>${itemsRows || ''}</tbody>
+        </table>
+        <p style="margin:16px 0 0 0;color:#6b7280;font-size:12px;">Please reply to this email for any questions or confirmations.</p>
+      </div>
+      <div style="padding:12px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">Sent by Smart Plate basic</div>
+    </div>
+  </body>
+</html>`;
+
+    const itemsTxt = items.map((it: any) => `• ${(it.item_name || '')} — ${Number(it.quantity || 0)} ${(it.unit || '')}`).join('\n');
+    const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${order.order_number || '-'}\nDelivery date: ${deliveryDate || '-'}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.`;
+
+    // Gmail connector
+    const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
+    if (!accessToken) return Response.json({ error: 'Gmail connector not authorized' }, { status: 500 });
+
+    // Identify sender
+    let senderEmail = '';
+    try {
+      const prof = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+      const p = await prof.json();
+      senderEmail = p?.emailAddress || '';
+    } catch (_) {}
+
+    const boundary = 'b44_boundary_' + Math.random().toString(36).slice(2);
+    const sendTo = async (rcpt: string) => {
+      const headers = [
+        `From: Smart Plate basic <${senderEmail || targetEmail || 'no-reply@smartplate.org'}>`,
+        `To: ${rcpt}`,
+        `Reply-To: ${targetEmail}`,
+        `Subject: ${subject}`,
+        'MIME-Version: 1.0',
+        `Content-Type: multipart/alternative; boundary="${boundary}"`,
+        '',
+      ];
+      const raw = headers.join('\r\n') +
+        `--${boundary}\r\n` +
+        'Content-Type: text/plain; charset=UTF-8\r\n' +
+        'Content-Transfer-Encoding: 7bit\r\n\r\n' +
+        text + '\r\n' +
+        `--${boundary}\r\n` +
+        'Content-Type: text/html; charset=UTF-8\r\n' +
+        'Content-Transfer-Encoding: 7bit\r\n\r\n' +
+        html + '\r\n' +
+        `--${boundary}--`;
+      const encoded = base64UrlEncode(raw);
+      const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raw: encoded })
+      });
+      if (!resp.ok) return { to: rcpt, ok: false, error: await resp.text() };
+      const data = await resp.json();
+      return { to: rcpt, ok: true, id: data?.id || null };
+    };
+
+    const results: any[] = [];
+    for (const r of dedup) { results.push(await sendTo(r)); }
+    // Separate copy to admin (not CC to avoid stricter policies)
+    results.push(await sendTo(adminCc));
+
+    const anyOk = results.some(r => r.ok);
+    if (!anyOk) return Response.json({ success: false, results }, { status: 500 });
+
+    return Response.json({ success: true, order_id: order.id, order_number: order.order_number || null, supplier: supplierName, results });
   } catch (error) {
     return Response.json({ error: error?.message || String(error) }, { status: 500 });
   }
