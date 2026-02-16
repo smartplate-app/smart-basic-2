@@ -22,6 +22,8 @@ export default function AuthKick() {
         if (inFrame || noAuto || recent) {
           setPhase('error');
           setErr('Tap the button below to open Google login.');
+          // Hard stop: never auto-login in previews
+          try { await base44.auth.logout(); } catch {}
           return;
         }
 
