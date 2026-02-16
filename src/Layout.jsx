@@ -246,6 +246,12 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   useEffect(() => {
+    // Never auto-auth inside embedded previews (e.g., PhonePreview in AndroidEmulator)
+    const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+    if (inIframe) {
+      setAuthLoading(false);
+      return;
+    }
     if (
       currentPageName !== 'OrderDetails' &&
       currentPageName !== 'WorkerPortal' &&
