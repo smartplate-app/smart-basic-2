@@ -254,11 +254,18 @@ const AppLayout = ({ children, currentPageName }) => {
     try {
       const params = new URLSearchParams(window.location.search);
       const oauthBack = params.has('code') || params.has('state');
+      // Avoid double-handling: let the Welcome-specific effect handle it, or if we're already on OAuthCallback
       if (!oauthBack) return;
+      if (currentPageName === 'Welcome') return;
+      if ((location.pathname || '').includes('OAuthCallback')) return;
       if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
+      if (sessionStorage.getItem('b44_oauth_finalized') === '1') return;
+
       const forceHash = localStorage.getItem('b44_emulate_force_hash') === '1';
       const disableHistory = localStorage.getItem('b44_emulate_disable_history') === '1';
       sessionStorage.setItem('b44_oauth_in_progress', '1');
+      sessionStorage.setItem('b44_oauth_finalized', '1');
+
       (async () => {
         try {
           // Retry auth a few times (slow WebViews)
@@ -280,11 +287,12 @@ const AppLayout = ({ children, currentPageName }) => {
             }
           }, 1200);
         }
-        // Clear flag after a short grace period
+        // Clear flags after a short grace period
         setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); } catch {} }, 4000);
+        setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_finalized'); } catch {} }, 15000);
       })();
     } catch {}
-  }, [location.search]);
+  }, [location.search, currentPageName]);
 
         // Post-login fallback (WebView/APK) – ensure we land on Dashboard after OAuth
         useEffect(() => {
