@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     const orderNumberHint = (body?.orderNumber || '').trim();
 
     if (!rawSupplier && !orderNumberHint) return Response.json({ error: 'supplierName or orderNumber is required' }, { status: 400 });
-    if (!toEmail) return Response.json({ error: 'toEmail is required' }, { status: 400 });
+    // No direct toEmail required; using order.supplier_email policy
 
     const norm = (s) => (s || '').toString().trim().toLowerCase();
 
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      to: toEmail,
+      to: targetOrder.supplier_email || null,
       supplier: rawSupplier || targetOrder.supplier_name,
       order_id: targetOrder.id,
       order_number: targetOrder.order_number || null,
