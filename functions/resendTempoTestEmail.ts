@@ -10,48 +10,69 @@ Deno.serve(async (req) => {
     const targetEmail = (body?.target_email || 'guestroom@smartplate.org').toString().trim().toLowerCase();
     const subject = (body?.subject || 'test order to see that we dont get postmaster').toString();
     const supplierKeyword = (body?.supplier_keyword || 'tempo').toString().toLowerCase();
+    const orderNumber = (body?.order_number || '').toString().trim();
+    const toOverride = (body?.to || '').toString().trim();
 
     const isAdmin = user?.role === 'admin';
     if (!isAdmin && (user.email || '').toLowerCase() !== targetEmail) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // 1) Try by supplier name under the target user
-    const suppliers = await base44.asServiceRole.entities.Supplier.filter({ created_by: targetEmail }, 'name');
-    let tempoSupplier = (suppliers || []).find(s => (s.name || '').toString().toLowerCase().includes(supplierKeyword));
-
     let order = null;
+    let supplierName = null;
 
-    if (tempoSupplier) {
-      const list = await base44.asServiceRole.entities.Order.filter({ created_by: targetEmail, supplier_id: tempoSupplier.id }, '-created_date');
-      if (list && list.length > 0) order = list[0];
-    }
-
-    // 2) If still not found, search recent orders by supplier_name includes keyword
-    if (!order) {
-      const recent = await base44.asServiceRole.entities.Order.filter({ created_by: targetEmail }, '-created_date');
-      const byName = (recent || []).find(o => ((o.supplier_name || '').toString().toLowerCase().includes(supplierKeyword)));
-      if (byName) {
-        order = byName;
-        // Best-effort supplier lookup for info
-        if (!tempoSupplier && byName.supplier_id) {
-          try { tempoSupplier = await base44.asServiceRole.entities.Supplier.get(byName.supplier_id); } catch { /* ignore */ }
+    // Prefer explicit order_number if provided
+    if (orderNumber) {
+      const exact = await base44.asServiceRole.entities.Order.filter({ order_number: orderNumber });
+      if (exact && exact.length > 0) {
+        order = exact[0];
+      } else {
+        // Fallback: search recent orders by this user and match suffix or contains
+        const recent = await base44.asServiceRole.entities.Order.filter({ created_by: targetEmail }, '-created_date');
+        const normalize = (s) => (s || '').toString().toLowerCase();
+        const suffix = orderNumber.replace(/^ORD[-_]?/i, '').toLowerCase();
+        order = (recent || []).find(o => {
+          const onum = normalize(o.order_number);
+          return onum === normalize(orderNumber) || onum.endsWith(suffix) || onum.includes(suffix);
+        }) || null;
+      }
+      if (!order) {
+        return Response.json({ success: false, error: `Order with number ${orderNumber} not found for ${targetEmail}` }, { status: 404 });
+      }
+      supplierName = order.supplier_name || null;
+    } else {
+      // Legacy path: infer by supplier keyword (e.g., 'tempo')
+      const suppliers = await base44.asServiceRole.entities.Supplier.filter({ created_by: targetEmail }, 'name');
+      let matchedSupplier = (suppliers || []).find(s => (s.name || '').toString().toLowerCase().includes(supplierKeyword));
+      if (matchedSupplier) {
+        const list = await base44.asServiceRole.entities.Order.filter({ created_by: targetEmail, supplier_id: matchedSupplier.id }, '-created_date');
+        if (list && list.length > 0) order = list[0];
+        supplierName = matchedSupplier.name || null;
+      }
+      if (!order) {
+        const recent = await base44.asServiceRole.entities.Order.filter({ created_by: targetEmail }, '-created_date');
+        const byName = (recent || []).find(o => ((o.supplier_name || '').toString().toLowerCase().includes(supplierKeyword)));
+        if (byName) {
+          order = byName;
+          supplierName = byName.supplier_name || supplierName;
         }
+      }
+      if (!order) {
+        return Response.json({ success: false, error: `No recent order to a supplier matching "${supplierKeyword}" for ${targetEmail}` }, { status: 404 });
       }
     }
 
-    if (!order) {
-      return Response.json({ success: false, error: `No recent order to a supplier matching "${supplierKeyword}" for ${targetEmail}` }, { status: 404 });
-    }
-
-    // Resend via existing mailer with custom subject + reply-to override; keep original recipients
-    const resp = await base44.asServiceRole.functions.invoke('sendOrderEmail', {
+    // Resend via existing mailer with custom subject + reply-to, and optional direct "to" override
+    const payload = {
       orderId: order.id,
       subject,
       reply_to_override: targetEmail,
-    });
+    } as Record<string, unknown>;
+    if (toOverride) payload.to = toOverride;
 
-    return Response.json({ success: true, order_id: order.id, supplier: tempoSupplier?.name || order.supplier_name || null, email_result: resp?.data || null });
+    const resp = await base44.asServiceRole.functions.invoke('sendOrderEmail', payload);
+
+    return Response.json({ success: true, order_id: order.id, order_number: order.order_number || null, supplier: supplierName, email_result: resp?.data || null });
   } catch (error) {
     return Response.json({ error: error?.message || String(error) }, { status: 500 });
   }
