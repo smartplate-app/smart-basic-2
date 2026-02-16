@@ -226,7 +226,16 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   useEffect(() => {
-    if (currentPageName !== 'OrderDetails' && currentPageName !== 'WorkerPortal' && currentPageName !== 'Register' && currentPageName !== 'RestaurantInvite' && currentPageName !== 'Welcome' && currentPageName !== 'PublicOrder' && currentPageName !== 'OAuthCallback') {
+    if (
+      currentPageName !== 'OrderDetails' &&
+      currentPageName !== 'WorkerPortal' &&
+      currentPageName !== 'Register' &&
+      currentPageName !== 'RestaurantInvite' &&
+      currentPageName !== 'Welcome' &&
+      currentPageName !== 'WelcomePublic' &&
+      currentPageName !== 'PublicOrder' &&
+      currentPageName !== 'OAuthCallback'
+    ) {
       loadAuth();
     } else {
       setAuthLoading(false);
