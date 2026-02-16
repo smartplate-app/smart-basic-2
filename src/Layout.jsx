@@ -274,13 +274,13 @@ const AppLayout = ({ children, currentPageName }) => {
         } catch {}
         if (!disableHistory) { try { window.history.replaceState({}, '', location.pathname); } catch {} }
         const target = forceHash ? ('/#/pages/OAuthCallback' + window.location.search) : (createPageUrl('OAuthCallback') + window.location.search);
-        // Primary redirect to lightweight OAuth finalizer page
-        window.location.href = target;
+        // Primary redirect to lightweight OAuth finalizer page (use replace to avoid history loop)
+        window.location.replace(target);
         // Hash fallback for older WebViews/Chrome when not forcing already
         if (!forceHash) {
           setTimeout(() => {
             if (!(location.pathname || '').includes('OAuthCallback')) {
-              window.location.href = '/#/pages/OAuthCallback' + window.location.search;
+              window.location.replace('/#/pages/OAuthCallback' + window.location.search);
             }
           }, 1200);
         }
