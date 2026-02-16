@@ -131,6 +131,7 @@ const AppLayout = ({ children, currentPageName }) => {
       return; // respect hash router target to avoid loops
     }
     if ((currentPath || '').includes('/pages/OAuthCallback')) return;
+    if ((currentPath || '').includes('/functions/welcomePublic')) return; // public route - never redirect
     if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
     if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
       // Avoid redirect loops on Android Chrome after Google login
