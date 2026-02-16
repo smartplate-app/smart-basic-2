@@ -398,6 +398,7 @@ const AppLayout = ({ children, currentPageName }) => {
           let currentUser = await base44.auth.me();
 
           setUser(currentUser);
+                  try { sessionStorage.removeItem('b44_logout_in_progress'); } catch {}
                   try { sessionStorage.removeItem('b44_login_redirect'); sessionStorage.removeItem('b44_login_cooldown_until'); localStorage.removeItem('b44_login_cooldown_until'); } catch {}
                   try { localStorage.setItem('b44_user_cache', JSON.stringify(currentUser)); } catch {}
                   setError(null);
@@ -782,7 +783,15 @@ const AppLayout = ({ children, currentPageName }) => {
               <Button 
                 onClick={async () => {
                   await base44.auth.updateMe({ store_user_revoked: false });
-                  await base44.auth.logout();
+                  try {
+                    sessionStorage.setItem('b44_logout_in_progress', '1');
+                    localStorage.removeItem('b44_user_cache');
+                    sessionStorage.removeItem('b44_oauth_in_progress');
+                    sessionStorage.removeItem('b44_oauth_finalized');
+                    sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
+                  } catch {}
+                  try { await base44.auth.logout('/#/pages/WelcomePublic'); } catch {}
+                  setTimeout(() => { window.location.replace('/#/pages/WelcomePublic'); }, 300);
                 }} 
                 className="w-full bg-gray-900 hover:bg-gray-800"
               >

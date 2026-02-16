@@ -36,7 +36,15 @@ export default function UserSwitcher({ user, onUserChange }) {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      await base44.auth.logout();
+      try {
+        sessionStorage.setItem('b44_logout_in_progress', '1');
+        localStorage.removeItem('b44_user_cache');
+        sessionStorage.removeItem('b44_oauth_in_progress');
+        sessionStorage.removeItem('b44_oauth_finalized');
+        sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
+      } catch {}
+      try { await base44.auth.logout('/#/pages/WelcomePublic'); } catch {}
+      setTimeout(() => { window.location.replace('/#/pages/WelcomePublic'); }, 300);
     } catch (error) {
       console.error("Logout failed:", error);
       setIsLoggingOut(false);
