@@ -156,7 +156,7 @@ export default function AndroidEmulator() {
               <div className="space-y-4">
                 <div className="flex gap-2 items-center">
                   <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/#/pages/AuthKick" />
-                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/AuthKick')}>Open Login (Google)</Button>
+                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/WelcomePublic?stop=1')}>Open Login (Preview-safe)</Button>
                   <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/Dashboard')}>App Dashboard</Button>
                 </div>
 

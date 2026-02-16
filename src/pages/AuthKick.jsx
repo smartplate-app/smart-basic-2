@@ -6,20 +6,22 @@ import { createPageUrl } from "@/utils";
 export default function AuthKick() {
   const [phase, setPhase] = useState<'logout' | 'redirect' | 'error'>('logout');
   const [err, setErr] = useState('');
+  const [inIframe, setInIframe] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         // Guard: avoid endless loops in embedded previews or rapid reloads
-        const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+        const inFrame = (() => { try { return window.top !== window.self; } catch { return true; } })();
+        setInIframe(inFrame);
         const params = new URLSearchParams(window.location.search);
         const noAuto = params.get('stop') === '1';
         const lastTs = Number(sessionStorage.getItem('b44_authkick_once') || '0');
         const recent = Date.now() - lastTs < 5000; // 5s one-time lock
 
-        if (inIframe || noAuto || recent) {
+        if (inFrame || noAuto || recent) {
           setPhase('error');
-          setErr(inIframe ? 'Login disabled in embedded preview. Use the button below.' : 'Click the button to continue to login.');
+          setErr(inFrame ? 'Login disabled in embedded preview.' : 'Click the button to continue to login.');
           return;
         }
 
@@ -68,11 +70,15 @@ export default function AuthKick() {
         {phase === 'error' && (
           <div className="space-y-3">
             <p className="text-red-600 text-sm break-all">{err}</p>
-            <Button onClick={openLogin} className="bg-gray-900 hover:bg-gray-800 w-full">Continue to Login</Button>
+            {!inIframe && (
+              <Button onClick={openLogin} className="bg-gray-900 hover:bg-gray-800 w-full">Continue to Login</Button>
+            )}
           </div>
         )}
         <div className="mt-4">
-          <Button onClick={openLogin} variant="outline" className="w-full">Open Google Login</Button>
+          {!inIframe && (
+            <Button onClick={openLogin} variant="outline" className="w-full">Open Google Login</Button>
+          )}
         </div>
       </div>
     </div>
