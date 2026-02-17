@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PhonePreview from "../components/emulator/PhonePreview";
-import FakeWhatsApp from "../components/emulator/FakeWhatsApp";
 
 export default function AndroidEmulator() {
   const [dimW, setDimW] = useState(390);
@@ -16,11 +15,8 @@ export default function AndroidEmulator() {
   const [forceLite, setForceLite] = useState(false);
   const [disableHistory, setDisableHistory] = useState(false);
   const [forceHash, setForceHash] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
-  const [incognito, setIncognito] = useState(true);
-  // ensure fresh context per run to avoid cached 403 state
-  const bust = Date.now();
-  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/PreviewLogin?incog=1') : '/#/pages/PreviewLogin?incog=1');
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(typeof window !== 'undefined' ? (window.location.origin + '/#/pages/AuthKick') : '/functions/welcomePublic');
 
   useEffect(() => {
     (async () => {
@@ -32,23 +28,8 @@ export default function AndroidEmulator() {
         setForceLite(localStorage.getItem('b44_emulate_force_lite') === '1');
         setDisableHistory(localStorage.getItem('b44_emulate_disable_history') === '1');
         setForceHash(localStorage.getItem('b44_emulate_force_hash') === '1');
-        setIncognito(true);
       }
     })();
-  }, []);
-
-  // Enable emulator flags for the previewed app (shared origin → iframe reads same localStorage)
-  useEffect(() => {
-    try {
-      localStorage.setItem('b44_emulator_mode', '1');
-      localStorage.setItem('b44_emulator_autosend_wa', '1');
-    } catch {}
-    return () => {
-      try {
-        localStorage.removeItem('b44_emulator_mode');
-        localStorage.removeItem('b44_emulator_autosend_wa');
-      } catch {}
-    };
   }, []);
 
   const saveFlag = (key, val) => {
@@ -62,17 +43,6 @@ export default function AndroidEmulator() {
     window.location.reload();
   };
 
-  const startIncognitoLogin = () => {
-    setShowPreview(true);
-    setIncognito(true);
-    try { localStorage.setItem('b44_emulate_iframe_incognito','1'); } catch {}
-    // Force a fresh browsing context, then navigate to a public page
-    setPreviewUrl('about:blank');
-    setTimeout(() => {
-      setPreviewUrl(`${window.location.origin}/#/pages/PreviewLogin?incog=1&ts=${Date.now()}`);
-    }, 120);
-  };
-
   const simulateOAuthReturn = () => {
     // Append demo OAuth params to current URL to trigger the app's return flow
     const url = new URL(window.location.href);
@@ -82,8 +52,6 @@ export default function AndroidEmulator() {
   };
 
   const safeLogout = async () => {
-    const ok = window.confirm('This will log out the current admin session in this browser. Continue?');
-    if (!ok) return;
     try {
       sessionStorage.setItem('b44_logout_in_progress', '1');
       localStorage.removeItem('b44_user_cache');
@@ -91,8 +59,8 @@ export default function AndroidEmulator() {
       sessionStorage.removeItem('b44_oauth_finalized');
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
     } catch {}
-    try { await base44.auth.logout('/#/pages/WelcomePublic?stop=1'); } catch {}
-    setTimeout(() => { window.location.replace('/#/pages/WelcomePublic?stop=1'); }, 400);
+    try { await base44.auth.logout('/#/pages/AuthKick'); } catch {}
+    setTimeout(() => { window.location.replace('/#/pages/AuthKick'); }, 400);
   };
 
   if (loading) return null;
@@ -117,23 +85,79 @@ export default function AndroidEmulator() {
         <h1 className="text-2xl font-bold">Android/Low-RAM Emulator</h1>
         <p className="text-gray-600">Toggle conditions to mimic older Android WebViews (e.g., Samsung A54/low RAM) and test the OAuth return flow.</p>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Emulation Flags</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Force Lite Mode</div>
+                <div className="text-sm text-gray-500">Disables animations/effects globally.</div>
+              </div>
+              <Switch checked={forceLite} onCheckedChange={(v) => { setForceLite(v); saveFlag('b44_emulate_force_lite', v); }} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Disable history.replaceState</div>
+                <div className="text-sm text-gray-500">Simulate fragile WebView history APIs.</div>
+              </div>
+              <Switch checked={disableHistory} onCheckedChange={(v) => { setDisableHistory(v); saveFlag('b44_emulate_disable_history', v); }} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Force Hash Redirects</div>
+                <div className="text-sm text-gray-500">Prefer #/pages/... navigation for redirects.</div>
+              </div>
+              <Switch checked={forceHash} onCheckedChange={(v) => { setForceHash(v); saveFlag('b44_emulate_force_hash', v); }} />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={applyAndReload} className="bg-gray-900 hover:bg-gray-800">Apply & Reload</Button>
+            </div>
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>OAuth Return Tester</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-600">Simulates returning from Google by adding ?code/state to the URL. The app should route you to OAuthCallback and then to Dashboard.</p>
+            <div className="flex gap-2">
+              <Button onClick={simulateOAuthReturn}>Simulate Google Return</Button>
+              <Button variant="outline" onClick={() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); alert('Cleared in-progress flag'); } catch {} }}>Clear In-Progress Flag</Button>
+            </div>
+          </CardContent>
+        </Card>
 
-
-
-
+        <Card>
+          <CardHeader>
+            <CardTitle>Session Controls</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button onClick={safeLogout} className="bg-red-600 hover:bg-red-700 w-full">Safe Logout & Reset</Button>
+            <div className="text-xs text-gray-600">Clears cached user, sets a short cooldown, and routes to the public welcome page.</div>
+          </CardContent>
+        </Card>
 
         <Card>
            <CardHeader>
              <CardTitle>Phone Preview (Web-only)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-
-
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Enable Phone Preview</div>
+                <div className="text-sm text-gray-500">Simulate device viewport inside a phone frame.</div>
+              </div>
+              <Switch checked={showPreview} onCheckedChange={(v)=>setShowPreview(v)} />
+            </div>
             {showPreview && (
               <div className="space-y-4">
-                <div className="flex gap-2 items-center flex-wrap">
-                  <Button className="bg-gray-900 hover:bg-gray-800" onClick={startIncognitoLogin}>Incognito Login</Button>
+                <div className="flex gap-2 items-center">
+                  <Input value={previewUrl} onChange={(e)=>setPreviewUrl(e.target.value)} placeholder="https://your-app/#/pages/AuthKick" />
+                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/AuthKick')}>Open Login (Google)</Button>
+                  <Button variant="outline" onClick={()=>setPreviewUrl(window.location.origin + '/#/pages/Dashboard')}>App Dashboard</Button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -177,8 +201,11 @@ export default function AndroidEmulator() {
                   </div>
                 </div>
 
+                <div className="flex gap-2">
+                  <Button onClick={()=>setPreviewUrl((u)=>{ try { const base = u.startsWith('http') ? u : (new URL(u, window.location.origin)).toString(); const url = new URL(base); url.searchParams.set('code','demo'); url.searchParams.set('state','demo'); return url.toString(); } catch { return u + (u.includes('?')?'&':'?') + 'code=demo&state=demo'; } })}>Simulate OAuth in Preview</Button>
+                </div>
 
-                <PhonePreview url={`${previewUrl}${previewUrl.includes('?') ? '&' : '?'}b=${bust}`} width={dimW} height={dimH} incognito={incognito} />
+                <PhonePreview url={previewUrl} width={dimW} height={dimH} />
               </div>
             )}
           </CardContent>
@@ -186,16 +213,7 @@ export default function AndroidEmulator() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Fake WhatsApp (Emulator)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FakeWhatsApp />
-          </CardContent>
-        </Card>
-
-        <Card>
-           <CardHeader>
-             <CardTitle>Environment Info</CardTitle>
+            <CardTitle>Environment Info</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-gray-700 space-y-1">
             <div><span className="font-medium">User-Agent:</span> {navigator.userAgent}</div>

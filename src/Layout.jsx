@@ -90,9 +90,6 @@ const AppLayout = ({ children, currentPageName }) => {
 
   // Fast boot: hydrate user from cache, but keep authLoading true until verified to avoid 403 storms
   useEffect(() => {
-    // Do not hydrate from cache inside embedded previews to avoid phantom admin sessions
-    const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-    if (inIframe) return;
     if (user) return;
     try {
       const s = localStorage.getItem('b44_user_cache');
@@ -111,29 +108,25 @@ const AppLayout = ({ children, currentPageName }) => {
   };
 
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
-          useEffect(() => {
-            const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-            if (inIframe) return;
-            const path = location.pathname.toLowerCase();
-            if (window.location.hash && window.location.hash.startsWith('#/pages/WelcomePublic')) return;
-            if (path === '/welcome') {
-              const target = '/#/pages/WelcomePublic';
-              if (window.location.href.indexOf(target) === -1) {
-                window.location.replace(target);
-              }
-              return; // prevent further redirects on this vanity route
-            }
-          }, [location.pathname]);
+  useEffect(() => {
+    const path = location.pathname.toLowerCase();
+    if (window.location.hash && window.location.hash.startsWith('#/pages/WelcomePublic')) return;
+    if (path === '/welcome') {
+      const target = '/#/pages/WelcomePublic';
+      if (window.location.href.indexOf(target) === -1) {
+        window.location.replace(target);
+      }
+      return; // prevent further redirects on this vanity route
+    }
+  }, [location.pathname]);
 
   // Redirect unauthenticated visitors at root to the public Welcome page (preserve ?preview=1)
-          // Do not override when a hash-based page is already specified; skip entirely in incognito
-          useEffect(() => {
-            const currentPath = location.pathname;
-            const params = new URLSearchParams(window.location.search);
-            const preview = params.get('preview');
-            const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-            if (inIframe) return; // never redirect inside embedded preview
-            if (isIncognito) return; // never redirect in incognito
+  // Do not override when a hash-based page is already specified; skip entirely in incognito
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    const preview = params.get('preview');
+    if (isIncognito) return; // never redirect in incognito
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
     }
@@ -249,12 +242,6 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   useEffect(() => {
-    // Never auto-auth inside embedded previews (e.g., PhonePreview in AndroidEmulator)
-    const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-    if (inIframe) {
-      setAuthLoading(false);
-      return;
-    }
     if (
       currentPageName !== 'OrderDetails' &&
       currentPageName !== 'WorkerPortal' &&
@@ -287,67 +274,53 @@ const AppLayout = ({ children, currentPageName }) => {
   }, [currentPageName, location.search]);
 
   // Consolidated OAuth return stabilizer (older Android/Chrome safe)
-          useEffect(() => {
-            try {
-              const params = new URLSearchParams(window.location.search);
-              const oauthBack = params.has('code') || params.has('state');
-              // Avoid double-handling: let the Welcome-specific effect handle it, or if we're already on OAuthCallback
-              if (!oauthBack) return;
-              if (currentPageName === 'Welcome') return;
-              if ((location.pathname || '').includes('OAuthCallback')) return;
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const oauthBack = params.has('code') || params.has('state');
+      // Avoid double-handling: let the Welcome-specific effect handle it, or if we're already on OAuthCallback
+      if (!oauthBack) return;
+      if (currentPageName === 'Welcome') return;
+      if ((location.pathname || '').includes('OAuthCallback')) return;
+      if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
+      if (sessionStorage.getItem('b44_oauth_finalized') === '1') return;
 
-              // New guards: allow OAuth handling inside emulator iframe (PreviewLogin/OAuthCallback/incog)
-              const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-              const allowIframe = (currentPageName === 'OAuthCallback' || currentPageName === 'PreviewLogin' || params.get('incog') === '1' || params.get('embed') === '1');
-              if (inIframe && !allowIframe) return;
+      const forceHash = localStorage.getItem('b44_emulate_force_hash') === '1';
+      const disableHistory = localStorage.getItem('b44_emulate_disable_history') === '1';
+      sessionStorage.setItem('b44_oauth_in_progress', '1');
+      sessionStorage.setItem('b44_oauth_finalized', '1');
 
-              const qs = window.location.search || '';
-              const lastQs = sessionStorage.getItem('b44_last_oauth_qs') || '';
-              if (lastQs === qs) return; // already handled this return once
-              sessionStorage.setItem('b44_last_oauth_qs', qs);
-
-              if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
-              if (sessionStorage.getItem('b44_oauth_finalized') === '1') return;
-
-              const forceHash = localStorage.getItem('b44_emulate_force_hash') === '1';
-              const disableHistory = localStorage.getItem('b44_emulate_disable_history') === '1';
-              sessionStorage.setItem('b44_oauth_in_progress', '1');
-              sessionStorage.setItem('b44_oauth_finalized', '1');
-
-              (async () => {
-                try {
-                  // Retry auth a few times (slow WebViews)
-                  for (let i = 0; i < 5; i++) {
-                    const authed = await base44.auth.isAuthenticated();
-                    if (authed) break;
-                    await new Promise(r => setTimeout(r, 400 * Math.pow(1.5, i)));
-                  }
-                } catch {}
-                if (!disableHistory) { try { window.history.replaceState({}, '', location.pathname); } catch {} }
-                const target = forceHash ? ('/#/pages/OAuthCallback' + qs) : (createPageUrl('OAuthCallback') + qs);
-                // Primary redirect to lightweight OAuth finalizer page (use replace to avoid history loop)
-                window.location.replace(target);
-                // Hash fallback for older WebViews/Chrome when not forcing already
-                if (!forceHash) {
-                  setTimeout(() => {
-                    if (!(location.pathname || '').includes('OAuthCallback')) {
-                      window.location.replace('/#/pages/OAuthCallback' + qs);
-                    }
-                  }, 1200);
-                }
-                // Clear flags after a short grace period
-                setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); } catch {} }, 4000);
-                setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_finalized'); } catch {} }, 15000);
-              })();
-            } catch {}
-          }, [location.search, currentPageName]);
+      (async () => {
+        try {
+          // Retry auth a few times (slow WebViews)
+          for (let i = 0; i < 5; i++) {
+            const authed = await base44.auth.isAuthenticated();
+            if (authed) break;
+            await new Promise(r => setTimeout(r, 400 * Math.pow(1.5, i)));
+          }
+        } catch {}
+        if (!disableHistory) { try { window.history.replaceState({}, '', location.pathname); } catch {} }
+        const target = forceHash ? ('/#/pages/OAuthCallback' + window.location.search) : (createPageUrl('OAuthCallback') + window.location.search);
+        // Primary redirect to lightweight OAuth finalizer page (use replace to avoid history loop)
+        window.location.replace(target);
+        // Hash fallback for older WebViews/Chrome when not forcing already
+        if (!forceHash) {
+          setTimeout(() => {
+            if (!(location.pathname || '').includes('OAuthCallback')) {
+              window.location.replace('/#/pages/OAuthCallback' + window.location.search);
+            }
+          }, 1200);
+        }
+        // Clear flags after a short grace period
+        setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_in_progress'); } catch {} }, 4000);
+        setTimeout(() => { try { sessionStorage.removeItem('b44_oauth_finalized'); } catch {} }, 15000);
+      })();
+    } catch {}
+  }, [location.search, currentPageName]);
 
         // Post-login fallback (WebView/APK) – ensure we land on Dashboard after OAuth
         useEffect(() => {
           try {
-            const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-            const allowIframe = (currentPageName === 'OAuthCallback' || currentPageName === 'PreviewLogin');
-            if (inIframe && !allowIframe) return;
             const params = new URLSearchParams(window.location.search);
             const oauthBack = params.has('code') || params.has('state');
             const hasHashTarget = window.location.hash && window.location.hash.startsWith('#/pages/');
@@ -754,8 +727,7 @@ const AppLayout = ({ children, currentPageName }) => {
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
     currentPageName === 'LoginHelper' ||
-    currentPageName === 'AuthKick' ||
-    currentPageName === 'PreviewLogin'
+    currentPageName === 'AuthKick'
   ) {
     return <>{children}</>;
   }

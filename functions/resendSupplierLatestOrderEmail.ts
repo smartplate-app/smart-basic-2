@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     const orderNumberHint = (body?.orderNumber || '').trim();
 
     if (!rawSupplier && !orderNumberHint) return Response.json({ error: 'supplierName or orderNumber is required' }, { status: 400 });
-    // No direct toEmail required; using order.supplier_email policy
+    if (!toEmail) return Response.json({ error: 'toEmail is required' }, { status: 400 });
 
     const norm = (s) => (s || '').toString().trim().toLowerCase();
 
@@ -76,7 +76,8 @@ Deno.serve(async (req) => {
 
     // 3) Send email using existing sender (adds CC to admin, Reply-To, Gmail connector)
     const sendRes = await base44.asServiceRole.functions.invoke('sendOrderEmail', {
-      orderId: targetOrder.id
+      orderId: targetOrder.id,
+      to: toEmail
     });
 
     const ok = sendRes?.status >= 200 && sendRes?.status < 300 && !!sendRes?.data && sendRes?.data?.success !== false;
@@ -92,7 +93,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      to: targetOrder.supplier_email || null,
+      to: toEmail,
       supplier: rawSupplier || targetOrder.supplier_name,
       order_id: targetOrder.id,
       order_number: targetOrder.order_number || null,

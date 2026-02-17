@@ -37,7 +37,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
   };
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden text-xs md:text-sm">
+    <div className="bg-white rounded-lg border overflow-hidden">
       <div className={`hidden md:grid grid-cols-8 gap-2 px-4 py-2 text-xs font-semibold text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
         <div>{t('supplier') || 'Supplier'}</div>
         <div>{t('order_number') || 'Order #'}</div>
@@ -60,7 +60,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
           receipts.map((r) => (
             <div
               key={r.id}
-              className={`px-3 py-2 flex flex-col md:grid md:grid-cols-8 md:items-center gap-1 md:gap-2 leading-tight ${isRTL ? 'text-right' : 'text-left'}`}
+              className={`px-4 py-3 flex flex-col md:grid md:grid-cols-8 md:items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
             >
               {/* Supplier + items count (if any) */}
               <div>

@@ -41,15 +41,15 @@ export default function ReceiptCard({ receipt, onEdit }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
-      <Card className="hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="p-3 md:p-4 pb-2">
+      <Card className="hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-bold text-base md:text-lg text-gray-900">
+                <h3 className="font-bold text-lg text-gray-900">
                   {t('receipt')} #{receipt.order_number}
                 </h3>
-                <Badge className={`${status.color} border flex items-center gap-1 text-[10px] md:text-xs px-1.5 py-0.5`}>
+                <Badge className={`${status.color} border flex items-center gap-1`}>
                   <StatusIcon className="w-3 h-3" />
                   {status.label}
                 </Badge>
@@ -61,11 +61,11 @@ export default function ReceiptCard({ receipt, onEdit }) {
                 )}
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Building2 className="w-4 h-4" />
                   <span>{t('supplier')}: {receipt.supplier_name}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="w-4 h-4" />
                   <span>{t('received_date')}: {new Date(receipt.received_date).toLocaleDateString('he-IL')}</span>
                 </div>
@@ -83,16 +83,16 @@ export default function ReceiptCard({ receipt, onEdit }) {
             )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 p-3 md:p-4 pt-0">
+        <CardContent className="space-y-3">
           {receipt.verified_items && receipt.verified_items.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Package className="w-4 h-4 text-green-500" />
                 {t('items')} ({receipt.verified_items.length}):
               </div>
-              <div className="bg-gray-50 rounded-lg p-2 space-y-0.5 max-h-24 md:max-h-32 overflow-y-auto">
+              <div className="bg-gray-50 rounded-lg p-3 space-y-1 max-h-32 overflow-y-auto">
                 {receipt.verified_items.map((item, index) => (
-                  <div key={index} className="text-xs md:text-sm">
+                  <div key={index} className="text-sm">
                     <div className="flex justify-between">
                       <span className={item.has_issue ? 'text-red-600 font-medium' : 'text-gray-700'}>
                         {item.item_name}
@@ -112,7 +112,7 @@ export default function ReceiptCard({ receipt, onEdit }) {
             <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-blue-800">{t('invoice_total')}:</span>
-                <span className="text-base md:text-lg font-bold text-blue-700">{receipt.invoice_total.toFixed(2)}</span>
+                <span className="text-lg font-bold text-blue-700">{receipt.invoice_total.toFixed(2)}</span>
               </div>
               {receipt.invoice_number && (
                 <div className="text-xs text-blue-600 mt-1">
@@ -123,7 +123,7 @@ export default function ReceiptCard({ receipt, onEdit }) {
           )}
 
           {receipt.notes && (
-            <div className="p-2 md:p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
               <p className="text-sm text-amber-800">{receipt.notes}</p>
             </div>
           )}
@@ -136,7 +136,7 @@ export default function ReceiptCard({ receipt, onEdit }) {
                   href={imageUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border border-gray-200 hover:border-green-500 transition-colors"
+                  className="w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-green-500 transition-colors"
                 >
                   {isPdf(imageUrl) ? (
                     <PdfThumbnail url={imageUrl} size={80} />

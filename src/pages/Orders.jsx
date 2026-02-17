@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Calendar } from "lucide-react";
+import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "../components/LanguageProvider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
@@ -50,22 +49,15 @@ export default function OrdersPage() {
     return map[u] || u;
   };
 
-  // Emulator flags (set by AndroidEmulator page)
-  const isEmulator = (() => { try { return localStorage.getItem('b44_emulator_mode') === '1'; } catch { return false; } })();
-  const emulatorAutoSendWA = (() => { try { return localStorage.getItem('b44_emulator_autosend_wa') === '1'; } catch { return false; } })();
-
 
   const [isViewer, setIsViewer] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [datePreset, setDatePreset] = useState('all');
   const startYRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [showReceiveForm, setShowReceiveForm] = useState(false);
   const [receiveOrder, setReceiveOrder] = useState(null);
-  const [activeTab, setActiveTab] = useState('orders');
   // Send options chooser
   const [showSendOptions, setShowSendOptions] = useState(false);
   const [sendOptionOrder, setSendOptionOrder] = useState(null);
@@ -688,34 +680,55 @@ export default function OrdersPage() {
 
   const handleSendNow = async (order) => {
     if (!order) return;
-    // Open the Preview modal (single place to choose Email / WhatsApp / Download)
-    setPreviewOrder(order);
+    // Always show chooser: Email or WhatsApp
+    setSendOptionOrder(order);
+    setShowSendOptions(true);
   };
 
   // Desktop-only direct WhatsApp send from preview (mobile unchanged)
   const sendWhatsAppDirect = async (order) => {
     if (!order) return;
-    const ua = navigator.userAgent || '';
-    const isAndroid = /Android/i.test(ua);
-    const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
-    const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-    // No pre-open tabs on any device to avoid about:blank
+    const isAndroid = /Android/i.test(navigator.userAgent || '');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
     let preOpenedWindow = null;
-
-    // Launch share/WA without opening blank tabs
-    try { sendOrderToWhatsApp(order); } catch (_) {}
-    setPreviewOrder(null);
-
-
+    if (!isAndroid && !isIOS) {
+      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
+    }
+    try {
+      const { data } = await base44.functions.invoke('markOrderSent', {
+        orderId: order.id,
+        orderNumber: order.order_number
+      });
+      const updated = data?.order || {};
+      setOrders(prev => prev.map(o => {
+        if (o.id !== (updated.id || order.id)) return o;
+        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
+      setPreviewOrder(null);
+      await loadData(user);
+    } catch (e) {
+      console.warn('markOrderSent failed, proceeding with WA fallback (direct):', e?.message || e);
+      setOrders(prev => prev.map(o => {
+        if (o.id !== order.id) return o;
+        const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
+      setPreviewOrder(null);
+      setTimeout(() => {
+        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number })
+          .catch(() => {});
+      }, 1200);
+    }
   };
 
   const sendOrderToWhatsApp = async (order, opts = {}) => {
-    if (isEmulator && emulatorAutoSendWA) { return; }
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
-    const ua = navigator.userAgent || '';
-    const isAndroid = /Android/i.test(ua);
-    const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(navigator.userAgent || '');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
     const preOpened = opts?.preOpenedWindow || null;
 
     // Normalize phone for WhatsApp (supports unsaved contacts)
@@ -728,7 +741,12 @@ export default function OrdersPage() {
       return p; // E.164 without '+' if possible
     })();
 
-    // Web endpoints intentionally unused: app does not support WhatsApp Web
+    const waWeb = phone
+      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    const apiUrl = phone
+      ? `https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     const deeplink = phone
       ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`
       : `whatsapp://send?text=${encodeURIComponent(text)}`;
@@ -736,79 +754,93 @@ export default function OrdersPage() {
       ? `intent://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
       : `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
 
-    const waWeb = phone
-      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
-      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    // Prepare a shareable JPG (used for native share or clipboard fallback)
+    const temp = document.createElement('div');
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    temp.style.top = '0';
+    temp.style.width = '800px';
+    temp.style.background = 'white';
+    temp.style.padding = '32px';
+    temp.style.fontFamily = 'system-ui, sans-serif';
+    temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
+    temp.innerHTML = `
+      <div style="background: linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:24px;border-radius:16px 16px 0 0;margin:-32px -32px 16px -32px;text-align:center;">
+        <div style="font-size:24px;font-weight:800;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
+        <div style="opacity:.9;margin-top:4px;">${t('supplier') || 'Supplier'}: ${order.supplier_name || ''}</div>
+      </div>
+      <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
+        <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
+        ${order.restaurant_address ? `<div style=\"color:#334155\">${order.restaurant_address}</div>` : ''}
+        ${order.delivery_date ? `<div style=\"margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;\">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
+      </div>
+      <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
+        <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
+          <tbody>
+            ${(order.items || []).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    document.body.appendChild(temp);
 
+    let file = null;
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+      if (blob) file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
+    } catch (e) {
+      console.warn('[WhatsApp Share] Failed to render image, will proceed with text only:', e?.message || e);
+    } finally {
+      try { document.body.removeChild(temp); } catch {}
+    }
 
-
-    // 0) Immediate native share sheet on mobile/tablet (text-only)
-    const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
-    if (isMobileOrTablet && navigator.share) {
-      // Try to generate a lightweight JPG of the order and attach it to the share sheet
-      let file = null;
+    // 1) Native share with file attachment when supported (auto-attaches in WhatsApp app)
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        const temp = document.createElement('div');
-        temp.style.position = 'fixed';
-        temp.style.left = '-9999px';
-        temp.style.top = '0';
-        temp.style.width = '1024px';
-        temp.style.background = 'white';
-        temp.style.padding = '24px';
-        temp.style.fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
-        temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
-        const maxItems = 12;
-        temp.innerHTML = `
-          <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:18px;border-radius:14px 14px 0 0;margin:-24px -24px 12px -24px;text-align:center;">
-            <div style="font-size:20px;font-weight:800;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
-            <div style="opacity:.9;margin-top:4px;">${t('supplier') || 'Supplier'}: ${order.supplier_name || ''}</div>
-          </div>
-          <div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:8px 0;">
-            <div style="font-weight:700;color:#0f172a;margin-bottom:6px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
-            ${order.delivery_date ? `<div style=\"margin-top:4px;color:#92400e;background:#fef3c7;padding:6px 10px;border-radius:8px;display:inline-block;\">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
-          </div>
-          <div style="border:1px solid #d1fae5;border-radius:10px;padding:12px;margin:8px 0;">
-            <div style="font-weight:800;color:#166534;margin-bottom:6px;">${t('items') || 'Items'}</div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px;">
-              <thead><tr style="background:#f9fafb"><th style="padding:6px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:6px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:6px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:6px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
-              <tbody>
-                ${(order.items || []).slice(0, maxItems).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:6px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:6px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}</td><td style=\"padding:6px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:6px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
-                ${(order.items || []).length > maxItems ? `<tr><td colspan=\"4\" style=\"padding:6px;color:#6b7280;font-style:italic;\">+${(order.items || []).length - maxItems} ${t('more') || 'more'}...</td></tr>` : ''}
-              </tbody>
-            </table>
-          </div>
-        `;
-        document.body.appendChild(temp);
-        const { default: html2canvas } = await import('html2canvas');
-        const canvas = await html2canvas(temp, { scale: 2.8, backgroundColor: '#ffffff', logging: false, useCORS: true });
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 1.0));
-        if (blob) file = new File([blob], `order-${ensuredNumber}.png`, { type: 'image/png' });
-        try { document.body.removeChild(temp); } catch {}
-      } catch (e) {
-        console.warn('[WhatsApp Share] JPG render skipped:', e?.message || e);
-      }
-
-      const canFileShare = !!(file && navigator.canShare && (()=>{ try { return navigator.canShare({ files: [file] }); } catch { return false; } })());
-      try {
-        if (canFileShare) {
-          await navigator.share({ files: [file], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
-          return;
-        }
-      } catch (_) { /* fall through */ }
-
-      // Best effort: copy the image so the user can paste it inside WhatsApp after the deep link opens
-      if (file && navigator.clipboard && 'write' in navigator.clipboard) {
-        try {
-          // @ts-ignore ClipboardItem global
-          await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
-        } catch (_) { /* ignore */ }
-      }
-
-      // Fallback: open the share sheet with text only
-      try {
-        await navigator.share({ title: `${t('order_preview') || 'Order'} #${ensuredNumber}`, text });
+        await navigator.share({ files: [file], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
         return;
-      } catch (_) { /* continue to next strategies */ }
+      } catch (_) {
+        // continue to deep link/web
+      }
+    }
+
+    // 2) Best-effort: copy image to clipboard so user can Paste in WhatsApp (Web/App)
+    let copiedImage = false;
+    let copiedText = false;
+    if (file && navigator.clipboard && 'write' in navigator.clipboard) {
+      try {
+        // @ts-ignore ClipboardItem may not be typed in some environments
+        await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
+        copiedImage = true;
+      } catch (_) {
+        // ignore and try copying text instead
+      }
+    }
+    if (!copiedImage && navigator.clipboard && 'writeText' in navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        copiedText = true;
+      } catch (_) {
+        // no clipboard available
+      }
+    }
+
+    // Older devices: if neither image nor text were copied, offer opening image for manual save
+    if (!copiedImage && !copiedText && file) {
+      try {
+        const msg = language === 'he'
+          ? 'במכשירים ישנים שיתוף תמונה אוטומטי לא נתמך. לפתוח את התמונה בלשונית חדשה לשמירה ידנית?'
+          : 'On older devices, automatic image sharing may not be supported. Open the image in a new tab to save manually?';
+        if (window.confirm(msg)) {
+          const objUrl = URL.createObjectURL(file);
+          window.open(objUrl, '_blank');
+          setTimeout(() => URL.revokeObjectURL(objUrl), 10000);
+        }
+      } catch (_) { /* ignore */ }
     }
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
@@ -820,29 +852,12 @@ export default function OrdersPage() {
       document.addEventListener('visibilitychange', onHide, { once: true });
 
       const openLink = (url) => {
-        // Prefer top-level navigation on iOS/iPadOS
-        if (isIOS) {
-          try {
-            if (window.top && window.top !== window) {
-              window.top.location.href = url;
-              return;
-            }
-          } catch {}
-          if (inIframe) {
-            // In preview iframe on iOS, avoid about:blank; open WhatsApp Web instead
-            try { window.open(waWeb, '_blank'); } catch {}
-            return;
-          }
-          try { window.location.href = url; return; } catch {}
-        }
-
-        // If we have a pre-opened window, always use it (works around iframe/popup limits)
-        if (preOpened && !preOpened.closed) {
-          try { preOpened.location.href = url; preOpened.focus(); return; } catch (_) {}
-        }
-
         if (!isAndroid && !isIOS) {
-          // Desktop: open in new tab (OS should route whatsapp:// to the native app)
+          // Use pre-opened tab if available to avoid blockers
+          if (preOpened && !preOpened.closed) {
+            try { preOpened.location.href = url; preOpened.focus(); return; } catch (_) {}
+          }
+          // Programmatic anchor click (safer in sandboxes)
           const a = document.createElement('a');
           a.href = url;
           a.target = '_blank';
@@ -852,7 +867,7 @@ export default function OrdersPage() {
           a.remove();
           return;
         }
-        // Android fallthrough: direct navigation
+        // Mobile: prefer deep link navigation; fallback to new tab if blocked
         try { window.location.href = url; } catch { window.open(url, '_blank'); }
       };
 
@@ -864,47 +879,24 @@ export default function OrdersPage() {
       tryNext(0);
     };
 
-    // Desktop/any: attempt Web Share with attached PNG as well (if supported)
-    try {
-      let file2 = null;
-      const temp2 = document.createElement('div');
-      temp2.style.position = 'fixed'; temp2.style.left = '-9999px'; temp2.style.top = '0';
-      temp2.style.width = '1024px'; temp2.style.background = 'white'; temp2.style.padding = '24px';
-      temp2.style.fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
-      temp2.style.direction = (language === 'he' ? 'rtl' : 'ltr');
-      const maxItems2 = 12;
-      temp2.innerHTML = `
-        <div style="font-weight:800;margin-bottom:8px">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
-        <div>${t('supplier') || 'Supplier'}: ${order.supplier_name || ''}</div>
-      `;
-      document.body.appendChild(temp2);
-      const { default: html2canvas } = await import('html2canvas');
-      const canvas2 = await html2canvas(temp2, { scale: 2.8, backgroundColor: '#ffffff', logging: false, useCORS: true });
-      const blob2 = await new Promise((resolve) => canvas2.toBlob(resolve, 'image/png', 1.0));
-      if (blob2) file2 = new File([blob2], `order-${ensuredNumber}.png`, { type: 'image/png' });
-      try { document.body.removeChild(temp2); } catch {}
-      if (file2 && navigator.share && navigator.canShare && navigator.canShare({ files: [file2] })) {
-        await navigator.share({ files: [file2], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
-        return;
-      }
-    } catch (_) { /* continue */ }
 
-    const isDesktop = !(isAndroid || isIOS);
-    if (isDesktop) {
-      // Desktop only: allow WhatsApp Web text handoff (no links on mobile/tablet)
-      try {
-        const a = document.createElement('a');
-        a.href = waWeb;
-        a.target = '_blank';
-        a.rel = 'noreferrer';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } catch (_) { try { window.open(waWeb, '_blank'); } catch {} }
+    if (isAndroid) {
+      tryOpenChain([deeplink, apiUrl, waWeb, androidIntent]);
+    } else if (isIOS) {
+      tryOpenChain([deeplink, waWeb]);
+    } else {
+      tryOpenChain([waWeb]);
     }
 
     // Mobile-only hint; no desktop popups
-
+    if ((isAndroid || isIOS) && (copiedImage || copiedText)) {
+      setTimeout(() => {
+        const msg = copiedImage
+          ? (t('image_copied_paste_in_whatsapp') || 'The image was copied. Paste in WhatsApp.')
+          : (t('text_copied_paste_in_whatsapp') || 'Text copied. Paste in WhatsApp.');
+        try { alert(msg); } catch {}
+      }, 300);
+    }
   };
 
   const handleConfirmSendEmail = async () => {
@@ -915,31 +907,49 @@ export default function OrdersPage() {
     setSendOptionOrder(null);
   };
 
-  const handleConfirmSendWhatsApp = async (orderOverride) => {
-    const order = orderOverride || sendOptionOrder;
-    if (!order) return;
+  const handleConfirmSendWhatsApp = async () => {
+    if (!sendOptionOrder) return;
+    const order = sendOptionOrder;
     setShowSendOptions(false);
-
-    // Launch share/WhatsApp first to keep iOS/iPadOS gesture alive
-    try { sendOrderToWhatsApp(order); } catch (_) {}
-    setPreviewOrder(null);
-    setSendOptionOrder(null);
-  };
-
-  // Resend via guestroom mailbox (Gmail connector)
-  const resendViaGuestroom = async (order) => {
+    // Pre-open a tab synchronously to avoid popup blockers and iframe embedding (Firefox/Preview)
+    const isAndroid = /Android/i.test(navigator.userAgent || '');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    let preOpenedWindow = null;
+    if (!isAndroid && !isIOS) {
+      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
+    }
     try {
-      const { data } = await base44.functions.invoke('resendTempoTestEmail', {
-        target_email: 'guestroom@smartplate.org',
-        order_number: order?.order_number || ''
+      const { data } = await base44.functions.invoke('markOrderSent', {
+        orderId: order.id,
+        orderNumber: order.order_number
       });
-      if (data?.success) {
-        alert('Email sent via guestroom mailbox');
-      } else {
-        alert('Send failed: ' + (JSON.stringify(data) || 'Unknown error'));
-      }
+      const updated = data?.order || {};
+      setOrders(prev => prev.map(o => {
+        if (o.id !== (updated.id || order.id)) return o;
+        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
+      setPreviewOrder(null);
+      await loadData(user);
     } catch (e) {
-      alert('Send failed: ' + (e?.message || 'Unknown error'));
+      // Preview sandbox sometimes returns 404 for freshly deployed functions.
+      // Fallback: proceed to WhatsApp and update UI optimistically.
+      console.warn('markOrderSent failed, proceeding with WA fallback:', e?.message || e);
+      setOrders(prev => prev.map(o => {
+        if (o.id !== order.id) return o;
+        const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
+      setPreviewOrder(null);
+      // Optionally retry in background without blocking UX
+      setTimeout(() => {
+        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number })
+          .catch(() => {});
+      }, 1200);
+    } finally {
+      setSendOptionOrder(null);
     }
   };
 
@@ -1126,12 +1136,6 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-4 w-full justify-start">
-            <TabsTrigger value="orders">{language === 'he' ? 'הזמנות' : 'Orders'}</TabsTrigger>
-            <TabsTrigger value="report">{language === 'he' ? 'דוח הזמנות לפריט' : 'Orders per Item'}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="orders">
         {/* Mobile Filters Drawer trigger */}
         <div className="md:hidden mb-4">
           <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
@@ -1214,45 +1218,79 @@ export default function OrdersPage() {
                 className="h-11 md:h-10 rounded-lg"
               />
               <div className="flex items-center gap-2">
-                <Select
-                  value={datePreset}
-                  onValueChange={(v) => {
-                    setDatePreset(v);
-                    const d = new Date();
-                    const y = d.getFullYear();
-                    const m = d.getMonth();
-                    if (v === 'custom') { setShowDatePicker(true); return; }
-                    if (v === 'all') { setDateStart(''); setDateEnd(''); return; }
-                    if (v === 'week') {
-                      const start = new Date(d); start.setDate(d.getDate() - d.getDay());
-                      const end = new Date(start); end.setDate(start.getDate() + 6);
-                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
-                    }
-                    if (v === 'month') {
-                      const start = new Date(y, m, 1); const end = new Date(y, m + 1, 0);
-                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
-                    }
-                    if (v === 'year') {
-                      const start = new Date(y, 0, 1); const end = new Date(y, 11, 31);
-                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-11 md:h-10 rounded-lg w-56">
-                    <SelectValue placeholder={language === 'he' ? 'טווח תאריכים' : 'Date range'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{language === 'he' ? 'כל התאריכים' : 'All dates'}</SelectItem>
-                    <SelectItem value="week">{language === 'he' ? 'שבוע נוכחי' : 'Current week'}</SelectItem>
-                    <SelectItem value="month">{language === 'he' ? 'חודש נוכחי' : 'Current month'}</SelectItem>
-                    <SelectItem value="year">{language === 'he' ? 'שנה נוכחית' : 'Current year'}</SelectItem>
-                    <SelectItem value="custom">{language === 'he' ? 'טווח מותאם…' : 'Custom range…'}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 md:h-10 rounded-lg" />
+                <span className="text-gray-500">–</span>
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 md:h-10 rounded-lg" />
               </div>
             </div>
 
-        {/* Mobile View */}
+        {/* Items Quantity Report (aggregated across orders) */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+              <div>
+                <div className="text-base font-semibold text-gray-800">{t('reports_title') || 'Monthly Report'}</div>
+                <div className="text-xs text-gray-500">{t('report_for_month_year', { month: (reportMonth || '').split('-')[1], year: (reportMonth || '').split('-')[0] }) || ''}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-600">{safeT('month', 'חודש', 'Month')}</label>
+                <Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} className="h-9 w-44" />
+                <Button variant="outline" className="h-9" onClick={handleGenerateAfcSheet}>{safeT('generate_afc_sheet','צור גיליון AFC','Generate AFC Sheet')}</Button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-6 mb-4">
+              <div>
+                <div className="text-sm text-gray-600">{t('total_orders')}</div>
+                <div className="text-xl font-bold">{reportOrders.length}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}</div>
+                <div className="text-xl font-bold">₪{(itemsSummary.totalCost || 0).toFixed(2)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-600">{t('total_item_quantity') || t('quantity')}</div>
+                <div className="text-xl font-bold">{(itemsSummary.totalQty || 0).toFixed(2)}</div>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <Input
+                value={itemSearch}
+                onChange={(e) => setItemSearch(e.target.value)}
+                placeholder={safeT('search', 'חיפוש פריטים...', 'Search items...')}
+                className="h-9 max-w-sm"
+              />
+            </div>
+
+            <div className="overflow-auto border rounded-md">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('item', 'פריט', 'Item')}</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('quantity', 'כמות', 'Quantity')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredItemRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={2} className="px-3 py-6 text-center text-gray-500">{t('no_items_to_display_items') || t('no_items_to_display')}</td>
+                    </tr>
+                  ) : (
+                    filteredItemRows.map((row) => (
+                      <tr key={row.name} className="border-t">
+                        <td className="px-3 py-2 text-right text-gray-800">{row.name}</td>
+                        <td className="px-3 py-2 text-right font-semibold">{row.quantity.toFixed(2)} {unitLabel(row.unit)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+         {/* Mobile View */}
         <div className="md:hidden space-y-4">
           {loading ? (
             <div className="text-center py-12">
@@ -1306,28 +1344,27 @@ export default function OrdersPage() {
                     <div className="flex gap-2 pt-2">
                       {!isViewer && order.supplier_phone && (
                         <button
-                              onClick={() => handleSendNow(order)}
-                              className="flex-1 text-white text-base font-medium rounded-lg px-4 py-3 flex items-center justify-center"
-                              style={{ backgroundColor: '#25D366' }}
-                            >
+                          onClick={() => handleResend(order)}
+                          className="flex-1 text-white text-base font-medium rounded-lg px-4 py-3 flex items-center justify-center"
+                          style={{ backgroundColor: '#25D366' }}
+                        >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    ...
+...
                           </svg>
                           {safeT('whatsapp','וואטסאפ','WhatsApp')}
                         </button>
-                      )}
-
-                      {!isViewer && order.status === 'sent' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                          className="border-green-300 text-green-700 hover:bg-green-50"
-                        >
-                          {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
-                        </Button>
-                      )}
-                      {!isViewer && (
+                                                        )}
+                                                        {!isViewer && order.status === 'sent' && (
+                                                          <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                                                            className="border-green-300 text-green-700 hover:bg-green-50"
+                                                          >
+                                                            {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
+                                                          </Button>
+                                                        )}
+                                                        {!isViewer && (
                         <>
                           <Button
                             variant="outline"
@@ -1401,41 +1438,9 @@ export default function OrdersPage() {
                 className="h-11 rounded-lg"
               />
               <div className="flex items-center gap-2">
-                <Select
-                  value={datePreset}
-                  onValueChange={(v) => {
-                    setDatePreset(v);
-                    const d = new Date();
-                    const y = d.getFullYear();
-                    const m = d.getMonth();
-                    if (v === 'custom') { setShowDatePicker(true); return; }
-                    if (v === 'all') { setDateStart(''); setDateEnd(''); return; }
-                    if (v === 'week') {
-                      const start = new Date(d); start.setDate(d.getDate() - d.getDay());
-                      const end = new Date(start); end.setDate(start.getDate() + 6);
-                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
-                    }
-                    if (v === 'month') {
-                      const start = new Date(y, m, 1); const end = new Date(y, m + 1, 0);
-                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
-                    }
-                    if (v === 'year') {
-                      const start = new Date(y, 0, 1); const end = new Date(y, 11, 31);
-                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
-                    }
-                  }}
-                >
-                  <SelectTrigger className="h-11 rounded-lg w-full justify-between">
-                    <SelectValue placeholder={language === 'he' ? 'טווח תאריכים' : 'Date range'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{language === 'he' ? 'כל התאריכים' : 'All dates'}</SelectItem>
-                    <SelectItem value="week">{language === 'he' ? 'שבוע נוכחי' : 'Current week'}</SelectItem>
-                    <SelectItem value="month">{language === 'he' ? 'חודש נוכחי' : 'Current month'}</SelectItem>
-                    <SelectItem value="year">{language === 'he' ? 'שנה נוכחית' : 'Current year'}</SelectItem>
-                    <SelectItem value="custom">{language === 'he' ? 'טווח מותאם…' : 'Custom range…'}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 rounded-lg" />
+                <span className="text-gray-500">–</span>
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg" />
               </div>
               <Button onClick={() => setFiltersOpen(false)} className="w-full">{safeT('apply', 'החל', 'Apply')}</Button>
             </div>
@@ -1524,7 +1529,7 @@ export default function OrdersPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleSendNow(order);
+                                  handleResend(order);
                                 }}
                                 className="text-white text-xs font-medium rounded-md px-3 py-1.5 flex items-center justify-center shadow-sm transition-colors"
                                 style={{
@@ -1539,17 +1544,16 @@ export default function OrdersPage() {
                                 </svg>
                                 {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
                               </button>
-                            )}
-
-                            {!isViewer && order.status === 'sent' && (
-                              <Button
-                                onClick={() => { setReceiveOrder(order); setShowReceiveForm(true); }}
-                                className="flex-1 h-11 rounded-lg text-base bg-green-600 hover:bg-green-700 text-white"
-                              >
-                                {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
-                              </Button>
-                            )}
-                            {!isViewer && (
+                                                      )}
+                                                      {!isViewer && order.status === 'sent' && (
+                                                        <Button
+                                                          onClick={() => { setReceiveOrder(order); setShowReceiveForm(true); }}
+                                                          className="flex-1 h-11 rounded-lg text-base bg-green-600 hover:bg-green-700 text-white"
+                                                        >
+                                                          {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
+                                                        </Button>
+                                                      )}
+                                                      {!isViewer && (
                               <>
                                 <Button
                                   variant="outline"
@@ -1560,9 +1564,9 @@ export default function OrdersPage() {
                                   }}
                                   className="border-gray-300 text-gray-700 hover:bg-gray-100"
                                 >
-                                  <Edit className="w-3 h-3 mr-1" />
-                                  {safeT('edit', 'עריכה', 'Edit')}
-                                </Button>
+                                                                        <Edit className="w-3 h-3 mr-1" />
+                                                                        {safeT('edit', 'עריכה', 'Edit')}
+                                                                      </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1572,9 +1576,9 @@ export default function OrdersPage() {
                                   }}
                                   className="border-red-300 text-red-600 hover:bg-red-50"
                                 >
-                                  <Trash2 className="w-3 h-3 mr-1" />
-                                  {safeT('delete', 'מחק', 'Delete')}
-                                </Button>
+                                                                        <Trash2 className="w-3 h-3 mr-1" />
+                                                                        {safeT('delete', 'מחק', 'Delete')}
+                                                                      </Button>
                               </>
                             )}
                           </div>
@@ -1593,109 +1597,9 @@ export default function OrdersPage() {
             </div>
           )}
         </div>
-          </TabsContent>
-          <TabsContent value="report">
-            {/* Items Quantity Report (aggregated across orders) */}
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-                  <div>
-                    <div className="text-base font-semibold text-gray-800">{t('reports_title') || 'Monthly Report'}</div>
-                    <div className="text-xs text-gray-500">{t('report_for_month_year', { month: (reportMonth || '').split('-')[1], year: (reportMonth || '').split('-')[0] }) || ''}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm text-gray-600">{safeT('month', 'חודש', 'Month')}</label>
-                    <Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} className="h-9 w-44" />
-                    <Button variant="outline" className="h-9" onClick={handleGenerateAfcSheet}>{safeT('generate_afc_sheet','צור גיליון AFC','Generate AFC Sheet')}</Button>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-6 mb-4">
-                  <div>
-                    <div className="text-sm text-gray-600">{t('total_orders')}</div>
-                    <div className="text-xl font-bold">{reportOrders.length}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}</div>
-                    <div className="text-xl font-bold">₪{(itemsSummary.totalCost || 0).toFixed(2)}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600">{t('total_item_quantity') || t('quantity')}</div>
-                    <div className="text-xl font-bold">{(itemsSummary.totalQty || 0).toFixed(2)}</div>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <Input
-                    value={itemSearch}
-                    onChange={(e) => setItemSearch(e.target.value)}
-                    placeholder={safeT('search', 'חיפוש פריטים...', 'Search items...')}
-                    className="h-9 max-w-sm"
-                  />
-                </div>
-
-                <div className="overflow-auto border rounded-md">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('item', 'פריט', 'Item')}</th>
-                        <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('quantity', 'כמות', 'Quantity')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredItemRows.length === 0 ? (
-                        <tr>
-                          <td colSpan={2} className="px-3 py-6 text-center text-gray-500">{t('no_items_to_display_items') || t('no_items_to_display')}</td>
-                        </tr>
-                      ) : (
-                        filteredItemRows.map((row) => (
-                          <tr key={row.name} className="border-t">
-                            <td className="px-3 py-2 text-right text-gray-800">{row.name}</td>
-                            <td className="px-3 py-2 text-right font-semibold">{row.quantity.toFixed(2)} {unitLabel(row.unit)}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
 
-      {/* Date Range Picker Dialog */}
-      <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{language === 'he' ? 'בחר טווח תאריכים' : 'Select Date Range'}</DialogTitle>
-            <DialogDescription>{language === 'he' ? 'בחר תאריך התחלה וסוף או השתמש בקיצורים' : 'Pick start/end dates or use a preset'}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-gray-500">{language === 'he' ? 'מתחיל' : 'Start'}</label>
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500">{language === 'he' ? 'מסתיים' : 'End'}</label>
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} />
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => { const d=new Date(); const day=d.getDay(); const start=new Date(d); start.setDate(d.getDate()-day); const end=new Date(start); end.setDate(start.getDate()+6); setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); setShowDatePicker(false); }}>{language === 'he' ? 'שבוע נוכחי' : 'Current week'}</Button>
-              <Button variant="outline" size="sm" onClick={() => { const d=new Date(); const y=d.getFullYear(); const m=d.getMonth(); const start=new Date(y,m,1); const end=new Date(y,m+1,0); setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); setShowDatePicker(false); }}>{language === 'he' ? 'חודש נוכחי' : 'Current month'}</Button>
-              <Button variant="outline" size="sm" onClick={() => { const d=new Date(); const y=d.getFullYear(); const start=new Date(y,0,1); const end=new Date(y,11,31); setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); setShowDatePicker(false); }}>{language === 'he' ? 'שנה נוכחית' : 'Current year'}</Button>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => { setDateStart(''); setDateEnd(''); setDatePreset('all'); setShowDatePicker(false); }}>{language === 'he' ? 'נקה' : 'Clear'}</Button>
-              <Button onClick={() => { setDatePreset('custom'); setShowDatePicker(false); }} className="bg-gray-900 hover:bg-gray-800 text-white">{language === 'he' ? 'אישור' : 'Apply'}</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Send options chooser (kept for future use; preview is the primary flow) */}
+      {/* Send options chooser */}
       <Dialog open={showSendOptions} onOpenChange={setShowSendOptions}>
         <DialogContent>
           <DialogHeader>
@@ -1714,13 +1618,14 @@ export default function OrdersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Order Preview Modal with 3 actions (Email / WhatsApp / Download) */}
-      <OrderPreviewModal
-        order={previewOrder}
-        isOpen={!!previewOrder}
-        onClose={() => setPreviewOrder(null)}
-      />
-
-      </div>
-      );
-      }
+      {previewOrder && (
+        <OrderPreviewModal
+          order={previewOrder}
+          isOpen={!!previewOrder}
+          onClose={() => setPreviewOrder(null)}
+          onSend={() => { const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || ''); if (isMobile) { handleSendNow(previewOrder); } else { sendWhatsAppDirect(previewOrder); } }}
+        />
+      )}
+    </div>
+  );
+}
