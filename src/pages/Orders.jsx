@@ -891,9 +891,10 @@ export default function OrdersPage() {
       }
     } catch (_) { /* continue */ }
 
-    if (isAndroid) {
+    const allowDeeplink = false;
+    if (allowDeeplink && isAndroid) {
       tryOpenChain([deeplink, androidIntent]);
-    } else if (isIOS) {
+    } else if (allowDeeplink && isIOS) {
       // iOS/iPadOS: native share/app only
       tryOpenChain([deeplink]);
     } else {
