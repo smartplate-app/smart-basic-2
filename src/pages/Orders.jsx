@@ -765,6 +765,10 @@ export default function OrdersPage() {
       ? `intent://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
       : `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
 
+    const waWeb = phone
+      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+
 
     // 0) Immediate native share sheet on mobile/tablet (text-only)
     const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
