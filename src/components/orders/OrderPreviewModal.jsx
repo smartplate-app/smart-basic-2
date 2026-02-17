@@ -19,6 +19,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
   const [frameLoaded, setFrameLoaded] = useState(false);
+  const urlRef = useRef('');
   
   if (!isOpen || !order) return null;
 
@@ -50,7 +51,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     m: effectiveTotal
   };
   const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
-  const urlRef = useRef('');
   if (!urlRef.current) {
     if (order.id) {
       const qs = `id=${order.id}&d=${orderData}`;
