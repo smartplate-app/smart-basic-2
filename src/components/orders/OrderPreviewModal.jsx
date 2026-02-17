@@ -282,12 +282,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           }, 450);
           if (onClose) onClose();
 
-          if (isMobile && navigator.share) {
-            // Use existing generator to create an image and invoke native share
-            handleDownloadImage({ shareOnly: true });
-            return;
-          }
-
         };
 
          return (
