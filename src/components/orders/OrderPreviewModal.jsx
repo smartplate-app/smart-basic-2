@@ -227,9 +227,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         document.body.removeChild(tempContainer);
         // Convert to blob and try to copy to clipboard (improved: JPEG then PNG)
         canvas.toBlob(async (jpegBlob) => {
-        const number = ensuredNumber;
-        const file = new File([jpegBlob], `order-${number}.jpg`, { type: 'image/jpeg' });
+          const number = ensuredNumber;
+          const file = new File([jpegBlob], `order-${number}.jpg`, { type: 'image/jpeg' });
+        }, 'image/jpeg', 0.95);
+        });
 
+        /* removed duplicate catch placement to close .then */
+
+        /* Continue inside updated flow */
+        // OLD block replaced below
+        return;
         const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
 
