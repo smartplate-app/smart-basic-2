@@ -385,7 +385,21 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           const ua = navigator.userAgent || '';
           const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
           const isMobile = /Android|iPhone|iPad|iPod/i.test(ua) || isIOSiPad;
-          const number = fallbackNumber;
+
+          // Ensure order has a number and mark as sent before launching share
+          let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+          try {
+            if (order.id) {
+              await base44.entities.Order.update(order.id, {
+                order_number: ensuredNumber,
+                status: 'sent'
+              });
+              order.order_number = ensuredNumber;
+              order.status = 'sent';
+            }
+          } catch (_) { /* best-effort */ }
+
+          const number = ensuredNumber;
           const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${number}`;
 
           if (isMobile && navigator.share) {
@@ -521,7 +535,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </Button>
         </div>
 
-        <div className="flex-1 bg-gray-100 p-4 overflow-auto" aria-busy={!frameLoaded} aria-live="polite">
+        <div className="flex-1 bg-gray-100 p-4 overflow-auto" aria-busy={!frameLoaded} aria-live="polite" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
             <div className={`${viewMode === 'mobile' ? 'h-[667px]' : 'h-[600px]'} w-full relative`}>
               {!frameLoaded && (
@@ -534,14 +548,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 className="w-full h-full border-0 [image-rendering:auto] [text-rendering:optimizeLegibility]"
                 title={t('order_preview')}
                 sandbox="allow-same-origin allow-scripts"
-                style={{ backgroundColor: '#ffffff', opacity: frameLoaded ? 1 : 0, willChange: 'opacity' }}
+                style={{ backgroundColor: '#ffffff', opacity: frameLoaded ? 1 : 0, willChange: 'opacity', pointerEvents: frameLoaded ? 'auto' : 'none' }}
                 onLoad={() => setFrameLoaded(true)}
               />
             </div>
           </div>
         </div>
 
-        <div className="flex gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0 z-20 pointer-events-auto">
+        <div className="flex gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0 z-30 pointer-events-auto">
           <Button type="button" onClick={onClose} variant="outline">
             {safeT('close','סגור','Close')}
           </Button>
