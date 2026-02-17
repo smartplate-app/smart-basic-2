@@ -266,7 +266,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 
           if (inIframe) {
-            window.open(waWebApi, '_blank', 'noopener,noreferrer');
+            const uaLocal = navigator.userAgent || '';
+            const isiOSLocal = /iPad|iPhone|iPod/.test(uaLocal) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (isiOSLocal) {
+              const deepLinkIOS = `whatsapp://send?text=${encodeURIComponent(text)}`;
+              try { window.location.href = deepLinkIOS; } catch {}
+              setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 700);
+            } else {
+              window.open(waWebApi, '_blank', 'noopener,noreferrer');
+            }
             if (onClose) onClose();
             return;
           }
@@ -277,7 +285,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
           // iOS/iPadOS & Desktop: prefer wa.me in a new tab (lets the OS/app chooser handle it)
           if (isIOS) {
-            window.location.href = waWebApi;
+            const deepLinkIOS = `whatsapp://send?text=${encodeURIComponent(text)}`;
+            let cancelledIOS = false;
+            const onVisIOS = () => { if (document.visibilityState === 'hidden') { cancelledIOS = true; cleanupIOS(); } };
+            const cleanupIOS = () => document.removeEventListener('visibilitychange', onVisIOS);
+            document.addEventListener('visibilitychange', onVisIOS);
+            try { window.location.href = deepLinkIOS; } catch {}
+            setTimeout(() => {
+              if (!cancelledIOS) {
+                window.open(waWebApi, '_blank', 'noopener,noreferrer');
+                cleanupIOS();
+              }
+            }, 600);
             if (onClose) onClose();
             return;
           }
