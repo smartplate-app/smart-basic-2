@@ -769,10 +769,6 @@ export default function OrdersPage() {
       ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
       : `https://wa.me/?text=${encodeURIComponent(text)}`;
 
-    const waWeb = phone
-      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
-      : `https://wa.me/?text=${encodeURIComponent(text)}`;
-
     // 0) Immediate native share sheet on mobile/tablet (text-only)
     const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
     if (isMobileOrTablet && navigator.share) {
@@ -780,15 +776,6 @@ export default function OrdersPage() {
         await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
         return;
       } catch (_) { /* continue to next strategies */ }
-    }
-
-    // 0) Immediate native share panel on mobile/tablet (text-only for speed)
-    const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
-    if (isMobileOrTablet && navigator.share) {
-      try {
-        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
-        return; // done
-      } catch (_) { /* fall back to image + deep link */ }
     }
 
     // Prepare a shareable JPG (used for native share or clipboard fallback)
@@ -898,23 +885,8 @@ export default function OrdersPage() {
             }
           } catch {}
           if (inIframe) {
-            // Try direct open to preserve user gesture
-            let w = null;
-            try { w = window.open(url, '_blank'); } catch {}
-            if (!w || w.closed) {
-              try { w = window.open('about:blank', '_blank'); } catch {}
-              if (w && !w.closed) {
-                try { w.location.href = url; }
-                catch {
-                  try {
-                    w.document.open();
-                    w.document.write(`<!doctype html><html><head><meta http-equiv="refresh" content="0;url=${url}"></head><body></body></html>`);
-                    w.document.close();
-                  } catch {}
-                }
-              }
-            }
-            try { setTimeout(() => { try { w && w.close(); } catch {} }, 2000); } catch {}
+            // In preview iframe on iOS, avoid about:blank; open WhatsApp Web instead
+            try { window.open(waWeb, '_blank'); } catch {}
             return;
           }
           try { window.location.href = url; return; } catch {}
@@ -982,42 +954,32 @@ export default function OrdersPage() {
     const order = orderOverride || sendOptionOrder;
     if (!order) return;
     setShowSendOptions(false);
-    const ua = navigator.userAgent || '';
-    const isAndroid = /Android/i.test(ua);
-    const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
-    try {
-      const { data } = await base44.functions.invoke('markOrderSent', {
-        orderId: order.id,
-        orderNumber: order.order_number
-      });
-      const updated = data?.order || {};
-      setOrders(prev => prev.map(o => {
-        if (o.id !== (updated.id || order.id)) return o;
-        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num };
-      }));
-      sendOrderToWhatsApp(updated.id ? updated : order);
-      setPreviewOrder(null);
-      await loadData(user);
-    } catch (e) {
-      // Preview sandbox sometimes returns 404 for freshly deployed functions.
-      // Fallback: proceed to WhatsApp and update UI optimistically.
-      console.warn('markOrderSent failed, proceeding with WA fallback:', e?.message || e);
-      setOrders(prev => prev.map(o => {
-        if (o.id !== order.id) return o;
-        const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num };
-      }));
-      try { sendOrderToWhatsApp(order); } catch (_) {}
-      setPreviewOrder(null);
-      // Optionally retry in background without blocking UX
-      setTimeout(() => {
-        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number })
-          .catch(() => {});
-      }, 1200);
-    } finally {
-      setSendOptionOrder(null);
-    }
+
+    // Optimistic UI: mark as sent immediately (prevents flip back to draft)
+    const ensuredNum = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+    setOrders(prev => prev.map(o => (o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNum } : o)));
+
+    // Launch share/WhatsApp first to keep iOS/iPadOS gesture alive
+    try { sendOrderToWhatsApp(order); } catch (_) {}
+    setPreviewOrder(null);
+
+    // Background persist (no popups)
+    setTimeout(async () => {
+      try {
+        const { data } = await base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNum });
+        const updated = data?.order || {};
+        setOrders(prev => prev.map(o => {
+          if (o.id !== (updated.id || order.id)) return o;
+          const num = updated.order_number || ensuredNum;
+          return { ...o, status: 'sent', order_number: num };
+        }));
+        await loadData(user);
+      } catch (e) {
+        console.warn('[WA] Background markOrderSent failed:', e?.message || e);
+      } finally {
+        setSendOptionOrder(null);
+      }
+    }, 50);
   };
 
   // Resend via guestroom mailbox (Gmail connector)
