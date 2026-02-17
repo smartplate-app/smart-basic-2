@@ -319,7 +319,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           <div className="space-y-2">
             <Label htmlFor="restaurant_name" className="text-xs md:text-sm">{t('business_name')} *</Label>
             <Input
