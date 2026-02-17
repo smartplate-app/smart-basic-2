@@ -779,95 +779,6 @@ export default function OrdersPage() {
       } catch (_) { /* continue to next strategies */ }
     }
 
-    // Prepare a shareable JPG (used for native share or clipboard fallback)
-    const temp = document.createElement('div');
-    temp.style.position = 'fixed';
-    temp.style.left = '-9999px';
-    temp.style.top = '0';
-    temp.style.width = '800px';
-    temp.style.background = 'white';
-    temp.style.padding = '32px';
-    temp.style.fontFamily = 'system-ui, sans-serif';
-    temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
-    temp.innerHTML = `
-      <div style="background: linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:24px;border-radius:16px 16px 0 0;margin:-32px -32px 16px -32px;text-align:center;">
-        <div style="font-size:24px;font-weight:800;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
-        <div style="opacity:.9;margin-top:4px;">${t('supplier') || 'Supplier'}: ${order.supplier_name || ''}</div>
-      </div>
-      <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
-        <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
-        ${order.restaurant_address ? `<div style=\"color:#334155\">${order.restaurant_address}</div>` : ''}
-        ${order.delivery_date ? `<div style=\"margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;\">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
-      </div>
-      <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
-        <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
-        <table style="width:100%;border-collapse:collapse;">
-          <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
-          <tbody>
-            ${(order.items || []).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-    document.body.appendChild(temp);
-
-    let file = null;
-    try {
-      const { default: html2canvas } = await import('html2canvas');
-      const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-      if (blob) file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
-    } catch (e) {
-      console.warn('[WhatsApp Share] Failed to render image, will proceed with text only:', e?.message || e);
-    } finally {
-      try { document.body.removeChild(temp); } catch {}
-    }
-
-    // 1) Native share with file attachment when supported (auto-attaches in WhatsApp app)
-    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
-        return;
-      } catch (_) {
-        // continue to deep link/web
-      }
-    }
-
-    // 2) Best-effort: copy image to clipboard so user can Paste in WhatsApp (Web/App)
-    let copiedImage = false;
-    let copiedText = false;
-    if (file && navigator.clipboard && 'write' in navigator.clipboard) {
-      try {
-        // @ts-ignore ClipboardItem may not be typed in some environments
-        await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
-        copiedImage = true;
-      } catch (_) {
-        // ignore and try copying text instead
-      }
-    }
-    if (!copiedImage && navigator.clipboard && 'writeText' in navigator.clipboard) {
-      try {
-        await navigator.clipboard.writeText(text);
-        copiedText = true;
-      } catch (_) {
-        // no clipboard available
-      }
-    }
-
-    // Suppress legacy prompt on modern devices
-    if (false && !copiedImage && !copiedText && file) {
-      try {
-        const msg = language === 'he'
-          ? 'במכשירים ישנים שיתוף תמונה אוטומטי לא נתמך. לפתוח את התמונה בלשונית חדשה לשמירה ידנית?'
-          : 'On older devices, automatic image sharing may not be supported. Open the image in a new tab to save manually?';
-        if (window.confirm(msg)) {
-          const objUrl = URL.createObjectURL(file);
-          window.open(objUrl, '_blank');
-          setTimeout(() => URL.revokeObjectURL(objUrl), 10000);
-        }
-      } catch (_) { /* ignore */ }
-    }
-
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
     // In editor preview (iframe) or desktop browsers, open in a new tab to avoid wa.me X-Frame-Options blocking
     const tryOpenChain = (urls, stepMs = 700) => {
@@ -956,31 +867,10 @@ export default function OrdersPage() {
     if (!order) return;
     setShowSendOptions(false);
 
-    // Optimistic UI: mark as sent immediately (prevents flip back to draft)
-    const ensuredNum = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-    setOrders(prev => prev.map(o => (o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNum } : o)));
-
     // Launch share/WhatsApp first to keep iOS/iPadOS gesture alive
     try { sendOrderToWhatsApp(order); } catch (_) {}
     setPreviewOrder(null);
-
-    // Background persist (no popups)
-    setTimeout(async () => {
-      try {
-        const { data } = await base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNum });
-        const updated = data?.order || {};
-        setOrders(prev => prev.map(o => {
-          if (o.id !== (updated.id || order.id)) return o;
-          const num = updated.order_number || ensuredNum;
-          return { ...o, status: 'sent', order_number: num };
-        }));
-        await loadData(user);
-      } catch (e) {
-        console.warn('[WA] Background markOrderSent failed:', e?.message || e);
-      } finally {
-        setSendOptionOrder(null);
-      }
-    }, 50);
+    setSendOptionOrder(null);
   };
 
   // Resend via guestroom mailbox (Gmail connector)
