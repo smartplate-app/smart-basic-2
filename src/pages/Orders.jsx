@@ -732,8 +732,9 @@ export default function OrdersPage() {
   const sendOrderToWhatsApp = async (order, opts = {}) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
-    const isAndroid = /Android/i.test(navigator.userAgent || '');
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
     const preOpened = opts?.preOpenedWindow || null;
 
     // Normalize phone for WhatsApp (supports unsaved contacts)
