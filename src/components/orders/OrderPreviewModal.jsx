@@ -462,7 +462,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
           if (isMobile && navigator.share) {
             // Use existing generator to create an image and invoke native share
-            await handleDownloadImage({ shareOnly: true });
+            handleDownloadImage({ shareOnly: true });
             return;
           }
 
