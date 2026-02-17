@@ -258,6 +258,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               ]);
             } catch {}
           }
+          // Close dialog immediately to avoid any perceived freeze while OS opens WhatsApp
+          try { if (onClose) onClose(); } catch {}
 
           // Mark as sent immediately (service-role updates number if needed)
           try { base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }); } catch {}
@@ -276,9 +278,22 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 
           if (inIframe) {
-            // In Preview (iframe): open WhatsApp Web immediately in a new tab to avoid popup/deeplink blocks
-            window.open(waWebApi, '_blank', 'noopener,noreferrer');
-            if (onClose) onClose();
+            const uaLocal = navigator.userAgent || '';
+            const isiOSLocal = /iPad|iPhone|iPod/.test(uaLocal) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isAndroidLocal = /Android/i.test(uaLocal);
+            if (isAndroidLocal) {
+              const intentLocal = phone
+                ? `intent://send/?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;S.browser_fallback_url=${encodeURIComponent(waWebApi)};end`
+                : `intent://send/?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;S.browser_fallback_url=${encodeURIComponent(waWebApi)};end`;
+              try { window.location.href = intentLocal; } catch {}
+              setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 800);
+            } else if (isiOSLocal) {
+              const deepLinkIOS = `whatsapp://send?text=${encodeURIComponent(text)}`;
+              try { window.location.href = deepLinkIOS; } catch {}
+              setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 700);
+            } else {
+              window.open(waWebApi, '_blank', 'noopener,noreferrer');
+            }
             return;
           }
 
