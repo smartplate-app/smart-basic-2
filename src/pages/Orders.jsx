@@ -897,7 +897,7 @@ export default function OrdersPage() {
     }
 
     // Mobile-only hint; no desktop popups
-    if ((isAndroid || isIOS) && (copiedImage || copiedText)) {
+    if (false && (isAndroid || isIOS) && (copiedImage || copiedText)) {
       setTimeout(() => {
         const msg = copiedImage
           ? (t('image_copied_paste_in_whatsapp') || 'The image was copied. Paste in WhatsApp.')

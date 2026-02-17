@@ -213,9 +213,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             } else {
               // Some Safari versions can't share files — show guidance instead of sending a link
               setDownloading(false);
-              alert(language === 'he'
-                ? 'iOS בגרסאות ישנות לא מאפשר שיתוף תמונה מהדפדפן. הוסף את האפליקציה למסך הבית או עדכן iOS כדי לשתף את התמונה ישירות.'
-                : 'Older iOS versions cannot share an image from the browser. Add the app to your Home Screen or update iOS to share the JPG directly.');
               return;
             }
           } catch (_) { /* fallthrough to download */ }
