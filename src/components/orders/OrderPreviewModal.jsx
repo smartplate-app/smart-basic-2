@@ -249,6 +249,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
           const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${ensuredNumber}`;
 
+          // Prepare file for native share; wait briefly to ensure image is ready
+          let fileForShare = shareFile;
+          if (!fileForShare) {
+            for (let i = 0; i < 8; i++) { // ~800ms max
+              await new Promise(r => setTimeout(r, 100));
+              if (shareFile) { fileForShare = shareFile; break; }
+            }
+          }
+
+
           // Best-effort: copy preview image to clipboard so user can paste in WhatsApp (skip inside preview iframe)
           const isInIframeLocal = (()=>{ try { return window.top !== window.self; } catch { return true; } })();
           if (!isInIframeLocal && shareFile && navigator.clipboard && window.ClipboardItem) {
@@ -257,33 +267,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 new window.ClipboardItem({ [shareFile.type]: shareFile })
               ]);
             } catch {}
-          }
-
-          // Prepare file for native share; wait briefly if still generating
-          let fileForShare = shareFile;
-          if (!fileForShare) {
-            for (let i = 0; i < 8; i++) { // ~800ms max
-              await new Promise(r => setTimeout(r, 100));
-              if (shareFile) { fileForShare = shareFile; break; }
-            }
-          }
-
-          // Prepare file for native share; wait briefly if still generating
-          let fileForShare = shareFile;
-          if (!fileForShare) {
-            for (let i = 0; i < 8; i++) { // ~800ms max
-              await new Promise(r => setTimeout(r, 100));
-              if (shareFile) { fileForShare = shareFile; break; }
-            }
-          }
-
-          // Small wait to ensure preview image is ready before sharing (prevents text-only fallback)
-          let fileForShare = shareFile;
-          if (!fileForShare) {
-            for (let i = 0; i < 8; i++) { // ~800ms max
-              await new Promise(r => setTimeout(r, 100));
-              if (shareFile) { fileForShare = shareFile; break; }
-            }
           }
 
           // If native share with files is available, prefer it to auto-attach the image (matches published app)
