@@ -280,7 +280,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
       className="bg-white rounded-xl shadow-lg p-3 md:p-6 mb-6 md:mb-8"
     >
       <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           <div className="space-y-2">
             <Label htmlFor="supplier" className="text-xs md:text-sm">{t('supplier')} *</Label>
             <Select
