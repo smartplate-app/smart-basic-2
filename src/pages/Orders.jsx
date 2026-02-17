@@ -858,12 +858,12 @@ export default function OrdersPage() {
       document.addEventListener('visibilitychange', onHide, { once: true });
 
       const openLink = (url) => {
+        // If we have a pre-opened window, always use it (works around iframe/popup limits)
+        if (preOpened && !preOpened.closed) {
+          try { preOpened.location.href = url; preOpened.focus(); return; } catch (_) {}
+        }
         if (!isAndroid && !isIOS) {
-          // Use pre-opened tab if available to avoid blockers
-          if (preOpened && !preOpened.closed) {
-            try { preOpened.location.href = url; preOpened.focus(); return; } catch (_) {}
-          }
-          // Programmatic anchor click (safer in sandboxes)
+          // Desktop fallback: open in new tab
           const a = document.createElement('a');
           a.href = url;
           a.target = '_blank';
