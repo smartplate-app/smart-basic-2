@@ -258,8 +258,19 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               ]);
             } catch {}
           }
-          // Close dialog immediately to avoid any perceived freeze while OS opens WhatsApp
-          try { if (onClose) onClose(); } catch {}
+
+          // If native share with files is available, prefer it to auto-attach the image (matches published app)
+          if (shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+            try {
+              await navigator.share({ files: [shareFile], text });
+              try { base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }); } catch {}
+              if (onSend) { try { onSend({ ...order, status: 'sent', order_number: ensuredNumber }); } catch {} }
+              if (onClose) onClose();
+              return;
+            } catch (e) {
+              // continue to deep-link fallback
+            }
+          }
 
           // Mark as sent immediately (service-role updates number if needed)
           try { base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }); } catch {}
