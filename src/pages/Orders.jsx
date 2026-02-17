@@ -687,6 +687,12 @@ export default function OrdersPage() {
   };
 
   const handleSendNow = async (order) => {
+    if (isEmulator) {
+      setSendOptionOrder(order);
+      setShowSendOptions(false);
+      await handleConfirmSendWhatsApp(order);
+      return;
+    }
     if (!order) return;
     if (isEmulator) {
       // Bypass chooser and send via emulator immediately
@@ -1389,7 +1395,7 @@ export default function OrdersPage() {
                     <div className="flex gap-2 pt-2">
                       {!isViewer && order.supplier_phone && (
                         <button
-                          onClick={() => handleResend(order)}
+                          onClick={() => { if (isEmulator) { handleSendNow(order); } else { handleResend(order); } }}
                           className="flex-1 text-white text-base font-medium rounded-lg px-4 py-3 flex items-center justify-center"
                           style={{ backgroundColor: '#25D366' }}
                         >
