@@ -55,6 +55,7 @@ export default function OrdersPage() {
   const [itemSearch, setItemSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePreset, setDatePreset] = useState('all');
   const startYRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -1244,12 +1245,41 @@ export default function OrdersPage() {
                 className="h-11 md:h-10 rounded-lg"
               />
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => setShowDatePicker(true)} className="h-11 md:h-10 rounded-lg whitespace-nowrap">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  {(dateStart || dateEnd)
-                    ? `${dateStart ? new Date(dateStart).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : '…'} – ${dateEnd ? new Date(dateEnd).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : '…'}`
-                    : (language === 'he' ? 'בחר טווח תאריכים' : 'Select date range')}
-                </Button>
+                <Select
+                  value={datePreset}
+                  onValueChange={(v) => {
+                    setDatePreset(v);
+                    const d = new Date();
+                    const y = d.getFullYear();
+                    const m = d.getMonth();
+                    if (v === 'custom') { setShowDatePicker(true); return; }
+                    if (v === 'all') { setDateStart(''); setDateEnd(''); return; }
+                    if (v === 'week') {
+                      const start = new Date(d); start.setDate(d.getDate() - d.getDay());
+                      const end = new Date(start); end.setDate(start.getDate() + 6);
+                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
+                    }
+                    if (v === 'month') {
+                      const start = new Date(y, m, 1); const end = new Date(y, m + 1, 0);
+                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
+                    }
+                    if (v === 'year') {
+                      const start = new Date(y, 0, 1); const end = new Date(y, 11, 31);
+                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-11 md:h-10 rounded-lg w-56">
+                    <SelectValue placeholder={language === 'he' ? 'טווח תאריכים' : 'Date range'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{language === 'he' ? 'כל התאריכים' : 'All dates'}</SelectItem>
+                    <SelectItem value="week">{language === 'he' ? 'שבוע נוכחי' : 'Current week'}</SelectItem>
+                    <SelectItem value="month">{language === 'he' ? 'חודש נוכחי' : 'Current month'}</SelectItem>
+                    <SelectItem value="year">{language === 'he' ? 'שנה נוכחית' : 'Current year'}</SelectItem>
+                    <SelectItem value="custom">{language === 'he' ? 'טווח מותאם…' : 'Custom range…'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -1402,12 +1432,41 @@ export default function OrdersPage() {
                 className="h-11 rounded-lg"
               />
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => setShowDatePicker(true)} className="h-11 rounded-lg w-full justify-center">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  {(dateStart || dateEnd)
-                    ? `${dateStart ? new Date(dateStart).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : '…'} – ${dateEnd ? new Date(dateEnd).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : '…'}`
-                    : (language === 'he' ? 'בחר טווח תאריכים' : 'Select date range')}
-                </Button>
+                <Select
+                  value={datePreset}
+                  onValueChange={(v) => {
+                    setDatePreset(v);
+                    const d = new Date();
+                    const y = d.getFullYear();
+                    const m = d.getMonth();
+                    if (v === 'custom') { setShowDatePicker(true); return; }
+                    if (v === 'all') { setDateStart(''); setDateEnd(''); return; }
+                    if (v === 'week') {
+                      const start = new Date(d); start.setDate(d.getDate() - d.getDay());
+                      const end = new Date(start); end.setDate(start.getDate() + 6);
+                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
+                    }
+                    if (v === 'month') {
+                      const start = new Date(y, m, 1); const end = new Date(y, m + 1, 0);
+                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
+                    }
+                    if (v === 'year') {
+                      const start = new Date(y, 0, 1); const end = new Date(y, 11, 31);
+                      setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); return;
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-11 rounded-lg w-full justify-between">
+                    <SelectValue placeholder={language === 'he' ? 'טווח תאריכים' : 'Date range'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{language === 'he' ? 'כל התאריכים' : 'All dates'}</SelectItem>
+                    <SelectItem value="week">{language === 'he' ? 'שבוע נוכחי' : 'Current week'}</SelectItem>
+                    <SelectItem value="month">{language === 'he' ? 'חודש נוכחי' : 'Current month'}</SelectItem>
+                    <SelectItem value="year">{language === 'he' ? 'שנה נוכחית' : 'Current year'}</SelectItem>
+                    <SelectItem value="custom">{language === 'he' ? 'טווח מותאם…' : 'Custom range…'}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button onClick={() => setFiltersOpen(false)} className="w-full">{safeT('apply', 'החל', 'Apply')}</Button>
             </div>
@@ -1660,8 +1719,8 @@ export default function OrdersPage() {
               <Button variant="outline" size="sm" onClick={() => { const d=new Date(); const y=d.getFullYear(); const start=new Date(y,0,1); const end=new Date(y,11,31); setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); setShowDatePicker(false); }}>{language === 'he' ? 'שנה נוכחית' : 'Current year'}</Button>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => { setDateStart(''); setDateEnd(''); setShowDatePicker(false); }}>{language === 'he' ? 'נקה' : 'Clear'}</Button>
-              <Button onClick={() => setShowDatePicker(false)} className="bg-gray-900 hover:bg-gray-800 text-white">{language === 'he' ? 'אישור' : 'Apply'}</Button>
+              <Button variant="outline" onClick={() => { setDateStart(''); setDateEnd(''); setDatePreset('all'); setShowDatePicker(false); }}>{language === 'he' ? 'נקה' : 'Clear'}</Button>
+              <Button onClick={() => { setDatePreset('custom'); setShowDatePicker(false); }} className="bg-gray-900 hover:bg-gray-800 text-white">{language === 'he' ? 'אישור' : 'Apply'}</Button>
             </div>
           </div>
         </DialogContent>
