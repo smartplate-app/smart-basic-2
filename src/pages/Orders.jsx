@@ -714,15 +714,11 @@ export default function OrdersPage() {
     const isAndroid = /Android/i.test(ua);
     const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
     const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+    // No pre-open tabs on any device to avoid about:blank
     let preOpenedWindow = null;
-    if (!isAndroid && !isIOS) {
-      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
-    } else if (isIOS && inIframe) {
-      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
-    }
 
-    // Launch WA first to keep user gesture
-    try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
+    // Launch share/WA without opening blank tabs
+    try { sendOrderToWhatsApp(order); } catch (_) {}
     setPreviewOrder(null);
 
     // Background mark and refresh
@@ -768,6 +764,19 @@ export default function OrdersPage() {
     const androidIntent = phone
       ? `intent://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
       : `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
+
+    const waWeb = phone
+      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+    // 0) Immediate native share sheet on mobile/tablet (text-only)
+    const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
+    if (isMobileOrTablet && navigator.share) {
+      try {
+        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+        return;
+      } catch (_) { /* continue to next strategies */ }
+    }
 
     // Prepare a shareable JPG (used for native share or clipboard fallback)
     const temp = document.createElement('div');
@@ -930,11 +939,11 @@ export default function OrdersPage() {
     if (isAndroid) {
       tryOpenChain([deeplink, androidIntent]);
     } else if (isIOS) {
-      // iOS/iPadOS: native app only (no Web)
+      // iOS/iPadOS: native share/app only
       tryOpenChain([deeplink]);
     } else {
-      // Desktop: attempt native app only (no Web)
-      tryOpenChain([deeplink]);
+      // Desktop: WhatsApp Web only
+      tryOpenChain([waWeb]);
     }
 
     // Mobile-only hint; no desktop popups
@@ -960,18 +969,9 @@ export default function OrdersPage() {
     const order = orderOverride || sendOptionOrder;
     if (!order) return;
     setShowSendOptions(false);
-    // Pre-open a tab synchronously to avoid popup blockers and iframe embedding (Firefox/Preview)
     const ua = navigator.userAgent || '';
     const isAndroid = /Android/i.test(ua);
     const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
-    const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
-    let preOpenedWindow = null;
-    if (!isAndroid && !isIOS) {
-      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
-    } else if (isIOS && inIframe) {
-      // In preview/iframe on iOS, pre-open a tab synchronously then navigate it to the deeplink
-      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
-    }
     try {
       const { data } = await base44.functions.invoke('markOrderSent', {
         orderId: order.id,
@@ -983,7 +983,7 @@ export default function OrdersPage() {
         const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
         return { ...o, status: 'sent', order_number: num };
       }));
-      sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
+      sendOrderToWhatsApp(updated.id ? updated : order);
       setPreviewOrder(null);
       await loadData(user);
     } catch (e) {
@@ -995,7 +995,7 @@ export default function OrdersPage() {
         const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
         return { ...o, status: 'sent', order_number: num };
       }));
-      try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
+      try { sendOrderToWhatsApp(order); } catch (_) {}
       setPreviewOrder(null);
       // Optionally retry in background without blocking UX
       setTimeout(() => {
