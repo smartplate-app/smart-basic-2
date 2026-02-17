@@ -14,6 +14,7 @@ import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, BarChart3, 
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, BarChart, Bar } from "recharts";
 import moment from "moment";
+import DailyTipsTab from "../components/dashboard/DailyTipsTab";
 
 import { notifyOS } from "../components/notifications/notify";
 
@@ -974,7 +975,11 @@ export default function DashboardPage() {
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'דוח AFC' : 'AFC Report'}
             </TabsTrigger>
-          </TabsList>
+            <TabsTrigger value="tips" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              {language === 'he' ? 'טיפים יומיים' : 'Daily Tips'}
+            </TabsTrigger>
+            </TabsList>
 
           {/* Actual Performance Tab */}
           <TabsContent value="actual" className="space-y-6">
@@ -1348,6 +1353,11 @@ export default function DashboardPage() {
 
 
           {/* Labor Goals Tab removed */}
+
+          {/* Daily Tips Tab */}
+          <TabsContent value="tips" className="space-y-6">
+            <DailyTipsTab month={selectedMonth} language={language} />
+          </TabsContent>
 
           {/* AFC Report Tab */}
           <TabsContent value="afc" className="space-y-6">
