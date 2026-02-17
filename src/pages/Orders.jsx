@@ -897,8 +897,8 @@ export default function OrdersPage() {
     } else if (allowDeeplink && isIOS) {
       // iOS/iPadOS: native share/app only
       tryOpenChain([deeplink]);
-    } else {
-      // Desktop: WhatsApp Web only
+    } else if (allowDeeplink) {
+      // Desktop: WhatsApp Web only (disabled by default)
       tryOpenChain([waWeb]);
     }
 
