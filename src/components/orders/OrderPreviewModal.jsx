@@ -261,10 +261,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           if (phone.startsWith('00')) phone = phone.slice(2);
 
           const deepLink = phone ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}` : `whatsapp://send?text=${encodeURIComponent(text)}`;
-          const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+          const waWebApi = phone
+            ? `https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`
+            : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 
           if (inIframe) {
-            window.open(waWeb, '_blank', 'noopener,noreferrer');
+            window.location.href = waWebApi;
             if (onClose) onClose();
             return;
           }
@@ -275,13 +277,13 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
           // iOS/iPadOS & Desktop: prefer wa.me in a new tab (lets the OS/app chooser handle it)
           if (isIOS) {
-            window.open(waWeb, '_blank', 'noopener,noreferrer');
+            window.location.href = waWebApi;
             if (onClose) onClose();
             return;
           }
 
           if (!isMobile) {
-            window.open(waWeb, '_blank', 'noopener,noreferrer');
+            window.open(waWebApi, '_blank', 'noopener,noreferrer');
             if (onClose) onClose();
             return;
           }
@@ -304,7 +306,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
           timerId = setTimeout(() => {
             if (cancelled || document.visibilityState === 'hidden') return;
-            window.open(waWeb, '_blank', 'noopener,noreferrer');
+            window.open(waWebApi, '_blank', 'noopener,noreferrer');
             cleanup();
           }, 1200);
 
