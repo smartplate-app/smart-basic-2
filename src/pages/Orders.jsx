@@ -720,34 +720,26 @@ export default function OrdersPage() {
     } else if (isIOS && inIframe) {
       try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
     }
-    try {
-      const { data } = await base44.functions.invoke('markOrderSent', {
-        orderId: order.id,
-        orderNumber: order.order_number
-      });
-      const updated = data?.order || {};
-      setOrders(prev => prev.map(o => {
-        if (o.id !== (updated.id || order.id)) return o;
-        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num };
-      }));
-      sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
-      setPreviewOrder(null);
-      await loadData(user);
-    } catch (e) {
-      console.warn('markOrderSent failed, proceeding with WA fallback (direct):', e?.message || e);
-      setOrders(prev => prev.map(o => {
-        if (o.id !== order.id) return o;
-        const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num };
-      }));
-      try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
-      setPreviewOrder(null);
-      setTimeout(() => {
-        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number })
-          .catch(() => {});
-      }, 1200);
-    }
+
+    // Launch WA first to keep user gesture
+    try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
+    setPreviewOrder(null);
+
+    // Background mark and refresh
+    setTimeout(async () => {
+      try {
+        const { data } = await base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number });
+        const updated = data?.order || {};
+        setOrders(prev => prev.map(o => {
+          if (o.id !== (updated.id || order.id)) return o;
+          const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+          return { ...o, status: 'sent', order_number: num };
+        }));
+        await loadData(user);
+      } catch (e) {
+        console.warn('[WA] Background markOrderSent failed (direct):', e?.message || e);
+      }
+    }, 50);
   };
 
   const sendOrderToWhatsApp = async (order, opts = {}) => {
@@ -936,13 +928,13 @@ export default function OrdersPage() {
 
 
     if (isAndroid) {
-      tryOpenChain([deeplink, apiUrl, androidIntent, waWeb]);
+      tryOpenChain([deeplink, androidIntent]);
     } else if (isIOS) {
-      // iOS/iPadOS: require native app – no WhatsApp Web fallback
+      // iOS/iPadOS: native app only (no Web)
       tryOpenChain([deeplink]);
     } else {
-      // Desktop: try to open native app first; fall back to Web only if needed
-      tryOpenChain([deeplink, waWeb]);
+      // Desktop: attempt native app only (no Web)
+      tryOpenChain([deeplink]);
     }
 
     // Mobile-only hint; no desktop popups
