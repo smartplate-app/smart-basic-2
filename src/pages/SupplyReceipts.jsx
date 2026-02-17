@@ -337,7 +337,7 @@ export default function SupplyReceiptsPage() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 md:p-8"
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-3 md:p-6"
       onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
       onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
       onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); const u = user || await base44.auth.me(); await loadData(u.email, storeOwnerEmailState); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
@@ -347,9 +347,9 @@ export default function SupplyReceiptsPage() {
         <div className="md:hidden flex items-center justify-center text-xs text-gray-500 h-8 transition-transform" style={{ transform: `translateY(${pullDist}px)` }}>
           {refreshing ? (<><Loader className="w-3 h-3 mr-1 animate-spin" /> {t('refreshing') || 'Refreshing...'}</>) : (pullDist > 0 ? (t('pull_to_refresh') || 'Pull to refresh') : null)}
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3 md:gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('receipts_title')}</h1>
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">{t('receipts_title')}</h1>
             <p className="text-gray-600 mt-2">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
           </div>
           <div className="flex gap-3 flex-wrap items-center">
@@ -374,7 +374,8 @@ export default function SupplyReceiptsPage() {
               </Button>
             </div>
             <Button
-             onClick={async () => {
+                          size="sm"
+                          onClick={async () => {
                // Scan for duplicate invoices across same supplier
                const map = {};
                receipts.forEach(r => {
@@ -411,8 +412,9 @@ export default function SupplyReceiptsPage() {
              {tt('check_duplicate_invoices','בדיקת כפילויות חשבוניות','Check Duplicate Invoices')}
            </Button>
            <Button
-             variant="outline"
-             onClick={async () => {
+                         size="sm"
+                         variant="outline"
+                         onClick={async () => {
                const list = (sortedReceipts || []).filter(r => r.is_refund || r.needs_review);
                if (!list.length) { alert(t('no_refund_review_found') || 'No refund/review invoices in current view.'); return; }
                const header = ['supplier','invoice_number','received_date','amount','flags','review_note'];
@@ -435,6 +437,7 @@ export default function SupplyReceiptsPage() {
              {tt('refund_review_report','דוח זיכויים/בדיקה','Refund/Review report')}
            </Button>
             <Button
+              size="sm"
               onClick={() => {
                 setShowNoOrderForm(true); // Open the no-order receipt creation form
                 setShowForm(false); // Close the manual receipt form if open
@@ -452,7 +455,7 @@ export default function SupplyReceiptsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
+          <TabsList className="mb-3">
             <TabsTrigger value="receipts">{tt('receipts_tab','קבלות','Receipts')}</TabsTrigger>
             <TabsTrigger value="monthly_report">{tt('monthly_report','דוח חודשי','Monthly Report')}</TabsTrigger>
           </TabsList>
@@ -505,7 +508,7 @@ export default function SupplyReceiptsPage() {
 
 
             {/* Mobile Filters Drawer trigger */}
-         <div className="md:hidden mb-4">
+         <div className="md:hidden mb-3">
            <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
              {tt('filters','מסננים','Filters')}
            </Button>
