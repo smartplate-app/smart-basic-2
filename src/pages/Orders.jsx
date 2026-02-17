@@ -692,8 +692,9 @@ export default function OrdersPage() {
   // Desktop-only direct WhatsApp send from preview (mobile unchanged)
   const sendWhatsAppDirect = async (order) => {
     if (!order) return;
-    const isAndroid = /Android/i.test(navigator.userAgent || '');
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
     let preOpenedWindow = null;
     if (!isAndroid && !isIOS) {
       try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
