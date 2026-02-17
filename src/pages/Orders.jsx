@@ -721,21 +721,7 @@ export default function OrdersPage() {
     try { sendOrderToWhatsApp(order); } catch (_) {}
     setPreviewOrder(null);
 
-    // Background mark and refresh
-    setTimeout(async () => {
-      try {
-        const { data } = await base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number });
-        const updated = data?.order || {};
-        setOrders(prev => prev.map(o => {
-          if (o.id !== (updated.id || order.id)) return o;
-          const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-          return { ...o, status: 'sent', order_number: num };
-        }));
-        await loadData(user);
-      } catch (e) {
-        console.warn('[WA] Background markOrderSent failed (direct):', e?.message || e);
-      }
-    }, 50);
+
   };
 
   const sendOrderToWhatsApp = async (order, opts = {}) => {
@@ -765,9 +751,6 @@ export default function OrdersPage() {
       ? `intent://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
       : `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
 
-    const waWeb = phone
-      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
-      : `https://wa.me/?text=${encodeURIComponent(text)}`;
 
 
     // 0) Immediate native share sheet on mobile/tablet (text-only)
