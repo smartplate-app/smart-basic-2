@@ -688,10 +688,8 @@ export default function OrdersPage() {
 
   const handleSendNow = async (order) => {
     if (!order) return;
-    // Always send via WhatsApp immediately (no preview, no chooser)
-    setSendOptionOrder(order);
-    setShowSendOptions(false);
-    await handleConfirmSendWhatsApp(order);
+    // Open the Preview modal (single place to choose Email / WhatsApp / Download)
+    setPreviewOrder(order);
   };
 
   // Desktop-only direct WhatsApp send from preview (mobile unchanged)
@@ -1697,7 +1695,7 @@ export default function OrdersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Send options chooser */}
+      {/* Send options chooser (kept for future use; preview is the primary flow) */}
       <Dialog open={showSendOptions} onOpenChange={setShowSendOptions}>
         <DialogContent>
           <DialogHeader>
@@ -1716,7 +1714,13 @@ export default function OrdersPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Order Preview Modal with 3 actions (Email / WhatsApp / Download) */}
+      <OrderPreviewModal
+        order={previewOrder}
+        isOpen={!!previewOrder}
+        onClose={() => setPreviewOrder(null)}
+      />
 
-    </div>
-  );
-}
+      </div>
+      );
+      }
