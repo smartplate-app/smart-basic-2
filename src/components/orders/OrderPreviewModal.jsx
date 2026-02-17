@@ -268,8 +268,20 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               if (onClose) onClose();
               return;
             } catch (e) {
-              // continue to deep-link fallback
+              // continue below
             }
+          }
+
+          // If inside preview OR files-share unsupported, open top-level ShareOrder bridge (matches published behavior)
+          const shareSupported = !!(shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] }));
+          const inIframeForShare = (()=>{ try { return window.top !== window.self; } catch { return true; } })();
+          if (inIframeForShare || !shareSupported) {
+            const shareUrl = `${window.location.origin}${createPageUrl(`ShareOrder?d=${orderData}&text=${encodeURIComponent(text)}${phone ? `&phone=${encodeURIComponent(phone)}` : ''}`)}`;
+            window.open(shareUrl, '_blank', 'noopener,noreferrer');
+            try { base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }); } catch {}
+            if (onSend) { try { onSend({ ...order, status: 'sent', order_number: ensuredNumber }); } catch {} }
+            if (onClose) onClose();
+            return;
           }
 
           // Mark as sent immediately (service-role updates number if needed)
@@ -299,11 +311,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             }, 700);
             if (onClose) onClose();
             return;
-          }
+            }
 
-          const ua = navigator.userAgent || '';
-          const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-          const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+            const ua = navigator.userAgent || '';
+            const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
 
           // iOS/iPadOS & Desktop: prefer wa.me in a new tab (lets the OS/app chooser handle it)
           if (isIOS) {
