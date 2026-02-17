@@ -423,27 +423,41 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${number}`;
 
           const file = shareFile;
+          const inIframe = (()=>{ try { return window.top !== window.self; } catch { return true; } })();
           const canFileShare = !!(file && navigator.canShare && (()=>{ try { return navigator.canShare({ files: [file] }); } catch { return false; } })());
+
+          // If running inside the builder preview (iframe), avoid navigator.share and use a new-tab wa.me link to break out
+          const rawPhone0 = String(order.supplier_phone || '').trim();
+          let phone0 = rawPhone0.replace(/[^\d+]/g, ''); if (phone0.startsWith('+')) phone0 = phone0.slice(1); if (phone0.startsWith('00')) phone0 = phone0.slice(2);
+          const waWeb0 = phone0 ? `https://wa.me/${encodeURIComponent(phone0)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+          if (inIframe) {
+            const a = document.createElement('a');
+            a.href = waWeb0; a.target = '_blank'; a.rel = 'noopener noreferrer';
+            document.body.appendChild(a); a.click(); a.remove();
+            if (onClose) onClose();
+            return;
+          }
+
           if (navigator.share) {
             try {
               navigator.share(canFileShare ? { files: [file], text, title: `${t('order_preview') || 'Order'} #${number}` } : { text, title: `${t('order_preview') || 'Order'} #${number}` });
-            } catch (_) {
-              const rawPhone = String(order.supplier_phone || '').trim();
-              let phone = rawPhone.replace(/[^\d+]/g, '');
-              if (phone.startsWith('+')) phone = phone.slice(1);
-              if (phone.startsWith('00')) phone = phone.slice(2);
-              const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
-              try { window.location.href = waWeb; } catch {}
-            }
-          } else {
-            const rawPhone = String(order.supplier_phone || '').trim();
-            let phone = rawPhone.replace(/[^\d+]/g, ''); if (phone.startsWith('+')) phone = phone.slice(1); if (phone.startsWith('00')) phone = phone.slice(2);
-            const deepLink = phone ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}` : `whatsapp://send?text=${encodeURIComponent(text)}`;
-            const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
-            try { window.location.href = deepLink; } catch { try { window.open(waWeb, '_blank'); } catch {} }
+              if (onClose) onClose();
+              return;
+            } catch (_) { /* fall through to WA link */ }
           }
 
-          try { if (order.id) { base44.entities.Order.update(order.id, { order_number: ensuredNumber, status: 'sent' }); } } catch {}
+          const rawPhone = String(order.supplier_phone || '').trim();
+          let phone = rawPhone.replace(/[^\d+]/g, ''); if (phone.startsWith('+')) phone = phone.slice(1); if (phone.startsWith('00')) phone = phone.slice(2);
+          const deepLink = phone ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}` : `whatsapp://send?text=${encodeURIComponent(text)}`;
+          const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+          let opened = false;
+          try { window.location.href = deepLink; opened = true; } catch {}
+          setTimeout(() => {
+            if (!opened) {
+              const a2 = document.createElement('a'); a2.href = waWeb; a2.target = '_blank'; a2.rel = 'noopener noreferrer'; document.body.appendChild(a2); a2.click(); a2.remove();
+            }
+          }, 400);
           if (onClose) onClose();
 
           if (isMobile && navigator.share) {
