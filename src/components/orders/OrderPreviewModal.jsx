@@ -249,6 +249,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
           const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${ensuredNumber}`;
 
+          // Best-effort: copy preview image to clipboard so user can paste in WhatsApp
+          if (shareFile && navigator.clipboard && window.ClipboardItem) {
+            try {
+              await navigator.clipboard.write([
+                new window.ClipboardItem({ [shareFile.type]: shareFile })
+              ]);
+            } catch {}
+          }
+
           // Mark as sent immediately (service-role updates number if needed)
           try { base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }); } catch {}
           if (onSend) { try { onSend({ ...order, status: 'sent', order_number: ensuredNumber }); } catch {} }
