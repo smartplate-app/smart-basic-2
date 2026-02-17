@@ -684,7 +684,15 @@ export default function OrdersPage() {
 
   const handleSendNow = async (order) => {
     if (!order) return;
-    // Always show chooser: Email or WhatsApp
+    if (isEmulator) {
+      // Bypass chooser and send via emulator immediately
+      setSendOptionOrder(order);
+      setShowSendOptions(false);
+      // Call directly to preserve the click gesture
+      await handleConfirmSendWhatsApp(order);
+      return;
+    }
+    // Default: show chooser
     setSendOptionOrder(order);
     setShowSendOptions(true);
   };
