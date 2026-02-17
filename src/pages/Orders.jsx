@@ -856,12 +856,36 @@ export default function OrdersPage() {
       document.addEventListener('visibilitychange', onHide, { once: true });
 
       const openLink = (url) => {
+        // Prefer top-level navigation on iOS/iPadOS
+        if (isIOS) {
+          try {
+            if (window.top && window.top !== window) {
+              window.top.location.href = url;
+              return;
+            }
+          } catch {}
+          if (inIframe) {
+            // Open a helper tab that meta-refreshes to the deeplink (works around iframe restrictions)
+            const w = window.open('about:blank', '_blank');
+            if (w && !w.closed) {
+              try {
+                w.document.open();
+                w.document.write(`<!doctype html><html><head><meta http-equiv="refresh" content="0;url=${url}"></head><body><a id="go" href="${url}">Open</a><script>setTimeout(function(){location.href='${url}';},10);</script></body></html>`);
+                w.document.close();
+              } catch {}
+            }
+            return;
+          }
+          try { window.location.href = url; return; } catch {}
+        }
+
         // If we have a pre-opened window, always use it (works around iframe/popup limits)
         if (preOpened && !preOpened.closed) {
           try { preOpened.location.href = url; preOpened.focus(); return; } catch (_) {}
         }
+
         if (!isAndroid && !isIOS) {
-          // Desktop: attempt opening in a new tab so OS can catch the custom scheme handler
+          // Desktop: open in new tab (OS should route whatsapp:// to the native app)
           const a = document.createElement('a');
           a.href = url;
           a.target = '_blank';
@@ -871,7 +895,7 @@ export default function OrdersPage() {
           a.remove();
           return;
         }
-        // Mobile: navigate directly
+        // Android fallthrough: direct navigation
         try { window.location.href = url; } catch { window.open(url, '_blank'); }
       };
 
@@ -881,13 +905,6 @@ export default function OrdersPage() {
         setTimeout(() => { if (!switched) tryNext(i + 1); }, stepMs);
       };
       tryNext(0);
-
-      // If nothing handled the deep link, show install guidance (app does not support WhatsApp Web)
-      const installMsg = language === 'he'
-        ? 'לא זוהתה אפליקציית WhatsApp במכשיר. נא להתקין את האפליקציה ולהנסה שוב (אין תמיכה ב-WhatsApp Web).'
-        : 'WhatsApp app not detected. Please install the WhatsApp desktop/mobile app and try again (WhatsApp Web is not supported).';
-      const timeoutMs = Math.max(1200, stepMs * (urls.length + 2));
-      setTimeout(() => { if (!switched) { try { alert(installMsg); } catch {} } }, timeoutMs);
     };
 
 
