@@ -833,8 +833,8 @@ export default function OrdersPage() {
       }
     }
 
-    // Older devices: if neither image nor text were copied, offer opening image for manual save
-    if (!copiedImage && !copiedText && file) {
+    // Suppress legacy prompt on modern devices
+    if (false && !copiedImage && !copiedText && file) {
       try {
         const msg = language === 'he'
           ? 'במכשירים ישנים שיתוף תמונה אוטומטי לא נתמך. לפתוח את התמונה בלשונית חדשה לשמירה ידנית?'
@@ -885,11 +885,13 @@ export default function OrdersPage() {
 
 
     if (isAndroid) {
-      tryOpenChain([deeplink, apiUrl, waWeb, androidIntent]);
+      tryOpenChain([deeplink, apiUrl, androidIntent, waWeb]);
     } else if (isIOS) {
-      tryOpenChain([deeplink, waWeb]);
+      // iOS/iPadOS: require native app – no WhatsApp Web fallback
+      tryOpenChain([deeplink]);
     } else {
-      tryOpenChain([waWeb]);
+      // Desktop: try to open native app first; fall back to Web only if needed
+      tryOpenChain([deeplink, waWeb]);
     }
 
     // Mobile-only hint; no desktop popups
@@ -1750,7 +1752,7 @@ export default function OrdersPage() {
           order={previewOrder}
           isOpen={!!previewOrder}
           onClose={() => setPreviewOrder(null)}
-          onSend={() => { const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || ''); if (isMobile) { handleSendNow(previewOrder); } else { sendWhatsAppDirect(previewOrder); } }}
+          onSend={() => { handleSendNow(previewOrder); }}
         />
       )}
     </div>
