@@ -20,6 +20,38 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const [sending, setSending] = useState(false);
   const [frameLoaded, setFrameLoaded] = useState(false);
   const urlRef = useRef('');
+  const [shareFile, setShareFile] = useState(null);
+
+  useEffect(() => {
+    let disposed = false;
+    async function gen() {
+      try {
+        if (!isOpen || !order) { setShareFile(null); return; }
+        const temp = document.createElement('div');
+        temp.style.position='fixed'; temp.style.left='-9999px'; temp.style.top='0';
+        temp.style.width='1024px'; temp.style.background='#fff'; temp.style.padding='24px';
+        temp.style.fontFamily='system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+        temp.style.direction=(language==='he'?'rtl':'ltr');
+        const items = (order.items||[]).slice(0,12).map((it,i)=>`<tr><td style="padding:6px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:6px;border-bottom:1px solid #e5e7eb">${it.item_name||it.name||''}</td><td style="padding:6px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">${it.quantity||''}</td><td style="padding:6px;border-bottom:1px solid #e5e7eb">${it.unit||''}</td></tr>`).join('');
+        const ensuredNumber = order.order_number || `ORD-${(order.id||Date.now()).toString().slice(-8)}`;
+        temp.innerHTML = `<div style="font-weight:800;margin-bottom:8px">${t('order_preview') || 'Order'} #${ensuredNumber}</div><div>${t('supplier') || 'Supplier'}: ${order.supplier_name||''}</div><div style="margin-top:8px;border:1px solid #e5e7eb;border-radius:10px;padding:10px"><table style="width:100%;border-collapse:collapse;font-size:13px"><tbody>${items}</tbody></table></div>`;
+        document.body.appendChild(temp);
+        const { default: html2canvas } = await import('html2canvas');
+        const canvas = await html2canvas(temp,{scale:2.4,backgroundColor:'#ffffff',logging:false,useCORS:true});
+        const blob = await new Promise(res=>canvas.toBlob(res,'image/png',1.0));
+        document.body.removeChild(temp);
+        if (disposed) return;
+        if (blob) {
+          const file = new File([blob], `order-${ensuredNumber}.png`, { type: 'image/png' });
+          setShareFile(file);
+        } else {
+          setShareFile(null);
+        }
+      } catch { setShareFile(null); }
+    }
+    gen();
+    return () => { disposed = true; };
+  }, [isOpen, order, language]);
   
   if (!isOpen || !order) return null;
 
@@ -381,26 +413,38 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           a.remove();
         };
 
-        const handleShareWhatsApp = async () => {
+        const handleShareWhatsApp = (e) => { if (e && e.preventDefault) e.preventDefault();
           const ua = navigator.userAgent || '';
           const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
           const isMobile = /Android|iPhone|iPad|iPod/i.test(ua) || isIOSiPad;
 
-          // Ensure order has a number and mark as sent before launching share
-          let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-          try {
-            if (order.id) {
-              await base44.entities.Order.update(order.id, {
-                order_number: ensuredNumber,
-                status: 'sent'
-              });
-              order.order_number = ensuredNumber;
-              order.status = 'sent';
-            }
-          } catch (_) { /* best-effort */ }
-
+          const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
           const number = ensuredNumber;
           const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${number}`;
+
+          const file = shareFile;
+          const canFileShare = !!(file && navigator.canShare && (()=>{ try { return navigator.canShare({ files: [file] }); } catch { return false; } })());
+          if (navigator.share) {
+            try {
+              navigator.share(canFileShare ? { files: [file], text, title: `${t('order_preview') || 'Order'} #${number}` } : { text, title: `${t('order_preview') || 'Order'} #${number}` });
+            } catch (_) {
+              const rawPhone = String(order.supplier_phone || '').trim();
+              let phone = rawPhone.replace(/[^\d+]/g, '');
+              if (phone.startsWith('+')) phone = phone.slice(1);
+              if (phone.startsWith('00')) phone = phone.slice(2);
+              const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+              try { window.location.href = waWeb; } catch {}
+            }
+          } else {
+            const rawPhone = String(order.supplier_phone || '').trim();
+            let phone = rawPhone.replace(/[^\d+]/g, ''); if (phone.startsWith('+')) phone = phone.slice(1); if (phone.startsWith('00')) phone = phone.slice(2);
+            const deepLink = phone ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}` : `whatsapp://send?text=${encodeURIComponent(text)}`;
+            const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+            try { window.location.href = deepLink; } catch { try { window.open(waWeb, '_blank'); } catch {} }
+          }
+
+          try { if (order.id) { base44.entities.Order.update(order.id, { order_number: ensuredNumber, status: 'sent' }); } } catch {}
+          if (onClose) onClose();
 
           if (isMobile && navigator.share) {
             // Use existing generator to create an image and invoke native share
