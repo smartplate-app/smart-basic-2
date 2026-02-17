@@ -509,7 +509,7 @@ export default function SupplyReceiptsPage() {
 
             {/* Mobile Filters Drawer trigger */}
          <div className="md:hidden mb-3">
-           <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
+           <Button size="sm" variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
              {tt('filters','מסננים','Filters')}
            </Button>
          </div>
@@ -765,11 +765,11 @@ export default function SupplyReceiptsPage() {
                loading={loading}
                />
             ) : (
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-3 md:gap-6 md:grid-cols-2">
                 <AnimatePresence>
                   {loading ? (
                     Array(4).fill(0).map((_, i) => (
-                      <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
+                      <div key={i} className="bg-white rounded-xl p-4 shadow-sm animate-pulse">
                         <div className="h-6 bg-gray-200 rounded mb-4"></div>
                         <div className="h-4 bg-gray-200 rounded mb-2"></div>
                         <div className="h-16 bg-gray-200 rounded"></div>
