@@ -687,24 +687,11 @@ export default function OrdersPage() {
   };
 
   const handleSendNow = async (order) => {
-    if (isEmulator) {
-      setSendOptionOrder(order);
-      setShowSendOptions(false);
-      await handleConfirmSendWhatsApp(order);
-      return;
-    }
     if (!order) return;
-    if (isEmulator) {
-      // Bypass chooser and send via emulator immediately
-      setSendOptionOrder(order);
-      setShowSendOptions(false);
-      // Call directly to preserve the click gesture
-      await handleConfirmSendWhatsApp(order);
-      return;
-    }
-    // Default: show chooser
+    // Always send via WhatsApp immediately (no preview, no chooser)
     setSendOptionOrder(order);
-    setShowSendOptions(true);
+    setShowSendOptions(false);
+    await handleConfirmSendWhatsApp(order);
   };
 
   // Desktop-only direct WhatsApp send from preview (mobile unchanged)
@@ -767,7 +754,7 @@ export default function OrdersPage() {
         temp.style.position = 'fixed';
         temp.style.left = '-9999px';
         temp.style.top = '0';
-        temp.style.width = '680px';
+        temp.style.width = '1024px';
         temp.style.background = 'white';
         temp.style.padding = '24px';
         temp.style.fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
@@ -795,9 +782,9 @@ export default function OrdersPage() {
         `;
         document.body.appendChild(temp);
         const { default: html2canvas } = await import('html2canvas');
-        const canvas = await html2canvas(temp, { scale: 1.6, backgroundColor: '#ffffff', logging: false, useCORS: true });
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-        if (blob) file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
+        const canvas = await html2canvas(temp, { scale: 2.8, backgroundColor: '#ffffff', logging: false, useCORS: true });
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 1.0));
+        if (blob) file = new File([blob], `order-${ensuredNumber}.png`, { type: 'image/png' });
         try { document.body.removeChild(temp); } catch {}
       } catch (e) {
         console.warn('[WhatsApp Share] JPG render skipped:', e?.message || e);
@@ -879,6 +866,30 @@ export default function OrdersPage() {
       tryNext(0);
     };
 
+    // Desktop/any: attempt Web Share with attached PNG as well (if supported)
+    try {
+      let file2 = null;
+      const temp2 = document.createElement('div');
+      temp2.style.position = 'fixed'; temp2.style.left = '-9999px'; temp2.style.top = '0';
+      temp2.style.width = '1024px'; temp2.style.background = 'white'; temp2.style.padding = '24px';
+      temp2.style.fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+      temp2.style.direction = (language === 'he' ? 'rtl' : 'ltr');
+      const maxItems2 = 12;
+      temp2.innerHTML = `
+        <div style="font-weight:800;margin-bottom:8px">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
+        <div>${t('supplier') || 'Supplier'}: ${order.supplier_name || ''}</div>
+      `;
+      document.body.appendChild(temp2);
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas2 = await html2canvas(temp2, { scale: 2.8, backgroundColor: '#ffffff', logging: false, useCORS: true });
+      const blob2 = await new Promise((resolve) => canvas2.toBlob(resolve, 'image/png', 1.0));
+      if (blob2) file2 = new File([blob2], `order-${ensuredNumber}.png`, { type: 'image/png' });
+      try { document.body.removeChild(temp2); } catch {}
+      if (file2 && navigator.share && navigator.canShare && navigator.canShare({ files: [file2] })) {
+        await navigator.share({ files: [file2], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+        return;
+      }
+    } catch (_) { /* continue */ }
 
     if (isAndroid) {
       tryOpenChain([deeplink, androidIntent]);
@@ -1293,10 +1304,10 @@ export default function OrdersPage() {
                     <div className="flex gap-2 pt-2">
                       {!isViewer && order.supplier_phone && (
                         <button
-                          onClick={() => { if (isEmulator) { handleSendNow(order); } else { handleResend(order); } }}
-                          className="flex-1 text-white text-base font-medium rounded-lg px-4 py-3 flex items-center justify-center"
-                          style={{ backgroundColor: '#25D366' }}
-                        >
+                              onClick={() => handleSendNow(order)}
+                              className="flex-1 text-white text-base font-medium rounded-lg px-4 py-3 flex items-center justify-center"
+                              style={{ backgroundColor: '#25D366' }}
+                            >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                     ...
                           </svg>
@@ -1511,7 +1522,7 @@ export default function OrdersPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleResend(order);
+                                  handleSendNow(order);
                                 }}
                                 className="text-white text-xs font-medium rounded-md px-3 py-1.5 flex items-center justify-center shadow-sm transition-colors"
                                 style={{
@@ -1701,14 +1712,7 @@ export default function OrdersPage() {
         </DialogContent>
       </Dialog>
 
-      {previewOrder && (
-        <OrderPreviewModal
-          order={previewOrder}
-          isOpen={!!previewOrder}
-          onClose={() => setPreviewOrder(null)}
-          onSend={() => { handleSendNow(previewOrder); }}
-        />
-      )}
+
     </div>
   );
 }
