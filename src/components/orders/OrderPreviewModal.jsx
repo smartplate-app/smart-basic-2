@@ -259,6 +259,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             } catch {}
           }
 
+          // Small wait to ensure preview image is ready before sharing (prevents text-only fallback)
+          let fileForShare = shareFile;
+          if (!fileForShare) {
+            for (let i = 0; i < 8; i++) { // ~800ms max
+              await new Promise(r => setTimeout(r, 100));
+              if (shareFile) { fileForShare = shareFile; break; }
+            }
+          }
+
           // If native share with files is available, prefer it to auto-attach the image (matches published app)
           if (fileForShare && navigator.canShare && navigator.canShare({ files: [fileForShare] })) {
             try {
@@ -276,7 +285,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           const shareSupported = !!(fileForShare && navigator.canShare && navigator.canShare({ files: [fileForShare] }));
           const inIframeForShare = (()=>{ try { return window.top !== window.self; } catch { return true; } })();
           if (inIframeForShare || !shareSupported) {
-            const shareUrl = `${window.location.origin}${createPageUrl(`ShareOrder?d=${orderData}&text=${encodeURIComponent(text)}${phone ? `&phone=${encodeURIComponent(phone)}` : ''}`)}`;
+            let rawP = String(order.supplier_phone || '').trim();
+            let p = rawP.replace(/[^\d+]/g, '');
+            if (p.startsWith('+')) p = p.slice(1);
+            if (p.startsWith('00')) p = p.slice(2);
+            const phoneParam = p ? `&phone=${encodeURIComponent(p)}` : '';
+            const shareUrl = `${window.location.origin}${createPageUrl(`ShareOrder?d=${orderData}&text=${encodeURIComponent(text)}${phoneParam}`)}`;
             window.open(shareUrl, '_blank', 'noopener,noreferrer');
             try { base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }); } catch {}
             if (onSend) { try { onSend({ ...order, status: 'sent', order_number: ensuredNumber }); } catch {} }
