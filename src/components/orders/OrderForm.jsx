@@ -277,12 +277,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-xl shadow-lg p-6 mb-8"
+      className="bg-white rounded-xl shadow-lg p-3 md:p-6 mb-6 md:mb-8"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="supplier">{t('supplier')} *</Label>
+            <Label htmlFor="supplier" className="text-xs md:text-sm">{t('supplier')} *</Label>
             <Select
               value={currentOrder.supplier_id}
               onValueChange={handleSupplierChange}
@@ -308,7 +308,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="delivery_date">{t('delivery_date')}</Label>
+            <Label htmlFor="delivery_date" className="text-xs md:text-sm">{t('delivery_date')}</Label>
             <Input
               id="delivery_date"
               type="date"
@@ -321,7 +321,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="restaurant_name">{t('business_name')} *</Label>
+            <Label htmlFor="restaurant_name" className="text-xs md:text-sm">{t('business_name')} *</Label>
             <Input
               id="restaurant_name"
               value={currentOrder.restaurant_name}
@@ -332,7 +332,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="restaurant_address">{t('business_address')}</Label>
+            <Label htmlFor="restaurant_address" className="text-xs md:text-sm">{t('business_address')}</Label>
             <Input
               id="restaurant_address"
               value={currentOrder.restaurant_address}
@@ -345,12 +345,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         {currentOrder.supplier_id && (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <Label className="text-lg font-semibold">{t('items')}</Label>
+              <Label className="text-sm md:text-lg font-semibold">{t('items')}</Label>
               <Input
                 placeholder={safeT('search_items', 'חפש פריטים...', 'Search items...')}
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
-                className="max-w-xs"
+                className="max-w-xs h-8 text-xs md:text-sm"
               />
             </div>
 
@@ -364,7 +364,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {t('no_available_items')}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto border rounded-lg p-4 bg-gray-50">
+              <div className="grid grid-cols-1 gap-2 md:gap-3 max-h-[420px] md:max-h-[600px] overflow-y-auto border rounded-lg p-2 md:p-4 bg-gray-50">
                 {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
                   const stock = currentStock[item.id] || 0;
@@ -377,7 +377,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   return (
                     <div 
                       key={item.id} 
-                      className={`p-4 rounded-lg border-2 transition-all ${
+                      className={`p-3 md:p-4 rounded-lg border-2 transition-all ${
                         quantity > 0 
                           ? 'bg-purple-50 border-purple-300 shadow-sm' 
                           : isLowStock 
@@ -388,7 +388,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-gray-900">{item.name}</span>
+                            <span className="font-semibold text-gray-900 text-sm md:text-base">{item.name}</span>
                             {hasMinStock && (
                               <Badge variant="outline" className="text-xs">
                                 <Package className="w-3 h-3 mr-1" />
@@ -396,7 +396,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                               </Badge>
                             )}
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-xs md:text-sm text-gray-600">
                             {item.unit}
                             {item.price > 0 && (
                               <span className="mr-2">
@@ -426,7 +426,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                                   type="number"
                                   value={stock || ''}
                                   onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
-                                  className={`w-20 text-center ${isLowStock ? 'border-orange-400 bg-orange-50' : ''}`}
+                                  className={`w-16 md:w-20 text-center ${isLowStock ? 'border-orange-400 bg-orange-50' : ''}`}
                                   placeholder="0"
                                   min="0"
                                   step="0.01"
@@ -442,7 +442,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                                 type="number"
                                 value={quantity || ''}
                                 onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                                className="w-20 text-center"
+                                className="w-16 md:w-20 text-center"
                                 placeholder="0"
                                 min="0"
                                 step="0.01"
@@ -450,7 +450,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             </div>
                             
                             {quantity > 0 && item.price > 0 && (
-                              <div className="text-sm font-semibold text-purple-700 w-20 text-center mt-5">
+                              <div className="text-xs md:text-sm font-semibold text-purple-700 w-16 md:w-20 text-center mt-5">
                                 ₪{discountedTotal.toFixed(2)}
                               </div>
                             )}
@@ -489,10 +489,10 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         )}
 
         {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border-2 border-purple-200">
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 md:p-4 rounded-lg border-2 border-purple-200">
             <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-700">{t('total_cost')}:</span>
-              <span className="text-2xl font-bold text-purple-700">
+              <span className="text-sm md:text-lg font-semibold text-gray-700">{t('total_cost')}:</span>
+              <span className="text-xl md:text-2xl font-bold text-purple-700">
                 ₪{calculateTotal().toFixed(2)}
               </span>
             </div>
@@ -500,7 +500,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="notes">{t('notes')}</Label>
+          <Label htmlFor="notes" className="text-xs md:text-sm">{t('notes')}</Label>
           <Input
             id="notes"
             value={currentOrder.notes}
@@ -509,12 +509,13 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           />
         </div>
 
-        <div className="flex gap-3 justify-end">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <div className="flex gap-2 justify-end">
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             {safeT('cancel', 'ביטול', 'Cancel')}
           </Button>
           <Button
             type="button"
+            size="sm"
             onClick={() => {
               if (!currentOrder.supplier_id) { alert(t('supplier_and_item_required')); return; }
               const orderItems = [];
@@ -546,7 +547,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           >
             {safeT('save_draft', 'שמור טיוטה', 'Save Draft')}
           </Button>
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white">
+          <Button type="submit" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
             {order ? t('update_order') : t('send_order')}
           </Button>
         </div>
