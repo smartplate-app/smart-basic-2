@@ -264,34 +264,49 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
 
           if (inIframe) {
-            const a = document.createElement('a'); a.href = waWeb; a.target = '_blank'; a.rel = 'noopener noreferrer';
-            document.body.appendChild(a); a.click(); a.remove();
+            window.open(waWeb, '_blank', 'noopener,noreferrer');
             if (onClose) onClose();
             return;
           }
 
-          // iPad/iOS: cancel fallback if the deep link succeeds (app switch hides the page)
+          const ua = navigator.userAgent || '';
+          const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+
+          // iOS/iPadOS & Desktop: prefer wa.me in a new tab (lets the OS/app chooser handle it)
+          if (isIOS) {
+            window.open(waWeb, '_blank', 'noopener,noreferrer');
+            if (onClose) onClose();
+            return;
+          }
+
+          if (!isMobile) {
+            window.open(waWeb, '_blank', 'noopener,noreferrer');
+            if (onClose) onClose();
+            return;
+          }
+
+          // Android: try native deep link first, with guarded fallback to wa.me if page stays visible
           let cancelled = false;
           let timerId;
-          const cancelFallback = () => { cancelled = true; if (timerId) clearTimeout(timerId); cleanup(); };
           const cleanup = () => {
             document.removeEventListener('visibilitychange', onVis);
-            window.removeEventListener('pagehide', cancelFallback);
-            window.removeEventListener('blur', cancelFallback);
+            window.removeEventListener('pagehide', onCancel);
+            window.removeEventListener('blur', onCancel);
           };
-          const onVis = () => { if (document.visibilityState === 'hidden') cancelFallback(); };
+          const onCancel = () => { cancelled = true; if (timerId) clearTimeout(timerId); cleanup(); };
+          const onVis = () => { if (document.visibilityState === 'hidden') onCancel(); };
           document.addEventListener('visibilitychange', onVis);
-          window.addEventListener('pagehide', cancelFallback, { once: true });
-          window.addEventListener('blur', cancelFallback, { once: true });
+          window.addEventListener('pagehide', onCancel, { once: true });
+          window.addEventListener('blur', onCancel, { once: true });
 
-          // Try native app first, then WhatsApp Web fallback only if still visible
           try { window.location.href = deepLink; } catch {}
+
           timerId = setTimeout(() => {
-            if (cancelled) return;
-            const a2 = document.createElement('a'); a2.href = waWeb; a2.target = '_blank'; a2.rel = 'noopener noreferrer';
-            document.body.appendChild(a2); a2.click(); a2.remove();
+            if (cancelled || document.visibilityState === 'hidden') return;
+            window.open(waWeb, '_blank', 'noopener,noreferrer');
             cleanup();
-          }, 1000);
+          }, 1200);
 
           if (onClose) onClose();
         };
