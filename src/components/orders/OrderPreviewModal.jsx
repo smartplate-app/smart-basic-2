@@ -217,18 +217,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
       document.body.appendChild(tempContainer);
 
       // Capture the element
-      const canvas = await html2canvas(tempContainer, {
+      html2canvas(tempContainer, {
         scale: shareOnly ? 1 : 2,
         backgroundColor: '#ffffff',
         logging: false,
         useCORS: true
-      });
-
-      // Remove temp container
-      document.body.removeChild(tempContainer);
-
-      // Convert to blob and try to copy to clipboard (improved: JPEG then PNG)
-      canvas.toBlob(async (jpegBlob) => {
+      }).then((canvas) => {
+        // Remove temp container
+        document.body.removeChild(tempContainer);
+        // Convert to blob and try to copy to clipboard (improved: JPEG then PNG)
+        canvas.toBlob(async (jpegBlob) => {
         const number = ensuredNumber;
         const file = new File([jpegBlob], `order-${number}.jpg`, { type: 'image/jpeg' });
 
