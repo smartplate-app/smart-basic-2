@@ -386,7 +386,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
           const isMobile = /Android|iPhone|iPad|iPod/i.test(ua) || isIOSiPad;
           const number = fallbackNumber;
-          const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${number}\n${orderUrl}`;
+          const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${number}`;
 
           if (isMobile && navigator.share) {
             // Use existing generator to create an image and invoke native share
@@ -394,7 +394,75 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             return;
           }
 
-          // Desktop: WhatsApp Web only with prefilled text (cannot attach programmatically)
+          // Desktop: try to copy JPEG to clipboard, then open WhatsApp Web (cannot auto-attach)
+          try {
+            const temp = document.createElement('div');
+            temp.style.position = 'fixed';
+            temp.style.left = '-9999px';
+            temp.style.top = '0';
+            temp.style.width = '800px';
+            temp.style.background = 'white';
+            temp.style.padding = '40px';
+            temp.style.fontFamily = 'system-ui, sans-serif';
+            temp.style.direction = language === 'he' ? 'rtl' : 'ltr';
+            temp.innerHTML = `
+              <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 32px; text-align: center; border-radius: 16px 16px 0 0; margin: -40px -40px 20px -40px;">
+                <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0;">
+                  ${language === 'he' ? 'הזמנה' : 'Order'} #${number}
+                </h1>
+                <p style="font-size: 16px; opacity: 0.9; margin: 0;">
+                  ${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name || ''}
+                </p>
+              </div>
+              <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e2e8f0;">
+                <h2 style="font-size: 18px; font-weight: bold; color: #1e293b; margin: 0 0 12px 0;">
+                  ${language === 'he' ? 'פרטי העסק' : 'Business Details'}
+                </h2>
+                <p style="margin: 8px 0; font-size: 16px;"><strong>🏢 ${order.restaurant_name || ''}</strong></p>
+                ${order.restaurant_address ? `<p style=\"margin: 8px 0; font-size: 14px; color: #64748b;\">📍 ${order.restaurant_address}</p>` : ''}
+              </div>
+              <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #22c55e;">
+                <h2 style="font-size: 18px; font-weight: bold; color: #15803d; margin: 0 0 16px 0;">
+                  📋 ${language === 'he' ? 'רשימת מוצרים' : 'Items List'}
+                </h2>
+                <div style="background: white; border-radius: 8px; overflow: hidden;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="background: #f9fafb;">
+                        <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">#</th>
+                        <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'מוצר' : 'Item'}</th>
+                        <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'כמות' : 'Qty'}</th>
+                        <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'יחידה' : 'Unit'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${(order.items || []).map((item, index) => `
+                        <tr style="background: ${index % 2 === 0 ? 'white' : '#f9fafb'};">
+                          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
+                          <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">${item.item_name}</td>
+                          <td style="padding: 12px; font-weight: 600; color: #059669; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
+                          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.unit}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(temp);
+            const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+            document.body.removeChild(temp);
+            await new Promise((resolve) => canvas.toBlob(async (blob) => {
+              try {
+                // @ts-ignore ClipboardItem global in browsers
+                if (blob && window.ClipboardItem && navigator.clipboard && 'write' in navigator.clipboard) {
+                  await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                }
+              } catch (_) { /* ignore clipboard issues */ }
+              resolve();
+            }, 'image/jpeg', 0.95));
+          } catch (_) { /* continue even if clipboard copy fails */ }
+
           const rawPhone = String(order.supplier_phone || '').trim();
           let phone = rawPhone.replace(/[^\d+]/g, '');
           if (phone.startsWith('+')) phone = phone.slice(1);
