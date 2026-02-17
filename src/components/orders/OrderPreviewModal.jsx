@@ -299,6 +299,23 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             }
           }
 
+          // Android: always route through ShareOrder bridge to attach image reliably
+          const uaAndroid = navigator.userAgent || '';
+          const isAndroid = /Android/i.test(uaAndroid);
+          if (isAndroid) {
+            let pRaw = String(order.supplier_phone || '').trim();
+            let p = pRaw.replace(/[^\d+]/g, '');
+            if (p.startsWith('+')) p = p.slice(1);
+            if (p.startsWith('00')) p = p.slice(2);
+            const phoneParam = p ? `&phone=${encodeURIComponent(p)}` : '';
+            const shareUrl = `${window.location.origin}${createPageUrl(`ShareOrder?d=${orderData}&text=${encodeURIComponent(text)}${phoneParam}`)}`;
+            window.open(shareUrl, '_blank', 'noopener,noreferrer');
+            try { base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }); } catch {}
+            if (onSend) { try { onSend({ ...order, status: 'sent', order_number: ensuredNumber }); } catch {} }
+            if (onClose) onClose();
+            return;
+          }
+
           // If inside preview OR files-share unsupported, open top-level ShareOrder bridge (matches published behavior)
           const shareSupported = !!(fileForShare && navigator.canShare && navigator.canShare({ files: [fileForShare] }));
           const inIframeForShare = (()=>{ try { return window.top !== window.self; } catch { return true; } })();
