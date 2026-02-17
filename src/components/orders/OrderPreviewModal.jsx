@@ -6,6 +6,7 @@ import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const { t, language } = useLanguage();
@@ -21,6 +22,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const [frameLoaded, setFrameLoaded] = useState(false);
   const urlRef = useRef('');
   const [shareFile, setShareFile] = useState(null);
+  const [showSendChooser, setShowSendChooser] = useState(false);
+  useEffect(() => { if (isOpen) setShowSendChooser(true); }, [isOpen]);
 
   useEffect(() => {
     let disposed = false;
@@ -343,19 +346,29 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             {safeT('close','סגור','Close')}
           </Button>
 
-          <Button type="button" onClick={handleOpenEmail} variant="outline" className="gap-2">
-            <Mail className="w-4 h-4" /> {safeT('send_email','שלח באימייל','Send via Email')}
-          </Button>
-
-          <Button type="button" onClick={handleShareWhatsApp} className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white">
-            <MessageCircle className="w-4 h-4" /> {safeT('send_whatsapp','שלח בוואטסאפ','Send via WhatsApp')}
-          </Button>
-
-          <Button type="button" onClick={handleDownloadJPG} variant="outline" className="gap-2" disabled={downloading}>
-            <Download className="w-4 h-4" /> {safeT('download_image','הורד תמונה','Download JPG')}
+          <Button type="button" onClick={() => setShowSendChooser(true)} className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white">
+            <MessageCircle className="w-4 h-4" /> {safeT('send','שליחה','Send')}
           </Button>
         </div>
-      </motion.div>
-    </div>
-  );
-}
+
+        <Dialog open={showSendChooser} onOpenChange={setShowSendChooser}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{safeT('choose_send_method','בחר אופן שליחה','Choose send method')}</DialogTitle>
+              <DialogDescription>{safeT('choose_how_to_send','בחר איך לשלוח את ההזמנה','Select how you want to send the order')}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-3">
+              <Button onClick={(e)=>{ setShowSendChooser(false); handleShareWhatsApp(e); }} className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white">
+                <MessageCircle className="w-4 h-4" /> {safeT('send_whatsapp','שלח בוואטסאפ','Send via WhatsApp')}
+              </Button>
+              <Button onClick={(e)=>{ setShowSendChooser(false); handleOpenEmail(e); }} variant="outline" className="gap-2">
+                <Mail className="w-4 h-4" /> {safeT('send_email','שלח באימייל','Send via Email')}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        </motion.div>
+        </div>
+        );
+        }
