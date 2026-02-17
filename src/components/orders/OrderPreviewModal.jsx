@@ -370,16 +370,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
             document.body.appendChild(tempContainer);
 
-            const canvas = await html2canvas(tempContainer, {
+            html2canvas(tempContainer, {
               scale: 2,
               backgroundColor: '#ffffff',
               logging: false,
               useCORS: true
-            });
-
-            document.body.removeChild(tempContainer);
-
-            canvas.toBlob(async (blob) => {
+            }).then((canvas) => {
+              document.body.removeChild(tempContainer);
+              canvas.toBlob(async (blob) => {
               const number = ensuredNumber;
               const url = window.URL.createObjectURL(blob);
               const a = document.createElement('a');
