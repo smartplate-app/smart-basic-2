@@ -535,7 +535,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </Button>
         </div>
 
-        <div className="flex-1 bg-gray-100 p-4 overflow-auto" aria-busy={!frameLoaded} aria-live="polite" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 bg-gray-100 p-4 overflow-auto pb-28 md:pb-24" aria-busy={!frameLoaded} aria-live="polite" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
             <div className={`${viewMode === 'mobile' ? 'h-[667px]' : 'h-[600px]'} w-full relative`}>
               {!frameLoaded && (
@@ -548,14 +548,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 className="w-full h-full border-0 [image-rendering:auto] [text-rendering:optimizeLegibility]"
                 title={t('order_preview')}
                 sandbox="allow-same-origin allow-scripts"
-                style={{ backgroundColor: '#ffffff', opacity: frameLoaded ? 1 : 0, willChange: 'opacity', pointerEvents: frameLoaded ? 'auto' : 'none' }}
+                style={{ backgroundColor: '#ffffff', opacity: frameLoaded ? 1 : 0, willChange: 'opacity', pointerEvents: frameLoaded ? 'auto' : 'none', zIndex: 0 }}
                 onLoad={() => setFrameLoaded(true)}
               />
             </div>
           </div>
         </div>
 
-        <div className="flex gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0 z-30 pointer-events-auto">
+        <div className="flex gap-3 px-6 py-4 border-t bg-white/95 sticky bottom-0 z-50 pointer-events-auto" onClickCapture={(e)=>e.stopPropagation()} onMouseDownCapture={(e)=>e.stopPropagation()} onTouchStartCapture={(e)=>e.stopPropagation()}>
           <Button type="button" onClick={onClose} variant="outline">
             {safeT('close','סגור','Close')}
           </Button>
