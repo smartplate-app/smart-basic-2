@@ -59,6 +59,7 @@ export default function OrdersPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [showReceiveForm, setShowReceiveForm] = useState(false);
   const [receiveOrder, setReceiveOrder] = useState(null);
+  const [activeTab, setActiveTab] = useState('orders');
   // Send options chooser
   const [showSendOptions, setShowSendOptions] = useState(false);
   const [sendOptionOrder, setSendOptionOrder] = useState(null);
@@ -1154,7 +1155,7 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="orders" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4 w-full justify-start">
             <TabsTrigger value="orders">{language === 'he' ? 'הזמנות' : 'Orders'}</TabsTrigger>
             <TabsTrigger value="report">{language === 'he' ? 'דוח הזמנות לפריט' : 'Orders per Item'}</TabsTrigger>
