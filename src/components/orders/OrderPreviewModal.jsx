@@ -249,8 +249,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
           const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${ensuredNumber}`;
 
-          // Best-effort: copy preview image to clipboard so user can paste in WhatsApp
-          if (shareFile && navigator.clipboard && window.ClipboardItem) {
+          // Best-effort: copy preview image to clipboard so user can paste in WhatsApp (skip inside preview iframe)
+          const isInIframeLocal = (()=>{ try { return window.top !== window.self; } catch { return true; } })();
+          if (!isInIframeLocal && shareFile && navigator.clipboard && window.ClipboardItem) {
             try {
               await navigator.clipboard.write([
                 new window.ClipboardItem({ [shareFile.type]: shareFile })
@@ -275,20 +276,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 
           if (inIframe) {
-            const uaLocal = navigator.userAgent || '';
-            const isiOSLocal = /iPad|iPhone|iPod/.test(uaLocal) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            const isAndroidLocal = /Android/i.test(uaLocal);
-            if (isiOSLocal) {
-              const deepLinkIOS = `whatsapp://send?text=${encodeURIComponent(text)}`;
-              try { window.location.href = deepLinkIOS; } catch {}
-              setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 700);
-            } else if (isAndroidLocal) {
-              const intentLocal = `intent://send/?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
-              try { window.location.href = intentLocal; } catch {}
-              setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 900);
-            } else {
-              window.open(waWebApi, '_blank', 'noopener,noreferrer');
-            }
+            // In Preview (iframe): open WhatsApp Web immediately in a new tab to avoid popup/deeplink blocks
+            window.open(waWebApi, '_blank', 'noopener,noreferrer');
             if (onClose) onClose();
             return;
           }
