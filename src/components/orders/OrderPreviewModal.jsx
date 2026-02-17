@@ -368,7 +368,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           }
         };
 
-        const handleOpenEmail = () => {
+        const handleOpenEmail = (e) => { if (e && e.preventDefault) e.preventDefault();
           const to = order.supplier_email || '';
           const subject = encodeURIComponent(`${language === 'he' ? 'הזמנה' : 'Order'} #${fallbackNumber}`);
           const body = encodeURIComponent(`${language === 'he' ? 'שלום, מצורפת ההזמנה:' : 'Hello, here is the order:'}\n${orderUrl}`);
@@ -467,12 +467,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           let phone = rawPhone.replace(/[^\d+]/g, '');
           if (phone.startsWith('+')) phone = phone.slice(1);
           if (phone.startsWith('00')) phone = phone.slice(2);
+          const deepLink = phone ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}` : `whatsapp://send?text=${encodeURIComponent(text)}`;
           const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
-          try {
-            window.open(waWeb, '_blank', 'noopener');
-          } catch (_) {
-            window.location.href = waWeb;
+          // Try native app first, then fall back to WhatsApp Web
+          let opened = false;
+          try { window.open(deepLink, '_blank', 'noopener'); opened = true; } catch (_) {
+            try { window.location.href = deepLink; opened = true; } catch (_) {}
           }
+          setTimeout(() => {
+            try { window.open(waWeb, '_blank', 'noopener'); } catch (_) { window.location.href = waWeb; }
+          }, 600);
         };
 
          return (
@@ -537,20 +541,20 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </div>
         </div>
 
-        <div className="flex gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0">
-          <Button onClick={onClose} variant="outline">
+        <div className="flex gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0 z-20 pointer-events-auto">
+          <Button type="button" onClick={onClose} variant="outline">
             {safeT('close','סגור','Close')}
           </Button>
 
-          <Button onClick={handleOpenEmail} variant="outline" className="gap-2">
+          <Button type="button" onClick={handleOpenEmail} variant="outline" className="gap-2">
             <Mail className="w-4 h-4" /> {safeT('send_email','שלח באימייל','Send via Email')}
           </Button>
 
-          <Button onClick={handleShareWhatsApp} className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white">
+          <Button type="button" onClick={handleShareWhatsApp} className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white">
             <MessageCircle className="w-4 h-4" /> {safeT('send_whatsapp','שלח בוואטסאפ','Send via WhatsApp')}
           </Button>
 
-          <Button onClick={handleDownloadJPG} variant="outline" className="gap-2" disabled={downloading}>
+          <Button type="button" onClick={handleDownloadJPG} variant="outline" className="gap-2" disabled={downloading}>
             <Download className="w-4 h-4" /> {safeT('download_image','הורד תמונה','Download JPG')}
           </Button>
         </div>
