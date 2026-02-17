@@ -266,7 +266,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 
           if (inIframe) {
-            window.location.href = waWebApi;
+            window.open(waWebApi, '_blank', 'noopener,noreferrer');
             if (onClose) onClose();
             return;
           }
