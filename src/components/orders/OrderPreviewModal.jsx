@@ -270,12 +270,29 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             return;
           }
 
-          // Try native app first, then WhatsApp Web fallback
+          // iPad/iOS: cancel fallback if the deep link succeeds (app switch hides the page)
+          let cancelled = false;
+          let timerId;
+          const cancelFallback = () => { cancelled = true; if (timerId) clearTimeout(timerId); cleanup(); };
+          const cleanup = () => {
+            document.removeEventListener('visibilitychange', onVis);
+            window.removeEventListener('pagehide', cancelFallback);
+            window.removeEventListener('blur', cancelFallback);
+          };
+          const onVis = () => { if (document.visibilityState === 'hidden') cancelFallback(); };
+          document.addEventListener('visibilitychange', onVis);
+          window.addEventListener('pagehide', cancelFallback, { once: true });
+          window.addEventListener('blur', cancelFallback, { once: true });
+
+          // Try native app first, then WhatsApp Web fallback only if still visible
           try { window.location.href = deepLink; } catch {}
-          setTimeout(() => {
+          timerId = setTimeout(() => {
+            if (cancelled) return;
             const a2 = document.createElement('a'); a2.href = waWeb; a2.target = '_blank'; a2.rel = 'noopener noreferrer';
             document.body.appendChild(a2); a2.click(); a2.remove();
-          }, 450);
+            cleanup();
+          }, 1000);
+
           if (onClose) onClose();
         };
 
