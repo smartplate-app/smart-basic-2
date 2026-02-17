@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { X, Smartphone, Monitor, Copy, Check, Download, Share } from 'lucide-react';
+import { X, Smartphone, Monitor, Copy, Check, Download, Mail, MessageCircle } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
@@ -368,7 +368,46 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           }
         };
 
-        return (
+        const handleOpenEmail = () => {
+          const to = order.supplier_email || '';
+          const subject = encodeURIComponent(`${language === 'he' ? 'הזמנה' : 'Order'} #${fallbackNumber}`);
+          const body = encodeURIComponent(`${language === 'he' ? 'שלום, מצורפת ההזמנה:' : 'Hello, here is the order:'}\n${orderUrl}`);
+          const href = `mailto:${to}?subject=${subject}&body=${body}`;
+          const a = document.createElement('a');
+          a.href = href;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        };
+
+        const handleShareWhatsApp = async () => {
+          const ua = navigator.userAgent || '';
+          const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(ua) || isIOSiPad;
+          const number = fallbackNumber;
+          const text = `${language === 'he' ? 'שלום, הזמנה חדשה.' : 'Hello, new order.'}\n${language === 'he' ? 'מספר הזמנה' : 'Order'}: ${number}\n${orderUrl}`;
+
+          if (isMobile && navigator.share) {
+            // Use existing generator to create an image and invoke native share
+            await handleDownloadImage({ shareOnly: true });
+            return;
+          }
+
+          // Desktop: WhatsApp Web only with prefilled text (cannot attach programmatically)
+          const rawPhone = String(order.supplier_phone || '').trim();
+          let phone = rawPhone.replace(/[^\d+]/g, '');
+          if (phone.startsWith('+')) phone = phone.slice(1);
+          if (phone.startsWith('00')) phone = phone.slice(2);
+          const waWeb = phone ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+          try {
+            window.open(waWeb, '_blank', 'noopener');
+          } catch (_) {
+            window.location.href = waWeb;
+          }
+        };
+
+         return (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -431,30 +470,20 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
         </div>
 
         <div className="flex gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0">
-          <Button
-            onClick={onClose}
-            variant="outline"
-          >
+          <Button onClick={onClose} variant="outline">
             {safeT('close','סגור','Close')}
           </Button>
 
-          <Button
-            onClick={handleDownloadJPG}
-            variant="outline"
-            className="gap-2"
-            disabled={downloading}
-          >
-            <Download className="w-4 h-4" /> {safeT('download_image','הורד תמונה','Download JPG')}
+          <Button onClick={handleOpenEmail} variant="outline" className="gap-2">
+            <Mail className="w-4 h-4" /> {safeT('send_email','שלח באימייל','Send via Email')}
           </Button>
 
-          <Button
-            onClick={() => { if (onSend) onSend(order); }}
-            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm disabled:opacity-50"
-            disabled={downloading}
-            data-testid="order-preview-send"
-          >
-            <Share className="w-5 h-5 mr-2" />
-            {safeT('send','שלח','Send')}
+          <Button onClick={handleShareWhatsApp} className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white">
+            <MessageCircle className="w-4 h-4" /> {safeT('send_whatsapp','שלח בוואטסאפ','Send via WhatsApp')}
+          </Button>
+
+          <Button onClick={handleDownloadJPG} variant="outline" className="gap-2" disabled={downloading}>
+            <Download className="w-4 h-4" /> {safeT('download_image','הורד תמונה','Download JPG')}
           </Button>
         </div>
       </motion.div>
