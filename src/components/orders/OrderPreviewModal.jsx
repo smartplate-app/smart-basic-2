@@ -268,10 +268,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           if (inIframe) {
             const uaLocal = navigator.userAgent || '';
             const isiOSLocal = /iPad|iPhone|iPod/.test(uaLocal) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isAndroidLocal = /Android/i.test(uaLocal);
             if (isiOSLocal) {
               const deepLinkIOS = `whatsapp://send?text=${encodeURIComponent(text)}`;
               try { window.location.href = deepLinkIOS; } catch {}
               setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 700);
+            } else if (isAndroidLocal) {
+              const intentLocal = `intent://send/?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
+              try { window.location.href = intentLocal; } catch {}
+              setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 900);
             } else {
               window.open(waWebApi, '_blank', 'noopener,noreferrer');
             }
@@ -307,7 +312,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             return;
           }
 
-          // Android: try native deep link first, with guarded fallback to wa.me if page stays visible
+          // Android: use intent:// first (reliable in WebViews), then deep link; guarded fallback to web
           let cancelled = false;
           let timerId;
           const cleanup = () => {
@@ -321,7 +326,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           window.addEventListener('pagehide', onCancel, { once: true });
           window.addEventListener('blur', onCancel, { once: true });
 
-          try { window.location.href = deepLink; } catch {}
+          const intent = phone
+            ? `intent://send/?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
+            : `intent://send/?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
+          try { window.location.href = intent; } catch {}
+          setTimeout(() => { try { window.location.href = deepLink; } catch {} }, 300);
 
           timerId = setTimeout(() => {
             if (cancelled || document.visibilityState === 'hidden') return;
