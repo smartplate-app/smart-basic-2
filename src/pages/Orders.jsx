@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle } from "lucide-react";
+import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -54,6 +54,7 @@ export default function OrdersPage() {
   const [isViewer, setIsViewer] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const startYRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -1243,9 +1244,12 @@ export default function OrdersPage() {
                 className="h-11 md:h-10 rounded-lg"
               />
               <div className="flex items-center gap-2">
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 md:h-10 rounded-lg" />
-                <span className="text-gray-500">–</span>
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 md:h-10 rounded-lg" />
+                <Button variant="outline" onClick={() => setShowDatePicker(true)} className="h-11 md:h-10 rounded-lg whitespace-nowrap">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  {(dateStart || dateEnd)
+                    ? `${dateStart ? new Date(dateStart).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : '…'} – ${dateEnd ? new Date(dateEnd).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : '…'}`
+                    : (language === 'he' ? 'בחר טווח תאריכים' : 'Select date range')}
+                </Button>
               </div>
             </div>
 
@@ -1398,9 +1402,12 @@ export default function OrdersPage() {
                 className="h-11 rounded-lg"
               />
               <div className="flex items-center gap-2">
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 rounded-lg" />
-                <span className="text-gray-500">–</span>
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg" />
+                <Button variant="outline" onClick={() => setShowDatePicker(true)} className="h-11 rounded-lg w-full justify-center">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  {(dateStart || dateEnd)
+                    ? `${dateStart ? new Date(dateStart).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : '…'} – ${dateEnd ? new Date(dateEnd).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : '…'}`
+                    : (language === 'he' ? 'בחר טווח תאריכים' : 'Select date range')}
+                </Button>
               </div>
               <Button onClick={() => setFiltersOpen(false)} className="w-full">{safeT('apply', 'החל', 'Apply')}</Button>
             </div>
@@ -1628,6 +1635,37 @@ export default function OrdersPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Date Range Picker Dialog */}
+      <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{language === 'he' ? 'בחר טווח תאריכים' : 'Select Date Range'}</DialogTitle>
+            <DialogDescription>{language === 'he' ? 'בחר תאריך התחלה וסוף או השתמש בקיצורים' : 'Pick start/end dates or use a preset'}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-500">{language === 'he' ? 'מתחיל' : 'Start'}</label>
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">{language === 'he' ? 'מסתיים' : 'End'}</label>
+                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => { const d=new Date(); const day=d.getDay(); const start=new Date(d); start.setDate(d.getDate()-day); const end=new Date(start); end.setDate(start.getDate()+6); setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); setShowDatePicker(false); }}>{language === 'he' ? 'שבוע נוכחי' : 'Current week'}</Button>
+              <Button variant="outline" size="sm" onClick={() => { const d=new Date(); const y=d.getFullYear(); const m=d.getMonth(); const start=new Date(y,m,1); const end=new Date(y,m+1,0); setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); setShowDatePicker(false); }}>{language === 'he' ? 'חודש נוכחי' : 'Current month'}</Button>
+              <Button variant="outline" size="sm" onClick={() => { const d=new Date(); const y=d.getFullYear(); const start=new Date(y,0,1); const end=new Date(y,11,31); setDateStart(start.toISOString().slice(0,10)); setDateEnd(end.toISOString().slice(0,10)); setShowDatePicker(false); }}>{language === 'he' ? 'שנה נוכחית' : 'Current year'}</Button>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setDateStart(''); setDateEnd(''); setShowDatePicker(false); }}>{language === 'he' ? 'נקה' : 'Clear'}</Button>
+              <Button onClick={() => setShowDatePicker(false)} className="bg-gray-900 hover:bg-gray-800 text-white">{language === 'he' ? 'אישור' : 'Apply'}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Send options chooser */}
       <Dialog open={showSendOptions} onOpenChange={setShowSendOptions}>
