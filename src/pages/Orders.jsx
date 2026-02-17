@@ -891,15 +891,18 @@ export default function OrdersPage() {
       }
     } catch (_) { /* continue */ }
 
-    const allowDeeplink = false;
-    if (allowDeeplink && isAndroid) {
-      tryOpenChain([deeplink, androidIntent]);
-    } else if (allowDeeplink && isIOS) {
-      // iOS/iPadOS: native share/app only
-      tryOpenChain([deeplink]);
-    } else if (allowDeeplink) {
-      // Desktop: WhatsApp Web only (disabled by default)
-      tryOpenChain([waWeb]);
+    const isDesktop = !(isAndroid || isIOS);
+    if (isDesktop) {
+      // Desktop only: allow WhatsApp Web text handoff (no links on mobile/tablet)
+      try {
+        const a = document.createElement('a');
+        a.href = waWeb;
+        a.target = '_blank';
+        a.rel = 'noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (_) { try { window.open(waWeb, '_blank'); } catch {} }
     }
 
     // Mobile-only hint; no desktop popups
