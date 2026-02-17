@@ -695,8 +695,11 @@ export default function OrdersPage() {
     const ua = navigator.userAgent || '';
     const isAndroid = /Android/i.test(ua);
     const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
+    const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
     let preOpenedWindow = null;
     if (!isAndroid && !isIOS) {
+      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
+    } else if (isIOS && inIframe) {
       try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
     }
     try {
