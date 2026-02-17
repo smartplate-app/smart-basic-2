@@ -217,6 +217,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               a.remove();
               setDownloading(false);
             }, 'image/jpeg', 0.95);
+            });
 
           } catch (err) {
             console.error('Failed to download image:', err);
