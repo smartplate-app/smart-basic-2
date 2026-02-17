@@ -769,6 +769,10 @@ export default function OrdersPage() {
       ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
       : `https://wa.me/?text=${encodeURIComponent(text)}`;
 
+    const waWeb = phone
+      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+
     // 0) Immediate native share sheet on mobile/tablet (text-only)
     const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
     if (isMobileOrTablet && navigator.share) {
@@ -776,6 +780,15 @@ export default function OrdersPage() {
         await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
         return;
       } catch (_) { /* continue to next strategies */ }
+    }
+
+    // 0) Immediate native share panel on mobile/tablet (text-only for speed)
+    const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
+    if (isMobileOrTablet && navigator.share) {
+      try {
+        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+        return; // done
+      } catch (_) { /* fall back to image + deep link */ }
     }
 
     // Prepare a shareable JPG (used for native share or clipboard fallback)
