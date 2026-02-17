@@ -28,13 +28,40 @@ export default function FakeWhatsApp() {
           const o = event?.data;
           if (!o) return;
           if (o.status === 'sent') {
-            setMessages((prev) => [...prev, formatMsg(o)]);
+            const msgs = [formatMsg(o)];
+            try {
+              if (localStorage.getItem('b44_emulator_autosend_wa') === '1') {
+                const img = renderPreviewImage(o);
+                if (img) msgs.push({ type: 'image', id: o.id + ':img', imgSrc: img, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+              }
+            } catch {}
+            setMessages((prev) => [...prev, ...msgs]);
           }
         });
       } catch {}
     })();
     return () => { try { unsub && unsub(); } catch {} };
   }, []);
+
+  const renderPreviewImage = (order) => {
+    try {
+      const c = document.createElement('canvas');
+      c.width = 640; c.height = 320;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,c.width,c.height);
+      const grad = ctx.createLinearGradient(0,0,c.width,0);
+      grad.addColorStop(0,'#22c55e'); grad.addColorStop(1,'#16a34a');
+      ctx.fillStyle = grad; ctx.fillRect(0,0,c.width,64);
+      ctx.fillStyle = '#0f172a'; ctx.font = 'bold 22px system-ui';
+      ctx.fillText(`Order #${order.order_number || order.id?.slice(0,6) || ''}`, 20, 110);
+      ctx.font = '16px system-ui';
+      if (order.supplier_name) ctx.fillText(`Supplier: ${order.supplier_name}`, 20, 150);
+      if (order.restaurant_name) ctx.fillText(`From: ${order.restaurant_name}`, 20, 180);
+      const ts = new Date(order.updated_date || Date.now()).toLocaleString();
+      ctx.fillText(ts, 20, 210);
+      return c.toDataURL('image/jpeg', 0.9);
+    } catch { return null; }
+  };
 
   const formatMsg = (order) => {
     const when = new Date(order.updated_date || Date.now());
@@ -44,7 +71,7 @@ export default function FakeWhatsApp() {
     const total = (order.total_cost != null) ? `₪${Number(order.total_cost).toFixed(2)}` : '';
     const title = `Order ${num} sent to ${supplier} ${total ? '(' + total + ')' : ''}`;
     const body = order.restaurant_name ? `From: ${order.restaurant_name}` : '';
-    return { id: order.id + ':' + (order.updated_date || ''), title, body, time };
+    return { type: 'text', id: order.id + ':' + (order.updated_date || ''), title, body, time };
   };
 
   return (
@@ -63,9 +90,18 @@ export default function FakeWhatsApp() {
           )}
           {messages.map((m, idx) => (
             <div key={m.id + ':' + idx} className="max-w-[85%] bg-white rounded-lg shadow px-3 py-2 border border-black/5">
-              <div className="text-[13px] font-medium text-gray-800">{m.title}</div>
-              {!!m.body && <div className="text-[12px] text-gray-600 mt-0.5">{m.body}</div>}
-              <div className="text-[10px] text-gray-400 mt-1 text-right">{m.time}</div>
+              {m.type === 'image' ? (
+                <div className="py-1">
+                  <img src={m.imgSrc} alt="order preview" className="rounded-md w-full h-auto" />
+                  <div className="text-[10px] text-gray-400 mt-1 text-right">{m.time}</div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-[13px] font-medium text-gray-800">{m.title}</div>
+                  {!!m.body && <div className="text-[12px] text-gray-600 mt-0.5">{m.body}</div>}
+                  <div className="text-[10px] text-gray-400 mt-1 text-right">{m.time}</div>
+                </>
+              )}
             </div>
           ))}
         </div>

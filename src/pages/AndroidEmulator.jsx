@@ -37,6 +37,20 @@ export default function AndroidEmulator() {
     })();
   }, []);
 
+  // Enable emulator flags for the previewed app (shared origin → iframe reads same localStorage)
+  useEffect(() => {
+    try {
+      localStorage.setItem('b44_emulator_mode', '1');
+      localStorage.setItem('b44_emulator_autosend_wa', '1');
+    } catch {}
+    return () => {
+      try {
+        localStorage.removeItem('b44_emulator_mode');
+        localStorage.removeItem('b44_emulator_autosend_wa');
+      } catch {}
+    };
+  }, []);
+
   const saveFlag = (key, val) => {
     try {
       if (val) localStorage.setItem(key, '1');

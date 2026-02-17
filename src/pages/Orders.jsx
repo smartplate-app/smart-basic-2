@@ -50,6 +50,10 @@ export default function OrdersPage() {
     return map[u] || u;
   };
 
+  // Emulator flags (set by AndroidEmulator page)
+  const isEmulator = (() => { try { return localStorage.getItem('b44_emulator_mode') === '1'; } catch { return false; } })();
+  const emulatorAutoSendWA = (() => { try { return localStorage.getItem('b44_emulator_autosend_wa') === '1'; } catch { return false; } })();
+
 
   const [isViewer, setIsViewer] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
@@ -741,6 +745,7 @@ export default function OrdersPage() {
   };
 
   const sendOrderToWhatsApp = async (order, opts = {}) => {
+    if (isEmulator && emulatorAutoSendWA) { return; }
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
     const ua = navigator.userAgent || '';
@@ -953,9 +958,9 @@ export default function OrdersPage() {
     setSendOptionOrder(null);
   };
 
-  const handleConfirmSendWhatsApp = async () => {
-    if (!sendOptionOrder) return;
-    const order = sendOptionOrder;
+  const handleConfirmSendWhatsApp = async (orderOverride) => {
+    const order = orderOverride || sendOptionOrder;
+    if (!order) return;
     setShowSendOptions(false);
     // Pre-open a tab synchronously to avoid popup blockers and iframe embedding (Firefox/Preview)
     const ua = navigator.userAgent || '';
