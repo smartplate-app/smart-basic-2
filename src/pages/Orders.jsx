@@ -8,6 +8,7 @@ import { AnimatePresence } from "framer-motion";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "../components/LanguageProvider";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
@@ -1153,6 +1154,12 @@ export default function OrdersPage() {
           </div>
         </div>
 
+        <Tabs defaultValue="orders" className="w-full">
+          <TabsList className="mb-4 w-full justify-start">
+            <TabsTrigger value="orders">{language === 'he' ? 'הזמנות' : 'Orders'}</TabsTrigger>
+            <TabsTrigger value="report">{language === 'he' ? 'דוח הזמנות לפריט' : 'Orders per Item'}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="orders">
         {/* Mobile Filters Drawer trigger */}
         <div className="md:hidden mb-4">
           <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
@@ -1241,73 +1248,7 @@ export default function OrdersPage() {
               </div>
             </div>
 
-        {/* Items Quantity Report (aggregated across orders) */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-              <div>
-                <div className="text-base font-semibold text-gray-800">{t('reports_title') || 'Monthly Report'}</div>
-                <div className="text-xs text-gray-500">{t('report_for_month_year', { month: (reportMonth || '').split('-')[1], year: (reportMonth || '').split('-')[0] }) || ''}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600">{safeT('month', 'חודש', 'Month')}</label>
-                <Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} className="h-9 w-44" />
-                <Button variant="outline" className="h-9" onClick={handleGenerateAfcSheet}>{safeT('generate_afc_sheet','צור גיליון AFC','Generate AFC Sheet')}</Button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-6 mb-4">
-              <div>
-                <div className="text-sm text-gray-600">{t('total_orders')}</div>
-                <div className="text-xl font-bold">{reportOrders.length}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}</div>
-                <div className="text-xl font-bold">₪{(itemsSummary.totalCost || 0).toFixed(2)}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">{t('total_item_quantity') || t('quantity')}</div>
-                <div className="text-xl font-bold">{(itemsSummary.totalQty || 0).toFixed(2)}</div>
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <Input
-                value={itemSearch}
-                onChange={(e) => setItemSearch(e.target.value)}
-                placeholder={safeT('search', 'חיפוש פריטים...', 'Search items...')}
-                className="h-9 max-w-sm"
-              />
-            </div>
-
-            <div className="overflow-auto border rounded-md">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('item', 'פריט', 'Item')}</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('quantity', 'כמות', 'Quantity')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItemRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={2} className="px-3 py-6 text-center text-gray-500">{t('no_items_to_display_items') || t('no_items_to_display')}</td>
-                    </tr>
-                  ) : (
-                    filteredItemRows.map((row) => (
-                      <tr key={row.name} className="border-t">
-                        <td className="px-3 py-2 text-right text-gray-800">{row.name}</td>
-                        <td className="px-3 py-2 text-right font-semibold">{row.quantity.toFixed(2)} {unitLabel(row.unit)}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-         {/* Mobile View */}
+        {/* Mobile View */}
         <div className="md:hidden space-y-4">
           {loading ? (
             <div className="text-center py-12">
@@ -1616,6 +1557,75 @@ export default function OrdersPage() {
             </div>
           )}
         </div>
+          </TabsContent>
+          <TabsContent value="report">
+            {/* Items Quantity Report (aggregated across orders) */}
+            <Card className="mb-6">
+              <CardContent className="p-4">
+                <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+                  <div>
+                    <div className="text-base font-semibold text-gray-800">{t('reports_title') || 'Monthly Report'}</div>
+                    <div className="text-xs text-gray-500">{t('report_for_month_year', { month: (reportMonth || '').split('-')[1], year: (reportMonth || '').split('-')[0] }) || ''}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600">{safeT('month', 'חודש', 'Month')}</label>
+                    <Input type="month" value={reportMonth} onChange={(e) => setReportMonth(e.target.value)} className="h-9 w-44" />
+                    <Button variant="outline" className="h-9" onClick={handleGenerateAfcSheet}>{safeT('generate_afc_sheet','צור גיליון AFC','Generate AFC Sheet')}</Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-6 mb-4">
+                  <div>
+                    <div className="text-sm text-gray-600">{t('total_orders')}</div>
+                    <div className="text-xl font-bold">{reportOrders.length}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}</div>
+                    <div className="text-xl font-bold">₪{(itemsSummary.totalCost || 0).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">{t('total_item_quantity') || t('quantity')}</div>
+                    <div className="text-xl font-bold">{(itemsSummary.totalQty || 0).toFixed(2)}</div>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <Input
+                    value={itemSearch}
+                    onChange={(e) => setItemSearch(e.target.value)}
+                    placeholder={safeT('search', 'חיפוש פריטים...', 'Search items...')}
+                    className="h-9 max-w-sm"
+                  />
+                </div>
+
+                <div className="overflow-auto border rounded-md">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('item', 'פריט', 'Item')}</th>
+                        <th className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{safeT('quantity', 'כמות', 'Quantity')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredItemRows.length === 0 ? (
+                        <tr>
+                          <td colSpan={2} className="px-3 py-6 text-center text-gray-500">{t('no_items_to_display_items') || t('no_items_to_display')}</td>
+                        </tr>
+                      ) : (
+                        filteredItemRows.map((row) => (
+                          <tr key={row.name} className="border-t">
+                            <td className="px-3 py-2 text-right text-gray-800">{row.name}</td>
+                            <td className="px-3 py-2 text-right font-semibold">{row.quantity.toFixed(2)} {unitLabel(row.unit)}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Send options chooser */}

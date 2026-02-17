@@ -67,6 +67,7 @@ import MonthlyCount from './pages/MonthlyCount';
 import OAuthCallback from './pages/OAuthCallback';
 import OrderDetails from './pages/OrderDetails';
 import Orders from './pages/Orders';
+import PreviewLogin from './pages/PreviewLogin';
 import PublicOrder from './pages/PublicOrder';
 import Register from './pages/Register';
 import RestaurantInvite from './pages/RestaurantInvite';
@@ -90,7 +91,6 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import PreviewLogin from './pages/PreviewLogin';
 import __Layout from './Layout.jsx';
 
 
@@ -115,6 +115,7 @@ export const PAGES = {
     "OAuthCallback": OAuthCallback,
     "OrderDetails": OrderDetails,
     "Orders": Orders,
+    "PreviewLogin": PreviewLogin,
     "PublicOrder": PublicOrder,
     "Register": Register,
     "RestaurantInvite": RestaurantInvite,
@@ -138,7 +139,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "PreviewLogin": PreviewLogin,
 }
 
 export const pagesConfig = {
