@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AnimatePresence } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import MonthlyInvoiceReport from "../components/receipts/MonthlyInvoiceReport";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
@@ -47,6 +48,7 @@ export default function SupplyReceiptsPage() {
   const [activeTab, setActiveTab] = useState('receipts');
   const [viewMode, setViewMode] = useState('list');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showDateDialog, setShowDateDialog] = useState(false);
   const startYRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -605,6 +607,8 @@ export default function SupplyReceiptsPage() {
                     const e = new Date(now.getFullYear(), 11, 31);
                     setDateFrom(s.toISOString().slice(0,10));
                     setDateTo(e.toISOString().slice(0,10));
+                  } else if (v === 'custom') {
+                    setShowDateDialog(true);
                   } else if (v === 'all') {
                     setDateFrom("");
                     setDateTo("");
@@ -624,24 +628,31 @@ export default function SupplyReceiptsPage() {
               </Select>
 
               {/* From / To dates */}
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); }}
-                placeholder={tt('from_date','מתאריך','From date')}
-                className="h-9 rounded-full px-3 text-sm"
-                disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
-              />
-              <span className="text-[11px] text-gray-500">{tt('between_dates','בין תאריכים','Between dates')}</span>
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); }}
-                placeholder={tt('to_date','עד תאריך','To date')}
-                className="h-9 rounded-full px-3 text-sm"
-                disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
-              />
+
             </div>
+
+            <Dialog open={showDateDialog} onOpenChange={setShowDateDialog}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{tt('custom_range','טווח מותאם','Custom range')}</DialogTitle>
+                  <DialogDescription>{language === 'he' ? 'בחר תאריך התחלה וסיום' : 'Choose start and end dates'}</DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500">{tt('from_date','מתאריך','From date')}</label>
+                    <Input type="date" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">{tt('to_date','עד תאריך','To date')}</label>
+                    <Input type="date" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button variant="outline" onClick={()=>{ setDateFrom(''); setDateTo(''); setDatePreset('all'); setShowDateDialog(false); }}>{tt('clear','נקה','Clear')}</Button>
+                  <Button onClick={()=>{ setDatePreset('custom'); setShowDateDialog(false); }} className="bg-gray-900 hover:bg-gray-800 text-white">{tt('apply','החל','Apply')}</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Mobile Filters Drawer */}
             <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -675,6 +686,68 @@ export default function SupplyReceiptsPage() {
                       <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {/* Supplier filter */}
+                  <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={tt('supplier','ספק','Supplier')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{tt('all_suppliers','כל הספקים','All suppliers')}</SelectItem>
+                      {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                        .sort((a,b) => a.localeCompare(b))
+                        .map(name => (
+                          <SelectItem key={name} value={name}>{name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Timeframe preset */}
+                  <Select
+                    value={datePreset}
+                    onValueChange={(v) => {
+                      setDatePreset(v);
+                      const now = new Date();
+                      if (v === 'week') {
+                        const s = new Date(now);
+                        const dow = s.getDay();
+                        s.setDate(s.getDate() - dow);
+                        s.setHours(0,0,0,0);
+                        const e = new Date(s);
+                        e.setDate(s.getDate() + 6);
+                        e.setHours(23,59,59,999);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'month') {
+                        const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                        const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'year') {
+                        const s = new Date(now.getFullYear(), 0, 1);
+                        const e = new Date(now.getFullYear(), 11, 31);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'custom') {
+                        setShowDateDialog(true);
+                      } else if (v === 'all') {
+                        setDateFrom("");
+                        setDateTo("");
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={tt('timeframe','טווח זמן','Timeframe')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{tt('all_time','כל הזמן','All time')}</SelectItem>
+                      <SelectItem value="week">{tt('current_week','שבוע נוכחי','Current week')}</SelectItem>
+                      <SelectItem value="month">{tt('current_month','חודש נוכחי','Current month')}</SelectItem>
+                      <SelectItem value="year">{tt('current_year','שנה נוכחית','Current year')}</SelectItem>
+                      <SelectItem value="custom">{tt('custom_range','טווח מותאם','Custom range')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <Button onClick={() => setFiltersOpen(false)} className="w-full">{tt('apply','החל','Apply')}</Button>
                 </div>
               </DrawerContent>
