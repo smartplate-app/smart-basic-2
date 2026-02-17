@@ -522,17 +522,17 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               </div>
             `;
             document.body.appendChild(temp);
-            const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
-            document.body.removeChild(temp);
-            await new Promise((resolve) => canvas.toBlob(async (blob) => {
-              try {
-                // @ts-ignore ClipboardItem global in browsers
-                if (blob && window.ClipboardItem && navigator.clipboard && 'write' in navigator.clipboard) {
-                  await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-                }
-              } catch (_) { /* ignore clipboard issues */ }
-              resolve();
-            }, 'image/jpeg', 0.95));
+            html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true }).then((canvas) => {
+              document.body.removeChild(temp);
+              canvas.toBlob(async (blob) => {
+                try {
+                  // @ts-ignore ClipboardItem global in browsers
+                  if (blob && window.ClipboardItem && navigator.clipboard && 'write' in navigator.clipboard) {
+                    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                  }
+                } catch (_) { /* ignore clipboard issues */ }
+              }, 'image/jpeg', 0.95);
+            });
           } catch (_) { /* continue even if clipboard copy fails */ }
 
           const rawPhone = String(order.supplier_phone || '').trim();
