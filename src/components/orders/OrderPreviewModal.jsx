@@ -278,22 +278,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
 
           if (inIframe) {
-            const uaLocal = navigator.userAgent || '';
-            const isiOSLocal = /iPad|iPhone|iPod/.test(uaLocal) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            const isAndroidLocal = /Android/i.test(uaLocal);
-            if (isAndroidLocal) {
-              const intentLocal = phone
-                ? `intent://send/?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;S.browser_fallback_url=${encodeURIComponent(waWebApi)};end`
-                : `intent://send/?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;S.browser_fallback_url=${encodeURIComponent(waWebApi)};end`;
-              try { window.location.href = intentLocal; } catch {}
-              setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 800);
-            } else if (isiOSLocal) {
-              const deepLinkIOS = `whatsapp://send?text=${encodeURIComponent(text)}`;
-              try { window.location.href = deepLinkIOS; } catch {}
-              setTimeout(() => { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }, 700);
-            } else {
-              window.open(waWebApi, '_blank', 'noopener,noreferrer');
-            }
+            // Mirror published app: open native WhatsApp via top-level navigation; fallback to web only if not opened
+            const deep = phone
+              ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`
+              : `whatsapp://send?text=${encodeURIComponent(text)}`;
+            try { (window.top || window).location.href = deep; } catch { window.location.href = deep; }
+            setTimeout(() => {
+              try { (window.top || window).open(waWebApi, '_blank', 'noopener,noreferrer'); } catch { window.open(waWebApi, '_blank', 'noopener,noreferrer'); }
+            }, 700);
+            if (onClose) onClose();
             return;
           }
 
@@ -325,31 +318,20 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             return;
           }
 
-          // Android: use intent:// first (reliable in WebViews), then deep link; guarded fallback to web
+          // Android: match published flow — use whatsapp:// only; fallback to web if app not opened
           let cancelled = false;
-          let timerId;
-          const cleanup = () => {
-            document.removeEventListener('visibilitychange', onVis);
-            window.removeEventListener('pagehide', onCancel);
-            window.removeEventListener('blur', onCancel);
-          };
-          const onCancel = () => { cancelled = true; if (timerId) clearTimeout(timerId); cleanup(); };
-          const onVis = () => { if (document.visibilityState === 'hidden') onCancel(); };
+          const cleanup = () => { document.removeEventListener('visibilitychange', onVis); };
+          const onVis = () => { if (document.visibilityState === 'hidden') { cancelled = true; cleanup(); } };
           document.addEventListener('visibilitychange', onVis);
-          window.addEventListener('pagehide', onCancel, { once: true });
-          window.addEventListener('blur', onCancel, { once: true });
 
-          const intent = phone
-            ? `intent://send/?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
-            : `intent://send/?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
-          try { window.location.href = intent; } catch {}
-          setTimeout(() => { try { window.location.href = deepLink; } catch {} }, 300);
+          try { (window.top || window).location.href = deepLink; } catch { window.location.href = deepLink; }
 
-          timerId = setTimeout(() => {
-            if (cancelled || document.visibilityState === 'hidden') return;
-            window.open(waWebApi, '_blank', 'noopener,noreferrer');
-            cleanup();
-          }, 1200);
+          setTimeout(() => {
+            if (!cancelled && document.visibilityState !== 'hidden') {
+              window.open(waWebApi, '_blank', 'noopener,noreferrer');
+              cleanup();
+            }
+          }, 900);
 
           if (onClose) onClose();
         };
