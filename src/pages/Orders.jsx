@@ -757,7 +757,11 @@ export default function OrdersPage() {
     const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
     if (isMobileOrTablet && navigator.share) {
       try {
-        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+        await navigator.share({
+          title: `${t('order_preview') || 'Order'} #${ensuredNumber}`,
+          text,
+          url: window.location.href
+        });
         return;
       } catch (_) { /* continue to next strategies */ }
     }
