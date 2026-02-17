@@ -751,17 +751,77 @@ export default function OrdersPage() {
       ? `intent://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
       : `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
 
+    const waWeb = phone
+      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+
 
 
     // 0) Immediate native share sheet on mobile/tablet (text-only)
     const isMobileOrTablet = isAndroid || isIOS || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
     if (isMobileOrTablet && navigator.share) {
+      // Try to generate a lightweight JPG of the order and attach it to the share sheet
+      let file = null;
       try {
-        await navigator.share({
-          title: `${t('order_preview') || 'Order'} #${ensuredNumber}`,
-          text,
-          url: window.location.href
-        });
+        const temp = document.createElement('div');
+        temp.style.position = 'fixed';
+        temp.style.left = '-9999px';
+        temp.style.top = '0';
+        temp.style.width = '680px';
+        temp.style.background = 'white';
+        temp.style.padding = '24px';
+        temp.style.fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+        temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
+        const maxItems = 12;
+        temp.innerHTML = `
+          <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:18px;border-radius:14px 14px 0 0;margin:-24px -24px 12px -24px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
+            <div style="opacity:.9;margin-top:4px;">${t('supplier') || 'Supplier'}: ${order.supplier_name || ''}</div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:8px 0;">
+            <div style="font-weight:700;color:#0f172a;margin-bottom:6px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
+            ${order.delivery_date ? `<div style=\"margin-top:4px;color:#92400e;background:#fef3c7;padding:6px 10px;border-radius:8px;display:inline-block;\">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
+          </div>
+          <div style="border:1px solid #d1fae5;border-radius:10px;padding:12px;margin:8px 0;">
+            <div style="font-weight:800;color:#166534;margin-bottom:6px;">${t('items') || 'Items'}</div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead><tr style="background:#f9fafb"><th style="padding:6px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:6px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:6px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:6px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
+              <tbody>
+                ${(order.items || []).slice(0, maxItems).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:6px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:6px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}</td><td style=\"padding:6px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:6px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
+                ${(order.items || []).length > maxItems ? `<tr><td colspan=\"4\" style=\"padding:6px;color:#6b7280;font-style:italic;\">+${(order.items || []).length - maxItems} ${t('more') || 'more'}...</td></tr>` : ''}
+              </tbody>
+            </table>
+          </div>
+        `;
+        document.body.appendChild(temp);
+        const { default: html2canvas } = await import('html2canvas');
+        const canvas = await html2canvas(temp, { scale: 1.6, backgroundColor: '#ffffff', logging: false, useCORS: true });
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+        if (blob) file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
+        try { document.body.removeChild(temp); } catch {}
+      } catch (e) {
+        console.warn('[WhatsApp Share] JPG render skipped:', e?.message || e);
+      }
+
+      const canFileShare = !!(file && navigator.canShare && (()=>{ try { return navigator.canShare({ files: [file] }); } catch { return false; } })());
+      try {
+        if (canFileShare) {
+          await navigator.share({ files: [file], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+          return;
+        }
+      } catch (_) { /* fall through */ }
+
+      // Best effort: copy the image so the user can paste it inside WhatsApp after the deep link opens
+      if (file && navigator.clipboard && 'write' in navigator.clipboard) {
+        try {
+          // @ts-ignore ClipboardItem global
+          await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
+        } catch (_) { /* ignore */ }
+      }
+
+      // Fallback: open the share sheet with text only
+      try {
+        await navigator.share({ title: `${t('order_preview') || 'Order'} #${ensuredNumber}`, text });
         return;
       } catch (_) { /* continue to next strategies */ }
     }
@@ -831,14 +891,7 @@ export default function OrdersPage() {
     }
 
     // Mobile-only hint; no desktop popups
-    if (false && (isAndroid || isIOS) && (copiedImage || copiedText)) {
-      setTimeout(() => {
-        const msg = copiedImage
-          ? (t('image_copied_paste_in_whatsapp') || 'The image was copied. Paste in WhatsApp.')
-          : (t('text_copied_paste_in_whatsapp') || 'Text copied. Paste in WhatsApp.');
-        try { alert(msg); } catch {}
-      }, 300);
-    }
+
   };
 
   const handleConfirmSendEmail = async () => {
