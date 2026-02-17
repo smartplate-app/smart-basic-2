@@ -919,8 +919,9 @@ export default function OrdersPage() {
     const order = sendOptionOrder;
     setShowSendOptions(false);
     // Pre-open a tab synchronously to avoid popup blockers and iframe embedding (Firefox/Preview)
-    const isAndroid = /Android/i.test(navigator.userAgent || '');
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua) || ((navigator.platform === 'MacIntel' || /Macintosh/.test(ua)) && navigator.maxTouchPoints > 1);
     let preOpenedWindow = null;
     if (!isAndroid && !isIOS) {
       try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
