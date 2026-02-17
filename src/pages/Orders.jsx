@@ -865,15 +865,23 @@ export default function OrdersPage() {
             }
           } catch {}
           if (inIframe) {
-            // Open a helper tab that meta-refreshes to the deeplink (works around iframe restrictions)
-            const w = window.open('about:blank', '_blank');
-            if (w && !w.closed) {
-              try {
-                w.document.open();
-                w.document.write(`<!doctype html><html><head><meta http-equiv="refresh" content="0;url=${url}"></head><body><a id="go" href="${url}">Open</a><script>setTimeout(function(){location.href='${url}';},10);</script></body></html>`);
-                w.document.close();
-              } catch {}
+            // Try direct open to preserve user gesture
+            let w = null;
+            try { w = window.open(url, '_blank'); } catch {}
+            if (!w || w.closed) {
+              try { w = window.open('about:blank', '_blank'); } catch {}
+              if (w && !w.closed) {
+                try { w.location.href = url; }
+                catch {
+                  try {
+                    w.document.open();
+                    w.document.write(`<!doctype html><html><head><meta http-equiv="refresh" content="0;url=${url}"></head><body></body></html>`);
+                    w.document.close();
+                  } catch {}
+                }
+              }
             }
+            try { setTimeout(() => { try { w && w.close(); } catch {} }, 2000); } catch {}
             return;
           }
           try { window.location.href = url; return; } catch {}
