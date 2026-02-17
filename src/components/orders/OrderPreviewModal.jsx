@@ -205,18 +205,22 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               useCORS: true
             }).then((canvas) => {
               document.body.removeChild(tempContainer);
-              canvas.toBlob(async (blob) => {
-              const number = ensuredNumber;
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `order-${number}.jpg`;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              a.remove();
+              canvas.toBlob((blob) => {
+                if (!blob) { setDownloading(false); return; }
+                const number = ensuredNumber;
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `order-${number}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                setDownloading(false);
+              }, 'image/jpeg', 0.95);
+            }).catch((err) => {
+              console.error('Failed to render image:', err);
               setDownloading(false);
-            }, 'image/jpeg', 0.95);
             });
 
           } catch (err) {
