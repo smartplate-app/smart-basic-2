@@ -750,12 +750,7 @@ export default function OrdersPage() {
       return p; // E.164 without '+' if possible
     })();
 
-    const waWeb = phone
-      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
-      : `https://wa.me/?text=${encodeURIComponent(text)}`;
-    const apiUrl = phone
-      ? `https://api.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`
-      : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    // Web endpoints intentionally unused: app does not support WhatsApp Web
     const deeplink = phone
       ? `whatsapp://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}`
       : `whatsapp://send?text=${encodeURIComponent(text)}`;
@@ -866,7 +861,7 @@ export default function OrdersPage() {
           try { preOpened.location.href = url; preOpened.focus(); return; } catch (_) {}
         }
         if (!isAndroid && !isIOS) {
-          // Desktop fallback: open in new tab
+          // Desktop: attempt opening in a new tab so OS can catch the custom scheme handler
           const a = document.createElement('a');
           a.href = url;
           a.target = '_blank';
@@ -876,7 +871,7 @@ export default function OrdersPage() {
           a.remove();
           return;
         }
-        // Mobile: prefer deep link navigation; fallback to new tab if blocked
+        // Mobile: navigate directly
         try { window.location.href = url; } catch { window.open(url, '_blank'); }
       };
 
@@ -886,6 +881,13 @@ export default function OrdersPage() {
         setTimeout(() => { if (!switched) tryNext(i + 1); }, stepMs);
       };
       tryNext(0);
+
+      // If nothing handled the deep link, show install guidance (app does not support WhatsApp Web)
+      const installMsg = language === 'he'
+        ? 'לא זוהתה אפליקציית WhatsApp במכשיר. נא להתקין את האפליקציה ולהנסה שוב (אין תמיכה ב-WhatsApp Web).'
+        : 'WhatsApp app not detected. Please install the WhatsApp desktop/mobile app and try again (WhatsApp Web is not supported).';
+      const timeoutMs = Math.max(1200, stepMs * (urls.length + 2));
+      setTimeout(() => { if (!switched) { try { alert(installMsg); } catch {} } }, timeoutMs);
     };
 
 
