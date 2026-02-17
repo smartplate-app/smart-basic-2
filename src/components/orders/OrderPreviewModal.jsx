@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { X, Smartphone, Monitor, Copy, Check, Download, Mail, MessageCircle } from 'lucide-react';
@@ -413,7 +413,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           a.remove();
         };
 
-        const handleShareWhatsApp = (e) => { if (e && e.preventDefault) e.preventDefault();
+        const handleShareWhatsApp = async (e) => { if (e && e.preventDefault) e.preventDefault();
           const ua = navigator.userAgent || '';
           const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
           const isMobile = /Android|iPhone|iPad|iPod/i.test(ua) || isIOSiPad;
