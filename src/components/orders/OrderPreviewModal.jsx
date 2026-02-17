@@ -260,9 +260,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           }
 
           // If native share with files is available, prefer it to auto-attach the image (matches published app)
-          if (shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+          if (fileForShare && navigator.canShare && navigator.canShare({ files: [fileForShare] })) {
             try {
-              await navigator.share({ files: [shareFile], text });
+              await navigator.share({ files: [fileForShare], text });
               try { base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }); } catch {}
               if (onSend) { try { onSend({ ...order, status: 'sent', order_number: ensuredNumber }); } catch {} }
               if (onClose) onClose();
@@ -273,7 +273,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           }
 
           // If inside preview OR files-share unsupported, open top-level ShareOrder bridge (matches published behavior)
-          const shareSupported = !!(shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] }));
+          const shareSupported = !!(fileForShare && navigator.canShare && navigator.canShare({ files: [fileForShare] }));
           const inIframeForShare = (()=>{ try { return window.top !== window.self; } catch { return true; } })();
           if (inIframeForShare || !shareSupported) {
             const shareUrl = `${window.location.origin}${createPageUrl(`ShareOrder?d=${orderData}&text=${encodeURIComponent(text)}${phone ? `&phone=${encodeURIComponent(phone)}` : ''}`)}`;
