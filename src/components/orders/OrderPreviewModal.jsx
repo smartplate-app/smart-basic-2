@@ -259,6 +259,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             } catch {}
           }
 
+          // Prepare file for native share; wait briefly if still generating
+          let fileForShare = shareFile;
+          if (!fileForShare) {
+            for (let i = 0; i < 8; i++) { // ~800ms max
+              await new Promise(r => setTimeout(r, 100));
+              if (shareFile) { fileForShare = shareFile; break; }
+            }
+          }
+
           // Small wait to ensure preview image is ready before sharing (prevents text-only fallback)
           let fileForShare = shareFile;
           if (!fileForShare) {
