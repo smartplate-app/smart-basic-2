@@ -8,15 +8,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Determine which emails to export for (own + acting/store-owner when relevant)
-    const sourceEmails = new Set<string>();
+    // Collect relevant emails (own + acting/store-owner if applicable)
+    const sourceEmails = new Set();
     if (user.email) sourceEmails.add(String(user.email));
     if (user.acting_as_store_email) sourceEmails.add(String(user.acting_as_store_email));
     if (user.store_user_owner_email) sourceEmails.add(String(user.store_user_owner_email));
-
     const emails = Array.from(sourceEmails);
 
-    // Entities to export (focused, safe list)
+    // Allowlist of entities to export
     const entityNames = [
       'Supplier',
       'Order',
@@ -41,10 +40,9 @@ Deno.serve(async (req) => {
       'HourlySalesReport'
     ];
 
-    // Helper: unique by id
-    const uniqById = (arr: any[]) => {
-      const seen = new Set<string>();
-      const out: any[] = [];
+    const uniqById = (arr) => {
+      const seen = new Set();
+      const out = [];
       for (const r of arr || []) {
         const id = r && r.id ? String(r.id) : null;
         if (!id || seen.has(id)) continue;
@@ -54,24 +52,25 @@ Deno.serve(async (req) => {
       return out;
     };
 
-    // Fetch all entities in parallel across emails
-    const results: Record<string, any[]> = {};
+    const results = {};
+
+    // Fetch data for each entity across all relevant emails
     await Promise.all(
       entityNames.map(async (name) => {
         try {
-          const perEmail = await Promise.all(
-            emails.map((e) => base44.entities[name as any].filter({ created_by: e }, '-created_date'))
+          const perEmailLists = await Promise.all(
+            emails.map((e) => base44.entities[name].filter({ created_by: e }, '-created_date'))
           );
-          results[name] = uniqById(perEmail.flat());
-        } catch (e) {
-          // If entity isn't present/accessible, just skip with empty list
+          results[name] = uniqById(perEmailLists.flat());
+        } catch (_) {
+          // Entity may not exist or user may not have access; default to []
           results[name] = [];
         }
       })
     );
 
-    const totals: Record<string, number> = {};
-    for (const k of Object.keys(results)) totals[k] = (results[k] || []).length;
+    const totals = {};
+    Object.keys(results).forEach((k) => { totals[k] = (results[k] || []).length; });
 
     const payload = {
       metadata: {
@@ -85,7 +84,7 @@ Deno.serve(async (req) => {
     };
 
     return Response.json(payload, { status: 200 });
-  } catch (error: any) {
+  } catch (error) {
     return Response.json({ error: error?.message || String(error) }, { status: 500 });
   }
 });
