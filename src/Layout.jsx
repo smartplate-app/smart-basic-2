@@ -107,6 +107,18 @@ const AppLayout = ({ children, currentPageName }) => {
     try { await installPromptEvent.userChoice; } finally { setInstallPromptEvent(null); }
   };
 
+  // Force WelcomePublic on custom domain (apex or www)
+  useEffect(() => {
+    try {
+      const host = (window.location.hostname || '').toLowerCase();
+      const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com';
+      const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
+      if (isCustom && !hasHashPage) {
+        window.location.replace('/#/pages/WelcomePublic');
+      }
+    } catch {}
+  }, []);
+
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
   useEffect(() => {
     const path = location.pathname.toLowerCase();
