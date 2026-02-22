@@ -107,16 +107,21 @@ const AppLayout = ({ children, currentPageName }) => {
     try { await installPromptEvent.userChoice; } finally { setInstallPromptEvent(null); }
   };
 
-  // Force WelcomePublic on custom domain (apex or www)
+  // Force WelcomePublic on custom domain (apex or www) ONLY for unauthenticated users
   useEffect(() => {
-    try {
-      const host = (window.location.hostname || '').toLowerCase();
-      const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com';
-      const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
-      if (isCustom && !hasHashPage) {
-        window.location.replace('/#/pages/WelcomePublic');
-      }
-    } catch {}
+    (async () => {
+      try {
+        const host = (window.location.hostname || '').toLowerCase();
+        const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com';
+        const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
+        const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
+        if (!isCustom || hasHashPage || hasOauthParams) return;
+        const authed = await base44.auth.isAuthenticated();
+        if (!authed) {
+          window.location.replace('/#/pages/WelcomePublic');
+        }
+      } catch {}
+    })();
   }, []);
 
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
