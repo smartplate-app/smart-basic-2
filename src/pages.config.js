@@ -48,8 +48,11 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AdminDashboard from './pages/AdminDashboard';
+import AndroidEmulator from './pages/AndroidEmulator';
+import AuthKick from './pages/AuthKick';
 import ChainDashboard from './pages/ChainDashboard';
 import ChainManagement from './pages/ChainManagement';
+import Dashboard from './pages/Dashboard';
 import Diagnostics from './pages/Diagnostics';
 import Home from './pages/Home';
 import IOSBuildGuide from './pages/IOSBuildGuide';
@@ -63,6 +66,7 @@ import LinkChecker from './pages/LinkChecker';
 import MonthlyCount from './pages/MonthlyCount';
 import OAuthCallback from './pages/OAuthCallback';
 import OrderDetails from './pages/OrderDetails';
+import Orders from './pages/Orders';
 import PublicOrder from './pages/PublicOrder';
 import Register from './pages/Register';
 import RestaurantInvite from './pages/RestaurantInvite';
@@ -72,6 +76,7 @@ import SignIn from './pages/SignIn';
 import StoreLogin from './pages/StoreLogin';
 import StoreUsers from './pages/StoreUsers';
 import Suppliers from './pages/Suppliers';
+import SupplyReceipts from './pages/SupplyReceipts';
 import Support from './pages/Support';
 import TestInviteLinks from './pages/TestInviteLinks';
 import TestInvites from './pages/TestInvites';
@@ -85,18 +90,16 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import Dashboard from './pages/Dashboard';
-import SupplyReceipts from './pages/SupplyReceipts';
-import Orders from './pages/Orders';
-import AndroidEmulator from './pages/AndroidEmulator';
-import AuthKick from './pages/AuthKick';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminDashboard": AdminDashboard,
+    "AndroidEmulator": AndroidEmulator,
+    "AuthKick": AuthKick,
     "ChainDashboard": ChainDashboard,
     "ChainManagement": ChainManagement,
+    "Dashboard": Dashboard,
     "Diagnostics": Diagnostics,
     "Home": Home,
     "IOSBuildGuide": IOSBuildGuide,
@@ -110,6 +113,7 @@ export const PAGES = {
     "MonthlyCount": MonthlyCount,
     "OAuthCallback": OAuthCallback,
     "OrderDetails": OrderDetails,
+    "Orders": Orders,
     "PublicOrder": PublicOrder,
     "Register": Register,
     "RestaurantInvite": RestaurantInvite,
@@ -119,6 +123,7 @@ export const PAGES = {
     "StoreLogin": StoreLogin,
     "StoreUsers": StoreUsers,
     "Suppliers": Suppliers,
+    "SupplyReceipts": SupplyReceipts,
     "Support": Support,
     "TestInviteLinks": TestInviteLinks,
     "TestInvites": TestInvites,
@@ -132,15 +137,10 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "Dashboard": Dashboard,
-    "SupplyReceipts": SupplyReceipts,
-    "Orders": Orders,
-    "AndroidEmulator": AndroidEmulator,
-    "AuthKick": AuthKick,
 }
 
 export const pagesConfig = {
-    mainPage: "Dashboard",
+    mainPage: "WelcomePublic",
     Pages: PAGES,
     Layout: __Layout,
 };
