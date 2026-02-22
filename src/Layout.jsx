@@ -126,7 +126,7 @@ const AppLayout = ({ children, currentPageName }) => {
     const currentPath = location.pathname;
     const params = new URLSearchParams(window.location.search);
     const preview = params.get('preview');
-    if (isIncognito) return; // never redirect in incognito
+    // Incognito allowed: proceed with public redirect on root
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
     }
