@@ -115,6 +115,8 @@ const AppLayout = ({ children, currentPageName }) => {
         const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com';
         const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
         const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
+        const previewParams = new URLSearchParams(window.location.search);
+        if (previewParams.get('preview') === '1') return;
         if (!isCustom || hasHashPage || hasOauthParams) return;
         const authed = await base44.auth.isAuthenticated();
         if (!authed) {
@@ -143,6 +145,7 @@ const AppLayout = ({ children, currentPageName }) => {
     const currentPath = location.pathname;
     const params = new URLSearchParams(window.location.search);
     const preview = params.get('preview');
+    if (preview === '1') return;
     // Incognito allowed: proceed with public redirect on root
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
@@ -215,6 +218,8 @@ const AppLayout = ({ children, currentPageName }) => {
 
   // APK/WebView guard: if spinner lasts too long, fail open to public page (prevents stuck state)
   useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('preview') === '1') return;
     if (!authLoading) return;
     const timer = setTimeout(() => {
       try {
@@ -753,6 +758,10 @@ const AppLayout = ({ children, currentPageName }) => {
 
 
   
+  const __previewParams = new URLSearchParams(window.location.search);
+  if (__previewParams.get('preview') === '1') {
+    return <>{children}</>;
+  }
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
