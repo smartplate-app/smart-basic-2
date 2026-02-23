@@ -1437,28 +1437,28 @@ export default function OrdersPage() {
                         className="hover:bg-blue-50 cursor-pointer transition-colors"
                         onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
                       >
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 py-2 text-right">
                           <div className="text-sm font-medium text-gray-900">{order.order_number || '—'}</div>
                           {order.restaurant_name && (
                             <div className="text-xs text-gray-500">{order.restaurant_name}</div>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-sm text-gray-700">
+                        <td className="px-3 py-2 text-right text-sm text-gray-700">
                           {order.supplier_name}
                         </td>
-                        <td className="px-4 py-3 text-right text-sm text-gray-700">
+                        <td className="px-3 py-2 text-right text-sm text-gray-700">
                           {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
                         </td>
-                        <td className="px-4 py-3 text-right text-sm font-bold text-green-600">
+                        <td className="px-3 py-2 text-right text-sm font-bold text-green-600">
                           ₪{(order.total_cost || 0).toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 py-2 text-right">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
                             {statusLabels[order.status] || order.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 min-w-[260px]">
-                          <div className="flex items-center justify-center gap-2 flex-wrap pointer-events-auto">
+                        <td className="px-3 py-2">
+                          <div className="flex items-center justify-center gap-1.5 pointer-events-auto">
                             {!isViewer && order.supplier_phone && (
                               <button
                                 onClick={(e) => {
