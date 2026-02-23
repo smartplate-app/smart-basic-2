@@ -1536,6 +1536,17 @@ export default function OrdersPage() {
         </div>
       </div>
 
+      {/* Mobile FAB for new order */}
+      {!isViewer && (
+        <Button
+          onClick={() => setShowForm(true)}
+          className={`fixed bottom-20 ${isRTL ? 'left-4' : 'right-4'} h-14 w-14 rounded-full shadow-lg bg-gray-900 hover:bg-gray-800 md:hidden z-40`}
+          size="icon"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
+      )}
+
       {/* Send options chooser */}
       <Dialog open={showSendOptions} onOpenChange={setShowSendOptions}>
         <DialogContent>
