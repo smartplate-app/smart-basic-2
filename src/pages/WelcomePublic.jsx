@@ -2,13 +2,14 @@ import React from "react";
 import { base44 } from "@/api/base44Client";
 import AccessRequestDialog from "../components/access/AccessRequestDialog";
 import { Button } from "@/components/ui/button";
+import { createPageUrl } from "@/utils";
 
 // Pure public marketing page: never checks auth or redirects
 export default function WelcomePublic() {
   const [openRequest, setOpenRequest] = React.useState(false);
 
   const handleSignIn = async () => {
-    await base44.auth.redirectToLogin('/pages/LaborCost');
+    await base44.auth.redirectToLogin(createPageUrl('Orders'));
   };
 
   return (
