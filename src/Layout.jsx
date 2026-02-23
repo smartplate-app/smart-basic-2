@@ -104,14 +104,16 @@ const AppLayout = ({ children, currentPageName }) => {
 
   // Force WelcomePublic on custom domain (apex or www) ONLY for unauthenticated users
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('preview') === '1') return; // Skip all redirects in preview
+    if (currentPageName === 'WelcomePublic' || currentPageName === 'Welcome') return; // Already on public page
+    
     (async () => {
       try {
         const host = (window.location.hostname || '').toLowerCase();
         const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com';
         const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
         const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
-        const previewParams = new URLSearchParams(window.location.search);
-        if (previewParams.get('preview') === '1') return;
         if (!isCustom || hasHashPage || hasOauthParams) return;
         const authed = await base44.auth.isAuthenticated();
         if (!authed) {
@@ -123,6 +125,9 @@ const AppLayout = ({ children, currentPageName }) => {
 
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('preview') === '1') return; // Skip in preview
+    
     const path = location.pathname.toLowerCase();
     if (window.location.hash && window.location.hash.startsWith('#/pages/WelcomePublic')) return;
     if (path === '/welcome') {
@@ -137,10 +142,11 @@ const AppLayout = ({ children, currentPageName }) => {
   // Redirect unauthenticated visitors at root to the public Welcome page (preserve ?preview=1)
   // Do not override when a hash-based page is already specified; skip entirely in incognito
   useEffect(() => {
-    const currentPath = location.pathname;
     const params = new URLSearchParams(window.location.search);
-    const preview = params.get('preview');
-    if (preview === '1') return;
+    if (params.get('preview') === '1') return; // Skip all redirects in preview
+    if (currentPageName === 'WelcomePublic' || currentPageName === 'Welcome') return; // Already on public page
+    
+    const currentPath = location.pathname;
     // Incognito allowed: proceed with public redirect on root
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
@@ -273,9 +279,11 @@ const AppLayout = ({ children, currentPageName }) => {
       currentPageName === 'PublicOrder' ||
       currentPageName === 'OAuthCallback' ||
       currentPageName === 'LoginHelper' ||
-      currentPageName === 'AuthKick'
+      currentPageName === 'AuthKick' ||
+      currentPageName === 'Diagnostics'
     ) {
       setAuthLoading(false);
+      return; // Critical: stop all auth logic
     } else {
       loadAuth();
     }
