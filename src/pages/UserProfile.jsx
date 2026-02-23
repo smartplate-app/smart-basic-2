@@ -488,37 +488,7 @@ export default function UserProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="mt-6 border-red-200">
-          <CardHeader>
-            <CardTitle className="text-red-700 flex items-center gap-2">
-              <Trash2 className="w-5 h-5" /> {language === 'he' ? 'מחיקת חשבון' : 'Delete Account'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-3">{language === 'he' ? 'פעולה בלתי הפיכה: תמחק את כל הנתונים הקשורים לחשבון שלך.' : 'This is irreversible: it will delete your account and related data.'}</p>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                const ok = window.confirm(language === 'he' ? 'בטוח שברצונך למחוק את החשבון?' : 'Are you sure you want to delete your account?');
-                if (!ok) return;
-                const confirmText = window.prompt(language === 'he' ? 'הקלד DELETE לאישור' : 'Type DELETE to confirm');
-                if (!confirmText || confirmText.toLowerCase() !== 'delete') return;
-                try {
-                  const { data } = await base44.functions.invoke('deleteUserAccount', {});
-                  if (data?.success !== false) {
-                    await base44.auth.logout();
-                  } else {
-                    alert((language === 'he' ? 'מחיקה נכשלה' : 'Delete failed') + (data?.error ? ': ' + data.error : ''));
-                  }
-                } catch (e) {
-                  alert((language === 'he' ? 'מחיקה נכשלה' : 'Delete failed') + ': ' + (e?.message || e));
-                }
-              }}
-            >
-              {language === 'he' ? 'מחק חשבון' : 'Delete Account'}
-            </Button>
-          </CardContent>
-        </Card>
+
       </div>
     </div>
   );
