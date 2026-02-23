@@ -104,16 +104,14 @@ const AppLayout = ({ children, currentPageName }) => {
 
   // Force WelcomePublic on custom domain (apex or www) ONLY for unauthenticated users
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('preview') === '1') return; // Skip all redirects in preview
-    if (currentPageName === 'WelcomePublic' || currentPageName === 'Welcome') return; // Already on public page
-    
     (async () => {
       try {
         const host = (window.location.hostname || '').toLowerCase();
         const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com';
         const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
         const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
+        const previewParams = new URLSearchParams(window.location.search);
+        if (previewParams.get('preview') === '1') return;
         if (!isCustom || hasHashPage || hasOauthParams) return;
         const authed = await base44.auth.isAuthenticated();
         if (!authed) {
@@ -125,9 +123,6 @@ const AppLayout = ({ children, currentPageName }) => {
 
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('preview') === '1') return; // Skip in preview
-    
     const path = location.pathname.toLowerCase();
     if (window.location.hash && window.location.hash.startsWith('#/pages/WelcomePublic')) return;
     if (path === '/welcome') {
@@ -142,11 +137,10 @@ const AppLayout = ({ children, currentPageName }) => {
   // Redirect unauthenticated visitors at root to the public Welcome page (preserve ?preview=1)
   // Do not override when a hash-based page is already specified; skip entirely in incognito
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('preview') === '1') return; // Skip all redirects in preview
-    if (currentPageName === 'WelcomePublic' || currentPageName === 'Welcome') return; // Already on public page
-    
     const currentPath = location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    const preview = params.get('preview');
+    if (preview === '1') return;
     // Incognito allowed: proceed with public redirect on root
     if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
       return; // respect hash router target to avoid loops
@@ -265,27 +259,21 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isPreview = urlParams.get('preview') === '1';
-    
     if (
-      isPreview ||
-      currentPageName === 'OrderDetails' ||
-      currentPageName === 'WorkerPortal' ||
-      currentPageName === 'Register' ||
-      currentPageName === 'RestaurantInvite' ||
-      currentPageName === 'Welcome' ||
-      currentPageName === 'WelcomePublic' ||
-      currentPageName === 'PublicOrder' ||
-      currentPageName === 'OAuthCallback' ||
-      currentPageName === 'LoginHelper' ||
-      currentPageName === 'AuthKick' ||
-      currentPageName === 'Diagnostics'
+      currentPageName !== 'OrderDetails' &&
+      currentPageName !== 'WorkerPortal' &&
+      currentPageName !== 'Register' &&
+      currentPageName !== 'RestaurantInvite' &&
+      currentPageName !== 'Welcome' &&
+      currentPageName !== 'WelcomePublic' &&
+      currentPageName !== 'PublicOrder' &&
+      currentPageName !== 'OAuthCallback' &&
+      currentPageName !== 'LoginHelper' &&
+      currentPageName !== 'AuthKick'
     ) {
-      setAuthLoading(false);
-      return;
-    } else {
       loadAuth();
+    } else {
+      setAuthLoading(false);
     }
   }, [currentPageName]);
 
@@ -726,23 +714,27 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
-  
-  // Early return for public/preview pages - no layout, no auth checks
   if (
-    isPreview ||
     currentPageName === 'WorkerPortal' ||
     currentPageName === 'OrderDetails' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
     currentPageName === 'Welcome' ||
-    currentPageName === 'WelcomePublic' ||
+    (currentPageName === 'WelcomePublic' && !isPreview) ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
     currentPageName === 'LoginHelper' ||
     currentPageName === 'AuthKick'
   ) {
-    return <div className="min-h-screen bg-white">{children}</div>;
+    return <>{children}</>;
+  }
+
+
+  
+  const __previewParams = new URLSearchParams(window.location.search);
+  if (__previewParams.get('preview') === '1') {
+    return <>{children}</>;
   }
   if (authLoading) {
     return (
@@ -1036,10 +1028,10 @@ const AppLayout = ({ children, currentPageName }) => {
             </div>
           </div>
 
-          <nav className="p-4 flex-grow overflow-y-auto bg-white dark:bg-[#0d2818]" onClick={(e)=>{
-              // Avoid full reload if user ctrl/cmd-clicks
-              const a = e.target.closest('a'); if (a && a.target === '_blank') e.stopPropagation();
-            }}>
+          <nav className="p-4 flex-grow overflow-y-auto" onClick={(e)=>{
+            // Avoid full reload if user ctrl/cmd-clicks
+            const a = e.target.closest('a'); if (a && a.target === '_blank') e.stopPropagation();
+          }}>
             <ul className="space-y-2">
               {filteredNavigationItems.map((item) => (
                 <li key={item.title}>
@@ -1091,44 +1083,27 @@ const AppLayout = ({ children, currentPageName }) => {
               {children}
             </div>
             <style
-              dangerouslySetInnerHTML={{ __html: `:root { 
-        --app-bg: #ffffff; 
-        --app-card: #ffffff; 
-        --app-text: #0f172a; 
-        --app-primary: #16a34a; 
-        --app-primary-hover: #15803d;
-        --app-accent: #dcfce7;
-      }
-      .dark:root { 
-        --app-bg: #0a1f12; 
-        --app-card: #0d2818; 
-        --app-surface: #0f3420; 
-        --app-muted: #0c2316; 
-        --app-text: #ecfdf5; 
-        --app-border: #166534; 
-        --app-primary: #22c55e; 
-        --app-primary-hover: #16a34a;
-        --app-accent: #14532d;
-      }
+              dangerouslySetInnerHTML={{ __html: `:root { --app-bg: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); --app-card: #ffffff; --app-text: #0f172a; }
+.dark:root { --app-bg: #050a1a; --app-card: #0b1530; --app-surface: #0e1d3d; --app-muted: #0a1430; --app-text: #e6eaf7; --app-border: #1e2a55; }
 html, body, #root { background: var(--app-bg); color: var(--app-text); }
 
 /* Real dark mode overrides */
-.dark html, .dark body, .dark #root { background: #0a1f12 !important; color: var(--app-text); }
-.dark .bg-white, .dark [class*="bg-white"], .dark .card, .dark .shadow, .dark .border, .dark .radix-content { background-color: var(--app-card) !important; }
-.dark .bg-white\\/95 { background-color: rgba(13,40,24,0.95) !important; }
-.dark .bg-white\\/80 { background-color: rgba(13,40,24,0.80) !important; }
-.dark .bg-white\\/60 { background-color: rgba(13,40,24,0.60) !important; }
-.dark .bg-white\\/40 { background-color: rgba(13,40,24,0.40) !important; }
-.dark .bg-white\\/20 { background-color: rgba(13,40,24,0.20) !important; }
-.dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700, .dark .text-gray-600 { color: #d1fae5 !important; }
+.dark html, .dark body, .dark #root { background: #050a1a !important; color: var(--app-text); }
+.dark .bg-white, .dark [class*="bg-white"], .dark .card, .dark .shadow, .dark .border, .dark .radix-content { background-color: var(--app-surface) !important; }
+.dark .bg-white\\/95 { background-color: rgba(11,21,48,0.95) !important; }
+.dark .bg-white\\/80 { background-color: rgba(11,21,48,0.80) !important; }
+.dark .bg-white\\/60 { background-color: rgba(11,21,48,0.60) !important; }
+.dark .bg-white\\/40 { background-color: rgba(11,21,48,0.40) !important; }
+.dark .bg-white\\/20 { background-color: rgba(11,21,48,0.20) !important; }
+.dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700, .dark .text-gray-600 { color: #c8d2f2 !important; }
 .dark .border-gray-200, .dark [class*="border-gray-200"], .dark .border { border-color: var(--app-border) !important; }
 .dark input, .dark textarea, .dark select { background-color: var(--app-muted) !important; color: var(--app-text) !important; border-color: var(--app-border) !important; }
-.dark .hover\\:bg-gray-100:hover { background-color: #0c2316 !important; }
-.dark [role="menu"], .dark .radix-select-content, .dark .radix-dropdown-content { background-color: var(--app-card) !important; border-color: var(--app-border) !important; }
+.dark .hover\\:bg-gray-100:hover { background-color: #0a1430 !important; }
+.dark [role="menu"], .dark .radix-select-content, .dark .radix-dropdown-content { background-color: var(--app-surface) !important; border-color: var(--app-border) !important; }
 .dark table { background-color: transparent; }
 .dark tr { border-color: var(--app-border) !important; }
-.dark .bg-amber-50, .dark .bg-blue-50, .dark .bg-red-50 { background-color: var(--app-card) !important; }
-.dark a { color: #4ade80; }
+.dark .bg-amber-50, .dark .bg-blue-50, .dark .bg-red-50 { background-color: var(--app-surface) !important; }
+.dark a { color: #9bb4ff; }
 /* Keep order preview light (do not darken inside the embedded preview) */
 .dark .order-preview-embed, 
 .dark .order-preview-embed * { color-scheme: light !important; }
@@ -1147,15 +1122,15 @@ html, body, #root { background: var(--app-bg); color: var(--app-text); }
 .dark .order-preview-embed iframe { filter: none !important; opacity: 1 !important; -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; image-rendering: auto !important; backface-visibility: visible !important; transform: none !important; background: #ffffff !important; }
 .dark .order-preview-embed, .dark .order-preview-embed .sticky { -webkit-font-smoothing: antialiased !important; -moz-osx-font-smoothing: grayscale !important; text-rendering: optimizeLegibility !important; }
 /* Force dark for light grays and whites */
-.dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-gray-200, .dark .bg-slate-50, .dark .bg-zinc-50, .dark .bg-neutral-50, .dark .bg-stone-50 { background-color: var(--app-muted) !important; }
+.dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-gray-200, .dark .bg-slate-50, .dark .bg-zinc-50, .dark .bg-neutral-50, .dark .bg-stone-50 { background-color: var(--app-surface) !important; }
 /* Any gradient backgrounds → dark gradient */
-.dark [class*="bg-gradient-to-"] { background-image: linear-gradient(135deg, #0d2818 0%, #0f3420 100%) !important; }
+.dark [class*="bg-gradient-to-"] { background-image: linear-gradient(135deg, #0b1530 0%, #0e1d3d 100%) !important; }
 /* Hover helpers that set white/gray */
-.dark [class*="hover:bg-white"]:hover, .dark [class*="hover:bg-gray-50"]:hover, .dark [class*="hover:bg-gray-100"]:hover { background-color: #0c2316 !important; }
+.dark [class*="hover:bg-white"]:hover, .dark [class*="hover:bg-gray-50"]:hover, .dark [class*="hover:bg-gray-100"]:hover { background-color: #0a1430 !important; }
 /* Card and popovers */
-.dark .bg-card, .dark .bg-popover, .dark .popover-content { background-color: var(--app-card) !important; }
+.dark .bg-card, .dark .bg-popover, .dark .popover-content { background-color: var(--app-surface) !important; }
 /* Inputs placeholder */
-.dark ::placeholder { color: #86efac !important; }
+.dark ::placeholder { color: #9fb0e0 !important; }
 
 /* Disable text selection on UI controls */
 button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .viewer-readonly { -webkit-user-select: none; -ms-user-select: none; user-select: none; }

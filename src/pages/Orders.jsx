@@ -1072,7 +1072,7 @@ export default function OrdersPage() {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-8 2xl:p-12"
+      className="min-h-screen bg-gray-50 p-4 md:p-8 2xl:p-12"
       onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
       onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
       onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); await loadData(user || (await base44.auth.me())); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
@@ -1082,16 +1082,16 @@ export default function OrdersPage() {
         <div className="md:hidden flex items-center justify-center text-xs text-gray-500 h-8 transition-transform" style={{ transform: `translateY(${pullDist}px)` }}>
           {refreshing ? (<><Loader className="w-3 h-3 mr-1 animate-spin" /> {t('refreshing') || 'Refreshing...'}</>) : (pullDist > 0 ? (t('pull_to_refresh') || 'Pull to refresh') : null)}
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 sm:mb-6 md:mb-8 gap-3 sm:gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{safeT('orders_title', 'ניהול הזמנות', 'Orders Management')}</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">{t('orders_greeting', { name: (user.acting_as_user_name || user.full_name) })}</p>
+            <h1 className="text-3xl font-bold text-gray-900">{safeT('orders_title', 'ניהול הזמנות', 'Orders Management')}</h1>
+            <p className="text-gray-600 mt-2">{t('orders_greeting', { name: (user.acting_as_user_name || user.full_name) })}</p>
           </div>
-          <div className="flex gap-2 sm:gap-3 flex-wrap w-full md:w-auto">
+          <div className="flex gap-3">
             <Button
               variant="outline"
               onClick={verifyDraftsNow}
-              className="h-9 sm:h-10 md:h-10 px-3 sm:px-4 rounded-lg text-sm sm:text-base flex-1 sm:flex-none"
+              className="h-11 md:h-10 px-4 rounded-lg"
             >
               {safeT('status_draft', 'טיוטה', 'Draft')} ✓
             </Button>
@@ -1099,7 +1099,7 @@ export default function OrdersPage() {
               <Button
                 variant="outline"
                 onClick={fixLatestDraft}
-                className="h-9 sm:h-10 md:h-10 px-3 sm:px-4 rounded-lg text-sm sm:text-base flex-1 sm:flex-none"
+                className="h-11 md:h-10 px-4 rounded-lg"
               >
                 {safeT('fix_last_draft', 'תקן טיוטה → נשלח', 'Fix last draft → sent')}
               </Button>
@@ -1107,9 +1107,9 @@ export default function OrdersPage() {
             {!isViewer && (
               <Button
                 onClick={() => setShowForm(!showForm)}
-                className="hidden md:inline-flex bg-green-700 hover:bg-green-800 text-white h-9 sm:h-10 md:h-10 px-4 sm:px-5 rounded-lg text-sm sm:text-base"
+                className="hidden md:inline-flex bg-gray-900 hover:bg-gray-800 text-white h-11 md:h-10 px-5 rounded-lg"
               >
-                <Plus className="w-4 sm:w-5 h-4 sm:h-5 ml-2" />
+                <Plus className="w-5 h-5 ml-2" />
                 {safeT('new_order', 'הזמנה חדשה', 'New Order')}
               </Button>
             )}
@@ -1117,20 +1117,20 @@ export default function OrdersPage() {
         </div>
 
         {/* Mobile Filters Drawer trigger */}
-        <div className="md:hidden mb-3 sm:mb-4">
-          <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full h-10 sm:h-11 text-sm sm:text-base">
+        <div className="md:hidden mb-4">
+          <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
             {safeT('filters', 'סינון', 'Filters')}
           </Button>
         </div>
 
         {/* Mobile quick filters */}
-        <div className="md:hidden mb-3 overflow-x-auto -mx-2 px-2">
-          <div className="flex gap-2 min-w-max">
+        <div className="md:hidden mb-3 overflow-x-auto">
+          <div className="flex gap-2">
             {['all','draft','sent','confirmed','delivered'].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm rounded-full border whitespace-nowrap ${statusFilter===s ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                className={`px-3 py-1.5 text-sm rounded-full border ${statusFilter===s ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
               >
                 {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
                  s==='draft' ? t('status_draft') :
@@ -1225,7 +1225,7 @@ export default function OrdersPage() {
 
 
          {/* Mobile View */}
-        <div className="md:hidden space-y-3 sm:space-y-4">
+        <div className="md:hidden space-y-4">
           {loading ? (
             <div className="text-center py-12">
               <Loader className="w-8 h-8 animate-spin text-gray-600 mx-auto mb-2" />
@@ -1252,40 +1252,40 @@ export default function OrdersPage() {
               };
 
               return (
-                <Card key={order.id} className="p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm">
-                  <div className="space-y-2 sm:space-y-3">
+                <Card key={order.id} className="p-4 rounded-xl shadow-sm">
+                  <div className="space-y-3">
                     <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-sm sm:text-base text-gray-900 truncate">{order.order_number || '—'}</div>
-                        <div className="text-xs sm:text-sm text-gray-600 truncate">{order.supplier_name}</div>
+                      <div>
+                        <div className="font-bold text-gray-900">{order.order_number || '—'}</div>
+                        <div className="text-sm text-gray-600">{order.supplier_name}</div>
                       </div>
-                      <span className={`inline-flex px-2 py-0.5 sm:py-1 text-xs font-medium rounded-full border whitespace-nowrap ml-2 ${statusColors[order.status]}`}>
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
                         {statusLabels[order.status] || order.status}
                       </span>
                     </div>
                     
                     {order.delivery_date && (
-                      <div className="text-xs sm:text-sm text-gray-600">
+                      <div className="text-sm text-gray-600">
                         {safeT('delivery_date','תאריך אספקה','Delivery date')}: {new Date(order.delivery_date).toLocaleDateString('he-IL')}
                       </div>
                     )}
                     
                     <div className="flex justify-between items-center pt-2 border-t">
-                      <span className="text-xs sm:text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}:</span>
-                      <span className="text-base sm:text-lg font-bold text-green-600">₪{(order.total_cost || 0).toFixed(2)}</span>
+                      <span className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}:</span>
+                      <span className="text-lg font-bold text-green-600">₪{(order.total_cost || 0).toFixed(2)}</span>
                     </div>
                     
-                    <div className="flex gap-1.5 sm:gap-2 pt-2">
+                    <div className="flex gap-2 pt-2">
                       {!isViewer && order.supplier_phone && (
                         <button
                           onClick={() => handleResend(order)}
-                          className="flex-1 text-white text-xs sm:text-sm font-medium rounded-md sm:rounded-lg px-2 sm:px-3 py-2 sm:py-2.5 flex items-center justify-center"
+                          className="flex-1 text-white text-base font-medium rounded-lg px-4 py-3 flex items-center justify-center"
                           style={{ backgroundColor: '#25D366' }}
                         >
-                          <svg className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" fill="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
 ...
                           </svg>
-                          <span className="truncate">{safeT('whatsapp','וואטסאפ','WhatsApp')}</span>
+                          {safeT('whatsapp','וואטסאפ','WhatsApp')}
                         </button>
                                                         )}
                                                         {!isViewer && order.status === 'sent' && (
@@ -1293,9 +1293,9 @@ export default function OrdersPage() {
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                                                            className="border-green-300 text-green-700 hover:bg-green-50 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 h-auto"
+                                                            className="border-green-300 text-green-700 hover:bg-green-50"
                                                           >
-                                                            <span className="truncate">{safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}</span>
+                                                            {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
                                                           </Button>
                                                         )}
                                                         {!isViewer && (
@@ -1303,18 +1303,18 @@ export default function OrdersPage() {
                           <Button
                             variant="outline"
                             onClick={() => handleEdit(order)}
-                            className="flex-1 h-9 sm:h-10 rounded-md sm:rounded-lg text-xs sm:text-sm px-2 sm:px-3"
+                            className="flex-1 h-11 rounded-lg text-base"
                           >
-                            <Edit className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                            <span className="truncate">{t('edit')}</span>
+                            <Edit className="w-4 h-4 mr-2" />
+                            {t('edit')}
                           </Button>
                           <Button
                             variant="outline"
                             onClick={() => handleDelete(order)}
-                            className="flex-1 h-9 sm:h-10 rounded-md sm:rounded-lg text-xs sm:text-sm border-red-300 text-red-600 hover:bg-red-50 px-2 sm:px-3"
+                            className="flex-1 h-11 rounded-lg text-base border-red-300 text-red-600 hover:bg-red-50"
                           >
-                            <Trash2 className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                            <span className="truncate">{t('delete')}</span>
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            {t('delete')}
                           </Button>
                         </>
                       )}
@@ -1537,10 +1537,10 @@ export default function OrdersPage() {
       {!isViewer && (
         <Button
           onClick={() => setShowForm(true)}
-          className={`fixed bottom-20 ${isRTL ? 'left-3 sm:left-4' : 'right-3 sm:right-4'} h-12 sm:h-14 w-12 sm:w-14 rounded-full shadow-lg bg-green-700 hover:bg-green-800 md:hidden z-40`}
+          className={`fixed bottom-20 ${isRTL ? 'left-4' : 'right-4'} h-14 w-14 rounded-full shadow-lg bg-gray-900 hover:bg-gray-800 md:hidden z-40`}
           size="icon"
         >
-          <Plus className="w-5 sm:w-6 h-5 sm:h-6" />
+          <Plus className="w-6 h-6" />
         </Button>
       )}
 
@@ -1561,7 +1561,7 @@ export default function OrdersPage() {
             <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
               <MessageCircle className="w-4 h-4 mr-2" /> {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
             </Button>
-            <Button onClick={handleConfirmSendEmail} className="bg-green-700 hover:bg-green-800 text-white">
+            <Button onClick={handleConfirmSendEmail} className="bg-gray-900 hover:bg-gray-800 text-white">
               <Mail className="w-4 h-4 mr-2" /> {safeT('email', 'אימייל', 'Email')}
             </Button>
           </div>
