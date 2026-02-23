@@ -283,8 +283,7 @@ const AppLayout = ({ children, currentPageName }) => {
       currentPageName === 'Diagnostics'
     ) {
       setAuthLoading(false);
-      setUser({ email: 'preview@user.com', role: 'preview' }); // Set dummy user for preview
-      return; // Critical: stop all auth logic
+      return;
     } else {
       loadAuth();
     }

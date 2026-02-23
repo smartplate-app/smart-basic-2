@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 export default function WelcomePublic() {
   const [openRequest, setOpenRequest] = React.useState(false);
 
-  const handleSignIn = async () => {
-    try {
-      await base44.auth.redirectToLogin('/pages/LaborCost');
-    } catch (err) {
-      console.error('Sign in redirect failed:', err);
-      // Fallback to manual redirect
-      window.location.href = '/pages/LaborCost';
+  const handleSignIn = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPreview = urlParams.get('preview') === '1';
+    
+    if (isPreview) {
+      alert('Sign in is not available in preview mode');
+      return;
     }
+    
+    base44.auth.redirectToLogin('/pages/Orders');
   };
 
   return (
