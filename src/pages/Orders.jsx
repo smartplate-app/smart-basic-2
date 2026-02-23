@@ -935,72 +935,15 @@ export default function OrdersPage() {
         return matchesSearch && matchesStatus && matchesSupplier && matchesCustomer && matchesDate;
       });
 
-  const [reportMonth, setReportMonth] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
 
-  const reportOrders = useMemo(() => {
-    if (!reportMonth) return filteredOrders;
-    return filteredOrders.filter((o) => {
-      const dateStr = o.delivery_date || o.created_date || o.updated_date;
-      if (!dateStr) return false;
-      const d = new Date(dateStr);
-      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      return ym === reportMonth;
-    });
-  }, [filteredOrders, reportMonth]);
 
-  // Aggregate quantities per item across filtered orders (not per supplier)
-  const itemsSummary = useMemo(() => {
-    const map = new Map();
-    let totalQty = 0;
-    let totalCost = 0;
 
-    reportOrders.forEach((o) => {
-      totalCost += Number(o.total_cost) || 0;
-      const items = Array.isArray(o.items) ? o.items : [];
-      items.forEach((it) => {
-        const key = it.item_name || it.item_id || it.item || '—';
-        const qty = Number(it.quantity) || 0;
-        const unit = it.unit || '';
-        const prev = map.get(key) || { name: key, quantity: 0, unit };
-        prev.quantity += qty;
-        if (!prev.unit && unit) prev.unit = unit;
-        map.set(key, prev);
-        totalQty += qty;
-      });
-    });
 
-    const rows = Array.from(map.values()).sort((a, b) => (b.quantity - a.quantity));
-    return { rows, totalQty, totalCost };
-  }, [reportOrders]);
 
-  const filteredItemRows = useMemo(() => {
-    const term = (itemSearch || '').toLowerCase();
-    if (!term) return itemsSummary.rows;
-    return itemsSummary.rows.filter(r => (r.name || '').toLowerCase().includes(term));
-  }, [itemsSummary.rows, itemSearch]);
 
-  const handleGenerateAfcSheet = async () => {
-    try {
-      if (!reportMonth) return;
-      const [yStr, mStr] = reportMonth.split('-');
-      const y = Number(yStr);
-      const m = Number(mStr);
-      const startDate = `${yStr}-${mStr}-01`;
-      const endDateObj = new Date(y, m, 0); // last day of month
-      const endDate = `${endDateObj.getFullYear()}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')}`;
-      const { data } = await base44.functions.invoke('generateAfcSheet', { startDate, endDate });
-      if (data?.spreadsheetUrl) {
-        window.open(data.spreadsheetUrl, '_blank');
-      } else {
-        alert('Failed to generate sheet');
-      }
-    } catch (e) {
-      alert('Failed to generate sheet');
-    }
-  };
+
+
+
 
   if (authLoading) {
     return (
