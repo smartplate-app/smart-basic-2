@@ -926,7 +926,7 @@ const AppLayout = ({ children, currentPageName }) => {
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-xs font-bold text-black dark:text-white tracking-wide">basic shiran app draft</span>
+                            <span className="text-xs font-bold text-black dark:text-white tracking-wide">shiran&nitsan</span>
                             <span className="text-red-500 text-sm">❤️</span>
                           </div>
                         </div>
@@ -976,7 +976,7 @@ const AppLayout = ({ children, currentPageName }) => {
                                 )}
                               </div>
                               <div className="flex items-center gap-1 mt-2">
-                                <span className="text-sm font-bold text-black dark:text-white tracking-wide">basic shiran app draft</span>
+                                <span className="text-sm font-bold text-black dark:text-white tracking-wide">shiran&nitsan</span>
                                 <span className="text-red-500">❤️</span>
                               </div>
                             </div>
