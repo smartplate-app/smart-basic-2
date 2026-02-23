@@ -1027,10 +1027,10 @@ const AppLayout = ({ children, currentPageName }) => {
             </div>
           </div>
 
-          <nav className="p-4 flex-grow overflow-y-auto" onClick={(e)=>{
-            // Avoid full reload if user ctrl/cmd-clicks
-            const a = e.target.closest('a'); if (a && a.target === '_blank') e.stopPropagation();
-          }}>
+          <nav className="p-4 flex-grow overflow-y-auto bg-white dark:bg-[#0d2818]" onClick={(e)=>{
+              // Avoid full reload if user ctrl/cmd-clicks
+              const a = e.target.closest('a'); if (a && a.target === '_blank') e.stopPropagation();
+            }}>
             <ul className="space-y-2">
               {filteredNavigationItems.map((item) => (
                 <li key={item.title}>
@@ -1087,22 +1087,22 @@ const AppLayout = ({ children, currentPageName }) => {
 html, body, #root { background: var(--app-bg); color: var(--app-text); }
 
 /* Real dark mode overrides */
-.dark html, .dark body, .dark #root { background: #050a1a !important; color: var(--app-text); }
-.dark .bg-white, .dark [class*="bg-white"], .dark .card, .dark .shadow, .dark .border, .dark .radix-content { background-color: var(--app-surface) !important; }
-.dark .bg-white\\/95 { background-color: rgba(11,21,48,0.95) !important; }
-.dark .bg-white\\/80 { background-color: rgba(11,21,48,0.80) !important; }
-.dark .bg-white\\/60 { background-color: rgba(11,21,48,0.60) !important; }
-.dark .bg-white\\/40 { background-color: rgba(11,21,48,0.40) !important; }
-.dark .bg-white\\/20 { background-color: rgba(11,21,48,0.20) !important; }
-.dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700, .dark .text-gray-600 { color: #c8d2f2 !important; }
+.dark html, .dark body, .dark #root { background: #0a1f12 !important; color: var(--app-text); }
+.dark .bg-white, .dark [class*="bg-white"], .dark .card, .dark .shadow, .dark .border, .dark .radix-content { background-color: var(--app-card) !important; }
+.dark .bg-white\\/95 { background-color: rgba(13,40,24,0.95) !important; }
+.dark .bg-white\\/80 { background-color: rgba(13,40,24,0.80) !important; }
+.dark .bg-white\\/60 { background-color: rgba(13,40,24,0.60) !important; }
+.dark .bg-white\\/40 { background-color: rgba(13,40,24,0.40) !important; }
+.dark .bg-white\\/20 { background-color: rgba(13,40,24,0.20) !important; }
+.dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700, .dark .text-gray-600 { color: #d1fae5 !important; }
 .dark .border-gray-200, .dark [class*="border-gray-200"], .dark .border { border-color: var(--app-border) !important; }
 .dark input, .dark textarea, .dark select { background-color: var(--app-muted) !important; color: var(--app-text) !important; border-color: var(--app-border) !important; }
-.dark .hover\\:bg-gray-100:hover { background-color: #0a1430 !important; }
-.dark [role="menu"], .dark .radix-select-content, .dark .radix-dropdown-content { background-color: var(--app-surface) !important; border-color: var(--app-border) !important; }
+.dark .hover\\:bg-gray-100:hover { background-color: #0c2316 !important; }
+.dark [role="menu"], .dark .radix-select-content, .dark .radix-dropdown-content { background-color: var(--app-card) !important; border-color: var(--app-border) !important; }
 .dark table { background-color: transparent; }
 .dark tr { border-color: var(--app-border) !important; }
-.dark .bg-amber-50, .dark .bg-blue-50, .dark .bg-red-50 { background-color: var(--app-surface) !important; }
-.dark a { color: #9bb4ff; }
+.dark .bg-amber-50, .dark .bg-blue-50, .dark .bg-red-50 { background-color: var(--app-card) !important; }
+.dark a { color: #4ade80; }
 /* Keep order preview light (do not darken inside the embedded preview) */
 .dark .order-preview-embed, 
 .dark .order-preview-embed * { color-scheme: light !important; }
@@ -1121,15 +1121,15 @@ html, body, #root { background: var(--app-bg); color: var(--app-text); }
 .dark .order-preview-embed iframe { filter: none !important; opacity: 1 !important; -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; image-rendering: auto !important; backface-visibility: visible !important; transform: none !important; background: #ffffff !important; }
 .dark .order-preview-embed, .dark .order-preview-embed .sticky { -webkit-font-smoothing: antialiased !important; -moz-osx-font-smoothing: grayscale !important; text-rendering: optimizeLegibility !important; }
 /* Force dark for light grays and whites */
-.dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-gray-200, .dark .bg-slate-50, .dark .bg-zinc-50, .dark .bg-neutral-50, .dark .bg-stone-50 { background-color: var(--app-surface) !important; }
+.dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-gray-200, .dark .bg-slate-50, .dark .bg-zinc-50, .dark .bg-neutral-50, .dark .bg-stone-50 { background-color: var(--app-muted) !important; }
 /* Any gradient backgrounds → dark gradient */
-.dark [class*="bg-gradient-to-"] { background-image: linear-gradient(135deg, #0b1530 0%, #0e1d3d 100%) !important; }
+.dark [class*="bg-gradient-to-"] { background-image: linear-gradient(135deg, #0d2818 0%, #0f3420 100%) !important; }
 /* Hover helpers that set white/gray */
-.dark [class*="hover:bg-white"]:hover, .dark [class*="hover:bg-gray-50"]:hover, .dark [class*="hover:bg-gray-100"]:hover { background-color: #0a1430 !important; }
+.dark [class*="hover:bg-white"]:hover, .dark [class*="hover:bg-gray-50"]:hover, .dark [class*="hover:bg-gray-100"]:hover { background-color: #0c2316 !important; }
 /* Card and popovers */
-.dark .bg-card, .dark .bg-popover, .dark .popover-content { background-color: var(--app-surface) !important; }
+.dark .bg-card, .dark .bg-popover, .dark .popover-content { background-color: var(--app-card) !important; }
 /* Inputs placeholder */
-.dark ::placeholder { color: #9fb0e0 !important; }
+.dark ::placeholder { color: #86efac !important; }
 
 /* Disable text selection on UI controls */
 button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .viewer-readonly { -webkit-user-select: none; -ms-user-select: none; user-select: none; }
