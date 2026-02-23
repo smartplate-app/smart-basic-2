@@ -778,19 +778,28 @@ export default function OrdersPage() {
       try { document.body.removeChild(temp); } catch {}
     }
 
-    // 1) Native share with file (Android Chrome/PWA). Use canShare to ensure file support
-    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    // 1) System share sheet (Android/iOS): prefer file when supported
+    const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+    const hasShare = typeof navigator.share === 'function';
+
+    if (canShareFiles) {
       try {
         await navigator.share({ files: [file], text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
         return;
-      } catch (_) { /* fallback below */ }
+      } catch (e) {
+        // If user canceled or blocked, do not auto-open WhatsApp
+        if (e?.name === 'AbortError' || e?.name === 'NotAllowedError') return;
+        // Otherwise continue to fallbacks below
+      }
     }
-    // 1b) Text-only native share (older Android WebView/APK)
-    if (navigator.share) {
+    if (hasShare) {
       try {
         await navigator.share({ text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
         return;
-      } catch (_) { /* continue to WA deep links */ }
+      } catch (e) {
+        if (e?.name === 'AbortError' || e?.name === 'NotAllowedError') return;
+        // Otherwise continue
+      }
     }
 
     // 2) Best-effort: copy image to clipboard so user can Paste in WhatsApp (Web/App)
