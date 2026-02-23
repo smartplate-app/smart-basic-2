@@ -789,9 +789,8 @@ export default function OrdersPage() {
           await navigator.share({ files: [file], text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
           return;
         } catch (e) {
-          // If user canceled or blocked, do not auto-open WhatsApp
-          if (e?.name === 'AbortError' || e?.name === 'NotAllowedError') return;
-          // Otherwise continue to fallbacks below
+          // Continue to fallbacks (deeplink) if share fails or is blocked
+          console.warn('[WA Image Share] Share failed, falling back:', e?.name || e);
         }
       }
       if (hasShare) {
@@ -799,8 +798,8 @@ export default function OrdersPage() {
           await navigator.share({ text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
           return;
         } catch (e) {
-          if (e?.name === 'AbortError' || e?.name === 'NotAllowedError') return;
-          // Otherwise continue
+          // Continue to fallbacks (deeplink) if share fails or is blocked
+          console.warn('[WA Text Share] Share failed, falling back:', e?.name || e);
         }
       }
     }
