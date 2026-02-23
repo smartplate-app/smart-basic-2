@@ -802,26 +802,24 @@ export default function OrdersPage() {
       }
     }
 
-    // 2) Best-effort: copy image to clipboard so user can Paste in WhatsApp (Web/App)
+    // 2) Best-effort: copy image OR text to clipboard (Web/App)
     let copiedImage = false;
     let copiedText = false;
+    // Some Android WebViews require a user gesture; this runs right after a button click
     if (file && navigator.clipboard && 'write' in navigator.clipboard) {
       try {
         // @ts-ignore ClipboardItem may not be typed in some environments
         await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
         copiedImage = true;
-      } catch (_) {
-        // ignore and try copying text instead
-      }
+      } catch (_) {}
     }
     if (!copiedImage && navigator.clipboard && 'writeText' in navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(text);
         copiedText = true;
-      } catch (_) {
-        // no clipboard available
-      }
+      } catch (_) {}
     }
+    // Android hint: if copiedImage is true, WhatsApp usually offers "Paste" bubble when opening chat
 
 
 
