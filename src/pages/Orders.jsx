@@ -1385,24 +1385,24 @@ export default function OrdersPage() {
         <div className="hidden md:block bg-white rounded-lg shadow">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="sticky top-0 z-20 bg-white/90 supports-[backdrop-filter]:bg-white/70 backdrop-blur border-b">
+              <thead className="bg-gray-100 border-b">
                 <tr>
-                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {safeT('order_number','מספר הזמנה','Order #')}
                   </th>
-                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {safeT('supplier','ספק','Supplier')}
                   </th>
-                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {safeT('delivery_date','תאריך אספקה','Delivery date')}
                   </th>
-                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {safeT('total_cost','עלות כוללת','Total cost')}
                   </th>
-                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {safeT('status','סטטוס','Status')}
                   </th>
-                  <th className="sticky top-0 z-20 bg-white/90 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-64">
+                  <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {safeT('actions', 'פעולות', 'Actions')}
                   </th>
                 </tr>
