@@ -8,7 +8,13 @@ export default function WelcomePublic() {
   const [openRequest, setOpenRequest] = React.useState(false);
 
   const handleSignIn = async () => {
-    await base44.auth.redirectToLogin('/pages/LaborCost');
+    try {
+      await base44.auth.redirectToLogin('/pages/LaborCost');
+    } catch (err) {
+      console.error('Sign in redirect failed:', err);
+      // Fallback to manual redirect
+      window.location.href = '/pages/LaborCost';
+    }
   };
 
   return (
