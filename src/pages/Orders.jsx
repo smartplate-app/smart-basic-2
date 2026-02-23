@@ -775,14 +775,18 @@ export default function OrdersPage() {
       try { document.body.removeChild(temp); } catch {}
     }
 
-    // 1) Native share with file attachment when supported (auto-attaches in WhatsApp app)
-    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    // 1) Prefer native share with file attachment (opens OS share sheet)
+    if (file && navigator.share) {
       try {
         await navigator.share({ files: [file], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
         return;
-      } catch (_) {
-        // continue to deep link/web
-      }
+      } catch (_) { /* fallback below */ }
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+        return;
+      } catch (_) { /* continue to WA deep links */ }
     }
 
     // 2) Best-effort: copy image to clipboard so user can Paste in WhatsApp (Web/App)
@@ -806,46 +810,18 @@ export default function OrdersPage() {
       }
     }
 
-    // Older devices: if neither image nor text were copied, offer opening image for manual save
-    if (!copiedImage && !copiedText && file) {
-      try {
-        const msg = language === 'he'
-          ? 'במכשירים ישנים שיתוף תמונה אוטומטי לא נתמך. לפתוח את התמונה בלשונית חדשה לשמירה ידנית?'
-          : 'On older devices, automatic image sharing may not be supported. Open the image in a new tab to save manually?';
-        if (window.confirm(msg)) {
-          const objUrl = URL.createObjectURL(file);
-          window.open(objUrl, '_blank');
-          setTimeout(() => URL.revokeObjectURL(objUrl), 10000);
-        }
-      } catch (_) { /* ignore */ }
-    }
+
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
     // In editor preview (iframe) or desktop browsers, open in a new tab to avoid wa.me X-Frame-Options blocking
     const tryOpenChain = (urls, stepMs = 700) => {
-      const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
       let switched = false;
       const onHide = () => { switched = true; };
       document.addEventListener('visibilitychange', onHide, { once: true });
 
       const openLink = (url) => {
-        if (!isAndroid && !isIOS) {
-          // Use pre-opened tab if available to avoid blockers
-          if (preOpened && !preOpened.closed) {
-            try { preOpened.location.href = url; preOpened.focus(); return; } catch (_) {}
-          }
-          // Programmatic anchor click (safer in sandboxes)
-          const a = document.createElement('a');
-          a.href = url;
-          a.target = '_blank';
-          a.rel = 'noreferrer';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          return;
-        }
-        // Mobile: prefer deep link navigation; fallback to new tab if blocked
-        try { window.location.href = url; } catch { window.open(url, '_blank'); }
+        try { window.location.href = url; }
+        catch { window.location.assign(url); }
       };
 
       const tryNext = (i) => {
@@ -862,18 +838,11 @@ export default function OrdersPage() {
     } else if (isIOS) {
       tryOpenChain([deeplink, waWeb]);
     } else {
+      // Desktop: navigate current tab instead of opening a new one
       tryOpenChain([waWeb]);
     }
 
-    // Mobile-only hint; no desktop popups
-    if ((isAndroid || isIOS) && (copiedImage || copiedText)) {
-      setTimeout(() => {
-        const msg = copiedImage
-          ? (t('image_copied_paste_in_whatsapp') || 'The image was copied. Paste in WhatsApp.')
-          : (t('text_copied_paste_in_whatsapp') || 'Text copied. Paste in WhatsApp.');
-        try { alert(msg); } catch {}
-      }, 300);
-    }
+
   };
 
   const handleConfirmSendEmail = async () => {
