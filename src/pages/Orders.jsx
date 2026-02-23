@@ -778,27 +778,29 @@ export default function OrdersPage() {
       try { document.body.removeChild(temp); } catch {}
     }
 
-    // 1) System share sheet (Android/iOS): prefer file when supported
-    const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
-    const hasShare = typeof navigator.share === 'function';
+    // 1) Disable system share on Android to ensure reliable WhatsApp flow and clipboard paste
+    if (!isAndroid) {
+      const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+      const hasShare = typeof navigator.share === 'function';
 
-    if (canShareFiles) {
-      try {
-        await navigator.share({ files: [file], text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
-        return;
-      } catch (e) {
-        // If user canceled or blocked, do not auto-open WhatsApp
-        if (e?.name === 'AbortError' || e?.name === 'NotAllowedError') return;
-        // Otherwise continue to fallbacks below
+      if (canShareFiles) {
+        try {
+          await navigator.share({ files: [file], text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
+          return;
+        } catch (e) {
+          // If user canceled or blocked, do not auto-open WhatsApp
+          if (e?.name === 'AbortError' || e?.name === 'NotAllowedError') return;
+          // Otherwise continue to fallbacks below
+        }
       }
-    }
-    if (hasShare) {
-      try {
-        await navigator.share({ text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
-        return;
-      } catch (e) {
-        if (e?.name === 'AbortError' || e?.name === 'NotAllowedError') return;
-        // Otherwise continue
+      if (hasShare) {
+        try {
+          await navigator.share({ text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
+          return;
+        } catch (e) {
+          if (e?.name === 'AbortError' || e?.name === 'NotAllowedError') return;
+          // Otherwise continue
+        }
       }
     }
 
@@ -825,7 +827,7 @@ export default function OrdersPage() {
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
     // In editor preview (iframe) or desktop browsers, open in a new tab to avoid wa.me X-Frame-Options blocking
-    const tryOpenChain = (urls, stepMs = 900) => {
+    const tryOpenChain = (urls, stepMs = 1200) => {
       let switched = false;
       const onHide = () => { switched = true; };
       document.addEventListener('visibilitychange', onHide, { once: true });
