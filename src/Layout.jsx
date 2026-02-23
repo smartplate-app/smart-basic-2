@@ -536,7 +536,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   if (isIncognito || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')))) {
                     // do not override incognito/public welcome
                   } else if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-                    console.log("[Layout] Redirecting to Dashboard page");
+                    console.log("[Layout] Redirecting to Orders page");
                     window.location.replace(createPageUrl("Orders"));
                   }
       
