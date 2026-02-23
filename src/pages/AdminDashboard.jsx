@@ -558,14 +558,7 @@ export default function AdminDashboard() {
                     <Instagram className="w-4 h-4" />
                     {language === 'he' ? 'קמפיין אינסטגרם' : 'Instagram Campaign'}
                   </Button>
-                  <Button
-                    onClick={handleCreateAliasSheet}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="w-4 h-4" />
-                    {language === 'he' ? 'גיליון התאמות פריטים' : 'Item Matching Sheet'}
-                  </Button>
+
                   <Button
                     onClick={() => setShowInviteModal(true)}
                     className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800"
