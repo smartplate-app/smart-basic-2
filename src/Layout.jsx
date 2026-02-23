@@ -283,6 +283,7 @@ const AppLayout = ({ children, currentPageName }) => {
       currentPageName === 'Diagnostics'
     ) {
       setAuthLoading(false);
+      setUser({ email: 'preview@user.com', role: 'preview' }); // Set dummy user for preview
       return; // Critical: stop all auth logic
     } else {
       loadAuth();
@@ -727,6 +728,7 @@ const AppLayout = ({ children, currentPageName }) => {
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
   
+  // Early return for public/preview pages - no layout, no auth checks
   if (
     isPreview ||
     currentPageName === 'WorkerPortal' ||
@@ -741,7 +743,7 @@ const AppLayout = ({ children, currentPageName }) => {
     currentPageName === 'LoginHelper' ||
     currentPageName === 'AuthKick'
   ) {
-    return <>{children}</>;
+    return <div className="min-h-screen bg-white">{children}</div>;
   }
   if (authLoading) {
     return (
