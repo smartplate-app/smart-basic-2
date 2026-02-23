@@ -1129,7 +1129,9 @@ html, body, #root { background: var(--app-bg); color: var(--app-text); }
 .dark .order-preview-embed iframe { filter: none !important; opacity: 1 !important; -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; image-rendering: auto !important; backface-visibility: visible !important; transform: none !important; background: #ffffff !important; }
 .dark .order-preview-embed, .dark .order-preview-embed .sticky { -webkit-font-smoothing: antialiased !important; -moz-osx-font-smoothing: grayscale !important; text-rendering: optimizeLegibility !important; }
 /* Force dark for light grays and whites */
-.dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-gray-200, .dark .bg-slate-50, .dark .bg-zinc-50, .dark .bg-neutral-50, .dark .bg-stone-50 { background-color: var(--app-surface) !important; }
+.dark .bg-gray-50, .dark .bg-gray-200, .dark .bg-slate-50, .dark .bg-zinc-50, .dark .bg-neutral-50, .dark .bg-stone-50 { background-color: var(--app-surface) !important; }
+aside.bg-gray-100 { background-color: #f3f4f6 !important; }
+.dark aside.bg-gray-100 { background-color: var(--app-surface) !important; }
 /* Any gradient backgrounds → dark gradient */
 .dark [class*="bg-gradient-to-"] { background-image: linear-gradient(135deg, #0b1530 0%, #0e1d3d 100%) !important; }
 /* Hover helpers that set white/gray */
