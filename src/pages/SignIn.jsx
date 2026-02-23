@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -8,18 +9,18 @@ export default function SignIn() {
     (async () => {
       const authed = await base44.auth.isAuthenticated();
       if (authed) {
-        window.location.href = "/pages/Orders";
+        window.location.replace(createPageUrl("Orders"));
         return;
       }
       const params = new URLSearchParams(window.location.search);
-      const next = params.get("next") || params.get("nextUrl") || "/pages/Orders";
+      const next = params.get("next") || params.get("nextUrl") || createPageUrl("Orders");
       await base44.auth.redirectToLogin(next);
     })();
   }, []);
 
   const handleClick = async () => {
     const params = new URLSearchParams(window.location.search);
-    const next = params.get("next") || params.get("nextUrl") || "/pages/Orders";
+    const next = params.get("next") || params.get("nextUrl") || createPageUrl("Orders");
     await base44.auth.redirectToLogin(next);
   };
 

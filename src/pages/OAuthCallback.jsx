@@ -28,7 +28,7 @@ export default function OAuthCallback() {
             const authed = await base44.auth.isAuthenticated();
             if (authed) {
               try { await base44.auth.me(); } catch {}
-              const target = createPageUrl('Dashboard');
+              const target = createPageUrl('Orders');
               try { window.history.replaceState({}, '', target); } catch {}
               window.location.replace(target);
               return;
@@ -59,7 +59,7 @@ export default function OAuthCallback() {
         <button
           onClick={() => {
             try { sessionStorage.setItem('b44_oauth_in_progress', '1'); } catch {}
-            base44.auth.redirectToLogin(createPageUrl('Dashboard'));
+            base44.auth.redirectToLogin(createPageUrl('Orders'));
           }}
           className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-gray-900 text-white hover:bg-gray-800"
         >

@@ -705,7 +705,7 @@ const AppLayout = ({ children, currentPageName }) => {
           acting_as_store_email: null,
           acting_as_store_name: null
         });
-        window.location.href = '/pages/AdminDashboard';
+        window.location.href = createPageUrl('AdminDashboard');
       } catch (error) {
         console.error("Error exiting admin control:", error);
       }

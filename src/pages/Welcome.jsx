@@ -1,5 +1,6 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 import AccessRequestDialog from "../components/access/AccessRequestDialog";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "../components/LanguageProvider";
@@ -12,7 +13,7 @@ export default function Welcome() {
     try {
       const isAuth = await base44.auth.isAuthenticated();
       if (isAuth) {
-        window.location.replace('/pages/LaborCost');
+        window.location.replace(createPageUrl("Orders"));
         return;
       }
     } catch {}
@@ -22,7 +23,7 @@ export default function Welcome() {
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 8000));
       localStorage.setItem('b44_login_cooldown_until', String(Date.now() + 8000));
     } catch {}
-    const nextUrl = new URL('/pages/LaborCost', window.location.origin).toString();
+    const nextUrl = window.location.origin + createPageUrl("Orders");
     await base44.auth.redirectToLogin(nextUrl);
   };
 
@@ -43,7 +44,7 @@ export default function Welcome() {
             }
           }
           // Non-admins (or admin without preview) get redirected
-          window.location.replace('/pages/LaborCost');
+          window.location.replace(createPageUrl("Orders"));
         }
       } catch {}
     })();
