@@ -700,7 +700,7 @@ export default function OrdersPage() {
     }
   };
 
-  const sendOrderToWhatsApp = async (order) => {
+  const sendOrderToWhatsApp = async (order, opts = {}) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const intro = safeT('whatsapp_intro', 'שלום, התקבלה הזמנה חדשה.', 'Hello, a new order has arrived.');
   const fromLbl = safeT('order_from', 'מאת', 'From');
@@ -734,9 +734,9 @@ export default function OrdersPage() {
       ? `intent://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
       : `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
 
-    // Prepare a shareable JPG (skip on Android to keep WA deep-link instant)
+    // Prepare a shareable JPG (skip on Android unless forced for image share)
     let file = null;
-    if (!isAndroid) {
+    if (!isAndroid || (opts && opts.forceImageShare)) {
       const temp = document.createElement('div');
       temp.style.position = 'fixed';
       temp.style.left = '-9999px';
@@ -779,8 +779,8 @@ export default function OrdersPage() {
       }
     }
 
-    // 1) Disable system share on Android to ensure reliable WhatsApp flow and clipboard paste
-    if (!isAndroid) {
+    // 1) Use system share when not Android or when explicitly forcing image share on Android
+    if ((opts && opts.forceImageShare) || !isAndroid) {
       const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
       const hasShare = typeof navigator.share === 'function';
 
@@ -911,7 +911,41 @@ export default function OrdersPage() {
     } finally {
       setSendOptionOrder(null);
     }
-  };
+    };
+
+    const handleConfirmSendWhatsAppImage = async () => {
+    if (!sendOptionOrder) return;
+    const order = sendOptionOrder;
+    setShowSendOptions(false);
+    try {
+      const { data } = await base44.functions.invoke('markOrderSent', {
+        orderId: order.id,
+        orderNumber: order.order_number
+      });
+      const updated = data?.order || {};
+      setOrders(prev => prev.map(o => {
+        if (o.id !== (updated.id || order.id)) return o;
+        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      await sendOrderToWhatsApp(updated.id ? updated : order, { forceImageShare: true });
+      setPreviewOrder(null);
+      await loadData(user);
+    } catch (e) {
+      setOrders(prev => prev.map(o => {
+        if (o.id !== order.id) return o;
+        const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+        return { ...o, status: 'sent', order_number: num };
+      }));
+      try { await sendOrderToWhatsApp(order, { forceImageShare: true }); } catch (_) {}
+      setPreviewOrder(null);
+      setTimeout(() => {
+        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number }).catch(() => {});
+      }, 1200);
+    } finally {
+      setSendOptionOrder(null);
+    }
+    };
 
   const handleDelete = async (order) => {
     if (isViewer) return;
@@ -1476,6 +1510,11 @@ export default function OrdersPage() {
           </DialogHeader>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setShowSendOptions(false)}>{safeT('cancel', 'ביטול', 'Cancel')}</Button>
+            {typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || '') && (
+              <Button onClick={handleConfirmSendWhatsAppImage} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
+                <MessageCircle className="w-4 h-4 mr-2" /> {language === 'he' ? 'וואטסאפ (תמונה)' : 'WhatsApp (image)'}
+              </Button>
+            )}
             <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
               <MessageCircle className="w-4 h-4 mr-2" /> {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
             </Button>
