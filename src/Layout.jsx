@@ -1014,19 +1014,6 @@ const AppLayout = ({ children, currentPageName }) => {
             <LanguageSwitcher />
           </div>
 
-          <div className="p-4 border-b border-gray-200">
-            <div className={'flex items-center justify-between ' + (isRTL ? 'flex-row-reverse' : '')}>
-              <div className="flex items-center gap-2 text-gray-700">
-                <Sun className="h-4 w-4" />
-                <span className="text-sm">{language === 'he' ? 'מצב בהיר/כהה' : 'Light/Dark Mode'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Sun className="h-4 w-4 text-yellow-500" />
-                <Switch checked={theme === 'dark'} onCheckedChange={(v) => setTheme(v ? 'dark' : 'light')} />
-                <Moon className="h-4 w-4 text-indigo-600" />
-              </div>
-            </div>
-          </div>
 
           {!isPwaInstalled && (
             <div className="p-4 border-b border-gray-200">
