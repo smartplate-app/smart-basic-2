@@ -702,7 +702,10 @@ export default function OrdersPage() {
 
   const sendOrderToWhatsApp = async (order) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-    const text = `${t('whatsapp_intro') || 'שלום, התקבלה הזמנה חדשה.'}\n\n*${t('order_from') || 'From'}:* ${order.restaurant_name || ''}\n*${t('order_number') || 'Order'}:* ${ensuredNumber}`;
+    const intro = safeT('whatsapp_intro', 'שלום, התקבלה הזמנה חדשה.', 'Hello, a new order has arrived.');
+  const fromLbl = safeT('order_from', 'מאת', 'From');
+  const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
+  const text = `${intro}\n\n*${fromLbl}:* ${order.restaurant_name || ''}\n*${numLbl}:* ${ensuredNumber}`;
     const isAndroid = /Android/i.test(navigator.userAgent || '');
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
     // No pre-opened tabs to avoid blockers/new-tab flashes
@@ -775,16 +778,17 @@ export default function OrdersPage() {
       try { document.body.removeChild(temp); } catch {}
     }
 
-    // 1) Prefer native share with file attachment (opens OS share sheet)
-    if (file && navigator.share) {
+    // 1) Native share with file when supported (best for Android Chrome)
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+        await navigator.share({ files: [file], text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
         return;
-      } catch (_) { /* fallback below */ }
+      } catch (_) { /* continue to fallback */ }
     }
+    // 1b) Text-only native share (older Android WebView / APK)
     if (navigator.share) {
       try {
-        await navigator.share({ text, title: `${t('order_preview') || 'Order'} #${ensuredNumber}` });
+        await navigator.share({ text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
         return;
       } catch (_) { /* continue to WA deep links */ }
     }
