@@ -1554,8 +1554,8 @@ export default function OrdersPage() {
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setShowSendOptions(false)}>{safeT('cancel', 'ביטול', 'Cancel')}</Button>
             {typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || '') && (
-              <Button onClick={handleConfirmSendWhatsAppImage} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
-                <MessageCircle className="w-4 h-4 mr-2" /> {language === 'he' ? 'וואטסאפ (תמונה)' : 'WhatsApp (image)'}
+              <Button onClick={handleConfirmSendWhatsAppImage} disabled={!androidShareFile} className="bg-[#25D366] hover:bg-[#128C7E] text-white disabled:opacity-60 disabled:cursor-not-allowed">
+                <MessageCircle className="w-4 h-4 mr-2" /> {(!androidShareFile) ? (language === 'he' ? 'מכין תמונה…' : 'Preparing image…') : (language === 'he' ? 'וואטסאפ (תמונה)' : 'WhatsApp (image)')}
               </Button>
             )}
             <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
