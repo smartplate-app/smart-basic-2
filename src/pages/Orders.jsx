@@ -825,7 +825,7 @@ export default function OrdersPage() {
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
     // In editor preview (iframe) or desktop browsers, open in a new tab to avoid wa.me X-Frame-Options blocking
-    const tryOpenChain = (urls, stepMs = 1200) => {
+    const tryOpenChain = (urls, stepMs = 900) => {
       let switched = false;
       const onHide = () => { switched = true; };
       document.addEventListener('visibilitychange', onHide, { once: true });
