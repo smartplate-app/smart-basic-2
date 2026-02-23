@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Video, Share, Sun, Moon } from "lucide-react";
+import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Video, Share } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import UserSwitcher from "./components/UserSwitcher";
 import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
@@ -12,7 +12,6 @@ import OfflineNotification from "./components/OfflineNotification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { RefreshCw, WifiOff, Copy, ExternalLink } from "lucide-react";
 
