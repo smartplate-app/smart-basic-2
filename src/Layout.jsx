@@ -1090,8 +1090,25 @@ const AppLayout = ({ children, currentPageName }) => {
               {children}
             </div>
             <style
-              dangerouslySetInnerHTML={{ __html: `:root { --app-bg: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); --app-card: #ffffff; --app-text: #0f172a; }
-.dark:root { --app-bg: #050a1a; --app-card: #0b1530; --app-surface: #0e1d3d; --app-muted: #0a1430; --app-text: #e6eaf7; --app-border: #1e2a55; }
+              dangerouslySetInnerHTML={{ __html: `:root { 
+        --app-bg: #ffffff; 
+        --app-card: #ffffff; 
+        --app-text: #0f172a; 
+        --app-primary: #16a34a; 
+        --app-primary-hover: #15803d;
+        --app-accent: #dcfce7;
+      }
+      .dark:root { 
+        --app-bg: #0a1f12; 
+        --app-card: #0d2818; 
+        --app-surface: #0f3420; 
+        --app-muted: #0c2316; 
+        --app-text: #ecfdf5; 
+        --app-border: #166534; 
+        --app-primary: #22c55e; 
+        --app-primary-hover: #16a34a;
+        --app-accent: #14532d;
+      }
 html, body, #root { background: var(--app-bg); color: var(--app-text); }
 
 /* Real dark mode overrides */
