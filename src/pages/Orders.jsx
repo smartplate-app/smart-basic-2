@@ -37,6 +37,7 @@ export default function OrdersPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [authLoading, setAuthLoading] = useState(true);
   const { t, language } = useLanguage();
+  const isRTL = language === 'he' || language === 'ar';
   const safeT = (key, he, en) => {
     const v = t(key);
     if (language === 'he' && (v === key || !v)) return he;
@@ -1109,7 +1110,7 @@ export default function OrdersPage() {
             {!isViewer && (
               <Button
                 onClick={() => setShowForm(!showForm)}
-                className="bg-gray-900 hover:bg-gray-800 text-white h-11 md:h-10 px-5 rounded-lg"
+                className="hidden md:inline-flex bg-gray-900 hover:bg-gray-800 text-white h-11 md:h-10 px-5 rounded-lg"
               >
                 <Plus className="w-5 h-5 ml-2" />
                 {safeT('new_order', 'הזמנה חדשה', 'New Order')}
@@ -1123,6 +1124,25 @@ export default function OrdersPage() {
           <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
             {safeT('filters', 'סינון', 'Filters')}
           </Button>
+        </div>
+
+        {/* Mobile quick filters */}
+        <div className="md:hidden mb-3 overflow-x-auto">
+          <div className="flex gap-2">
+            {['all','draft','sent','confirmed','delivered'].map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-1.5 text-sm rounded-full border ${statusFilter===s ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
+              >
+                {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
+                 s==='draft' ? t('status_draft') :
+                 s==='sent' ? t('status_sent') :
+                 s==='confirmed' ? t('status_confirmed') :
+                 t('status_delivered')}
+              </button>
+            ))}
+          </div>
         </div>
 
         <AnimatePresence>
@@ -1235,7 +1255,7 @@ export default function OrdersPage() {
               };
 
               return (
-                <Card key={order.id} className="p-4">
+                <Card key={order.id} className="p-4 rounded-xl shadow-sm">
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
