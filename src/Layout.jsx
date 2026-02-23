@@ -17,6 +17,11 @@ import { RefreshCw, WifiOff, Copy, ExternalLink } from "lucide-react";
 
 const AppLayout = ({ children, currentPageName }) => {
   const location = useLocation();
+  
+  // Check preview mode FIRST before any state or effects
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPreview = urlParams.get('preview') === '1';
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDesktopSidebar, setShowDesktopSidebar] = useState(true);
   const [user, setUser] = useState(null);
@@ -33,6 +38,11 @@ const AppLayout = ({ children, currentPageName }) => {
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  
+  // Early return for preview mode - skip all auth and effects
+  if (isPreview) {
+    return <>{children}</>;
+  }
   // Keep sidebar visible; adjust only width via CSS
   useEffect(() => {
     setShowDesktopSidebar(true);
@@ -712,28 +722,19 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const isPreview = urlParams.get('preview') === '1';
   if (
     currentPageName === 'WorkerPortal' ||
     currentPageName === 'OrderDetails' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
     currentPageName === 'Welcome' ||
-    (currentPageName === 'WelcomePublic' && !isPreview) ||
+    currentPageName === 'WelcomePublic' ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
     currentPageName === 'LoginHelper' ||
     currentPageName === 'AuthKick'
   ) {
-    return <>{children}</>;
-  }
-
-
-  
-  const __previewParams = new URLSearchParams(window.location.search);
-  if (__previewParams.get('preview') === '1') {
     return <>{children}</>;
   }
   if (authLoading) {
