@@ -733,13 +733,15 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPreview = urlParams.get('preview') === '1';
   if (
     currentPageName === 'WorkerPortal' ||
     currentPageName === 'OrderDetails' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
     currentPageName === 'Welcome' ||
-    currentPageName === 'WelcomePublic' ||
+    (currentPageName === 'WelcomePublic' && !isPreview) ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
