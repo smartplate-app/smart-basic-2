@@ -778,14 +778,14 @@ export default function OrdersPage() {
       try { document.body.removeChild(temp); } catch {}
     }
 
-    // 1) Native share with file when supported (best for Android Chrome)
+    // 1) Native share with file (Android Chrome/PWA). Use canShare to ensure file support
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
         return;
-      } catch (_) { /* continue to fallback */ }
+      } catch (_) { /* fallback below */ }
     }
-    // 1b) Text-only native share (older Android WebView / APK)
+    // 1b) Text-only native share (older Android WebView/APK)
     if (navigator.share) {
       try {
         await navigator.share({ text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
@@ -818,7 +818,7 @@ export default function OrdersPage() {
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
     // In editor preview (iframe) or desktop browsers, open in a new tab to avoid wa.me X-Frame-Options blocking
-    const tryOpenChain = (urls, stepMs = 700) => {
+    const tryOpenChain = (urls, stepMs = 1200) => {
       let switched = false;
       const onHide = () => { switched = true; };
       document.addEventListener('visibilitychange', onHide, { once: true });
