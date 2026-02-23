@@ -34,10 +34,6 @@ const AppLayout = ({ children, currentPageName }) => {
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
-  const [theme, setTheme] = useState('light');
-
-
-
   // Keep sidebar visible; adjust only width via CSS
   useEffect(() => {
     setShowDesktopSidebar(true);
@@ -366,28 +362,7 @@ const AppLayout = ({ children, currentPageName }) => {
             document.documentElement.lang = language;
           }, [language]);
 
-          // Theme: dark/light with saved preference
-          useEffect(() => {
-            let initial = 'light';
-            try {
-              const saved = localStorage.getItem('b44_theme');
-              if (saved === 'dark' || saved === 'light') {
-                initial = saved;
-              } else {
-                const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-                initial = (mq && mq.matches) ? 'dark' : 'light';
-              }
-            } catch {}
-            setTheme(initial);
-            if (initial === 'dark') document.documentElement.classList.add('dark');
-            else document.documentElement.classList.remove('dark');
-          }, []);
 
-          useEffect(() => {
-            try { localStorage.setItem('b44_theme', theme); } catch {}
-            if (theme === 'dark') document.documentElement.classList.add('dark');
-            else document.documentElement.classList.remove('dark');
-          }, [theme]);
 
           // Enable lite mode for low-memory devices or very old Chrome versions
           useEffect(() => {
