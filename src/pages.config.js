@@ -88,8 +88,8 @@ import Welcome from './pages/Welcome';
 import WelcomeIncognito from './pages/WelcomeIncognito';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import Orders from './pages/Orders';
 import WelcomePublic from './pages/WelcomePublic';
+import Orders from './pages/Orders';
 import __Layout from './Layout.jsx';
 
 
@@ -135,8 +135,8 @@ export const PAGES = {
     "WelcomeIncognito": WelcomeIncognito,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "Orders": Orders,
     "WelcomePublic": WelcomePublic,
+    "Orders": Orders,
 }
 
 export const pagesConfig = {
