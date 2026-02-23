@@ -38,11 +38,11 @@ export default function WelcomePublic() {
         <a href="mailto:admin@smartplate.org" className="block text-xl sm:text-2xl md:text-3xl font-extrabold text-blue-600 hover:text-blue-700 hover:underline mb-6 sm:mb-8 break-all px-2">
           admin@smartplate.org
         </a>
-        <div className="flex flex-col items-center justify-center gap-4">
-          <div className="text-sm text-gray-500 text-center">If you already have access, click Sign in. Otherwise, request access and we’ll enable your account.</div>
-          <div className="flex items-center gap-3">
-            <Button onClick={handleSignIn} className="bg-gray-900 hover:bg-gray-800">Sign in</Button>
-            <Button variant="outline" onClick={() => setOpenRequest(true)}>Request access</Button>
+        <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 px-2">
+          <div className="text-xs sm:text-sm text-gray-500 text-center">If you already have access, click Sign in. Otherwise, request access and we'll enable your account.</div>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <Button onClick={handleSignIn} className="bg-gray-900 hover:bg-gray-800 w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2.5">Sign in</Button>
+            <Button variant="outline" onClick={() => setOpenRequest(true)} className="w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2.5">Request access</Button>
           </div>
         </div>
       </div>
