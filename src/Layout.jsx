@@ -17,11 +17,6 @@ import { RefreshCw, WifiOff, Copy, ExternalLink } from "lucide-react";
 
 const AppLayout = ({ children, currentPageName }) => {
   const location = useLocation();
-  
-  // Check preview mode FIRST before any state or effects
-  const urlParams = new URLSearchParams(window.location.search);
-  const isPreview = urlParams.get('preview') === '1';
-  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDesktopSidebar, setShowDesktopSidebar] = useState(true);
   const [user, setUser] = useState(null);
@@ -38,11 +33,6 @@ const AppLayout = ({ children, currentPageName }) => {
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
-  
-  // Early return for preview mode - skip all auth and effects
-  if (isPreview) {
-    return <>{children}</>;
-  }
   // Keep sidebar visible; adjust only width via CSS
   useEffect(() => {
     setShowDesktopSidebar(true);
@@ -269,21 +259,25 @@ const AppLayout = ({ children, currentPageName }) => {
           ];
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPreview = urlParams.get('preview') === '1';
+    
     if (
-      currentPageName !== 'OrderDetails' &&
-      currentPageName !== 'WorkerPortal' &&
-      currentPageName !== 'Register' &&
-      currentPageName !== 'RestaurantInvite' &&
-      currentPageName !== 'Welcome' &&
-      currentPageName !== 'WelcomePublic' &&
-      currentPageName !== 'PublicOrder' &&
-      currentPageName !== 'OAuthCallback' &&
-      currentPageName !== 'LoginHelper' &&
-      currentPageName !== 'AuthKick'
+      isPreview ||
+      currentPageName === 'OrderDetails' ||
+      currentPageName === 'WorkerPortal' ||
+      currentPageName === 'Register' ||
+      currentPageName === 'RestaurantInvite' ||
+      currentPageName === 'Welcome' ||
+      currentPageName === 'WelcomePublic' ||
+      currentPageName === 'PublicOrder' ||
+      currentPageName === 'OAuthCallback' ||
+      currentPageName === 'LoginHelper' ||
+      currentPageName === 'AuthKick'
     ) {
-      loadAuth();
-    } else {
       setAuthLoading(false);
+    } else {
+      loadAuth();
     }
   }, [currentPageName]);
 
@@ -722,7 +716,11 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPreview = urlParams.get('preview') === '1';
+  
   if (
+    isPreview ||
     currentPageName === 'WorkerPortal' ||
     currentPageName === 'OrderDetails' ||
     currentPageName === 'Register' ||
