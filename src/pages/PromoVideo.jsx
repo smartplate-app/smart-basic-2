@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import OrderDemoAnimation from "@/components/onboarding/OrderDemoAnimation";
 import { Button } from "@/components/ui/button";
 import { Video, StopCircle, Download, ShoppingCart, Users, FileSpreadsheet, Image as ImageIcon, Loader2 } from "lucide-react";
