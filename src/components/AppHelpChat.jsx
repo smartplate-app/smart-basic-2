@@ -8,15 +8,30 @@ import { useLanguage } from "./LanguageProvider";
 import { createPageUrl } from "@/utils";
 import moment from "moment";
 
-export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, onItemAdded }) {
+export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, onItemAdded, isOpen: externalIsOpen, onClose }) {
   const { language } = useLanguage();
   const isRTL = language === 'he';
   
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const toggleOpen = () => {
+    if (onClose && isOpen) onClose();
+    else if (externalIsOpen === undefined) setInternalIsOpen(!internalIsOpen);
+  };
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [localSuppliers, setLocalSuppliers] = useState([]);
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (!suppliers) {
+      base44.entities.Supplier.list().then(setLocalSuppliers).catch(() => {});
+    }
+  }, [suppliers]);
+
+  const effectiveSuppliers = suppliers || localSuppliers;
 
   const isSupplierPage = currentPage === 'Suppliers';
 
@@ -312,9 +327,9 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
   }, [messages]);
 
   const findSupplierByName = (name) => {
-    if (!name || !suppliers?.length) return null;
+    if (!name || !effectiveSuppliers?.length) return null;
     const lowerName = name.toLowerCase().trim();
-    return suppliers.find(s => 
+    return effectiveSuppliers.find(s => 
       s.name.toLowerCase().includes(lowerName) || 
       lowerName.includes(s.name.toLowerCase())
     );
@@ -371,7 +386,7 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
       הודעת משתמש: "${userMessage}"
 
       נושאי עזרה זמינים: ${guideTopics.join(', ')}
-      ${isSupplierPage ? `ספקים זמינים: ${suppliers?.map(s => s.name).join(', ') || 'אין'}` : ''}
+      ${isSupplierPage ? `ספקים זמינים: ${effectiveSuppliers?.map(s => s.name).join(', ') || 'אין'}` : ''}
 
       כללים חשובים לקליטת אספקה/חשבוניות:
       - אם ההודעה כוללת מילים כמו: "חשבונית", "חשבוניות", "קבלת סחורה", "קליטת אספקה", "תעודת משלוח", "Delivery Note", "Supply Receipt", "Invoice" → בחר action="help" ו-topic="receive_supply".
@@ -440,12 +455,12 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
           const noSuppliersMsg = language === 'he' ? 'אין ספקים במערכת. הוסף ספק קודם.' : 'No suppliers in system. Add a supplier first.';
           const notFoundMsg = language === 'he' ? 'לא מצאתי את הספק. ספקים קיימים:' : 'Supplier not found. Available suppliers:';
           
-          if (!suppliers?.length) {
+          if (!effectiveSuppliers?.length) {
             setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${noSuppliersMsg}` }]);
           } else {
             setMessages(prev => [...prev, { 
               role: 'assistant', 
-              content: `❌ ${notFoundMsg}\n${suppliers.map(s => `• ${s.name}`).join('\n')}`
+              content: `❌ ${notFoundMsg}\n${effectiveSuppliers.map(s => `• ${s.name}`).join('\n')}`
             }]);
           }
         } else {
@@ -503,21 +518,17 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
 
   return (
     <>
-      {/* Floating Bubble */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-50 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110`}
-      >
-        {isOpen ? <X className="w-6 h-6" /> : <HelpCircle className="w-6 h-6" />}
-      </button>
-
       {/* Chat Panel */}
       {isOpen && (
-        <Card className={`fixed bottom-24 ${isRTL ? 'left-6' : 'right-6'} z-50 w-80 md:w-96 shadow-2xl border-2 border-purple-200`} dir={isRTL ? 'rtl' : 'ltr'}>
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg py-3">
-            <CardTitle className={`text-lg flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <Card className={`fixed bottom-20 inset-x-0 mx-auto w-[95%] max-w-md md:right-6 md:left-auto md:bottom-24 md:w-96 z-50 shadow-2xl border-2 border-purple-200`} dir={isRTL ? 'rtl' : 'ltr'}>
+          <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg py-3 flex flex-row items-center justify-between">
+            <CardTitle className={`text-lg flex items-center gap-2`}>
               <HelpCircle className="w-5 h-5" />
               {t.title}
+            </CardTitle>
+            <button onClick={toggleOpen} className="text-white hover:bg-white/20 rounded-full p-1">
+              <X className="w-5 h-5" />
+            </button>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-4">

@@ -9,6 +9,7 @@ import LanguageSwitcher from "./components/LanguageSwitcher";
 import WorkerInvite from "./components/WorkerInvite";
 import OnboardingModal from "./components/onboarding/OnboardingModal";
 import OfflineNotification from "./components/OfflineNotification";
+import AppHelpChat from "./components/AppHelpChat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ const AppLayout = ({ children, currentPageName }) => {
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [showHelpChat, setShowHelpChat] = useState(false);
   // Keep sidebar visible; adjust only width via CSS
   useEffect(() => {
     setShowDesktopSidebar(true);
@@ -1178,7 +1180,13 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
 
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40 dark:backdrop-blur-0">
-          <div className={'grid grid-cols-4 text-xs ' + (isRTL ? 'text-right' : 'text-center')}>
+          <div className={'grid grid-cols-5 text-xs ' + (isRTL ? 'text-right' : 'text-center')}>
+            <button onClick={() => setShowHelpChat(!showHelpChat)} className={'flex flex-col items-center py-2 ' + (showHelpChat ? 'text-green-600' : 'text-green-600')}>
+              <div className="bg-green-100 rounded-full p-1 mb-0.5">
+                <MessageCircle className="h-4 w-4" />
+              </div>
+              <span>{language === 'he' ? 'עוזר' : 'Help'}</span>
+            </button>
             <Link to={createPageUrl('Orders')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
@@ -1197,6 +1205,12 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
             </Link>
           </div>
         </nav>
+
+        <AppHelpChat 
+          currentPage={currentPageName} 
+          isOpen={showHelpChat} 
+          onClose={() => setShowHelpChat(false)} 
+        />
 
         {/* Offline notification for data-sensitive pages */}
                               <OfflineNotification pageName={currentPageName} />
