@@ -64,10 +64,12 @@ export default function PromoVideo() {
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
     } catch (err) {
       console.error("Failed to download image:", err);
-      alert("Failed to download image");
+      alert("Failed to download image. Try using a different browser.");
     }
   };
 
