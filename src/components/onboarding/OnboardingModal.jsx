@@ -93,17 +93,7 @@ export default function OnboardingModal({ user }) {
     <Dialog open={open} onOpenChange={(val) => { if (!val) handleClose(); }}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden outline-none">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col items-center justify-center min-h-[420px] text-center relative" dir={isHe ? 'rtl' : 'ltr'}>
-          {user?.role === 'admin' && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`absolute top-4 ${isHe ? 'right-4' : 'left-4'} gap-1.5 z-50 bg-white/80 hover:bg-white text-xs text-pink-600 border-pink-200 hover:text-pink-700`}
-              onClick={() => window.open('/#/pages/PromoVideo', '_blank')}
-            >
-              <Camera className="w-3 h-3" />
-              {isHe ? 'ערכת אינסטגרם (אדמין)' : 'Promo Kit (Admin)'}
-            </Button>
-          )}
+
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
