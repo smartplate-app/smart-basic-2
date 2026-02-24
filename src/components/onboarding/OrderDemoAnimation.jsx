@@ -92,7 +92,19 @@ export default function OrderDemoAnimation({ isHe }) {
               <span className="text-white text-[10px] font-bold">{isHe ? 'ספק ירקות' : 'Veggie Supplier'}</span>
             </div>
             <div className="p-3 flex flex-col items-end space-y-2">
-              <div className="bg-[#dcf8c6] p-2 rounded-lg rounded-tr-none shadow-sm max-w-[85%] text-left" dir="ltr">
+              <div className="bg-[#dcf8c6] p-2 rounded-lg rounded-tr-none shadow-sm max-w-[85%] text-left relative" dir="ltr">
+                {/* Simulated Image Attachment */}
+                <div className="bg-gray-200 rounded-md w-full h-16 mb-1.5 flex items-center justify-center overflow-hidden border border-gray-300">
+                  <div className="bg-white w-[90%] h-[80%] shadow-sm p-1 flex flex-col">
+                    <div className="bg-blue-600 h-2 w-full mb-1"></div>
+                    <div className="space-y-0.5">
+                      <div className="bg-gray-200 h-1 w-3/4"></div>
+                      <div className="bg-gray-200 h-1 w-1/2"></div>
+                      <div className="bg-gray-200 h-1 w-full mt-1"></div>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="text-[9px] font-bold text-gray-800 mb-1">
                   New Order #{Math.floor(Math.random() * 900) + 100}
                 </div>
