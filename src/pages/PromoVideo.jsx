@@ -5,10 +5,13 @@ import { Video, StopCircle, Download, ShoppingCart, Users, FileSpreadsheet, Imag
 import { Card } from "@/components/ui/card";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
+import { base44 } from "@/api/base44Client";
+import { CloudUpload } from "lucide-react";
 
 
 export default function PromoVideo() {
   const [isZipping, setIsZipping] = useState(false);
+  const [isUploadingToDrive, setIsUploadingToDrive] = useState(false);
   // State for video recording removed
 
   // Recording logic removed as per user request to replace video with static images
