@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, Send, Check, CheckCircle2, Image as ImageIcon } from 'lucide-react';
+import { ShoppingCart, Plus, Send, Check, CheckCircle2, Image as ImageIcon, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function OrderDemoAnimation({ isHe }) {
