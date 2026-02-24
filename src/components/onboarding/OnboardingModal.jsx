@@ -79,27 +79,7 @@ export default function OnboardingModal({ user }) {
     },
     {
       id: 'order',
-      icon: (
-        <div className="flex flex-col items-center gap-4">
-          <MessageCircle className="w-16 h-16 text-green-600" />
-          {/* VIDEO / GIF PLACEHOLDER */}
-          <div className="w-full max-w-[280px] bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center text-gray-500">
-            <span className="text-xs font-bold mb-1">{isHe ? 'מקום לסרטון / GIF' : 'Video / GIF Placeholder'}</span>
-            <span className="text-[10px] text-center">
-              {isHe 
-                ? 'העלה וידאו או גיף שמראה את כרטיס ההזמנה בוואטסאפ ושים את הקישור בקוד (OnboardingModal.jsx).' 
-                : 'Upload a video/GIF showing the WhatsApp order card and put the URL in the code.'}
-            </span>
-            {/* 
-              To use a real video, uncomment this and replace the src:
-              <video src="YOUR_VIDEO_URL.mp4" autoPlay loop muted playsInline className="w-full mt-2 rounded-lg shadow-sm" />
-              
-              Or for a GIF:
-              <img src="YOUR_GIF_URL.gif" className="w-full mt-2 rounded-lg shadow-sm" />
-            */}
-          </div>
-        </div>
-      ),
+      icon: <OrderDemoAnimation isHe={isHe} />,
       title: isHe ? '3. שליחת הזמנה בוואטסאפ' : '3. Send Order via WhatsApp',
       description: isHe 
         ? 'בוחרים ספק, מוסיפים פריטים לעגלה, ולוחצים על "שלח". ההזמנה מגיעה לספק בהודעת וואטסאפ מסודרת עם תמונת ההזמנה (Image card)!' 
