@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import OrderDemoAnimation from "@/components/onboarding/OrderDemoAnimation";
 import { Button } from "@/components/ui/button";
-import { Video, StopCircle, Download, ShoppingCart, Users, FileSpreadsheet, Image as ImageIcon } from "lucide-react";
+import { Video, StopCircle, Download, ShoppingCart, Users, FileSpreadsheet, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
@@ -31,44 +31,67 @@ export default function PromoVideo() {
   };
 
   const downloadAllImagesAsZip = async () => {
+    if (isZipping) return;
+    setIsZipping(true);
     const zip = new JSZip();
     const folder = zip.folder("promo-slides");
 
     try {
-      // Generate all images
+      // 1. Generate intro slides
       for (let i = 0; i < slides.length; i++) {
         const slide = slides[i];
         const el = document.getElementById(slide.id);
         if (el) {
-          const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-          folder.file(`slide_${i + 1}.png`, blob);
+          try {
+            const canvas = await html2canvas(el, { 
+              scale: 2, // Reduced scale slightly for stability
+              useCORS: true, 
+              backgroundColor: '#ffffff',
+              logging: false
+            });
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            folder.file(`slide_${i + 1}.png`, blob);
+          } catch (e) {
+            console.error(`Failed to render slide ${i+1}`, e);
+          }
         }
       }
 
-      // Generate WhatsApp flow images
+      // 2. Generate WhatsApp flow images
       for (let p = 0; p < 5; p++) {
         const el = document.getElementById(`wa-phase-${p}`);
         if (el) {
-          const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-          folder.file(`slide_${p + 4}.png`, blob);
+          try {
+            const canvas = await html2canvas(el, { 
+              scale: 2, 
+              useCORS: true, 
+              backgroundColor: '#ffffff',
+              logging: false
+            });
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            folder.file(`slide_${p + 4}.png`, blob);
+          } catch (e) {
+            console.error(`Failed to render wa-phase-${p}`, e);
+          }
         }
       }
 
-      // Generate zip
+      // 3. Generate and download zip
       const content = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(content);
       const a = document.createElement('a');
       a.href = url;
-      a.download = "promo_slides.zip";
+      a.download = "smart_basic_promo_kit.zip";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
     } catch (err) {
       console.error("Failed to generate zip:", err);
-      alert("Failed to generate zip file.");
+      alert("Failed to generate ZIP file. Please try downloading images individually.");
+    } finally {
+      setIsZipping(false);
     }
   };
 
@@ -102,9 +125,22 @@ export default function PromoVideo() {
         <p className="text-gray-600 mb-2 text-sm">
           Download all 8 slides (3 intro slides + 5 WhatsApp flow slides) to create a perfect step-by-step carousel post on Instagram!
         </p>
-        <Button onClick={downloadAllImagesAsZip} className="mt-2 bg-pink-600 hover:bg-pink-700 gap-2">
-            <Download className="w-4 h-4" />
-            Download All Images as ZIP
+        <Button 
+          onClick={downloadAllImagesAsZip} 
+          disabled={isZipping}
+          className="mt-2 bg-pink-600 hover:bg-pink-700 gap-2 min-w-[200px]"
+        >
+            {isZipping ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating ZIP...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Download All Images as ZIP
+              </>
+            )}
         </Button>
       </Card>
 
