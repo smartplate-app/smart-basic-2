@@ -9,9 +9,19 @@ import { base44 } from "@/api/base44Client";
 import { CloudUpload } from "lucide-react";
 
 
-export default function PromoVideo() {
+export default function PromoVideo({ autoUpload = false, onClose }) {
   const [isZipping, setIsZipping] = useState(false);
   const [isUploadingToDrive, setIsUploadingToDrive] = useState(false);
+
+  useEffect(() => {
+    if (autoUpload && !isUploadingToDrive) {
+      // Small delay to ensure rendering
+      const timer = setTimeout(() => {
+        uploadAllImagesToDrive();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoUpload]);
   // State for video recording removed
 
   // Recording logic removed as per user request to replace video with static images
@@ -174,14 +184,26 @@ export default function PromoVideo() {
       });
 
       if (data?.success) {
-          alert(`Successfully uploaded to Google Drive!${data.sharedTo ? ` Shared folder to: ${data.sharedTo}` : ''}`);
+          if (autoUpload && onClose) {
+            onClose({ success: true, sharedTo: data.sharedTo });
+          } else {
+            alert(`Successfully uploaded to Google Drive!${data.sharedTo ? ` Shared folder to: ${data.sharedTo}` : ''}`);
+          }
       } else {
-          alert('Upload failed: ' + (data?.error || 'Unknown error'));
+          if (autoUpload && onClose) {
+             onClose({ success: false, error: data?.error });
+          } else {
+             alert('Upload failed: ' + (data?.error || 'Unknown error'));
+          }
       }
       
     } catch (err) {
       console.error("Failed to upload to Drive:", err);
-      alert("Failed to upload to Google Drive. Please try again.");
+      if (autoUpload && onClose) {
+         onClose({ success: false, error: err.message });
+      } else {
+         alert("Failed to upload to Google Drive. Please try again.");
+      }
     } finally {
       setIsUploadingToDrive(false);
     }
