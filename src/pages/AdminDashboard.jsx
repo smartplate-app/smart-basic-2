@@ -14,6 +14,7 @@ import { useLanguage } from "../components/LanguageProvider";
 import InstagramCampaign from "@/components/marketing/InstagramCampaign";
 import InstagramCampaignDE from "@/components/marketing/InstagramCampaignDE";
 import InstagramCampaignHE from "@/components/marketing/InstagramCampaignHE";
+import PromoVideo from "./PromoVideo";
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
@@ -37,6 +38,9 @@ export default function AdminDashboard() {
   const [inviteName, setInviteName] = useState("");
   const [inviteLang, setInviteLang] = useState('he');
   const [sendingInvite, setSendingInvite] = useState(false);
+  const [showPromoKitModal, setShowPromoKitModal] = useState(false);
+  const [promoKitStatus, setPromoKitStatus] = useState('idle');
+  const [promoKitResult, setPromoKitResult] = useState(null);
 
   useEffect(() => {
     loadAdminData();
@@ -558,7 +562,7 @@ export default function AdminDashboard() {
                     {language === 'he' ? 'שליחת הזמנת בעלים' : 'Send Owner Invite'}
                   </Button>
                   <Button
-                    onClick={() => window.location.href = '/#/pages/PromoVideo'}
+                    onClick={() => { setShowPromoKitModal(true); setPromoKitStatus('uploading'); setPromoKitResult(null); }}
                     variant="outline"
                     className="flex items-center gap-2 border-green-500 text-green-600 hover:bg-green-50"
                   >
@@ -1023,6 +1027,72 @@ export default function AdminDashboard() {
           </div>
           )}
         </>
+        )}
+      </div>
+
+      <Dialog open={showPromoKitModal} onOpenChange={(val) => { if(!val && promoKitStatus !== 'uploading') setShowPromoKitModal(false); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{language === 'he' ? 'העלאת ערכת היכרות' : 'Uploading Promo Kit'}</DialogTitle>
+            <DialogDescription>
+              {language === 'he' ? 'מייצר תמונות ומעלה לתיקייה ב-Google Drive...' : 'Generating images and uploading to Google Drive...'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 flex flex-col items-center justify-center">
+            {promoKitStatus === 'uploading' && (
+              <div className="flex flex-col items-center gap-4">
+                <Loader className="w-10 h-10 animate-spin text-green-600" />
+                <p className="text-gray-600 font-medium text-center">
+                  {language === 'he' ? 'נא להמתין כ-15 שניות, אנחנו מכינים את הקבצים...' : 'Please wait about 15 seconds, preparing files...'}
+                </p>
+              </div>
+            )}
+            {promoKitStatus === 'success' && (
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 text-2xl">✓</span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">{language === 'he' ? 'הועלה בהצלחה!' : 'Uploaded Successfully!'}</h3>
+                {promoKitResult?.sharedTo && (
+                  <p className="text-sm text-gray-600">
+                    {language === 'he' ? 'שותף עם:' : 'Shared with:'} <br/><span className="font-semibold">{promoKitResult.sharedTo}</span>
+                  </p>
+                )}
+                <Button onClick={() => setShowPromoKitModal(false)} className="mt-4 w-full bg-gray-900 hover:bg-gray-800">
+                  {language === 'he' ? 'סגור' : 'Close'}
+                </Button>
+              </div>
+            )}
+            {promoKitStatus === 'error' && (
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <span className="text-red-600 text-2xl">✗</span>
+                </div>
+                <h3 className="text-lg font-bold text-red-600">{language === 'he' ? 'שגיאה בהעלאה' : 'Upload Failed'}</h3>
+                <p className="text-sm text-gray-600">{promoKitResult?.error || 'Unknown error'}</p>
+                <Button onClick={() => setShowPromoKitModal(false)} className="mt-4 w-full bg-gray-900 hover:bg-gray-800">
+                  {language === 'he' ? 'סגור' : 'Close'}
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -9999, opacity: 0.01, width: '1200px', height: '2500px', pointerEvents: 'none' }}>
+        {promoKitStatus === 'uploading' && (
+          <PromoVideo 
+            autoUpload={true} 
+            onClose={(result) => {
+              if (result.success) {
+                setPromoKitStatus('success');
+                setPromoKitResult(result);
+              } else {
+                setPromoKitStatus('error');
+                setPromoKitResult(result);
+              }
+            }} 
+          />
         )}
       </div>
 
