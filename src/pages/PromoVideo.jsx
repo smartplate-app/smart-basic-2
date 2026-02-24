@@ -174,7 +174,7 @@ export default function PromoVideo() {
       });
 
       if (data?.success) {
-          alert(`Successfully uploaded to Google Drive!${data.sharedTo ? \` Shared folder to: ${data.sharedTo}\` : ''}`);
+          alert(`Successfully uploaded to Google Drive!${data.sharedTo ? ` Shared folder to: ${data.sharedTo}` : ''}`);
       } else {
           alert('Upload failed: ' + (data?.error || 'Unknown error'));
       }
