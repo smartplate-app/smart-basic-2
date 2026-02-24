@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Video, StopCircle, Download, ShoppingCart, Users, FileSpreadsheet, Image as ImageIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import html2canvas from "html2canvas";
+import JSZip from "jszip";
+
 
 export default function PromoVideo() {
   const [recording, setRecording] = useState(false);
@@ -73,6 +75,38 @@ export default function PromoVideo() {
     }
   };
 
+  const downloadAllImagesAsZip = async () => {
+    const zip = new JSZip();
+    const folder = zip.folder("promo-slides");
+
+    try {
+      // Generate all images
+      for (let i = 0; i < slides.length; i++) {
+        const slide = slides[i];
+        const el = document.getElementById(slide.id);
+        if (el) {
+          const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          folder.file(`slide_${i + 1}.png`, blob);
+        }
+      }
+
+      // Generate zip
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "promo_slides.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to generate zip:", err);
+      alert("Failed to generate zip file.");
+    }
+  };
+
   const slides = [
     {
       id: 'slide-1',
@@ -103,6 +137,10 @@ export default function PromoVideo() {
         <p className="text-gray-600 mb-2 text-sm">
           Download the 3 image slides below, and record the 4th video slide to create a perfect step-by-step carousel post on Instagram!
         </p>
+        <Button onClick={downloadAllImagesAsZip} className="mt-2 bg-pink-600 hover:bg-pink-700 gap-2">
+            <Download className="w-4 h-4" />
+            Download All Images as ZIP
+        </Button>
       </Card>
 
       <div className="flex flex-col gap-16 items-center w-full">
