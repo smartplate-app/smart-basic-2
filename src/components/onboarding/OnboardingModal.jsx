@@ -5,7 +5,6 @@ import { FileSpreadsheet, MessageCircle, ShoppingCart, Users, ArrowRight, CheckC
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../LanguageProvider';
 import { base44 } from '@/api/base44Client';
-import OrderDemoAnimation from './OrderDemoAnimation';
 
 export default function OnboardingModal({ user }) {
   const { language } = useLanguage();
