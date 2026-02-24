@@ -529,7 +529,6 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
             <button onClick={toggleOpen} className="text-white hover:bg-white/20 rounded-full p-1">
               <X className="w-5 h-5" />
             </button>
-            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             {/* Messages */}
