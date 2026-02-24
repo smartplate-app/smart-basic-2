@@ -8,6 +8,7 @@ import JSZip from "jszip";
 
 
 export default function PromoVideo() {
+  const [isZipping, setIsZipping] = useState(false);
   // State for video recording removed
 
   // Recording logic removed as per user request to replace video with static images
