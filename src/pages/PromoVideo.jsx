@@ -8,54 +8,9 @@ import JSZip from "jszip";
 
 
 export default function PromoVideo() {
-  const [recording, setRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const chunks = useRef([]);
+  // State for video recording removed
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { 
-            displaySurface: 'browser',
-            frameRate: 60
-        },
-        audio: false,
-        preferCurrentTab: true 
-      });
-      
-      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
-      
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.current.push(e.data);
-      };
-      
-      recorder.onstop = () => {
-        const blob = new Blob(chunks.current, { type: 'video/webm' });
-        chunks.current = [];
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'slide_4_video.webm';
-        a.click();
-        URL.revokeObjectURL(url);
-        stream.getTracks().forEach(track => track.stop());
-        setRecording(false);
-      };
-
-      recorder.start();
-      setRecording(true);
-      setMediaRecorder(recorder);
-    } catch (err) {
-      console.error("Error starting recording:", err);
-      alert("Could not start recording. Please ensure you are on a desktop browser.");
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-    }
-  };
+  // Recording logic removed as per user request to replace video with static images
 
   const downloadImage = async (id, filename) => {
     const el = document.getElementById(id);
@@ -88,6 +43,16 @@ export default function PromoVideo() {
           const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
           folder.file(`slide_${i + 1}.png`, blob);
+        }
+      }
+
+      // Generate WhatsApp flow images
+      for (let p = 0; p < 4; p++) {
+        const el = document.getElementById(`wa-phase-${p}`);
+        if (el) {
+          const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          folder.file(`slide_${p + 4}.png`, blob);
         }
       }
 
@@ -135,7 +100,7 @@ export default function PromoVideo() {
            Instagram Carousel Generator
         </h1>
         <p className="text-gray-600 mb-2 text-sm">
-          Download the 3 image slides below, and record the 4th video slide to create a perfect step-by-step carousel post on Instagram!
+          Download all 7 slides (3 intro slides + 4 WhatsApp flow slides) to create a perfect step-by-step carousel post on Instagram!
         </p>
         <Button onClick={downloadAllImagesAsZip} className="mt-2 bg-pink-600 hover:bg-pink-700 gap-2">
             <Download className="w-4 h-4" />
@@ -174,36 +139,33 @@ export default function PromoVideo() {
           </div>
         ))}
 
-        <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t-2 border-gray-200 w-full max-w-4xl">
-          <h2 className="text-xl font-bold text-gray-700">Slide 4 (Video Animation)</h2>
-          <p className="text-sm text-gray-500 text-center max-w-md">
-            1. Click "Record" <br/>
-            2. Select <strong>"This Tab"</strong> in the browser popup <br/>
-            3. Let the animation play for one loop <br/>
-            4. Click "Stop & Download"
+        <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t-2 border-gray-200 w-full max-w-6xl">
+          <h2 className="text-xl font-bold text-gray-700">Slides 4-7 (WhatsApp Flow)</h2>
+          <p className="text-sm text-gray-500 text-center max-w-md mb-4">
+            These slides show the WhatsApp ordering process step-by-step. They are included in the ZIP download.
           </p>
-
-          <div className="flex justify-center gap-4">
-            {!recording ? (
-              <Button 
-                  onClick={startRecording} 
-                  className="gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:opacity-90 transition-opacity border-0 shadow-md"
-              >
-                <Video className="w-4 h-4" />
-                Start Recording
-              </Button>
-            ) : (
-              <Button onClick={stopRecording} variant="destructive" className="gap-2 animate-pulse shadow-md">
-                <StopCircle className="w-4 h-4" />
-                Stop & Download
-              </Button>
-            )}
-          </div>
-
-          <div className="w-[400px] h-[500px] bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-8 text-center shadow-md relative overflow-hidden mt-4">
-            <div className="transform scale-[1.2] origin-center translate-y-12">
-              <OrderDemoAnimation isHe={true} />
-            </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[0, 1, 2, 3].map(p => (
+              <div key={`wa-phase-${p}`} className="flex flex-col items-center gap-4">
+                <div 
+                  id={`wa-phase-${p}`}
+                  className="w-[300px] h-[375px] bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4 text-center shadow-md relative overflow-hidden"
+                >
+                  <div className="transform scale-[1.0] origin-center">
+                    <OrderDemoAnimation isHe={true} staticPhase={p} />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => downloadImage(`wa-phase-${p}`, `slide_${p + 4}.png`)}
+                  variant="outline"
+                  className="gap-2 text-xs"
+                >
+                  <Download className="w-3 h-3" />
+                  Download Slide {p + 4}
+                </Button>
+              </div>
+            ))}
           </div>
         </div>
 
