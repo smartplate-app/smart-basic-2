@@ -66,6 +66,7 @@ import LinkChecker from './pages/LinkChecker';
 import MonthlyCount from './pages/MonthlyCount';
 import OAuthCallback from './pages/OAuthCallback';
 import OrderDetails from './pages/OrderDetails';
+import Orders from './pages/Orders';
 import PublicOrder from './pages/PublicOrder';
 import Register from './pages/Register';
 import RestaurantInvite from './pages/RestaurantInvite';
@@ -86,10 +87,9 @@ import Warehouses from './pages/Warehouses';
 import WasteReports from './pages/WasteReports';
 import Welcome from './pages/Welcome';
 import WelcomeIncognito from './pages/WelcomeIncognito';
+import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import WelcomePublic from './pages/WelcomePublic';
-import Orders from './pages/Orders';
 import __Layout from './Layout.jsx';
 
 
@@ -113,6 +113,7 @@ export const PAGES = {
     "MonthlyCount": MonthlyCount,
     "OAuthCallback": OAuthCallback,
     "OrderDetails": OrderDetails,
+    "Orders": Orders,
     "PublicOrder": PublicOrder,
     "Register": Register,
     "RestaurantInvite": RestaurantInvite,
@@ -133,10 +134,9 @@ export const PAGES = {
     "WasteReports": WasteReports,
     "Welcome": Welcome,
     "WelcomeIncognito": WelcomeIncognito,
+    "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "WelcomePublic": WelcomePublic,
-    "Orders": Orders,
 }
 
 export const pagesConfig = {

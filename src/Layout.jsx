@@ -7,7 +7,7 @@ import UserSwitcher from "./components/UserSwitcher";
 import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 import WorkerInvite from "./components/WorkerInvite";
-
+import OnboardingModal from "./components/onboarding/OnboardingModal";
 import OfflineNotification from "./components/OfflineNotification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1172,6 +1172,9 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
 }` }}
                   />
               </main>
+
+        {/* Onboarding Modal */}
+        <OnboardingModal user={user} />
 
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40 dark:backdrop-blur-0">
