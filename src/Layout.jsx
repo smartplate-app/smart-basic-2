@@ -683,8 +683,8 @@ const AppLayout = ({ children, currentPageName }) => {
     }, [location.pathname, user?.email]);
 
               const visibleNavigationItems = navigationItems.filter(item => {
-                                    // Always hide admin-only items from the sidebar (admins can access via preview switcher)
-                                    if (item.adminOnly) return false;
+                                    // Hide admin-only items from the sidebar unless the user is an admin
+                                    if (item.adminOnly && user?.role !== 'admin') return false;
                                     // Hide additional admin-related pages not flagged as adminOnly
                                     const hideByUrl = (item.url || '').includes('ChainManagement');
                                     if (hideByUrl) return false;
