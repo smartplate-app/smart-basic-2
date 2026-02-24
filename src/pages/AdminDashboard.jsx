@@ -551,28 +551,11 @@ export default function AdminDashboard() {
                     {chains.length > 0 && <Badge variant="secondary">{chains.length}</Badge>}
                   </Button>
                   <Button
-                    onClick={() => setShowMarketingView(!showMarketingView)}
-                    variant={showMarketingView ? "default" : "outline"}
-                    className="flex items-center gap-2"
-                  >
-                    <Instagram className="w-4 h-4" />
-                    {language === 'he' ? 'קמפיין אינסטגרם' : 'Instagram Campaign'}
-                  </Button>
-
-                  <Button
                     onClick={() => setShowInviteModal(true)}
                     className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800"
                   >
                     <Mail className="w-4 h-4" />
                     {language === 'he' ? 'שליחת הזמנת בעלים' : 'Send Owner Invite'}
-                  </Button>
-                  <Button
-                    onClick={() => window.location.href = '/#/pages/PromoVideo'}
-                    variant="outline"
-                    className="flex items-center gap-2 border-pink-500 text-pink-600 hover:bg-pink-50"
-                  >
-                    <Instagram className="w-4 h-4" />
-                    {language === 'he' ? 'הורדת פוסט היכרות לאינסטגרם' : 'Download Promo Assets'}
                   </Button>
                   <Button
                     onClick={() => window.dispatchEvent(new Event('b44_test_onboarding'))}
