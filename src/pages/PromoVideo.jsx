@@ -62,11 +62,19 @@ export default function PromoVideo() {
         const el = document.getElementById(`wa-phase-${p}`);
         if (el) {
           try {
+            // Need to handle the scale transform properly for html2canvas
             const canvas = await html2canvas(el, { 
               scale: 2, 
               useCORS: true, 
               backgroundColor: '#ffffff',
-              logging: false
+              logging: false,
+              onclone: (clonedDoc) => {
+                // Ensure the cloned element is fully visible and not transformed oddly
+                const clonedEl = clonedDoc.getElementById(`wa-phase-${p}`);
+                if (clonedEl) {
+                  clonedEl.style.transform = 'none';
+                }
+              }
             });
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             folder.file(`slide_${p + 4}.png`, blob);
