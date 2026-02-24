@@ -125,7 +125,7 @@ export default function PromoVideo() {
             </div>
 
             <Button 
-              onClick={() => downloadImage(slide.id, \`slide_${idx + 1}.png\`)}
+              onClick={() => downloadImage(slide.id, `slide_${idx + 1}.png`)}
               className="gap-2 bg-blue-600 hover:bg-blue-700"
             >
               <Download className="w-4 h-4" />
