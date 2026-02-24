@@ -520,45 +520,7 @@ const handleCleanOrphans = async (ownerEmail) => {
               {exporting ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
               {safeT('export_to_sheets','ייצוא ל-Google Sheets','Export to Google Sheets')}
             </Button>
-            <Button
-              variant="outline"
-              onClick={async () => {
-                setSeeding(true);
-                try {
-                  const { data } = await base44.functions.invoke('seedItems', { ownerEmail: (user?.store_user_owner_email || user?.acting_as_store_email || user?.email), count: 12 });
-                  if (data?.success) {
-                    await loadData(user);
-                    const added = (data?.created_count ?? data?.created ?? 0);
-                          alert(`Added ${added} test items`);
-                  } else {
-                    alert('Seeding failed: ' + (data?.error || 'Unknown error'));
-                  }
-                } finally {
-                  setSeeding(false);
-                }
-              }}
-              disabled={seeding}
-              className="gap-2"
-            >
-              {seeding ? <Loader className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {safeT('seed_items','הוסף נתוני דמה','Seed sample items')}
-            </Button>
-             {!isViewer && (
-            <Button
-              variant="outline"
-              onClick={async () => {
-                const defaultEmail = user?.store_user_owner_email || user?.acting_as_store_email || user?.email;
-                const email = window.prompt('Owner email to clean orphan items:', defaultEmail);
-                if (email) {
-                  await handleCleanOrphans(email.trim());
-                }
-              }}
-              className="border-red-300 text-red-600 hover:bg-red-50"
-            >
-              <Trash2 className="w-5 h-5 mr-2" />
-              {safeT('clean_orphans','ניקוי פריטים יתומים','Clean Orphan Items')}
-            </Button>
-            )}
+
 
             {!isViewer && (
             <Button
