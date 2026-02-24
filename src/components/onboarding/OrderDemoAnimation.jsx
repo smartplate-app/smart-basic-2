@@ -6,13 +6,14 @@ export default function OrderDemoAnimation({ isHe, staticPhase }) {
   const [phase, setPhase] = useState(staticPhase !== undefined ? staticPhase : 0); 
   // 0: Order App Summary
   // 1: WhatsApp Empty
-  // 2: WhatsApp Pasting (Image preview + text)
-  // 3: WhatsApp Sent
+  // 2: WhatsApp Paste Menu
+  // 3: WhatsApp Pasting Preview (Image preview + text)
+  // 4: WhatsApp Sent
 
   useEffect(() => {
     if (staticPhase !== undefined) return;
     const interval = setInterval(() => {
-      setPhase((prev) => (prev + 1) % 4);
+      setPhase((prev) => (prev + 1) % 5);
     }, 2500);
     return () => clearInterval(interval);
   }, [staticPhase]);
@@ -96,10 +97,45 @@ export default function OrderDemoAnimation({ isHe, staticPhase }) {
           </Container>
         )}
 
-        {/* Phase 2: WhatsApp Pasting Preview */}
+        {/* Phase 2: WhatsApp Paste Menu */}
         {currentPhase === 2 && (
           <Container 
-            key="wa-paste"
+            key="wa-paste-menu"
+            {...containerProps}
+            className="absolute inset-0 flex flex-col bg-[#e5ddd5]"
+          >
+            <div className="bg-[#075e54] h-8 flex items-center px-3 gap-2 shadow-sm z-10">
+              <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                <Users className="w-3 h-3 text-gray-500" />
+              </div>
+              <span className="text-white text-[10px] font-bold">{isHe ? 'ספק הירקות' : 'Veggie Supplier'}</span>
+            </div>
+            <div className="flex-1 p-2 flex flex-col justify-end relative">
+              {/* Paste tooltip popup */}
+              <motion.div 
+                initial={isStatic ? { scale: 1 } : { scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="absolute bottom-8 left-10 bg-gray-800 text-white text-[10px] px-3 py-1.5 rounded-lg shadow-lg z-20 font-bold"
+              >
+                {isHe ? 'הדבק (Paste)' : 'Paste'}
+                <div className="absolute -bottom-1 left-4 w-2 h-2 bg-gray-800 rotate-45"></div>
+              </motion.div>
+            </div>
+            <div className="bg-[#f0f0f0] p-1.5 flex gap-1 items-center z-10">
+              <div className="flex-1 bg-blue-50/50 border border-blue-200 rounded-full h-6 px-3 flex items-center">
+                <span className="text-[9px] text-blue-500 font-bold">|</span>
+              </div>
+              <div className="w-6 h-6 bg-[#00897b] rounded-full flex items-center justify-center text-white opacity-50">
+                <Send className="w-3 h-3 ml-0.5" />
+              </div>
+            </div>
+          </Container>
+        )}
+
+        {/* Phase 3: WhatsApp Pasting Preview */}
+        {currentPhase === 3 && (
+          <Container 
+            key="wa-paste-preview"
             {...containerProps}
             className="absolute inset-0 flex flex-col bg-black/90"
           >
@@ -141,8 +177,8 @@ export default function OrderDemoAnimation({ isHe, staticPhase }) {
           </Container>
         )}
 
-        {/* Phase 3: WhatsApp Sent */}
-        {currentPhase === 3 && (
+        {/* Phase 4: WhatsApp Sent */}
+        {currentPhase === 4 && (
           <Container 
             key="wa-sent"
             {...containerProps}

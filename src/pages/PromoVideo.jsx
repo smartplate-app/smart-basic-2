@@ -47,7 +47,7 @@ export default function PromoVideo() {
       }
 
       // Generate WhatsApp flow images
-      for (let p = 0; p < 4; p++) {
+      for (let p = 0; p < 5; p++) {
         const el = document.getElementById(`wa-phase-${p}`);
         if (el) {
           const canvas = await html2canvas(el, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
@@ -100,7 +100,7 @@ export default function PromoVideo() {
            Instagram Carousel Generator
         </h1>
         <p className="text-gray-600 mb-2 text-sm">
-          Download all 7 slides (3 intro slides + 4 WhatsApp flow slides) to create a perfect step-by-step carousel post on Instagram!
+          Download all 8 slides (3 intro slides + 5 WhatsApp flow slides) to create a perfect step-by-step carousel post on Instagram!
         </p>
         <Button onClick={downloadAllImagesAsZip} className="mt-2 bg-pink-600 hover:bg-pink-700 gap-2">
             <Download className="w-4 h-4" />
@@ -140,29 +140,29 @@ export default function PromoVideo() {
         ))}
 
         <div className="flex flex-col items-center gap-4 mt-8 pt-8 border-t-2 border-gray-200 w-full max-w-6xl">
-          <h2 className="text-xl font-bold text-gray-700">Slides 4-7 (WhatsApp Flow)</h2>
+          <h2 className="text-xl font-bold text-gray-700">Slides 4-8 (WhatsApp Flow)</h2>
           <p className="text-sm text-gray-500 text-center max-w-md mb-4">
-            These slides show the WhatsApp ordering process step-by-step. They are included in the ZIP download.
+            These slides show the WhatsApp ordering process step-by-step, including the pasting menu and the image preview. They are included in the ZIP download.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[0, 1, 2, 3].map(p => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+            {[0, 1, 2, 3, 4].map(p => (
               <div key={`wa-phase-${p}`} className="flex flex-col items-center gap-4">
                 <div 
                   id={`wa-phase-${p}`}
-                  className="w-[300px] h-[375px] bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4 text-center shadow-md relative overflow-hidden"
+                  className="w-[200px] h-[250px] bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-2 text-center shadow-md relative overflow-hidden"
                 >
-                  <div className="transform scale-[1.0] origin-center">
+                  <div className="transform scale-[0.7] origin-center">
                     <OrderDemoAnimation isHe={true} staticPhase={p} />
                   </div>
                 </div>
                 <Button 
                   onClick={() => downloadImage(`wa-phase-${p}`, `slide_${p + 4}.png`)}
                   variant="outline"
-                  className="gap-2 text-xs"
+                  className="gap-2 text-xs w-full max-w-[150px]"
                 >
                   <Download className="w-3 h-3" />
-                  Download Slide {p + 4}
+                  Slide {p + 4}
                 </Button>
               </div>
             ))}
