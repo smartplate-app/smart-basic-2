@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileSpreadsheet, MessageCircle, ShoppingCart, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { FileSpreadsheet, MessageCircle, ShoppingCart, Users, ArrowRight, CheckCircle2, Plus, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../LanguageProvider';
 import { base44 } from '@/api/base44Client';
+import OrderDemoAnimation from './OrderDemoAnimation';
 
 export default function OnboardingModal({ user }) {
   const { language } = useLanguage();
@@ -55,7 +56,7 @@ export default function OnboardingModal({ user }) {
     {
       id: 'welcome',
       icon: <ShoppingCart className="w-16 h-16 text-blue-500" />,
-      title: isHe ? 'ברוכים הבאים ל-Smart Plate!' : 'Welcome to Smart Plate!',
+      title: isHe ? 'ברוכים הבאים ל-Smart Basic!' : 'Welcome to Smart Basic!',
       description: isHe 
         ? 'רוצים לבצע הזמנה חדשה מספק? בואו נראה איך עושים את זה בכמה שלבים פשוטים.' 
         : 'Want to make a new order from a supplier? Let\'s see how to do it in a few simple steps.',
@@ -78,11 +79,11 @@ export default function OnboardingModal({ user }) {
     },
     {
       id: 'order',
-      icon: <MessageCircle className="w-16 h-16 text-green-600" />,
+      icon: <OrderDemoAnimation isHe={isHe} />,
       title: isHe ? '3. שליחת הזמנה בוואטסאפ' : '3. Send Order via WhatsApp',
       description: isHe 
-        ? 'אחרי שהכל מוכן, תוכלו ליצור הזמנה חדשה, להוסיף פריטים לעגלה, ולשלוח את ההזמנה ישירות לספק בוואטסאפ בקליק אחד!' 
-        : 'After everything is set, you can create a new order, add a couple of items to your cart, and send it directly to the supplier by WhatsApp with one click!',
+        ? 'בוחרים ספק, מוסיפים פריטים לעגלה, ולוחצים על "שלח". ההזמנה מגיעה לספק בהודעת וואטסאפ מסודרת עם כל הפרטים!' 
+        : 'Choose a supplier, add items to cart, and click "Send". The order arrives to the supplier as a neat WhatsApp message with all details!',
     }
   ];
 
@@ -91,7 +92,7 @@ export default function OnboardingModal({ user }) {
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) handleClose(); }}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden outline-none">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col items-center justify-center min-h-[340px] text-center relative" dir={isHe ? 'rtl' : 'ltr'}>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col items-center justify-center min-h-[420px] text-center relative" dir={isHe ? 'rtl' : 'ltr'}>
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -101,7 +102,7 @@ export default function OnboardingModal({ user }) {
               transition={{ duration: 0.3 }}
               className="flex flex-col items-center w-full"
             >
-              <div className="mb-6 bg-white p-5 rounded-full shadow-md border border-blue-100">
+              <div className="mb-6 bg-white p-2 rounded-2xl shadow-md border border-blue-100 overflow-hidden">
                 {steps[step].icon}
               </div>
               <DialogTitle className="text-2xl font-extrabold text-gray-900 mb-4">
