@@ -104,6 +104,86 @@ export default function PromoVideo() {
     }
   };
 
+  const uploadAllImagesToDrive = async () => {
+    if (isUploadingToDrive) return;
+    setIsUploadingToDrive(true);
+    
+    try {
+      const filesToUpload = [];
+
+      // 1. Generate intro slides
+      for (let i = 0; i < slides.length; i++) {
+        const slide = slides[i];
+        const el = document.getElementById(slide.id);
+        if (el) {
+          try {
+            const canvas = await html2canvas(el, { 
+              scale: 2, 
+              useCORS: true, 
+              backgroundColor: '#ffffff',
+              logging: false
+            });
+            const dataUrl = canvas.toDataURL('image/png');
+            filesToUpload.push({
+                name: `slide_${i + 1}.png`,
+                data: dataUrl,
+                mimeType: 'image/png'
+            });
+          } catch (e) {
+            console.error(`Failed to render slide ${i+1}`, e);
+          }
+        }
+      }
+
+      // 2. Generate WhatsApp flow images
+      for (let p = 0; p < 5; p++) {
+        const el = document.getElementById(`wa-phase-${p}`);
+        if (el) {
+          try {
+            const canvas = await html2canvas(el, { 
+              scale: 2, 
+              useCORS: true, 
+              backgroundColor: '#ffffff',
+              logging: false,
+              onclone: (clonedDoc) => {
+                const clonedEl = clonedDoc.getElementById(`wa-phase-${p}`);
+                if (clonedEl) {
+                  clonedEl.style.transform = 'none';
+                }
+              }
+            });
+            const dataUrl = canvas.toDataURL('image/png');
+            filesToUpload.push({
+                name: `slide_${p + 4}.png`,
+                data: dataUrl,
+                mimeType: 'image/png'
+            });
+          } catch (e) {
+            console.error(`Failed to render wa-phase-${p}`, e);
+          }
+        }
+      }
+
+      // 3. Upload to Drive
+      const { data } = await base44.functions.invoke('uploadPromoFolderToDrive', {
+          folderName: `Promo Kit - ${new Date().toISOString().split('T')[0]}`,
+          files: filesToUpload
+      });
+
+      if (data?.success) {
+          alert(`Successfully uploaded to Google Drive!${data.sharedTo ? \` Shared folder to: ${data.sharedTo}\` : ''}`);
+      } else {
+          alert('Upload failed: ' + (data?.error || 'Unknown error'));
+      }
+      
+    } catch (err) {
+      console.error("Failed to upload to Drive:", err);
+      alert("Failed to upload to Google Drive. Please try again.");
+    } finally {
+      setIsUploadingToDrive(false);
+    }
+  };
+
   const slides = [
     {
       id: 'slide-1',
@@ -134,23 +214,43 @@ export default function PromoVideo() {
         <p className="text-gray-600 mb-2 text-sm">
           Download all 8 slides (3 intro slides + 5 WhatsApp flow slides) to create a perfect step-by-step carousel post on Instagram!
         </p>
-        <Button 
-          onClick={downloadAllImagesAsZip} 
-          disabled={isZipping}
-          className="mt-2 bg-pink-600 hover:bg-pink-700 gap-2 min-w-[200px]"
-        >
-            {isZipping ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating ZIP...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Download All Images as ZIP
-              </>
-            )}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
+            <Button 
+              onClick={uploadAllImagesToDrive} 
+              disabled={isUploadingToDrive || isZipping}
+              className="bg-green-600 hover:bg-green-700 gap-2 min-w-[220px]"
+            >
+                {isUploadingToDrive ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Uploading to Drive...
+                  </>
+                ) : (
+                  <>
+                    <CloudUpload className="w-4 h-4" />
+                    Save to Google Drive
+                  </>
+                )}
+            </Button>
+            <Button 
+              onClick={downloadAllImagesAsZip} 
+              disabled={isZipping || isUploadingToDrive}
+              variant="outline"
+              className="gap-2 min-w-[220px] border-pink-200 text-pink-700 hover:bg-pink-50"
+            >
+                {isZipping ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Generating ZIP...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Download as ZIP
+                  </>
+                )}
+            </Button>
+        </div>
       </Card>
 
       <div className="flex flex-col gap-16 items-center w-full">
