@@ -566,6 +566,14 @@ export default function AdminDashboard() {
                     <Mail className="w-4 h-4" />
                     {language === 'he' ? 'שליחת הזמנת בעלים' : 'Send Owner Invite'}
                   </Button>
+                  <Button
+                    onClick={() => window.dispatchEvent(new Event('b44_test_onboarding'))}
+                    variant="outline"
+                    className="flex items-center gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {language === 'he' ? 'בדיקת סיור היכרות' : 'Test Onboarding'}
+                  </Button>
                 </div>
               </div>
 

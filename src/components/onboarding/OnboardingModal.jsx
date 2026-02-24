@@ -35,6 +35,15 @@ export default function OnboardingModal({ user }) {
     checkFirstTime();
   }, [user]);
 
+  useEffect(() => {
+    const handleTestEvent = () => {
+      setStep(0);
+      setOpen(true);
+    };
+    window.addEventListener('b44_test_onboarding', handleTestEvent);
+    return () => window.removeEventListener('b44_test_onboarding', handleTestEvent);
+  }, []);
+
   const handleClose = () => {
     setOpen(false);
     if (user) {
