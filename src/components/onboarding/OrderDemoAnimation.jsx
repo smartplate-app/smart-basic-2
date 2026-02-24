@@ -2,19 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Send, Check, CheckCircle2, Image as ImageIcon, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function OrderDemoAnimation({ isHe }) {
-  const [phase, setPhase] = useState(0); 
+export default function OrderDemoAnimation({ isHe, staticPhase }) {
+  const [phase, setPhase] = useState(staticPhase !== undefined ? staticPhase : 0); 
   // 0: Order App Summary
   // 1: WhatsApp Empty
   // 2: WhatsApp Pasting (Image preview + text)
   // 3: WhatsApp Sent
 
   useEffect(() => {
+    if (staticPhase !== undefined) return;
     const interval = setInterval(() => {
       setPhase((prev) => (prev + 1) % 4);
     }, 2500);
     return () => clearInterval(interval);
-  }, []);
+  }, [staticPhase]);
+
+  const currentPhase = staticPhase !== undefined ? staticPhase : phase;
+  const isStatic = staticPhase !== undefined;
 
   const variants = {
     initial: { opacity: 0, scale: 0.95 },
@@ -22,18 +26,18 @@ export default function OrderDemoAnimation({ isHe }) {
     exit: { opacity: 0, scale: 1.05 }
   };
 
+  const Container = isStatic ? 'div' : motion.div;
+  const containerProps = isStatic ? {} : { variants, initial: "initial", animate: "animate", exit: "exit" };
+
   return (
     <div className="w-64 h-44 bg-gray-100 rounded-xl overflow-hidden relative border border-gray-200 shadow-inner" dir="ltr">
       <AnimatePresence mode="wait">
         
         {/* Phase 0: App Screen */}
-        {phase === 0 && (
-          <motion.div 
+        {currentPhase === 0 && (
+          <Container 
             key="app"
-            variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            {...containerProps}
             className="absolute inset-0 flex flex-col bg-white"
           >
             <div className="bg-blue-600 text-white p-2 flex justify-between items-center shadow-sm">
@@ -53,8 +57,8 @@ export default function OrderDemoAnimation({ isHe }) {
               <div className="mt-auto flex justify-center pb-2">
                 <motion.div 
                   initial={{ scale: 1 }}
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ repeat: Infinity, duration: 1.2 }}
+                  animate={isStatic ? { scale: 1 } : { scale: [1, 1.1, 1] }}
+                  transition={isStatic ? {} : { repeat: Infinity, duration: 1.2 }}
                   className="bg-green-500 text-white rounded-full px-4 py-1.5 shadow-md flex items-center gap-1.5"
                 >
                   <Send className="w-3 h-3" />
@@ -62,17 +66,14 @@ export default function OrderDemoAnimation({ isHe }) {
                 </motion.div>
               </div>
             </div>
-          </motion.div>
+          </Container>
         )}
 
         {/* Phase 1: WhatsApp Empty */}
-        {phase === 1 && (
-          <motion.div 
+        {currentPhase === 1 && (
+          <Container 
             key="wa-empty"
-            variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            {...containerProps}
             className="absolute inset-0 flex flex-col bg-[#e5ddd5]"
           >
             <div className="bg-[#075e54] h-8 flex items-center px-3 gap-2 shadow-sm z-10">
@@ -92,23 +93,20 @@ export default function OrderDemoAnimation({ isHe }) {
                 <Send className="w-3 h-3 ml-0.5" />
               </div>
             </div>
-          </motion.div>
+          </Container>
         )}
 
         {/* Phase 2: WhatsApp Pasting Preview */}
-        {phase === 2 && (
-          <motion.div 
+        {currentPhase === 2 && (
+          <Container 
             key="wa-paste"
-            variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            {...containerProps}
             className="absolute inset-0 flex flex-col bg-black/90"
           >
             <div className="flex-1 flex flex-col items-center justify-center p-3">
               {/* Fake Image Preview container (when pasting image + text in WA) */}
               <motion.div 
-                initial={{ y: 20, opacity: 0 }}
+                initial={isStatic ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="bg-white rounded-lg w-full max-w-[140px] overflow-hidden shadow-2xl relative"
               >
@@ -131,26 +129,23 @@ export default function OrderDemoAnimation({ isHe }) {
                   </div>
                 </div>
                 <motion.div 
-                  initial={{ scale: 0 }}
+                  initial={isStatic ? { scale: 1 } : { scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ delay: 1, type: 'spring' }}
+                  transition={isStatic ? {} : { delay: 1, type: 'spring' }}
                   className="absolute -bottom-3 -right-3 w-10 h-10 bg-[#00897b] rounded-full flex items-center justify-center text-white shadow-lg border-2 border-black"
                 >
                   <Send className="w-4 h-4 ml-0.5" />
                 </motion.div>
               </motion.div>
             </div>
-          </motion.div>
+          </Container>
         )}
 
         {/* Phase 3: WhatsApp Sent */}
-        {phase === 3 && (
-          <motion.div 
+        {currentPhase === 3 && (
+          <Container 
             key="wa-sent"
-            variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            {...containerProps}
             className="absolute inset-0 flex flex-col bg-[#e5ddd5]"
           >
              <div className="bg-[#075e54] h-8 flex items-center px-3 gap-2 shadow-sm z-10">
@@ -162,7 +157,7 @@ export default function OrderDemoAnimation({ isHe }) {
             
             <div className="flex-1 p-3 flex flex-col justify-end items-end">
               <motion.div 
-                initial={{ scale: 0.8, opacity: 0, x: 20 }}
+                initial={isStatic ? { scale: 1, opacity: 1, x: 0 } : { scale: 0.8, opacity: 0, x: 20 }}
                 animate={{ scale: 1, opacity: 1, x: 0 }}
                 className="bg-[#dcf8c6] rounded-lg rounded-tr-none shadow-sm max-w-[85%] text-left overflow-hidden relative"
               >
@@ -198,7 +193,7 @@ export default function OrderDemoAnimation({ isHe }) {
                 <Send className="w-3 h-3 ml-0.5" />
               </div>
             </div>
-          </motion.div>
+          </Container>
         )}
 
       </AnimatePresence>
