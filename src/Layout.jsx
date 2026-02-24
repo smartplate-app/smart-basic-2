@@ -272,7 +272,8 @@ const AppLayout = ({ children, currentPageName }) => {
       currentPageName !== 'PublicOrder' &&
       currentPageName !== 'OAuthCallback' &&
       currentPageName !== 'LoginHelper' &&
-      currentPageName !== 'AuthKick'
+      currentPageName !== 'AuthKick' &&
+      currentPageName !== 'PromoVideo'
     ) {
       loadAuth();
     } else {
@@ -728,7 +729,8 @@ const AppLayout = ({ children, currentPageName }) => {
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
     currentPageName === 'LoginHelper' ||
-    currentPageName === 'AuthKick'
+    currentPageName === 'AuthKick' ||
+    currentPageName === 'PromoVideo'
   ) {
     return <>{children}</>;
   }
