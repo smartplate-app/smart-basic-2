@@ -558,6 +558,14 @@ export default function AdminDashboard() {
                     {language === 'he' ? 'שליחת הזמנת בעלים' : 'Send Owner Invite'}
                   </Button>
                   <Button
+                    onClick={() => window.location.href = '/#/pages/PromoVideo'}
+                    variant="outline"
+                    className="flex items-center gap-2 border-green-500 text-green-600 hover:bg-green-50"
+                  >
+                    <Instagram className="w-4 h-4" />
+                    {language === 'he' ? 'ערכת היכרות (גוגל דרייב)' : 'Promo Kit (Drive)'}
+                  </Button>
+                  <Button
                     onClick={() => window.dispatchEvent(new Event('b44_test_onboarding'))}
                     variant="outline"
                     className="flex items-center gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
