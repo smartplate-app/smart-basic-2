@@ -57,6 +57,7 @@ export default function DashboardPage() {
   const [predictedMonthlyLabor, setPredictedMonthlyLabor] = useState(0);
   const [hasScheduleData, setHasScheduleData] = useState(false);
   const [exportingMonthly, setExportingMonthly] = useState(false);
+  const [importingData, setImportingData] = useState(false);
   const [inventoryCounts, setInventoryCounts] = useState([]);
   const [monthReceipts, setMonthReceipts] = useState([]);
   const [monthOrders, setMonthOrders] = useState([]);
@@ -469,6 +470,29 @@ export default function DashboardPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const handleImportFromSheet = async () => {
+    const url = prompt(language === 'he' ? 'הזן קישור לגיליון Google Sheets:' : 'Enter Google Sheets URL:');
+    if (!url) return;
+
+    try {
+      setImportingData(true);
+      const response = await base44.functions.invoke('importDashboardDataFromSheet', { spreadsheetUrl: url });
+      
+      if (response.data.success) {
+        alert(language === 'he' ? 'הנתונים יובאו בהצלחה!' : 'Data imported successfully!');
+        setSelectedMonth(response.data.month);
+        await loadData();
+      } else {
+        throw new Error(response.data.error || 'Import failed');
+      }
+    } catch (error) {
+      console.error("Error importing data:", error);
+      alert(language === 'he' ? 'שגיאה בייבוא נתונים: ' + error.message : 'Error importing data: ' + error.message);
+    } finally {
+      setImportingData(false);
+    }
   };
 
   const handleExportMonthlyReport = async () => {
@@ -997,6 +1021,15 @@ export default function DashboardPage() {
                     );
                   })}
                 </select>
+                <Button 
+                  onClick={handleImportFromSheet}
+                  disabled={importingData}
+                  variant="outline"
+                  className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                  {importingData ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  {language === 'he' ? 'ייבא מ-Google Sheets' : 'Import from Google Sheets'}
+                </Button>
                 <Button 
                   onClick={handleExportMonthlyReport}
                   disabled={exportingMonthly}
