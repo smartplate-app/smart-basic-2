@@ -104,7 +104,9 @@ Deno.serve(async (req) => {
             restaurant_sales: totalSales, // Assuming all sales are restaurant sales for simplicity if not split
             delivery_takeaway_sales: 0,
             manual_labor_cost: laborCost,
+            use_manual_labor: laborCost > 0,
             manual_food_cost: foodCost,
+            use_manual_food: foodCost > 0,
             predicted_sales: predictedSales,
             labor_goal_percent: laborGoalPercent,
             food_goal_percent: foodGoalPercent,
