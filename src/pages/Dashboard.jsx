@@ -431,8 +431,10 @@ export default function DashboardPage() {
         restaurant_sales: Number(restaurantSales) || 0,
         delivery_takeaway_sales: Number(deliverySales) || 0,
         total_tips: parseFloat(totalTips) || 0,
-        manual_labor_cost: useManualLabor ? (parseFloat(manualLaborCost) || 0) : 0,
-        manual_food_cost: calculatedFoodCost,
+        manual_labor_cost: parseFloat(manualLaborCost) || 0,
+        use_manual_labor: useManualLabor,
+        manual_food_cost: parseFloat(manualFoodCost) || 0,
+        use_manual_food: useManualFood,
         monthly_rent_incl_vat: parseFloat(monthlyRent) || 0
       };
 
@@ -758,7 +760,8 @@ export default function DashboardPage() {
     const actualSalesExVATLocal = (actualSales || 0) / 1.17;
     const effectiveLaborCostLocal = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
     const actualLaborPercentLocal = actualSalesExVATLocal > 0 ? (effectiveLaborCostLocal / actualSalesExVATLocal) * 100 : 0;
-    const actualFoodPercentLocal = actualSalesExVATLocal > 0 ? (calculatedFoodCost / actualSalesExVATLocal) * 100 : 0;
+    const effectiveFoodCostLocal = (useManualFood && manualFoodCost > 0) ? manualFoodCost : calculatedFoodCost;
+    const actualFoodPercentLocal = actualSalesExVATLocal > 0 ? (effectiveFoodCostLocal / actualSalesExVATLocal) * 100 : 0;
     const actualCombinedPercentLocal = actualLaborPercentLocal + actualFoodPercentLocal;
     const isOverGoalLocal = actualCombinedPercentLocal > combinedGoalPercentLocal;
     if (!isOverGoalLocal) return;
