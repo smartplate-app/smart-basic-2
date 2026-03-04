@@ -1289,6 +1289,29 @@ export default function DashboardPage() {
                   <div className={`text-gray-200 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                     {actualFoodPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות (ללא מע"מ)' : 'of sales (excl. VAT)'}
                   </div>
+
+                  {/* Manual override controls */}
+                  <div className={`mt-3 space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Switch checked={useManualFood} onCheckedChange={setUseManualFood} />
+                      <span className="text-sm">{language === 'he' ? 'השתמש בעלות מזון ידנית' : 'Use manual food cost'}</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Input
+                        type="number"
+                        value={manualFoodCost}
+                        onChange={(e) => { const v = parseFloat(e.target.value) || 0; setManualFoodCost(v); if (!useManualFood) setUseManualFood(true); }}
+                        placeholder="0"
+                        className={`w-48 bg-white/10 border-white/20 ${isRTL ? 'text-right' : 'text-left'}`}
+                      />
+                    </div>
+                    {useManualFood && (
+                      <div className={`text-xs text-yellow-300 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {language === 'he' ? 'מצב ידני — נשמר לחודש שנבחר למעלה' : 'Manual mode — saved for the selected month'}
+                      </div>
+                    )}
+                  </div>
+
                   <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {language === 'he' ? 'סה"כ קבלות אספקה מתחילת החודש' : 'Total supply receipts from month start'}
                   </div>
