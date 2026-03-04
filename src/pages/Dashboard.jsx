@@ -225,8 +225,12 @@ export default function DashboardPage() {
         // Manual labor override
         const mlc = Number(existingData.manual_labor_cost || 0);
         setManualLaborCost(mlc);
-        // Default to computed MTD; manual is available but OFF until explicitly toggled
-        setUseManualLabor(false);
+        setUseManualLabor(Boolean(existingData.use_manual_labor));
+        
+        // Manual food override
+        const mfc = Number(existingData.manual_food_cost || 0);
+        setManualFoodCost(mfc);
+        setUseManualFood(Boolean(existingData.use_manual_food));
       } else {
         setDashboardData(null);
         setPredictedSales(0);
@@ -240,6 +244,8 @@ export default function DashboardPage() {
         setDeliverySales(0);
         setManualLaborCost(0);
         setUseManualLabor(false);
+        setManualFoodCost(0);
+        setUseManualFood(false);
       }
 
       // Sales projection (based on days elapsed till yesterday)
@@ -376,6 +382,8 @@ export default function DashboardPage() {
           totalTips,
           manualLaborCost,
           useManualLabor,
+          manualFoodCost: mfc || 0,
+          useManualFood: Boolean(existingData?.use_manual_food),
           calculatedLaborCost: Math.round(mtdLabor),
           calculatedFoodCost: adjustedFoodCost,
           predictedLaborToDate,
