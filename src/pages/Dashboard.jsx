@@ -736,10 +736,11 @@ export default function DashboardPage() {
   // Derived KPIs for consulting banner (computed early for hooks below)
   const actualSalesExVAT = actualSales / 1.17;
   const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
+  const effectiveFoodCost = (useManualFood && manualFoodCost > 0) ? manualFoodCost : calculatedFoodCost;
   const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT) * 100 : 0;
   const weeklySalesExVAT = latestPredictedWeeklySales > 0 ? latestPredictedWeeklySales / 1.17 : 0;
   const weeklyLaborPercent = weeklySalesExVAT > 0 ? ((latestWeeklyLaborCost || 0) / weeklySalesExVAT) * 100 : 0;
-  const actualFoodPercent = actualSalesExVAT > 0 ? (calculatedFoodCost / actualSalesExVAT) * 100 : 0;
+  const actualFoodPercent = actualSalesExVAT > 0 ? (effectiveFoodCost / actualSalesExVAT) * 100 : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
   const daysInMonthForProjection = moment(selectedMonth).daysInMonth();
   const projectedSalesInclVAT = (actualSales > 0 && projectionDaysElapsed > 0)
@@ -833,7 +834,7 @@ export default function DashboardPage() {
 
   const costBreakdownData = [
     { name: language === 'he' ? 'עלות עבודה' : 'Labor Cost', value: effectiveLaborCost, color: '#1f2937' },
-    { name: language === 'he' ? 'עלות מזון' : 'Food Cost', value: calculatedFoodCost, color: '#6b7280' }
+    { name: language === 'he' ? 'עלות מזון' : 'Food Cost', value: effectiveFoodCost, color: '#6b7280' }
   ];
 
   // AFC calculations (start count + supplies accepted - end count) / sales (excl. VAT)
@@ -841,7 +842,7 @@ export default function DashboardPage() {
   const endCount = inventoryCounts.find(c => c.id === selectedEndCountId);
   const startVal = startCount?.total_inventory_value || 0;
   const endVal = endCount?.total_inventory_value || 0;
-  const suppliesAccepted = calculatedFoodCost; // Already excl. VAT and adjusted for transfers
+  const suppliesAccepted = effectiveFoodCost; // Already excl. VAT and adjusted for transfers
   const afcUsage = Math.max(0, startVal + suppliesAccepted - endVal);
   const afcPercent = actualSalesExVAT > 0 ? (afcUsage / actualSalesExVAT) * 100 : 0;
 
