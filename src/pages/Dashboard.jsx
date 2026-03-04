@@ -773,7 +773,7 @@ export default function DashboardPage() {
       : `Combined cost ${actualCombinedPercentLocal.toFixed(1)}% exceeds goal ${combinedGoalPercentLocal.toFixed(0)}%`;
     notifyOS({ title, body, tag: 'dashboard-over-goal' });
     localStorage.setItem(key, '1');
-  }, [predictedSales, laborGoalPercent, foodGoalPercent, actualSales, useManualLabor, manualLaborCost, calculatedLaborCost, calculatedFoodCost, selectedMonth, language]);
+  }, [predictedSales, laborGoalPercent, foodGoalPercent, actualSales, useManualLabor, manualLaborCost, calculatedLaborCost, useManualFood, manualFoodCost, calculatedFoodCost, selectedMonth, language]);
 
   // Show one-time consulting popup per month when thresholds exceeded
   useEffect(() => {
