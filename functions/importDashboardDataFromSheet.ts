@@ -99,15 +99,25 @@ Deno.serve(async (req) => {
             }
         }
 
+        let hasLaborCost = false;
+        let hasFoodCost = false;
+
+        for (const row of rows) {
+            if (!row[0]) continue;
+            const label = row[0].toLowerCase();
+            if (label.includes('labor cost')) hasLaborCost = true;
+            if (label.includes('food cost')) hasFoodCost = true;
+        }
+
         const dashboardData = {
             month,
             total_sales: totalSales,
             restaurant_sales: totalSales, // Assuming all sales are restaurant sales for simplicity if not split
             delivery_takeaway_sales: 0,
             manual_labor_cost: laborCost,
-            use_manual_labor: laborCost > 0,
+            use_manual_labor: hasLaborCost,
             manual_food_cost: foodCost,
-            use_manual_food: foodCost > 0,
+            use_manual_food: hasFoodCost,
             predicted_sales: predictedSales,
             labor_goal_percent: laborGoalPercent,
             food_goal_percent: foodGoalPercent,
