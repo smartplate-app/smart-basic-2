@@ -491,6 +491,23 @@ export default function DashboardPage() {
       const response = await base44.functions.invoke('importDashboardDataFromSheet', { spreadsheetUrl: url });
       
       if (response.data.success) {
+        const d = response.data.data;
+        if (d) {
+          setActualSales(d.total_sales || 0);
+          setRestaurantSales(d.restaurant_sales || 0);
+          setDeliverySales(d.delivery_takeaway_sales || 0);
+          setPredictedSales(d.predicted_sales || 0);
+          setLaborGoalPercent(d.labor_goal_percent || 25);
+          setFoodGoalPercent(d.food_goal_percent || 30);
+          if (d.use_manual_labor) {
+            setUseManualLabor(true);
+            setManualLaborCost(d.manual_labor_cost || 0);
+          }
+          if (d.use_manual_food) {
+            setUseManualFood(true);
+            setManualFoodCost(d.manual_food_cost || 0);
+          }
+        }
         alert(language === 'he' ? 'הנתונים יובאו בהצלחה!' : 'Data imported successfully!');
         setSelectedMonth(response.data.month);
         await loadData();
