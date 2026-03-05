@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
 
         const data = await dataResponse.json();
         const rows = data.values || [];
+        console.log("Rows:", JSON.stringify(rows));
 
         if (rows.length === 0) {
             return Response.json({ success: false, error: 'Sheet is empty' }, { status: 400 });
