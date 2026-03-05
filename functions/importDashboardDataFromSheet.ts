@@ -85,15 +85,15 @@ Deno.serve(async (req) => {
             const label = row[0].toLowerCase();
             if (label.includes('total sales (incl. vat)')) {
                 totalSales = parseCurrency(row[1]);
-            } else if (label === 'labor cost') {
+            } else if (label.includes('labor cost')) {
                 laborCost = parseCurrency(row[1]);
-            } else if (label === 'food cost') {
+            } else if (label.includes('food cost')) {
                 foodCost = parseCurrency(row[1]);
-            } else if (label === 'predicted sales') {
+            } else if (label.includes('predicted sales')) {
                 predictedSales = parseCurrency(row[1]);
-            } else if (label === 'labor goal') {
+            } else if (label.includes('labor goal')) {
                 laborGoalPercent = parsePercent(row[2]);
-            } else if (label === 'food goal') {
+            } else if (label.includes('food goal')) {
                 foodGoalPercent = parsePercent(row[2]);
             }
         }
