@@ -82,6 +82,8 @@ export default function DashboardPage() {
   // Manual overrides
   const [useManualLabor, setUseManualLabor] = useState(false);
   const [manualLaborCost, setManualLaborCost] = useState(0);
+  const [useManualFood, setUseManualFood] = useState(false);
+  const [manualFoodCost, setManualFoodCost] = useState(0);
 
   // Category scan (Sales BI image)
   const [categoryScanLoading, setCategoryScanLoading] = useState(false);
