@@ -987,8 +987,9 @@ export default function OrdersPage() {
     // Pre-open a tab synchronously to avoid popup blockers and iframe embedding (Firefox/Preview)
     const isAndroid = /Android/i.test(navigator.userAgent || '');
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    const isIframe = window.self !== window.top;
     let preOpenedWindow = null;
-    if (!isAndroid && !isIOS) {
+    if (!isAndroid && !isIOS || isIframe) {
       try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
     }
     try {
