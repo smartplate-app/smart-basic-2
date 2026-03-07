@@ -1092,7 +1092,7 @@ const AppLayout = ({ children, currentPageName }) => {
               {children}
             </div>
             <style
-              dangerouslySetInnerHTML={{ __html: `:root { --app-bg: #f3f2f1; --app-card: #ffffff; --app-text: #212529; }
+              dangerouslySetInnerHTML={{ __html: `:root { --app-bg: #f3f2f1; --app-card: #ffffff; --app-text: #212529; --primary: 147 77% 27%; --primary-foreground: 0 0% 100%; --secondary: 147 20% 90%; --secondary-foreground: 147 77% 27%; --accent: 147 20% 90%; --accent-foreground: 147 77% 27%; --ring: 147 77% 27%; }
 .dark:root { --app-bg: #050a1a; --app-card: #0b1530; --app-surface: #0e1d3d; --app-muted: #0a1430; --app-text: #e6eaf7; --app-border: #1e2a55; }
 html, body, #root { background: var(--app-bg); color: var(--app-text); }
 
