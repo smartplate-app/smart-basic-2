@@ -1303,18 +1303,15 @@ export default function OrdersPage() {
                     </div>
                     
                     <div className="flex gap-2 pt-2">
-                      {!isViewer && order.supplier_phone && (
-                        <button
+                      {!isViewer && (
+                        <Button
                           onClick={() => handleResend(order)}
-                          className="flex-1 text-white text-base font-medium rounded-lg px-4 py-3 flex items-center justify-center"
-                          style={{ backgroundColor: '#25D366' }}
+                          className="flex-1 h-11 rounded-lg text-base bg-blue-600 hover:bg-blue-700 text-white"
                         >
-                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-...
-                          </svg>
-                          {safeT('whatsapp','וואטסאפ','WhatsApp')}
-                        </button>
-                                                        )}
+                          <Share className="w-4 h-4 mr-2" />
+                          {safeT('share','שתף','Share')}
+                        </Button>
+                      )}
                                                         {!isViewer && order.status === 'sent' && (
                                                           <Button
                                                             variant="outline"
