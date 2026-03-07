@@ -805,7 +805,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   try { await base44.auth.logout('/#/pages/WelcomePublic'); } catch {}
                   setTimeout(() => { window.location.replace('/#/pages/WelcomePublic'); }, 300);
                 }} 
-                className="w-full bg-gray-900 hover:bg-gray-800"
+                className="w-full bg-[#107c41] hover:bg-[#0c5e31]"
               >
                 {language === 'he' ? 'התנתק' : 'Logout'}
               </Button>
@@ -862,7 +862,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 setRetryCount(0);
                 window.location.reload();
               }} 
-              className="w-full bg-gray-900 hover:bg-gray-800"
+              className="w-full bg-[#107c41] hover:bg-[#0c5e31]"
             >
               <RefreshCw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {language === 'he' ? 'רענן את הדף' : language === 'ar' ? 'إعادة تحميل الصفحة' : 'Reload Page'}
