@@ -1134,7 +1134,7 @@ export default function OrdersPage() {
             {!isViewer && (
               <Button
                 onClick={() => setShowForm(!showForm)}
-                className="hidden md:inline-flex bg-gray-900 hover:bg-gray-800 text-white h-11 md:h-10 px-5 rounded-lg"
+                className="hidden md:inline-flex bg-[#107c41] hover:bg-[#0c5e31] text-white h-11 md:h-10 px-5 rounded-lg"
               >
                 <Plus className="w-5 h-5 ml-2" />
                 {safeT('new_order', 'הזמנה חדשה', 'New Order')}
@@ -1554,7 +1554,7 @@ export default function OrdersPage() {
       {!isViewer && (
         <Button
           onClick={() => setShowForm(true)}
-          className={`fixed bottom-20 ${isRTL ? 'left-4' : 'right-4'} h-14 w-14 rounded-full shadow-lg bg-gray-900 hover:bg-gray-800 md:hidden z-40`}
+          className={`fixed bottom-20 ${isRTL ? 'left-4' : 'right-4'} h-14 w-14 rounded-full shadow-lg bg-[#107c41] hover:bg-[#0c5e31] md:hidden z-40`}
           size="icon"
         >
           <Plus className="w-6 h-6" />
@@ -1578,7 +1578,7 @@ export default function OrdersPage() {
             <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
               <MessageCircle className="w-4 h-4 mr-2" /> {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
             </Button>
-            <Button onClick={handleConfirmSendEmail} className="bg-gray-900 hover:bg-gray-800 text-white">
+            <Button onClick={handleConfirmSendEmail} className="bg-[#107c41] hover:bg-[#0c5e31] text-white">
               <Mail className="w-4 h-4 mr-2" /> {safeT('email', 'אימייל', 'Email')}
             </Button>
           </div>
