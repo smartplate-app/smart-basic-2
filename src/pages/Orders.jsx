@@ -1157,7 +1157,7 @@ export default function OrdersPage() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 text-sm rounded-full border ${statusFilter===s ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-300'}`}
+                className={`px-3 py-1.5 text-sm rounded-full border ${statusFilter===s ? 'bg-[#107c41] text-white border-[#107c41]' : 'bg-white text-gray-700 border-gray-300'}`}
               >
                 {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
                  s==='draft' ? t('status_draft') :
