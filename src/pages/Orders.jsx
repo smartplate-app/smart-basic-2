@@ -1600,7 +1600,7 @@ export default function OrdersPage() {
           order={previewOrder}
           isOpen={!!previewOrder}
           onClose={() => setPreviewOrder(null)}
-          onSend={() => { const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || ''); if (isMobile) { handleSendNow(previewOrder); } else { sendWhatsAppDirect(previewOrder); } }}
+          onSend={() => handleSendNow(previewOrder)}
         />
       )}
     </div>
