@@ -776,6 +776,15 @@ export default function OrdersPage() {
   // Desktop-only direct WhatsApp send from preview (mobile unchanged)
   const sendWhatsAppDirect = async (order) => {
     if (!order) return;
+    
+    // Pre-open a tab synchronously to avoid popup blockers and iframe embedding
+    const isIframe = window.self !== window.top;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    let preOpenedWindow = null;
+    if (!isMobile || isIframe) {
+      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
+    }
+
     try {
       const { data } = await base44.functions.invoke('markOrderSent', {
         orderId: order.id,
@@ -787,7 +796,7 @@ export default function OrdersPage() {
         const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
         return { ...o, status: 'sent', order_number: num };
       }));
-      sendOrderToWhatsApp(updated.id ? updated : order);
+      sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
       setPreviewOrder(null);
       await loadData(user);
     } catch (e) {
@@ -797,7 +806,7 @@ export default function OrdersPage() {
         const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
         return { ...o, status: 'sent', order_number: num };
       }));
-      try { sendOrderToWhatsApp(order); } catch (_) {}
+      try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
       setPreviewOrder(null);
       setTimeout(() => {
         base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number }).catch(() => {});
