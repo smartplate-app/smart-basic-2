@@ -947,8 +947,14 @@ export default function OrdersPage() {
       document.addEventListener('visibilitychange', onHide, { once: true });
 
       const openLink = (url) => {
-        try { window.location.href = url; }
-        catch { window.location.assign(url); }
+        if (opts && opts.preOpenedWindow && !opts.preOpenedWindow.closed) {
+          opts.preOpenedWindow.location.href = url;
+        } else if (window.self !== window.top) {
+          window.open(url, '_blank');
+        } else {
+          try { window.location.href = url; }
+          catch { window.location.assign(url); }
+        }
       };
 
       const tryNext = (i) => {
