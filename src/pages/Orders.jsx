@@ -664,6 +664,53 @@ export default function OrdersPage() {
 
   const handleSendNow = async (order) => {
     if (!order) return;
+
+    const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+    const text = `${safeT('whatsapp_intro', 'שלום, התקבלה הזמנה חדשה.', 'Hello, a new order has arrived.')}\n\n*${safeT('order_from', 'מאת', 'From')}:* ${order.restaurant_name || ''}\n*${safeT('order_number', 'מספר הזמנה', 'Order')}:* ${ensuredNumber}`;
+    
+    const computeItemTotal = (it) => {
+      const tot = Number(it.total);
+      if (!isNaN(tot) && isFinite(tot) && tot > 0) return tot;
+      const p = Number(it.price);
+      const q = Number(it.quantity);
+      if (!isNaN(p) && isFinite(p) && !isNaN(q) && isFinite(q)) return p * q;
+      return 0;
+    };
+    const rawItemsTotal = (order.items || []).reduce((sum, it) => sum + computeItemTotal(it), 0);
+    const effectiveTotal = rawItemsTotal > 0 ? rawItemsTotal : Number(order.total_cost || 0);
+
+    const minimalOrder = {
+      n: ensuredNumber,
+      s: order.supplier_name,
+      r: order.restaurant_name,
+      a: order.restaurant_address,
+      d: order.delivery_date,
+      i: (order.items || []).map(it => ({ n: (it.item_name || it.item || it.name || ''), q: it.quantity, u: (it.unit || it.u || '') })),
+      t: order.notes,
+      m: effectiveTotal
+    };
+    const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
+    const orderUrl = order.id 
+      ? `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}&d=${orderData}`)}`
+      : `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
+
+    if (navigator.share) {
+      try {
+        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
+        setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
+        
+        await navigator.share({
+          title: `${safeT('order_preview','הזמנה','Order')} #${ensuredNumber}`,
+          text: text,
+          url: orderUrl
+        });
+      } catch (e) {
+        console.warn('Native share failed or cancelled', e);
+      }
+      setPreviewOrder(null);
+      return;
+    }
+
     // Always show chooser: Email or WhatsApp
     setSendOptionOrder(order);
     setShowSendOptions(true);
