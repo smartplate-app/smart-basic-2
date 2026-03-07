@@ -704,11 +704,16 @@ export default function OrdersPage() {
           text: text,
           url: orderUrl
         });
+        setPreviewOrder(null);
+        return;
       } catch (e) {
         console.warn('Native share failed or cancelled', e);
+        if (e.name === 'AbortError') {
+          setPreviewOrder(null);
+          return;
+        }
+        // If it's a NotAllowedError (like in the preview iframe), fall through to the custom chooser
       }
-      setPreviewOrder(null);
-      return;
     }
 
     // Always show chooser: Email or WhatsApp
