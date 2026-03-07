@@ -1187,7 +1187,7 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
               </div>
               <span>{language === 'he' ? 'עוזר' : 'Help'}</span>
             </button>
-            <Link to={createPageUrl('Orders')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Dashboard')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
             </Link>
