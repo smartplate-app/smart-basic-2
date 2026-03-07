@@ -1327,7 +1327,7 @@ export default function OrdersPage() {
                           <Button
                             variant="outline"
                             onClick={() => handleEdit(order)}
-                            className="flex-1 h-11 rounded-lg text-base"
+                            className="flex-1 h-11 rounded-lg text-base border-gray-300 text-gray-700 hover:bg-gray-50"
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             {t('edit')}
