@@ -1406,7 +1406,7 @@ export default function OrdersPage() {
 
         {/* Desktop View */}
         <div className="hidden md:block bg-white rounded-lg shadow">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <table className="w-full">
               <thead className="bg-gray-100 border-b">
                 <tr>
