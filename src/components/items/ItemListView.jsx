@@ -83,7 +83,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
 
   return (
     <div className="bg-white rounded-lg shadow relative min-h-0">
-      <div className="relative overflow-visible">
+      <div className="relative overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <Table className="w-full min-w-max"> {/* Replaced <table> with <Table> */}
           <TableHeader className={`sticky ${headerTopClass} z-50 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm`}> {/* Sticky header below filters */}
             <TableRow> {/* Replaced <tr> with <TableRow> */}
