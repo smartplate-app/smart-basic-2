@@ -931,7 +931,7 @@ export default function DashboardPage() {
               {t('dashboard_greeting', { name: (user.acting_as_user_name || user.full_name) })}
             </p>
           </div>
-          <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex flex-wrap gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
             {!isPwaInstalled && (
               installPromptEvent ? (
                 <Button
