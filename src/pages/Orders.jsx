@@ -1151,10 +1151,8 @@ export default function OrdersPage() {
         </div>
 
         {/* Mobile quick filters */}
-        <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4">
-          {/* Added px-4 to the flex container to ensure padding is respected in RTL, along with the spacers for Safari support */}
-          <div className="flex gap-2 pb-1 w-max px-4">
-            <div className="w-1 flex-shrink-0"></div>
+        <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4 px-4">
+          <div className="flex gap-2 pb-1 w-max after:content-[''] after:w-1 after:flex-shrink-0 before:content-[''] before:w-1 before:flex-shrink-0">
             {['all','draft','sent','confirmed','delivered'].map((s) => (
               <button
                 key={s}
@@ -1168,7 +1166,6 @@ export default function OrdersPage() {
                  t('status_delivered')}
               </button>
             ))}
-            <div className="w-4 flex-shrink-0"></div>
           </div>
         </div>
 
