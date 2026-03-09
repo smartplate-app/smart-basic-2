@@ -251,8 +251,8 @@ export default function PublicOrderPage() {
                     padding: '24px 16px',
                     textAlign: 'center'
                 }}>
-                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                        {language === 'he' ? 'הזמנה' : 'Order'} #{order.order_number}
+                    <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                        {language === 'he' ? 'הזמנה' : 'Order'} <span dir="ltr" style={{ display: 'inline-block' }}>#{order.order_number}</span>
                     </h1>
                     <p style={{ fontSize: '16px', opacity: 0.9, margin: 0 }}>
                         {language === 'he' ? 'ספק:' : 'Supplier:'} {order.supplier_name}
