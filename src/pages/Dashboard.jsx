@@ -1033,11 +1033,11 @@ export default function DashboardPage() {
 
           {/* Actual Performance Tab */}
           <TabsContent value="actual" className="space-y-6">
-            <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
               <div className="text-sm text-gray-600">
                 {language === 'he' ? 'בחר חודש:' : 'Select month:'}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
