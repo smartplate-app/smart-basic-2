@@ -36,7 +36,7 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <Table className="w-full">
           <TableHeader className="bg-gray-50 border-b">
             <TableRow>
