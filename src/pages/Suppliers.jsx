@@ -645,7 +645,7 @@ export default function SuppliersPage() {
                 <p className="mt-2 text-gray-600">{language === 'he' ? 'טוען...' : 'Loading...'}</p>
               </div>
             ) : reportData && Object.keys(reportData).length > 0 ? (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gray-100">
