@@ -1151,13 +1151,13 @@ export default function OrdersPage() {
         </div>
 
         {/* Mobile quick filters */}
-        <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4 px-4">
           <div className="flex gap-2 pb-1 w-max">
             {['all','draft','sent','confirmed','delivered'].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 text-sm rounded-full border ${statusFilter===s ? 'bg-[#107c41] text-white border-[#107c41]' : 'bg-white text-gray-700 border-gray-300'}`}
+                className={`px-3 py-1.5 text-sm rounded-full border flex-shrink-0 whitespace-nowrap ${statusFilter===s ? 'bg-[#107c41] text-white border-[#107c41]' : 'bg-white text-gray-700 border-gray-300'}`}
               >
                 {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
                  s==='draft' ? t('status_draft') :
