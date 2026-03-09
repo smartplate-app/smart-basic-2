@@ -1152,8 +1152,9 @@ export default function OrdersPage() {
 
         {/* Mobile quick filters */}
         <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4">
-          <div className="flex gap-2 pb-1 w-max">
-            <div className="w-4 flex-shrink-0"></div>
+          {/* Added px-4 to the flex container to ensure padding is respected in RTL, along with the spacers for Safari support */}
+          <div className="flex gap-2 pb-1 w-max px-4">
+            <div className="w-1 flex-shrink-0"></div>
             {['all','draft','sent','confirmed','delivered'].map((s) => (
               <button
                 key={s}
