@@ -438,8 +438,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                           padding: '24px 16px',
                           textAlign: 'center'
                       }}>
-                          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                              {language === 'he' ? 'הזמנה' : 'Order'} #{fallbackNumber}
+                          <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                              {language === 'he' ? 'הזמנה' : 'Order'} <span dir="ltr" style={{ display: 'inline-block' }}>#{fallbackNumber}</span>
                           </h1>
                           <p style={{ fontSize: '16px', opacity: 0.9, margin: 0 }}>
                               {language === 'he' ? 'ספק:' : 'Supplier:'} {order.supplier_name}
