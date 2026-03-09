@@ -1592,7 +1592,7 @@ export default function DashboardPage() {
                     {language === 'he' ? 'אין פריטים להצגה' : 'No items to display'}
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     <Table>
                       <TableHeader>
                         <TableRow>
