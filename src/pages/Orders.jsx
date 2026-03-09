@@ -1223,7 +1223,6 @@ export default function OrdersPage() {
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
                   <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
-                  <SelectItem value="delivered">{t('status_delivered')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
@@ -1374,7 +1373,6 @@ export default function OrdersPage() {
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
                   <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
-                  <SelectItem value="delivered">{t('status_delivered')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
