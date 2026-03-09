@@ -1152,7 +1152,7 @@ export default function OrdersPage() {
 
         {/* Mobile quick filters */}
         <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <div className="flex gap-2 pb-1">
+          <div className="flex gap-2 pb-1 w-max">
             {['all','draft','sent','confirmed','delivered'].map((s) => (
               <button
                 key={s}
