@@ -435,10 +435,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                       <div style={{
                           background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
                           color: 'white',
-                          padding: '32px',
+                          padding: '24px 16px',
                           textAlign: 'center'
                       }}>
-                          <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+                          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                               {language === 'he' ? 'הזמנה' : 'Order'} #{fallbackNumber}
                           </h1>
                           <p style={{ fontSize: '16px', opacity: 0.9, margin: 0 }}>
