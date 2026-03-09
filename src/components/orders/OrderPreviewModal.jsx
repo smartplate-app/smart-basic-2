@@ -18,7 +18,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
-  const [frameLoaded, setFrameLoaded] = useState(false);
   
   if (!isOpen || !order) return null;
 
