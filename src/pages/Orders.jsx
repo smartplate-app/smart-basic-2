@@ -1252,7 +1252,7 @@ export default function OrdersPage() {
 
 
          {/* Mobile View */}
-        <div className="md:hidden space-y-4">
+        <div className="md:hidden space-y-4 pb-24">
           {loading ? (
             <div className="text-center py-12">
               <Loader className="w-8 h-8 animate-spin text-gray-600 mx-auto mb-2" />
