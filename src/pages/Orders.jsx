@@ -1302,42 +1302,41 @@ export default function OrdersPage() {
                       <span className="text-lg font-bold text-green-600">₪{(order.total_cost || 0).toFixed(2)}</span>
                     </div>
                     
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {!isViewer && (
                         <Button
                           onClick={() => handleResend(order)}
-                          className="flex-1 h-11 rounded-lg text-base bg-blue-600 hover:bg-blue-700 text-white"
+                          className="flex-1 min-w-[100px] h-11 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white"
                         >
-                          <Share className="w-4 h-4 mr-2" />
+                          <Share className="w-4 h-4 mr-1" />
                           {safeT('share','שתף','Share')}
                         </Button>
                       )}
-                                                        {!isViewer && order.status === 'sent' && (
-                                                          <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                                                            className="border-green-300 text-green-700 hover:bg-green-50"
-                                                          >
-                                                            {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
-                                                          </Button>
-                                                        )}
-                                                        {!isViewer && (
+                      {!isViewer && order.status === 'sent' && (
+                        <Button
+                          variant="outline"
+                          onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                          className="flex-1 min-w-[100px] h-11 rounded-lg text-sm border-green-300 text-green-700 hover:bg-green-50"
+                        >
+                          {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
+                        </Button>
+                      )}
+                      {!isViewer && (
                         <>
                           <Button
                             variant="outline"
                             onClick={() => handleEdit(order)}
-                            className="flex-1 h-11 rounded-lg text-base border-gray-300 text-gray-700 hover:bg-gray-50"
+                            className="flex-1 min-w-[100px] h-11 rounded-lg text-sm border-gray-300 text-gray-700 hover:bg-gray-50"
                           >
-                            <Edit className="w-4 h-4 mr-2" />
+                            <Edit className="w-4 h-4 mr-1" />
                             {t('edit')}
                           </Button>
                           <Button
                             variant="outline"
                             onClick={() => handleDelete(order)}
-                            className="flex-1 h-11 rounded-lg text-base border-red-300 text-red-600 hover:bg-red-50"
+                            className="flex-1 min-w-[100px] h-11 rounded-lg text-sm border-red-300 text-red-600 hover:bg-red-50"
                           >
-                            <Trash2 className="w-4 h-4 mr-2" />
+                            <Trash2 className="w-4 h-4 mr-1" />
                             {t('delete')}
                           </Button>
                         </>
