@@ -1153,7 +1153,7 @@ export default function OrdersPage() {
         {/* Mobile quick filters */}
         <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4">
           <div className="flex gap-2 pb-1 w-max">
-            <div className="w-2 flex-shrink-0"></div>
+            <div className="w-4 flex-shrink-0"></div>
             {['all','draft','sent','confirmed','delivered'].map((s) => (
               <button
                 key={s}
@@ -1167,7 +1167,7 @@ export default function OrdersPage() {
                  t('status_delivered')}
               </button>
             ))}
-            <div className="w-2 flex-shrink-0"></div>
+            <div className="w-4 flex-shrink-0"></div>
           </div>
         </div>
 
