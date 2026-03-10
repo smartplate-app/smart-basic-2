@@ -694,7 +694,9 @@ export default function OrdersPage() {
       ? `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}&d=${orderData}`)}`
       : `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
 
-    if (navigator.share) {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
+    if (isMobile && navigator.share) {
       try {
         base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
         setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
