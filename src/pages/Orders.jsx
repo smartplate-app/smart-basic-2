@@ -1461,13 +1461,13 @@ export default function OrdersPage() {
                         onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
                       >
                         <td className="px-3 py-2 text-right">
-                          <div className="text-sm font-medium text-gray-900">{order.order_number || '—'}</div>
+                          <div className="text-sm font-medium text-gray-900">{order.supplier_name}</div>
                           {order.restaurant_name && (
                             <div className="text-xs text-gray-500">{order.restaurant_name}</div>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right text-sm text-gray-700">
-                          {order.supplier_name}
+                        <td className="px-3 py-2 text-right text-sm text-gray-500">
+                          {order.order_number || '—'}
                         </td>
                         <td className="px-3 py-2 text-right text-sm text-gray-700">
                           {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
