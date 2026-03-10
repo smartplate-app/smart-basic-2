@@ -1284,8 +1284,8 @@ export default function OrdersPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="font-bold text-gray-900">{order.order_number || '—'}</div>
-                        <div className="text-sm text-gray-600">{order.supplier_name}</div>
+                        <div className="font-bold text-gray-900">{order.supplier_name}</div>
+                        <div className="text-sm text-gray-500">{order.order_number || '—'}</div>
                       </div>
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
                         {statusLabels[order.status] || order.status}
