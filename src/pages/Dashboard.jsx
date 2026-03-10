@@ -1153,16 +1153,16 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    {dashboardData && (dashboardData.updated_date || dashboardData.created_date) && (
-                      <div className={`mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="flex justify-between items-center">
+                      <Label className={isRTL ? 'text-right block' : 'text-left block'}>
+                        {language === 'he' ? 'מכירות מסעדה (כולל מע"מ)' : 'Restaurant (Dine-in) Sales (incl. VAT)'}
+                      </Label>
+                      {dashboardData && (dashboardData.updated_date || dashboardData.created_date) && (
                         <Badge variant="outline" className="text-xs">
                           {language === 'he' ? 'עודכן:' : 'Updated:'} {moment(dashboardData.updated_date || dashboardData.created_date).format('YYYY-MM-DD')}
                         </Badge>
-                      </div>
-                    )}
-                    <Label className={isRTL ? 'text-right block' : 'text-left block'}>
-                      {language === 'he' ? 'מכירות מסעדה (כולל מע"מ)' : 'Restaurant (Dine-in) Sales (incl. VAT)'}
-                    </Label>
+                      )}
+                    </div>
                     <Input
                       type="number"
                       value={restaurantSales}
