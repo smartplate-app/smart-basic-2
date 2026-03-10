@@ -1580,9 +1580,6 @@ export default function OrdersPage() {
             <Button onClick={handleConfirmSendEmail} className="bg-[#107c41] hover:bg-[#0c5e31] text-white">
               <Mail className="w-4 h-4 mr-2" /> {safeT('email', 'אימייל', 'Email')}
             </Button>
-            <Button onClick={handleCopyLink} className="bg-gray-800 hover:bg-gray-700 text-white">
-              <Copy className="w-4 h-4 mr-2" /> {safeT('copy_link', 'העתק קישור', 'Copy Link')}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
