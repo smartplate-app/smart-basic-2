@@ -1411,10 +1411,10 @@ export default function OrdersPage() {
               <thead className="bg-gray-100 border-b">
                 <tr>
                   <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {safeT('order_number','מספר הזמנה','Order #')}
+                    {safeT('supplier','ספק','Supplier')}
                   </th>
                   <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {safeT('supplier','ספק','Supplier')}
+                    {safeT('order_number','מספר הזמנה','Order #')}
                   </th>
                   <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {safeT('delivery_date','תאריך אספקה','Delivery date')}
