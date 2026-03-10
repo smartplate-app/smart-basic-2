@@ -1055,20 +1055,30 @@ export default function DashboardPage() {
                 <Button 
                   onClick={handleImportFromSheet}
                   disabled={importingData}
-                  variant="outline"
-                  className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                  size="sm"
+                  className={`flex items-center gap-1.5 bg-[#0f9d58] hover:bg-[#0b8043] text-white shadow-sm rounded-full px-4 transition-all hover:shadow-md ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
-                  {importingData ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  {language === 'he' ? 'ייבא מ-Google Sheets' : 'Import from Google Sheets'}
+                  {importingData ? <Loader className="w-4 h-4 animate-spin" /> : (
+                    <div className="flex items-center gap-1">
+                      <Download className="w-3.5 h-3.5" />
+                      <FileSpreadsheet className="w-4 h-4" />
+                    </div>
+                  )}
+                  {language === 'he' ? 'ייבוא מ-Sheets' : 'Import Sheets'}
                 </Button>
                 <Button 
                   onClick={handleExportMonthlyReport}
                   disabled={exportingMonthly}
-                  variant="outline"
-                  className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                  size="sm"
+                  className={`flex items-center gap-1.5 bg-[#0f9d58] hover:bg-[#0b8043] text-white shadow-sm rounded-full px-4 transition-all hover:shadow-md ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
-                  {exportingMonthly ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-                  {language === 'he' ? 'ייצא ל-Google Sheets' : 'Export to Google Sheets'}
+                  {exportingMonthly ? <Loader className="w-4 h-4 animate-spin" /> : (
+                    <div className="flex items-center gap-1">
+                      <Upload className="w-3.5 h-3.5" />
+                      <FileSpreadsheet className="w-4 h-4" />
+                    </div>
+                  )}
+                  {language === 'he' ? 'ייצוא ל-Sheets' : 'Export Sheets'}
                 </Button>
               </div>
             </div>
