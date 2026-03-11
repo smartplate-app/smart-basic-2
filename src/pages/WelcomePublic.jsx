@@ -36,8 +36,8 @@ export default function WelcomePublic() {
               <img
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
                 alt="Smart Plate Logo"
-                className="h-8 w-auto object-contain" />
-
+                className="h-8 w-auto object-contain"
+              />
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 flex items-center justify-center shadow-sm">
                   <span className="text-white font-black text-sm tracking-widest">B</span>
@@ -132,12 +132,12 @@ export default function WelcomePublic() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              
-
-
-              
-
-
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                Looking for an alternative to MarketMan or Zest?
+              </h2>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                While legacy systems like MarketMan focus heavily on exhaustive recipe costing, and Zest focuses on basic scheduling, <strong>Smart Plate Basic</strong> combines the best of both worlds into a single, lightning-fast app designed for modern operators.
+              </p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
                   <CheckCircle2 className="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
@@ -194,6 +194,40 @@ export default function WelcomePublic() {
         </div>
       </div>
 
+      {/* SEO Content Section */}
+      <div className="py-20 bg-white border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">The Ultimate Guide to Food Cost Management</h2>
+          
+          <div className="space-y-8 text-lg text-gray-600 leading-relaxed">
+            <section>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">What is Food Cost Management?</h3>
+              <p>
+                Food cost management is the process of tracking, analyzing, and optimizing the cost of ingredients used in a restaurant or bar. Effective food cost management ensures that a business remains profitable by keeping the cost of goods sold (COGS) at an optimal level, typically between 28% and 32% of total food sales.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">5 Proven Strategies to Manage Your Food Cost</h3>
+              <ul className="list-disc pl-6 space-y-3">
+                <li><strong className="text-gray-900">Track Inventory Regularly:</strong> Conduct weekly or monthly inventory counts to understand your actual food cost (AFC) versus your theoretical food cost.</li>
+                <li><strong className="text-gray-900">Monitor Supplier Prices:</strong> Keep a close eye on invoice prices. Smart Plate Basic automatically highlights price changes when you scan supply receipts.</li>
+                <li><strong className="text-gray-900">Optimize Portion Control:</strong> Standardize recipes and train staff to ensure consistent portion sizes, reducing waste and over-serving.</li>
+                <li><strong className="text-gray-900">Reduce Food Waste:</strong> Track waste reports to identify which items are being thrown away and adjust your prep levels accordingly.</li>
+                <li><strong className="text-gray-900">Use a Food Cost App:</strong> Replace manual spreadsheets with a dedicated food cost management app to automate calculations and get real-time profitability dashboards.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Why Labor Cost Management Matters</h3>
+              <p>
+                While food cost is critical, labor cost is the second massive expense for any restaurant. The golden rule of hospitality is keeping your combined prime costs (Food Cost + Labor Cost) under 60%. A dedicated labor cost management app helps you forecast weekly schedules, track employee hours, and manage tip pools efficiently.
+              </p>
+            </section>
+          </div>
+        </div>
+      </div>
+
       {/* CTA Section */}
       <div className="bg-[#107c41] py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
@@ -214,8 +248,8 @@ export default function WelcomePublic() {
             <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
               alt="Smart Plate Logo"
-              className="h-8 w-auto opacity-50 grayscale" />
-
+              className="h-8 w-auto opacity-50 grayscale"
+            />
             <span className="text-xl font-bold text-gray-500">Smart Plate</span>
           </div>
           <p className="mb-4">The premier food cost and labor cost management app for restaurants and bars.</p>
@@ -227,6 +261,6 @@ export default function WelcomePublic() {
       </footer>
 
       <AccessRequestDialog open={openRequest} onOpenChange={setOpenRequest} />
-    </div>);
-
+    </div>
+  );
 }
