@@ -64,7 +64,7 @@ export default function WelcomePublic() {
               The Ultimate <span className="text-[#107c41]">Food Cost</span> & <span className="text-blue-600">Labor Cost</span> App for Restaurants
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed">
-              Take control of your restaurant's profitability. A smarter, faster, and more intuitive alternative to MarketMan and Zest. Keep your combined costs under the magic 60% mark.
+              Take control of your restaurant's profitability. Keep your combined costs under the magic 60% mark.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" onClick={() => setOpenRequest(true)} className="w-full sm:w-auto text-lg h-14 px-8 bg-[#107c41] hover:bg-[#0c5e31]">
