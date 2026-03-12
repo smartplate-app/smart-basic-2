@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Plus, Check, Trash2, Gift, Share } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Copy, Plus, Check, Trash2, Gift } from "lucide-react";
 
 export default function PromoLinks() {
   const { t, language } = useLanguage();
@@ -17,7 +16,6 @@ export default function PromoLinks() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
-  const [shareLink, setShareLink] = useState(null);
   
   const [formData, setFormData] = useState({
     recipient_name: "",
@@ -96,24 +94,6 @@ export default function PromoLinks() {
       case 'lifetime_free': return 'Lifetime Free';
       default: return type;
     }
-  };
-
-  const getShareText = (link) => {
-    const url = `${window.location.origin}/#/pages/Register?promo=${link.code}`;
-    return `Hey ${link.recipient_name},\n\nI've arranged a special VIP invite for you to Smart Plate Basic (${getOfferLabel(link.offer_type)}).\n\nClick here to claim it:\n${url}`;
-  };
-
-  const handleWhatsApp = () => {
-    const text = getShareText(shareLink);
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    setShareLink(null);
-  };
-
-  const handleEmail = () => {
-    const text = getShareText(shareLink);
-    const subject = `VIP Invite to Smart Plate Basic`;
-    window.open(`mailto:${shareLink.recipient_email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`, '_blank');
-    setShareLink(null);
   };
 
   return (
@@ -247,20 +227,11 @@ export default function PromoLinks() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => setShareLink(link)}
-                              className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
-                            >
-                              <Share className="w-4 h-4 mr-1" />
-                              Share
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
                               onClick={() => copyToClipboard(link.code, link.id)}
                               className={copiedId === link.id ? "bg-green-50 text-green-600 border-green-200" : ""}
                             >
                               {copiedId === link.id ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
-                              {copiedId === link.id ? "Copied!" : "Copy"}
+                              {copiedId === link.id ? "Copied!" : "Copy Link"}
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -281,27 +252,6 @@ export default function PromoLinks() {
           </CardContent>
         </Card>
       </div>
-
-      <Dialog open={!!shareLink} onOpenChange={(open) => !open && setShareLink(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Share VIP Link</DialogTitle>
-            <DialogDescription>Preview the message before sending.</DialogDescription>
-          </DialogHeader>
-          {shareLink && (
-            <div className="space-y-4 pt-4">
-              <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap text-sm border text-left" dir="ltr">
-                {getShareText(shareLink)}
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => setShareLink(null)}>Cancel</Button>
-                <Button onClick={handleEmail} className="bg-blue-600 hover:bg-blue-700 text-white">Email</Button>
-                <Button onClick={handleWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">WhatsApp</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
