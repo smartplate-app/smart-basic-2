@@ -314,12 +314,6 @@ export default function OrdersPage() {
           throw new Error('No internet connection. Please check your network.');
         }
         
-        // Add initial delay on first load to ensure SDK is ready
-        if (retryAttempt === 0) {
-          console.log('[Orders] Initial delay to ensure SDK initialization...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
         // Exponential backoff for retry attempts
         if (retryAttempt > 0) {
           const delay = Math.min(3000 * Math.pow(1.5, retryAttempt - 1), 15000);
@@ -348,9 +342,6 @@ export default function OrdersPage() {
         } catch (e) {
           console.log('[Orders] deleteSentOrdersForUser failed:', e?.message || e);
         }
-        
-        // Delay before loading data
-        await new Promise(resolve => setTimeout(resolve, 500));
         
         if (mounted) {
           const c = getCache('orders_v1');
@@ -399,12 +390,9 @@ export default function OrdersPage() {
       }
     };
 
-    // Add small delay before starting to prevent race conditions
-    initTimeout = setTimeout(() => {
-      if (mounted) {
-        checkAuthAndLoadData();
-      }
-    }, 100);
+    if (mounted) {
+      checkAuthAndLoadData();
+    }
     
     return () => {
       mounted = false;
