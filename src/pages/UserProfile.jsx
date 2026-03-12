@@ -82,11 +82,11 @@ export default function UserProfilePage() {
         restaurant_logo: formData.restaurant_logo
       });
 
-      alert(language === 'he' ? 'העדכון נשמר' : 'Settings saved successfully!');
+      toast({ title: language === 'he' ? 'העדכון נשמר' : 'Settings saved successfully!' });
       loadUserData();
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert(t('error_saving') || 'Error saving profile. Please try again.');
+      toast({ title: t('error_saving') || 'Error saving profile. Please try again.', variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -95,12 +95,12 @@ export default function UserProfilePage() {
   const handleSaveDriveEmail = async () => {
     try {
       const email = (driveEmail || '').trim();
-      if (!email) { alert(language === 'he' ? 'הזן מייל של Google' : 'Enter a Google email'); return; }
+      if (!email) { toast({ title: language === 'he' ? 'הזן מייל של Google' : 'Enter a Google email', variant: "destructive" }); return; }
       await base44.auth.updateMe({ drive_share_email: email });
-      alert(language === 'he' ? 'נשמר' : 'Saved');
+      toast({ title: language === 'he' ? 'נשמר' : 'Saved' });
       await loadUserData();
     } catch (e) {
-      alert('Error: ' + (e?.message || e));
+      toast({ title: 'Error: ' + (e?.message || e), variant: "destructive" });
     }
   };
 
@@ -115,13 +115,13 @@ export default function UserProfilePage() {
           setDriveAccount(who?.data?.user || null);
         } catch {}
         const target = (driveEmail || user?.email || '').trim();
-        alert(`Connected. Files will be shared to ${target}.`);
+        toast({ title: `Connected. Files will be shared to ${target}.` });
       } else {
-        alert(language === 'he' ? 'לא מחובר ל-Google Drive' : 'Not connected to Google Drive');
+        toast({ title: language === 'he' ? 'לא מחובר ל-Google Drive' : 'Not connected to Google Drive', variant: "destructive" });
       }
     } catch (e) {
       setDriveAuthorized(false);
-      alert(language === 'he' ? 'לא מחובר' : 'Not connected');
+      toast({ title: language === 'he' ? 'לא מחובר' : 'Not connected', variant: "destructive" });
     } finally {
       setDriveChecking(false);
     }
@@ -149,7 +149,7 @@ export default function UserProfilePage() {
       setReminderLoading(true);
       const { data } = await base44.functions.invoke('createMonthlyComplianceReminder', {});
       if (data?.success) {
-        alert((language === 'he' ? 'תזכורת חודשית נוצרה/עודכנה ביומן שלך' : 'Monthly reminder created/updated on your calendar'));
+        toast({ title: language === 'he' ? 'תזכורת חודשית נוצרה/עודכנה ביומן שלך' : 'Monthly reminder created/updated on your calendar' });
       } else {
         // Fallback: open pre-filled Google Calendar event (no OAuth needed)
         window.open(buildGoogleRecurringURL(), '_blank');
@@ -291,7 +291,7 @@ export default function UserProfilePage() {
                             setFormData({...formData, restaurant_logo: file_url});
                           } catch (error) {
                             console.error("Error uploading logo:", error);
-                            alert(language === 'he' ? 'שגיאה בהעלאת הלוגו' : 'Error uploading logo');
+                            toast({ title: language === 'he' ? 'שגיאה בהעלאת הלוגו' : 'Error uploading logo', variant: "destructive" });
                           } finally {
                             setUploadingLogo(false);
                           }
