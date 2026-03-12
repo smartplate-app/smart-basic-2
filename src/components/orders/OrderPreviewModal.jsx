@@ -564,10 +564,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </div>
         </div>
 
-        <div className="flex gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0">
+        <div className="flex flex-wrap sm:flex-nowrap gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0">
           <Button
             onClick={onClose}
             variant="outline"
+            className="flex-1 sm:flex-none"
           >
             {safeT('close','סגור','Close')}
           </Button>
@@ -575,7 +576,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           <Button
             onClick={handleDownloadJPG}
             variant="outline"
-            className="gap-2"
+            className="flex-1 sm:flex-none gap-2"
             disabled={downloading}
           >
             <Download className="w-4 h-4" /> {safeT('download_image','הורד תמונה','Download JPG')}
@@ -583,7 +584,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
           <Button
             onClick={() => { if (onSend) onSend(order); }}
-            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm disabled:opacity-50"
+            className="w-full sm:flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm disabled:opacity-50"
             disabled={downloading}
             data-testid="order-preview-send"
           >

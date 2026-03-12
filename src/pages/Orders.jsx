@@ -684,7 +684,7 @@ export default function OrdersPage() {
 
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
 
-    if (isMobile && navigator.share) {
+    if (navigator.share) {
       try {
         base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
         setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
@@ -920,8 +920,8 @@ export default function OrdersPage() {
     } else if (isIOS) {
       tryOpenChain([deeplink, waWeb]);
     } else {
-      // Desktop: try to open native app first, then fallback to web
-      tryOpenChain([deeplink, waWeb]);
+      // Desktop: use api.whatsapp.com which handles the app deep link better, then fallback to web
+      tryOpenChain([apiUrl, waWeb]);
     }
 
 
