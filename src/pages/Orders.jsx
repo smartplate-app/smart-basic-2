@@ -679,7 +679,7 @@ export default function OrdersPage() {
     };
     const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
     const orderUrl = order.id 
-      ? `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}&d=${orderData}`)}`
+      ? `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}`)}`
       : `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
 
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
@@ -691,8 +691,7 @@ export default function OrdersPage() {
         
         await navigator.share({
           title: `${safeT('order_preview','הזמנה','Order')} #${ensuredNumber}`,
-          text: text,
-          url: orderUrl
+          text: `${text}\n\n${orderUrl}`
         });
         setPreviewOrder(null);
         return;
