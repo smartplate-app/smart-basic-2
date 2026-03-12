@@ -147,7 +147,15 @@ export default function UserProfilePage() {
   const handleEnableReminder = async () => {
     try {
       setReminderLoading(true);
-      const { data } = await base44.functions.invoke('createMonthlyComplianceReminder', {});
+      const summaryText = language === 'he' ? 'בדיקות חודשיות: עלות עבודה, עלות מזון, סידור עבודה, קבלות' : 'Monthly checklist: labor cost, food cost, schedule, receipts';
+      const detailsText = language === 'he'
+        ? 'צ׳ק ליסט:\n1) יש לוודא שכל הטיפים ושעות ההעבודה נכונות מתחילת החודש\n2) לוודא שקיבלנו את כל ההזמנות מתחילת החודש\n3) לבדוק אם קיבלנו ולבקש זיכויים מספקים. ולקבל אותם במערכת'
+        : 'Checklist:\n1) Verify all tips and work hours are correct from the start of the month\n2) Verify we received all orders from the start of the month\n3) Check for and request credits from suppliers, and receive them in the system';
+
+      const { data } = await base44.functions.invoke('createMonthlyComplianceReminder', {
+        summary: summaryText,
+        description: detailsText
+      });
       if (data?.success) {
         toast({ title: language === 'he' ? 'תזכורת חודשית נוצרה/עודכנה ביומן שלך' : 'Monthly reminder created/updated on your calendar' });
       } else {
