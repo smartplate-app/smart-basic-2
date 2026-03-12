@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader, Save, Upload, X, CalendarPlus, Trash2 } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function UserProfilePage() {
   const { t, language } = useLanguage();
+  const { toast } = useToast();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
