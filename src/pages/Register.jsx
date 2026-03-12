@@ -9,79 +9,104 @@ import { Loader, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 export default function RegisterPage() {
   const [loading, setLoading] = useState(true);
   const [inviteData, setInviteData] = useState(null);
+  const [promoData, setPromoData] = useState(null);
   const [error, setError] = useState(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [restaurantName, setRestaurantName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    verifyInvite();
+    verifyLink();
   }, []);
 
-  const verifyInvite = async () => {
+  const verifyLink = async () => {
     try {
       setLoading(true);
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('invite') || urlParams.get('token');
+      const promo = urlParams.get('promo');
 
-      if (!token) {
-        setError('No invitation token found. Please check your invitation link.');
+      if (!token && !promo) {
+        setError('No invitation or promo link found. Please check your link.');
         setLoading(false);
         return;
       }
 
-      console.log('[Register] Verifying invite token:', token);
+      const activeToken = token || promo;
+      const isPromo = !!promo;
 
       // Check if returning from OAuth
-      const oauthInviteKey = `oauth_invite_${token}`;
-      if (sessionStorage.getItem(oauthInviteKey)) {
-        console.log('[Register] Returning from OAuth, checking authentication...');
-        sessionStorage.removeItem(oauthInviteKey);
+      const oauthKey = isPromo ? `oauth_promo_${promo}` : `oauth_invite_${token}`;
+      if (sessionStorage.getItem(oauthKey)) {
+        sessionStorage.removeItem(oauthKey);
         
         try {
           const isAuth = await base44.auth.isAuthenticated();
           if (isAuth) {
             const currentUser = await base44.auth.me();
-            console.log('[Register] User authenticated via OAuth:', currentUser.email);
             
-            // Verify invite first
-            const response = await base44.functions.invoke('verifyInviteToken', { token });
-            if (!response.data.success || !response.data.invite) {
-              setError(response.data.error || 'Invalid or expired invitation');
-              setLoading(false);
-              return;
-            }
-            
-            const invite = response.data.invite;
-            
-            // Complete signup automatically
-            const signupResponse = await base44.functions.invoke('completeSignup', {
-              invite_token: token,
-              username: currentUser.email.split('@')[0],
-              password: 'oauth-' + Math.random().toString(36).substring(7),
-              invite_type: invite.invite_type,
-              chain_id: invite.chain_id,
-              store_id: invite.store_id,
-              store_name: invite.store_name,
-              role: invite.role,
-              inviter_email: invite.inviter_email,
-              oauth_user_email: currentUser.email
-            });
-            
-            if (signupResponse.data.success) {
-              console.log('[Register] OAuth signup completed, redirecting...');
-              setSuccess(true);
-              setTimeout(() => {
-                window.location.href = window.location.origin + '/#/pages/Orders';
-              }, 1500);
-              return;
+            if (isPromo) {
+              const response = await base44.functions.invoke('verifyPromoCode', { code: promo });
+              if (!response.data.success || !response.data.promo) {
+                setError(response.data.error || 'Invalid or expired promo code');
+                setLoading(false);
+                return;
+              }
+              
+              const signupResponse = await base44.functions.invoke('redeemPromoCode', {
+                code: promo,
+                username: currentUser.email.split('@')[0],
+                password: 'oauth-' + Math.random().toString(36).substring(7),
+                oauth_user_email: currentUser.email,
+                full_name: response.data.promo.recipient_name
+              });
+              
+              if (signupResponse.data.success) {
+                setSuccess(true);
+                setTimeout(() => window.location.href = window.location.origin + '/#/pages/Orders', 1500);
+                return;
+              } else {
+                setError('Registration failed: ' + signupResponse.data.error);
+                setLoading(false);
+                return;
+              }
             } else {
-              setError('Failed to complete registration: ' + signupResponse.data.error);
-              setLoading(false);
-              return;
+              // Existing invite OAuth logic
+              const response = await base44.functions.invoke('verifyInviteToken', { token });
+              if (!response.data.success || !response.data.invite) {
+                setError(response.data.error || 'Invalid or expired invitation');
+                setLoading(false);
+                return;
+              }
+              
+              const invite = response.data.invite;
+              const signupResponse = await base44.functions.invoke('completeSignup', {
+                invite_token: token,
+                username: currentUser.email.split('@')[0],
+                password: 'oauth-' + Math.random().toString(36).substring(7),
+                invite_type: invite.invite_type,
+                chain_id: invite.chain_id,
+                store_id: invite.store_id,
+                store_name: invite.store_name,
+                role: invite.role,
+                inviter_email: invite.inviter_email,
+                oauth_user_email: currentUser.email
+              });
+              
+              if (signupResponse.data.success) {
+                setSuccess(true);
+                setTimeout(() => window.location.href = window.location.origin + '/#/pages/Orders', 1500);
+                return;
+              } else {
+                setError('Registration failed: ' + signupResponse.data.error);
+                setLoading(false);
+                return;
+              }
             }
           }
         } catch (authError) {
@@ -89,22 +114,28 @@ export default function RegisterPage() {
         }
       }
 
-      // Regular flow - verify invite and show form
-      const response = await base44.functions.invoke('verifyInviteToken', { token });
-
-      if (response.data.success && response.data.invite) {
-        console.log('[Register] Invite verified successfully');
-        setInviteData(response.data.invite);
-        setUsername(response.data.invite.email?.split('@')[0] || '');
-        setLoading(false);
+      if (isPromo) {
+        const response = await base44.functions.invoke('verifyPromoCode', { code: promo });
+        if (response.data.success && response.data.promo) {
+          setPromoData(response.data.promo);
+          setLoading(false);
+        } else {
+          setError(response.data.error || 'Invalid or expired promo code');
+          setLoading(false);
+        }
       } else {
-        console.error('[Register] Invalid invite:', response.data.error);
-        setError(response.data.error || 'Invalid or expired invitation');
-        setLoading(false);
+        const response = await base44.functions.invoke('verifyInviteToken', { token });
+        if (response.data.success && response.data.invite) {
+          setInviteData(response.data.invite);
+          setUsername(response.data.invite.email?.split('@')[0] || '');
+          setLoading(false);
+        } else {
+          setError(response.data.error || 'Invalid or expired invitation');
+          setLoading(false);
+        }
       }
     } catch (err) {
-      console.error('[Register] Error verifying invite:', err);
-      setError('Failed to verify invitation. Please try again or contact support.');
+      setError('Failed to verify link. Please try again.');
       setLoading(false);
     }
   };
@@ -113,7 +144,7 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (!username || !password || !confirmPassword) {
-      alert('Please fill in all fields');
+      alert('Please fill in all required fields');
       return;
     }
 
@@ -131,24 +162,39 @@ export default function RegisterPage() {
       setSubmitting(true);
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('invite') || urlParams.get('token');
+      const promo = urlParams.get('promo');
 
-      // Call completeSignup - it will mark the invite as used
-      const response = await base44.functions.invoke('completeSignup', {
-        invite_token: token,
-        username: username.trim(),
-        password: password,
-        invite_type: inviteData?.invite_type,
-        chain_id: inviteData?.chain_id,
-        store_id: inviteData?.store_id,
-        store_name: inviteData?.store_name,
-        role: inviteData?.role,
-        inviter_email: inviteData?.inviter_email
-      });
+      let response;
+      if (promo) {
+        if (!email || !restaurantName) {
+          alert('Email and Restaurant Name are required for VIP signup');
+          setSubmitting(false);
+          return;
+        }
+        response = await base44.functions.invoke('redeemPromoCode', {
+          code: promo,
+          username: username.trim(),
+          password: password,
+          email: email.trim(),
+          restaurant_name: restaurantName.trim(),
+          full_name: promoData?.recipient_name
+        });
+      } else {
+        response = await base44.functions.invoke('completeSignup', {
+          invite_token: token,
+          username: username.trim(),
+          password: password,
+          invite_type: inviteData?.invite_type,
+          chain_id: inviteData?.chain_id,
+          store_id: inviteData?.store_id,
+          store_name: inviteData?.store_name,
+          role: inviteData?.role,
+          inviter_email: inviteData?.inviter_email
+        });
+      }
 
       if (response.data.success) {
         setSuccess(true);
-        // User needs to login with their new credentials
-        // Redirect to login with nextUrl parameter to go to Orders after login
         setTimeout(() => {
           const loginUrl = `/auth/login?next=${encodeURIComponent(window.location.origin + '/pages/Orders')}`;
           window.location.href = loginUrl;
@@ -243,38 +289,53 @@ export default function RegisterPage() {
               className="h-16 object-contain"
             />
           </div>
-          <CardTitle className="text-center">Complete Your Registration</CardTitle>
+          <CardTitle className="text-center">
+          {promoData ? 'VIP Founding Member Access' : 'Complete Your Registration'}
+          </CardTitle>
           <p className="text-center text-gray-600 mt-2">
-            Welcome, {inviteData?.full_name}!
+          Welcome, {promoData ? promoData.recipient_name : inviteData?.full_name}!
           </p>
+          {promoData && (
+          <div className="mt-3 bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+            <span className="text-purple-800 font-semibold text-sm">
+              🎁 Special Offer: {promoData.offer_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            </span>
+          </div>
+          )}
           {inviteData?.invite_type === 'chain_store' && (
-            <p className="text-center text-blue-600 text-sm mt-1">
-              You're joining as store manager for: {inviteData?.store_name}
-            </p>
+          <p className="text-center text-blue-600 text-sm mt-1">
+            You're joining as store manager for: {inviteData?.store_name}
+          </p>
           )}
           {inviteData?.invite_type === 'store_user' && (
-            <p className="text-center text-green-600 text-sm mt-1">
-              You're joining {inviteData?.store_name} as {inviteData?.role === 'manager' ? 'Manager' : 'Worker'}
-            </p>
+          <p className="text-center text-green-600 text-sm mt-1">
+            You're joining {inviteData?.store_name} as {inviteData?.role === 'manager' ? 'Manager' : 'Worker'}
+          </p>
           )}
-        </CardHeader>
-        <CardContent>
+          </CardHeader>
+          <CardContent>
           {/* OAuth Sign-in Options */}
           <div className="space-y-3 mb-6">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 bg-white hover:bg-gray-50 border-2"
-              onClick={async () => {
-                const token = new URLSearchParams(window.location.search).get('invite') || new URLSearchParams(window.location.search).get('token');
-                
-                // Mark that we're starting OAuth flow for this invite
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-11 bg-white hover:bg-gray-50 border-2"
+            onClick={async () => {
+              const params = new URLSearchParams(window.location.search);
+              const token = params.get('invite') || params.get('token');
+              const promo = params.get('promo');
+
+              if (promo) {
+                sessionStorage.setItem(`oauth_promo_${promo}`, 'true');
+                const returnUrl = encodeURIComponent(`${window.location.origin}/#/pages/Register?promo=${promo}`);
+                window.location.href = `/auth/login?provider=google&next=${returnUrl}`;
+              } else {
                 sessionStorage.setItem(`oauth_invite_${token}`, 'true');
-                
                 const returnUrl = encodeURIComponent(`${window.location.origin}/#/pages/Register?invite=${token}`);
                 window.location.href = `/auth/login?provider=google&next=${returnUrl}`;
-              }}
-            >
+              }
+            }}
+          >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -344,16 +405,42 @@ export default function RegisterPage() {
               </div>
             )}
             
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={inviteData?.email || ''}
-                disabled
-                className="bg-gray-100"
-              />
-            </div>
+            {promoData ? (
+              <>
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="your@email.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="restaurantName">Restaurant Name *</Label>
+                  <Input
+                    id="restaurantName"
+                    value={restaurantName}
+                    onChange={(e) => setRestaurantName(e.target.value)}
+                    required
+                    placeholder="e.g. The Golden Fork"
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={inviteData?.email || ''}
+                  disabled
+                  className="bg-gray-100"
+                />
+              </div>
+            )}
 
             <div>
               <Label htmlFor="username">Username *</Label>
