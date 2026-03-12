@@ -270,10 +270,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             tempContainer.innerHTML = `
               <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 32px; text-align: center; border-radius: 16px 16px 0 0; margin: -40px -40px 20px -40px;">
                 <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0;">
-                  ${language === 'he' ? 'הזמנה' : 'Order'} #${ensuredNumber}
+                  ${order.supplier_name}
                 </h1>
                 <p style="font-size: 16px; opacity: 0.9; margin: 0;">
-                  ${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}
+                  ${language === 'he' ? 'הזמנה' : 'Order'} #${ensuredNumber}
                 </p>
                 ${order.delivery_date ? `<p style="font-size: 14px; margin: 8px 0 0 0; opacity: 0.95;">📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</p>` : ''}
               </div>
@@ -438,11 +438,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                           padding: '24px 16px',
                           textAlign: 'center'
                       }}>
-                          <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                              {language === 'he' ? 'הזמנה' : 'Order'} <span dir="ltr" style={{ display: 'inline-block' }}>#{fallbackNumber}</span>
+                          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                              {order.supplier_name}
                           </h1>
                           <p style={{ fontSize: '16px', opacity: 0.9, margin: 0 }}>
-                              {language === 'he' ? 'ספק:' : 'Supplier:'} {order.supplier_name}
+                              {language === 'he' ? 'הזמנה' : 'Order'} <span dir="ltr" style={{ display: 'inline-block' }}>#{fallbackNumber}</span>
                           </p>
                           {order.delivery_date && (
                             <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.95 }}>
