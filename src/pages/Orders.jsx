@@ -841,27 +841,15 @@ export default function OrdersPage() {
       }
     }
 
-    // 1) Use system share when not Android or when explicitly forcing image share on Android
-    if ((opts && opts.forceImageShare) || !isAndroid) {
+    // 1) Use system share ONLY when explicitly forcing image share (e.g. Android pre-rendered image)
+    if (opts && opts.forceImageShare) {
       const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
-      const hasShare = typeof navigator.share === 'function';
-
       if (canShareFiles) {
         try {
           await navigator.share({ files: [file], text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
           return;
         } catch (e) {
-          // Continue to fallbacks (deeplink) if share fails or is blocked
           console.warn('[WA Image Share] Share failed, falling back:', e?.name || e);
-        }
-      }
-      if (hasShare) {
-        try {
-          await navigator.share({ text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
-          return;
-        } catch (e) {
-          // Continue to fallbacks (deeplink) if share fails or is blocked
-          console.warn('[WA Text Share] Share failed, falling back:', e?.name || e);
         }
       }
     }
