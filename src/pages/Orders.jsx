@@ -920,8 +920,8 @@ export default function OrdersPage() {
     } else if (isIOS) {
       tryOpenChain([deeplink, waWeb]);
     } else {
-      // Desktop: navigate current tab instead of opening a new one
-      tryOpenChain([waWeb]);
+      // Desktop: try to open native app first, then fallback to web
+      tryOpenChain([deeplink, waWeb]);
     }
 
 
@@ -1555,8 +1555,8 @@ export default function OrdersPage() {
             <DialogTitle>{safeT('choose_send_method','בחר אופן שליחה','Choose how to send')}</DialogTitle>
             <DialogDescription>{safeT('send_method_hint','בחר שיטת שליחה:','Choose a send method:')}</DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setShowSendOptions(false)}>{safeT('cancel', 'ביטול', 'Cancel')}</Button>
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowSendOptions(false)} className="order-last sm:order-first">{safeT('cancel', 'ביטול', 'Cancel')}</Button>
             {typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || '') && (
               <Button onClick={handleConfirmSendWhatsAppImage} disabled={!androidShareFile} className="bg-[#25D366] hover:bg-[#128C7E] text-white disabled:opacity-60 disabled:cursor-not-allowed">
                 <MessageCircle className="w-4 h-4 mr-2" /> {(!androidShareFile) ? (language === 'he' ? 'מכין תמונה…' : 'Preparing image…') : (language === 'he' ? 'וואטסאפ (תמונה)' : 'WhatsApp (image)')}
