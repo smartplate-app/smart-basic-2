@@ -52,8 +52,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const urlRef = useRef('');
   if (!urlRef.current) {
     if (order.id) {
-      const qs = `id=${order.id}&d=${orderData}`;
-      urlRef.current = `${window.location.origin}${createPageUrl(`PublicOrder?${qs}`)}`;
+      urlRef.current = `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}`)}`;
     } else {
       urlRef.current = `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
     }
