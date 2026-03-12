@@ -727,7 +727,7 @@ export default function OrdersPage() {
         temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
         temp.innerHTML = `
           <div style="background: linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:24px;border-radius:16px 16px 0 0;margin:-32px -32px 16px -32px;text-align:center;">
-            <div style="font-size:24px;font-weight:800;">${order.supplier_name || ''}</div>
+            <div style="font-size:28px;font-weight:800;">${order.supplier_name || ''}</div>
             <div style="opacity:.9;margin-top:4px;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
           </div>
           <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
