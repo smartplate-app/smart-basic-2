@@ -36,8 +36,8 @@ export default function WelcomePublic() {
               <img
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
                 alt="Smart Plate Logo"
-                className="h-8 w-auto object-contain"
-              />
+                className="h-8 w-auto object-contain" />
+
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 flex items-center justify-center shadow-sm">
                   <span className="text-white font-black text-sm tracking-widest">B</span>
@@ -132,9 +132,9 @@ export default function WelcomePublic() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Looking for an alternative to MarketMan or Zest?
-              </h2>
+              
+
+
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
                 While legacy systems like MarketMan focus heavily on exhaustive recipe costing, and Zest focuses on basic scheduling, <strong>Smart Plate Basic</strong> combines the best of both worlds into a single, lightning-fast app designed for modern operators.
               </p>
@@ -248,8 +248,8 @@ export default function WelcomePublic() {
             <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
               alt="Smart Plate Logo"
-              className="h-8 w-auto opacity-50 grayscale"
-            />
+              className="h-8 w-auto opacity-50 grayscale" />
+
             <span className="text-xl font-bold text-gray-500">Smart Plate</span>
           </div>
           <p className="mb-4">The premier food cost and labor cost management app for restaurants and bars.</p>
@@ -261,6 +261,6 @@ export default function WelcomePublic() {
       </footer>
 
       <AccessRequestDialog open={openRequest} onOpenChange={setOpenRequest} />
-    </div>
-  );
+    </div>);
+
 }
