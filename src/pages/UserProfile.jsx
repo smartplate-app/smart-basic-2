@@ -80,7 +80,7 @@ export default function UserProfilePage() {
         restaurant_logo: formData.restaurant_logo
       });
 
-      alert(t('save_success') || 'Settings saved successfully!');
+      alert(language === 'he' ? 'העדכון נשמר' : 'Settings saved successfully!');
       loadUserData();
     } catch (error) {
       console.error("Error saving profile:", error);
