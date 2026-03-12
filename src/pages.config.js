@@ -68,6 +68,7 @@ import MonthlyCount from './pages/MonthlyCount';
 import OAuthCallback from './pages/OAuthCallback';
 import OrderDetails from './pages/OrderDetails';
 import Orders from './pages/Orders';
+import PromoLinks from './pages/PromoLinks';
 import PromoVideo from './pages/PromoVideo';
 import PublicOrder from './pages/PublicOrder';
 import Register from './pages/Register';
@@ -92,7 +93,6 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import PromoLinks from './pages/PromoLinks';
 import __Layout from './Layout.jsx';
 
 
@@ -118,6 +118,7 @@ export const PAGES = {
     "OAuthCallback": OAuthCallback,
     "OrderDetails": OrderDetails,
     "Orders": Orders,
+    "PromoLinks": PromoLinks,
     "PromoVideo": PromoVideo,
     "PublicOrder": PublicOrder,
     "Register": Register,
@@ -142,7 +143,6 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "PromoLinks": PromoLinks,
 }
 
 export const pagesConfig = {

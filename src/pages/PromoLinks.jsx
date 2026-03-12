@@ -4,6 +4,7 @@ import { useLanguage } from "../components/LanguageProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Copy, Plus, Check, Trash2, Gift } from "lucide-react";
 
@@ -153,12 +154,13 @@ export default function PromoLinks() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium">Internal Notes</label>
-                    <Input 
+                    <Textarea 
                       placeholder="e.g. Met at NYC food show"
                       value={formData.notes}
                       onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                      className="min-h-[100px]"
                     />
                   </div>
                 </div>
