@@ -56,6 +56,7 @@ import Dashboard from './pages/Dashboard';
 import Diagnostics from './pages/Diagnostics';
 import Home from './pages/Home';
 import IOSBuildGuide from './pages/IOSBuildGuide';
+import InstagramBlueprint from './pages/InstagramBlueprint';
 import InventoryTransfers from './pages/InventoryTransfers';
 import InviteUser from './pages/InviteUser';
 import Items from './pages/Items';
@@ -91,7 +92,7 @@ import WelcomeIncognito from './pages/WelcomeIncognito';
 import WelcomePublic from './pages/WelcomePublic';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
-import InstagramBlueprint from './pages/InstagramBlueprint';
+import PromoLinks from './pages/PromoLinks';
 import __Layout from './Layout.jsx';
 
 
@@ -105,6 +106,7 @@ export const PAGES = {
     "Diagnostics": Diagnostics,
     "Home": Home,
     "IOSBuildGuide": IOSBuildGuide,
+    "InstagramBlueprint": InstagramBlueprint,
     "InventoryTransfers": InventoryTransfers,
     "InviteUser": InviteUser,
     "Items": Items,
@@ -140,7 +142,7 @@ export const PAGES = {
     "WelcomePublic": WelcomePublic,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
-    "InstagramBlueprint": InstagramBlueprint,
+    "PromoLinks": PromoLinks,
 }
 
 export const pagesConfig = {

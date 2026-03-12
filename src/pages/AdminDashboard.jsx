@@ -577,6 +577,14 @@ export default function AdminDashboard() {
                     <Eye className="w-4 h-4" />
                     {language === 'he' ? 'בדיקת סיור היכרות' : 'Test Onboarding'}
                   </Button>
+                  <Button
+                    onClick={() => window.location.href = '#/pages/PromoLinks'}
+                    variant="outline"
+                    className="flex items-center gap-2 border-purple-500 text-purple-600 hover:bg-purple-50"
+                  >
+                    <Crown className="w-4 h-4" />
+                    {language === 'he' ? 'קישורי פרומו VIP' : 'VIP Promo Links'}
+                  </Button>
                 </div>
               </div>
 
