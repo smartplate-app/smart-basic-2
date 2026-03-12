@@ -136,8 +136,8 @@ export default function UserProfilePage() {
     const fmt = (d) => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
     const text = encodeURIComponent(language === 'he' ? 'בדיקות חודשיות: עלות עבודה, עלות מזון, סידור עבודה, קבלות' : 'Monthly checklist: labor cost, food cost, schedule, receipts');
     const details = encodeURIComponent(language === 'he'
-      ? 'צ׳ק ליסט:\n1) יש לוודא שכל הטיפים ושעות ההעבודה נכונות מתחילת החודש\n2) לוודא שקיבלנו את כל ההזמנות מתחילת החודש\n3) לבדוק אם קיבלנו ולבקש זיכויים מספקים. ולקבל אותם במערכת'
-      : 'Checklist:\n1) Verify all tips and work hours are correct from the start of the month\n2) Verify we received all orders from the start of the month\n3) Check for and request credits from suppliers, and receive them in the system');
+      ? 'צ׳ק ליסט:\n1) בדיקת עלות עבודה מתחילת החודש\n2) לאשר שכל העובדים שובצו ולבצע תיקוני שעות\n3) בדיקת עלויות רכש מתחילת חודש\n4) לקבל זיכויים מספקים וגם במערכת'
+      : 'Checklist:\n1) Check labor cost from the start of the month\n2) Confirm all workers are scheduled and make hour corrections\n3) Check purchase costs from the start of the month\n4) Receive credits from suppliers and in the system');
     const dates = `${fmt(start)}/${fmt(end)}`;
     const recur = encodeURIComponent('RRULE:FREQ=MONTHLY;BYMONTHDAY=20');
     const ctz = encodeURIComponent('Asia/Jerusalem');

@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     const eventPayload = {
       id: clientEventId,
       summary: summary || 'Monthly checklist: Review labor cost & food cost',
-      description: description || 'Checklist:\n1) Verify all tips and work hours are correct from the start of the month\n2) Verify we received all orders from the start of the month\n3) Check for and request credits from suppliers, and receive them in the system',
+      description: description || 'Checklist:\n1) Check labor cost from the start of the month\n2) Confirm all workers are scheduled and make hour corrections\n3) Check purchase costs from the start of the month\n4) Receive credits from suppliers and in the system',
       start: { date: formatDate(start), timeZone: timezone },
       end: { date: formatDate(end), timeZone: timezone },
       recurrence: [ 'RRULE:FREQ=MONTHLY;BYMONTHDAY=20' ],
