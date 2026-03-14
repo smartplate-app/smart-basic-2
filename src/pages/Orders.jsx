@@ -656,109 +656,95 @@ export default function OrdersPage() {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `${safeT('whatsapp_intro', 'שלום, התקבלה הזמנה חדשה.', 'Hello, a new order has arrived.')}\n\n*${safeT('order_from', 'מאת', 'From')}:* ${order.restaurant_name || ''}\n*${safeT('order_number', 'מספר הזמנה', 'Order')}:* ${ensuredNumber}`;
     
-    const computeItemTotal = (it) => {
-      const tot = Number(it.total);
-      if (!isNaN(tot) && isFinite(tot) && tot > 0) return tot;
-      const p = Number(it.price);
-      const q = Number(it.quantity);
-      if (!isNaN(p) && isFinite(p) && !isNaN(q) && isFinite(q)) return p * q;
-      return 0;
-    };
-    const rawItemsTotal = (order.items || []).reduce((sum, it) => sum + computeItemTotal(it), 0);
-    const effectiveTotal = rawItemsTotal > 0 ? rawItemsTotal : Number(order.total_cost || 0);
-
-    const minimalOrder = {
-      n: ensuredNumber,
-      s: order.supplier_name,
-      r: order.restaurant_name,
-      a: order.restaurant_address,
-      d: order.delivery_date,
-      i: (order.items || []).map(it => ({ n: (it.item_name || it.item || it.name || ''), q: it.quantity, u: (it.unit || it.u || '') })),
-      t: order.notes,
-      m: effectiveTotal
-    };
-    const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
-    const orderUrl = order.id 
-      ? `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}`)}`
-      : `${window.location.origin}${createPageUrl(`PublicOrder?d=${orderData}`)}`;
-
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-
-    if (navigator.share) {
-      try {
-        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
-        setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
+    // Generate image
+    const temp = document.createElement('div');
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    temp.style.top = '0';
+    temp.style.width = '800px';
+    temp.style.background = 'white';
+    temp.style.padding = '32px';
+    temp.style.fontFamily = 'system-ui, sans-serif';
+    temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
+    temp.innerHTML = `
+      <div style="background: linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:24px;border-radius:16px 16px 0 0;margin:-32px -32px 16px -32px;text-align:center;">
+        <div style="font-size:28px;font-weight:800;">${order.supplier_name || ''}</div>
+        <div style="opacity:.9;margin-top:4px;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
+      </div>
+      <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
+        <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
+        ${order.restaurant_address ? \`<div style="color:#334155">\${order.restaurant_address}</div>\` : ''}
+        ${order.delivery_date ? \`<div style="margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;">\${t('delivery_date') || 'Delivery'}: \${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>\` : ''}
+      </div>
+      <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
+        <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
+          <tbody>
+            ${(order.items || []).map((it,i)=>\`<tr style="background:\${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">\${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">\${it.item_name||it.name||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">\${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">\${it.unit||''}</td></tr>\`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    document.body.appendChild(temp);
+    
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+      
+      if (blob) {
+        const file = new File([blob], \`order-\${ensuredNumber}.jpg\`, { type: 'image/jpeg' });
         
-        await navigator.share({
-          title: `${safeT('order_preview','הזמנה','Order')} #${ensuredNumber}`,
-          text: `${text}\n\n${orderUrl}`
-        });
-        setPreviewOrder(null);
-        return;
-      } catch (e) {
-        console.warn('Native share failed or cancelled', e);
-        if (e.name === 'AbortError') {
+        // Try native share with the image file attached
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
+          setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
+          
+          await navigator.share({
+            files: [file],
+            title: \`\${safeT('order_preview','הזמנה','Order')} #\${ensuredNumber}\`,
+            text: text
+          });
           setPreviewOrder(null);
           return;
         }
-        // If it's a NotAllowedError (like in the preview iframe), fall through to the custom chooser
-      }
-    }
-
-    // Always show chooser: Email or WhatsApp
-    setSendOptionOrder(order);
-    setShowSendOptions(true);
-
-    // Android: pre-render share image in background so the next tap can open share sheet instantly
-    try {
-      const isAndroid = /Android/i.test(navigator.userAgent || '');
-      if (isAndroid) {
-        setAndroidShareFile(null);
-        const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-        const temp = document.createElement('div');
-        temp.style.position = 'fixed';
-        temp.style.left = '-9999px';
-        temp.style.top = '0';
-        temp.style.width = '800px';
-        temp.style.background = 'white';
-        temp.style.padding = '32px';
-        temp.style.fontFamily = 'system-ui, sans-serif';
-        temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
-        temp.innerHTML = `
-          <div style="background: linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:24px;border-radius:16px 16px 0 0;margin:-32px -32px 16px -32px;text-align:center;">
-            <div style="font-size:28px;font-weight:800;">${order.supplier_name || ''}</div>
-            <div style="opacity:.9;margin-top:4px;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
-          </div>
-          <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
-            <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
-            ${order.restaurant_address ? `<div style=\"color:#334155\">${order.restaurant_address}</div>` : ''}
-            ${order.delivery_date ? `<div style=\"margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;\">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
-          </div>
-          <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
-            <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
-            <table style="width:100%;border-collapse:collapse;">
-              <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
-              <tbody>
-                ${(order.items || []).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-        document.body.appendChild(temp);
-        try {
-          const { default: html2canvas } = await import('html2canvas');
-          const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
-          const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-          if (blob) {
-            const file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
-            setAndroidShareFile(file);
-          }
-        } finally {
-          try { document.body.removeChild(temp); } catch {}
-        }
+        
+        // Fallback: download the image if share sheet isn't supported
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = \`order-\${ensuredNumber}.jpg\`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        
+        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
+        setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
+        setPreviewOrder(null);
+        return;
       }
     } catch (e) {
-      console.warn('[PreRender] could not prepare image for Android share:', e?.message || e);
+      console.warn('Failed to generate image', e);
+    } finally {
+      try { document.body.removeChild(temp); } catch {}
+    }
+
+    // Fallback if image generation completely fails
+    try {
+      base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
+      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: \`\${safeT('order_preview','הזמנה','Order')} #\${ensuredNumber}\`,
+          text: text
+        });
+      }
+      setPreviewOrder(null);
+    } catch (e) {
+      console.warn('Native share failed', e);
     }
   };
 
