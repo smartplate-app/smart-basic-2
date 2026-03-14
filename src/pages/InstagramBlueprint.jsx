@@ -174,13 +174,10 @@ export default function InstagramBlueprint() {
               <div className="flex-1 overflow-y-auto bg-white">
                 <div className="grid grid-cols-3 gap-0.5">
                   {gridPosts.map((post) => (
-                    <div key={post.id} className={`aspect-square ${post.image ? '' : post.bg} relative group cursor-pointer flex items-center justify-center p-2 text-center overflow-hidden`}>
-                      {post.image && (
-                        <img src={post.image} alt={post.title} className="absolute inset-0 w-full h-full object-cover" />
-                      )}
-                      {post.type === 'reel' && <PlaySquare className={`absolute top-1 right-1 w-4 h-4 z-10 ${post.image ? 'text-white drop-shadow-md' : 'text-black/50'}`} />}
-                      {post.type === 'carousel' && <Grid className={`absolute top-1 right-1 w-4 h-4 z-10 ${post.image ? 'text-white drop-shadow-md' : 'text-black/50'}`} />}
-                      {!post.image && <span className={`text-[10px] font-bold leading-tight ${post.text}`}>{post.title}</span>}
+                    <div key={post.id} className={`aspect-square ${post.bg} relative group cursor-pointer flex items-center justify-center p-2 text-center`}>
+                      {post.type === 'reel' && <PlaySquare className="absolute top-1 right-1 w-4 h-4 text-black/50" />}
+                      {post.type === 'carousel' && <Grid className="absolute top-1 right-1 w-4 h-4 text-black/50" />}
+                      <span className={`text-[10px] font-bold leading-tight ${post.text}`}>{post.title}</span>
                     </div>
                   ))}
                 </div>
