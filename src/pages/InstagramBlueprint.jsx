@@ -2,11 +2,76 @@ import React from "react";
 import { useLanguage } from "../components/LanguageProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, Grid, PlaySquare, Bookmark, User, Link as LinkIcon, Heart, MessageCircle, Share2, Info } from "lucide-react";
+import { Camera, Grid, PlaySquare, Bookmark, User, Link as LinkIcon, Heart, MessageCircle, Share2, Info, Download } from "lucide-react";
+import html2canvas from "html2canvas";
 
 export default function InstagramBlueprint() {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
+
+  const downloadPosts = [
+    { id: 1, title: '3 Mistakes Killing Your Restaurant Margins', bg: 'bg-blue-100', text: 'text-blue-800' },
+    { id: 2, title: 'How to Calculate Food Cost %', bg: 'bg-green-100', text: 'text-green-800' },
+    { id: 3, title: 'When the supplier raises prices again...', bg: 'bg-yellow-100', text: 'text-yellow-800' },
+    { id: 4, title: 'See your daily profit in real-time', bg: 'bg-purple-100', text: 'text-purple-800' },
+    { id: 5, title: 'Smart Plate vs. MarketMan', bg: 'bg-indigo-100', text: 'text-indigo-800' },
+    { id: 6, title: 'Taking inventory in 5 mins', bg: 'bg-pink-100', text: 'text-pink-800' },
+  ];
+
+  const handleDownload = async (post) => {
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'fixed';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '1080px';
+    tempContainer.style.height = '1080px';
+    tempContainer.style.display = 'flex';
+    tempContainer.style.alignItems = 'center';
+    tempContainer.style.justifyContent = 'center';
+    tempContainer.style.padding = '120px';
+    tempContainer.style.textAlign = 'center';
+    tempContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+    
+    const bgColors = {
+      'bg-blue-100': '#dbeafe',
+      'bg-green-100': '#dcfce7',
+      'bg-yellow-100': '#fef9c3',
+      'bg-purple-100': '#f3e8ff',
+      'bg-indigo-100': '#e0e7ff',
+      'bg-pink-100': '#fce7f3',
+    };
+    const textColors = {
+      'text-blue-800': '#1e40af',
+      'text-green-800': '#166534',
+      'text-yellow-800': '#854d0e',
+      'text-purple-800': '#6b21a8',
+      'text-indigo-800': '#3730a3',
+      'text-pink-800': '#9d174d',
+    };
+
+    tempContainer.style.backgroundColor = bgColors[post.bg] || '#ffffff';
+    tempContainer.style.color = textColors[post.text] || '#000000';
+    
+    tempContainer.innerHTML = `
+      <h1 style="font-size: 100px; font-weight: 800; line-height: 1.2; margin: 0;">
+        ${post.title}
+      </h1>
+    `;
+    
+    document.body.appendChild(tempContainer);
+    
+    try {
+      const canvas = await html2canvas(tempContainer, { scale: 1 });
+      const link = document.createElement('a');
+      link.download = `instagram-post-${post.id}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('Failed to download', err);
+    } finally {
+      document.body.removeChild(tempContainer);
+    }
+  };
 
   const gridPosts = [
     { id: 1, type: 'carousel', title: '3 Mistakes Killing Your Restaurant Margins', bg: 'bg-blue-100', text: 'text-blue-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/654f8dae6_generated_image.png' },
