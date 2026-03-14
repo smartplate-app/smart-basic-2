@@ -74,12 +74,12 @@ export default function InstagramBlueprint() {
   };
 
   const gridPosts = [
-    { id: 1, type: 'carousel', title: '3 Mistakes Killing Your Restaurant Margins', bg: 'bg-blue-100', text: 'text-blue-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/654f8dae6_generated_image.png' },
-    { id: 2, type: 'carousel', title: 'How to Calculate Food Cost % (Formula)', bg: 'bg-green-100', text: 'text-green-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/1e40cf317_generated_image.png' },
-    { id: 3, type: 'image', title: 'Meme: When the supplier raises prices again', bg: 'bg-yellow-100', text: 'text-yellow-800', icon: <Camera className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/95106c27f_generated_image.png' },
-    { id: 4, type: 'image', title: 'App UI: See your daily profit in real-time', bg: 'bg-purple-100', text: 'text-purple-800', icon: <Camera className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/4d7799fb7_generated_image.png' },
-    { id: 5, type: 'carousel', title: 'Smart Plate vs. MarketMan (Comparison)', bg: 'bg-indigo-100', text: 'text-indigo-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/f383ed239_generated_image.png' },
-    { id: 6, type: 'carousel', title: 'Behind the scenes: Taking inventory in 5 mins', bg: 'bg-pink-100', text: 'text-pink-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/b9cae71e9_generated_image.png' },
+    { id: 1, type: 'carousel', title: '3 Mistakes Killing Your Restaurant Margins', bg: 'bg-blue-100', text: 'text-blue-800', icon: <Grid className="w-6 h-6" /> },
+    { id: 2, type: 'carousel', title: 'How to Calculate Food Cost % (Formula)', bg: 'bg-green-100', text: 'text-green-800', icon: <Grid className="w-6 h-6" /> },
+    { id: 3, type: 'image', title: 'Meme: When the supplier raises prices again', bg: 'bg-yellow-100', text: 'text-yellow-800', icon: <Camera className="w-6 h-6" /> },
+    { id: 4, type: 'image', title: 'App UI: See your daily profit in real-time', bg: 'bg-purple-100', text: 'text-purple-800', icon: <Camera className="w-6 h-6" /> },
+    { id: 5, type: 'carousel', title: 'Smart Plate vs. MarketMan (Comparison)', bg: 'bg-indigo-100', text: 'text-indigo-800', icon: <Grid className="w-6 h-6" /> },
+    { id: 6, type: 'carousel', title: 'Behind the scenes: Taking inventory in 5 mins', bg: 'bg-pink-100', text: 'text-pink-800', icon: <Grid className="w-6 h-6" /> },
     { id: 7, type: 'image', title: 'Customer Testimonial: "Saved 4% on food cost"', bg: 'bg-orange-100', text: 'text-orange-800', icon: <Camera className="w-6 h-6" /> },
     { id: 8, type: 'image', title: 'Quote: "Profit is made in the prep"', bg: 'bg-teal-100', text: 'text-teal-800', icon: <Camera className="w-6 h-6" /> },
     { id: 9, type: 'reel', title: 'Stop guessing your labor costs. Do this instead.', bg: 'bg-rose-100', text: 'text-rose-800', icon: <PlaySquare className="w-6 h-6" /> },
