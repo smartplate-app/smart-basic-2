@@ -10,15 +10,33 @@ export default function InstagramBlueprint() {
   const isRTL = language === 'he' || language === 'ar';
 
   const downloadPosts = [
-    { id: 1, title: '3 Mistakes Killing Your Restaurant Margins', bg: 'bg-blue-100', text: 'text-blue-800' },
-    { id: 2, title: 'How to Calculate Food Cost %', bg: 'bg-green-100', text: 'text-green-800' },
-    { id: 3, title: 'When the supplier raises prices again...', bg: 'bg-yellow-100', text: 'text-yellow-800' },
-    { id: 4, title: 'See your daily profit in real-time', bg: 'bg-purple-100', text: 'text-purple-800' },
-    { id: 5, title: 'Smart Plate vs. MarketMan', bg: 'bg-indigo-100', text: 'text-indigo-800' },
-    { id: 6, title: 'Taking inventory in 5 mins', bg: 'bg-pink-100', text: 'text-pink-800' },
+    { id: 1, title: '3 Mistakes Killing Your Restaurant Margins', bg: 'bg-blue-100', text: 'text-blue-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/f4b2895e4_generated_image.png' },
+    { id: 2, title: 'How to Calculate Food Cost %', bg: 'bg-green-100', text: 'text-green-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/d54f2dbca_generated_image.png' },
+    { id: 3, title: 'When the supplier raises prices again...', bg: 'bg-yellow-100', text: 'text-yellow-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/57682e845_generated_image.png' },
+    { id: 4, title: 'See your daily profit in real-time', bg: 'bg-purple-100', text: 'text-purple-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/dc982c976_generated_image.png' },
+    { id: 5, title: 'Smart Plate vs. MarketMan', bg: 'bg-indigo-100', text: 'text-indigo-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/2b3a7bbd0_generated_image.png' },
+    { id: 6, title: 'Taking inventory in 5 mins', bg: 'bg-pink-100', text: 'text-pink-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/6611a3d19_generated_image.png' },
   ];
 
   const handleDownload = async (post) => {
+    if (post.image) {
+      try {
+        const response = await fetch(post.image);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `instagram-post-${post.id}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Failed to download image', err);
+      }
+      return;
+    }
+
     const tempContainer = document.createElement('div');
     tempContainer.style.position = 'fixed';
     tempContainer.style.left = '-9999px';
@@ -339,8 +357,12 @@ export default function InstagramBlueprint() {
                 {downloadPosts.map((post) => (
                   <div key={post.id} className="flex items-center justify-between p-4 bg-white border rounded-lg shadow-sm">
                     <div className="flex items-center gap-4">
-                      <div className={`w-16 h-16 rounded-md flex items-center justify-center text-center p-1 ${post.bg} ${post.text}`}>
-                        <span className="text-[8px] font-bold leading-tight">{post.title}</span>
+                      <div className={`w-16 h-16 rounded-md flex items-center justify-center text-center p-1 relative overflow-hidden ${post.bg} ${post.text}`}>
+                        {post.image ? (
+                          <img src={post.image} alt={post.title} className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-[8px] font-bold leading-tight">{post.title}</span>
+                        )}
                       </div>
                       <div>
                         <h4 className="font-bold text-gray-900">Post {post.id}</h4>
