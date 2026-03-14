@@ -328,6 +328,31 @@ export default function InstagramBlueprint() {
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>5. Download Post Images</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {downloadPosts.map((post) => (
+                  <div key={post.id} className="flex items-center justify-between p-4 bg-white border rounded-lg shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-16 h-16 rounded-md flex items-center justify-center text-center p-1 ${post.bg} ${post.text}`}>
+                        <span className="text-[8px] font-bold leading-tight">{post.title}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900">Post {post.id}</h4>
+                        <p className="text-sm text-gray-500">{post.title}</p>
+                      </div>
+                    </div>
+                    <Button onClick={() => handleDownload(post)} variant="outline" className="flex items-center gap-2">
+                      <Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
           </div>
 
         </div>
