@@ -673,15 +673,15 @@ export default function OrdersPage() {
       </div>
       <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
         <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
-        ${order.restaurant_address ? \`<div style="color:#334155">\${order.restaurant_address}</div>\` : ''}
-        ${order.delivery_date ? \`<div style="margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;">\${t('delivery_date') || 'Delivery'}: \${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>\` : ''}
+        ${order.restaurant_address ? `<div style="color:#334155">${order.restaurant_address}</div>` : ''}
+        ${order.delivery_date ? `<div style="margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
       </div>
       <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
         <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
         <table style="width:100%;border-collapse:collapse;">
           <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
           <tbody>
-            ${(order.items || []).map((it,i)=>\`<tr style="background:\${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">\${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">\${it.item_name||it.name||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">\${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">\${it.unit||''}</td></tr>\`).join('')}
+            ${(order.items || []).map((it,i)=>`<tr style="background:${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.item_name||it.name||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.unit||''}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>
