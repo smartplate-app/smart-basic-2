@@ -197,6 +197,72 @@ export default function InstagramBlueprint() {
                 </ul>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>4. Your First 6 Posts (Captions & Hashtags)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-2">Post 1: 3 Mistakes Killing Your Restaurant Margins (Carousel)</h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    Are you making these 3 common mistakes? 🤔
+                    1. Not tracking inventory weekly.
+                    2. Guessing your recipe costs.
+                    3. Ignoring labor percentage.
+                    If you want to fix this, Smart Plate automates it all for you. Link in bio to see how! 👇
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2 font-medium">#RestaurantOwner #FoodCost #RestaurantManagement #ChefLife #SmartPlate</p>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-2">Post 2: How to Calculate Food Cost % (Carousel)</h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    Knowing your food cost percentage is the first step to profitability! 📊
+                    Formula: (Beginning Inventory + Purchases - Ending Inventory) / Food Sales.
+                    Sound complicated? Smart Plate does it automatically. 💡
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2 font-medium">#RestaurantBusiness #FoodCostPercentage #RestaurantTips #HospitalityIndustry #SmartPlate</p>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-2">Post 3: Meme: When the supplier raises prices again (Image)</h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    We've all been there... 😅 When the supplier sneaks in a price increase and you only notice it weeks later.
+                    With Smart Plate, you get alerted instantly when prices change! 🛑📉
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2 font-medium">#RestaurantMemes #ChefMemes #SupplierProblems #RestaurantLife #SmartPlate</p>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-2">Post 4: App UI: See your daily profit in real-time (Image)</h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    Imagine knowing exactly how much money you made today before you even close the doors. 💸
+                    Smart Plate gives you real-time profit tracking so you can make decisions that matter. Click the link in our bio to try it out! 🚀
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2 font-medium">#RestaurantTech #ProfitMargins #RestaurantSoftware #SmartPlateApp #RestaurantOwner</p>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-2">Post 5: Smart Plate vs. MarketMan (Carousel)</h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    Why are restaurants switching to Smart Plate? 🔄
+                    It's simple, fast, and built for actual restaurant owners, not accountants. Swipe to see the difference! 👉
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2 font-medium">#RestaurantSoftware #MarketManAlternative #RestaurantOperations #FoodCostApp #SmartPlate</p>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-2">Post 6: Behind the scenes: Taking inventory in 5 mins (Carousel)</h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    Taking inventory doesn't have to take all night. 🕒
+                    See how our users cut their inventory time by 80% using Smart Plate's mobile scanner. Work smarter, not harder! 💪
+                  </p>
+                  <p className="text-xs text-blue-600 mt-2 font-medium">#InventoryManagement #RestaurantInventory #WorkSmarter #RestaurantHacks #SmartPlate</p>
+                </div>
+              </CardContent>
+            </Card>
+
           </div>
 
         </div>
