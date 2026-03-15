@@ -91,6 +91,22 @@ export default function DashboardPage() {
   const [categoryScanError, setCategoryScanError] = useState(null);
   const [consultPopupOpen, setConsultPopupOpen] = useState(false);
 
+  // Weekly POS Sales
+  const [weeklySalesRecords, setWeeklySalesRecords] = useState([]);
+  const [showSalesImportModal, setShowSalesImportModal] = useState(false);
+  const [showMondayReminder, setShowMondayReminder] = useState(false);
+
+  useEffect(() => {
+    const today = new Date();
+    if (today.getDay() === 1) { // Monday
+      const key = `pos_reminder_${today.toISOString().slice(0,10)}`;
+      if (!localStorage.getItem(key)) {
+        setShowMondayReminder(true);
+        localStorage.setItem(key, '1');
+      }
+    }
+  }, []);
+
   useEffect(() => {
     loadData();
   }, [selectedMonth]);
