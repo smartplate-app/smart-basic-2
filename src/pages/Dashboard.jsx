@@ -1745,6 +1745,41 @@ export default function DashboardPage() {
                 </TabsContent>
           </Tabs>
       </div>
+
+      <SalesImportModal 
+        isOpen={showSalesImportModal} 
+        onClose={() => setShowSalesImportModal(false)} 
+        onSave={() => loadData()} 
+      />
+
+      <Dialog open={showMondayReminder} onOpenChange={setShowMondayReminder}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
+              {language === 'he' ? 'תזכורת: ייבוא מכירות שבועיות' : 'Reminder: Import Weekly Sales'}
+            </DialogTitle>
+            <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
+              {language === 'he' 
+                ? 'היום יום שני! אל תשכח להעלות צילום מסך של נתוני המכירות מהקופה (POS) של השבוע שעבר כדי לשמור על מעקב מדויק.' 
+                : 'It\'s Monday! Don\'t forget to upload a screenshot of your POS sales data from last week to keep your tracking accurate.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowMondayReminder(false)}>
+              {language === 'he' ? 'אחר כך' : 'Later'}
+            </Button>
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                setShowMondayReminder(false);
+                setShowSalesImportModal(true);
+              }}
+            >
+              {language === 'he' ? 'ייבא עכשיו' : 'Import Now'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
