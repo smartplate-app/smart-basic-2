@@ -212,17 +212,24 @@ export default function DashboardPage() {
       const monthEnd = moment(selectedMonth).endOf('month');
       const endDate = today.isBefore(monthEnd) && today.isAfter(monthStart) ? today : monthEnd;
 
-      const [allDashboardData, allSchedules, allReceipts, allOrders, incomingTransfers, outgoingTransfers, allCounts] = await Promise.all([
+      const [allDashboardData, allSchedules, allReceipts, allOrders, incomingTransfers, outgoingTransfers, allCounts, allWeeklySales] = await Promise.all([
         base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: selectedMonth }),
         base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
         base44.entities.SupplyReceipt.filter({ created_by: workingEmail }),
         base44.entities.Order.filter({ created_by: workingEmail }),
         base44.entities.InventoryTransfer.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }),
         base44.entities.InventoryTransfer.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' }),
-        base44.entities.InventoryCount.filter({ created_by: workingEmail }, "-count_date")
+        base44.entities.InventoryCount.filter({ created_by: workingEmail }, "-count_date"),
+        base44.entities.WeeklySalesRecord.filter({ created_by: workingEmail }, "-week_start_date")
       ]);
 
       setInventoryCounts(allCounts);
+      
+      const filteredWeeklySales = allWeeklySales.filter(ws => {
+         const d = moment(ws.week_start_date);
+         return d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate);
+      });
+      setWeeklySalesRecords(filteredWeeklySales);
 
       // Process dashboard data
       const existingData = allDashboardData[0];
