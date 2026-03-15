@@ -583,12 +583,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
           <Button
             onClick={() => { if (onSend) onSend(order); }}
-            className="w-full sm:flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium shadow-sm disabled:opacity-50"
+            className="w-full sm:flex-1 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50"
             disabled={downloading}
             data-testid="order-preview-send"
           >
-            <Share className="w-5 h-5 mr-2" />
-            {safeT('send','שלח','Send')}
+            <MessageCircle className="w-5 h-5 mr-2" />
+            {safeT('send_message','הודעה / וואטסאפ / אימייל','Message / WhatsApp / Email')}
           </Button>
         </div>
       </motion.div>
