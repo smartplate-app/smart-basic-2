@@ -694,7 +694,7 @@ export default function OrdersPage() {
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
       
       if (blob) {
-        const file = new File([blob], \`order-\${ensuredNumber}.jpg\`, { type: 'image/jpeg' });
+        const file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
         
         // Try native share with the image file attached
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -703,7 +703,7 @@ export default function OrdersPage() {
           
           await navigator.share({
             files: [file],
-            title: \`\${safeT('order_preview','הזמנה','Order')} #\${ensuredNumber}\`,
+            title: `${safeT('order_preview','הזמנה','Order')} #${ensuredNumber}`,
             text: text
           });
           setPreviewOrder(null);
@@ -714,7 +714,7 @@ export default function OrdersPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = \`order-\${ensuredNumber}.jpg\`;
+        a.download = `order-${ensuredNumber}.jpg`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -738,7 +738,7 @@ export default function OrdersPage() {
       
       if (navigator.share) {
         await navigator.share({
-          title: \`\${safeT('order_preview','הזמנה','Order')} #\${ensuredNumber}\`,
+          title: `${safeT('order_preview','הזמנה','Order')} #${ensuredNumber}`,
           text: text
         });
       }
