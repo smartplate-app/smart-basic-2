@@ -861,8 +861,8 @@ export default function OrdersPage() {
       try {
         const { default: html2canvas } = await import('html2canvas');
         const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-        if (blob) file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (blob) file = new File([blob], `order-${ensuredNumber}.png`, { type: 'image/png' });
       } catch (e) {
         console.warn('[WhatsApp Share] Failed to render image, will proceed with text only:', e?.message || e);
       } finally {
@@ -900,9 +900,15 @@ export default function OrdersPage() {
         copiedText = true;
       } catch (_) {}
     }
-    // Android hint: if copiedImage is true, WhatsApp usually offers "Paste" bubble when opening chat
-
-
+    
+    // Alert user on desktop if copied successfully
+    if (copiedImage && !isAndroid && !isIOS) {
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Mac/.test(navigator.userAgent);
+      const pasteKey = isMac ? 'Cmd+V' : 'Ctrl+V';
+      alert(language === 'he' 
+        ? `התמונה הועתקה! וואטסאפ ייפתח כעת, פשוט לחץ ${pasteKey} בתוך הצ'אט כדי להדביק ולשלוח.` 
+        : `Image copied! WhatsApp will open now, just press ${pasteKey} in the chat to paste and send.`);
+    }
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
     // In editor preview (iframe) or desktop browsers, open in a new tab to avoid wa.me X-Frame-Options blocking
