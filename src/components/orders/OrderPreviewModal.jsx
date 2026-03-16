@@ -554,7 +554,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
                           {/* Footer */}
                           <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e5e7eb', color: '#6b7280' }}>
-                              <p style={{ fontSize: '12px', margin: 0 }}>Smart Plate - the ultimate food & labor cost app for restaurants</p>
+                              <p style={{ fontSize: '12px', margin: 0, textTransform: 'uppercase' }}>SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTURANT</p>
                           </div>
                       </div>
                   </div>
