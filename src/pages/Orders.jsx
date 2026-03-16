@@ -654,7 +654,7 @@ export default function OrdersPage() {
     if (!order) return;
 
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-    const text = `${safeT('whatsapp_intro', 'שלום, התקבלה הזמנה חדשה.', 'Hello, a new order has arrived.')}\n\n*${safeT('order_from', 'מאת', 'From')}:* ${order.restaurant_name || ''}\n*${safeT('order_number', 'מספר הזמנה', 'Order')}:* ${ensuredNumber}`;
+    const text = `You have received a new order from "${order.restaurant_name || ''}"\n\n*${safeT('order_number', 'מספר הזמנה', 'Order')}:* ${ensuredNumber}`;
     
     // Generate image
     const temp = document.createElement('div');
