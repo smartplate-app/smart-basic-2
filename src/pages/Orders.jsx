@@ -692,6 +692,7 @@ export default function OrdersPage() {
       const { default: html2canvas } = await import('html2canvas');
       const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+      const pngBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
       
       if (blob) {
         const file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
@@ -710,15 +711,45 @@ export default function OrdersPage() {
           return;
         }
         
-        // Fallback: download the image if share sheet isn't supported
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `order-${ensuredNumber}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
+        // Fallback for Desktop: Try to copy to clipboard first
+        let copied = false;
+        if (navigator.clipboard && window.ClipboardItem && pngBlob) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                'text/plain': new Blob([text], { type: 'text/plain' }),
+                'image/png': pngBlob
+              })
+            ]);
+            copied = true;
+            alert(language === 'he' ? 'התמונה והטקסט הועתקו ללוח! אפשר להדביק בוואטסאפ (Ctrl+V)' : 'Image and text copied to clipboard! You can paste it in WhatsApp (Ctrl+V)');
+          } catch (err) {
+            console.warn('Clipboard copy with text failed, trying image only', err);
+            try {
+              await navigator.clipboard.write([
+                new ClipboardItem({
+                  'image/png': pngBlob
+                })
+              ]);
+              copied = true;
+              alert(language === 'he' ? 'התמונה הועתקה ללוח! אפשר להדביק בוואטסאפ (Ctrl+V)' : 'Image copied to clipboard! You can paste it in WhatsApp (Ctrl+V)');
+            } catch (err2) {
+              console.warn('Clipboard copy failed', err2);
+            }
+          }
+        }
+
+        // If clipboard copy failed or isn't supported, fallback to download
+        if (!copied) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `order-${ensuredNumber}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          a.remove();
+        }
         
         base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
         setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
