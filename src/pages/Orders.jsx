@@ -784,7 +784,7 @@ export default function OrdersPage() {
       
       if (navigator.share) {
         await navigator.share({
-          title: `You have received an order from "${order.restaurant_name || ''}" via Smart Plate Basic ordering system`,
+          title: `You have received a new order from "${order.restaurant_name || ''}"`,
           text: text
         });
       }
