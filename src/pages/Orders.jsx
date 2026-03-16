@@ -796,10 +796,9 @@ export default function OrdersPage() {
 
   const sendOrderToWhatsApp = async (order, opts = {}) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-    const intro = safeT('whatsapp_intro', 'שלום, התקבלה הזמנה חדשה.', 'Hello, a new order has arrived.');
-  const fromLbl = safeT('order_from', 'מאת', 'From');
+    const intro = `You have received a new order from "${order.restaurant_name || ''}"`;
   const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
-  const text = `${intro}\n\n*${fromLbl}:* ${order.restaurant_name || ''}\n*${numLbl}:* ${ensuredNumber}`;
+  const text = `${intro}\n\n*${numLbl}:* ${ensuredNumber}`;
     const isAndroid = /Android/i.test(navigator.userAgent || '');
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
     // No pre-opened tabs to avoid blockers/new-tab flashes
