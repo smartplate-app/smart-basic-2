@@ -707,7 +707,7 @@ export default function OrdersPage() {
           
           await navigator.share({
             files: [file],
-            title: `You have received an order from "${order.restaurant_name || ''}" via Smart Plate Basic ordering system`,
+            title: `You have received a new order from "${order.restaurant_name || ''}"`,
             text: text
           });
           setPreviewOrder(null);
