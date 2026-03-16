@@ -206,7 +206,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           try {
             if (!navigator.canShare || navigator.canShare({ files: [file] })) {
               setDownloading(false);
-              await navigator.share({ files: [file], title: `${language === 'he' ? 'הזמנה' : 'Order'} #${number}` });
+              await navigator.share({ files: [file], title: `You have received an order from "${order.restaurant_name || ''}" via Smart Plate Basic ordering system` });
               return;
             } else {
               // Some Safari versions can't share files — show guidance instead of sending a link
