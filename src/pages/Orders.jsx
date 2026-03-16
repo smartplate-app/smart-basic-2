@@ -722,7 +722,6 @@ export default function OrdersPage() {
               })
             ]);
             copied = true;
-            alert(language === 'he' ? 'התמונה והטקסט הועתקו ללוח! אפשר להדביק בוואטסאפ (Ctrl+V)' : 'Image and text copied to clipboard! You can paste it in WhatsApp (Ctrl+V)');
           } catch (err) {
             console.warn('Clipboard copy with text failed, trying image only', err);
             try {
@@ -732,15 +731,28 @@ export default function OrdersPage() {
                 })
               ]);
               copied = true;
-              alert(language === 'he' ? 'התמונה הועתקה ללוח! אפשר להדביק בוואטסאפ (Ctrl+V)' : 'Image copied to clipboard! You can paste it in WhatsApp (Ctrl+V)');
             } catch (err2) {
               console.warn('Clipboard copy failed', err2);
             }
           }
         }
 
-        // If clipboard copy failed or isn't supported, fallback to download
-        if (!copied) {
+        if (copied) {
+          const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Mac/.test(navigator.userAgent);
+          const pasteKey = isMac ? 'Cmd+V' : 'Ctrl+V';
+          alert(language === 'he' 
+            ? `התמונה הועתקה! וואטסאפ ייפתח כעת, פשוט לחץ ${pasteKey} בתוך הצ'אט כדי להדביק ולשלוח.` 
+            : `Image copied! WhatsApp will open now, just press ${pasteKey} in the chat to paste and send.`);
+          
+          const rawPhone = String(order.supplier_phone || '').trim();
+          let phone = rawPhone.replace(/[^\d+]/g, '');
+          if (phone.startsWith('+')) phone = phone.slice(1);
+          if (phone.startsWith('00')) phone = phone.slice(2);
+          
+          const waUrl = phone ? `https://wa.me/${phone}` : `https://wa.me/`;
+          window.open(waUrl, '_blank');
+        } else {
+          // If clipboard copy failed or isn't supported, fallback to download
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
