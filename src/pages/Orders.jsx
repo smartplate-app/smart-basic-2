@@ -784,7 +784,7 @@ export default function OrdersPage() {
       
       if (navigator.share) {
         await navigator.share({
-          title: `${safeT('order_preview','הזמנה','Order')} #${ensuredNumber}`,
+          title: `You have received an order from "${order.restaurant_name || ''}" via Smart Plate Basic ordering system`,
           text: text
         });
       }
