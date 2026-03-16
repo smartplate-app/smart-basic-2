@@ -881,7 +881,7 @@ export default function OrdersPage() {
       const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
       if (canShareFiles) {
         try {
-          await navigator.share({ files: [file], text, title: `${safeT('order_preview','תצוגת הזמנה','Order')} #${ensuredNumber}` });
+          await navigator.share({ files: [file], text, title: `You have received an order from "${order.restaurant_name || ''}" via Smart Plate Basic ordering system` });
           return;
         } catch (e) {
           console.warn('[WA Image Share] Share failed, falling back:', e?.name || e);
