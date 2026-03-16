@@ -11,15 +11,33 @@ export default function WelcomePublic() {
 
   useEffect(() => {
     document.title = "Smart Plate Basic | Food Cost & Labor Cost Management App for Restaurants";
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute("content", "The ultimate food cost app and labor cost management app for restaurants and bars. A smarter alternative to MarketMan and Zest. Track inventory, schedule staff, and keep costs under 60%.");
-    } else {
-      const meta = document.createElement('meta');
-      meta.name = "description";
-      meta.content = "The ultimate food cost app and labor cost management app for restaurants and bars. A smarter alternative to MarketMan and Zest. Track inventory, schedule staff, and keep costs under 60%.";
-      document.head.appendChild(meta);
-    }
+    
+    const setMetaTag = (name, content, isProperty = false) => {
+      const attr = isProperty ? 'property' : 'name';
+      let meta = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(attr, name);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute("content", content);
+    };
+
+    // Standard SEO
+    setMetaTag("description", "The ultimate food cost app and labor cost management app for restaurants and bars. A smarter alternative to MarketMan and Zest. Track inventory, schedule staff, and keep costs under 60%.");
+    setMetaTag("keywords", "food cost app, restaurant management software, labor cost app, restaurant profit, Smart Plate, MarketMan alternative");
+    
+    // Open Graph / Facebook
+    setMetaTag("og:type", "website", true);
+    setMetaTag("og:title", "Smart Plate | The Ultimate Food Cost App", true);
+    setMetaTag("og:description", "Stop guessing, start profiting. Track inventory, calculate food costs, and manage suppliers with the ultimate app for restaurants.", true);
+    setMetaTag("og:image", "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg", true);
+    
+    // Twitter
+    setMetaTag("twitter:card", "summary_large_image", false);
+    setMetaTag("twitter:title", "Smart Plate | The Ultimate Food Cost App", false);
+    setMetaTag("twitter:description", "Stop guessing, start profiting. Track inventory, calculate food costs, and manage suppliers with the ultimate app for restaurants.", false);
+    setMetaTag("twitter:image", "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg", false);
   }, []);
 
   const handleSignIn = async () => {
