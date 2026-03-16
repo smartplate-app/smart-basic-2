@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     const toHeader = recipients.join(', ');
 
     // Compose email (English-only to avoid garbled subjects)
-    const subject = (body?.subject && String(body.subject)) || 'New order from Smart Plate Basic';
+    const subject = (body?.subject && String(body.subject)) || `New order from ${order.restaurant_name || ''} via Smart Plate Basic App`;
     const adminCc = 'admin@smartplate.org';
     const replyTo = (body?.reply_to_override && String(body.reply_to_override)) || user.email || 'no-reply@smartplate.org';
     const fromDisplay = 'Smart Plate basic';

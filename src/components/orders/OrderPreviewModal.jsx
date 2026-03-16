@@ -208,8 +208,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
               setDownloading(false);
               await navigator.share({ 
                 files: [file], 
-                title: `You have received a new order from "${order.restaurant_name || ''}"`,
-                text: `You have received a new order from "${order.restaurant_name || ''}"`
+                title: `You have received a new order from "${order.restaurant_name || ''}" via Smart Plate Basic App`,
+                text: `You have received a new order from "${order.restaurant_name || ''}" via Smart Plate Basic App`
               });
               return;
             } else {
