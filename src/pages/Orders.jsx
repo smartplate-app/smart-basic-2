@@ -703,6 +703,7 @@ export default function OrdersPage() {
         // Try native share with the image file attached
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
           base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
+          try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
           setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
           
           await navigator.share({
@@ -767,6 +768,7 @@ export default function OrdersPage() {
         }
         
         base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
+        try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
         setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
         setPreviewOrder(null);
         return;
@@ -780,6 +782,7 @@ export default function OrdersPage() {
     // Fallback if image generation completely fails
     try {
       base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
+      try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
       setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
       
       if (navigator.share) {
@@ -985,6 +988,7 @@ export default function OrdersPage() {
         const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
         return { ...o, status: 'sent', order_number: num };
       }));
+      try { base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id }).catch(() => {}); } catch (e) {}
       sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
       setPreviewOrder(null);
       await loadData(user);
@@ -1028,6 +1032,7 @@ export default function OrdersPage() {
       // Background: mark as sent and refresh (no blocking)
       setTimeout(() => {
         base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number }).catch(() => {});
+        try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
         loadData(user).catch(() => {});
       }, 200);
 
