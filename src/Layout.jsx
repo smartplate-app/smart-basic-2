@@ -725,7 +725,7 @@ const AppLayout = ({ children, currentPageName }) => {
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
     currentPageName === 'Welcome' ||
-    (currentPageName === 'WelcomePublic' && !isPreview) ||
+    currentPageName === 'WelcomePublic' ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
