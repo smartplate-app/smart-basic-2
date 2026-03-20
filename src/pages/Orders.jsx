@@ -79,6 +79,7 @@ export default function OrdersPage() {
   }, []);
 
   // Pre-generate share image to avoid losing user gesture on iOS Safari
+  // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
   useEffect(() => {
     if (!previewOrder) {
       setPregeneratedShareFile(null);
