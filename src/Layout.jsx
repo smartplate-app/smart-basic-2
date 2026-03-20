@@ -929,9 +929,9 @@ const AppLayout = ({ children, currentPageName }) => {
                               </>
                             )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs font-bold text-black dark:text-white tracking-wide">shiran &amp; help draft</span>
-                            <span className="text-black dark:text-white text-sm">❤️</span>
+                          <div className="flex flex-col items-center">
+                            <span className="text-lg font-bold text-black dark:text-white tracking-wide">BASIC</span>
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 tracking-wider">food cost app</span>
                           </div>
                         </div>
                         <div className="flex items-center">
