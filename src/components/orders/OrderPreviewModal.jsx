@@ -256,6 +256,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
 
 
+        // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
         const handleDownloadJPG = async () => {
           try {
             setDownloading(true);
