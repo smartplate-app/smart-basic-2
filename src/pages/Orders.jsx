@@ -879,6 +879,7 @@ export default function OrdersPage() {
     }
   };
 
+  // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
   const sendOrderToWhatsApp = async (order, opts = {}) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const intro = `You have received a new order from "${order.restaurant_name || ''}"`;
