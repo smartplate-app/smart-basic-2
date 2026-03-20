@@ -129,7 +129,7 @@ export default function OrdersPage() {
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
         const pngBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
         if (blob && !isCancelled) {
-          const file = new File([blob], \`order-\${ensuredNumber}.jpg\`, { type: 'image/jpeg' });
+          const file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
           setPregeneratedShareFile(file);
           setPregeneratedPngBlob(pngBlob);
         }
