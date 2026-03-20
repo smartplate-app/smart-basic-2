@@ -34,6 +34,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [previewOrder, setPreviewOrder] = useState(null);
+  const [pregeneratedShareFile, setPregeneratedShareFile] = useState(null);
+  const [pregeneratedPngBlob, setPregeneratedPngBlob] = useState(null);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const [authLoading, setAuthLoading] = useState(true);
