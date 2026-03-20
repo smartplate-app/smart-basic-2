@@ -586,12 +586,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
           </Button>
 
           <Button
-            onClick={() => { if (onSend) onSend(order); }}
+            onClick={async () => { 
+              if (onSend) {
+                setSending(true);
+                try { await onSend(order); } catch (e) {}
+                setSending(false);
+              }
+            }}
             className="w-full sm:flex-1 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50"
-            disabled={downloading}
+            disabled={downloading || sending}
             data-testid="order-preview-send"
           >
-            <MessageCircle className="w-5 h-5 mr-2" />
+            {sending ? <Loader className="w-5 h-5 mr-2 animate-spin" /> : <MessageCircle className="w-5 h-5 mr-2" />}
             {safeT('send_message','הודעה / וואטסאפ / אימייל','Message / WhatsApp / Email')}
           </Button>
         </div>
