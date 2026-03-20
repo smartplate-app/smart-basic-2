@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { X, Smartphone, Monitor, Copy, Check, Download, Share, MessageCircle } from 'lucide-react';
+import { X, Smartphone, Monitor, Copy, Check, Download, Share, MessageCircle, Loader } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
