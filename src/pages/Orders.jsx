@@ -10,6 +10,7 @@ import { useLanguage } from "../components/LanguageProvider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import html2canvas from 'html2canvas';
 
 import OrderForm from "../components/orders/OrderForm";
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
