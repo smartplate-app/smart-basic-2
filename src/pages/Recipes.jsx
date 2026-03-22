@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "../components/LanguageProvider";
 import { Plus, Search, Edit, Trash2, ChefHat, Lock, Package, FileSpreadsheet } from "lucide-react";
 import RecipeForm from "../components/recipes/RecipeForm";
+import ImportIngredientsModal from "../components/recipes/ImportIngredientsModal";
 
 export default function RecipesPage() {
   const { language } = useLanguage();
@@ -19,6 +20,7 @@ export default function RecipesPage() {
   
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const handleAuth = (e) => {
     e.preventDefault();
