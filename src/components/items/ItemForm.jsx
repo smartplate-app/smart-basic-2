@@ -299,7 +299,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label htmlFor="units_per_package">{t('units_per_package')}</Label>
             <Input
@@ -314,6 +314,40 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
           </div>
 
           <div>
+            <Label htmlFor="content_per_unit">{language === 'he' ? 'תכולה ליחידה' : 'Content per unit'}</Label>
+            <Input
+              id="content_per_unit"
+              type="number"
+              value={currentItem.content_per_unit || ''}
+              onChange={(e) => setCurrentItem({...currentItem, content_per_unit: parseFloat(e.target.value) || 1})}
+              min="0.01"
+              step="0.01"
+            />
+            <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'כמה יש ביחידה אחת (למשל 330 לפחית)' : 'Amount per single unit'}</p>
+          </div>
+
+          <div>
+            <Label htmlFor="content_unit">{language === 'he' ? 'יחידת מידה לתכולה' : 'Content unit'}</Label>
+            <Select 
+              value={currentItem.content_unit || "unit"}
+              onValueChange={(value) => handleChange("content_unit", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('unit_type')} />
+              </SelectTrigger>
+              <SelectContent>
+                {UNITS.filter(u => u.value !== 'case').map(unit => (
+                  <SelectItem key={unit.value} value={unit.value}>
+                    {unit.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
             <Label htmlFor="price">{t('price_per_product')}</Label>
             <Input
               id="price"
@@ -324,7 +358,6 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               step="0.01"
             />
           </div>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
