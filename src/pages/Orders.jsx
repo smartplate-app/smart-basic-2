@@ -1592,7 +1592,7 @@ export default function OrdersPage() {
                                   e.stopPropagation();
                                   handleResend(order);
                                 }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                className="bg-orange-500 hover:bg-orange-600 text-white"
                               >
                                 <Share className="w-3 h-3 mr-1" />
                                 {safeT('share','שתף','Share')}
