@@ -115,30 +115,33 @@ export default function MenuEngineeringPage() {
   const avgVolume = validItemsCount > 0 ? totalVolume / validItemsCount : 0;
   const avgProfit = totalVolume > 0 ? totalProfit / totalVolume : 0;
   const overallFoodCostPercent = totalRevenue > 0 ? (totalFoodCost / totalRevenue) * 100 : 0;
+  const avgMix = validItemsCount > 0 ? 100 / validItemsCount : 0;
 
   const categorizedItems = itemsData.map(item => {
     let category = "";
     let color = "";
     const mixPercent = totalVolume > 0 ? (item.qty / totalVolume) * 100 : 0;
+    const isHighMix = mixPercent >= avgMix;
+    const isHighProfit = item.itemProfit >= avgProfit;
 
     if (item.qty === 0) {
       category = language === 'he' ? 'אין מכירות' : 'No Sales';
-      color = "bg-gray-100 text-gray-600";
-    } else if (item.qty >= avgVolume && item.itemProfit >= avgProfit) {
+      color = "bg-gray-100 text-gray-600 border-gray-200";
+    } else if (isHighMix && isHighProfit) {
       category = language === 'he' ? 'כוכב' : 'Star';
-      color = "bg-green-100 text-green-700";
-    } else if (item.qty >= avgVolume && item.itemProfit < avgProfit) {
+      color = "bg-green-50 text-green-700 border-green-200";
+    } else if (isHighMix && !isHighProfit) {
       category = language === 'he' ? 'סוס עבודה' : 'Plowhorse';
-      color = "bg-blue-100 text-blue-700";
-    } else if (item.qty < avgVolume && item.itemProfit >= avgProfit) {
+      color = "bg-blue-50 text-blue-700 border-blue-200";
+    } else if (!isHighMix && isHighProfit) {
       category = language === 'he' ? 'חידה' : 'Puzzle';
-      color = "bg-yellow-100 text-yellow-700";
+      color = "bg-yellow-50 text-yellow-700 border-yellow-200";
     } else {
       category = language === 'he' ? 'כלב' : 'Dog';
-      color = "bg-red-100 text-red-700";
+      color = "bg-red-50 text-red-700 border-red-200";
     }
 
-    return { ...item, category, color, mixPercent };
+    return { ...item, category, color, mixPercent, isHighMix, isHighProfit };
   });
 
   return (
@@ -262,74 +265,156 @@ export default function MenuEngineeringPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50/50 border-b text-gray-500">
-                <tr>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שם הפריט' : 'Item Name'}</th>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'קטגוריה' : 'Category'}</th>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'נמכר' : 'Sold'}</th>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות מזון' : 'Food Cost'}</th>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</th>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תרומה' : 'Contribution'}</th>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? '% תמהיל' : 'Mix %'}</th>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סיווג' : 'Classification'}</th>
-                  <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'פעולות' : 'Actions'}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {categorizedItems.map(item => (
-                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-900">{item.name}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+        {/* Content Area */}
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {categorizedItems.map(item => (
+              <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-white border border-gray-200 rounded-2xl">
+                <CardContent className="p-5">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
+                      <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md mt-2 font-medium border border-gray-200">
                         {language === 'he' ? 'כללי' : 'General'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
+                    </div>
+                    <span className={`px-2 py-1 rounded-md text-xs font-bold border ${item.color}`}>
+                      {item.category}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm mb-5">
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מספר שנמכר' : 'Sold Count'}</div>
                       <Input
                         type="number"
                         min="0"
                         value={item.qty || ''}
                         onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                        className="w-20 h-8 text-center bg-transparent border-gray-200"
+                        className="w-24 h-8 px-2 py-1 text-sm font-bold bg-gray-50 border-gray-200"
                         placeholder="0"
                       />
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">₪{item.cost.toFixed(2)}</td>
-                    <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePrice) * 100).toFixed(1)}%` : '0.0%'}</td>
-                    <td className="px-6 py-4 text-gray-600">{item.mixPercent.toFixed(1)}%</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.color}`}>
-                        {item.category}
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תמהיל תפריט %' : 'Menu Mix %'}</div>
+                      <div className="font-bold text-gray-900 h-8 flex items-center">{item.mixPercent.toFixed(1)}%</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'עלות מזון' : 'Food Cost'}</div>
+                      <div className="font-bold text-gray-900">₪{item.cost.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</div>
+                      <div className="font-bold text-gray-900">₪{item.salePrice.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לפריט' : 'Item Contribution'}</div>
+                      <div className="font-bold text-green-600">₪{item.itemProfit.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לתפריט' : 'Total Contribution'}</div>
+                      <div className="font-bold text-green-600">₪{item.totalItemProfit.toFixed(2)}</div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <div className="flex gap-3 text-xs font-medium">
+                      <span className={item.isHighMix ? 'text-green-600' : 'text-red-500'}>
+                        {language === 'he' ? 'תמהיל: ' : 'Mix: '}
+                        {item.isHighMix ? (language === 'he' ? 'גבוה' : 'High') : (language === 'he' ? 'נמוך' : 'Low')}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors">
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {categorizedItems.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
-                      {language === 'he' ? 'לא נמצאו מנות למכירה' : 'No sale items found'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      <span className={item.isHighProfit ? 'text-green-600' : 'text-red-500'}>
+                        {language === 'he' ? 'תרומה: ' : 'Contribution: '}
+                        {item.isHighProfit ? (language === 'he' ? 'גבוהה' : 'High') : (language === 'he' ? 'נמוכה' : 'Low')}
+                      </span>
+                    </div>
+                    <div className="flex gap-1">
+                      <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {categorizedItems.length === 0 && !loading && (
+              <div className="col-span-full py-12 text-center text-gray-500">
+                {language === 'he' ? 'לא נמצאו מנות למכירה' : 'No sale items found'}
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50/50 border-b text-gray-500">
+                  <tr>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שם הפריט' : 'Item Name'}</th>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'קטגוריה' : 'Category'}</th>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'נמכר' : 'Sold'}</th>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות מזון' : 'Food Cost'}</th>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</th>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תרומה' : 'Contribution'}</th>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? '% תמהיל' : 'Mix %'}</th>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סיווג' : 'Classification'}</th>
+                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'פעולות' : 'Actions'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {categorizedItems.map(item => (
+                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-gray-900">{item.name}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+                          {language === 'he' ? 'כללי' : 'General'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Input
+                          type="number"
+                          min="0"
+                          value={item.qty || ''}
+                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                          className="w-20 h-8 text-center bg-transparent border-gray-200"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-6 py-4 text-gray-600">₪{item.cost.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
+                      <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePrice) * 100).toFixed(1)}%` : '0.0%'}</td>
+                      <td className="px-6 py-4 text-gray-600">{item.mixPercent.toFixed(1)}%</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${item.color}`}>
+                          {item.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {categorizedItems.length === 0 && !loading && (
+                    <tr>
+                      <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
+                        {language === 'he' ? 'לא נמצאו מנות למכירה' : 'No sale items found'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

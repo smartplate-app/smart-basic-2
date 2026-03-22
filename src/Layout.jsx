@@ -247,7 +247,7 @@ const AppLayout = ({ children, currentPageName }) => {
           { title: language === 'he' ? 'דוחות COGS' : 'COGS Reports', url: createPageUrl("CogsReports"), icon: BarChart3, adminOnly: false, workerHidden: false },
           { title: language === 'he' ? 'דיווח בזבוז' : 'Waste', url: createPageUrl("WasteReports"), icon: TrendingDown, adminOnly: false, workerHidden: false },
           { title: language === 'he' ? 'מתכונים' : 'Recipes', url: createPageUrl("Recipes"), icon: ChefHat, adminOnly: false, workerHidden: false },
-          { title: language === 'he' ? 'הנדסת תפריט' : 'Menu Engineering', url: createPageUrl("MenuEngineering"), icon: Calculator, adminOnly: false, workerHidden: false },
+          { title: language === 'he' ? 'מחשבון הנדסת תפריט' : 'Menu Engineering Calculator', url: createPageUrl("MenuEngineering"), icon: Calculator, adminOnly: false, workerHidden: false },
           { title: language === 'he' ? 'העברות מלאי' : 'Inventory Transfers', url: createPageUrl("InventoryTransfers"), icon: ArrowLeftRight, adminOnly: false, workerHidden: true },
           { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
 
