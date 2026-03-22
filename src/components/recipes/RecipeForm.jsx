@@ -86,9 +86,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     setLoading(false);
   };
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const filteredItems = items.filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ).slice(0, 5);
+  );
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
