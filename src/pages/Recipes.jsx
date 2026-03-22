@@ -112,7 +112,7 @@ export default function RecipesPage() {
               className="bg-white text-[#d4a373] hover:bg-gray-50 border-none rounded-full px-6 font-bold"
             >
               <FileSpreadsheet className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'ייבא מתכונים' : 'Import Recipes'}
+              {language === 'he' ? 'ייבא מרכיבים' : 'Import Ingredients'}
             </Button>
             <Button 
               onClick={() => { setEditingRecipe(null); setShowForm(true); }}
