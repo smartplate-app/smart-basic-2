@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Trash2, Plus, Search } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function RecipeForm({ recipe, onSave, onCancel }) {
   const { language } = useLanguage();
