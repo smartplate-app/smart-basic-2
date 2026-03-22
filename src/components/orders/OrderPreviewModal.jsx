@@ -595,7 +595,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 setSending(false);
               }
             }}
-            className="w-full sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium shadow-sm disabled:opacity-50"
+            className="w-full sm:flex-1 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50"
             disabled={downloading || sending}
             data-testid="order-preview-send"
           >
