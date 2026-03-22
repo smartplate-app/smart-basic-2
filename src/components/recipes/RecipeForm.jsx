@@ -154,17 +154,24 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
               <Input
                 placeholder={language === 'he' ? 'חפש פריט מהמלאי להוספה...' : 'Search inventory item to add...'}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setIsDropdownOpen(true);
+                }}
+                onFocus={() => setIsDropdownOpen(true)}
                 className={isRTL ? 'pr-9' : 'pl-9'}
               />
-              {searchTerm && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
+              {isDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
                   {filteredItems.length > 0 ? (
                     filteredItems.map(item => (
                       <div 
                         key={item.id} 
                         className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                        onClick={() => handleAddIngredient(item)}
+                        onClick={() => {
+                          handleAddIngredient(item);
+                          setIsDropdownOpen(false);
+                        }}
                       >
                         <span>{item.name}</span>
                         <span className="text-sm text-gray-500">₪{item.price_after_discount || item.price} / {item.unit}</span>
