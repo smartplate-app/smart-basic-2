@@ -162,7 +162,10 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                 className={isRTL ? 'pr-9' : 'pl-9'}
               />
               {isDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div 
+                  className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto"
+                  onMouseLeave={() => setIsDropdownOpen(false)}
+                >
                   {filteredItems.length > 0 ? (
                     filteredItems.map(item => (
                       <div 
