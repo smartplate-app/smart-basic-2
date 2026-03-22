@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { spreadsheetUrl, spreadsheetId: rawId, supplierId, supplierName } = await req.json();
+    const { spreadsheetUrl, spreadsheetId: rawId } = await req.json();
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
 
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       const prompt = `קלט: נתונים מגוגל שיטס (שם הגיליון: "${sheetName}").
 הנתונים יכולים להכיל פריטי מלאי (חומרי גלם) או מתכונים (הכנות מטבח או מנות סופיות).
 אנא נתח את הנתונים והחזר JSON עם שני מערכים:
-1. items: פריטי מלאי (חומרי גלם). שדות: name, unit (unit/kg/gram/liter/ml/case), price (מספר), catalog_number.
+1. items: פריטי מלאי (חומרי גלם). שדות: name, unit (unit/kg/gram/liter/ml/case), price (מספר), catalog_number, supplier_name (שם הספק - חשוב מאוד לחלץ מעמודת הספק אם קיימת).
 2. recipes: מתכונים. שדות: 
    - name: שם המתכון
    - type: 'prep_recipe' (הכנת מטבח) או 'sale_item' (מנה למכירה)
@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
 - מתחת לזה ייתכן שיופיעו כותרות למרכיבים ("כמות יחידות", "שם פריט המלאי") ומתחתיהן שורות של המרכיבים עצמם.
 - עליך להבין את המבנה הלוגי מתוך הנתונים ולחלץ את כל המתכונים והמרכיבים שלהם.
 - אם הגיליון מכיל מנות סופיות (למשל "שם המנה בתפריט"), סווג אותן כ-'sale_item'. אם זה "הכנת מטבח", סווג כ-'prep_recipe'.
+- עבור פריטי מלאי, חפש עמודה של "שם הספק" (או דומה) ושייך את שם הספק לכל פריט.
 
 הנתונים (עד 200 שורות ראשונות):
 ${JSON.stringify(rows.slice(0, 200))}
@@ -91,7 +92,8 @@ ${JSON.stringify(rows.slice(0, 200))}
                   name: { type: 'string' },
                   unit: { type: 'string' },
                   price: { type: 'number' },
-                  catalog_number: { type: 'string' }
+                  catalog_number: { type: 'string' },
+                  supplier_name: { type: 'string' }
                 },
                 required: ['name']
               }
@@ -130,18 +132,53 @@ ${JSON.stringify(rows.slice(0, 200))}
       if (response.recipes) allRecipes.push(...response.recipes);
     }
 
+    // Handle Suppliers
+    const existingSuppliers = await base44.entities.Supplier.filter({ created_by: user.email });
+    const supplierMap = new Map(existingSuppliers.map(s => [s.name.trim().toLowerCase(), s]));
+    
+    // Find unique new suppliers from items
+    const newSupplierNames = new Set();
+    allItems.forEach(it => {
+      const sName = (it.supplier_name || 'כללי').trim();
+      if (sName && !supplierMap.has(sName.toLowerCase())) {
+        newSupplierNames.add(sName);
+      }
+    });
+
+    // Create new suppliers
+    if (newSupplierNames.size > 0) {
+      const suppliersToCreate = Array.from(newSupplierNames).map(name => ({
+        name: name,
+        supplier_type: 'simple'
+      }));
+      const createdSuppliers = await base44.entities.Supplier.bulkCreate(suppliersToCreate);
+      createdSuppliers.forEach(s => supplierMap.set(s.name.trim().toLowerCase(), s));
+    }
+    
+    // Fallback default supplier if needed
+    let defaultSupplier = supplierMap.get('כללי') || supplierMap.get('general');
+    if (!defaultSupplier) {
+      defaultSupplier = await base44.entities.Supplier.create({ name: 'כללי', supplier_type: 'simple' });
+      supplierMap.set('כללי', defaultSupplier);
+    }
+
     // Process and save items
-    const validItems = allItems.filter(it => it.name).map(it => ({
-      name: it.name,
-      unit: normalizeUnit(it.unit),
-      price: Number(it.price) || 0,
-      catalog_number: it.catalog_number || undefined,
-      supplier_id: supplierId,
-      supplier_name: supplierName || '',
-      units_per_package: 1,
-      minimum_stock: 0,
-      discount: 0
-    }));
+    const validItems = allItems.filter(it => it.name).map(it => {
+      const sName = (it.supplier_name || 'כללי').trim();
+      const supplier = supplierMap.get(sName.toLowerCase()) || defaultSupplier;
+      
+      return {
+        name: it.name,
+        unit: normalizeUnit(it.unit),
+        price: Number(it.price) || 0,
+        catalog_number: it.catalog_number || undefined,
+        supplier_id: supplier.id,
+        supplier_name: supplier.name,
+        units_per_package: 1,
+        minimum_stock: 0,
+        discount: 0
+      };
+    });
 
     let createdItems = [];
     if (validItems.length > 0) {
