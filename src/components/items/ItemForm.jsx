@@ -12,10 +12,12 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
   const { t } = useLanguage();
 
   const UNITS = [
-    { value: "kg", label: t('unit_kg') },
-    { value: "liter", label: t('unit_liter') },
-    { value: "unit", label: t('unit_piece') },
-    { value: "case", label: t('unit_box') }
+    { value: "kg", label: t('unit_kg') || "ק״ג" },
+    { value: "gram", label: t('unit_gram') || "גרם" },
+    { value: "liter", label: t('unit_liter') || "ליטר" },
+    { value: "ml", label: t('unit_ml') || "מ״ל" },
+    { value: "unit", label: t('unit_piece') || "יחידה" },
+    { value: "case", label: t('unit_box') || "ארגז" }
   ];
 
   const [currentItem, setCurrentItem] = React.useState(item || {
@@ -27,6 +29,8 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     warehouse_name: "",
     unit: "unit",
     units_per_package: 1,
+    content_per_unit: 1,
+    content_unit: "unit",
     price: 0,
     discount: 0,
     minimum_stock: 0
