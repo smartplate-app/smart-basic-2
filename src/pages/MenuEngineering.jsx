@@ -14,7 +14,7 @@ export default function MenuEngineeringPage() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [quantities, setQuantities] = useState({});
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("grid");
   const [activeTab, setActiveTab] = useState("all");
 
   const handleAuth = (e) => {
