@@ -43,6 +43,12 @@ export default function RecipesPage() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadRecipes();
+    }
+  }, [isAuthenticated]);
+
   const handleDelete = async (id) => {
     if (window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק מתכון זה?' : 'Are you sure you want to delete this recipe?')) {
       await base44.entities.Recipe.delete(id);
