@@ -38,7 +38,7 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
         }
       }
 
-      const response = await base44.functions.invoke('importSupplierItemsFromSheet', {
+      const response = await base44.functions.invoke('importRecipesFromSheet', {
         spreadsheetUrl: url,
         supplierId: defaultSupplier.id,
         supplierName: defaultSupplier.name
@@ -46,8 +46,8 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
 
       if (response.data && response.data.success) {
         alert(language === 'he' 
-          ? `יובאו בהצלחה ${response.data.created_count} מרכיבים.` 
-          : `Successfully imported ${response.data.created_count} ingredients.`);
+          ? `יובאו בהצלחה ${response.data.created_items_count} מרכיבים ו-${response.data.created_recipes_count} מתכונים.` 
+          : `Successfully imported ${response.data.created_items_count} ingredients and ${response.data.created_recipes_count} recipes.`);
         onSuccess();
         onClose();
       } else {
