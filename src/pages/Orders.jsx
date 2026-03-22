@@ -1410,7 +1410,7 @@ export default function OrdersPage() {
                       {!isViewer && (
                         <Button
                           onClick={() => handleResend(order)}
-                          className="flex-1 min-w-[100px] h-11 rounded-lg text-sm bg-orange-500 hover:bg-orange-600 text-white"
+                          className="flex-1 min-w-[100px] h-11 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           <Share className="w-4 h-4 mr-1" />
                           {safeT('share','שתף','Share')}
