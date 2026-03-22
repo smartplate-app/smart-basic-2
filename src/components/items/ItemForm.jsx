@@ -358,6 +358,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               step="0.01"
             />
           </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
