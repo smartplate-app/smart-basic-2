@@ -67,12 +67,12 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-green-600" />
-            {language === 'he' ? 'ייבוא מרכיבים מ-Google Sheets' : 'Import Ingredients from Google Sheets'}
+            {language === 'he' ? 'ייבוא מתכונים ומרכיבים מ-Google Sheets' : 'Import Recipes & Ingredients from Google Sheets'}
           </DialogTitle>
           <DialogDescription>
             {language === 'he' 
-              ? 'הדבק קישור לגיליון Google Sheets המכיל את המרכיבים שלך. ודא שהגיליון פתוח לצפייה (Anyone with the link can view).'
-              : 'Paste a link to a Google Sheets document containing your ingredients. Make sure the sheet is accessible (Anyone with the link can view).'}
+              ? 'הדבק קישור לגיליון Google Sheets המכיל את המרכיבים והמתכונים שלך (הכנות ומנות סופיות). המערכת תסרוק את כל הגיליונות בקובץ. ודא שהקובץ פתוח לצפייה (Anyone with the link can view).'
+              : 'Paste a link to a Google Sheets document containing your ingredients and recipes. The system will scan all sheets in the file. Make sure the sheet is accessible (Anyone with the link can view).'}
           </DialogDescription>
         </DialogHeader>
 
