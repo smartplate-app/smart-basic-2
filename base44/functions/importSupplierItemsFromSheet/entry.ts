@@ -52,19 +52,19 @@ Deno.serve(async (req) => {
 
     // Hebrew header map + synonyms
     const keyMap = {
-      name: ['שם פריט', 'שם', 'פריט'],
+      name: ['שם פריט', 'שם', 'פריט', 'item name'],
       catalog_number: ['מספר קטלוגי', 'מק"ט', 'קטלוג'],
-      unit: ['יחידה', 'יח׳', 'סוג יחידה'],
-      price: ['מחיר', 'מחיר ליחידה'],
-      discount: ['הנחה (%)', 'הנחה', '% הנחה'],
-      units_per_package: ['יחידות בחבילה', 'כמות בחבילה', 'אריזות'],
+      unit: ['יחידה', 'יח׳', 'סוג יחידה', 'unit'],
+      price: ['מחיר', 'מחיר ליחידה', 'מחיר לפריט', 'price'],
+      discount: ['הנחה (%)', 'הנחה', '% הנחה', 'הנחה באחוזים', 'discount'],
+      units_per_package: ['יחידות בחבילה', 'כמות בחבילה', 'אריזות', 'כמות במארז'],
       minimum_stock: ['מלאי מינימלי', 'מינ׳ מלאי'],
       notes: ['הערות', 'תיאור']
     };
 
     const findCol = (names) => {
       for (const n of names) {
-        const idx = headers.findIndex(h => h.toLowerCase() === n.toLowerCase());
+        const idx = headers.findIndex(h => h.toLowerCase().includes(n.toLowerCase()));
         if (idx !== -1) return idx;
       }
       return -1;
