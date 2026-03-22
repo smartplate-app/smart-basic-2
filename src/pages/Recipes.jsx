@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "../components/LanguageProvider";
-import { Plus, Search, Edit, Trash2, ChefHat, Lock, Package } from "lucide-react";
+import { Plus, Search, Edit, Trash2, ChefHat, Lock, Package, FileSpreadsheet } from "lucide-react";
 import RecipeForm from "../components/recipes/RecipeForm";
 
 export default function RecipesPage() {
