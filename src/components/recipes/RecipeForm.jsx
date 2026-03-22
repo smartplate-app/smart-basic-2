@@ -22,7 +22,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    base44.entities.Item.list().then(setItems);
+    base44.entities.Item.filter({}, "name").then(setItems);
   }, []);
 
   const UNITS = [
