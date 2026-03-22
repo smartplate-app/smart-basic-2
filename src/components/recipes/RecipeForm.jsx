@@ -25,18 +25,71 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     base44.entities.Item.list().then(setItems);
   }, []);
 
+  const UNITS = [
+    { value: "kg", label: language === 'he' ? "ק״ג" : "kg" },
+    { value: "gram", label: language === 'he' ? "גרם" : "gram" },
+    { value: "liter", label: language === 'he' ? "ליטר" : "liter" },
+    { value: "ml", label: language === 'he' ? "מ״ל" : "ml" },
+    { value: "unit", label: language === 'he' ? "יחידה" : "unit" }
+  ];
+
+  const getConversionFactor = (fromUnit, toUnit) => {
+    if (fromUnit === toUnit) return 1;
+    if (fromUnit === 'kg' && toUnit === 'gram') return 1000;
+    if (fromUnit === 'gram' && toUnit === 'kg') return 0.001;
+    if (fromUnit === 'liter' && toUnit === 'ml') return 1000;
+    if (fromUnit === 'ml' && toUnit === 'liter') return 0.001;
+    return null;
+  };
+
+  const getIngredientCost = (item, quantity, recipeUnit) => {
+    const price = item.price_after_discount || item.price || 0;
+    const unitsPerPackage = item.units_per_package || 1;
+    const contentPerUnit = item.content_per_unit || 1;
+    const purchaseUnit = item.unit || 'unit';
+    const contentUnit = item.content_unit || 'unit';
+
+    if (recipeUnit === purchaseUnit) {
+      return (quantity / unitsPerPackage) * price;
+    }
+
+    if (recipeUnit === 'unit' && purchaseUnit === 'case') {
+      return quantity * (price / unitsPerPackage);
+    }
+
+    let factor = getConversionFactor(recipeUnit, contentUnit);
+    if (factor !== null) {
+      const totalContent = unitsPerPackage * contentPerUnit;
+      const costPerContentUnit = price / totalContent;
+      return quantity * factor * costPerContentUnit;
+    }
+
+    let factor2 = getConversionFactor(recipeUnit, purchaseUnit);
+    if (factor2 !== null) {
+      const costPerPurchaseUnit = price / unitsPerPackage;
+      return quantity * factor2 * costPerPurchaseUnit;
+    }
+
+    return quantity * (price / unitsPerPackage);
+  };
+
   const calculateTotalCost = (ingredients) => {
     return ingredients.reduce((sum, ing) => sum + (Number(ing.cost) || 0), 0);
   };
 
   const handleAddIngredient = (item) => {
+    // Default recipe unit is the purchase unit, unless it's a case, then default to unit
+    const defaultRecipeUnit = item.unit === 'case' ? 'unit' : (item.unit || 'unit');
+    const initialQuantity = 1;
+    const initialCost = getIngredientCost(item, initialQuantity, defaultRecipeUnit);
+    
     const newIngredients = [...formData.ingredients, {
       item_id: item.id,
       item_name: item.name,
-      quantity: 1,
-      unit: item.unit,
-      cost: item.price_after_discount || item.price || 0,
-      unit_price: item.price_after_discount || item.price || 0
+      quantity: initialQuantity,
+      unit: defaultRecipeUnit,
+      cost: initialCost,
+      original_item: item // Store the original item to recalculate cost when unit changes
     }];
     setFormData({
       ...formData,
@@ -50,8 +103,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     const newIngredients = [...formData.ingredients];
     newIngredients[index][field] = value;
     
-    if (field === 'quantity') {
-      newIngredients[index].cost = Number(value) * Number(newIngredients[index].unit_price || 0);
+    if (field === 'quantity' || field === 'unit') {
+      const item = newIngredients[index].original_item || items.find(i => i.id === newIngredients[index].item_id);
+      if (item) {
+        newIngredients[index].cost = getIngredientCost(item, Number(newIngredients[index].quantity), newIngredients[index].unit);
+      }
     }
 
     setFormData({
