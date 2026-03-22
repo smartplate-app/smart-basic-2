@@ -21,27 +21,8 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
     setError("");
 
     try {
-      const user = await base44.auth.me();
-      
-      // Find or create a default supplier for these ingredients
-      let suppliers = await base44.entities.Supplier.filter({ created_by: user.email });
-      let defaultSupplier = suppliers.find(s => s.name === 'כללי' || s.name === 'General');
-      
-      if (!defaultSupplier) {
-        if (suppliers.length > 0) {
-          defaultSupplier = suppliers[0];
-        } else {
-          defaultSupplier = await base44.entities.Supplier.create({
-            name: language === 'he' ? 'כללי' : 'General',
-            supplier_type: 'simple'
-          });
-        }
-      }
-
       const response = await base44.functions.invoke('importRecipesFromSheet', {
-        spreadsheetUrl: url,
-        supplierId: defaultSupplier.id,
-        supplierName: defaultSupplier.name
+        spreadsheetUrl: url
       });
 
       if (response.data && response.data.success) {
