@@ -231,6 +231,7 @@ const AppLayout = ({ children, currentPageName }) => {
   }, [authLoading]);
 
   const navigationItems = [
+          { title: language === 'he' ? 'מתכונים' : 'Recipes', url: createPageUrl("Recipes"), icon: ChefHat, adminOnly: false, workerHidden: false },
           // Dashboard first
           { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
           ...(user?.is_chain_head && user?.chain_id ? [{ title: language === 'he' ? 'דשבורד רשת' : 'Chain Dashboard', url: createPageUrl("ChainDashboard"), icon: BarChart2, adminOnly: false, workerHidden: false }] : []),
