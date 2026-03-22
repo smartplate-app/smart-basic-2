@@ -48,6 +48,12 @@ export default function RecipesPage() {
     }
   };
 
+  const handleGenerateSheet = () => {
+    alert(language === 'he' 
+      ? 'המבנה נבנה כעת. אנא הדבק את הקישור לגיליון בגוגל בצ\'אט כדי שנשלים את ההטמעה.' 
+      : 'The template structure is currently being built. Please paste the Google Sheet link in the chat to complete the implementation.');
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
