@@ -202,7 +202,7 @@ ${allRowsData}
       name: r.name,
       unit: normalizeUnit(r.yield_unit),
       price: 0, // Cost will be calculated dynamically in the app, but we need the item record
-      supplier_id: supplierId,
+      supplier_id: defaultSupplier.id,
       supplier_name: 'Prep Recipe',
       units_per_package: 1,
       minimum_stock: 0,
