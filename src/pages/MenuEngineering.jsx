@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "../components/LanguageProvider";
-import { Lock, Plus, Trash2, HelpCircle, LayoutGrid, List, Edit, Percent, TrendingUp, DollarSign, Clock, Star, Tractor, Puzzle, Dog, Filter, RefreshCw } from "lucide-react";
+import { Lock, Plus, Trash2, HelpCircle, LayoutGrid, List, Edit, Percent, TrendingUp, DollarSign, Clock, Star, Tractor, Puzzle, Dog, Filter, RefreshCw, Tag } from "lucide-react";
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 
 export default function MenuEngineeringPage() {
   const { language } = useLanguage();
@@ -13,9 +15,13 @@ export default function MenuEngineeringPage() {
   const [passcode, setPasscode] = useState("");
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [quantities, setQuantities] = useState({});
   const [viewMode, setViewMode] = useState("grid");
   const [activeTab, setActiveTab] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   const handleAuth = (e) => {
     e.preventDefault();
@@ -38,11 +44,55 @@ export default function MenuEngineeringPage() {
     setLoading(false);
   };
 
-  const handleQuantityChange = (id, value) => {
-    setQuantities(prev => ({
-      ...prev,
-      [id]: Number(value) || 0
-    }));
+  const handleSaveItem = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+      name: formData.get('name'),
+      menu_category: formData.get('menu_category'),
+      sold_count: Number(formData.get('sold_count')),
+      sale_price: Number(formData.get('sale_price')),
+      total_cost: Number(formData.get('total_cost')),
+      type: 'sale_item'
+    };
+
+    try {
+      if (editingItem?.id) {
+        await base44.entities.Recipe.update(editingItem.id, data);
+      } else {
+        await base44.entities.Recipe.create(data);
+      }
+      setShowItemModal(false);
+      loadRecipes();
+    } catch (err) {
+      console.error(err);
+      alert('Error saving item');
+    }
+  };
+
+  const handleDeleteItem = async (id) => {
+    if (!window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק פריט זה?' : 'Are you sure you want to delete this item?')) return;
+    try {
+      await base44.entities.Recipe.delete(id);
+      loadRecipes();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך לאפס את כל נתוני המכירות?' : 'Are you sure you want to reset all sales data?')) return;
+    
+    try {
+      setLoading(true);
+      const updates = recipes.map(r => base44.entities.Recipe.update(r.id, { sold_count: 0 }));
+      await Promise.all(updates);
+      await loadRecipes();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -78,6 +128,17 @@ export default function MenuEngineeringPage() {
     );
   }
 
+  const categoryLabels = {
+    general: language === 'he' ? 'כללי' : 'General',
+    morning: language === 'he' ? 'בוקר' : 'Morning',
+    noon: language === 'he' ? 'צהריים' : 'Noon',
+    evening: language === 'he' ? 'ערב' : 'Evening'
+  };
+
+  const filteredRecipes = categoryFilter === 'all' 
+    ? recipes 
+    : recipes.filter(r => r.menu_category === categoryFilter);
+
   // Calculate Menu Engineering Metrics
   let totalVolume = 0;
   let totalRevenue = 0;
@@ -85,8 +146,8 @@ export default function MenuEngineeringPage() {
   let totalProfit = 0;
   let validItemsCount = 0;
 
-  const itemsData = recipes.map(recipe => {
-    const qty = quantities[recipe.id] || 0;
+  const itemsData = filteredRecipes.map(recipe => {
+    const qty = Number(recipe.sold_count) || 0;
     const salePrice = Number(recipe.sale_price) || 0;
     const cost = Number(recipe.total_cost) || 0;
     const itemProfit = salePrice - cost;
@@ -119,6 +180,7 @@ export default function MenuEngineeringPage() {
 
   const categorizedItems = itemsData.map(item => {
     let category = "";
+    let categoryEn = "";
     let color = "";
     const mixPercent = totalVolume > 0 ? (item.qty / totalVolume) * 100 : 0;
     const isHighMix = mixPercent >= avgMix;
@@ -126,47 +188,122 @@ export default function MenuEngineeringPage() {
 
     if (item.qty === 0) {
       category = language === 'he' ? 'אין מכירות' : 'No Sales';
+      categoryEn = 'No Sales';
       color = "bg-gray-100 text-gray-600 border-gray-200";
     } else if (isHighMix && isHighProfit) {
       category = language === 'he' ? 'כוכב' : 'Star';
+      categoryEn = 'Star';
       color = "bg-green-50 text-green-700 border-green-200";
     } else if (isHighMix && !isHighProfit) {
       category = language === 'he' ? 'סוס עבודה' : 'Plowhorse';
+      categoryEn = 'Plowhorse';
       color = "bg-blue-50 text-blue-700 border-blue-200";
     } else if (!isHighMix && isHighProfit) {
       category = language === 'he' ? 'חידה' : 'Puzzle';
+      categoryEn = 'Puzzle';
       color = "bg-yellow-50 text-yellow-700 border-yellow-200";
     } else {
       category = language === 'he' ? 'כלב' : 'Dog';
+      categoryEn = 'Dog';
       color = "bg-red-50 text-red-700 border-red-200";
     }
 
-    return { ...item, category, color, mixPercent, isHighMix, isHighProfit };
+    return { ...item, category, categoryEn, color, mixPercent, isHighMix, isHighProfit };
   });
 
+  const getCategoryIcon = (categoryEn) => {
+    switch(categoryEn) {
+      case 'Star': return <Star className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />;
+      case 'Plowhorse': return <Tractor className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />;
+      case 'Puzzle': return <Puzzle className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />;
+      case 'Dog': return <Dog className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />;
+      default: return null;
+    }
+  };
+
+  const renderMatrixView = () => {
+    const data = categorizedItems.filter(item => item.qty > 0).map(item => ({
+      name: item.name,
+      x: item.mixPercent,
+      y: item.itemProfit,
+      category: item.category,
+      color: item.color.includes('green') ? '#15803d' : 
+             item.color.includes('blue') ? '#1d4ed8' : 
+             item.color.includes('yellow') ? '#a16207' : '#b91c1c'
+    }));
+
+    return (
+      <Card className="shadow-sm border-0 mt-6 bg-white rounded-2xl">
+        <CardHeader>
+          <CardTitle>{language === 'he' ? 'מטריצת הנדסת תפריט' : 'Menu Engineering Matrix'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[500px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.5} />
+                <XAxis type="number" dataKey="x" name="Mix %" unit="%" tick={{fontSize: 12}} />
+                <YAxis type="number" dataKey="y" name="Profit" unit="₪" tick={{fontSize: 12}} />
+                <RechartsTooltip cursor={{ strokeDasharray: '3 3' }} content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload;
+                    return (
+                      <div className="bg-white p-3 border shadow-lg rounded-lg">
+                        <p className="font-bold">{data.name}</p>
+                        <p className="text-sm text-gray-600">{language === 'he' ? 'תמהיל:' : 'Mix:'} {data.x.toFixed(1)}%</p>
+                        <p className="text-sm text-gray-600">{language === 'he' ? 'תרומה:' : 'Profit:'} ₪{data.y.toFixed(2)}</p>
+                        <p className={`text-sm font-bold mt-1`} style={{color: data.color}}>{data.category}</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }} />
+                <Scatter name="Items" data={data}>
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Scatter>
+                <ReferenceLine x={avgMix} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'top', value: language === 'he' ? 'ממוצע תמהיל' : 'Avg Mix', fill: '#64748b', fontSize: 12 }} />
+                <ReferenceLine y={avgProfit} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'right', value: language === 'he' ? 'ממוצע תרומה' : 'Avg Profit', fill: '#64748b', fontSize: 12 }} />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8">
+    <div className="min-h-screen bg-[#f0f4f8] p-4 md:p-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex gap-3 items-center w-full md:w-auto">
-            <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50">
+          <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
+            <Button variant="outline" onClick={handleClearAll} className="text-gray-700 border-gray-300 hover:bg-gray-100">
               <Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'נקה הכל' : 'Clear All'}
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={() => { setEditingItem(null); setShowItemModal(true); }} className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'הוסף פריט' : 'Add Item'}
             </Button>
             <div className="relative flex-1 md:w-48">
-              <select className="w-full h-10 pl-3 pr-8 text-sm border rounded-md appearance-none bg-white">
-                <option>{language === 'he' ? 'הכל' : 'All'}</option>
+              <select 
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full h-10 pl-3 pr-8 text-sm border rounded-md appearance-none bg-white"
+              >
+                <option value="all">{language === 'he' ? 'הכל' : 'All'}</option>
+                <option value="general">{language === 'he' ? 'כללי' : 'General'}</option>
+                <option value="morning">{language === 'he' ? 'בוקר' : 'Morning'}</option>
+                <option value="noon">{language === 'he' ? 'צהריים' : 'Noon'}</option>
+                <option value="evening">{language === 'he' ? 'ערב' : 'Evening'}</option>
               </select>
               <Filter className="absolute right-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
-            <Button variant="outline" className="text-gray-600">
+            <Button variant="outline" onClick={() => setShowGuideModal(true)} className="text-gray-600 bg-white">
               <HelpCircle className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'מדריך מושגים' : 'Concepts Guide'}
+              {language === 'he' ? 'מדריך מונחים' : 'Concepts Guide'}
             </Button>
           </div>
           <div className={`text-${isRTL ? 'left' : 'right'}`}>
@@ -181,7 +318,7 @@ export default function MenuEngineeringPage() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="shadow-sm border-0">
+          <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? '% עלות מזון' : 'Food Cost %'}</p>
@@ -192,7 +329,7 @@ export default function MenuEngineeringPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-sm border-0">
+          <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'סה"כ תרומה' : 'Total Contribution'}</p>
@@ -203,7 +340,7 @@ export default function MenuEngineeringPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-sm border-0">
+          <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'סה"כ הכנסות' : 'Total Revenue'}</p>
@@ -214,7 +351,7 @@ export default function MenuEngineeringPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="shadow-sm border-0">
+          <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'סה"כ נמכר' : 'Total Sold'}</p>
@@ -229,193 +366,251 @@ export default function MenuEngineeringPage() {
 
         {/* Tabs and View Toggle */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex gap-2">
-            <Button 
-              variant={activeTab === 'all' ? 'default' : 'outline'} 
-              onClick={() => setActiveTab('all')}
-              className={activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm border' : 'bg-transparent border-0 text-gray-500'}
-            >
-              <RefreshCw className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'כל הפריטים' : 'All Items'} ({recipes.length})
-            </Button>
-            <Button 
-              variant={activeTab === 'matrix' ? 'default' : 'outline'} 
-              onClick={() => setActiveTab('matrix')}
-              className={activeTab === 'matrix' ? 'bg-white text-gray-900 shadow-sm border' : 'bg-transparent border-0 text-gray-500'}
-            >
-              <LayoutGrid className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'תצוגת מטריצה' : 'Matrix View'}
-            </Button>
-          </div>
-          <div className="flex bg-gray-200 p-1 rounded-lg">
+          <div className="flex gap-2 bg-white p-1 rounded-full shadow-sm border border-gray-100">
             <button 
-              onClick={() => setViewMode('grid')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 ${viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-colors ${activeTab === 'all' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              <RefreshCw className="w-4 h-4" />
+              {language === 'he' ? 'כל הפריטים' : 'All Items'} ({filteredRecipes.length})
+            </button>
+            <button 
+              onClick={() => setActiveTab('matrix')}
+              className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-colors ${activeTab === 'matrix' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <LayoutGrid className="w-4 h-4" />
-              {language === 'he' ? 'כרטיסיות' : 'Grid'}
-            </button>
-            <button 
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 ${viewMode === 'list' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              <List className="w-4 h-4" />
-              {language === 'he' ? 'רשימה' : 'List'}
+              {language === 'he' ? 'תצוגת מטריצה' : 'Matrix View'}
             </button>
           </div>
+          {activeTab === 'all' && (
+            <div className="flex bg-white p-1 rounded-lg shadow-sm border border-gray-100">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${viewMode === 'grid' ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                {language === 'he' ? 'כרטיסים' : 'Grid'} <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${viewMode === 'list' ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                {language === 'he' ? 'רשימה' : 'List'} <List className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content Area */}
-        {viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {categorizedItems.map(item => (
-              <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-white border border-gray-200 rounded-2xl">
-                <CardContent className="p-5">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
-                      <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md mt-2 font-medium border border-gray-200">
-                        {language === 'he' ? 'כללי' : 'General'}
-                      </span>
-                    </div>
-                    <span className={`px-2 py-1 rounded-md text-xs font-bold border ${item.color}`}>
-                      {item.category}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm mb-5">
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מספר שנמכר' : 'Sold Count'}</div>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={item.qty || ''}
-                        onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                        className="w-24 h-8 px-2 py-1 text-sm font-bold bg-gray-50 border-gray-200"
-                        placeholder="0"
-                      />
-                    </div>
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תמהיל תפריט %' : 'Menu Mix %'}</div>
-                      <div className="font-bold text-gray-900 h-8 flex items-center">{item.mixPercent.toFixed(1)}%</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'עלות מזון' : 'Food Cost'}</div>
-                      <div className="font-bold text-gray-900">₪{item.cost.toFixed(2)}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</div>
-                      <div className="font-bold text-gray-900">₪{item.salePrice.toFixed(2)}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לפריט' : 'Item Contribution'}</div>
-                      <div className="font-bold text-green-600">₪{item.itemProfit.toFixed(2)}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לתפריט' : 'Total Contribution'}</div>
-                      <div className="font-bold text-green-600">₪{item.totalItemProfit.toFixed(2)}</div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-                    <div className="flex gap-3 text-xs font-medium">
-                      <span className={item.isHighMix ? 'text-green-600' : 'text-red-500'}>
-                        {language === 'he' ? 'תמהיל: ' : 'Mix: '}
-                        {item.isHighMix ? (language === 'he' ? 'גבוה' : 'High') : (language === 'he' ? 'נמוך' : 'Low')}
-                      </span>
-                      <span className={item.isHighProfit ? 'text-green-600' : 'text-red-500'}>
-                        {language === 'he' ? 'תרומה: ' : 'Contribution: '}
-                        {item.isHighProfit ? (language === 'he' ? 'גבוהה' : 'High') : (language === 'he' ? 'נמוכה' : 'Low')}
-                      </span>
-                    </div>
-                    <div className="flex gap-1">
-                      <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {categorizedItems.length === 0 && !loading && (
-              <div className="col-span-full py-12 text-center text-gray-500">
-                {language === 'he' ? 'לא נמצאו מנות למכירה' : 'No sale items found'}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50/50 border-b text-gray-500">
-                  <tr>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שם הפריט' : 'Item Name'}</th>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'קטגוריה' : 'Category'}</th>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'נמכר' : 'Sold'}</th>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות מזון' : 'Food Cost'}</th>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</th>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תרומה' : 'Contribution'}</th>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? '% תמהיל' : 'Mix %'}</th>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סיווג' : 'Classification'}</th>
-                    <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'פעולות' : 'Actions'}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {categorizedItems.map(item => (
-                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900">{item.name}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
-                          {language === 'he' ? 'כללי' : 'General'}
+        {activeTab === 'matrix' ? renderMatrixView() : (
+          viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {categorizedItems.map(item => (
+                <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-white border border-gray-200 rounded-2xl flex flex-col">
+                  <CardContent className="p-5 flex-1 flex flex-col">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
+                        <span className="inline-flex items-center px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-md mt-2 font-medium border border-gray-200">
+                          <Tag className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />
+                          {categoryLabels[item.menu_category || 'general']}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Input
-                          type="number"
-                          min="0"
-                          value={item.qty || ''}
-                          onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                          className="w-20 h-8 text-center bg-transparent border-gray-200"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">₪{item.cost.toFixed(2)}</td>
-                      <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePrice) * 100).toFixed(1)}%` : '0.0%'}</td>
-                      <td className="px-6 py-4 text-gray-600">{item.mixPercent.toFixed(1)}%</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${item.color}`}>
-                          {item.category}
+                      </div>
+                      <span className={`px-2 py-1 rounded-md text-xs font-bold border flex items-center ${item.color}`}>
+                        {getCategoryIcon(item.categoryEn)}
+                        {item.category}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm mb-5 flex-1">
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מספר שנמכר' : 'Sold Count'}</div>
+                        <div className="font-bold text-gray-900 text-lg">{item.qty}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תמהיל תפריט %' : 'Menu Mix %'}</div>
+                        <div className="font-bold text-gray-900 text-lg">{item.mixPercent.toFixed(1)}%</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'עלות מזון' : 'Food Cost'}</div>
+                        <div className="font-bold text-gray-900">₪{item.cost.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</div>
+                        <div className="font-bold text-gray-900">₪{item.salePrice.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לפריט' : 'Item Contribution'}</div>
+                        <div className="font-bold text-green-600">₪{item.itemProfit.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לתפריט' : 'Total Contribution'}</div>
+                        <div className="font-bold text-green-600">₪{item.totalItemProfit.toFixed(2)}</div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100 flex justify-between items-center mt-auto">
+                      <div className="flex gap-3 text-xs font-medium">
+                        <span className={item.isHighMix ? 'text-green-600' : 'text-red-500'}>
+                          {language === 'he' ? 'תמהיל: ' : 'Mix: '}
+                          {item.isHighMix ? (language === 'he' ? 'גבוה' : 'High') : (language === 'he' ? 'נמוך' : 'Low')}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors">
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {categorizedItems.length === 0 && !loading && (
-                    <tr>
-                      <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
-                        {language === 'he' ? 'לא נמצאו מנות למכירה' : 'No sale items found'}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                        <span className={item.isHighProfit ? 'text-green-600' : 'text-red-500'}>
+                          {language === 'he' ? 'תרומה: ' : 'Contribution: '}
+                          {item.isHighProfit ? (language === 'he' ? 'גבוהה' : 'High') : (language === 'he' ? 'נמוכה' : 'Low')}
+                        </span>
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => { setEditingItem(item); setShowItemModal(true); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors">
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDeleteItem(item.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {categorizedItems.length === 0 && !loading && (
+                <div className="col-span-full py-12 text-center text-gray-500">
+                  {language === 'he' ? 'לא נמצאו מנות למכירה' : 'No sale items found'}
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50/50 border-b text-gray-500">
+                    <tr>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שם הפריט' : 'Item Name'}</th>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'קטגוריה' : 'Category'}</th>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'נמכר' : 'Sold'}</th>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות מזון' : 'Food Cost'}</th>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</th>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תרומה' : 'Contribution'}</th>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? '% תמהיל' : 'Mix %'}</th>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סיווג' : 'Classification'}</th>
+                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'פעולות' : 'Actions'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {categorizedItems.map(item => (
+                      <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4 font-medium text-gray-900">{item.name}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-md text-xs font-medium border border-gray-200">
+                            {categoryLabels[item.menu_category || 'general']}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-bold">{item.qty}</td>
+                        <td className="px-6 py-4 text-gray-600">₪{item.cost.toFixed(2)}</td>
+                        <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePrice) * 100).toFixed(1)}%` : '0.0%'}</td>
+                        <td className="px-6 py-4 text-gray-600">{item.mixPercent.toFixed(1)}%</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center w-max ${item.color}`}>
+                            {getCategoryIcon(item.categoryEn)}
+                            {item.category}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => { setEditingItem(item); setShowItemModal(true); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors">
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleDeleteItem(item.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {categorizedItems.length === 0 && !loading && (
+                      <tr>
+                        <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
+                          {language === 'he' ? 'לא נמצאו מנות למכירה' : 'No sale items found'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
         )}
       </div>
+
+      {/* Add/Edit Item Modal */}
+      <Dialog open={showItemModal} onOpenChange={setShowItemModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingItem ? (language === 'he' ? 'ערוך פריט' : 'Edit Item') : (language === 'he' ? 'הוסף פריט' : 'Add Item')}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSaveItem} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">{language === 'he' ? 'שם הפריט' : 'Item Name'}</label>
+              <Input name="name" defaultValue={editingItem?.name} required />
+            </div>
+            <div>
+              <label className="text-sm font-medium">{language === 'he' ? 'קטגוריה' : 'Category'}</label>
+              <select name="menu_category" defaultValue={editingItem?.menu_category || 'general'} className="w-full h-10 px-3 border rounded-md bg-white">
+                <option value="general">{language === 'he' ? 'כללי' : 'General'}</option>
+                <option value="morning">{language === 'he' ? 'בוקר' : 'Morning'}</option>
+                <option value="noon">{language === 'he' ? 'צהריים' : 'Noon'}</option>
+                <option value="evening">{language === 'he' ? 'ערב' : 'Evening'}</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">{language === 'he' ? 'מספר שנמכר' : 'Sold Count'}</label>
+                <Input type="number" name="sold_count" defaultValue={editingItem?.sold_count || 0} min="0" required />
+              </div>
+              <div>
+                <label className="text-sm font-medium">{language === 'he' ? 'עלות מזון' : 'Food Cost'}</label>
+                <Input type="number" step="0.01" name="total_cost" defaultValue={editingItem?.total_cost || 0} min="0" required />
+              </div>
+              <div>
+                <label className="text-sm font-medium">{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</label>
+                <Input type="number" step="0.01" name="sale_price" defaultValue={editingItem?.sale_price || 0} min="0" required />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowItemModal(false)}>{language === 'he' ? 'ביטול' : 'Cancel'}</Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">{language === 'he' ? 'שמור' : 'Save'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Concepts Guide Modal */}
+      <Dialog open={showGuideModal} onOpenChange={setShowGuideModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{language === 'he' ? 'מדריך מושגים - הנדסת תפריט' : 'Menu Engineering Concepts Guide'}</DialogTitle>
+          </DialogHeader>
+          <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="font-bold text-green-800 flex items-center gap-2"><Star className="w-4 h-4"/> {language === 'he' ? 'כוכב (Star)' : 'Star'}</h4>
+                <p className="text-sm text-green-700 mt-1">{language === 'he' ? 'פופולריות גבוהה, רווחיות גבוהה. אלו המנות המנצחות שלך. קדם אותן והבלט אותן בתפריט.' : 'High popularity, high profitability. These are your winning dishes. Promote and highlight them on the menu.'}</p>
+              </div>
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-bold text-blue-800 flex items-center gap-2"><Tractor className="w-4 h-4"/> {language === 'he' ? 'סוס עבודה (Plowhorse)' : 'Plowhorse'}</h4>
+                <p className="text-sm text-blue-700 mt-1">{language === 'he' ? 'פופולריות גבוהה, רווחיות נמוכה. מנות אהובות אך לא רווחיות מספיק. שקול להעלות מחיר מעט או להקטין מנות.' : 'High popularity, low profitability. Beloved dishes but not profitable enough. Consider slightly raising the price or reducing portion size.'}</p>
+              </div>
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h4 className="font-bold text-yellow-800 flex items-center gap-2"><Puzzle className="w-4 h-4"/> {language === 'he' ? 'חידה (Puzzle)' : 'Puzzle'}</h4>
+                <p className="text-sm text-yellow-700 mt-1">{language === 'he' ? 'פופולריות נמוכה, רווחיות גבוהה. מנות רווחיות שלא נמכרות מספיק. נסה לשפר את התיאור, המיקום בתפריט או לקדם אותן דרך המלצרים.' : 'Low popularity, high profitability. Profitable dishes that don\'t sell enough. Try improving the description, placement, or promote via staff.'}</p>
+              </div>
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <h4 className="font-bold text-red-800 flex items-center gap-2"><Dog className="w-4 h-4"/> {language === 'he' ? 'כלב (Dog)' : 'Dog'}</h4>
+                <p className="text-sm text-red-700 mt-1">{language === 'he' ? 'פופולריות נמוכה, רווחיות נמוכה. שקול להסיר מנות אלו מהתפריט או לשנות אותן לחלוטין.' : 'Low popularity, low profitability. Consider removing these dishes from the menu or completely revamping them.'}</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
