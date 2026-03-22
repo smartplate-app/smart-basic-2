@@ -106,13 +106,22 @@ export default function RecipesPage() {
               {language === 'he' ? 'שלום, נהל את המתכונים והמחירים שלך' : 'Hello, manage your recipes and prices'}
             </p>
           </div>
-          <Button 
-            onClick={() => { setEditingRecipe(null); setShowForm(true); }}
-            className="bg-pink-500 hover:bg-pink-600 text-white border-none rounded-full px-6"
-          >
-            <Plus className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
-            {language === 'he' ? 'מתכון חדש' : 'New Recipe'}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleGenerateSheet}
+              className="bg-white text-[#d4a373] hover:bg-gray-50 border-none rounded-full px-6 font-bold"
+            >
+              <FileSpreadsheet className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'ייבא מתכונים' : 'Import Recipes'}
+            </Button>
+            <Button 
+              onClick={() => { setEditingRecipe(null); setShowForm(true); }}
+              className="bg-pink-500 hover:bg-pink-600 text-white border-none rounded-full px-6"
+            >
+              <Plus className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'מתכון חדש' : 'New Recipe'}
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
