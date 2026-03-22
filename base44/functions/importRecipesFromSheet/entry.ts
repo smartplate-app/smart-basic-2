@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
 
     let allItems = [];
     let allRecipes = [];
+    let allRowsData = "";
 
     for (const sheetName of sheetNames) {
       const range = `'${sheetName}'!A1:Z200`;
@@ -54,8 +55,15 @@ Deno.serve(async (req) => {
       const rows = data.values || [];
       if (rows.length < 2) continue;
 
-      // Use LLM to parse this sheet
-      const prompt = `קלט: נתונים מגוגל שיטס (שם הגיליון: "${sheetName}").
+      allRowsData += `\n\n--- גיליון: ${sheetName} ---\n` + JSON.stringify(rows.slice(0, 200));
+    }
+
+    if (!allRowsData) {
+      return Response.json({ error: 'No data found in spreadsheet' }, { status: 400 });
+    }
+
+    // Use LLM to parse all sheets at once
+    const prompt = `קלט: נתונים ממספר גיליונות בגוגל שיטס.
 הנתונים יכולים להכיל פריטי מלאי (חומרי גלם) או מתכונים (הכנות מטבח או מנות סופיות).
 אנא נתח את הנתונים והחזר JSON עם שני מערכים:
 1. items: פריטי מלאי (חומרי גלם). שדות: name, unit (unit/kg/gram/liter/ml/case), price (מספר), catalog_number, supplier_name (שם הספק - חשוב מאוד לחלץ מעמודת הספק אם קיימת).
@@ -73,64 +81,64 @@ Deno.serve(async (req) => {
 - עליך להבין את המבנה הלוגי מתוך הנתונים ולחלץ את כל המתכונים והמרכיבים שלהם.
 - אם הגיליון מכיל מנות סופיות (למשל "שם המנה בתפריט"), סווג אותן כ-'sale_item'. אם זה "הכנת מטבח", סווג כ-'prep_recipe'.
 - עבור פריטי מלאי, חפש עמודה של "שם הספק" (או דומה) ושייך את שם הספק לכל פריט.
+- קשר בין מתכוני הכנה למנות סופיות: אם מנה סופית משתמשת בהכנת מטבח כמרכיב, רשום את שם הכנת המטבח ב-item_name של המרכיב.
 
-הנתונים (עד 200 שורות ראשונות):
-${JSON.stringify(rows.slice(0, 200))}
+הנתונים:
+${allRowsData}
 `;
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        model: 'gemini_3_flash', // Use a model with larger context window and good reasoning
-        response_json_schema: {
-          type: 'object',
-          properties: {
+    const response = await base44.integrations.Core.InvokeLLM({
+      prompt,
+      model: 'gemini_3_flash', // Use a model with larger context window and good reasoning
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
             items: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  name: { type: 'string' },
-                  unit: { type: 'string' },
-                  price: { type: 'number' },
-                  catalog_number: { type: 'string' },
-                  supplier_name: { type: 'string' }
-                },
-                required: ['name']
-              }
-            },
-            recipes: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  name: { type: 'string' },
-                  type: { type: 'string', enum: ['prep_recipe', 'sale_item'] },
-                  yield_quantity: { type: 'number' },
-                  yield_unit: { type: 'string' },
-                  sale_price: { type: 'number' },
-                  ingredients: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        item_name: { type: 'string' },
-                        quantity: { type: 'number' },
-                        unit: { type: 'string' }
-                      },
-                      required: ['item_name', 'quantity']
-                    }
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                unit: { type: 'string' },
+                price: { type: 'number' },
+                catalog_number: { type: 'string' },
+                supplier_name: { type: 'string' }
+              },
+              required: ['name']
+            }
+          },
+          recipes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                type: { type: 'string', enum: ['prep_recipe', 'sale_item'] },
+                yield_quantity: { type: 'number' },
+                yield_unit: { type: 'string' },
+                sale_price: { type: 'number' },
+                ingredients: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      item_name: { type: 'string' },
+                      quantity: { type: 'number' },
+                      unit: { type: 'string' }
+                    },
+                    required: ['item_name', 'quantity']
                   }
-                },
-                required: ['name', 'type', 'ingredients']
-              }
+                }
+              },
+              required: ['name', 'type', 'ingredients']
             }
           }
         }
-      });
+      }
+    });
 
-      if (response.items) allItems.push(...response.items);
-      if (response.recipes) allRecipes.push(...response.recipes);
-    }
+    if (response.items) allItems.push(...response.items);
+    if (response.recipes) allRecipes.push(...response.recipes);
 
     // Handle Suppliers
     const existingSuppliers = await base44.entities.Supplier.filter({ created_by: user.email });
