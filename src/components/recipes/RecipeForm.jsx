@@ -255,7 +255,21 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     value={ing.quantity}
                     onChange={(e) => handleUpdateIngredient(idx, 'quantity', e.target.value)}
                   />
-                  <div className="text-sm text-gray-500 w-12">{ing.unit}</div>
+                  <Select 
+                    value={ing.unit} 
+                    onValueChange={(value) => handleUpdateIngredient(idx, 'unit', value)}
+                  >
+                    <SelectTrigger className="w-24 h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UNITS.map(u => (
+                        <SelectItem key={u.value} value={u.value} className="text-xs">
+                          {u.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <div className="text-sm font-bold w-16 text-left">₪{Number(ing.cost).toFixed(2)}</div>
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRemoveIngredient(idx)}>
                     <Trash2 className="w-4 h-4" />
