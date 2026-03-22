@@ -35,7 +35,20 @@ Deno.serve(async (req) => {
 
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
 
-    const range = sheetName ? `${sheetName}!A1:Z1000` : 'Sheet1!A1:Z1000';
+    let actualSheetName = sheetName;
+    if (!actualSheetName) {
+      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=false`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      if (metaRes.ok) {
+        const metaData = await metaRes.json();
+        if (metaData.sheets && metaData.sheets.length > 0) {
+          actualSheetName = metaData.sheets[0].properties.title;
+        }
+      }
+    }
+
+    const range = actualSheetName ? `'${actualSheetName}'!A1:Z1000` : 'Sheet1!A1:Z1000';
     const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
