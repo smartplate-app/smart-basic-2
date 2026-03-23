@@ -43,6 +43,7 @@ export default function ItemsPage() {
   const [seeding, setSeeding] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [merging, setMerging] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
   React.useEffect(() => {
@@ -428,6 +429,35 @@ const handleCleanOrphans = async (ownerEmail) => {
       alert('Export failed: ' + (e?.message || 'Unknown error'));
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleMergeItems = async () => {
+    if (selectedIds.length < 2) return;
+    if (!confirm(language === 'he' 
+      ? `האם לאחד ${selectedIds.length} פריטים? הפעולה תשאיר פריט אחד ותמחק את הכפילויות, תוך עדכון כל המתכונים וההזמנות.` 
+      : `Merge ${selectedIds.length} items? This will keep one item and delete duplicates, updating all recipes and orders.`)) {
+      return;
+    }
+
+    try {
+      setMerging(true);
+      const { data } = await base44.functions.invoke('mergeItems', { itemIds: selectedIds });
+      
+      if (data?.success) {
+        alert(language === 'he' 
+          ? `אוחדו בהצלחה! הפריט הראשי הוא: ${data.masterItem.name}` 
+          : `Merged successfully! Master item: ${data.masterItem.name}`);
+        setSelectedIds([]);
+        await loadData(user);
+      } else {
+        throw new Error(data?.error || 'Merge failed');
+      }
+    } catch (e) {
+      console.error("Merge failed:", e);
+      alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to merge'));
+    } finally {
+      setMerging(false);
     }
   };
 
@@ -828,6 +858,7 @@ const handleCleanOrphans = async (ownerEmail) => {
           setSelectedWarehouseId(created.id);
           setSelectedIds([]);
         }}
+        onMerge={handleMergeItems}
         />
         )}
     </div>

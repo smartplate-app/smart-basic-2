@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Merge } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "../LanguageProvider";
 
@@ -10,6 +10,7 @@ export default function SelectionBar({
   currentWarehouseName,
   onAddToCurrent,
   onCreateNew,
+  onMerge,
   warehouses = [],
   targetWarehouseId,
   onChangeTargetWarehouse
@@ -57,6 +58,16 @@ export default function SelectionBar({
           >
             <PlusCircle className={`w-4 h-4 ${language === 'he' ? 'ml-2' : 'mr-2'}`} /> {language === 'he' ? 'מחסן חדש' : 'New warehouse'}
           </Button>
+          {selectedCount > 1 && onMerge && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-purple-200"
+              onClick={onMerge}
+            >
+              <Merge className={`w-4 h-4 ${language === 'he' ? 'ml-2' : 'mr-2'}`} /> {language === 'he' ? 'אחד פריטים' : 'Merge Items'}
+            </Button>
+          )}
         </div>
       </div>
     </div>
