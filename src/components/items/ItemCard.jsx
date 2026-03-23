@@ -37,7 +37,13 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
               />
             )}
             <div className="flex-1">
-            <CardTitle className="text-lg font-bold text-gray-900">
+            <CardTitle 
+              className="text-lg font-bold text-gray-900 hover:text-green-600 transition-colors cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(item);
+              }}
+            >
               {item.name}
             </CardTitle>
             <p className="text-sm text-gray-600 mt-1">{item.supplier_name}</p>
