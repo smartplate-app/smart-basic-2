@@ -43,6 +43,7 @@ export default function ItemsPage() {
   const [seeding, setSeeding] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
