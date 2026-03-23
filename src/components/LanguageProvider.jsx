@@ -101,7 +101,7 @@ const translations = {
         "update_item": "עדכן פריט",
         "save_item": "שמור פריט",
         "item_name_supplier_required": "שם הפריט ובחירת ספק הם שדות חובה",
-        "unit_kg": "קילוגרם", "unit_g": "גרם", "unit_liter": "ליטר", "unit_ml": "מיליליטר", "unit_piece": "יחידה", "unit_box": "קופסה", "unit_pack": "אריזה", "unit_meter": "מטר", "unit_cm": "סנטימטר",
+        "unit_kg": "קילוגרם", "unit_g": "גרם", "unit_liter": "ליטר", "unit_ml": "מיליליטר", "unit_piece": "יחידה", "unit_box": "קופסה", "unit_case": "ארגז", "unit_pack": "אריזה", "unit_meter": "מטר", "unit_cm": "סנטימטר",
         "package_type": "סוג אריזה",
         "units_per_package": "כמות יחידות באריזה",
         "units_per_package_help": "כמה יחידות בחבילה/קרטון",
