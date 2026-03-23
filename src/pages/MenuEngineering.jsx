@@ -275,6 +275,7 @@ export default function MenuEngineeringPage() {
               </ScatterChart>
             </ResponsiveContainer>
           </div>
+          )}
         </CardContent>
       </Card>
     );
