@@ -143,11 +143,21 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
             <Button variant="outline" size="sm" onClick={addFreeRow} className="gap-2"><Plus className="w-4 h-4"/> {language === 'he' ? 'הוסף פריט' : 'Add item'}</Button>
           )}
           <div className="border rounded-lg divide-y">
+            {rows.length > 0 && (
+              <div className="p-3 grid grid-cols-1 md:grid-cols-12 gap-2 items-center bg-gray-50 text-xs font-medium text-gray-500 rounded-t-lg hidden md:grid">
+                <div className="md:col-span-4">{language === 'he' ? 'פריט' : 'Item'}</div>
+                <div className="md:col-span-2">{language === 'he' ? 'כמות' : 'Quantity'}</div>
+                <div className="md:col-span-2">{language === 'he' ? 'מחיר ליחידה' : 'Price per unit'}</div>
+                <div className="md:col-span-3">{language === 'he' ? 'סיבה' : 'Reason'}</div>
+                <div className="md:col-span-1"></div>
+              </div>
+            )}
             {rows.length === 0 ? (
               <div className="p-4 text-sm text-gray-500">{mode==='preset' ? (language === 'he' ? 'אין פריטים קבועים. לחץ על גלגל השיניים להגדרת רשימה.' : 'No preset items. Click the gear to set preset list.') : (language === 'he' ? 'אין פריטים עדיין. הוסף פריטים לדיווח פחת.' : 'No items yet. Add items to report waste.')}</div>
             ) : rows.map((r, idx) => (
               <div key={idx} className="p-3 grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
                 <div className="md:col-span-4">
+                  <div className="text-xs text-gray-500 mb-1 md:hidden">{language === 'he' ? 'פריט' : 'Item'}</div>
                   {mode==='free' ? (
                     <Select value={r.item_id} onValueChange={(v)=>{
                       const it = items.find(x=>x.id===v);
