@@ -1509,7 +1509,7 @@ const translations = {
         "update_item": "Actualizar artículo",
         "save_item": "Guardar artículo",
         "item_name_supplier_required": "Nombre del artículo y proveedor son obligatorios",
-        "unit_kg": "Kilogramo", "unit_g": "Gramo", "unit_liter": "Litro", "unit_ml": "Mililitro", "unit_piece": "Unidad", "unit_box": "Caja", "unit_pack": "Paquete", "unit_meter": "Metro", "unit_cm": "Centímetro",
+        "unit_kg": "Kilogramo", "unit_g": "Gramo", "unit_liter": "Litro", "unit_ml": "Mililitro", "unit_piece": "Unidad", "unit_box": "Caja", "unit_case": "Caja", "unit_pack": "Paquete", "unit_meter": "Metro", "unit_cm": "Centímetro",
         "package_type": "Tipo de paquete",
         "units_per_package": "Unidades por paquete",
         "units_per_package_help": "Cuántas unidades hay en el paquete/caja",
