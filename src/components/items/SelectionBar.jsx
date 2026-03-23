@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "../LanguageProvider";
 
 export default function SelectionBar({
   selectedCount,
@@ -13,6 +14,8 @@ export default function SelectionBar({
   targetWarehouseId,
   onChangeTargetWarehouse
 }) {
+  const { language } = useLanguage();
+
   if (!selectedCount) return null;
 
   return (
