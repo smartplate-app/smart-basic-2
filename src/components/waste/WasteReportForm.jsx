@@ -187,7 +187,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
                 </div>
                 <div className="md:col-span-2">
                   <div className="text-xs text-gray-500 mb-1 md:hidden">{language === 'he' ? 'מחיר ליחידה' : 'Price per unit'}</div>
-                  <Input type="number" step="0.01" value={r.price_per_unit} readOnly className="bg-gray-100 cursor-not-allowed" placeholder={language === 'he' ? 'מחיר' : 'Price'} />
+                  <Input type="number" step="0.01" value={Number(r.price_per_unit || 0).toFixed(2)} readOnly className="bg-gray-100 cursor-not-allowed" placeholder={language === 'he' ? 'מחיר' : 'Price'} />
                 </div>
                 <div className="md:col-span-3">
                   <div className="text-xs text-gray-500 mb-1 md:hidden">{language === 'he' ? 'סיבה' : 'Reason'}</div>
