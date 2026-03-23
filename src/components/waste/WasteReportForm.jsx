@@ -79,7 +79,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
       }
       onSaved?.(wr);
     } catch (e) {
-      alert('Failed to save');
+      alert(language === 'he' ? 'שגיאה בשמירה' : 'Failed to save');
     } finally {
       setSaving(false);
     }
