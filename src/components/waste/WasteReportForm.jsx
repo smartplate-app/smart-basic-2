@@ -29,14 +29,18 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
     if (mode === 'preset') {
       const presetIds = selectedWarehouse?.waste_preset_items || [];
       const map = new Map(items.map(i => [i.id, i]));
-      setRows(presetIds.map(id => map.get(id)).filter(Boolean).map(it => ({
-        item_id: it.id,
-        item_name: it.name,
-        unit: it.unit,
-        price_per_unit: it.price || 0,
-        quantity: 0,
-        reason: "",
-      })));
+      setRows(presetIds.map(id => map.get(id)).filter(Boolean).map(it => {
+        const unitsPerPackage = it.units_per_package && it.units_per_package > 0 ? it.units_per_package : 1;
+        const pricePerUnit = (it.price_after_discount || it.price || 0) / unitsPerPackage;
+        return {
+          item_id: it.id,
+          item_name: it.name,
+          unit: it.unit,
+          price_per_unit: pricePerUnit,
+          quantity: 0,
+          reason: "",
+        };
+      }));
     } else {
       setRows([]);
     }
