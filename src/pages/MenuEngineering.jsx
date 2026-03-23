@@ -238,6 +238,13 @@ export default function MenuEngineeringPage() {
           <CardTitle>{language === 'he' ? 'מטריצת הנדסת תפריט' : 'Menu Engineering Matrix'}</CardTitle>
         </CardHeader>
         <CardContent>
+          {data.length === 0 ? (
+            <div className="h-[400px] w-full flex flex-col items-center justify-center text-gray-500 bg-gray-50 rounded-xl border border-dashed">
+              <LayoutGrid className="w-12 h-12 mb-4 text-gray-300" />
+              <p>{language === 'he' ? 'אין מספיק נתוני מכירות להצגת המטריצה.' : 'Not enough sales data to display the matrix.'}</p>
+              <p className="text-sm mt-1">{language === 'he' ? 'אנא עדכן כמויות שנמכרו עבור הפריטים.' : 'Please update sold quantities for the items.'}</p>
+            </div>
+          ) : (
           <div className="h-[500px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
