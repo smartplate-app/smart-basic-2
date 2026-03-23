@@ -72,7 +72,7 @@ export default function ItemEditModal({ item, isOpen, onClose, onSave }) {
                   <SelectItem value="kg">{t('unit_kg')}</SelectItem>
                   <SelectItem value="liter">{t('unit_liter')}</SelectItem>
                   <SelectItem value="unit">{t('unit_piece')}</SelectItem>
-                  <SelectItem value="case">{t('unit_box')}</SelectItem>
+                  <SelectItem value="case">{t('unit_case') || 'ארגז'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
