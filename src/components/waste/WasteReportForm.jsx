@@ -165,10 +165,12 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
                   {mode==='free' ? (
                     <Select value={r.item_id} onValueChange={(v)=>{
                       const it = items.find(x=>x.id===v);
+                      const unitsPerPackage = it?.units_per_package && it.units_per_package > 0 ? it.units_per_package : 1;
+                      const pricePerUnit = it ? ((it.price_after_discount || it.price || 0) / unitsPerPackage) : 0;
                       updateRowField(idx, 'item_id', v);
                       updateRowField(idx, 'item_name', it?.name || '');
                       updateRowField(idx, 'unit', it?.unit || 'unit');
-                      updateRowField(idx, 'price_per_unit', it?.price || 0);
+                      updateRowField(idx, 'price_per_unit', pricePerUnit);
                     }}>
                       <SelectTrigger className="w-full"><SelectValue placeholder={language === 'he' ? 'בחר פריט' : 'Select item'} /></SelectTrigger>
                       <SelectContent className="max-h-64">
