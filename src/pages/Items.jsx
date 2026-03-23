@@ -447,42 +447,42 @@ const handleCleanOrphans = async (ownerEmail) => {
       printContainer.style.direction = language === 'he' ? 'rtl' : 'ltr';
       document.body.appendChild(printContainer);
 
-      let html = \`
+      let html = `
         <div style="font-family: system-ui, -apple-system, sans-serif; color: #111827;">
           <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #107c41; padding-bottom: 20px;">
             <h1 style="color: #107c41; margin: 0; font-size: 28px;">
-              \${language === 'he' ? 'קטלוג פריטים' : 'Items Catalog'}
+              ${language === 'he' ? 'קטלוג פריטים' : 'Items Catalog'}
             </h1>
             <p style="color: #6b7280; margin-top: 10px; font-size: 14px;">
-              \${new Date().toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} | \${filteredItems.length} \${language === 'he' ? 'פריטים' : 'items'}
+              ${new Date().toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} | ${filteredItems.length} ${language === 'he' ? 'פריטים' : 'items'}
             </p>
           </div>
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">
-      \`;
+      `;
 
       filteredItems.forEach(item => {
         const price = item.price_after_discount || item.price || 0;
-        html += \`
+        html += `
           <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; background-color: #f9fafb;">
-            <div style="font-weight: 700; font-size: 18px; margin-bottom: 8px; color: #111827;">\${item.name}</div>
+            <div style="font-weight: 700; font-size: 18px; margin-bottom: 8px; color: #111827;">${item.name}</div>
             <div style="color: #4b5563; font-size: 14px; margin-bottom: 16px; display: flex; justify-content: space-between;">
-              <span>\${item.supplier_name || ''}</span>
-              <span style="color: #9ca3af;">\${item.catalog_number || ''}</span>
+              <span>${item.supplier_name || ''}</span>
+              <span style="color: #9ca3af;">${item.catalog_number || ''}</span>
             </div>
             <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #e5e7eb; padding-top: 12px;">
               <span style="font-size: 14px; color: #6b7280; background: #e5e7eb; padding: 4px 8px; border-radius: 6px;">
-                \${item.units_per_package} \${t('unit_' + item.unit) || item.unit}
+                ${item.units_per_package} ${t('unit_' + item.unit) || item.unit}
               </span>
-              <span style="font-weight: 800; font-size: 20px; color: #107c41;">₪\${price.toFixed(2)}</span>
+              <span style="font-weight: 800; font-size: 20px; color: #107c41;">₪${price.toFixed(2)}</span>
             </div>
           </div>
-        \`;
+        `;
       });
 
-      html += \`
+      html += `
           </div>
         </div>
-      \`;
+      `;
 
       printContainer.innerHTML = html;
 
