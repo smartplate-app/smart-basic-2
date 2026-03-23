@@ -6,8 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Calendar as CalendarIcon, Save, Settings } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useLanguage } from "../LanguageProvider";
 
 export default function WasteReportForm({ warehouses, items, onCancel, onSaved, report }) {
+  const { language } = useLanguage();
   const [warehouseId, setWarehouseId] = useState(report?.warehouse_id || warehouses[0]?.id || "");
   const [date, setDate] = useState(() => report?.report_date || new Date().toISOString().slice(0,10));
   const [shift, setShift] = useState(report?.shift || "daily");
