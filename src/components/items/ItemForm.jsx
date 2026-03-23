@@ -17,7 +17,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     { value: "liter", label: t('unit_liter') || "ליטר" },
     { value: "ml", label: t('unit_ml') || "מ״ל" },
     { value: "unit", label: t('unit_piece') || "יחידה" },
-    { value: "case", label: t('unit_box') || "ארגז" }
+    { value: "case", label: t('unit_case') || "ארגז" }
   ];
 
   const [currentItem, setCurrentItem] = React.useState(item || {
