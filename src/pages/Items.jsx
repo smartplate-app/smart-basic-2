@@ -610,6 +610,15 @@ const handleCleanOrphans = async (ownerEmail) => {
               {exporting ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
               {safeT('export_to_sheets','ייצוא ל-Google Sheets','Export to Google Sheets')}
             </Button>
+            <Button
+              variant="outline"
+              onClick={handleGenerateCatalogPdf}
+              className="gap-2"
+              disabled={generatingPdf}
+            >
+              {generatingPdf ? <Loader className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+              {language === 'he' ? 'הפק קטלוג' : 'Generate Catalog'}
+            </Button>
 
 
             {!isViewer && (
