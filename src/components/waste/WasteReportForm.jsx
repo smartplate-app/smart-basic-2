@@ -55,7 +55,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
   const total = useMemo(() => rows.reduce((s,r)=> s + (Number(r.quantity||0) * Number(r.price_per_unit||0)), 0), [rows]);
 
   const save = async () => {
-    if (!warehouseId) { alert('Select warehouse'); return; }
+    if (!warehouseId) { alert(language === 'he' ? 'בחר מחסן' : 'Select warehouse'); return; }
     setSaving(true);
     try {
       const cleanItems = rows.map(r => ({
