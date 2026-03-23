@@ -206,7 +206,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </table>
       </div>
 
       {items.length === 0 && (
