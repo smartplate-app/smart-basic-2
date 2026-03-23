@@ -98,53 +98,53 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>{report ? 'Edit Waste Report' : 'New Waste Report'}</span>
-          <Badge variant="outline">{total.toFixed(2)} total</Badge>
+          <span>{report ? (language === 'he' ? 'ערוך דיווח פחת' : 'Edit Waste Report') : (language === 'he' ? 'דיווח פחת חדש' : 'New Waste Report')}</span>
+          <Badge variant="outline">{language === 'he' ? `סה"כ ${total.toFixed(2)}` : `${total.toFixed(2)} total`}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
-            <label className="text-sm text-gray-600">Warehouse</label>
+            <label className="text-sm text-gray-600">{language === 'he' ? 'מחסן' : 'Warehouse'}</label>
             <Select value={warehouseId} onValueChange={setWarehouseId}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder={language === 'he' ? 'בחר' : 'Select'} /></SelectTrigger>
               <SelectContent>
                 {warehouses.map(w => (<SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Date</label>
+            <label className="text-sm text-gray-600">{language === 'he' ? 'תאריך' : 'Date'}</label>
             <div className="flex items-center gap-2">
               <Input type="date" value={date} onChange={e=>setDate(e.target.value)} />
               <CalendarIcon className="w-4 h-4 text-gray-400" />
             </div>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Report Type</label>
+            <label className="text-sm text-gray-600">{language === 'he' ? 'סוג דיווח' : 'Report Type'}</label>
             <Select value={reportType} onValueChange={setReportType}>
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectTrigger className="w-full"><SelectValue placeholder={language === 'he' ? 'בחר' : 'Select'} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="start">Start of day</SelectItem>
-                <SelectItem value="end">End of day</SelectItem>
+                <SelectItem value="start">{language === 'he' ? 'תחילת יום' : 'Start of day'}</SelectItem>
+                <SelectItem value="end">{language === 'he' ? 'סוף יום' : 'End of day'}</SelectItem>
               </SelectContent>
             </Select>
-            <div className="text-xs text-gray-500 mt-1">End of day marking is done in Daily Summary.</div>
+            <div className="text-xs text-gray-500 mt-1">{language === 'he' ? 'סימון סוף יום מתבצע בסיכום יומי.' : 'End of day marking is done in Daily Summary.'}</div>
           </div>
           <div className="flex items-end gap-2">
-            <Button variant={mode==='preset'? 'default':'outline'} onClick={()=>setMode('preset')}>Preset</Button>
-            <Button variant={mode==='free'? 'default':'outline'} onClick={()=>setMode('free')}>Free</Button>
-            <Button variant="outline" onClick={setPresetForWarehouse} title="Quick preset"><Settings className="w-4 h-4" /></Button>
+            <Button variant={mode==='preset'? 'default':'outline'} onClick={()=>setMode('preset')}>{language === 'he' ? 'קבוע מראש' : 'Preset'}</Button>
+            <Button variant={mode==='free'? 'default':'outline'} onClick={()=>setMode('free')}>{language === 'he' ? 'חופשי' : 'Free'}</Button>
+            <Button variant="outline" onClick={setPresetForWarehouse} title={language === 'he' ? 'הגדרה מהירה' : 'Quick preset'}><Settings className="w-4 h-4" /></Button>
           </div>
         </div>
 
         <div className="space-y-2">
           {mode==='free' && (
-            <Button variant="outline" size="sm" onClick={addFreeRow} className="gap-2"><Plus className="w-4 h-4"/> Add item</Button>
+            <Button variant="outline" size="sm" onClick={addFreeRow} className="gap-2"><Plus className="w-4 h-4"/> {language === 'he' ? 'הוסף פריט' : 'Add item'}</Button>
           )}
           <div className="border rounded-lg divide-y">
             {rows.length === 0 ? (
-              <div className="p-4 text-sm text-gray-500">{mode==='preset' ? 'No preset items. Click the gear to set preset list.' : 'No items yet. Add items to report waste.'}</div>
+              <div className="p-4 text-sm text-gray-500">{mode==='preset' ? (language === 'he' ? 'אין פריטים קבועים. לחץ על גלגל השיניים להגדרת רשימה.' : 'No preset items. Click the gear to set preset list.') : (language === 'he' ? 'אין פריטים עדיין. הוסף פריטים לדיווח פחת.' : 'No items yet. Add items to report waste.')}</div>
             ) : rows.map((r, idx) => (
               <div key={idx} className="p-3 grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
                 <div className="md:col-span-4">
@@ -156,7 +156,7 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
                       updateRowField(idx, 'unit', it?.unit || 'unit');
                       updateRowField(idx, 'price_per_unit', it?.price || 0);
                     }}>
-                      <SelectTrigger className="w-full"><SelectValue placeholder="Select item" /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue placeholder={language === 'he' ? 'בחר פריט' : 'Select item'} /></SelectTrigger>
                       <SelectContent className="max-h-64">
                         {items.map(it => (<SelectItem key={it.id} value={it.id}>{it.name}</SelectItem>))}
                       </SelectContent>
@@ -166,13 +166,13 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
                   )}
                 </div>
                 <div className="md:col-span-2">
-                  <Input type="number" step="0.01" value={r.quantity} onChange={e=>updateRowField(idx,'quantity', e.target.value)} placeholder="Qty" />
+                  <Input type="number" step="0.01" value={r.quantity} onChange={e=>updateRowField(idx,'quantity', e.target.value)} placeholder={language === 'he' ? 'כמות' : 'Qty'} />
                 </div>
                 <div className="md:col-span-2">
-                  <Input type="number" step="0.01" value={r.price_per_unit} onChange={e=>updateRowField(idx,'price_per_unit', e.target.value)} placeholder="Price" />
+                  <Input type="number" step="0.01" value={r.price_per_unit} onChange={e=>updateRowField(idx,'price_per_unit', e.target.value)} placeholder={language === 'he' ? 'מחיר' : 'Price'} />
                 </div>
                 <div className="md:col-span-3">
-                  <Input value={r.reason} onChange={e=>updateRowField(idx,'reason', e.target.value)} placeholder="Reason (expired, damaged, over-prep...)" />
+                  <Input value={r.reason} onChange={e=>updateRowField(idx,'reason', e.target.value)} placeholder={language === 'he' ? 'סיבה (פג תוקף, פגום...)' : 'Reason (expired, damaged, over-prep...)'} />
                 </div>
                 <div className="md:col-span-1 text-right">
                   <Button variant="ghost" size="icon" onClick={()=>removeRow(idx)}><Trash2 className="w-4 h-4"/></Button>
@@ -183,14 +183,14 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm text-gray-600">Notes</label>
-          <Input value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional notes" />
+          <label className="text-sm text-gray-600">{language === 'he' ? 'הערות' : 'Notes'}</label>
+          <Input value={note} onChange={e=>setNote(e.target.value)} placeholder={language === 'he' ? 'הערות אופציונליות' : 'Optional notes'} />
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={save} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
-            <Save className="w-4 h-4 mr-1"/> {report ? 'Update Report' : 'Save Report'}
+          <Button variant="outline" onClick={onCancel}>{language === 'he' ? 'ביטול' : 'Cancel'}</Button>
+          <Button onClick={save} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Save className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0"/> {report ? (language === 'he' ? 'עדכן דיווח' : 'Update Report') : (language === 'he' ? 'שמור דיווח' : 'Save Report')}
           </Button>
         </div>
       </CardContent>
