@@ -86,12 +86,13 @@ Deno.serve(async (req) => {
     // Load items created by this user (catalog items)
     const items = await base44.entities.Item.filter({ created_by: workingEmail }, 'name');
 
-    const headers = ['name', 'unit', 'price', 'discount'];
+    const headers = ['name', 'unit', 'price', 'discount', 'catalog_number'];
     const rows = (items || []).map((it) => [
       it.name || '',
       it.unit || '',
       (typeof it.price === 'number' ? it.price : Number(it.price) || 0),
-      (typeof it.discount === 'number' ? it.discount : Number(it.discount) || 0)
+      (typeof it.discount === 'number' ? it.discount : Number(it.discount) || 0),
+      it.catalog_number || ''
     ]);
 
     const title = `COGS Items - ${user.business_name || workingEmail}`;
@@ -113,7 +114,7 @@ Deno.serve(async (req) => {
 
     const allValues = [headers, ...rows];
     const endRow = allValues.length;
-    const endCol = 'D'; // A..D
+    const endCol = 'E'; // A..E
     const range = `${sheetTitle}!A1:${endCol}${endRow}`;
 
     await writeValues(accessToken, targetSpreadsheetId, range, allValues);
