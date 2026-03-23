@@ -86,12 +86,12 @@ export default function WasteReportForm({ warehouses, items, onCancel, onSaved, 
   };
 
   const setPresetForWarehouse = async () => {
-    const chosen = prompt('Enter item names or IDs separated by commas (quick setup). For full control, switch to Free mode and add rows then Save as preset later.');
+    const chosen = prompt(language === 'he' ? 'הזן שמות פריטים מופרדים בפסיקים (הגדרה מהירה). לשליטה מלאה, עבור למצב חופשי והוסף שורות ואז שמור כקבוע מראש.' : 'Enter item names or IDs separated by commas (quick setup). For full control, switch to Free mode and add rows then Save as preset later.');
     if (!chosen) return;
     const tokens = chosen.split(',').map(s=>s.trim()).filter(Boolean);
     const ids = tokens.map(t => items.find(it => it.id===t || it.name.toLowerCase()===t.toLowerCase())?.id).filter(Boolean);
     await base44.entities.Warehouse.update(warehouseId, { ...selectedWarehouse, waste_preset_items: ids });
-    alert('Preset saved');
+    alert(language === 'he' ? 'נשמר בהצלחה' : 'Preset saved');
   };
 
   return (
