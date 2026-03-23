@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
       prepsData.push(['יחידת מידה', 'ק"ג']);
       prepsData.push(['משקל כולל', '1']);
       prepsData.push([]);
-      prepsData.push(['שם פריט המלאי', 'כמות יחידות', 'יחידת מידה']);
-      for (let j = 0; j < 5; j++) prepsData.push(['', '', '']);
+      prepsData.push(['שם פריט המלאי', 'מספר קטלוגי', 'כמות יחידות', 'יחידת מידה']);
+      for (let j = 0; j < 5; j++) prepsData.push(['', '', '', '']);
       prepsData.push([]);
       prepsData.push([]);
     }
@@ -78,8 +78,8 @@ Deno.serve(async (req) => {
       recipesData.push(['שם המנה בתפריט', `מנה ${i}`]);
       recipesData.push(['מחיר מכירה', '50']);
       recipesData.push([]);
-      recipesData.push(['שם פריט המלאי', 'כמות יחידות', 'יחידת מידה']);
-      for (let j = 0; j < 5; j++) recipesData.push(['', '', '']);
+      recipesData.push(['שם פריט המלאי', 'מספר קטלוגי', 'כמות יחידות', 'יחידת מידה']);
+      for (let j = 0; j < 5; j++) recipesData.push(['', '', '', '']);
       recipesData.push([]);
       recipesData.push([]);
     }
