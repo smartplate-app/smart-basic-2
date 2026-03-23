@@ -20,42 +20,42 @@ export default function SelectionBar({
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
-      <div className="bg-white/95 backdrop-blur border shadow-xl rounded-xl px-4 py-3 flex items-center gap-3">
+      <div className={`bg-white/95 backdrop-blur border shadow-xl rounded-xl px-4 py-3 flex items-center gap-3 ${language === 'he' ? 'flex-row-reverse' : ''}`}>
         <Badge variant="secondary" className="text-sm">
-          {selectedCount} selected
+          {selectedCount} {language === 'he' ? 'נבחרו' : 'selected'}
         </Badge>
 
         <div className="hidden sm:block">
           <Select value={targetWarehouseId || ""} onValueChange={(v) => onChangeTargetWarehouse && onChangeTargetWarehouse(v)}>
-            <SelectTrigger className="h-8 w-56">
-              <SelectValue placeholder="Choose warehouse" />
+            <SelectTrigger className={`h-8 w-56 ${language === 'he' ? 'text-right flex-row-reverse' : ''}`}>
+              <SelectValue placeholder={language === 'he' ? 'בחר מחסן' : 'Choose warehouse'} />
             </SelectTrigger>
             <SelectContent>
               {warehouses.map((w) => (
-                <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                <SelectItem key={w.id} value={w.id} className={language === 'he' ? 'flex-row-reverse justify-end' : ''}>{w.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="text-sm text-gray-700 hidden sm:block">
-          Add to: <span className="font-semibold">{currentWarehouseName || (warehouses.find(w => w.id === targetWarehouseId)?.name) || '—'}</span>
+        <div className="text-sm text-gray-700 hidden sm:block whitespace-nowrap">
+          {language === 'he' ? 'הוסף ל:' : 'Add to:'} <span className="font-semibold">{currentWarehouseName || (warehouses.find(w => w.id === targetWarehouseId)?.name) || '—'}</span>
         </div>
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${language === 'he' ? 'flex-row-reverse' : ''}`}>
           <Button
             size="sm"
             className="bg-green-600 hover:bg-green-700 text-white"
             onClick={onAddToCurrent}
             disabled={!targetWarehouseId}
           >
-            Add to current
+            {language === 'he' ? 'הוסף למחסן' : 'Add to current'}
           </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={onCreateNew}
           >
-            <PlusCircle className="w-4 h-4 mr-2" /> New warehouse
+            <PlusCircle className={`w-4 h-4 ${language === 'he' ? 'ml-2' : 'mr-2'}`} /> {language === 'he' ? 'מחסן חדש' : 'New warehouse'}
           </Button>
         </div>
       </div>
