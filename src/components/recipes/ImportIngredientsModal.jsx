@@ -4,33 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
-import { Loader2, FileSpreadsheet, PlusCircle } from "lucide-react";
+import { Loader2, FileSpreadsheet } from "lucide-react";
 
 export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
-
-  const handleGenerateTemplate = async () => {
-    setGenerating(true);
-    setError("");
-    try {
-      const response = await base44.functions.invoke('generateRecipeTemplateSheet', {});
-      if (response.data && response.data.success && response.data.url) {
-        window.open(response.data.url, '_blank');
-      } else {
-        throw new Error(response.data?.error || 'Unknown error occurred');
-      }
-    } catch (err) {
-      console.error("Generate error:", err);
-      setError(err.message || (language === 'he' ? 'שגיאה ביצירת תבנית' : 'Error generating template'));
-    } finally {
-      setGenerating(false);
-    }
-  };
 
   const handleImport = async (e) => {
     e.preventDefault();
@@ -75,13 +56,6 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
               : 'Paste a link to a Google Sheets document containing your ingredients and recipes. The system will scan all sheets in the file. Make sure the sheet is accessible (Anyone with the link can view).'}
           </DialogDescription>
         </DialogHeader>
-
-        <div className="flex justify-center mt-4 mb-2">
-            <Button type="button" variant="outline" onClick={handleGenerateTemplate} disabled={generating} className="w-full border-dashed border-2 border-green-300 text-green-700 hover:bg-green-50">
-              {generating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PlusCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
-              {language === 'he' ? 'צור גיליון תבנית ריק לדוגמה' : 'Generate Empty Template Sheet'}
-            </Button>
-        </div>
 
         <form onSubmit={handleImport} className="space-y-4 mt-4">
           <div>
