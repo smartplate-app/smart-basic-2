@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { base44 } from "@/api/base44Client";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 
 function normalizeText(str) {
   if (!str) return '';
@@ -39,6 +40,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [targetEmail, setTargetEmail] = useState('');
   const [sortMode, setSortMode] = useState('supplier_asc');
   const [itemSearch, setItemSearch] = useState('');
+  const [uploadTarget, setUploadTarget] = useState('drive');
 
   React.useEffect(() => {
     (async () => {
@@ -109,51 +111,87 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
           <CardTitle className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <span>{t('monthly_report') || 'Monthly Report'}</span>
-              <Button
-                disabled={uploading}
-                onClick={async () => {
-                  setUploadResult(null);
-                  try {
-                    // Quick auth check
-                    let isAuth = false;
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    disabled={uploading}
+                    className={`bg-green-600 hover:bg-green-700 shrink-0 ${isRTL ? 'order-first' : ''}`}
+                  >
+                    {uploading ? (t('uploading') || 'Uploading...') : (language === 'he' ? 'העלה לענן' : 'Upload to Cloud')}
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={async () => {
+                    setUploadResult(null);
+                    setUploadTarget('drive');
                     try {
-                      const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
-                      isAuth = !!auth?.authorized;
-                      setDriveAuthorized(isAuth);
-                    } catch (authErr) {
-                      isAuth = false;
-                      setDriveAuthorized(false);
-                    }
-                    if (!isAuth) {
-                      alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
-                      return;
-                    }
+                      let isAuth = false;
+                      try {
+                        const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
+                        isAuth = !!auth?.authorized;
+                        setDriveAuthorized(isAuth);
+                      } catch (authErr) {
+                        isAuth = false;
+                        setDriveAuthorized(false);
+                      }
+                      if (!isAuth) {
+                        alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
+                        return;
+                      }
 
-                    // Require per-user share email for non-admins
-                    let me = null;
-                    try { me = await base44.auth.me(); } catch {}
-                    if ((me?.role !== 'admin') && !me?.drive_share_email) {
-                      setShowConnect(true);
-                      return;
-                    }
+                      let me = null;
+                      try { me = await base44.auth.me(); } catch {}
+                      if ((me?.role !== 'admin') && !me?.drive_share_email) {
+                        setShowConnect(true);
+                        return;
+                      }
 
-                    // Lookup the Google Drive account tied to this token
+                      try {
+                        const { data } = await base44.functions.invoke('driveWhoAmI', {});
+                        setDriveAccount(data?.user || null);
+                      } catch {}
+                      setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
+
+                      setShowDriveConfirm(true);
+                    } catch (e) {
+                      alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
+                    }
+                  }}>
+                    {t('upload_to_drive') || 'Upload to Google Drive'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={async () => {
+                    setUploadResult(null);
+                    setUploadTarget('dropbox');
                     try {
-                      const { data } = await base44.functions.invoke('driveWhoAmI', {});
-                      setDriveAccount(data?.user || null);
-                    } catch {}
-                    setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
+                      let isAuth = false;
+                      try {
+                        const { data: auth } = await base44.functions.invoke('checkDropboxAuth', {});
+                        isAuth = !!auth?.authorized;
+                      } catch (authErr) {
+                        isAuth = false;
+                      }
+                      if (!isAuth) {
+                        alert(language === 'he' ? 'אנא התחבר ל-Dropbox תחילה.' : 'Please connect Dropbox first.');
+                        return;
+                      }
 
-                    // Show confirmation dialog before uploading
-                    setShowDriveConfirm(true);
-                  } catch (e) {
-                    alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
-                  }
-                }}
-                className={`bg-green-600 hover:bg-green-700 shrink-0 ${isRTL ? 'order-first' : ''}`}
-              >
-                {uploading ? (t('uploading') || 'Uploading...') : (t('upload_to_drive') || 'Upload to Drive')}
-              </Button>
+                      let me = null;
+                      try { me = await base44.auth.me(); } catch {}
+                      
+                      setDriveAccount({ displayName: 'Dropbox' });
+                      setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
+
+                      setShowDriveConfirm(true);
+                    } catch (e) {
+                      alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
+                    }
+                  }}>
+                    {language === 'he' ? 'העלה ל-Dropbox' : 'Upload to Dropbox'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
               <label className="text-sm text-gray-600">{t('month') || 'Month'}</label>
@@ -330,10 +368,15 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 )}
               </tbody>
             </table>
-            {uploadResult?.parentFolder?.webViewLink && (
+            {(uploadResult?.parentFolder?.webViewLink || (uploadTarget === 'dropbox' && uploadResult?.parentFolder?.path)) && (
               <div className="mt-3 text-sm text-gray-700">
-                <a href={uploadResult.parentFolder.webViewLink} target="_blank" rel="noreferrer" className="text-blue-600 underline">
-                  {t('open_drive_folder') || 'Open Drive folder'}
+                <a 
+                  href={uploadResult.parentFolder.webViewLink || `https://www.dropbox.com/home${uploadResult.parentFolder.path}`} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="text-blue-600 underline"
+                >
+                  {uploadTarget === 'dropbox' ? (language === 'he' ? 'פתח תיקיית Dropbox' : 'Open Dropbox folder') : (t('open_drive_folder') || 'Open Drive folder')}
                 </a>
               </div>
             )}
@@ -365,16 +408,24 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             <DialogTitle>{(t('confirm_upload') && t('confirm_upload') !== 'confirm_upload') ? t('confirm_upload') : 'Confirm upload'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm">
-            <div>{(t('drive_upload_account') && t('drive_upload_account') !== 'drive_upload_account') ? t('drive_upload_account') : "Files will be uploaded using the app owner’s Google Drive account:"}</div>
+            <div>
+              {uploadTarget === 'dropbox' 
+                ? (language === 'he' ? 'הקבצים יועלו לחשבון ה-Dropbox המחובר:' : 'Files will be uploaded to the connected Dropbox account:')
+                : ((t('drive_upload_account') && t('drive_upload_account') !== 'drive_upload_account') ? t('drive_upload_account') : "Files will be uploaded using the app owner’s Google Drive account:")}
+            </div>
             <div className="font-medium">{driveAccount?.emailAddress || driveAccount?.displayName || ((t('google_drive') && t('google_drive') !== 'google_drive') ? t('google_drive') : 'Google Drive')}</div>
             <div className="text-gray-500">
               { (t('drive_target_folder') && t('drive_target_folder') !== 'drive_target_folder') ? t('drive_target_folder') : 'Target folder:' } {targetPath || 'SmartPlateUploads/<your email>/Invoices-<month>'}
             </div>
+            {uploadTarget === 'drive' && (
+              <div className="text-gray-500">
+                {(t('drive_shared_with') && t('drive_shared_with') !== 'drive_shared_with') ? t('drive_shared_with') : 'Files will be shared with:'} {targetUser?.drive_share_email || targetEmail}
+              </div>
+            )}
             <div className="text-gray-500">
-              {(t('drive_shared_with') && t('drive_shared_with') !== 'drive_shared_with') ? t('drive_shared_with') : 'Files will be shared with:'} {targetUser?.drive_share_email || targetEmail}
-            </div>
-            <div className="text-gray-500">
-              { (t('drive_app_connector_note') && t('drive_app_connector_note') !== 'drive_app_connector_note') ? t('drive_app_connector_note') : 'Note: For security, files upload to the app owner’s Drive and are organized under your personal folder.'}
+              {uploadTarget === 'dropbox'
+                ? (language === 'he' ? 'הערה: הקבצים יאורגנו בתיקייה תחת שמך.' : 'Note: Files will be organized in a folder under your name.')
+                : ((t('drive_app_connector_note') && t('drive_app_connector_note') !== 'drive_app_connector_note') ? t('drive_app_connector_note') : 'Note: For security, files upload to the app owner’s Drive and are organized under your personal folder.')}
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-4">
@@ -397,10 +448,15 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                       receipt_images: r.receipt_images,
                     })),
                   };
-                  const { data } = await base44.functions.invoke('uploadMonthlyInvoicesToDrive', payload);
+                  
+                  const functionName = uploadTarget === 'dropbox' ? 'uploadMonthlyInvoicesToDropbox' : 'uploadMonthlyInvoicesToDrive';
+                  const { data } = await base44.functions.invoke(functionName, payload);
+                  
                   setUploadResult(data);
                   setShowDriveConfirm(false);
-                  alert((t('upload_completed') || 'Upload completed') + (data?.parentFolder?.webViewLink ? `\n${data.parentFolder.webViewLink}` : ''));
+                  
+                  const link = data?.parentFolder?.webViewLink || (uploadTarget === 'dropbox' && data?.parentFolder?.path ? `https://www.dropbox.com/home${data.parentFolder.path}` : '');
+                  alert((t('upload_completed') || 'Upload completed') + (link ? `\n${link}` : ''));
                 } catch (e) {
                   alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
                 } finally {
