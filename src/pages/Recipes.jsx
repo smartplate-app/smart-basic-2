@@ -66,16 +66,20 @@ export default function RecipesPage() {
   };
 
   const handleMenuUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     
     setScanningMenu(true);
     try {
-      // 1. Upload file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // 1. Upload files
+      const fileUrls = [];
+      for (let i = 0; i < files.length; i++) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: files[i] });
+        fileUrls.push(file_url);
+      }
       
       // 2. Scan via backend
-      const { data } = await base44.functions.invoke('scanMenuPdf', { fileUrl: file_url });
+      const { data } = await base44.functions.invoke('scanMenuPdf', { fileUrls });
       
       if (data?.success) {
         setMissingRecipes(data.missingRecipes || []);
@@ -200,7 +204,7 @@ export default function RecipesPage() {
               className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4"
             >
               {scanningMenu ? <Loader2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <FileText className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
-              {language === 'he' ? 'סרוק תפריט PDF' : 'Scan Menu PDF'}
+              {language === 'he' ? 'סרוק תפריט (PDF/תמונות)' : 'Scan Menu (PDF/Images)'}
             </Button>
             <input 
               type="file" 
@@ -208,6 +212,7 @@ export default function RecipesPage() {
               onChange={handleMenuUpload} 
               accept=".pdf,image/*" 
               className="hidden" 
+              multiple
             />
 
             <Button 
