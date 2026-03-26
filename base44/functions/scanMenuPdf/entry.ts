@@ -14,14 +14,15 @@ Deno.serve(async (req) => {
     const existingNames = existingRecipes.map(r => r.name.trim().toLowerCase());
 
     // Use LLM to extract menu items
-    const prompt = `Extract all the food and drink items (dishes, recipes) from this restaurant menu. 
-Return a JSON object with an array of strings called 'menu_items' containing the names of the dishes.
-Do not include prices, descriptions, or category headers. Just the dish names.`;
+    const prompt = `קרא את כל התפריט המצורף (תמונה או PDF) וחלץ את כל פריטי המזון והשתייה (מנות, מתכונים, משקאות).
+החזר אובייקט JSON עם מערך של מחרוזות בשם 'menu_items' המכיל את שמות המנות בדיוק כפי שהם מופיעים בתפריט בעברית.
+אל תכלול מחירים, תיאורים או כותרות של קטגוריות. רק את שמות המנות.
+חשוב: קרא את כל הדפים וכל העמודות בתפריט ואל תדלג על אף מנה.`;
 
     const response = await base44.integrations.Core.InvokeLLM({
       prompt,
       file_urls: [fileUrl],
-      model: 'gemini_3_flash',
+      model: 'claude_sonnet_4_6',
       response_json_schema: {
         type: 'object',
         properties: {
