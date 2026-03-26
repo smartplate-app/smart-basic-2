@@ -9,6 +9,7 @@ import RecipeForm from "../components/recipes/RecipeForm";
 import ImportIngredientsModal from "../components/recipes/ImportIngredientsModal";
 import RecipeListView from "../components/recipes/RecipeListView";
 import MenuScanModal from "../components/recipes/MenuScanModal";
+import MenuImageUploadModal from "../components/recipes/MenuImageUploadModal";
 
 export default function RecipesPage() {
   const { language } = useLanguage();
@@ -28,8 +29,8 @@ export default function RecipesPage() {
   
   const [scanningMenu, setScanningMenu] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
+  const [showImageUploadModal, setShowImageUploadModal] = useState(false);
   const [missingRecipes, setMissingRecipes] = useState([]);
-  const fileInputRef = React.useRef(null);
 
   const handleAuth = (e) => {
     e.preventDefault();
@@ -65,8 +66,7 @@ export default function RecipesPage() {
     }
   };
 
-  const handleMenuUpload = async (e) => {
-    const files = e.target.files;
+  const handleMenuUpload = async (files) => {
     if (!files || files.length === 0) return;
     
     setScanningMenu(true);
@@ -83,6 +83,7 @@ export default function RecipesPage() {
       
       if (data?.success) {
         setMissingRecipes(data.missingRecipes || []);
+        setShowImageUploadModal(false);
         setShowScanModal(true);
       } else {
         throw new Error(data?.error || 'Failed to scan menu');
@@ -91,7 +92,6 @@ export default function RecipesPage() {
       alert((language === 'he' ? 'שגיאה בסריקת התפריט: ' : 'Error scanning menu: ') + err.message);
     } finally {
       setScanningMenu(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -199,21 +199,13 @@ export default function RecipesPage() {
             </Button>
             
             <Button 
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setShowImageUploadModal(true)}
               disabled={scanningMenu}
               className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4"
             >
               {scanningMenu ? <Loader2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <FileText className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
-              {language === 'he' ? 'סרוק תפריט (PDF/תמונות)' : 'Scan Menu (PDF/Images)'}
+              {language === 'he' ? 'סרוק תפריט (תמונות)' : 'Scan Menu (Images)'}
             </Button>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleMenuUpload} 
-              accept=".pdf,image/*" 
-              className="hidden" 
-              multiple
-            />
 
             <Button 
               onClick={handleGenerateSheet}
@@ -342,6 +334,13 @@ export default function RecipesPage() {
           isOpen={showScanModal}
           onClose={() => setShowScanModal(false)}
           missingRecipes={missingRecipes}
+        />
+
+        <MenuImageUploadModal
+          isOpen={showImageUploadModal}
+          onClose={() => setShowImageUploadModal(false)}
+          onUpload={handleMenuUpload}
+          scanningMenu={scanningMenu}
         />
       </div>
     </div>
