@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     const response = await base44.integrations.Core.InvokeLLM({
       prompt,
       file_urls: fileUrls,
-      model: 'claude_sonnet_4_6',
+      model: 'gpt_5',
       response_json_schema: {
         type: 'object',
         properties: {
@@ -49,12 +49,8 @@ Deno.serve(async (req) => {
     const missingRecipes = [];
     for (const item of menuItems) {
       const itemLower = item.trim().toLowerCase();
-      // Simple fuzzy match: check if item is included in any existing recipe name or vice versa
-      const exists = existingNames.some(existing => 
-        existing === itemLower || 
-        existing.includes(itemLower) || 
-        itemLower.includes(existing)
-      );
+      // Strict matching: only exact match to avoid false positives
+      const exists = existingNames.some(existing => existing === itemLower);
       
       if (!exists) {
         missingRecipes.push(item.trim());

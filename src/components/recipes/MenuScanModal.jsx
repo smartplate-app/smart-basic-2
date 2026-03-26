@@ -38,6 +38,11 @@ export default function MenuScanModal({ isOpen, onClose, missingRecipes }) {
               {language === 'he' ? 'כל המנות בתפריט נמצאות במערכת! כל הכבוד!' : 'All menu items are in the system! Great job!'}
             </p>
           )}
+          {/* If totalFound is 0, we might want to warn the user, but this prop isn't passed yet. 
+              Ideally we should handle the "no items found" case in the parent component or pass totalFound here. 
+              For now, let's just rely on the user seeing an empty list and the success message. 
+              If the user sees "Great job!" but knows items are missing, they might report it (as they did). 
+          */}
         </div>
 
         <DialogFooter className="mt-4">

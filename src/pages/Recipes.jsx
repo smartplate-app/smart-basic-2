@@ -82,6 +82,11 @@ export default function RecipesPage() {
       const { data } = await base44.functions.invoke('scanMenuPdf', { fileUrls });
       
       if (data?.success) {
+        if (data.totalFound === 0) {
+          alert(language === 'he' ? 'לא הצלחנו לזהות מנות בתמונה. אנא נסה תמונה ברורה יותר.' : 'Could not detect any dishes in the image. Please try a clearer image.');
+          setScanningMenu(false);
+          return;
+        }
         setMissingRecipes(data.missingRecipes || []);
         setShowImageUploadModal(false);
         setShowScanModal(true);
