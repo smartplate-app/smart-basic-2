@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText } from "lucide-react";
+import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -44,6 +44,7 @@ export default function ItemsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -431,6 +432,25 @@ const handleCleanOrphans = async (ownerEmail) => {
     }
   };
 
+  const handleFindDuplicates = async () => {
+    if (isViewer) return;
+    if (window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק פריטים כפולים? הפעולה אינה ניתנת לביטול.' : 'Are you sure you want to delete duplicate items? This cannot be undone.')) {
+      setCleaning(true);
+      try {
+        const { data } = await base44.functions.invoke('findAndRemoveDuplicates', { type: 'items' });
+        if (data?.success) {
+          alert((language === 'he' ? 'נמחקו פריטים כפולים: ' : 'Deleted duplicate items: ') + data.deletedCount);
+          await loadData(user);
+        } else {
+          alert(data?.error || 'Error');
+        }
+      } catch (e) {
+        alert(e.message || 'Error');
+      }
+      setCleaning(false);
+    }
+  };
+
   const handleGenerateCatalogPdf = async () => {
     setGeneratingPdf(true);
     try {
@@ -620,6 +640,17 @@ const handleCleanOrphans = async (ownerEmail) => {
               {language === 'he' ? 'הפק קטלוג' : 'Generate Catalog'}
             </Button>
 
+            {!isViewer && (
+              <Button
+                variant="outline"
+                onClick={handleFindDuplicates}
+                disabled={cleaning}
+                className="gap-2"
+              >
+                {cleaning ? <Loader className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                {language === 'he' ? 'נקה כפולים' : 'Clean Doubles'}
+              </Button>
+            )}
 
             {!isViewer && (
             <Button

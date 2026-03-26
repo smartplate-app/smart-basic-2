@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "../components/LanguageProvider";
-import { Plus, Search, Edit, Trash2, ChefHat, Lock, Package, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, Edit, Trash2, ChefHat, Lock, Package, FileSpreadsheet, LayoutGrid, List, Wand2 } from "lucide-react";
 import RecipeForm from "../components/recipes/RecipeForm";
 import ImportIngredientsModal from "../components/recipes/ImportIngredientsModal";
+import RecipeListView from "../components/recipes/RecipeListView";
 
 export default function RecipesPage() {
   const { language } = useLanguage();
@@ -17,10 +18,12 @@ export default function RecipesPage() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("cards");
   
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
 
   const handleAuth = (e) => {
     e.preventDefault();
@@ -58,6 +61,24 @@ export default function RecipesPage() {
 
   const handleGenerateSheet = () => {
     setShowImportModal(true);
+  };
+
+  const handleFindDuplicates = async () => {
+    if (window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק מתכונים כפולים? הפעולה אינה ניתנת לביטול.' : 'Are you sure you want to delete duplicate recipes? This cannot be undone.')) {
+      setCleaning(true);
+      try {
+        const { data } = await base44.functions.invoke('findAndRemoveDuplicates', { type: 'recipes' });
+        if (data?.success) {
+          alert((language === 'he' ? 'נמחקו מתכונים כפולים: ' : 'Deleted duplicate recipes: ') + data.deletedCount);
+          loadRecipes();
+        } else {
+          alert(data?.error || 'Error');
+        }
+      } catch (e) {
+        alert(e.message || 'Error');
+      }
+      setCleaning(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -112,7 +133,34 @@ export default function RecipesPage() {
               {language === 'he' ? 'שלום, נהל את המתכונים והמחירים שלך' : 'Hello, manage your recipes and prices'}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-end">
+            <div className="flex bg-white/20 rounded-full p-1 mr-2 rtl:ml-2 rtl:mr-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setViewMode('cards')}
+                className={`rounded-full h-8 w-8 ${viewMode === 'cards' ? 'bg-white text-[#d4a373]' : 'text-white hover:bg-white/20'}`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setViewMode('list')}
+                className={`rounded-full h-8 w-8 ${viewMode === 'list' ? 'bg-white text-[#d4a373]' : 'text-white hover:bg-white/20'}`}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <Button 
+              onClick={handleFindDuplicates}
+              disabled={cleaning}
+              className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4"
+            >
+              <Wand2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'נקה כפולים' : 'Clean Doubles'}
+            </Button>
             <Button 
               onClick={handleGenerateSheet}
               className="bg-white text-[#d4a373] hover:bg-gray-50 border-none rounded-full px-6 font-bold"
@@ -151,62 +199,70 @@ export default function RecipesPage() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredRecipes.map(recipe => (
-            <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-[#fdfbf7] border-[#e5dfd3] rounded-2xl">
-              <CardContent className="p-0">
-                <div className="p-5 border-b border-[#e5dfd3] flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-xl text-red-500 flex items-center gap-2">
-                      <ChefHat className="w-5 h-5 text-orange-500" />
-                      {recipe.name}
-                    </h3>
-                    <span className="inline-block px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full mt-2 font-medium">
-                      {recipe.type === 'sale_item' 
-                        ? (language === 'he' ? 'פריט למכירה' : 'Sale Item') 
-                        : (language === 'he' ? 'מתכון הכנה' : 'Prep Recipe')}
-                    </span>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditingRecipe(recipe); setShowForm(true); }} className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(recipe.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-5 grid grid-cols-2 gap-4 bg-white">
-                  {recipe.type === 'sale_item' && (
-                    <div className="bg-green-50 p-3 rounded-xl text-center border border-green-100">
-                      <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'מחיר מכירה' : 'Sale Price'}</div>
-                      <div className="font-bold text-green-600 text-xl">₪{Number(recipe.sale_price || 0).toFixed(2)}</div>
-                      {recipe.sale_price > 0 && (
-                        <div className="text-[10px] text-gray-500 mt-1">
-                          {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
-                          {((recipe.total_cost / recipe.sale_price) * 100).toFixed(1)}%
-                        </div>
-                      )}
+        {viewMode === 'list' ? (
+          <RecipeListView 
+            recipes={filteredRecipes} 
+            onEdit={(recipe) => { setEditingRecipe(recipe); setShowForm(true); }}
+            onDelete={handleDelete}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredRecipes.map(recipe => (
+              <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-[#fdfbf7] border-[#e5dfd3] rounded-2xl">
+                <CardContent className="p-0">
+                  <div className="p-5 border-b border-[#e5dfd3] flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-xl text-red-500 flex items-center gap-2">
+                        <ChefHat className="w-5 h-5 text-orange-500" />
+                        {recipe.name}
+                      </h3>
+                      <span className="inline-block px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full mt-2 font-medium">
+                        {recipe.type === 'sale_item' 
+                          ? (language === 'he' ? 'פריט למכירה' : 'Sale Item') 
+                          : (language === 'he' ? 'מתכון הכנה' : 'Prep Recipe')}
+                      </span>
                     </div>
-                  )}
-                  <div className="bg-red-50 p-3 rounded-xl text-center border border-red-100">
-                    <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</div>
-                    <div className="font-bold text-red-500 text-xl">₪{Number(recipe.total_cost || 0).toFixed(2)}</div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingRecipe(recipe); setShowForm(true); }} className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(recipe.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="px-5 py-3 bg-[#fdfbf7] flex justify-between items-center text-xs text-gray-500 font-medium">
-                  <div className="flex items-center gap-1">
-                    <Package className="w-4 h-4 text-orange-400" />
-                    {language === 'he' ? 'מרכיבים:' : 'Ingredients:'} {recipe.ingredients?.length || 0}
+                  <div className="p-5 grid grid-cols-2 gap-4 bg-white">
+                    {recipe.type === 'sale_item' && (
+                      <div className="bg-green-50 p-3 rounded-xl text-center border border-green-100">
+                        <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'מחיר מכירה' : 'Sale Price'}</div>
+                        <div className="font-bold text-green-600 text-xl">₪{Number(recipe.sale_price || 0).toFixed(2)}</div>
+                        {recipe.sale_price > 0 && (
+                          <div className="text-[10px] text-gray-500 mt-1">
+                            {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
+                            {((recipe.total_cost / recipe.sale_price) * 100).toFixed(1)}%
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="bg-red-50 p-3 rounded-xl text-center border border-red-100">
+                      <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</div>
+                      <div className="font-bold text-red-500 text-xl">₪{Number(recipe.total_cost || 0).toFixed(2)}</div>
+                    </div>
                   </div>
-                  <div>
-                    {language === 'he' ? 'נוצר ב:' : 'Created:'} {new Date(recipe.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+                  <div className="px-5 py-3 bg-[#fdfbf7] flex justify-between items-center text-xs text-gray-500 font-medium">
+                    <div className="flex items-center gap-1">
+                      <Package className="w-4 h-4 text-orange-400" />
+                      {language === 'he' ? 'מרכיבים:' : 'Ingredients:'} {recipe.ingredients?.length || 0}
+                    </div>
+                    <div>
+                      {language === 'he' ? 'נוצר ב:' : 'Created:'} {new Date(recipe.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {showForm && (
           <RecipeForm

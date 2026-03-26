@@ -170,6 +170,10 @@ ${allRowsData}
       supplierMap.set('כללי', defaultSupplier);
     }
 
+    // Fetch existing items to avoid duplicates
+    const existingItems = await base44.entities.Item.filter({ created_by: user.email });
+    const itemMap = new Map(existingItems.map(it => [it.name.trim().toLowerCase(), it]));
+
     // Process and save items
     const validItems = allItems.filter(it => it.name).map(it => {
       const sName = (it.supplier_name || 'כללי').trim();
@@ -188,16 +192,36 @@ ${allRowsData}
       };
     });
 
-    let createdItems = [];
-    if (validItems.length > 0) {
-      createdItems = await base44.entities.Item.bulkCreate(validItems);
+    let createdItemsCount = 0;
+    let updatedItemsCount = 0;
+    const itemsToCreate = [];
+
+    for (const itemData of validItems) {
+      const existing = itemMap.get(itemData.name.trim().toLowerCase());
+      if (existing) {
+        // Update if changed
+        const hasChanges = existing.price !== itemData.price || 
+                           existing.unit !== itemData.unit || 
+                           existing.supplier_id !== itemData.supplier_id ||
+                           existing.catalog_number !== itemData.catalog_number;
+        if (hasChanges) {
+          await base44.entities.Item.update(existing.id, itemData);
+          updatedItemsCount++;
+          itemMap.set(itemData.name.trim().toLowerCase(), { ...existing, ...itemData });
+        }
+      } else {
+        itemsToCreate.push(itemData);
+      }
     }
 
-    // Fetch all items to map ingredient names to item IDs
-    const existingItems = await base44.entities.Item.filter({ created_by: user.email }, "name");
-    const itemMap = new Map(existingItems.map(it => [it.name.trim().toLowerCase(), it]));
+    if (itemsToCreate.length > 0) {
+      const created = await base44.entities.Item.bulkCreate(itemsToCreate);
+      createdItemsCount = created.length;
+      created.forEach(it => itemMap.set(it.name.trim().toLowerCase(), it));
+    }
 
     // We also need to map prep recipes to items, because a recipe might use a prep recipe as an ingredient.
+    const prepRecipeItemsToCreate = [];
     const prepRecipeItems = allRecipes.filter(r => r.type === 'prep_recipe').map(r => ({
       name: r.name,
       unit: normalizeUnit(r.yield_unit),
@@ -209,12 +233,23 @@ ${allRowsData}
       discount: 0
     }));
 
-    if (prepRecipeItems.length > 0) {
-      const createdPrepItems = await base44.entities.Item.bulkCreate(prepRecipeItems);
+    for (const itemData of prepRecipeItems) {
+      const existing = itemMap.get(itemData.name.trim().toLowerCase());
+      if (!existing) {
+        prepRecipeItemsToCreate.push(itemData);
+      }
+    }
+
+    if (prepRecipeItemsToCreate.length > 0) {
+      const createdPrepItems = await base44.entities.Item.bulkCreate(prepRecipeItemsToCreate);
       for (const it of createdPrepItems) {
         itemMap.set(it.name.trim().toLowerCase(), it);
       }
     }
+
+    // Fetch existing recipes to avoid duplicates
+    const existingRecipes = await base44.entities.Recipe.filter({ created_by: user.email });
+    const recipeMap = new Map(existingRecipes.map(r => [r.name.trim().toLowerCase(), r]));
 
     // Process and save recipes
     const validRecipes = allRecipes.filter(r => r.name).map(r => {
@@ -250,16 +285,39 @@ ${allRowsData}
       };
     });
 
-    let createdRecipes = [];
-    if (validRecipes.length > 0) {
-      createdRecipes = await base44.entities.Recipe.bulkCreate(validRecipes);
+    let createdRecipesCount = 0;
+    let updatedRecipesCount = 0;
+    const recipesToCreate = [];
+
+    for (const recipeData of validRecipes) {
+      const existing = recipeMap.get(recipeData.name.trim().toLowerCase());
+      if (existing) {
+        // Update if changed
+        const hasChanges = existing.sale_price !== recipeData.sale_price ||
+                           existing.yield_quantity !== recipeData.yield_quantity ||
+                           existing.yield_unit !== recipeData.yield_unit ||
+                           JSON.stringify(existing.ingredients) !== JSON.stringify(recipeData.ingredients);
+        if (hasChanges) {
+          await base44.entities.Recipe.update(existing.id, recipeData);
+          updatedRecipesCount++;
+        }
+      } else {
+        recipesToCreate.push(recipeData);
+      }
+    }
+
+    if (recipesToCreate.length > 0) {
+      const created = await base44.entities.Recipe.bulkCreate(recipesToCreate);
+      createdRecipesCount = created.length;
     }
 
     return Response.json({ 
       success: true, 
-      created_items_count: validItems.length,
-      created_recipes_count: validRecipes.length,
-      message: `Imported ${validItems.length} items and ${validRecipes.length} recipes.`
+      created_items_count: createdItemsCount,
+      updated_items_count: updatedItemsCount,
+      created_recipes_count: createdRecipesCount,
+      updated_recipes_count: updatedRecipesCount,
+      message: `Imported: ${createdItemsCount} new items, ${updatedItemsCount} updated items. ${createdRecipesCount} new recipes, ${updatedRecipesCount} updated recipes.`
     });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
