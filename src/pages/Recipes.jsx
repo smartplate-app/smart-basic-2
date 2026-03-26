@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "../components/LanguageProvider";
-import { Plus, Search, Edit, Trash2, ChefHat, Lock, Package, FileSpreadsheet, LayoutGrid, List, Wand2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, ChefHat, Lock, Package, FileSpreadsheet, LayoutGrid, List, Wand2, FileText, Loader2 } from "lucide-react";
 import RecipeForm from "../components/recipes/RecipeForm";
 import ImportIngredientsModal from "../components/recipes/ImportIngredientsModal";
 import RecipeListView from "../components/recipes/RecipeListView";
+import MenuScanModal from "../components/recipes/MenuScanModal";
 
 export default function RecipesPage() {
   const { language } = useLanguage();
@@ -24,6 +25,11 @@ export default function RecipesPage() {
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [cleaning, setCleaning] = useState(false);
+  
+  const [scanningMenu, setScanningMenu] = useState(false);
+  const [showScanModal, setShowScanModal] = useState(false);
+  const [missingRecipes, setMissingRecipes] = useState([]);
+  const fileInputRef = React.useRef(null);
 
   const handleAuth = (e) => {
     e.preventDefault();
@@ -56,6 +62,32 @@ export default function RecipesPage() {
     if (window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק מתכון זה?' : 'Are you sure you want to delete this recipe?')) {
       await base44.entities.Recipe.delete(id);
       loadRecipes();
+    }
+  };
+
+  const handleMenuUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setScanningMenu(true);
+    try {
+      // 1. Upload file
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      
+      // 2. Scan via backend
+      const { data } = await base44.functions.invoke('scanMenuPdf', { fileUrl: file_url });
+      
+      if (data?.success) {
+        setMissingRecipes(data.missingRecipes || []);
+        setShowScanModal(true);
+      } else {
+        throw new Error(data?.error || 'Failed to scan menu');
+      }
+    } catch (err) {
+      alert((language === 'he' ? 'שגיאה בסריקת התפריט: ' : 'Error scanning menu: ') + err.message);
+    } finally {
+      setScanningMenu(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -161,6 +193,23 @@ export default function RecipesPage() {
               <Wand2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'נקה כפולים' : 'Clean Doubles'}
             </Button>
+            
+            <Button 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={scanningMenu}
+              className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4"
+            >
+              {scanningMenu ? <Loader2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <FileText className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
+              {language === 'he' ? 'סרוק תפריט PDF' : 'Scan Menu PDF'}
+            </Button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleMenuUpload} 
+              accept=".pdf,image/*" 
+              className="hidden" 
+            />
+
             <Button 
               onClick={handleGenerateSheet}
               className="bg-white text-[#d4a373] hover:bg-gray-50 border-none rounded-full px-6 font-bold"
@@ -282,6 +331,12 @@ export default function RecipesPage() {
             // The import adds ingredients (Items), not Recipes directly.
             // But we can reload recipes if needed, or just show success.
           }}
+        />
+
+        <MenuScanModal 
+          isOpen={showScanModal}
+          onClose={() => setShowScanModal(false)}
+          missingRecipes={missingRecipes}
         />
       </div>
     </div>
