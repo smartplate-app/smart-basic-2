@@ -66,10 +66,13 @@ const AuthenticatedApp = () => {
     }
   }
 
+  // In preview mode, default to Orders page
+  const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
+
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/WelcomePublic" replace />} />
+      <Route path="/" element={<Navigate to={isPreview ? "/Orders" : "/WelcomePublic"} replace />} />
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}

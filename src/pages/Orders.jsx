@@ -1383,7 +1383,11 @@ export default function OrdersPage() {
               };
 
               return (
-                <Card key={order.id} className="p-4 rounded-xl shadow-sm">
+                <Card 
+                  key={order.id} 
+                  className="p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setPreviewOrder(order)}
+                >
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
@@ -1409,7 +1413,7 @@ export default function OrdersPage() {
                     <div className="flex flex-wrap gap-2 pt-2">
                       {!isViewer && (
                         <Button
-                          onClick={() => handleResend(order)}
+                          onClick={(e) => { e.stopPropagation(); handleResend(order); }}
                           className="flex-1 min-w-[100px] h-11 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           <Share className="w-4 h-4 mr-1" />
@@ -1429,7 +1433,7 @@ export default function OrdersPage() {
                         <>
                           <Button
                             variant="outline"
-                            onClick={() => handleEdit(order)}
+                            onClick={(e) => { e.stopPropagation(); handleEdit(order); }}
                             className="flex-1 min-w-[100px] h-11 rounded-lg text-sm border-gray-300 text-gray-700 hover:bg-gray-50"
                           >
                             <Edit className="w-4 h-4 mr-1" />
@@ -1437,7 +1441,7 @@ export default function OrdersPage() {
                           </Button>
                           <Button
                             variant="outline"
-                            onClick={() => handleDelete(order)}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
                             className="flex-1 min-w-[100px] h-11 rounded-lg text-sm border-red-300 text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="w-4 h-4 mr-1" />
@@ -1561,6 +1565,7 @@ export default function OrdersPage() {
                       <tr
                         key={order.id}
                         className="hover:bg-blue-50 cursor-pointer transition-colors"
+                        onClick={() => setPreviewOrder(order)}
                         onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
                       >
                         <td className="px-3 py-2 text-right">
@@ -1600,7 +1605,7 @@ export default function OrdersPage() {
                             )}
                                                       {!isViewer && order.status === 'sent' && (
                                                         <Button
-                                                          onClick={() => { setReceiveOrder(order); setShowReceiveForm(true); }}
+                                                          onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
                                                           className="flex-1 h-11 rounded-lg text-base bg-green-600 hover:bg-green-700 text-white"
                                                         >
                                                           {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
