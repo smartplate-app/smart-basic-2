@@ -212,7 +212,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     const offeredInclVat = formData.total_cost && (formData.target_sfc_percent || 30)
                       ? (formData.total_cost / ((formData.target_sfc_percent || 30) / 100)) * 1.05
                       : 0;
-                    const offeredExclVat = offeredInclVat / 1.05;
+                    const offeredExclVat = offeredInclVat / 1.18;
                     const costPct = offeredExclVat > 0 ? (formData.total_cost / offeredExclVat) * 100 : 0;
                     return (
                       <div className="mt-1 text-xs text-gray-500">
@@ -233,7 +233,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     onChange={e => setFormData({...formData, sale_price: parseFloat(e.target.value) || 0})} 
                   />
                   {(() => {
-                    const actualExclVat = (formData.sale_price || 0) / 1.05;
+                    const actualExclVat = (formData.sale_price || 0) / 1.18;
                     const costPct = actualExclVat > 0 ? (formData.total_cost / actualExclVat) * 100 : 0;
                     return (
                       <div className="mt-1 text-xs text-gray-500">
