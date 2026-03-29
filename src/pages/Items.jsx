@@ -13,6 +13,7 @@ import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import ItemEditModal from "../components/items/ItemEditModal";
 import ItemListView from "../components/items/ItemListView";
 import SelectionBar from "../components/items/SelectionBar";
+import ImportSuppliersItemsModal from "../components/items/ImportSuppliersItemsModal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function ItemsPage() {
@@ -45,6 +46,7 @@ export default function ItemsPage() {
   const [deleting, setDeleting] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [cleaning, setCleaning] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -624,6 +626,14 @@ const handleCleanOrphans = async (ownerEmail) => {
             </div>
             <Button
               variant="outline"
+              onClick={() => setShowImportModal(true)}
+              className="gap-2"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              {language === 'he' ? 'ייבוא מגוגל שיטס' : 'Import from Google Sheets'}
+            </Button>
+            <Button
+              variant="outline"
               onClick={handleExportToSheets}
               className="gap-2"
             >
@@ -861,6 +871,12 @@ const handleCleanOrphans = async (ownerEmail) => {
         }}
         />
         )}
+
+        <ImportSuppliersItemsModal 
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => loadData(user)}
+        />
     </div>
   );
 }
