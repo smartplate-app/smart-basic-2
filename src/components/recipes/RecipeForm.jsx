@@ -208,6 +208,20 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       ((formData.total_cost / ((formData.target_sfc_percent || 30) / 100)) * 1.05).toFixed(2) 
                       : '0.00'}
                   </div>
+                  {(() => {
+                    const offeredInclVat = formData.total_cost && (formData.target_sfc_percent || 30)
+                      ? (formData.total_cost / ((formData.target_sfc_percent || 30) / 100)) * 1.05
+                      : 0;
+                    const offeredExclVat = offeredInclVat / 1.05;
+                    const costPct = offeredExclVat > 0 ? (formData.total_cost / offeredExclVat) * 100 : 0;
+                    return (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
+                        <span className="font-bold text-orange-600">{costPct.toFixed(1)}%</span>
+                        {language === 'he' ? ' (עלות / מחיר ללא מע"מ)' : ' (cost / price excl. VAT)'}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר מכירה בפועל (₪)' : 'Actual Sale Price (₪)'}</label>
@@ -218,6 +232,17 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     value={formData.sale_price} 
                     onChange={e => setFormData({...formData, sale_price: parseFloat(e.target.value) || 0})} 
                   />
+                  {(() => {
+                    const actualExclVat = (formData.sale_price || 0) / 1.05;
+                    const costPct = actualExclVat > 0 ? (formData.total_cost / actualExclVat) * 100 : 0;
+                    return (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
+                        <span className="font-bold text-orange-600">{costPct.toFixed(1)}%</span>
+                        {language === 'he' ? ' (עלות / מחיר ללא מע"מ)' : ' (cost / price excl. VAT)'}
+                      </div>
+                    );
+                  })()}
                 </div>
               </>
             )}
