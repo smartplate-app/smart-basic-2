@@ -193,7 +193,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
             {formData.type === 'sale_item' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'אחוז עלות רצוי (SFC %)' : 'Wanted Cost % (SFC)'}</label>
+                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'אחוז עלות מתוקצב (SFC %)' : 'Budgeted Food Cost %'}</label>
                   <Input 
                     type="number" 
                     step="1"
