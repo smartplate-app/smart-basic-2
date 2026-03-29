@@ -160,7 +160,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">{language === 'he' ? 'שם המנה' : 'Menu Item Name'}</label>
+              <label className="block text-sm font-medium mb-1">{language === 'he' ? 'שם המתכון' : 'Recipe Name'}</label>
               <Input 
                 required 
                 value={formData.name} 
