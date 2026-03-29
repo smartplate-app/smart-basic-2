@@ -84,9 +84,10 @@ export default function ItemEditModal({ item, isOpen, onClose, onSave }) {
               <Input
                 id="units_per_package"
                 type="number"
-                min="1"
-                value={formData.units_per_package || 1}
-                onChange={(e) => handleChange('units_per_package', parseInt(e.target.value) || 1)}
+                min="0.01"
+                step="0.01"
+                value={formData.units_per_package || ''}
+                onChange={(e) => handleChange('units_per_package', parseFloat(e.target.value) || 1)}
               />
             </div>
           </div>
