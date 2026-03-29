@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     if (!getRes.ok) {
       const errorText = await getRes.text();
       console.error("GetRes error:", errorText);
-      return Response.json({ error: 'Failed to read sheet data. Ensure the Google Sheet is shared as "Anyone with the link can view" or you authorized the Google Sheets connector.' }, { status: 400 });
+      return Response.json({ error: 'Failed to read sheet data. Google reports this file does not exist or is fully restricted. If using a work/school account, "Anyone with the link" might only mean your organization. Please verify the link works in an Incognito window.' }, { status: 400 });
     }
 
     const data = await getRes.json();

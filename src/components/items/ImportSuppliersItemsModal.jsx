@@ -102,9 +102,9 @@ export default function ImportSuppliersItemsModal({ isOpen, onClose, onSuccess }
               <div>
                 <p className="font-bold">{language === 'he' ? 'שגיאה' : 'Error'}</p>
                 <p>{error}</p>
-                {error.includes("access") || error.includes("404") || error.includes("view") ? (
+                {error.includes("access") || error.includes("404") || error.includes("view") || error.includes("exist") ? (
                    <p className="mt-2 text-xs opacity-90">
-                     {language === 'he' ? 'המסמך פרטי. שנה את הגדרות השיתוף של המסמך ל"כל מי שיש לו את הקישור יכול לראות" (Anyone with the link) ונסה שוב.' : 'The document is private. Please change the share settings to "Anyone with the link can view" and try again.'}
+                     {language === 'he' ? 'המסמך חסום. אם אתה משתמש בחשבון עסקי/ארגוני, "כל מי שיש לו את הקישור" עלול להיות מוגבל לארגון שלך בלבד. ודא שהקישור עובד בחלון גלישה בסתר (Incognito).' : 'The document is blocked. If you are using a work/school account, "Anyone with the link" might only mean your organization. Please verify the link works in an Incognito window.'}
                    </p>
                 ) : null}
               </div>
