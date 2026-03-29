@@ -116,7 +116,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
           const autoItems = catalogItems.map(item => ({
             item_id: item.id,
             item_name: item.name,
-            counted_quantity: 0,
+            counted_quantity: "",
             unit: item.unit,
             price_per_unit: item.price || 0,
             total_cost: 0,
@@ -137,7 +137,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
       newItems = catalogItems.map(item => ({
         item_id: item.id,
         item_name: item.name,
-        counted_quantity: 0,
+        counted_quantity: "",
         unit: item.unit,
         price_per_unit: item.price || 0,
         total_cost: 0,
@@ -218,7 +218,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     const newItem = {
       item_id: item.id,
       item_name: item.name,
-      counted_quantity: 0,
+      counted_quantity: "",
       unit: item.unit,
       price_per_unit: item.price || 0,
       total_cost: 0,
@@ -235,10 +235,11 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const updateItemQuantity = (index, quantity) => {
     const newItems = [...formData.items];
     const qty = parseFloat(quantity) || 0;
+    const price = parseFloat(newItems[index].price_per_unit) || 0;
     newItems[index] = { 
       ...newItems[index], 
-      counted_quantity: qty,
-      total_cost: qty * (newItems[index].price_per_unit || 0)
+      counted_quantity: quantity,
+      total_cost: qty * price
     };
     setFormData(prev => ({ ...prev, items: newItems }));
   };
@@ -246,10 +247,11 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const updateItemPrice = (index, price) => {
     const newItems = [...formData.items];
     const priceValue = parseFloat(price) || 0;
+    const qty = parseFloat(newItems[index].counted_quantity) || 0;
     newItems[index] = { 
       ...newItems[index], 
-      price_per_unit: priceValue,
-      total_cost: (newItems[index].counted_quantity || 0) * priceValue
+      price_per_unit: price,
+      total_cost: qty * priceValue
     };
     setFormData(prev => ({ ...prev, items: newItems }));
   };
@@ -480,10 +482,10 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                                 <Input
                                   type="number"
                                   min="0"
-                                  step="0.001" 
-                                  value={item.counted_quantity === 0 ? '' : item.counted_quantity}
+                                  step="any" 
+                                  value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
                                   onChange={(e) => updateItemQuantity(index, e.target.value)}
-                                  className="w-24"
+                                  className="w-24 hide-arrows"
                                 />
                               </TableCell>
                               <TableCell>{item.unit}</TableCell>
@@ -491,10 +493,10 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                                 <Input
                                   type="number"
                                   min="0"
-                                  step="0.01"
+                                  step="any"
                                   value={item.price_per_unit}
                                   onChange={(e) => updateItemPrice(index, e.target.value)}
-                                  className="w-24"
+                                  className="w-24 hide-arrows"
                                 />
                               </TableCell>
                               <TableCell className="font-bold text-green-600">
