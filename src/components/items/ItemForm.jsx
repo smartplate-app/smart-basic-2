@@ -9,7 +9,7 @@ import { useLanguage } from "../LanguageProvider";
 import { Warehouse } from "@/entities/Warehouse";
 
 export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCancel, onWarehouseCreated, defaultSupplierId }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const UNITS = [
     { value: "kg", label: t('unit_kg') || "ק״ג" },
