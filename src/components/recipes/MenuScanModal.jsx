@@ -46,7 +46,7 @@ export default function MenuScanModal({ isOpen, onClose, missingRecipes }) {
         </div>
 
         <DialogFooter className="mt-4">
-          <Button onClick={onClose} className="bg-[#107c41] hover:bg-[#0c5e31]">
+          <Button onClick={onClose} className="bg-blue-600 hover:bg-blue-700">
             {language === 'he' ? 'הבנתי' : 'Got it'}
           </Button>
         </DialogFooter>

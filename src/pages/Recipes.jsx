@@ -145,7 +145,7 @@ export default function RecipesPage() {
                 className="text-center text-lg tracking-widest"
                 autoFocus
               />
-              <Button type="submit" className="w-full bg-[#107c41] hover:bg-[#0c5e31]">
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                 {language === 'he' ? 'כניסה' : 'Enter'}
               </Button>
             </form>

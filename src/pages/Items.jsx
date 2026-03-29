@@ -469,8 +469,8 @@ const handleCleanOrphans = async (ownerEmail) => {
 
       let html = `
         <div style="font-family: system-ui, -apple-system, sans-serif; color: #111827;">
-          <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid #107c41; padding-bottom: 20px;">
-            <h1 style="color: #107c41; margin: 0; font-size: 28px;">
+          <div style="text-align: center; margin-bottom: 40px; border-bottom: 2px solid blue-600; padding-bottom: 20px;">
+            <h1 style="color: blue-600; margin: 0; font-size: 28px;">
               ${language === 'he' ? 'קטלוג פריטים' : 'Items Catalog'}
             </h1>
             <p style="color: #6b7280; margin-top: 10px; font-size: 14px;">
@@ -493,7 +493,7 @@ const handleCleanOrphans = async (ownerEmail) => {
               <span style="font-size: 14px; color: #6b7280; background: #e5e7eb; padding: 4px 8px; border-radius: 6px;">
                 ${item.units_per_package} ${t('unit_' + item.unit) || item.unit}
               </span>
-              <span style="font-weight: 800; font-size: 20px; color: #107c41;">₪${price.toFixed(2)}</span>
+              <span style="font-weight: 800; font-size: 20px; color: blue-600;">₪${price.toFixed(2)}</span>
             </div>
           </div>
         `;
