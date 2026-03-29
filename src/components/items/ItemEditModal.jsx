@@ -70,7 +70,9 @@ export default function ItemEditModal({ item, isOpen, onClose, onSave }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="kg">{t('unit_kg')}</SelectItem>
+                  <SelectItem value="gram">{t('unit_g')}</SelectItem>
                   <SelectItem value="liter">{t('unit_liter')}</SelectItem>
+                  <SelectItem value="ml">{t('unit_ml')}</SelectItem>
                   <SelectItem value="unit">{t('unit_piece')}</SelectItem>
                   <SelectItem value="case">{t('unit_case') || 'ארגז'}</SelectItem>
                 </SelectContent>

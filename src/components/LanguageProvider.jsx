@@ -811,7 +811,7 @@ const translations = {
         "update_item": "Update Item",
         "save_item": "Save Item",
         "item_name_supplier_required": "Item name and supplier are required",
-        "unit_kg": "Kilogram", "unit_g": "Gram", "unit_liter": "Liter", "unit_ml": "Milliliter", "unit_piece": "Piece", "unit_box": "Box", "unit_case": "Case", "unit_pack": "Pack", "unit_meter": "Meter", "unit_cm": "Centimeter",
+        "unit_kg": "Kilogram", "unit_g": "Gram", "unit_liter": "Liter", "unit_ml": "Milliliter", "unit_piece": "Unit", "unit_box": "Box", "unit_case": "Case", "unit_pack": "Pack", "unit_meter": "Meter", "unit_cm": "Centimeter",
         "package_type": "Package Type",
         "units_per_package": "Units per Package",
         "units_per_package_help": "How many units in the package/case",

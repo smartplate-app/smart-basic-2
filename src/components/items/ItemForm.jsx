@@ -13,7 +13,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
 
   const UNITS = [
     { value: "kg", label: t('unit_kg') || "ק״ג" },
-    { value: "gram", label: t('unit_gram') || "גרם" },
+    { value: "gram", label: t('unit_g') || "גרם" },
     { value: "liter", label: t('unit_liter') || "ליטר" },
     { value: "ml", label: t('unit_ml') || "מ״ל" },
     { value: "unit", label: t('unit_piece') || "יחידה" },
@@ -379,7 +379,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
               <span className="text-sm text-green-700">{t('final_price') || 'מחיר סופי'}:</span>
               <span className="text-lg font-bold text-green-700">
-                ₪{(currentItem.price && currentItem.discount 
+                {(currentItem.price && currentItem.discount 
                   ? (currentItem.price / (1 + (currentItem.discount / 100))).toFixed(2)
                   : (currentItem.price || 0).toFixed(2)
                 )}
