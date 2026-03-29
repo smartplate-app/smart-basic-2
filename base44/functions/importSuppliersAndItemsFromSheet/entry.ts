@@ -120,12 +120,12 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
     }
 
     const targetEmail = user.store_user_owner_email || user.email;
-    const existingSuppliers = await base44.entities.Supplier.filter({ created_by: targetEmail });
+    const existingSuppliers = await base44.entities.Supplier.filter({ created_by: targetEmail }, null, 5000);
     const supplierMap = new Map(existingSuppliers.map(s => [s.name.trim().toLowerCase(), s]));
 
     const [itemsByCreator, itemsByStoreOwner] = await Promise.all([
-      base44.entities.Item.filter({ created_by: targetEmail }),
-      base44.entities.Item.filter({ store_owner_email: targetEmail })
+      base44.entities.Item.filter({ created_by: targetEmail }, null, 10000),
+      base44.entities.Item.filter({ store_owner_email: targetEmail }, null, 10000)
     ]);
     const allExistingItems = [...itemsByCreator, ...itemsByStoreOwner];
     const existingItemsSet = new Set(allExistingItems.map(i => `${(i.supplier_name || '').trim().toLowerCase()}|${(i.name || '').trim().toLowerCase()}`));
