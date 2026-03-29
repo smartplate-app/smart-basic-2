@@ -209,7 +209,9 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       : '0'}
                   </div>
                   <div className="mt-1 text-xs text-gray-500">
-                    {language === 'he' ? 'אחוז עלות מזון + 5% פחת + מע"מ' : 'food cost % + 5% Q factor + vat'}
+                    {language === 'he' 
+                      ? `אחוז עלות מזון (${formData.target_sfc_percent || 30}%) + 5% פחת + מע"מ` 
+                      : `food cost % (${formData.target_sfc_percent || 30}%) + 5% Q factor + vat`}
                   </div>
                 </div>
                 <div>
