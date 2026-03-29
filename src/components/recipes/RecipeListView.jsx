@@ -10,8 +10,8 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <Table>
-        <TableHeader>
+      <Table wrapperClassName="max-h-[calc(100vh-250px)]">
+        <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
           <TableRow>
             <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'שם המתכון' : 'Recipe Name'}</TableHead>
             <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'סוג' : 'Type'}</TableHead>
