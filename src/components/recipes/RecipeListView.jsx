@@ -37,9 +37,9 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
                     : (language === 'he' ? 'מתכון הכנה' : 'Prep Recipe')}
                 </span>
               </TableCell>
-              <TableCell className="text-red-600 font-bold">₪{Number(recipe.total_cost || 0).toFixed(2)}</TableCell>
+              <TableCell className="text-red-600 font-bold">{Number(recipe.total_cost || 0).toFixed(2)}</TableCell>
               <TableCell className="text-green-600 font-bold">
-                {recipe.type === 'sale_item' ? `₪${Number(recipe.sale_price || 0).toFixed(2)}` : '-'}
+                {recipe.type === 'sale_item' ? `${Number(recipe.sale_price || 0).toFixed(2)}` : '-'}
               </TableCell>
               <TableCell>
                 {recipe.type === 'sale_item' && recipe.sale_price > 0 

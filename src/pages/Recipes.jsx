@@ -286,7 +286,7 @@ export default function RecipesPage() {
                     {recipe.type === 'sale_item' && (
                       <div className="bg-green-50 p-3 rounded-xl text-center border border-green-100">
                         <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'מחיר מכירה' : 'Sale Price'}</div>
-                        <div className="font-bold text-green-600 text-xl">₪{Number(recipe.sale_price || 0).toFixed(2)}</div>
+                        <div className="font-bold text-green-600 text-xl">{Number(recipe.sale_price || 0).toFixed(2)}</div>
                         {recipe.sale_price > 0 && (
                           <div className="text-[10px] text-gray-500 mt-1">
                             {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
@@ -297,7 +297,7 @@ export default function RecipesPage() {
                     )}
                     <div className="bg-red-50 p-3 rounded-xl text-center border border-red-100">
                       <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</div>
-                      <div className="font-bold text-red-500 text-xl">₪{Number(recipe.total_cost || 0).toFixed(2)}</div>
+                      <div className="font-bold text-red-500 text-xl">{Number(recipe.total_cost || 0).toFixed(2)}</div>
                     </div>
                   </div>
                   <div className="px-5 py-3 bg-[#fdfbf7] flex justify-between items-center text-xs text-gray-500 font-medium">

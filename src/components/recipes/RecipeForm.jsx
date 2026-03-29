@@ -180,7 +180,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-1">{language === 'he' ? 'עלות כוללת (₪)' : 'Total Cost (₪)'}</label>
+              <label className="block text-sm font-medium mb-1">{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</label>
               <Input 
                 type="number" 
                 step="0.01"
@@ -204,7 +204,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                 <div>
                   <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר מכירה מוצע (כולל מע"מ)' : 'Suggested Selling Price (incl. VAT)'}</label>
                   <div className="h-9 flex items-center px-3 bg-green-50 text-green-700 font-bold rounded-md border border-green-200">
-                    ₪{formData.total_cost && (formData.target_sfc_percent || 30) ? 
+                    {formData.total_cost && (formData.target_sfc_percent || 30) ? 
                       ((formData.total_cost / ((formData.target_sfc_percent || 30) / 100)) * 1.05).toFixed(2) 
                       : '0.00'}
                   </div>
@@ -224,7 +224,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                   })()}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר בתפריט (₪)' : 'Price on Menu (₪)'}</label>
+                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר בתפריט' : 'Price on Menu'}</label>
                   <Input 
                     type="number" 
                     step="0.01"
@@ -279,7 +279,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                         }}
                       >
                         <span>{item.name}</span>
-                        <span className="text-sm text-gray-500">₪{item.price_after_discount || item.price} / {item.unit}</span>
+                        <span className="text-sm text-gray-500">{item.price_after_discount || item.price} / {item.unit}</span>
                       </div>
                     ))
                   ) : (
@@ -315,7 +315,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <div className="text-sm font-bold w-16 text-left">₪{Number(ing.cost).toFixed(2)}</div>
+                  <div className="text-sm font-bold w-16 text-left">{Number(ing.cost).toFixed(2)}</div>
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRemoveIngredient(idx)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
