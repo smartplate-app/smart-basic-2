@@ -32,27 +32,47 @@ Deno.serve(async (req) => {
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl);
     if (!spreadsheetId) return Response.json({ error: 'Invalid Google Sheets URL' }, { status: 400 });
 
+    // Get access token for the backend API calls
     const { accessToken } = await base44.asServiceRole.connectors.getConnection("googlesheets");
+    console.log("Got access token, spreadsheetId:", spreadsheetId);
 
-    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=false`, {
+    // If fetching sheet names fails, fallback to Sheet1 instead of erroring out right away
+    let sheetName = "Sheet1";
+    try {
+      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=false`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      if (metaRes.ok) {
+        const metaData = await metaRes.json();
+        sheetName = metaData.sheets[0].properties.title;
+      }
+    } catch (e) {
+      console.warn("Could not fetch sheet metadata, falling back to default sheet name", e);
+    }
+    
+    // We try to read data. If it fails, the sheet is truly inaccessible.
+    const range = `'${sheetName}'!A1:Z5000`;
+    let getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
-    
-    if (!metaRes.ok) {
-      const err = await metaRes.text();
-      return Response.json({ error: 'Failed to access sheet. Ensure it is shared or accessible.' }, { status: 400 });
+
+    if (!getRes.ok && sheetName !== "Sheet1") {
+       // if we failed, try the generic one too just in case
+       getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('Sheet1!A1:Z5000')}`, {
+         headers: { 'Authorization': `Bearer ${accessToken}` }
+       });
     }
 
-    const metaData = await metaRes.json();
-    const sheetName = metaData.sheets[0].properties.title;
-    const range = `'${sheetName}'!A1:Z5000`;
-
-    const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
+    if (!getRes.ok && sheetName !== "גיליון1") {
+       getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent('גיליון1!A1:Z5000')}`, {
+         headers: { 'Authorization': `Bearer ${accessToken}` }
+       });
+    }
     
     if (!getRes.ok) {
-      return Response.json({ error: 'Failed to read sheet data' }, { status: 500 });
+      const errorText = await getRes.text();
+      console.error("GetRes error:", errorText);
+      return Response.json({ error: 'Failed to read sheet data. Ensure the Google Sheet is shared as "Anyone with the link can view" or you authorized the Google Sheets connector.' }, { status: 400 });
     }
 
     const data = await getRes.json();

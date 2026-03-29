@@ -91,8 +91,8 @@ export default function ImportSuppliersItemsModal({ isOpen, onClose, onSuccess }
             </div>
             <p className="text-xs text-gray-500">
               {language === 'he' 
-                ? 'יש לוודא שיש עמודות "ספק" ו"שם פריט" (חובה). רצוי גם: מחיר, מק"ט, יחידת מידה.' 
-                : 'Make sure there are "Supplier" and "Item Name" columns. Optional: Price, Catalog Number, Unit.'}
+                ? 'יש לוודא שיש עמודות "ספק" ו"שם פריט" (חובה). רצוי גם: מחיר, מק"ט, יחידת מידה. המסמך חייב להיות ציבורי (Anyone with the link can view).' 
+                : 'Make sure there are "Supplier" and "Item Name" columns. Optional: Price, Catalog Number, Unit. The document must be public (Anyone with the link can view).'}
             </p>
           </div>
 
@@ -102,6 +102,11 @@ export default function ImportSuppliersItemsModal({ isOpen, onClose, onSuccess }
               <div>
                 <p className="font-bold">{language === 'he' ? 'שגיאה' : 'Error'}</p>
                 <p>{error}</p>
+                {error.includes("access") || error.includes("404") || error.includes("view") ? (
+                   <p className="mt-2 text-xs opacity-90">
+                     {language === 'he' ? 'המסמך פרטי. שנה את הגדרות השיתוף של המסמך ל"כל מי שיש לו את הקישור יכול לראות" (Anyone with the link) ונסה שוב.' : 'The document is private. Please change the share settings to "Anyone with the link can view" and try again.'}
+                   </p>
+                ) : null}
               </div>
             </div>
           )}
