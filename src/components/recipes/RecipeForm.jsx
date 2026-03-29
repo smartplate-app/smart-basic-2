@@ -224,7 +224,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                   })()}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר מכירה בפועל (₪)' : 'Actual Sale Price (₪)'}</label>
+                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר בתפריט (₪)' : 'Price on Menu (₪)'}</label>
                   <Input 
                     type="number" 
                     step="0.01"
