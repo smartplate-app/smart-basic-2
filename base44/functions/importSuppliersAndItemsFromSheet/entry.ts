@@ -123,6 +123,13 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
     const existingSuppliers = await base44.entities.Supplier.filter({ created_by: targetEmail });
     const supplierMap = new Map(existingSuppliers.map(s => [s.name.trim().toLowerCase(), s]));
 
+    const [itemsByCreator, itemsByStoreOwner] = await Promise.all([
+      base44.entities.Item.filter({ created_by: targetEmail }),
+      base44.entities.Item.filter({ store_owner_email: targetEmail })
+    ]);
+    const allExistingItems = [...itemsByCreator, ...itemsByStoreOwner];
+    const existingItemsSet = new Set(allExistingItems.map(i => `${(i.supplier_name || '').trim().toLowerCase()}|${(i.name || '').trim().toLowerCase()}`));
+
     const itemsToCreate = [];
     const newSuppliersToCreate = new Set();
     
@@ -173,6 +180,10 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
     for (const row of parsedRows) {
       const supplier = supplierMap.get(row.sName.toLowerCase());
       if (!supplier) continue;
+
+      const itemKey = `${supplier.name.trim().toLowerCase()}|${row.item_name.toLowerCase()}`;
+      if (existingItemsSet.has(itemKey)) continue;
+      existingItemsSet.add(itemKey);
 
       itemsToCreate.push({
         name: row.item_name,
