@@ -70,7 +70,7 @@ export default function CogsReportsPage() {
                 className="text-center text-lg tracking-widest"
                 autoFocus
               />
-              <Button type="submit" className="w-full bg-[#107c41] hover:bg-[#0c5e31]">
+              <Button type="submit" className="w-full bg-[#d4a373] hover:bg-[#b88c60]">
                 {language === 'he' ? 'כניסה' : 'Enter'}
               </Button>
             </form>
@@ -99,7 +99,7 @@ export default function CogsReportsPage() {
           </div>
           <Button 
             onClick={() => { setEditingReport(null); setShowForm(true); }}
-            className="bg-[#107c41] hover:bg-[#0c5e31] text-white border-none rounded-full px-6"
+            className="bg-[#d4a373] hover:bg-[#b88c60] text-white border-none rounded-full px-6"
           >
             <Plus className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
             {language === 'he' ? 'דוח COGS חדש' : 'New COGS Report'}
@@ -160,8 +160,8 @@ export default function CogsReportsPage() {
                     <div className="text-xs text-gray-500 mt-1">{language === 'he' ? 'מחושב' : 'Calculated'}</div>
                   </div>
                   <div className="bg-blue-50 p-4 rounded-xl text-center border border-blue-100">
-                    <div className="text-sm text-blue-600 font-bold mb-1">{language === 'he' ? 'רווח גולמי' : 'Gross Profit'}</div>
-                    <div className="font-bold text-blue-600 text-2xl">₪{Number(report.gross_profit || 0).toFixed(0)}</div>
+                    <div className="text-sm text-[#d4a373] font-bold mb-1">{language === 'he' ? 'רווח גולמי' : 'Gross Profit'}</div>
+                    <div className="font-bold text-[#d4a373] text-2xl">₪{Number(report.gross_profit || 0).toFixed(0)}</div>
                     <div className="text-xs text-gray-500 mt-1">margin: {report.total_sales > 0 ? ((report.gross_profit / report.total_sales) * 100).toFixed(2) : 0}%</div>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-xl text-center border border-orange-100">
@@ -186,7 +186,7 @@ export default function CogsReportsPage() {
                           <td className="p-3 font-medium text-gray-800">{item.item_name}</td>
                           <td className="p-3 text-center">{item.quantity_sold}</td>
                           <td className="p-3 text-center font-bold text-green-600">{Number(item.cost_percentage || 0).toFixed(1)}%</td>
-                          <td className="p-3 text-center font-bold text-blue-600">₪{Number(item.total_sales || 0).toFixed(0)}</td>
+                          <td className="p-3 text-center font-bold text-[#d4a373]">₪{Number(item.total_sales || 0).toFixed(0)}</td>
                         </tr>
                       ))}
                     </tbody>

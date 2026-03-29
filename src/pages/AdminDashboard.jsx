@@ -220,7 +220,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader className="w-12 h-12 animate-spin text-blue-600" />
+          <Loader className="w-12 h-12 animate-spin text-[#d4a373]" />
           <p className="text-lg text-gray-700">{t('loading')}</p>
         </div>
       </div>
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
     return (
       <div className="space-y-6">
         {/* Header */}
-        <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+        <Card className="bg-gradient-to-r from-purple-600 to-[#d4a373] text-white">
           <CardContent className="py-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
@@ -527,7 +527,7 @@ export default function AdminDashboard() {
         {viewingUser ? (
           loading ? (
             <div className="flex justify-center py-12">
-              <Loader className="w-8 h-8 animate-spin text-blue-600" />
+              <Loader className="w-8 h-8 animate-spin text-[#d4a373]" />
             </div>
           ) : (
             renderLiveView()
@@ -572,7 +572,7 @@ export default function AdminDashboard() {
                   <Button
                     onClick={() => window.dispatchEvent(new Event('b44_test_onboarding'))}
                     variant="outline"
-                    className="flex items-center gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+                    className="flex items-center gap-2 border-blue-500 text-[#d4a373] hover:bg-blue-50"
                   >
                     <Eye className="w-4 h-4" />
                     {language === 'he' ? 'בדיקת סיור היכרות' : 'Test Onboarding'}
@@ -671,7 +671,7 @@ export default function AdminDashboard() {
 
             {showMarketingView && (
               <Card className="mb-6 border-2 border-purple-200">
-                <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+                <CardHeader className="bg-gradient-to-r from-purple-600 to-[#d4a373] text-white rounded-t-lg">
                   <CardTitle className="flex items-center justify-between">
                     <span>Instagram Campaign</span>
                     <div className="flex gap-2">
@@ -822,7 +822,7 @@ export default function AdminDashboard() {
 
             {loading ? (
               <div className="flex justify-center py-12">
-                <Loader className="w-8 h-8 animate-spin text-blue-600" />
+                <Loader className="w-8 h-8 animate-spin text-[#d4a373]" />
               </div>
             ) : userData && (
               <>
@@ -854,7 +854,7 @@ export default function AdminDashboard() {
                   <Card>
                     <CardContent className="pt-6">
                       <div className="flex items-center gap-3">
-                        <Package className="w-8 h-8 text-blue-600" />
+                        <Package className="w-8 h-8 text-[#d4a373]" />
                         <div>
                           <p className="text-2xl font-bold">{userData.items.length}</p>
                           <p className="text-sm text-gray-600">{language === 'he' ? 'פריטים' : 'Items'}</p>

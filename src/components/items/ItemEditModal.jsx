@@ -174,7 +174,7 @@ export default function ItemEditModal({ item, isOpen, onClose, onSave }) {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" className="flex-1 bg-[#d4a373] hover:bg-[#b88c60]">
               {t('save')}
             </Button>
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">

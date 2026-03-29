@@ -1239,7 +1239,7 @@ export default function OrdersPage() {
             {!isViewer && (
               <Button
                 onClick={() => setShowForm(!showForm)}
-                className="hidden md:inline-flex bg-[blue-600] hover:bg-[blue-700] text-white h-11 md:h-10 px-5 rounded-lg"
+                className="hidden md:inline-flex bg-[#d4a373] hover:bg-[#b88c60] text-white h-11 md:h-10 px-5 rounded-lg"
               >
                 <Plus className="w-5 h-5 ml-2" />
                 {safeT('new_order', 'הזמנה חדשה', 'New Order')}
@@ -1262,7 +1262,7 @@ export default function OrdersPage() {
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 text-sm rounded-full border flex-shrink-0 whitespace-nowrap ${statusFilter===s ? 'bg-[blue-600] text-white border-[blue-600]' : 'bg-white text-gray-700 border-gray-300'}`}
+                className={`px-3 py-1.5 text-sm rounded-full border flex-shrink-0 whitespace-nowrap ${statusFilter===s ? 'bg-[#d4a373] text-white border-[#d4a373]' : 'bg-white text-gray-700 border-gray-300'}`}
               >
                 {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
                  s==='draft' ? t('status_draft') :
@@ -1414,7 +1414,7 @@ export default function OrdersPage() {
                       {!isViewer && (
                         <Button
                           onClick={(e) => { e.stopPropagation(); handleResend(order); }}
-                          className="flex-1 min-w-[100px] h-11 rounded-lg text-sm bg-blue-600 hover:bg-blue-700 text-white"
+                          className="flex-1 min-w-[100px] h-11 rounded-lg text-sm bg-[#d4a373] hover:bg-[#b88c60] text-white"
                         >
                           <Share className="w-4 h-4 mr-1" />
                           {safeT('share','שתף','Share')}
@@ -1597,7 +1597,7 @@ export default function OrdersPage() {
                                   e.stopPropagation();
                                   handleResend(order);
                                 }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
                               >
                                 <Share className="w-3 h-3 mr-1" />
                                 {safeT('share','שתף','Share')}
@@ -1661,7 +1661,7 @@ export default function OrdersPage() {
       {!isViewer && (
         <Button
           onClick={() => setShowForm(true)}
-          className={`fixed bottom-20 ${isRTL ? 'left-4' : 'right-4'} h-14 w-14 rounded-full shadow-lg bg-[blue-600] hover:bg-[blue-700] md:hidden z-40`}
+          className={`fixed bottom-20 ${isRTL ? 'left-4' : 'right-4'} h-14 w-14 rounded-full shadow-lg bg-[#d4a373] hover:bg-[#b88c60] md:hidden z-40`}
           size="icon"
         >
           <Plus className="w-6 h-6" />
@@ -1685,7 +1685,7 @@ export default function OrdersPage() {
             <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
               <MessageCircle className="w-4 h-4 mr-2" /> {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
             </Button>
-            <Button onClick={handleConfirmSendEmail} className="bg-[blue-600] hover:bg-[blue-700] text-white">
+            <Button onClick={handleConfirmSendEmail} className="bg-[#d4a373] hover:bg-[#b88c60] text-white">
               <Mail className="w-4 h-4 mr-2" /> {safeT('email', 'אימייל', 'Email')}
             </Button>
           </div>

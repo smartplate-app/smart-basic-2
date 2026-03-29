@@ -322,7 +322,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
 
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button type="button" variant="outline" onClick={onCancel}>{language === 'he' ? 'ביטול' : 'Cancel'}</Button>
-            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" disabled={loading} className="bg-[#d4a373] hover:bg-[#b88c60]">
               {language === 'he' ? 'שמור מתכון' : 'Save Recipe'}
             </Button>
           </div>

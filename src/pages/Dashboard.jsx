@@ -836,7 +836,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader className="w-12 h-12 animate-spin text-blue-600" />
+          <Loader className="w-12 h-12 animate-spin text-[#d4a373]" />
           <p className="text-lg text-gray-700">{t('loading')}</p>
         </div>
       </div>
@@ -1037,7 +1037,7 @@ export default function DashboardPage() {
               </DialogDescription>
             </DialogHeader>
             <p className={isRTL ? 'text-right' : 'text-left'}>
-              {language === 'he' ? 'למידע נוסף: ' : 'For more details: '}<a href="mailto:admin@smartplate.org" className="text-blue-600 underline">admin@smartplate.org</a>
+              {language === 'he' ? 'למידע נוסף: ' : 'For more details: '}<a href="mailto:admin@smartplate.org" className="text-[#d4a373] underline">admin@smartplate.org</a>
             </p>
           </DialogContent>
         </Dialog>
@@ -1241,7 +1241,7 @@ export default function DashboardPage() {
                 <Button 
                   size="sm" 
                   onClick={() => setShowSalesImportModal(true)}
-                  className={`flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white ${isRTL ? 'flex-row-reverse' : ''}`}
+                  className={`flex items-center gap-1 bg-[#d4a373] hover:bg-[#b88c60] text-white ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
                   <PlusCircle className="w-4 h-4" />
                   {language === 'he' ? 'ייבוא דוח קופה' : 'Import POS Report'}
@@ -1256,7 +1256,7 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       <div className={`p-3 bg-blue-50 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div className="text-xs text-blue-600 font-medium">{language === 'he' ? 'סה"כ יובא' : 'Total Imported'}</div>
+                        <div className="text-xs text-[#d4a373] font-medium">{language === 'he' ? 'סה"כ יובא' : 'Total Imported'}</div>
                         <div className="text-lg font-bold text-blue-900">
                           {formatCurrency(weeklySalesRecords.reduce((sum, r) => sum + (r.total_sales_incl_vat || 0), 0))}
                         </div>
@@ -1305,7 +1305,7 @@ export default function DashboardPage() {
                               <TableCell>{formatCurrency(record.takeaway_sales)}</TableCell>
                               <TableCell>
                                 {record.source_file_url && (
-                                  <a href={record.source_file_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-xs">
+                                  <a href={record.source_file_url} target="_blank" rel="noreferrer" className="text-[#d4a373] hover:underline text-xs">
                                     {language === 'he' ? 'צפה' : 'View'}
                                   </a>
                                 )}
@@ -1514,7 +1514,7 @@ export default function DashboardPage() {
                       }
                     }}
                   />
-                  {categoryScanLoading && <Loader className="w-4 h-4 animate-spin text-blue-600" />}
+                  {categoryScanLoading && <Loader className="w-4 h-4 animate-spin text-[#d4a373]" />}
                 </div>
                 {categoryScanError && (
                   <p className={`mt-2 text-sm text-red-600 ${isRTL ? 'text-right' : 'text-left'}`}>{categoryScanError}</p>
@@ -1769,7 +1769,7 @@ export default function DashboardPage() {
               {language === 'he' ? 'אחר כך' : 'Later'}
             </Button>
             <Button 
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
               onClick={() => {
                 setShowMondayReminder(false);
                 setShowSalesImportModal(true);

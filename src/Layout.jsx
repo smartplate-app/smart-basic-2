@@ -810,7 +810,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   try { await base44.auth.logout('/#/pages/WelcomePublic'); } catch {}
                   setTimeout(() => { window.location.replace('/#/pages/WelcomePublic'); }, 300);
                 }} 
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-[#d4a373] hover:bg-[#b88c60]"
               >
                 {language === 'he' ? 'התנתק' : 'Logout'}
               </Button>
@@ -867,7 +867,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 setRetryCount(0);
                 window.location.reload();
               }} 
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-[#d4a373] hover:bg-[#b88c60]"
             >
               <RefreshCw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {language === 'he' ? 'רענן את הדף' : language === 'ar' ? 'إعادة تحميل الصفحة' : 'Reload Page'}
@@ -1053,7 +1053,7 @@ const AppLayout = ({ children, currentPageName }) => {
                     to={item.url}
                     preventScrollReset
                     onClick={() => setSidebarOpen(false)}
-                    className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-blue-600 text-white font-bold dark:bg-blue-600' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]')}
+                    className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-[#d4a373] text-white font-bold dark:bg-[#d4a373]' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]')}
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.title}</span>
@@ -1097,7 +1097,7 @@ const AppLayout = ({ children, currentPageName }) => {
               {children}
             </div>
             <style
-              dangerouslySetInnerHTML={{ __html: `:root { --app-bg: #f3f2f1; --app-card: #ffffff; --app-text: #212529; --primary: 221 83% 53%; --primary-foreground: 0 0% 100%; --secondary: 221 20% 90%; --secondary-foreground: 221 83% 53%; --accent: 221 20% 90%; --accent-foreground: 221 83% 53%; --ring: 221 83% 53%; }
+              dangerouslySetInnerHTML={{ __html: `:root { --app-bg: #f3f2f1; --app-card: #ffffff; --app-text: #212529; --primary: 30 54% 64%; --primary-foreground: 0 0% 100%; --secondary: 30 20% 90%; --secondary-foreground: 30 54% 64%; --accent: 30 20% 90%; --accent-foreground: 30 54% 64%; --ring: 30 54% 64%; }
 .dark:root { --app-bg: #050a1a; --app-card: #0b1530; --app-surface: #0e1d3d; --app-muted: #0a1430; --app-text: #e6eaf7; --app-border: #1e2a55; }
 html, body, #root { background: var(--app-bg); color: var(--app-text); }
 
@@ -1192,19 +1192,19 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
               </div>
               <span>{language === 'he' ? 'עוזר' : 'Help'}</span>
             </button>
-            <Link to={createPageUrl('Dashboard')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Dashboard')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}>
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
             </Link>
-            <Link to={createPageUrl('Orders')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Orders')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}>
               <ShoppingCart className="h-5 w-5" />
               <span>{language === 'he' ? 'הזמנות' : 'Orders'}</span>
             </Link>
-            <Link to={createPageUrl('Suppliers')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('Suppliers')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}>
               <Users className="h-5 w-5" />
               <span>{language === 'he' ? 'ספקים' : 'Suppliers'}</span>
             </Link>
-            <Link to={createPageUrl('UserProfile')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-blue-600' : 'text-gray-600 dark:text-gray-300')}>
+            <Link to={createPageUrl('UserProfile')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}>
               <UserCircle className="h-5 w-5" />
               <span>{language === 'he' ? 'פרופיל' : 'Profile'}</span>
             </Link>

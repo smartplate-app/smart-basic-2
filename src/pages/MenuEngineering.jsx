@@ -100,7 +100,7 @@ export default function MenuEngineeringPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <Card className="max-w-md w-full shadow-xl">
           <CardContent className="pt-6 space-y-4 text-center">
-            <div className="mx-auto w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-12 h-12 bg-blue-100 text-[#d4a373] rounded-full flex items-center justify-center mb-4">
               <Lock className="w-6 h-6" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">
@@ -197,7 +197,7 @@ export default function MenuEngineeringPage() {
     } else if (isHighMix && !isHighProfit) {
       category = language === 'he' ? 'סוס עבודה' : 'Plowhorse';
       categoryEn = 'Plowhorse';
-      color = "bg-blue-50 text-blue-700 border-blue-200";
+      color = "bg-blue-50 text-[#b88c60] border-blue-200";
     } else if (!isHighMix && isHighProfit) {
       category = language === 'he' ? 'חידה' : 'Puzzle';
       categoryEn = 'Puzzle';
@@ -291,7 +291,7 @@ export default function MenuEngineeringPage() {
               <Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'נקה הכל' : 'Clear All'}
             </Button>
-            <Button onClick={() => { setEditingItem(null); setShowItemModal(true); }} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={() => { setEditingItem(null); setShowItemModal(true); }} className="bg-[#d4a373] hover:bg-[#b88c60] text-white">
               <Plus className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'הוסף פריט' : 'Add Item'}
             </Button>
@@ -315,7 +315,7 @@ export default function MenuEngineeringPage() {
             </Button>
           </div>
           <div className={`text-${isRTL ? 'left' : 'right'}`}>
-            <h1 className="text-3xl font-bold text-blue-700">
+            <h1 className="text-3xl font-bold text-[#b88c60]">
               {language === 'he' ? 'ניתוח הנדסת תפריט' : 'Menu Engineering Analysis'}
             </h1>
             <p className="text-gray-500 mt-1">
@@ -585,7 +585,7 @@ export default function MenuEngineeringPage() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowItemModal(false)}>{language === 'he' ? 'ביטול' : 'Cancel'}</Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">{language === 'he' ? 'שמור' : 'Save'}</Button>
+              <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60] text-white">{language === 'he' ? 'שמור' : 'Save'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -605,7 +605,7 @@ export default function MenuEngineeringPage() {
               </div>
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h4 className="font-bold text-blue-800 flex items-center gap-2"><Tractor className="w-4 h-4"/> {language === 'he' ? 'סוס עבודה (Plowhorse)' : 'Plowhorse'}</h4>
-                <p className="text-sm text-blue-700 mt-1">{language === 'he' ? 'פופולריות גבוהה, רווחיות נמוכה. מנות אהובות אך לא רווחיות מספיק. שקול להעלות מחיר מעט או להקטין מנות.' : 'High popularity, low profitability. Beloved dishes but not profitable enough. Consider slightly raising the price or reducing portion size.'}</p>
+                <p className="text-sm text-[#b88c60] mt-1">{language === 'he' ? 'פופולריות גבוהה, רווחיות נמוכה. מנות אהובות אך לא רווחיות מספיק. שקול להעלות מחיר מעט או להקטין מנות.' : 'High popularity, low profitability. Beloved dishes but not profitable enough. Consider slightly raising the price or reducing portion size.'}</p>
               </div>
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <h4 className="font-bold text-yellow-800 flex items-center gap-2"><Puzzle className="w-4 h-4"/> {language === 'he' ? 'חידה (Puzzle)' : 'Puzzle'}</h4>

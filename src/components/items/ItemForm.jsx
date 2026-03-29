@@ -260,7 +260,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
                   type="button"
                   onClick={handleCreateWarehouse}
                   disabled={creatingWarehouse || !newWarehouseName.trim()}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-[#d4a373] hover:bg-[#b88c60]"
                 >
                   {creatingWarehouse ? '...' : t('add')}
                 </Button>
@@ -430,7 +430,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
           <Button type="button" variant="outline" onClick={onCancel}>
             {t('cancel')}
           </Button>
-          <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+          <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60]">
             {item ? t('update_item') : t('save_item')}
           </Button>
         </div>

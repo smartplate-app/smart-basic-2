@@ -173,7 +173,7 @@ export default function UserProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader className="w-12 h-12 animate-spin text-blue-600" />
+          <Loader className="w-12 h-12 animate-spin text-[#d4a373]" />
           <p className="text-lg text-gray-700">{t('loading')}</p>
         </div>
       </div>
@@ -422,7 +422,7 @@ export default function UserProfilePage() {
               </div>
 
               <div className="mt-6 flex justify-end">
-                <Button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                <Button type="submit" disabled={saving} className="bg-[#d4a373] hover:bg-[#b88c60]">
                   {saving ? (
                     <>
                       <Loader className="w-4 h-4 mr-2 animate-spin" />
@@ -454,7 +454,7 @@ export default function UserProfilePage() {
                 <Input id="drive_email" type="email" value={driveEmail} onChange={(e) => setDriveEmail(e.target.value)} placeholder="you@gmail.com" />
               </div>
               <div className="flex gap-2">
-                <Button type="button" onClick={handleSaveDriveEmail} className="bg-blue-600 hover:bg-blue-700">
+                <Button type="button" onClick={handleSaveDriveEmail} className="bg-[#d4a373] hover:bg-[#b88c60]">
                   <Save className="w-4 h-4 mr-2" /> Save
                 </Button>
                 <Button type="button" variant="outline" onClick={handleCheckDrive} disabled={driveChecking}>
