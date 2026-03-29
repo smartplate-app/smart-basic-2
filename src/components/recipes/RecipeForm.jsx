@@ -208,20 +208,9 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       ((formData.total_cost / ((formData.target_sfc_percent || 30) / 100)) * 1.05).toFixed(2) 
                       : '0.00'}
                   </div>
-                  {(() => {
-                    const offeredInclVat = formData.total_cost && (formData.target_sfc_percent || 30)
-                      ? (formData.total_cost / ((formData.target_sfc_percent || 30) / 100)) * 1.05
-                      : 0;
-                    const offeredExclVat = offeredInclVat / 1.18;
-                    const costPct = offeredExclVat > 0 ? (formData.total_cost / offeredExclVat) * 100 : 0;
-                    return (
-                      <div className="mt-1 text-xs text-gray-500">
-                        {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
-                        <span className="font-bold text-orange-600">{costPct.toFixed(1)}%</span>
-                        {language === 'he' ? ' (עלות / מחיר ללא מע"מ)' : ' (cost / price excl. VAT)'}
-                      </div>
-                    );
-                  })()}
+                  <div className="mt-1 text-xs text-gray-500">
+                    {language === 'he' ? 'אחוז עלות מזון + 5% פחת + מע"מ' : 'food cost % + 5% Q factor + vat'}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר בתפריט' : 'Price on Menu'}</label>
