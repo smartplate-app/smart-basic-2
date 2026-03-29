@@ -376,14 +376,31 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
 
           <div>
             <Label>{t('price_after_discount') || 'מחיר אחרי הנחה'}</Label>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
-              <span className="text-sm text-green-700">{t('final_price') || 'מחיר סופי'}:</span>
-              <span className="text-lg font-bold text-green-700">
-                {(currentItem.price && currentItem.discount 
-                  ? (currentItem.price / (1 + (currentItem.discount / 100))).toFixed(2)
-                  : (currentItem.price || 0).toFixed(2)
-                )}
-              </span>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-green-700">{t('final_price') || 'מחיר סופי'}:</span>
+                <span className="text-lg font-bold text-green-700">
+                  {(currentItem.price && currentItem.discount 
+                    ? (currentItem.price / (1 + (currentItem.discount / 100))).toFixed(2)
+                    : (currentItem.price || 0).toFixed(2)
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center justify-between border-t border-green-200/50 pt-1">
+                <span className="text-sm text-green-700">
+                  {t('price_per_unit') || 'מחיר ל-'}{(() => {
+                    if (currentItem.unit === 'kg') return t('unit_kg') || 'ק״ג';
+                    if (currentItem.unit === 'gram') return t('unit_g') || 'גרם';
+                    if (currentItem.unit === 'liter') return t('unit_liter') || 'ליטר';
+                    if (currentItem.unit === 'ml') return t('unit_ml') || 'מ״ל';
+                    if (currentItem.unit === 'case') return t('unit_piece') || 'יחידה';
+                    return t('unit_piece') || 'יחידה';
+                  })()}:
+                </span>
+                <span className="text-md font-bold text-green-700">
+                  {((currentItem.price ? (currentItem.price / (1 + ((currentItem.discount || 0) / 100))) : 0) / (currentItem.units_per_package || 1)).toFixed(2)}
+                </span>
+              </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
               {t('price_after_discount_help') || 'המחיר שישמש לכל החישובים'}
