@@ -202,7 +202,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר מוצע (כולל מע"מ)' : 'Offered Price (incl. VAT)'}</label>
+                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר מכירה מוצע (כולל מע"מ)' : 'Suggested Selling Price (incl. VAT)'}</label>
                   <div className="h-9 flex items-center px-3 bg-green-50 text-green-700 font-bold rounded-md border border-green-200">
                     ₪{formData.total_cost && (formData.target_sfc_percent || 30) ? 
                       ((formData.total_cost / ((formData.target_sfc_percent || 30) / 100)) * 1.05).toFixed(2) 
