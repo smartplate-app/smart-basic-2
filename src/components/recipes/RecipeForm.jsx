@@ -15,6 +15,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     type: "sale_item",
     sale_price: 0,
     total_cost: 0,
+    target_sfc_percent: 30,
     ingredients: []
   });
   const [items, setItems] = useState([]);
@@ -178,29 +179,48 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
               </select>
             </div>
             
-            {formData.type === 'sale_item' && (
-              <div>
-                <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר מכירה (₪)' : 'Sale Price (₪)'}</label>
-                <Input 
-                  type="number" 
-                  step="0.01"
-                  required 
-                  value={formData.sale_price} 
-                  onChange={e => setFormData({...formData, sale_price: parseFloat(e.target.value) || 0})} 
-                />
-              </div>
-            )}
-            
             <div>
               <label className="block text-sm font-medium mb-1">{language === 'he' ? 'עלות כוללת (₪)' : 'Total Cost (₪)'}</label>
               <Input 
                 type="number" 
                 step="0.01"
-                readOnly
                 value={formData.total_cost} 
+                onChange={e => setFormData({...formData, total_cost: parseFloat(e.target.value) || 0})} 
                 className="bg-gray-50 font-bold text-red-600"
               />
             </div>
+
+            {formData.type === 'sale_item' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'אחוז עלות רצוי (SFC %)' : 'Wanted Cost % (SFC)'}</label>
+                  <Input 
+                    type="number" 
+                    step="1"
+                    value={formData.target_sfc_percent || 30} 
+                    onChange={e => setFormData({...formData, target_sfc_percent: parseFloat(e.target.value) || 0})} 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר מוצע (כולל מע"מ)' : 'Offered Price (incl. VAT)'}</label>
+                  <div className="h-9 flex items-center px-3 bg-green-50 text-green-700 font-bold rounded-md border border-green-200">
+                    ₪{formData.total_cost && (formData.target_sfc_percent || 30) ? 
+                      ((formData.total_cost / ((formData.target_sfc_percent || 30) / 100)) * 1.05).toFixed(2) 
+                      : '0.00'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">{language === 'he' ? 'מחיר מכירה בפועל (₪)' : 'Actual Sale Price (₪)'}</label>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    required 
+                    value={formData.sale_price} 
+                    onChange={e => setFormData({...formData, sale_price: parseFloat(e.target.value) || 0})} 
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="border-t pt-4">

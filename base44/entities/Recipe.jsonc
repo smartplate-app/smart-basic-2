@@ -1,0 +1,113 @@
+{
+  "name": "Recipe",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Recipe name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "sale_item",
+        "prep_recipe"
+      ],
+      "default": "sale_item",
+      "description": "Type of recipe"
+    },
+    "menu_category": {
+      "type": "string",
+      "default": "general",
+      "description": "Category for menu engineering"
+    },
+    "sold_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of items sold for menu engineering"
+    },
+    "sale_price": {
+      "type": "number",
+      "default": 0,
+      "description": "Selling price (for sale items)"
+    },
+    "total_cost": {
+      "type": "number",
+      "default": 0,
+      "description": "Total cost of ingredients"
+    },
+    "manual_cost": {
+      "type": "number",
+      "default": 0,
+      "description": "Manually entered cost (when no ingredients)"
+    },
+    "use_manual_cost": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to use manual cost instead of calculated from ingredients"
+    },
+    "target_sfc_percent": {
+      "type": "number",
+      "default": 0,
+      "description": "Target food cost percentage (SFC%)"
+    },
+    "suggested_price_excl_vat": {
+      "type": "number",
+      "default": 0,
+      "description": "Suggested price excluding VAT based on SFC%"
+    },
+    "suggested_price_incl_vat": {
+      "type": "number",
+      "default": 0,
+      "description": "Suggested price including VAT (SFC% + 5%)"
+    },
+    "cost_percentage": {
+      "type": "number",
+      "default": 0,
+      "description": "Food cost percentage"
+    },
+    "ingredients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "instructions": {
+      "type": "string",
+      "description": "Preparation instructions"
+    },
+    "yield_quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "How much this recipe yields"
+    },
+    "yield_unit": {
+      "type": "string",
+      "default": "unit",
+      "description": "Unit of the yield"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}
