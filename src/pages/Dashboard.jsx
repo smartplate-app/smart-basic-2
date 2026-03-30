@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,6 +84,8 @@ export default function DashboardPage() {
   const [manualLaborCost, setManualLaborCost] = useState(0);
   const [useManualFood, setUseManualFood] = useState(false);
   const [manualFoodCost, setManualFoodCost] = useState(0);
+  const [manualLaborLastUpdated, setManualLaborLastUpdated] = useState(null);
+  const autoSaveTimerRef = useRef(null);
 
   // Category scan (Sales BI image)
   const [categoryScanLoading, setCategoryScanLoading] = useState(false);
@@ -251,6 +253,7 @@ export default function DashboardPage() {
         const mlc = Number(existingData.manual_labor_cost || 0);
         setManualLaborCost(mlc);
         setUseManualLabor(Boolean(existingData.use_manual_labor));
+        setManualLaborLastUpdated(existingData.updated_date || existingData.created_date || null);
         
         // Manual food override
         const mfc = Number(existingData.manual_food_cost || 0);
@@ -477,6 +480,41 @@ export default function DashboardPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Auto-save manual labor cost (debounced, no button needed)
+  const autoSaveManualLabor = (newLaborCost, newUseManual) => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(async () => {
+      try {
+        const now = new Date().toISOString();
+        const dataToSave = {
+          month: selectedMonth,
+          predicted_sales: parseFloat(predictedSales) || 0,
+          labor_goal_percent: parseFloat(laborGoalPercent) || 25,
+          food_goal_percent: parseFloat(foodGoalPercent) || 30,
+          management_salary: parseFloat(managementSalary) || 0,
+          total_sales: (Number(restaurantSales) || 0) + (Number(deliverySales) || 0),
+          restaurant_sales: Number(restaurantSales) || 0,
+          delivery_takeaway_sales: Number(deliverySales) || 0,
+          total_tips: parseFloat(totalTips) || 0,
+          manual_labor_cost: parseFloat(newLaborCost) || 0,
+          use_manual_labor: newUseManual,
+          manual_food_cost: parseFloat(manualFoodCost) || 0,
+          use_manual_food: useManualFood,
+          monthly_rent_incl_vat: parseFloat(monthlyRent) || 0
+        };
+        if (dashboardData && dashboardData.id) {
+          await base44.entities.MonthlyDashboardData.update(dashboardData.id, dataToSave);
+        } else {
+          const created = await base44.entities.MonthlyDashboardData.create(dataToSave);
+          setDashboardData(created);
+        }
+        setManualLaborLastUpdated(now);
+      } catch (e) {
+        console.error('Auto-save labor cost failed:', e);
+      }
+    }, 1000);
   };
 
   // Validate combined goal doesn't exceed 60%
@@ -1385,27 +1423,41 @@ export default function DashboardPage() {
                     {formatCurrency(effectiveLaborCost)}
                   </div>
                   <div className={`text-gray-300 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {weeklyLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות השבועיות (ללא מע\"מ)' : 'of weekly sales (excl. VAT)'}
+                    {actualLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות החודשיות (ללא מע\"מ)' : 'of monthly sales (excl. VAT)'}
                   </div>
 
                   {/* Manual override controls - always visible inside this card */}
                   <div className={`mt-3 space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Switch checked={useManualLabor} onCheckedChange={setUseManualLabor} />
+                      <Switch checked={useManualLabor} onCheckedChange={(val) => { 
+                        setUseManualLabor(val); 
+                        autoSaveManualLabor(manualLaborCost, val); 
+                      }} />
                       <span className="text-sm">{language === 'he' ? 'השתמש בעלות עבודה ידנית' : 'Use manual labor cost'}</span>
                     </div>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Input
                         type="number"
                         value={manualLaborCost}
-                        onChange={(e) => { const v = parseFloat(e.target.value) || 0; setManualLaborCost(v); if (!useManualLabor) setUseManualLabor(true); }}
+                        onChange={(e) => { 
+                          const v = parseFloat(e.target.value) || 0; 
+                          setManualLaborCost(v); 
+                          if (!useManualLabor) setUseManualLabor(true); 
+                          autoSaveManualLabor(v, true); 
+                        }}
                         placeholder="0"
                         className={`w-48 bg-white/10 border-white/20 ${isRTL ? 'text-right' : 'text-left'}`}
                       />
                     </div>
                     {useManualLabor && (
                       <div className={`text-xs text-yellow-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {language === 'he' ? 'מצב ידני — נשמר לחודש שנבחר למעלה' : 'Manual mode — saved for the selected month'}
+                        <div>{language === 'he' ? 'מצב ידני — נשמר אוטומטית' : 'Manual mode — auto-saved'}</div>
+                        {manualLaborLastUpdated && (
+                          <div className="text-white/70 mt-1" dir={isRTL ? 'rtl' : 'ltr'}>
+                            {language === 'he' ? 'עודכן לאחרונה: ' : 'Last updated: '}
+                            {moment(manualLaborLastUpdated).format('DD/MM/YYYY HH:mm')}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
