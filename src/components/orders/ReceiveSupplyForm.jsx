@@ -449,6 +449,7 @@ const handleAutoScan = async () => {
             const inv = sanitizeInvoiceNumber(resp.invoice_number || '');
             const dateChosen = resp.invoice_date_invoice || resp.invoice_date || resp.invoice_date_printed || formData.received_date;
             const dup = supplierId ? await checkDuplicateInvoice(inv, supplierId, receipt?.id) : false;
+            // duplicate flag shown inline per-card; confirmation happens at save time
             return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, duplicate: dup, document_type: 'invoice' };
           })
         );
@@ -540,15 +541,12 @@ const handleAutoScan = async () => {
 
         const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
         const isDup = await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
-        if (isDup) {
-          alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.');
+        if (noTotalFound) {
+          alert(language === 'he' ? 'לא נמצא סכום בחשבונית; הסכום נקבע ל-0. ניתן לערוך ידנית.' : 'No total found on the invoice; amount set to 0. You can edit it manually.');
         } else {
-          if (noTotalFound) {
-            alert(language === 'he' ? 'לא נמצא סכום בחשבונית; הסכום נקבע ל-0. ניתן לערוך ידנית.' : 'No total found on the invoice; amount set to 0. You can edit it manually.');
-          } else {
-            alert(t('scanning_complete') || 'סריקה הושלמה! הוסף פריטים ידנית.');
-          }
+          alert(t('scanning_complete') || 'סריקה הושלמה! הוסף פריטים ידנית.');
         }
+        // Duplicate warning shown via inline alert in the form (duplicateExists state)
 
       } else {
         // Original flow for orders - only update invoice details from scan
@@ -569,15 +567,11 @@ const handleAutoScan = async () => {
         scrollToDetails();
 
         const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
-        const isDup = await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
-        if (isDup) {
-          alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.');
+        await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
+        if (noTotalFound) {
+          alert(language === 'he' ? 'לא נמצא סכום בחשבונית; הסכום נקבע ל-0. ניתן לערוך ידנית.' : 'No total found on the invoice; amount set to 0. You can edit it manually.');
         } else {
-          if (noTotalFound) {
-            alert(language === 'he' ? 'לא נמצא סכום בחשבונית; הסכום נקבע ל-0. ניתן לערוך ידנית.' : 'No total found on the invoice; amount set to 0. You can edit it manually.');
-          } else {
-            alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים.');
-          }
+          alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים.');
         }
       }
 
@@ -791,7 +785,13 @@ const handleAutoScan = async () => {
     }
 
     const dup = await checkDuplicateInvoice(formData.invoice_number, formData.supplier_id || (receipt?.supplier_id || ''), receipt?.id);
-    if (dup) { alert(t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.'); return; }
+    if (dup) {
+      const msg = language === 'he'
+        ? `⚠️ חשבונית מספר ${formData.invoice_number} כבר קיימת במערכת עבור ספק זה!\n\nהאם אתה בטוח שברצונך לשמור אותה שוב?`
+        : `⚠️ Invoice #${formData.invoice_number} already exists in the system for this supplier!\n\nAre you sure you want to save it again?`;
+      const confirmed = window.confirm(msg);
+      if (!confirmed) return;
+    }
     onSubmit(formData);
   };
 
@@ -1424,9 +1424,12 @@ const handleAutoScan = async () => {
                   )}
 
                   {duplicateExists && (
-                      <Alert variant="destructive" className="mt-2">
+                      <Alert variant="destructive" className="mt-2 bg-orange-50 border-orange-300 text-orange-800">
                         <AlertDescription>
-                          {t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier. You cannot save another copy.'}
+                          <AlertTriangle className="w-4 h-4 inline-block mr-2 text-orange-600 rtl:ml-2" />
+                          {language === 'he' 
+                            ? 'שים לב: חשבונית מספר זה כבר קיימת במערכת עבור הספק הנ"ל.'
+                            : 'Warning: This invoice number already exists in the system for this supplier.'}
                         </AlertDescription>
                       </Alert>
                     )}
@@ -1437,8 +1440,17 @@ const handleAutoScan = async () => {
                           <Button
                             type="button"
                             className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                            disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date || d.duplicate)}
+                            disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date)}
                             onClick={async () => {
+                              const hasDups = scannedDocs.some(d => d.duplicate);
+                              if (hasDups) {
+                                const msg = language === 'he'
+                                  ? '⚠️ חלק מהחשבוניות שסרקת כבר קיימות במערכת עבור ספק זה!\n\nהאם אתה בטוח שברצונך לשמור אותן שוב?'
+                                  : '⚠️ Some of the scanned invoices already exist in the system for this supplier!\n\nAre you sure you want to save them again?';
+                                const confirmed = window.confirm(msg);
+                                if (!confirmed) return;
+                              }
+
                               const baseData = {
                                 supplier_id: formData.supplier_id,
                                 supplier_name: formData.supplier_name,
@@ -1494,7 +1506,7 @@ const handleAutoScan = async () => {
                           <Button 
                             type="submit" 
                             className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                                     disabled={!formData.invoice_number || formData.receipt_images.length === 0 || duplicateExists}
+                                                     disabled={!formData.invoice_number || formData.receipt_images.length === 0}
                           >
                             <PackageCheck className="w-4 h-4 ml-2" />
                             {safeT('save_receipt', 'שמור קבלה', 'Save receipt')}
