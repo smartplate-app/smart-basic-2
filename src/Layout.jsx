@@ -110,7 +110,7 @@ const AppLayout = ({ children, currentPageName }) => {
     (async () => {
       try {
         const host = (window.location.hostname || '').toLowerCase();
-        const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com';
+        const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com' || host === 'foodcostapp.com' || host === 'www.foodcostapp.com' || host === 'foocostapp.com' || host === 'www.foocostapp.com';
         const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
         const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
         const previewParams = new URLSearchParams(window.location.search);
@@ -118,7 +118,7 @@ const AppLayout = ({ children, currentPageName }) => {
         if (!isCustom || hasHashPage || hasOauthParams) return;
         const authed = await base44.auth.isAuthenticated();
         if (!authed) {
-          window.location.replace('/#/pages/WelcomePublic');
+          window.location.replace(createPageUrl('WelcomePublic'));
         }
       } catch {}
     })();
@@ -200,15 +200,15 @@ const AppLayout = ({ children, currentPageName }) => {
                 } catch {}
                 const inCooldown = cooldownUntil > Date.now();
                 if (suppress || isPwaInstalled || inCooldown) {
-                  setTimeout(() => {
-                    const url = new URL(createPageUrl('Welcome'), window.location.origin);
-                    if (preview === '1') url.searchParams.set('preview', '1');
-                    window.location.replace(url.pathname + url.search);
-                  }, 1500);
-                } else {
-                  const url = new URL(createPageUrl('Welcome'), window.location.origin);
+                setTimeout(() => {
+                  const url = new URL(createPageUrl('WelcomePublic'), window.location.origin);
                   if (preview === '1') url.searchParams.set('preview', '1');
                   window.location.replace(url.pathname + url.search);
+                }, 1500);
+                } else {
+                const url = new URL(createPageUrl('WelcomePublic'), window.location.origin);
+                if (preview === '1') url.searchParams.set('preview', '1');
+                window.location.replace(url.pathname + url.search);
                 }
               });
     }

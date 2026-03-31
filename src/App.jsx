@@ -53,7 +53,7 @@ const AuthenticatedApp = () => {
       '/AuthKick'
     ];
     
-    const isPublicRoute = publicRoutes.some(route => location.pathname === route || location.pathname.startsWith(route + '/'));
+    const isPublicRoute = publicRoutes.some(route => location.pathname.toLowerCase() === route.toLowerCase() || location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/'));
     
     if (!isPublicRoute) {
       if (authError.type === 'user_not_registered') {
