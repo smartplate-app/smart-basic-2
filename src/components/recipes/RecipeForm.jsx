@@ -19,11 +19,13 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     ingredients: []
   });
   const [items, setItems] = useState([]);
+  const [prepRecipes, setPrepRecipes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     base44.entities.Item.filter({}, "name").then(setItems);
+    base44.entities.Recipe.filter({ type: "prep_recipe" }, "name").then(setPrepRecipes);
   }, []);
 
   const UNITS = [
@@ -150,6 +152,28 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredPrepRecipes = prepRecipes.filter(r =>
+    r.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (!recipe || r.id !== recipe.id) // prevent self-reference
+  );
+
+  const handleAddPrepRecipe = (prep) => {
+    const newIngredients = [...formData.ingredients, {
+      item_id: prep.id,
+      item_name: prep.name,
+      quantity: 1,
+      unit: 'unit',
+      cost: prep.total_cost || 0,
+      is_prep_recipe: true
+    }];
+    setFormData({
+      ...formData,
+      ingredients: newIngredients,
+      total_cost: calculateTotalCost(newIngredients)
+    });
+    setSearchTerm("");
+  };
+
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -259,22 +283,47 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                   className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto"
                   onMouseLeave={() => setIsDropdownOpen(false)}
                 >
-                  {filteredItems.length > 0 ? (
-                    filteredItems.map(item => (
-                      <div 
-                        key={item.id} 
-                        className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                        onClick={() => {
-                          handleAddIngredient(item);
-                          setIsDropdownOpen(false);
-                        }}
-                      >
-                        <span>{item.name}</span>
-                        <span className="text-sm text-gray-500">₪{Number(item.price_after_discount || item.price || 0).toFixed(2)} / {language === 'he' ? 'אריזה' : 'pkg'}</span>
-                      </div>
-                    ))
-                  ) : (
+                  {filteredItems.length === 0 && filteredPrepRecipes.length === 0 ? (
                     <div className="p-2 text-gray-500 text-center">{language === 'he' ? 'לא נמצאו פריטים' : 'No items found'}</div>
+                  ) : (
+                    <>
+                      {filteredPrepRecipes.map(prep => (
+                        <div
+                          key={`prep-${prep.id}`}
+                          className="p-2 hover:bg-purple-50 cursor-pointer flex justify-between items-center"
+                          onClick={() => {
+                            handleAddPrepRecipe(prep);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                              {language === 'he' ? 'הכנה' : 'PREP'}
+                            </span>
+                            <span>{prep.name}</span>
+                          </div>
+                          <span className="text-sm text-gray-500">₪{Number(prep.total_cost || 0).toFixed(2)}</span>
+                        </div>
+                      ))}
+                      {filteredItems.map(item => (
+                        <div
+                          key={`item-${item.id}`}
+                          className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                          onClick={() => {
+                            handleAddIngredient(item);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                              {language === 'he' ? 'פריט' : 'ITEM'}
+                            </span>
+                            <span>{item.name}</span>
+                          </div>
+                          <span className="text-sm text-gray-500">₪{Number(item.price_after_discount || item.price || 0).toFixed(2)} / {language === 'he' ? 'אריזה' : 'pkg'}</span>
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
               )}
@@ -283,7 +332,14 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
             <div className="space-y-2">
               {formData.ingredients.map((ing, idx) => (
                 <div key={idx} className="flex items-center gap-2 bg-gray-50 p-2 rounded-md border">
-                  <div className="flex-1 font-medium text-sm">{ing.item_name}</div>
+                  <div className="flex-1 font-medium text-sm flex items-center gap-1.5">
+                    {ing.is_prep_recipe ? (
+                      <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'הכנה' : 'PREP'}</span>
+                    ) : (
+                      <span className="text-xs font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'פריט' : 'ITEM'}</span>
+                    )}
+                    {ing.item_name}
+                  </div>
                   <Input 
                     type="number" 
                     step="0.01" 
@@ -291,21 +347,25 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     value={ing.quantity}
                     onChange={(e) => handleUpdateIngredient(idx, 'quantity', e.target.value)}
                   />
-                  <Select 
-                    value={ing.unit} 
-                    onValueChange={(value) => handleUpdateIngredient(idx, 'unit', value)}
-                  >
-                    <SelectTrigger className="w-24 h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {UNITS.map(u => (
-                        <SelectItem key={u.value} value={u.value} className="text-xs">
-                          {u.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {ing.is_prep_recipe ? (
+                    <div className="w-24 h-8 flex items-center justify-center text-xs text-gray-400">{language === 'he' ? 'יחידה' : 'unit'}</div>
+                  ) : (
+                    <Select 
+                      value={ing.unit} 
+                      onValueChange={(value) => handleUpdateIngredient(idx, 'unit', value)}
+                    >
+                      <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UNITS.map(u => (
+                          <SelectItem key={u.value} value={u.value} className="text-xs">
+                            {u.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <div className="text-sm font-bold w-16 text-left">{Number(ing.cost).toFixed(2)}</div>
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRemoveIngredient(idx)}>
                     <Trash2 className="w-4 h-4" />
