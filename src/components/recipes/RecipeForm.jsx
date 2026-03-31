@@ -270,7 +270,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                         }}
                       >
                         <span>{item.name}</span>
-                        <span className="text-sm text-gray-500">{item.price_after_discount || item.price} / {item.unit}</span>
+                        <span className="text-sm text-gray-500">₪{Number(item.price_after_discount || item.price || 0).toFixed(2)} / {language === 'he' ? 'אריזה' : 'pkg'}</span>
                       </div>
                     ))
                   ) : (
