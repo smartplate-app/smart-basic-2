@@ -91,8 +91,8 @@ export default function ImportSuppliersItemsModal({ isOpen, onClose, onSuccess }
             </div>
             <p className="text-xs text-gray-500">
               {language === 'he' 
-                ? 'יש לוודא שיש עמודות "ספק" ו"שם פריט" (חובה). רצוי גם: מחיר, מק"ט, יחידת מידה. המסמך חייב להיות ציבורי (Anyone with the link can view).' 
-                : 'Make sure there are "Supplier" and "Item Name" columns. Optional: Price, Catalog Number, Unit. The document must be public (Anyone with the link can view).'}
+                ? 'יש לוודא שיש בקובץ עמודות "ספק" ו"שם פריט" (חובה). רצוי גם: מחיר, מק"ט, יחידת מידה. המסמך חייב להיות מוגדר כפתוח לשיתוף עם כל מי שיש לו לינק - לצפייה (Anyone with the link can view).' 
+                : 'Make sure the file has "Supplier" and "Item Name" columns (required). Recommended: Price, Catalog Number, Unit. The document must be set to share with anyone who has the link – view only (Anyone with the link can view).'}
             </p>
           </div>
 
