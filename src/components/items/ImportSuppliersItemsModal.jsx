@@ -76,7 +76,7 @@ export default function ImportSuppliersItemsModal({ isOpen, onClose, onSuccess }
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              {language === 'he' ? 'קישור לגוגל שיטס:' : 'Google Sheets URL:'}
+              {language === 'he' ? 'נא להוסיף פה קישור ל Google Sheets:' : 'Google Sheets URL:'}
             </label>
             <div className="relative">
               <LinkIcon className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} w-5 h-5 text-gray-400`} />
