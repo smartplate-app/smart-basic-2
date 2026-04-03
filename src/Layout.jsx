@@ -118,7 +118,7 @@ const AppLayout = ({ children, currentPageName }) => {
         if (!isCustom || hasHashPage || hasOauthParams) return;
         const authed = await base44.auth.isAuthenticated();
         if (!authed) {
-          window.location.replace(createPageUrl('WelcomePublic'));
+          window.location.replace(createPageUrl('WelcomePublic') + (window.location.search || ''));
         }
       } catch {}
     })();
@@ -182,14 +182,14 @@ const AppLayout = ({ children, currentPageName }) => {
                         const again = await base44.auth.isAuthenticated();
                         if (!again) {
                           // Send truly public users to public welcome (no auth loop)
-                          window.location.replace('/#/pages/WelcomePublic');
+                          window.location.replace('/#/pages/WelcomePublic' + window.location.search);
                         }
                       } catch {
-                        window.location.replace('/#/pages/WelcomePublic');
+                        window.location.replace('/#/pages/WelcomePublic' + window.location.search);
                       }
                     }, 1500);
                   } else {
-                    window.location.replace('/#/pages/WelcomePublic');
+                    window.location.replace('/#/pages/WelcomePublic' + window.location.search);
                   }
                 }
               }).catch(() => {
@@ -199,16 +199,19 @@ const AppLayout = ({ children, currentPageName }) => {
                   cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0');
                 } catch {}
                 const inCooldown = cooldownUntil > Date.now();
+                const currentSearch = window.location.search || '';
+                const searchParamsStr = (preview === '1' && !currentSearch.includes('preview=1')) 
+                  ? (currentSearch ? currentSearch + '&preview=1' : '?preview=1') 
+                  : currentSearch;
+                  
                 if (suppress || isPwaInstalled || inCooldown) {
-                setTimeout(() => {
-                  const url = new URL(createPageUrl('WelcomePublic'), window.location.origin);
-                  if (preview === '1') url.searchParams.set('preview', '1');
-                  window.location.replace(url.pathname + url.search);
-                }, 1500);
+                  setTimeout(() => {
+                    const targetUrl = '/#/pages/WelcomePublic' + searchParamsStr;
+                    window.location.replace(targetUrl);
+                  }, 1500);
                 } else {
-                const url = new URL(createPageUrl('WelcomePublic'), window.location.origin);
-                if (preview === '1') url.searchParams.set('preview', '1');
-                window.location.replace(url.pathname + url.search);
+                  const targetUrl = '/#/pages/WelcomePublic' + searchParamsStr;
+                  window.location.replace(targetUrl);
                 }
               });
     }
@@ -216,18 +219,18 @@ const AppLayout = ({ children, currentPageName }) => {
 
   // APK/WebView guard: if spinner lasts too long, fail open to public page (prevents stuck state)
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    if (p.get('preview') === '1') return;
-    if (!authLoading) return;
-    const timer = setTimeout(() => {
-      try {
-        if (authLoading) {
-          sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
-          window.location.replace('/#/pages/WelcomePublic');
-        }
-      } catch {}
-    }, 8000);
-    return () => clearTimeout(timer);
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('preview') === '1') return;
+  if (!authLoading) return;
+  const timer = setTimeout(() => {
+  try {
+    if (authLoading) {
+      sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
+      window.location.replace('/#/pages/WelcomePublic' + (window.location.search || ''));
+    }
+  } catch {}
+  }, 8000);
+  return () => clearTimeout(timer);
   }, [authLoading]);
 
   const navigationItems = [
@@ -582,7 +585,7 @@ const AppLayout = ({ children, currentPageName }) => {
               if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
                 setAuthLoading(false);
                 try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
-                window.location.replace('/#/pages/WelcomePublic');
+                window.location.replace('/#/pages/WelcomePublic' + (window.location.search || ''));
                 return;
               }
         // Stop spinner immediately in APK/WebView so user isn't stuck
@@ -596,7 +599,7 @@ const AppLayout = ({ children, currentPageName }) => {
           setTimeout(() => loadAuth(attemptNumber + 1), 1200);
           return;
         }
-        window.location.replace('/#/pages/WelcomePublic');
+        window.location.replace('/#/pages/WelcomePublic' + (window.location.search || ''));
         return;
       }
       

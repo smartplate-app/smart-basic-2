@@ -39,21 +39,43 @@ const AuthenticatedApp = () => {
     const publicRoutes = [
       '/',
       '/WelcomePublic',
+      '/pages/WelcomePublic',
       '/Welcome',
+      '/pages/Welcome',
+      '/GoogleCampaign',
+      '/pages/GoogleCampaign',
       '/OAuthCallback',
+      '/pages/OAuthCallback',
       '/PublicOrder',
+      '/pages/PublicOrder',
       '/Register',
+      '/pages/Register',
       '/SignIn',
+      '/pages/SignIn',
       '/StoreLogin',
+      '/pages/StoreLogin',
       '/WorkerPortal',
+      '/pages/WorkerPortal',
       '/OrderDetails',
+      '/pages/OrderDetails',
       '/RestaurantInvite',
+      '/pages/RestaurantInvite',
       '/Diagnostics',
+      '/pages/Diagnostics',
       '/LoginHelper',
-      '/AuthKick'
+      '/pages/LoginHelper',
+      '/AuthKick',
+      '/pages/AuthKick',
+      '/WelcomeIncognito',
+      '/pages/WelcomeIncognito'
     ];
     
-    const isPublicRoute = publicRoutes.some(route => location.pathname.toLowerCase() === route.toLowerCase() || location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/'));
+    const isPublicRoute = publicRoutes.some(route => 
+      location.pathname.toLowerCase() === route.toLowerCase() || 
+      location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/') ||
+      location.pathname.toLowerCase().includes('welcomepublic') ||
+      location.pathname.toLowerCase().includes('welcomeincognito')
+    );
     
     if (!isPublicRoute) {
       if (authError.type === 'user_not_registered') {
