@@ -1,0 +1,25 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "business_name": {
+      "type": "string",
+      "description": "Name of the restaurant or business"
+    },
+    "business_address": {
+      "type": "string",
+      "description": "Address of the restaurant or business"
+    },
+    "vat_percent": {
+      "type": "number",
+      "default": 17,
+      "description": "VAT percentage for the country"
+    },
+    "is_partner": {
+      "type": "boolean",
+      "default": false,
+      "description": "Partner read-only access: can view all app data but cannot modify it"
+    }
+  },
+  "required": []
+}

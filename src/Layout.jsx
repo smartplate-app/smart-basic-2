@@ -8,6 +8,7 @@ import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 import WorkerInvite from "./components/WorkerInvite";
 import OnboardingModal from "./components/onboarding/OnboardingModal";
+import BusinessSetupWizard from "./components/onboarding/BusinessSetupWizard";
 import OfflineNotification from "./components/OfflineNotification";
 import AppHelpChat from "./components/AppHelpChat";
 import { Button } from "@/components/ui/button";
@@ -1184,6 +1185,7 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
               </main>
 
         {/* Onboarding Modal */}
+        <BusinessSetupWizard user={user} />
         <OnboardingModal user={user} />
 
         {/* Mobile Bottom Tab Bar */}

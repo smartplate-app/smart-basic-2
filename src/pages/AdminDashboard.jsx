@@ -15,6 +15,7 @@ import InstagramCampaign from "@/components/marketing/InstagramCampaign";
 import InstagramCampaignDE from "@/components/marketing/InstagramCampaignDE";
 import InstagramCampaignHE from "@/components/marketing/InstagramCampaignHE";
 import PromoVideo from "./PromoVideo";
+import BusinessSetupWizard from "@/components/onboarding/BusinessSetupWizard";
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
@@ -41,6 +42,7 @@ export default function AdminDashboard() {
   const [showPromoKitModal, setShowPromoKitModal] = useState(false);
   const [promoKitStatus, setPromoKitStatus] = useState('idle');
   const [promoKitResult, setPromoKitResult] = useState(null);
+  const [showBusinessSetupPreview, setShowBusinessSetupPreview] = useState(false);
 
   useEffect(() => {
     loadAdminData();
@@ -568,6 +570,14 @@ export default function AdminDashboard() {
                   >
                     <Instagram className="w-4 h-4" />
                     {language === 'he' ? 'ערכת היכרות (גוגל דרייב)' : 'Promo Kit (Drive)'}
+                  </Button>
+                  <Button
+                    onClick={() => setShowBusinessSetupPreview(true)}
+                    variant="outline"
+                    className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    {language === 'he' ? 'בדיקת אשף עסק' : 'Test Business Setup'}
                   </Button>
                   <Button
                     onClick={() => window.dispatchEvent(new Event('b44_test_onboarding'))}
@@ -1103,6 +1113,12 @@ export default function AdminDashboard() {
           />
         )}
       </div>
+
+      <BusinessSetupWizard 
+        user={currentUser} 
+        forceShow={showBusinessSetupPreview} 
+        onComplete={() => setShowBusinessSetupPreview(false)} 
+      />
 
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
         <DialogContent className="max-w-md">
