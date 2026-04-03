@@ -319,6 +319,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                               {language === 'he' ? 'פריט' : 'ITEM'}
                             </span>
                             <span>{item.name}</span>
+                            {item.supplier_name && (
+                              <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">
+                                {item.supplier_name}
+                              </span>
+                            )}
                           </div>
                           <span className="text-sm text-gray-500">₪{Number(item.price_after_discount || item.price || 0).toFixed(2)} / {language === 'he' ? 'אריזה' : 'pkg'}</span>
                         </div>
@@ -339,6 +344,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       <span className="text-xs font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'פריט' : 'ITEM'}</span>
                     )}
                     {ing.item_name}
+                    {!ing.is_prep_recipe && (ing.original_item?.supplier_name) && (
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200 ml-1">
+                        {ing.original_item.supplier_name}
+                      </span>
+                    )}
                   </div>
                   <Input 
                     type="number" 
