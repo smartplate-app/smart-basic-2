@@ -16,7 +16,9 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     sale_price: 0,
     total_cost: 0,
     target_sfc_percent: 30,
-    ingredients: []
+    ingredients: [],
+    yield_quantity: 1,
+    yield_unit: 'unit'
   });
   const [items, setItems] = useState([]);
   const [prepRecipes, setPrepRecipes] = useState([]);
@@ -260,6 +262,54 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                   })()}
                 </div>
               </>
+            )}
+
+            {formData.type === 'prep_recipe' && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium mb-1">{language === 'he' ? 'כמות מתקבלת (Yield)' : 'Yield Quantity'}</label>
+                <div className="flex gap-2">
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    value={formData.yield_quantity || 1} 
+                    onChange={e => setFormData({...formData, yield_quantity: parseFloat(e.target.value) || 1})} 
+                    className="w-1/2"
+                  />
+                  <select
+                    value={formData.yield_unit || 'unit'}
+                    onChange={e => setFormData({...formData, yield_unit: e.target.value})}
+                    className="w-1/2 h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                  >
+                    {UNITS.map(u => (
+                      <option key={u.value} value={u.value}>{u.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {(() => {
+                  const totalCost = formData.total_cost || 0;
+                  const yieldQty = formData.yield_quantity || 1;
+                  const yieldUnit = formData.yield_unit || 'unit';
+                  const costPerUnit = yieldQty > 0 ? totalCost / yieldQty : 0;
+                  
+                  let extraText = '';
+                  if (yieldUnit === 'kg') {
+                    extraText = `₪${(costPerUnit / 1000).toFixed(4)} / ${language === 'he' ? 'גרם' : 'gram'}`;
+                  } else if (yieldUnit === 'liter') {
+                    extraText = `₪${(costPerUnit / 1000).toFixed(4)} / ${language === 'he' ? 'מ״ל' : 'ml'}`;
+                  } else if (yieldUnit === 'gram') {
+                    extraText = `₪${(costPerUnit * 1000).toFixed(2)} / ${language === 'he' ? 'ק״ג' : 'kg'}`;
+                  } else if (yieldUnit === 'ml') {
+                    extraText = `₪${(costPerUnit * 1000).toFixed(2)} / ${language === 'he' ? 'ליטר' : 'liter'}`;
+                  }
+
+                  return (
+                    <div className="mt-2 text-sm bg-blue-50 p-2 rounded-md border border-blue-100">
+                      <span className="font-bold text-blue-800">₪{costPerUnit.toFixed(2)}</span> <span className="text-blue-700">/ {UNITS.find(u => u.value === yieldUnit)?.label || yieldUnit}</span>
+                      {extraText && <div className="text-gray-500 text-xs mt-1">{extraText}</div>}
+                    </div>
+                  );
+                })()}
+              </div>
             )}
           </div>
 
