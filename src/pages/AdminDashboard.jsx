@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram, Mail } from "lucide-react";
+import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram, Mail, Globe } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 import InstagramCampaign from "@/components/marketing/InstagramCampaign";
@@ -43,6 +43,28 @@ export default function AdminDashboard() {
   const [promoKitStatus, setPromoKitStatus] = useState('idle');
   const [promoKitResult, setPromoKitResult] = useState(null);
   const [showBusinessSetupPreview, setShowBusinessSetupPreview] = useState(false);
+  const [showSeoModal, setShowSeoModal] = useState(false);
+  const [seoKeyword, setSeoKeyword] = useState("Smart Plate food cost app");
+  const [seoDomain, setSeoDomain] = useState("foodcostapp.com");
+  const [seoLoading, setSeoLoading] = useState(false);
+  const [seoResult, setSeoResult] = useState(null);
+
+  const handleCheckSeo = async () => {
+    try {
+      setSeoLoading(true);
+      setSeoResult(null);
+      const response = await base44.functions.invoke('checkSeoRanking', { keyword: seoKeyword, domain: seoDomain });
+      if (response.data.success) {
+        setSeoResult(response.data.data);
+      } else {
+        alert("Error checking SEO: " + response.data.error);
+      }
+    } catch (e) {
+      alert("Error: " + e.message);
+    } finally {
+      setSeoLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadAdminData();
@@ -595,6 +617,14 @@ export default function AdminDashboard() {
                     <Crown className="w-4 h-4" />
                     {language === 'he' ? 'קישורי פרומו VIP' : 'VIP Promo Links'}
                   </Button>
+                  <Button
+                    onClick={() => setShowSeoModal(true)}
+                    variant="outline"
+                    className="flex items-center gap-2 border-teal-500 text-teal-600 hover:bg-teal-50"
+                  >
+                    <Globe className="w-4 h-4" />
+                    {language === 'he' ? 'בודק מיקומים בגוגל' : 'SEO Rank Checker'}
+                  </Button>
                 </div>
               </div>
 
@@ -1119,6 +1149,62 @@ export default function AdminDashboard() {
         forceShow={showBusinessSetupPreview} 
         onComplete={() => setShowBusinessSetupPreview(false)} 
       />
+
+      <Dialog open={showSeoModal} onOpenChange={setShowSeoModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{language === 'he' ? 'בודק מיקומים בגוגל' : 'Google SEO Rank Checker'}</DialogTitle>
+            <DialogDescription>
+              {language === 'he' ? 'הכלי הזה משתמש בבינה מלאכותית שמחוברת לאינטרנט כדי לחפש את האתר שלך בגוגל ולמצוא את המיקום שלו.' : 'This tool uses internet-connected AI to search Google and find your ranking position.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{language === 'he' ? 'מילת מפתח לחיפוש' : 'Search Keyword'}</label>
+              <Input
+                value={seoKeyword}
+                onChange={(e) => setSeoKeyword(e.target.value)}
+                placeholder="e.g. Smart Plate food cost app"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{language === 'he' ? 'הדומיין שלך' : 'Your Domain'}</label>
+              <Input
+                value={seoDomain}
+                onChange={(e) => setSeoDomain(e.target.value)}
+                placeholder="e.g. foodcostapp.com"
+              />
+            </div>
+            <Button 
+              onClick={handleCheckSeo} 
+              disabled={seoLoading} 
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+            >
+              {seoLoading ? (language === 'he' ? 'מחפש בגוגל...' : 'Searching Google...') : (language === 'he' ? 'בדוק מיקום עכשיו' : 'Check Rank Now')}
+            </Button>
+
+            {seoResult && (
+              <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+                <div className="flex items-center gap-2 mb-2">
+                  {seoResult.found ? (
+                    <span className="flex items-center gap-1 text-green-600 font-bold"><Globe className="w-4 h-4"/> Found in search results!</span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-orange-600 font-bold"><Globe className="w-4 h-4"/> Not found in top results yet</span>
+                  )}
+                </div>
+                {seoResult.found && seoResult.estimated_position && (
+                  <p className="text-lg font-bold text-gray-900 mb-2">Estimated Position: #{seoResult.estimated_position}</p>
+                )}
+                <p className="text-sm text-gray-600">{seoResult.summary}</p>
+                
+                <p className="text-xs text-gray-500 mt-4 italic">
+                  Note: Google indexing can take anywhere from a few days to a few weeks for a brand new domain. Keep checking back! This uses Gemini 3.1 Pro for live search which takes a few integration credits per run.
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
         <DialogContent className="max-w-md">
