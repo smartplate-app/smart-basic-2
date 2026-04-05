@@ -320,9 +320,6 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                                 {item.supplier_name}
                               </span>
                             )}
-                            <span className="text-xs font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded shrink-0">
-                              {language === 'he' ? 'פריט' : 'ITEM'}
-                            </span>
                             <span>{item.name}</span>
                           </div>
                           <span className="text-sm text-gray-500">₪{Number(item.price_after_discount || item.price || 0).toFixed(2)} / {language === 'he' ? 'אריזה' : 'pkg'}</span>
@@ -343,10 +340,8 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                         {ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name}
                       </span>
                     )}
-                    {ing.is_prep_recipe ? (
+                    {ing.is_prep_recipe && (
                       <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'הכנה' : 'PREP'}</span>
-                    ) : (
-                      <span className="text-xs font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'פריט' : 'ITEM'}</span>
                     )}
                     {ing.item_name}
                   </div>
