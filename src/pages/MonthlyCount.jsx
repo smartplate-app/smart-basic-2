@@ -498,14 +498,13 @@ export default function MonthlyCountPage() {
             <p className="text-gray-600 mt-2">{t('monthly_count_greeting', { name: user.full_name })}</p>
           </div>
           <div className="flex gap-3 flex-wrap">
-            {user?.admin_original_email && (
+            {(user?.role === 'admin' || user?.admin_original_email) && (
               <Button
                 onClick={() => setShowMergeModal(true)}
-                variant="outline"
-                className="border-purple-600 text-purple-700 hover:bg-purple-100"
+                className="bg-purple-600 hover:bg-purple-700 text-white"
               >
                 <Merge className="w-5 h-5 ml-2 rtl:mr-2 rtl:ml-0" />
-                {language === 'he' ? 'מזג ספירות (אדמין)' : 'Merge Counts'}
+                {language === 'he' ? 'מזג ספירות (אדמין)' : 'Merge Counts (Admin)'}
               </Button>
             )}
             <Button
