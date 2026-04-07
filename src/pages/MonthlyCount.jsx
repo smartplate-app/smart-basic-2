@@ -34,7 +34,7 @@ export default function MonthlyCountPage() {
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [showScreenshotImport, setShowScreenshotImport] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [exportStartDate, setExportStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
   const [exportEndDate, setExportEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [exporting, setExporting] = useState(false);
