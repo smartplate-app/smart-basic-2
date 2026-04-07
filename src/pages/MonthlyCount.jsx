@@ -795,46 +795,16 @@ export default function MonthlyCountPage() {
                   try {
                     setShowMergeModal(false);
                     setLoading(true);
-                    const countsToMerge = counts.filter(c => selectedCountsForMerge.includes(c.id));
+                    const response = await base44.functions.invoke('mergeInventoryCounts', { countIds: selectedCountsForMerge });
                     
-                    const mergedItemsMap = new Map();
-                    countsToMerge.forEach(count => {
-                      (count.items || []).forEach(item => {
-                        const key = item.item_id;
-                        if (mergedItemsMap.has(key)) {
-                          const existing = mergedItemsMap.get(key);
-                          existing.counted_quantity = (Number(existing.counted_quantity) || 0) + (Number(item.counted_quantity) || 0);
-                          existing.total_cost = (Number(existing.total_cost) || 0) + (Number(item.total_cost) || 0);
-                        } else {
-                          mergedItemsMap.set(key, { ...item });
-                        }
-                      });
-                    });
-                    
-                    const mergedItems = Array.from(mergedItemsMap.values());
-                    const totalInventoryValue = mergedItems.reduce((sum, item) => sum + (item.total_cost || 0), 0);
-                    
-                    const newCount = {
-                      warehouse_id: "",
-                      warehouse_name: "Merged Count",
-                      count_date: countsToMerge[0].count_date,
-                      count_type: "monthly",
-                      items: mergedItems,
-                      total_inventory_value: totalInventoryValue,
-                      name: "Merged: " + countsToMerge.map(c => c.name || c.warehouse_name).join(", "),
-                      notes: "Auto-merged by Admin.",
-                      status: "completed"
-                    };
-
-                    await base44.entities.InventoryCount.create(newCount);
-                    
-                    for (const count of countsToMerge) {
-                      await base44.entities.InventoryCount.delete(count.id);
+                    if (!response.data.success) {
+                        throw new Error(response.data.error || 'Failed to merge counts');
                     }
                     
                     setSelectedCountsForMerge([]);
                     alert(language === 'he' ? 'הספירות מוזגו בהצלחה' : 'Counts merged successfully');
-                    await loadData(user.email);
+                    const targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.email;
+                    await loadData(targetEmail);
                   } catch (error) {
                     console.error(error);
                     alert("Error merging counts: " + error.message);
