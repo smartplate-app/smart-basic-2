@@ -273,7 +273,19 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     e.preventDefault();
     // Clear local storage after successful submit
     clearLocalStorage();
-    onSubmit(formData);
+    
+    // Clean up empty fields to avoid backend validation errors
+    const cleanedData = {
+      ...formData,
+      items: formData.items.map(item => ({
+        ...item,
+        counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+        price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+        total_cost: Number(item.total_cost) || 0
+      }))
+    };
+
+    onSubmit(cleanedData);
   };
 
   return (
