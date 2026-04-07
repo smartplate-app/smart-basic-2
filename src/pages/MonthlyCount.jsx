@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, Warehouse as WarehouseIcon, RefreshCw, LayoutGrid, List, FileSpreadsheet, Camera, Upload } from "lucide-react";
+import { Plus, Search, Loader, Warehouse as WarehouseIcon, RefreshCw, LayoutGrid, List, FileSpreadsheet, Camera, Upload, Merge } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -38,6 +40,8 @@ export default function MonthlyCountPage() {
   const [exporting, setExporting] = useState(false);
   const [generatingSheet, setGeneratingSheet] = useState(false);
   const [importingSheet, setImportingSheet] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
+  const [selectedCountsForMerge, setSelectedCountsForMerge] = useState([]);
 
   const loadData = async (userEmail, retryAttempt = 0) => {
     try {
@@ -494,6 +498,16 @@ export default function MonthlyCountPage() {
             <p className="text-gray-600 mt-2">{t('monthly_count_greeting', { name: user.full_name })}</p>
           </div>
           <div className="flex gap-3 flex-wrap">
+            {user?.admin_original_email && (
+              <Button
+                onClick={() => setShowMergeModal(true)}
+                variant="outline"
+                className="border-purple-600 text-purple-700 hover:bg-purple-100"
+              >
+                <Merge className="w-5 h-5 ml-2 rtl:mr-2 rtl:ml-0" />
+                {language === 'he' ? 'מזג ספירות (אדמין)' : 'Merge Counts'}
+              </Button>
+            )}
             <Button
               onClick={handleGenerateCountSheet}
               variant="outline"
@@ -736,6 +750,106 @@ export default function MonthlyCountPage() {
             )}
           </>
         )}
+        
+        <Dialog open={showMergeModal} onOpenChange={(open) => { setShowMergeModal(open); if(!open) setSelectedCountsForMerge([]); }}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{language === 'he' ? 'מיזוג ספירות (מצב אדמין)' : 'Merge Counts (Admin Mode)'}</DialogTitle>
+              <DialogDescription>
+                {language === 'he' ? 'בחר את הספירות שתרצה לאחד לאחת. הפעולה תיצור ספירה חדשה משולבת ותמחוק את המקוריות.' : 'Select counts to merge into one. This will create a new combined count and delete the original ones.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 my-4">
+              {counts.length === 0 ? (
+                <p className="text-gray-500">{language === 'he' ? 'אין ספירות זמינות' : 'No counts available'}</p>
+              ) : (
+                counts.map(c => (
+                  <div key={c.id} className="flex items-center space-x-3 rtl:space-x-reverse border p-3 rounded-md">
+                    <Checkbox 
+                      id={`merge-${c.id}`} 
+                      checked={selectedCountsForMerge.includes(c.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) setSelectedCountsForMerge([...selectedCountsForMerge, c.id]);
+                        else setSelectedCountsForMerge(selectedCountsForMerge.filter(id => id !== c.id));
+                      }}
+                    />
+                    <label htmlFor={`merge-${c.id}`} className="flex-1 cursor-pointer flex justify-between items-center ml-2 rtl:mr-2">
+                      <div>
+                        <span className="font-semibold block">{c.name || c.warehouse_name || 'Unnamed Count'}</span>
+                        <span className="text-sm text-gray-500">{c.count_date} • {c.items?.length || 0} items</span>
+                      </div>
+                      <span className="font-bold">₪{(c.total_inventory_value || 0).toFixed(2)}</span>
+                    </label>
+                  </div>
+                ))
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowMergeModal(false)}>{t('cancel') || 'Cancel'}</Button>
+              <Button 
+                onClick={async () => {
+                  if (selectedCountsForMerge.length < 2) {
+                    alert(language === 'he' ? 'בחר לפחות 2 ספירות למיזוג' : 'Select at least 2 counts to merge');
+                    return;
+                  }
+                  if (!confirm(language === 'he' ? 'האם אתה בטוח שברצונך לאחד ספירות אלו? פעולה זו בלתי הפיכה ותמחוק את הספירות המקוריות.' : 'Are you sure you want to merge these counts? This cannot be undone and original counts will be deleted.')) return;
+                  try {
+                    setShowMergeModal(false);
+                    setLoading(true);
+                    const countsToMerge = counts.filter(c => selectedCountsForMerge.includes(c.id));
+                    
+                    const mergedItemsMap = new Map();
+                    countsToMerge.forEach(count => {
+                      (count.items || []).forEach(item => {
+                        const key = item.item_id;
+                        if (mergedItemsMap.has(key)) {
+                          const existing = mergedItemsMap.get(key);
+                          existing.counted_quantity = (Number(existing.counted_quantity) || 0) + (Number(item.counted_quantity) || 0);
+                          existing.total_cost = (Number(existing.total_cost) || 0) + (Number(item.total_cost) || 0);
+                        } else {
+                          mergedItemsMap.set(key, { ...item });
+                        }
+                      });
+                    });
+                    
+                    const mergedItems = Array.from(mergedItemsMap.values());
+                    const totalInventoryValue = mergedItems.reduce((sum, item) => sum + (item.total_cost || 0), 0);
+                    
+                    const newCount = {
+                      warehouse_id: "",
+                      warehouse_name: "Merged Count",
+                      count_date: countsToMerge[0].count_date,
+                      count_type: "monthly",
+                      items: mergedItems,
+                      total_inventory_value: totalInventoryValue,
+                      name: "Merged: " + countsToMerge.map(c => c.name || c.warehouse_name).join(", "),
+                      notes: "Auto-merged by Admin.",
+                      status: "completed"
+                    };
+
+                    await base44.entities.InventoryCount.create(newCount);
+                    
+                    for (const count of countsToMerge) {
+                      await base44.entities.InventoryCount.delete(count.id);
+                    }
+                    
+                    setSelectedCountsForMerge([]);
+                    alert(language === 'he' ? 'הספירות מוזגו בהצלחה' : 'Counts merged successfully');
+                    await loadData(user.email);
+                  } catch (error) {
+                    console.error(error);
+                    alert("Error merging counts: " + error.message);
+                    setLoading(false);
+                  }
+                }}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                disabled={selectedCountsForMerge.length < 2}
+              >
+                {t('merge_counts') || 'Merge'} ({selectedCountsForMerge.length})
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
