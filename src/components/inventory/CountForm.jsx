@@ -93,6 +93,22 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     setFormData(prev => ({ ...prev, total_inventory_value: total }));
   }, [formData.items]);
 
+  // Auto-save draft to local storage
+  useEffect(() => {
+    if (!formData.warehouse_id && formData.items.length === 0) return;
+    
+    const timer = setTimeout(() => {
+      const dataToSave = {
+        ...formData,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+      setHasDraft(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [formData]);
+
   // Effect to populate filteredAvailableItems for the "Add Item" dropdown
   useEffect(() => {
     const term = (availableSearch || '').trim().toLowerCase();
@@ -625,6 +641,11 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                       <Save className="w-4 h-4 mr-1" />
                       {language === 'he' ? 'שמור מקומית' : 'Save Locally'}
                     </Button>
+                    {hasDraft && (
+                      <div className="flex items-center text-xs text-gray-500 whitespace-nowrap self-center hidden md:flex">
+                        {language === 'he' ? '(נשמר אוטומטית)' : '(Auto-saved)'}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
