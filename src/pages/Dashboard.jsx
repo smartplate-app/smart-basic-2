@@ -410,7 +410,7 @@ export default function DashboardPage() {
           totalTips,
           manualLaborCost,
           useManualLabor,
-          manualFoodCost: mfc || 0,
+          manualFoodCost: manualFoodCost || 0,
           useManualFood: Boolean(existingData?.use_manual_food),
           calculatedLaborCost: Math.round(mtdLabor),
           calculatedFoodCost: adjustedFoodCost,
@@ -804,9 +804,6 @@ export default function DashboardPage() {
         setCategoryScanError(language === 'he' ? 'לא נמצא מידע קריא בתמונה/‏PDF. נסו תמונה חדה יותר או דו"ח עם שמות קטגוריות וסכומים/אחוזים.' : 'Couldn’t read categories from the image/PDF. Try a clearer shot or a report that shows category names and amounts/percents.');
       }
       setCategoryChart(chosenNorm);
-      if (withPerc.length === 0) {
-        setCategoryScanError(language === 'he' ? 'לא נמצא מידע קריא בתמונה/‏PDF. נסו תמונה חדה יותר או דו"ח עם שמות קטגוריות וסכומים/אחוזים.' : 'Couldn’t read categories from the image/PDF. Try a clearer shot or a report that shows category names and amounts/percents.');
-      }
     } catch (err) {
       console.error('Category scan failed:', err);
       setCategoryScanError(language === 'he' ? 'נכשלה קריאת הדוח. נסו תמונה ברורה או PDF.' : 'Failed to read the report. Try a clear image or PDF.');

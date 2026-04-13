@@ -1101,11 +1101,11 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const handleDownloadJPG = async () => {
+    const element = scheduleTableRef.current;
+    if (!element) return;
+
     try {
       toast.info(language === 'he' ? 'מכין תמונה...' : 'Preparing image...');
-      
-      const element = scheduleTableRef.current;
-      if (!element) return;
       
       // Hide all cost elements before capture
       const costElements = element.querySelectorAll('.shift-cost');

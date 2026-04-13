@@ -1,0 +1,115 @@
+{
+  "name": "InventoryCount",
+  "type": "object",
+  "properties": {
+    "warehouse_id": {
+      "type": "string",
+      "description": "ID of the warehouse being counted (empty string for full inventory)"
+    },
+    "warehouse_name": {
+      "type": "string",
+      "description": "Name of the warehouse for easy reference"
+    },
+    "count_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the count was performed"
+    },
+    "count_type": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly",
+        "quarterly",
+        "annual"
+      ],
+      "default": "monthly",
+      "description": "Type of inventory count"
+    },
+    "items": {
+      "type": "array",
+      "description": "Items counted in this inventory check",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "supplier_name": {
+            "type": "string"
+          },
+          "counted_quantity": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "price_per_unit": {
+            "type": "number"
+          },
+          "total_cost": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "total_inventory_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Total value of all counted items"
+    },
+    "screenshot_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs of uploaded screenshot images"
+    },
+    "supplier_breakdown": {
+      "type": "array",
+      "description": "Breakdown by supplier",
+      "items": {
+        "type": "object",
+        "properties": {
+          "supplier_name": {
+            "type": "string"
+          },
+          "items_count": {
+            "type": "number"
+          },
+          "total_value": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-friendly name for this count (e.g., December Month-End)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes about this inventory count"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "in_progress",
+        "completed"
+      ],
+      "default": "in_progress",
+      "description": "Status of the count"
+    }
+  },
+  "required": [
+    "warehouse_name",
+    "count_date"
+  ]
+}

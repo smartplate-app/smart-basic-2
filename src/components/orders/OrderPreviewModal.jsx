@@ -18,6 +18,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
+  const urlRef = useRef('');
   
   if (!isOpen || !order) return null;
 
@@ -49,7 +50,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     m: effectiveTotal
   };
   const orderData = encodeURIComponent(JSON.stringify(minimalOrder));
-  const urlRef = useRef('');
   if (!urlRef.current) {
     if (order.id) {
       urlRef.current = `${window.location.origin}${createPageUrl(`PublicOrder?id=${order.id}`)}`;

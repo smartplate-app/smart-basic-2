@@ -20,6 +20,5 @@
       "default": false,
       "description": "Partner read-only access: can view all app data but cannot modify it"
     }
-  },
-  "required": []
+  }
 }
