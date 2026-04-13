@@ -28,10 +28,10 @@ export default function WarehousesPage() {
     is_active: true
   });
 
-  const loadWarehouses = async (userEmail) => {
+  const loadWarehouses = async (targetEmail) => {
     try {
       setLoading(true);
-      const data = await Warehouse.filter({ created_by: userEmail }, "name");
+      const data = await Warehouse.filter({ created_by: targetEmail }, "name");
       setWarehouses(data);
     } catch (error) {
       console.error("Error loading warehouses:", error);
@@ -47,7 +47,8 @@ export default function WarehousesPage() {
         setAuthLoading(true);
         const currentUser = await User.me();
         setUser(currentUser);
-        await loadWarehouses(currentUser.email);
+        const targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
+        await loadWarehouses(targetEmail);
       } catch (error) {
         console.error("Authentication failed:", error);
         await User.login();

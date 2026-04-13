@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
     console.log('[createItemForStore] Creating item with service role...');
     const newItem = await base44.asServiceRole.entities.Item.create({
       ...itemData,
+      created_by: storeEmail,
       store_owner_email: storeEmail
     });
 

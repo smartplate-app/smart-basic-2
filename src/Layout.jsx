@@ -111,7 +111,7 @@ const AppLayout = ({ children, currentPageName }) => {
     (async () => {
       try {
         const host = (window.location.hostname || '').toLowerCase();
-        const isCustom = host === 'smartplatebnasic.com' || host === 'www.smartplatebnasic.com' || host === 'foodcostapp.com' || host === 'www.foodcostapp.com' || host === 'foocostapp.com' || host === 'www.foocostapp.com';
+        const isCustom = host === 'smartplatebasic.com' || host === 'www.smartplatebasic.com' || host === 'foodcostapp.com' || host === 'www.foodcostapp.com' || host === 'foocostapp.com' || host === 'www.foocostapp.com';
         const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
         const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
         const previewParams = new URLSearchParams(window.location.search);

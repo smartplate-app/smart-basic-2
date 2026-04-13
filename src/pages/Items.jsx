@@ -84,16 +84,18 @@ export default function ItemsPage() {
         store_user_role: currentUser.store_user_role
       });
 
+      const effectiveEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
+
       if (isStoreUser && storeOwnerEmail) {
         // Store user - load data from the store owner
         console.log('[Items] Loading as STORE USER from owner:', storeOwnerEmail);
         const [ownerItems, ownItemsByStoreOwner, managerCreated, ownerSuppliers, ownerWarehouses, myWarehouses] = await Promise.all([
           base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date"),
           base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }, "-created_date"),
-          base44.entities.Item.filter({ created_by: currentUser.email }, "-created_date"),
+          base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date"),
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
           base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name"),
-          base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
+          base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name")
         ]);
         console.log('[Items] Loaded from owner:', {
           ownerItems: ownerItems.length,
@@ -137,9 +139,9 @@ export default function ItemsPage() {
               base44.entities.Item.filter({ created_by: headEmail }, "-created_date"),
               base44.entities.Supplier.filter({ created_by: headEmail }, "name"),
               base44.entities.Warehouse.filter({ created_by: headEmail }, "name"),
-              base44.entities.Item.filter({ created_by: currentUser.email }, "-created_date"),
-              base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
-              base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
+              base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date"),
+              base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name"),
+              base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name")
             ]);
             itemsData = [...headItems, ...ownItems]
               .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
@@ -150,10 +152,10 @@ export default function ItemsPage() {
       } else {
         // Head store or no chain - include items created by owner and items attributed to owner via store_owner_email
         const [ownCreated, ownedByStore, suppliers, warehouses] = await Promise.all([
-          base44.entities.Item.filter({ created_by: currentUser.email }, "-created_date"),
-          base44.entities.Item.filter({ store_owner_email: currentUser.email }, "-created_date"),
-          base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
-          base44.entities.Warehouse.filter({ created_by: currentUser.email }, "name")
+          base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date"),
+          base44.entities.Item.filter({ store_owner_email: effectiveEmail }, "-created_date"),
+          base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name"),
+          base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name")
         ]);
         const allItems = [...ownCreated, ...ownedByStore];
         itemsData = Array.from(new Map(allItems.map(i => [i.id, i])).values())
@@ -301,10 +303,11 @@ export default function ItemsPage() {
 
     // 1) Create item (show error only if creation fails)
     try {
-      if (user.store_user_owner_email) {
+      const targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email;
+      if (targetEmail) {
         const { data } = await base44.functions.invoke('createItemForStore', {
           itemData: cleanData,
-          storeEmail: user.store_user_owner_email
+          storeEmail: targetEmail
         });
         if (!data?.success) throw new Error(data?.error || 'Failed to create item');
       } else {
@@ -407,7 +410,7 @@ export default function ItemsPage() {
 
 const handleCleanOrphans = async (ownerEmail) => {
     if (isViewer) return;
-    const email = ownerEmail || user?.store_user_owner_email || user?.acting_as_store_email || user?.email;
+    const email = ownerEmail || user?.acting_as_store_email || user?.store_user_owner_email || user?.acting_as_user_email || user?.email;
     const { data } = await base44.functions.invoke('cleanOrphanItems', { targetEmail: email });
     if (!data?.success) {
       alert((t('error_saving') || 'Error') + ': ' + (data?.error || 'Failed to clean orphans'));

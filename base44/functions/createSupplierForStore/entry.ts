@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
     // since we can't override created_by, we'll use a store_owner_email field
     const supplier = await base44.asServiceRole.entities.Supplier.create({
       ...supplierData,
+      created_by: storeEmail,
       store_owner_email: storeEmail
     });
     

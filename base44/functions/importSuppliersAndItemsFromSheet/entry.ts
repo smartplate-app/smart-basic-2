@@ -119,7 +119,7 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
       return Response.json({ error: 'Could not find required columns (Supplier and Item Name) in the sheet' }, { status: 400 });
     }
 
-    const targetEmail = user.store_user_owner_email || user.email;
+    const targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
     const existingSuppliers = await base44.entities.Supplier.filter({ created_by: targetEmail }, null, 5000);
     const supplierMap = new Map(existingSuppliers.map(s => [s.name.trim().toLowerCase(), s]));
 
@@ -167,11 +167,11 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
 
     // Create missing suppliers
     for (const sName of newSuppliersToCreate) {
-      const newSup = await base44.entities.Supplier.create({
+      const newSup = await base44.asServiceRole.entities.Supplier.create({
         name: sName,
         supplier_type: 'simple',
         created_by: targetEmail,
-        store_owner_email: user.store_user_owner_email ? user.store_user_owner_email : undefined
+        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
       });
       supplierMap.set(sName.toLowerCase(), newSup);
     }
@@ -195,8 +195,8 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
         discount: toNumber(row.discount),
         price_after_discount: toNumber(row.price) / (1 + (toNumber(row.discount) / 100)),
         units_per_package: toNumber(row.units_per_package) || 1,
-        created_by: user.email,
-        store_owner_email: user.store_user_owner_email ? user.store_user_owner_email : undefined
+        created_by: targetEmail,
+        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
       });
     }
 
@@ -204,7 +204,7 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
     const createdItemsCount = itemsToCreate.length;
     for (let i = 0; i < itemsToCreate.length; i += 500) {
       const chunk = itemsToCreate.slice(i, i + 500);
-      await base44.entities.Item.bulkCreate(chunk);
+      await base44.asServiceRole.entities.Item.bulkCreate(chunk);
     }
 
     return Response.json({ 
