@@ -59,6 +59,8 @@ Deno.serve(async (req) => {
     const idxAcc = col(['מספר ספק בחשבונאות', 'accounting', 'accounting code']);
     const idxNotes = col(['הערות', 'notes']);
 
+    const targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
+
     const payload = bodyRows.map(r => ({
       name: normStr(r[idxName]),
       email: idxEmail !== -1 ? normStr(r[idxEmail]) : undefined,
@@ -67,12 +69,14 @@ Deno.serve(async (req) => {
       supplier_type: idxType !== -1 ? normType(r[idxType]) : 'simple',
       accounting_code: idxAcc !== -1 ? normStr(r[idxAcc]) : undefined,
       grant_notes: idxNotes !== -1 ? normStr(r[idxNotes]) : undefined,
+      created_by: targetEmail,
+      store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
     })).filter(x => x.name);
 
     if (payload.length === 0) return Response.json({ error: 'No valid supplier rows' }, { status: 400 });
 
-    // Create suppliers (user scope)
-    const created = await base44.entities.Supplier.bulkCreate(payload);
+    // Create suppliers (service role to override created_by)
+    const created = await base44.asServiceRole.entities.Supplier.bulkCreate(payload);
 
     return Response.json({ success: true, created_count: created.length });
   } catch (error) {

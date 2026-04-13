@@ -97,8 +97,12 @@ export default function SuppliersPage() {
                     const promises = [
                       base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, '-created_date'),
                       base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, '-created_date'),
+                      base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
+                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
                       base44.entities.Item.filter({ created_by: storeOwnerEmail }),
-                      base44.entities.Item.filter({ store_owner_email: storeOwnerEmail })
+                      base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }),
+                      base44.entities.Item.filter({ created_by: workingEmail }),
+                      base44.entities.Item.filter({ store_owner_email: workingEmail })
                     ];
                     if (headEmail) {
                       promises.push(
@@ -109,14 +113,18 @@ export default function SuppliersPage() {
                     const results = await Promise.all(promises);
                     const ownerSuppliers = results[0] || [];
                     const storeSuppliers = results[1] || [];
-                    const ownerItems = results[2] || [];
-                    const storeItems = results[3] || [];
-                    const headSuppliers = headEmail ? (results[4] || []) : [];
-                    const headItems = headEmail ? (results[5] || []) : [];
+                    const mySuppliers1 = results[2] || [];
+                    const mySuppliers2 = results[3] || [];
+                    const ownerItems = results[4] || [];
+                    const storeItems = results[5] || [];
+                    const myItems1 = results[6] || [];
+                    const myItems2 = results[7] || [];
+                    const headSuppliers = headEmail ? (results[8] || []) : [];
+                    const headItems = headEmail ? (results[9] || []) : [];
 
-                    const allSuppliers = [...ownerSuppliers, ...storeSuppliers, ...headSuppliers];
+                    const allSuppliers = [...ownerSuppliers, ...storeSuppliers, ...mySuppliers1, ...mySuppliers2, ...headSuppliers];
                     suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-                    const allItems = [...ownerItems, ...storeItems, ...headItems];
+                    const allItems = [...ownerItems, ...storeItems, ...myItems1, ...myItems2, ...headItems];
                     itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
                   } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore) {
                     // Branch store - get suppliers from chain head + own (with fallbacks)
@@ -154,7 +162,25 @@ export default function SuppliersPage() {
                         const allSuppliers = [...headSuppliers, ...ownSuppliers, ...storeSuppliers];
                         suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
                         itemsData = [...headItems, ...ownItems, ...storeItems].filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
+                      } else {
+                        const [ownSuppliers, ownItems, storeSuppliers] = await Promise.all([
+                          base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
+                          base44.entities.Item.filter({ created_by: workingEmail }),
+                          base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date')
+                        ]);
+                        const allSuppliers = [...ownSuppliers, ...storeSuppliers];
+                        suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+                        itemsData = ownItems;
                       }
+                    } else {
+                      const [ownSuppliers, ownItems, storeSuppliers] = await Promise.all([
+                        base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
+                        base44.entities.Item.filter({ created_by: workingEmail }),
+                        base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date')
+                      ]);
+                      const allSuppliers = [...ownSuppliers, ...storeSuppliers];
+                      suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+                      itemsData = ownItems;
                     }
                   } else {
                     // Head store or no chain - load TARGET user's suppliers + any with store_owner_email
