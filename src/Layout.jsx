@@ -359,7 +359,7 @@ const AppLayout = ({ children, currentPageName }) => {
               try {
                 const authed = await base44.auth.isAuthenticated();
                 const atRoot = location.pathname === '/' || location.pathname === '' || location.pathname === '/pages' || location.pathname === '/pages/';
-                if (authed && (oauthBack || atRoot)) {
+                if (authed && oauthBack) {
                   try { window.history.replaceState({}, '', createPageUrl('Orders')); } catch {}
                   window.location.replace(createPageUrl('Orders'));
                 }
@@ -547,8 +547,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   if (isIncognito || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')))) {
                     // do not override incognito/public welcome
                   } else if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-                    console.log("[Layout] Redirecting to Orders page");
-                    window.location.replace(createPageUrl("Orders"));
+                    // Do not auto-redirect to Orders from root. Let WelcomePublic handle it.
                   }
       
       setAuthLoading(false);

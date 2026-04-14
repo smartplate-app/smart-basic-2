@@ -10,6 +10,13 @@ export default function WelcomePublic() {
   const [openRequest, setOpenRequest] = React.useState(false);
 
   useEffect(() => {
+    base44.auth.isAuthenticated().then(isAuth => {
+      if (isAuth) {
+        localStorage.removeItem('b44_user_cache');
+        base44.auth.logout();
+      }
+    });
+
     document.title = "Food Cost App | Smart Plate Basic for Restaurants";
     
     const setMetaTag = (name, content, isProperty = false) => {
