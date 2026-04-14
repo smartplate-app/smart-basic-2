@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'r
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import WelcomePublic from './pages/WelcomePublic';
 import RecipesPage from './pages/Recipes';
 import CogsReportsPage from './pages/CogsReports';
 import MenuEngineeringPage from './pages/MenuEngineering';
@@ -92,7 +93,9 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<LayoutWrapper currentPageName="WelcomePublic"><Pages.WelcomePublic /></LayoutWrapper>} />
+      <Route path="/" element={<LayoutWrapper currentPageName="WelcomePublic"><WelcomePublic /></LayoutWrapper>} />
+      <Route path="/WelcomePublic" element={<LayoutWrapper currentPageName="WelcomePublic"><WelcomePublic /></LayoutWrapper>} />
+      <Route path="/pages/WelcomePublic" element={<LayoutWrapper currentPageName="WelcomePublic"><WelcomePublic /></LayoutWrapper>} />
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}

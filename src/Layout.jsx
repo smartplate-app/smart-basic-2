@@ -130,10 +130,14 @@ const AppLayout = ({ children, currentPageName }) => {
         const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
         const previewParams = new URLSearchParams(window.location.search);
         if (previewParams.get('preview') === '1') return;
+        
+        const path = window.location.pathname.toLowerCase();
+        if (path.includes('welcomepublic') || path === '/') return;
+        
         if (!isCustom || hasHashPage || hasOauthParams) return;
         const authed = await base44.auth.isAuthenticated();
         if (!authed) {
-          window.location.replace(createPageUrl('WelcomePublic') + (window.location.search || ''));
+          window.location.replace('/WelcomePublic' + (window.location.search || ''));
         }
       } catch {}
     })();
@@ -152,22 +156,7 @@ const AppLayout = ({ children, currentPageName }) => {
     }
   }, [location.pathname]);
 
-  // Redirect unauthenticated visitors at root to the public Welcome page (preserve ?preview=1)
-  // Do not override when a hash-based page is already specified; skip entirely in incognito
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const params = new URLSearchParams(window.location.search);
-    const preview = params.get('preview');
-    if (preview === '1') return;
-    // Incognito allowed: proceed with public redirect on root
-    if (window.location.hash && window.location.hash.startsWith('#/pages/')) {
-      return; // respect hash router target to avoid loops
-    }
-    if ((currentPath || '').includes('/pages/OAuthCallback')) return;
-    if ((currentPath || '').includes('/functions/welcomePublic')) return; // public route - never redirect
-          if (sessionStorage.getItem('b44_logout_in_progress') === '1') return; // skip redirects during explicit logout
-    if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
-  }, [location.pathname, isIncognito]);
+
 
   // APK/WebView guard: if spinner lasts too long, fail open to public page (prevents stuck state)
   useEffect(() => {
@@ -178,7 +167,7 @@ const AppLayout = ({ children, currentPageName }) => {
   try {
     if (authLoading) {
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
-      window.location.replace('/#/pages/WelcomePublic' + (window.location.search || ''));
+      window.location.replace('/WelcomePublic' + (window.location.search || ''));
     }
   } catch {}
   }, 8000);
@@ -536,7 +525,7 @@ const AppLayout = ({ children, currentPageName }) => {
               if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
                 setAuthLoading(false);
                 try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
-                window.location.replace('/#/pages/WelcomePublic' + (window.location.search || ''));
+                window.location.replace('/WelcomePublic' + (window.location.search || ''));
                 return;
               }
         // Stop spinner immediately in APK/WebView so user isn't stuck
@@ -550,7 +539,7 @@ const AppLayout = ({ children, currentPageName }) => {
           setTimeout(() => loadAuth(attemptNumber + 1), 1200);
           return;
         }
-        window.location.replace('/#/pages/WelcomePublic' + (window.location.search || ''));
+        window.location.replace('/WelcomePublic' + (window.location.search || ''));
         return;
       }
       
@@ -761,8 +750,8 @@ const AppLayout = ({ children, currentPageName }) => {
                     sessionStorage.removeItem('b44_oauth_finalized');
                     sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
                   } catch {}
-                  try { await base44.auth.logout('/#/pages/WelcomePublic'); } catch {}
-                  setTimeout(() => { window.location.replace('/#/pages/WelcomePublic'); }, 300);
+                  try { await base44.auth.logout('/WelcomePublic'); } catch {}
+                  setTimeout(() => { window.location.replace('/WelcomePublic'); }, 300);
                 }} 
                 className="w-full bg-[#d4a373] hover:bg-[#b88c60]"
               >
