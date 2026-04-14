@@ -25,8 +25,50 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
   const location = useLocation();
 
-  // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  const publicRoutes = [
+    '/',
+    '/index.html',
+    '/WelcomePublic',
+    '/pages/WelcomePublic',
+    '/Welcome',
+    '/pages/Welcome',
+    '/GoogleCampaign',
+    '/pages/GoogleCampaign',
+    '/OAuthCallback',
+    '/pages/OAuthCallback',
+    '/PublicOrder',
+    '/pages/PublicOrder',
+    '/Register',
+    '/pages/Register',
+    '/SignIn',
+    '/pages/SignIn',
+    '/StoreLogin',
+    '/pages/StoreLogin',
+    '/WorkerPortal',
+    '/pages/WorkerPortal',
+    '/OrderDetails',
+    '/pages/OrderDetails',
+    '/RestaurantInvite',
+    '/pages/RestaurantInvite',
+    '/Diagnostics',
+    '/pages/Diagnostics',
+    '/LoginHelper',
+    '/pages/LoginHelper',
+    '/AuthKick',
+    '/pages/AuthKick',
+    '/WelcomeIncognito',
+    '/pages/WelcomeIncognito'
+  ];
+  
+  const isPublicRoute = publicRoutes.some(route => 
+    location.pathname.toLowerCase() === route.toLowerCase() || 
+    location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/') ||
+    location.pathname.toLowerCase().includes('welcomepublic') ||
+    location.pathname.toLowerCase().includes('welcomeincognito')
+  );
+
+  // Show loading spinner while checking app public settings or auth (skip for public routes to prevent flicker)
+  if ((isLoadingPublicSettings || isLoadingAuth) && !isPublicRoute) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
@@ -36,48 +78,6 @@ const AuthenticatedApp = () => {
 
   // Handle authentication errors
   if (authError) {
-    const publicRoutes = [
-      '/',
-      '/index.html',
-      '/WelcomePublic',
-      '/pages/WelcomePublic',
-      '/Welcome',
-      '/pages/Welcome',
-      '/GoogleCampaign',
-      '/pages/GoogleCampaign',
-      '/OAuthCallback',
-      '/pages/OAuthCallback',
-      '/PublicOrder',
-      '/pages/PublicOrder',
-      '/Register',
-      '/pages/Register',
-      '/SignIn',
-      '/pages/SignIn',
-      '/StoreLogin',
-      '/pages/StoreLogin',
-      '/WorkerPortal',
-      '/pages/WorkerPortal',
-      '/OrderDetails',
-      '/pages/OrderDetails',
-      '/RestaurantInvite',
-      '/pages/RestaurantInvite',
-      '/Diagnostics',
-      '/pages/Diagnostics',
-      '/LoginHelper',
-      '/pages/LoginHelper',
-      '/AuthKick',
-      '/pages/AuthKick',
-      '/WelcomeIncognito',
-      '/pages/WelcomeIncognito'
-    ];
-    
-    const isPublicRoute = publicRoutes.some(route => 
-      location.pathname.toLowerCase() === route.toLowerCase() || 
-      location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/') ||
-      location.pathname.toLowerCase().includes('welcomepublic') ||
-      location.pathname.toLowerCase().includes('welcomeincognito')
-    );
-    
     if (!isPublicRoute) {
       if (authError.type === 'user_not_registered') {
         return <UserNotRegisteredError />;

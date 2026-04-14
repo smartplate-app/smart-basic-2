@@ -23,7 +23,21 @@ const AppLayout = ({ children, currentPageName }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDesktopSidebar, setShowDesktopSidebar] = useState(true);
   const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(() => {
+    return !(
+      currentPageName === 'OrderDetails' ||
+      currentPageName === 'WorkerPortal' ||
+      currentPageName === 'Register' ||
+      currentPageName === 'RestaurantInvite' ||
+      currentPageName === 'Welcome' ||
+      currentPageName === 'WelcomePublic' ||
+      currentPageName === 'PublicOrder' ||
+      currentPageName === 'OAuthCallback' ||
+      currentPageName === 'Diagnostics' ||
+      currentPageName === 'LoginHelper' ||
+      currentPageName === 'AuthKick'
+    );
+  });
   const [showWorkerInvite, setShowWorkerInvite] = useState(false);
   const [error, setError] = useState(null);
       const [retryCount, setRetryCount] = useState(0);
@@ -153,69 +167,6 @@ const AppLayout = ({ children, currentPageName }) => {
     if ((currentPath || '').includes('/functions/welcomePublic')) return; // public route - never redirect
           if (sessionStorage.getItem('b44_logout_in_progress') === '1') return; // skip redirects during explicit logout
     if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
-    if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-      // Avoid redirect loops on Android Chrome after Google login
-      const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
-      if (hasOauthParams) {
-        // Let the auth settle on this page; do not redirect to Welcome
-        setTimeout(async () => {
-          try {
-            const authed = await base44.auth.isAuthenticated();
-            if (authed) {
-              window.location.replace(createPageUrl('Orders'));
-              return;
-            }
-          } catch {}
-        }, 800);
-        return;
-      }
-      base44.auth.isAuthenticated().then((auth) => {
-                if (!auth) {
-                  let suppress = false; let cooldownUntil = 0;
-                  try {
-                    suppress = sessionStorage.getItem('b44_login_redirect') === '1';
-                    cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0');
-                  } catch {}
-                  const inCooldown = cooldownUntil > Date.now();
-                  if (suppress || isPwaInstalled || inCooldown) {
-                    setTimeout(async () => {
-                      try {
-                        const again = await base44.auth.isAuthenticated();
-                        if (!again) {
-                          // Send truly public users to public welcome (no auth loop)
-                          window.location.replace('/#/pages/WelcomePublic' + window.location.search);
-                        }
-                      } catch {
-                        window.location.replace('/#/pages/WelcomePublic' + window.location.search);
-                      }
-                    }, 1500);
-                  } else {
-                    window.location.replace('/#/pages/WelcomePublic' + window.location.search);
-                  }
-                }
-              }).catch(() => {
-                let suppress = false; let cooldownUntil = 0;
-                try {
-                  suppress = sessionStorage.getItem('b44_login_redirect') === '1';
-                  cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0');
-                } catch {}
-                const inCooldown = cooldownUntil > Date.now();
-                const currentSearch = window.location.search || '';
-                const searchParamsStr = (preview === '1' && !currentSearch.includes('preview=1')) 
-                  ? (currentSearch ? currentSearch + '&preview=1' : '?preview=1') 
-                  : currentSearch;
-                  
-                if (suppress || isPwaInstalled || inCooldown) {
-                  setTimeout(() => {
-                    const targetUrl = '/#/pages/WelcomePublic' + searchParamsStr;
-                    window.location.replace(targetUrl);
-                  }, 1500);
-                } else {
-                  const targetUrl = '/#/pages/WelcomePublic' + searchParamsStr;
-                  window.location.replace(targetUrl);
-                }
-              });
-    }
   }, [location.pathname, isIncognito]);
 
   // APK/WebView guard: if spinner lasts too long, fail open to public page (prevents stuck state)
