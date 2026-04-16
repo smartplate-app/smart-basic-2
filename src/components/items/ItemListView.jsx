@@ -152,9 +152,15 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                   <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={() => onToggleSelect && onToggleSelect(item.id)} aria-label="Select row" className="h-5 w-5 sm:h-4 sm:w-4" />
                 </TableCell>
                 <TableCell className="px-4 py-3 text-right"> {/* Replaced <td> with <TableCell> */}
-                  <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                  <div 
+                    onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                    className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer inline-block"
+                    title={language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item'}
+                  >
+                    {item.name}
+                  </div>
                   {item.description && (
-                    <div className="text-xs text-gray-500 truncate max-w-xs">{item.description}</div>
+                    <div className="text-xs text-gray-500 truncate max-w-xs mt-0.5">{item.description}</div>
                   )}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
