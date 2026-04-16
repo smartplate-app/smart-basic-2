@@ -268,13 +268,15 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               <div className="flex gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex-1 justify-between font-normal">
-                      {((currentItem.warehouse_names && currentItem.warehouse_names.length > 0) || currentItem.warehouse_name)
-                        ? (currentItem.warehouse_names && currentItem.warehouse_names.length > 0 
-                            ? currentItem.warehouse_names.join(", ") 
-                            : currentItem.warehouse_name)
-                        : t('select_warehouse')}
-                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    <Button variant="outline" className="flex-1 justify-between font-normal overflow-hidden">
+                      <span className="truncate">
+                        {((currentItem.warehouse_names && currentItem.warehouse_names.length > 0) || currentItem.warehouse_name)
+                          ? (currentItem.warehouse_names && currentItem.warehouse_names.length > 0 
+                              ? currentItem.warehouse_names.join(", ") 
+                              : currentItem.warehouse_name)
+                          : t('select_warehouse')}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0 ml-2" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-[200px]">

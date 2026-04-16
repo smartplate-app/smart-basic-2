@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "../LanguageProvider";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 
-export default function ItemEditModal({ item, isOpen, onClose, onSave }) {
+export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onClose, onSave }) {
   const [formData, setFormData] = React.useState(item || {});
   const { t } = useLanguage();
 
@@ -24,6 +25,34 @@ export default function ItemEditModal({ item, isOpen, onClose, onSave }) {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleWarehouseToggle = (warehouseId, warehouseName) => {
+    setFormData(prev => {
+      let currentIds = prev.warehouse_ids || [];
+      let currentNames = prev.warehouse_names || [];
+      
+      if (prev.warehouse_id && !currentIds.includes(prev.warehouse_id)) {
+        currentIds = [...currentIds, prev.warehouse_id];
+        currentNames = [...currentNames, prev.warehouse_name];
+      }
+
+      if (currentIds.includes(warehouseId)) {
+        currentIds = currentIds.filter(id => id !== warehouseId);
+        currentNames = currentNames.filter(name => name !== warehouseName);
+      } else {
+        currentIds = [...currentIds, warehouseId];
+        currentNames = [...currentNames, warehouseName];
+      }
+
+      return {
+        ...prev,
+        warehouse_ids: currentIds,
+        warehouse_names: currentNames,
+        warehouse_id: currentIds.length > 0 ? currentIds[0] : "",
+        warehouse_name: currentNames.length > 0 ? currentNames[0] : ""
+      };
+    });
   };
 
   return (
@@ -56,6 +85,60 @@ export default function ItemEditModal({ item, isOpen, onClose, onSave }) {
               value={formData.catalog_number || ''}
               onChange={(e) => handleChange('catalog_number', e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="supplier_id">{t('supplier')} *</Label>
+            <Select
+              value={formData.supplier_id || ''}
+              onValueChange={(value) => {
+                const supplier = suppliers?.find(s => s.id === value);
+                handleChange('supplier_id', value);
+                if (supplier) handleChange('supplier_name', supplier.name);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('select_supplier')} />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers?.map(supplier => (
+                  <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="warehouse_ids">{t('warehouse')}</Label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between font-normal overflow-hidden">
+                  <span className="truncate">
+                    {((formData.warehouse_names && formData.warehouse_names.length > 0) || formData.warehouse_name)
+                      ? (formData.warehouse_names && formData.warehouse_names.length > 0 
+                          ? formData.warehouse_names.join(", ") 
+                          : formData.warehouse_name)
+                      : t('select_warehouse')}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                {warehouses?.map(warehouse => {
+                  const isSelected = (formData.warehouse_ids && formData.warehouse_ids.includes(warehouse.id)) || formData.warehouse_id === warehouse.id;
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={warehouse.id}
+                      checked={isSelected}
+                      onCheckedChange={() => handleWarehouseToggle(warehouse.id, warehouse.name)}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {warehouse.name}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
