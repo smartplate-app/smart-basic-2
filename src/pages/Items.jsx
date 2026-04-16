@@ -36,7 +36,7 @@ export default function ItemsPage() {
     return (v === key || !v) ? (en ?? key) : v;
   };
   const [isViewer, setIsViewer] = useState(false);
-  const [viewMode, setViewMode] = useState("cards");
+  const [viewMode, setViewMode] = useState("list");
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState("all");
   const [defaultSupplierId, setDefaultSupplierId] = useState(null);
