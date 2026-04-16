@@ -6,9 +6,11 @@ import { useLanguage } from "../LanguageProvider";
 export default function SelectionBar({
   selectedCount,
   onAddToCurrent,
+  onRemoveFromCurrent,
   onCreateNew,
   warehouses = [],
   targetWarehouseId,
+  currentWarehouseName,
   onChangeTargetWarehouse
 }) {
   const { language } = useLanguage();
@@ -78,6 +80,16 @@ export default function SelectionBar({
 
         {/* Action buttons */}
         <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          {currentWarehouseName && onRemoveFromCurrent && (
+            <Button
+              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold rounded-xl h-10 px-3"
+              onClick={onRemoveFromCurrent}
+              title={isRTL ? `הסר מ-${currentWarehouseName}` : `Remove from ${currentWarehouseName}`}
+            >
+              <X className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {isRTL ? 'הסר ממחסן נוכחי' : 'Remove from current'}
+            </Button>
+          )}
           <Button
             className="flex-1 bg-amber-400 hover:bg-amber-500 text-gray-900 font-bold rounded-xl h-10"
             onClick={onAddToCurrent}

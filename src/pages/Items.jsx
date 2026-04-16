@@ -373,6 +373,37 @@ export default function ItemsPage() {
       const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
 
       await base44.entities.Item.update(editingItem.id, cleanData);
+
+      // Sync warehouse catalog_items
+      const currentWarehouseIds = cleanData.warehouse_ids || [];
+      const oldWarehouseIds = editingItem.warehouse_ids || [];
+      
+      const removedWarehouseIds = oldWarehouseIds.filter(wid => !currentWarehouseIds.includes(wid));
+      const addedWarehouseIds = currentWarehouseIds.filter(wid => !oldWarehouseIds.includes(wid));
+
+      // For removed warehouses, we also need to check any warehouse that might have this item in its catalog_items
+      // even if it wasn't in item.warehouse_ids (to fix out-of-sync states).
+      const allWarehousesToUpdate = [];
+      
+      for (const wh of warehouses) {
+        const hasItemInCatalog = Array.isArray(wh.catalog_items) && wh.catalog_items.includes(editingItem.id);
+        const shouldBeInWarehouse = currentWarehouseIds.includes(wh.id);
+        
+        if (hasItemInCatalog && !shouldBeInWarehouse) {
+          // Needs to be removed
+          const newCatalog = wh.catalog_items.filter(itemId => itemId !== editingItem.id);
+          allWarehousesToUpdate.push(base44.entities.Warehouse.update(wh.id, { catalog_items: newCatalog }));
+        } else if (!hasItemInCatalog && shouldBeInWarehouse) {
+          // Needs to be added
+          const newCatalog = [...(wh.catalog_items || []), editingItem.id];
+          allWarehousesToUpdate.push(base44.entities.Warehouse.update(wh.id, { catalog_items: newCatalog }));
+        }
+      }
+
+      if (allWarehousesToUpdate.length > 0) {
+        await Promise.all(allWarehousesToUpdate);
+      }
+
       await loadData(user);
       setShowEditModal(false);
       setEditingItem(null);
@@ -884,6 +915,33 @@ const handleCleanOrphans = async (ownerEmail) => {
         warehouses={warehouses}
         targetWarehouseId={selectedWarehouseId !== 'all' ? selectedWarehouseId : ''}
         onChangeTargetWarehouse={(id) => setSelectedWarehouseId(id)}
+        onRemoveFromCurrent={async () => {
+          if (selectedWarehouseId === 'all') return;
+          const wh = warehouses.find(w => w.id === selectedWarehouseId);
+          if (!wh) return;
+          // Update Warehouse catalog_items
+          const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
+          const next = existing.filter(id => !selectedIds.includes(id));
+          await base44.entities.Warehouse.update(wh.id, { catalog_items: next });
+          // Update each item to remove this warehouse from its warehouse_ids
+          await Promise.all(selectedIds.map(async (itemId) => {
+            const item = items.find(i => i.id === itemId);
+            if (!item) return;
+            const currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
+            const currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
+            if (!currentWids.includes(wh.id)) return;
+            const newWids = currentWids.filter(id => id !== wh.id);
+            const newWnames = currentWnames.filter(name => name !== wh.name);
+            await base44.entities.Item.update(item.id, {
+              warehouse_ids: newWids,
+              warehouse_names: newWnames,
+              warehouse_id: newWids.length > 0 ? newWids[0] : "",
+              warehouse_name: newWnames.length > 0 ? newWnames[0] : ""
+            });
+          }));
+          setSelectedIds([]);
+          loadData(user);
+        }}
         onAddToCurrent={async () => {
           const targetId = selectedWarehouseId;
           if (!targetId || targetId === 'all') { alert(safeT('select_warehouse_first','בחר/י מחסן תחילה','Select a warehouse first')); return; }
@@ -891,9 +949,23 @@ const handleCleanOrphans = async (ownerEmail) => {
           if (!wh) return;
           const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
           const next = Array.from(new Set([...existing, ...selectedIds]));
-          const updated = await base44.entities.Warehouse.update(wh.id, { catalog_items: next });
-          setWarehouses(prev => prev.map(w => w.id === wh.id ? updated : w));
+          await base44.entities.Warehouse.update(wh.id, { catalog_items: next });
+          // Also update items
+          await Promise.all(selectedIds.map(async (itemId) => {
+            const item = items.find(i => i.id === itemId);
+            if (!item) return;
+            const currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
+            const currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
+            if (currentWids.includes(wh.id)) return;
+            await base44.entities.Item.update(item.id, {
+              warehouse_ids: [...currentWids, wh.id],
+              warehouse_names: [...currentWnames, wh.name],
+              warehouse_id: currentWids.length === 0 ? wh.id : item.warehouse_id,
+              warehouse_name: currentWnames.length === 0 ? wh.name : item.warehouse_name
+            });
+          }));
           setSelectedIds([]);
+          loadData(user);
         }}
         onCreateNew={async () => {
           const name = window.prompt('Warehouse name');
