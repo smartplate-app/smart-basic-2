@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Plus } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
+import { X, Plus, ChevronDown } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Warehouse } from "@/entities/Warehouse";
 
@@ -27,6 +28,8 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     catalog_number: "",
     warehouse_id: "",
     warehouse_name: "",
+    warehouse_ids: [],
+    warehouse_names: [],
     unit: "unit",
     units_per_package: 1,
     content_per_unit: 1,
@@ -78,13 +81,34 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     }));
   };
 
-  const handleWarehouseChange = (warehouseId) => {
-    const selectedWarehouse = warehouses.find(w => w.id === warehouseId);
-    setCurrentItem(prev => ({
+  const handleWarehouseToggle = (warehouseId, warehouseName) => {
+    setCurrentItem(prev => {
+      let currentIds = prev.warehouse_ids || [];
+      let currentNames = prev.warehouse_names || [];
+      
+      // Migration from old single select to array
+      if (prev.warehouse_id && !currentIds.includes(prev.warehouse_id)) {
+        currentIds = [...currentIds, prev.warehouse_id];
+        currentNames = [...currentNames, prev.warehouse_name];
+      }
+
+      if (currentIds.includes(warehouseId)) {
+        currentIds = currentIds.filter(id => id !== warehouseId);
+        currentNames = currentNames.filter(name => name !== warehouseName);
+      } else {
+        currentIds = [...currentIds, warehouseId];
+        currentNames = [...currentNames, warehouseName];
+      }
+
+      return {
         ...prev,
-        warehouse_id: warehouseId,
-        warehouse_name: selectedWarehouse?.name || ""
-    }));
+        warehouse_ids: currentIds,
+        warehouse_names: currentNames,
+        // Sync single fields for backwards compatibility
+        warehouse_id: currentIds.length > 0 ? currentIds[0] : "",
+        warehouse_name: currentNames.length > 0 ? currentNames[0] : ""
+      };
+    });
   };
 
   const handleCreateWarehouse = async () => {
@@ -105,11 +129,19 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
         created_by: ownerEmail
       });
       
-      setCurrentItem(prev => ({
-        ...prev,
-        warehouse_id: newWarehouse.id,
-        warehouse_name: newWarehouse.name
-      }));
+      setCurrentItem(prev => {
+        const currentIds = prev.warehouse_ids || [];
+        const currentNames = prev.warehouse_names || [];
+        const updatedIds = [...currentIds, newWarehouse.id];
+        const updatedNames = [...currentNames, newWarehouse.name];
+        return {
+          ...prev,
+          warehouse_ids: updatedIds,
+          warehouse_names: updatedNames,
+          warehouse_id: updatedIds[0],
+          warehouse_name: updatedNames[0]
+        };
+      });
       
       setShowWarehouseForm(false);
       setNewWarehouseName("");
@@ -138,14 +170,26 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     }
     
     const selectedSupplier = suppliers.find(s => s.id === currentItem.supplier_id);
-    const selectedWarehouse = warehouses.find(w => w.id === currentItem.warehouse_id);
     const price = currentItem.price || 0;
     const discount = currentItem.discount || 0;
+    
+    // Ensure arrays are initialized
+    const finalWarehouseIds = currentItem.warehouse_ids || [];
+    const finalWarehouseNames = currentItem.warehouse_names || [];
+
+    // Fallback migration logic
+    if (currentItem.warehouse_id && finalWarehouseIds.length === 0) {
+      finalWarehouseIds.push(currentItem.warehouse_id);
+      finalWarehouseNames.push(currentItem.warehouse_name || "");
+    }
     
     const completeData = {
       ...currentItem,
       supplier_name: selectedSupplier?.name || "",
-      warehouse_name: selectedWarehouse?.name || "",
+      warehouse_ids: finalWarehouseIds,
+      warehouse_names: finalWarehouseNames,
+      warehouse_id: finalWarehouseIds[0] || "",
+      warehouse_name: finalWarehouseNames[0] || "",
       units_per_package: currentItem.units_per_package || 1,
       price: price,
       discount: discount,
@@ -219,25 +263,36 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="warehouse_id">{t('warehouse')}</Label>
+            <Label htmlFor="warehouse_ids">{t('warehouse')}</Label>
             {!showWarehouseForm ? (
               <div className="flex gap-2">
-                <Select 
-                  value={currentItem.warehouse_id}
-                  onValueChange={handleWarehouseChange}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder={t('select_warehouse')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={null}>{t('no_warehouse')}</SelectItem>
-                    {warehouses.map(warehouse => (
-                      <SelectItem key={warehouse.id} value={warehouse.id}>
-                        {warehouse.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex-1 justify-between font-normal">
+                      {((currentItem.warehouse_names && currentItem.warehouse_names.length > 0) || currentItem.warehouse_name)
+                        ? (currentItem.warehouse_names && currentItem.warehouse_names.length > 0 
+                            ? currentItem.warehouse_names.join(", ") 
+                            : currentItem.warehouse_name)
+                        : t('select_warehouse')}
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[200px]">
+                    {warehouses.map(warehouse => {
+                      const isSelected = (currentItem.warehouse_ids && currentItem.warehouse_ids.includes(warehouse.id)) || currentItem.warehouse_id === warehouse.id;
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={warehouse.id}
+                          checked={isSelected}
+                          onCheckedChange={() => handleWarehouseToggle(warehouse.id, warehouse.name)}
+                          onSelect={(e) => e.preventDefault()} // Keep menu open when selecting multiple items
+                        >
+                          {warehouse.name}
+                        </DropdownMenuCheckboxItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   type="button"
                   variant="outline"

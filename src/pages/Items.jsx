@@ -579,7 +579,10 @@ const handleCleanOrphans = async (ownerEmail) => {
                          (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          (item.catalog_number && item.catalog_number.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesSupplier = selectedSupplier === "all" || item.supplier_id === selectedSupplier;
-    const matchesWarehouse = !currentWarehouse || (Array.isArray(currentWarehouse.catalog_items) && currentWarehouse.catalog_items.includes(item.id));
+    const matchesWarehouse = !currentWarehouse || 
+      (Array.isArray(currentWarehouse.catalog_items) && currentWarehouse.catalog_items.includes(item.id)) ||
+      (Array.isArray(item.warehouse_ids) && item.warehouse_ids.includes(currentWarehouse.id)) ||
+      (item.warehouse_id === currentWarehouse.id);
     return matchesSearch && matchesSupplier && matchesWarehouse;
   });
 

@@ -1,0 +1,108 @@
+{
+  "name": "Item",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Item name"
+    },
+    "supplier_id": {
+      "type": "string",
+      "description": "ID of the supplier this item belongs to"
+    },
+    "supplier_name": {
+      "type": "string",
+      "description": "Name of the supplier (for easy reference)"
+    },
+    "catalog_number": {
+      "type": "string",
+      "description": "Catalog number provided by supplier"
+    },
+    "warehouse_id": {
+      "type": "string",
+      "description": "ID of the primary warehouse where this item is stored"
+    },
+    "warehouse_name": {
+      "type": "string",
+      "description": "Name of the primary warehouse (for easy reference)"
+    },
+    "warehouse_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of all warehouses where this item is stored"
+    },
+    "warehouse_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Names of all warehouses for easy reference"
+    },
+    "unit": {
+      "type": "string",
+      "enum": [
+        "kg",
+        "gram",
+        "liter",
+        "ml",
+        "unit",
+        "case"
+      ],
+      "default": "unit",
+      "description": "Purchase unit type"
+    },
+    "units_per_package": {
+      "type": "number",
+      "default": 1,
+      "description": "Number of items in the package/case"
+    },
+    "content_per_unit": {
+      "type": "number",
+      "default": 1,
+      "description": "Amount of content per single unit (e.g. 330 for a 330ml can)"
+    },
+    "content_unit": {
+      "type": "string",
+      "enum": [
+        "kg",
+        "gram",
+        "liter",
+        "ml",
+        "unit"
+      ],
+      "default": "unit",
+      "description": "Unit of the content (e.g. ml for a 330ml can)"
+    },
+    "price": {
+      "type": "number",
+      "default": 0,
+      "description": "Price per product before discount"
+    },
+    "discount": {
+      "type": "number",
+      "default": 0,
+      "description": "Discount percentage (0-100)"
+    },
+    "price_after_discount": {
+      "type": "number",
+      "default": 0,
+      "description": "Calculated price after discount: price / (1 + discount/100)"
+    },
+    "minimum_stock": {
+      "type": "number",
+      "default": 0,
+      "description": "Minimum stock level required - used for smart ordering suggestions"
+    },
+    "store_owner_email": {
+      "type": "string",
+      "description": "Email of the store owner (for chain sub-stores)"
+    }
+  },
+  "required": [
+    "name",
+    "supplier_id",
+    "unit"
+  ]
+}
