@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Pencil, Trash2, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeftRight } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ import { useLanguage } from "../LanguageProvider";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll, headerTopClass = "top-[64px] md:top-[84px]" }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Sorting state
   const [sortKey, setSortKey] = React.useState('name');
@@ -82,8 +82,12 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
   const allSelected = items.length > 0 && items.every(i => selectedIds.includes(i.id));
 
   return (
-    <div className="bg-white rounded-lg shadow relative min-h-0">
-      <div className="relative overflow-auto max-h-[calc(100vh-250px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <div className="bg-white rounded-lg shadow relative min-h-0 flex flex-col">
+      <div className="md:hidden text-xs text-gray-500 bg-blue-50/40 p-2.5 flex items-center justify-center gap-2 border-b rounded-t-lg">
+        <ArrowLeftRight className="w-4 h-4 animate-pulse text-blue-400" />
+        <span>{language === 'he' ? 'החליקו לצדדים לצפייה בפרטים נוספים' : 'Swipe left/right for more details'}</span>
+      </div>
+      <div className="relative overflow-auto max-h-[calc(100vh-250px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-[inset_-12px_0_12px_-12px_rgba(0,0,0,0.1),inset_12px_0_12px_-12px_rgba(0,0,0,0.1)]">
         <table className="w-full min-w-max caption-bottom text-sm">
           <TableHeader className="sticky top-0 z-50 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm">
             <TableRow> {/* Replaced <tr> with <TableRow> */}
