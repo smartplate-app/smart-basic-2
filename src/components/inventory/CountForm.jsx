@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Trash2, Save, WifiOff, Upload } from "lucide-react";
+import { X, Plus, Trash2, Save, WifiOff, Upload, FileSpreadsheet, Loader, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
 import { Item } from "@/entities/Item";
@@ -36,6 +36,53 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [warehouseOptions, setWarehouseOptions] = useState(warehouses || []);
   const [availableSearch, setAvailableSearch] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [exportingSheets, setExportingSheets] = useState(false);
+
+  const handleExportToSheets = async () => {
+    try {
+      setExportingSheets(true);
+      
+      const title = formData.name || formData.warehouse_name || 'Inventory Count';
+      const itemsToExport = formData.items;
+      
+      const { data } = await base44.functions.invoke('exportSingleCountToSheets', {
+        title,
+        items: itemsToExport,
+        total_value: formData.total_inventory_value
+      });
+      
+      if (data?.success && data?.spreadsheetUrl) {
+        window.open(data.spreadsheetUrl, '_blank');
+      } else {
+        alert(t('error_saving') || 'Export failed');
+      }
+    } catch (e) {
+      console.error('Export error:', e);
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
+    } finally {
+      setExportingSheets(false);
+    }
+  };
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+    
+    const sortedItems = [...formData.items].sort((a, b) => {
+      if (key === 'total_cost') {
+        const costA = Number(a.total_cost) || 0;
+        const costB = Number(b.total_cost) || 0;
+        return direction === 'asc' ? (costA - costB) : (costB - costA);
+      }
+      return 0;
+    });
+    
+    setFormData(prev => ({ ...prev, items: sortedItems }));
+  };
 
   // Monitor online/offline status
   useEffect(() => {
@@ -317,6 +364,10 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
             {count ? t('edit_count') : t('new_count')}
           </CardTitle>
           <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={handleExportToSheets} disabled={exportingSheets || formData.items.length === 0} className="hidden md:flex border-green-600 text-green-600 hover:bg-green-50">
+              {exportingSheets ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
+              {language === 'he' ? 'ייצא פירוט ל-Sheets' : 'Export items to Sheets'}
+            </Button>
             {isOffline && (
               <span className="flex items-center gap-1 text-orange-600 text-sm font-medium animate-pulse">
                 <WifiOff className="w-4 h-4" />
@@ -497,7 +548,19 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                             <TableHead>{t('counted_quantity')}</TableHead>
                             <TableHead>{t('unit')}</TableHead>
                             <TableHead>{t('price_per_unit')}</TableHead>
-                            <TableHead>{t('total_cost')}</TableHead>
+                            <TableHead 
+                              className="cursor-pointer hover:bg-gray-50 transition-colors select-none group" 
+                              onClick={() => handleSort('total_cost')}
+                            >
+                              <div className="flex items-center gap-1">
+                                {t('total_cost')}
+                                {sortConfig.key === 'total_cost' ? (
+                                  sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                ) : (
+                                  <ArrowUpDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                                )}
+                              </div>
+                            </TableHead>
                             <TableHead>{t('notes')}</TableHead>
                             <TableHead></TableHead>
                           </TableRow>
