@@ -373,8 +373,10 @@ export default function DashboardPage() {
       // Calculate food cost (remove VAT from receipts since invoice_total includes VAT)
       const VAT_RATE = 1.17;
       const filteredReceipts = (allReceipts || []).filter(r => {
-        const d = moment(r.received_date);
-        return d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate);
+        const dateStr = r.invoice_date || r.received_date;
+        if (!dateStr) return false;
+        const d = moment(dateStr, [moment.ISO_8601, 'YYYY-MM-DD', 'DD/MM/YYYY']);
+        return d.isValid() && d.isSameOrAfter(monthStart) && d.isSameOrBefore(endDate);
       });
       let totalFoodCost = 0;
       filteredReceipts.forEach(receipt => {
