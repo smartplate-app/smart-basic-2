@@ -11,7 +11,25 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
   const isRTL = language === 'he' || language === 'ar';
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+
+  const handleGenerateTemplate = async () => {
+    setGenerating(true);
+    try {
+      const response = await base44.functions.invoke('generateRecipeTemplateSheet', {});
+      if (response.data && response.data.success) {
+        window.open(response.data.url, '_blank');
+      } else {
+        throw new Error(response.data?.error || 'Failed to generate template');
+      }
+    } catch (err) {
+      console.error(err);
+      alert(language === 'he' ? 'שגיאה ביצירת תבנית: ' + err.message : 'Error generating template: ' + err.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleImport = async (e) => {
     e.preventDefault();
@@ -50,14 +68,22 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
             <FileSpreadsheet className="w-5 h-5 text-green-600" />
             {language === 'he' ? 'ייבוא מתכונים ומרכיבים מ-Google Sheets' : 'Import Recipes & Ingredients from Google Sheets'}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-600">
             {language === 'he' 
-              ? 'הדבק קישור לגיליון Google Sheets המכיל את המרכיבים והמתכונים שלך (הכנות ומנות סופיות). המערכת תסרוק את כל הגיליונות בקובץ. ודא שהקובץ פתוח לצפייה (Anyone with the link can view).'
-              : 'Paste a link to a Google Sheets document containing your ingredients and recipes. The system will scan all sheets in the file. Make sure the sheet is accessible (Anyone with the link can view).'}
+              ? 'ניתן להשתמש בתבנית מסודרת של המערכת (לחיצה מטה), או להדביק קישור לקובץ שלכם. בזכות מערכת ה-AI שלנו, אפשר להשתמש כמעט בכל מבנה נתונים — המערכת תזהה את המרכיבים והמתכונים שלכם! ודאו שהקובץ פתוח לצפייה (Anyone with the link can view).'
+              : 'Generate an organized template below, or paste a link to your own Google Sheet. Thanks to our AI system, you can use almost any file structure — the system will automatically identify your ingredients and recipes! Make sure the sheet is accessible (Anyone with the link can view).'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleImport} className="space-y-4 mt-4">
+        <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} mt-2`}>
+          <Button type="button" variant="outline" onClick={handleGenerateTemplate} disabled={generating} className="text-[#107c41] border-[#107c41] bg-green-50 hover:bg-green-100">
+            {generating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            {language === 'he' ? 'הורד תבנית לדוגמה' : 'Generate Template'}
+          </Button>
+        </div>
+
+        <form onSubmit={handleImport} className="space-y-4 mt-4 border-t pt-4">
           <div>
             <label className="block text-sm font-medium mb-1">
               {language === 'he' ? 'קישור לגיליון (URL)' : 'Spreadsheet URL'}
