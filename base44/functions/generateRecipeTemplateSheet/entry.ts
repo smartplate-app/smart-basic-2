@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.26';
 
 const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlesheets');
     
     const title = `תבנית מתכונים והכנות - ${new Date().toLocaleDateString('he-IL')}`;
     const spreadsheetId = await createSpreadsheet(accessToken, title);
@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
       ['', '', '', '', '']
     ];
 
-    await writeValues(accessToken, spreadsheetId, "'הכנות מטבח'!A1:C150", prepsData);
-    await writeValues(accessToken, spreadsheetId, "'מנות סופיות'!A1:C150", recipesData);
+    await writeValues(accessToken, spreadsheetId, "'הכנות מטבח'!A1:E150", prepsData);
+    await writeValues(accessToken, spreadsheetId, "'מנות סופיות'!A1:E150", recipesData);
     await writeValues(accessToken, spreadsheetId, "'חומרי גלם'!A1:E100", itemsData);
 
     const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
