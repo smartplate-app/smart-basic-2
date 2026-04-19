@@ -99,6 +99,13 @@ Deno.serve(async (req) => {
     await writeValues(accessToken, spreadsheetId, "'מנות סופיות'!A1:E150", recipesData);
     await writeValues(accessToken, spreadsheetId, "'חומרי גלם'!A1:E100", itemsData);
 
+    // Share with store managers
+    try {
+      await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId });
+    } catch(e) {
+      console.error('Failed to share sheet with managers:', e);
+    }
+
     const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
     return Response.json({ success: true, url });
   } catch (error) {

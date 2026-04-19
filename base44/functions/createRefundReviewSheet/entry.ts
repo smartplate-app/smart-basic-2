@@ -53,6 +53,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Google API error (values)', details, spreadsheetId }, { status: 500 });
     }
 
+    // Share with store managers
+    try {
+      await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId });
+    } catch(e) {
+      console.error('Failed to share sheet with managers:', e);
+    }
+
     const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
     return Response.json({ success: true, spreadsheetId, url, count: rows.length });
   } catch (error) {

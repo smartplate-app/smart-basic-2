@@ -159,6 +159,13 @@ Deno.serve(async (req) => {
       body: JSON.stringify(batchReq)
     });
 
+    // Share with store managers
+    try {
+      await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId });
+    } catch(e) {
+      console.error('Failed to share sheet with managers:', e);
+    }
+
     const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
     return Response.json({ success: true, spreadsheetId, spreadsheetUrl });
   } catch (error) {

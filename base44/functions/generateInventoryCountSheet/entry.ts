@@ -113,6 +113,13 @@ Deno.serve(async (req) => {
     const shareTo = (user.drive_share_email || workingEmail).trim();
     if (shareTo) { await ensureShared(driveToken, fileMeta.id, shareTo); }
 
+    // Share with store managers
+    try {
+      await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId: fileMeta.id });
+    } catch(e) {
+      console.error('Failed to share sheet with managers:', e);
+    }
+
     return Response.json({ success: true, sheet: fileMeta, parentFolder: parent });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

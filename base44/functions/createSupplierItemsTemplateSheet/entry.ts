@@ -94,6 +94,13 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ role: 'writer', type: 'user', emailAddress: shareEmail })
       });
 
+      // Share with store managers
+      try {
+        await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId });
+      } catch(e) {
+        console.error('Failed to share sheet with managers:', e);
+      }
+
       // Get a webViewLink for convenience
       try {
         const infoRes = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?fields=webViewLink&supportsAllDrives=true`, {

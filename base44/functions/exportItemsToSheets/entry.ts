@@ -118,6 +118,13 @@ Deno.serve(async (req) => {
 
     await writeValues(accessToken, targetSpreadsheetId, range, allValues);
 
+    // Share with store managers
+    try {
+      await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId: targetSpreadsheetId });
+    } catch(e) {
+      console.error('Failed to share sheet with managers:', e);
+    }
+
     const url = `https://docs.google.com/spreadsheets/d/${targetSpreadsheetId}/edit`;
     return Response.json({ success: true, url, spreadsheetId: targetSpreadsheetId, rows: rows.length });
   } catch (error) {
