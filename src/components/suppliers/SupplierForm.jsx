@@ -21,7 +21,8 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
     grant_notes: "",
     grant_amount: "",
     grant_document_url: "",
-    accounting_code: ""
+    accounting_code: "",
+    storenext_id: ""
   });
   const [uploading, setUploading] = React.useState(false);
 
@@ -137,6 +138,16 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
                 value={formData.accounting_code || ""}
                 onChange={(e) => handleChange("accounting_code", e.target.value)}
                 placeholder={language === 'he' ? 'לדוגמה: 5401' : 'e.g., 5401'}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="storenext_id">{language === 'he' ? 'מזהה StoreNext' : 'StoreNext ID'}</Label>
+              <Input
+                id="storenext_id"
+                value={formData.storenext_id || ""}
+                onChange={(e) => handleChange("storenext_id", e.target.value)}
+                placeholder={language === 'he' ? 'הכנס מזהה ספק (אופציונלי)' : 'Enter supplier ID (optional)'}
               />
             </div>
 

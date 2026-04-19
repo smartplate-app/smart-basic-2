@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Share, Copy } from "lucide-react";
+import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Share, Copy, FileCode } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -1106,6 +1106,38 @@ export default function OrdersPage() {
     }
     };
 
+    const handleConfirmSendStoreNext = async () => {
+      if (!sendOptionOrder) return;
+      const order = sendOptionOrder;
+      setShowSendOptions(false);
+      
+      try {
+        const { data } = await base44.functions.invoke('exportStoreNextXML', { orderId: order.id });
+        if (data?.success && data?.xml) {
+          // Download XML
+          const blob = new Blob([data.xml], { type: 'application/xml' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `StoreNext_Order_${order.order_number || order.id}.xml`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          a.remove();
+          
+          // Mark as sent
+          base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number }).catch(() => {});
+          setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent' } : o));
+          alert(language === 'he' ? 'קובץ ה-XML עבור StoreNext הורד בהצלחה. יש לטעון אותו במערכת StoreNext.' : 'StoreNext XML downloaded successfully. Please upload it to StoreNext.');
+        } else {
+          alert(language === 'he' ? 'שגיאה ביצירת קובץ StoreNext' : 'Error generating StoreNext file');
+        }
+      } catch (e) {
+        alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + (e?.message || ''));
+      }
+      setSendOptionOrder(null);
+    };
+
     const handleConfirmSendWhatsAppImage = async () => {
       if (!sendOptionOrder) return;
       const order = sendOptionOrder;
@@ -1697,6 +1729,9 @@ export default function OrdersPage() {
             </Button>
             <Button onClick={handleConfirmSendEmail} className="bg-[#d4a373] hover:bg-[#b88c60] text-white">
               <Mail className="w-4 h-4 mr-2" /> {safeT('email', 'אימייל', 'Email')}
+            </Button>
+            <Button onClick={handleConfirmSendStoreNext} className="bg-[#005ea2] hover:bg-[#004e8a] text-white">
+              <FileCode className="w-4 h-4 mr-2" /> {language === 'he' ? 'StoreNext (XML)' : 'StoreNext (XML)'}
             </Button>
           </div>
         </DialogContent>

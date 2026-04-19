@@ -1,0 +1,59 @@
+{
+  "name": "Supplier",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Supplier company name"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Supplier email address"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Supplier phone number"
+    },
+    "contact_person": {
+      "type": "string",
+      "description": "Main contact person name"
+    },
+    "supplier_type": {
+      "type": "string",
+      "enum": [
+        "simple",
+        "catalogic"
+      ],
+      "default": "simple",
+      "description": "Type of supplier - simple or catalogic with Excel import"
+    },
+    "store_owner_email": {
+      "type": "string",
+      "description": "Email of the store owner (for chain sub-stores)"
+    },
+    "grant_notes": {
+      "type": "string",
+      "description": "Free text notes about grants or special agreements"
+    },
+    "grant_amount": {
+      "type": "number",
+      "description": "Amount of grant or special discount"
+    },
+    "grant_document_url": {
+      "type": "string",
+      "description": "URL to uploaded grant agreement document (image or PDF)"
+    },
+    "accounting_code": {
+      "type": "string",
+      "description": "Supplier code used in accounting systems"
+    },
+    "storenext_id": {
+      "type": "string",
+      "description": "StoreNext Supplier ID (GLN) if integrated"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
