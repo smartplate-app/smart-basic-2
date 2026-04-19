@@ -184,7 +184,7 @@ const AppLayout = ({ children, currentPageName }) => {
           { title: t('nav_receipts'), url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false, workerHidden: false },
           { title: t('nav_suppliers'), url: createPageUrl("Suppliers"), icon: Users, adminOnly: false, workerHidden: false },
           // Weekly Schedule (moved to position 5 and renamed)
-          { title: language === 'he' ? 'סידור עבודה שבועי' : 'Weekly Schedule', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
+          { title: language === 'he' ? 'סידור עבודה שבועי למקומות רחוב' : 'Weekly Schedule for street food places', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true, isLightGray: true },
           // The rest
           { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
           { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
@@ -996,7 +996,7 @@ const AppLayout = ({ children, currentPageName }) => {
                     to={item.url}
                     preventScrollReset
                     onClick={() => setSidebarOpen(false)}
-                    className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-[#d4a373] text-white font-bold dark:bg-[#d4a373]' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]')}
+                    className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-[#d4a373] text-white font-bold dark:bg-[#d4a373]' : (item.isLightGray ? 'text-gray-400 hover:bg-gray-100 dark:text-slate-500 dark:hover:bg-[#0a1430]' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]'))}
                   >
                     <item.icon className="w-5 h-5" />
                     <span>{item.title}</span>

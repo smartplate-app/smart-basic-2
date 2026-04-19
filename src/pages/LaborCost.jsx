@@ -32,6 +32,8 @@ export default function LaborCostPage() {
     return moment().startOf('week').format('YYYY-MM-DD');
   });
   const { t, language } = useLanguage();
+  const [passcode, setPasscode] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const loadData = async (retryCount = 0) => {
     try {
@@ -84,8 +86,28 @@ export default function LaborCostPage() {
   };
 
   useEffect(() => {
-    loadData();
+    const savedCode = localStorage.getItem('labor_passcode');
+    if (savedCode === '2233') {
+      setIsAuthenticated(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated]);
+
+  const handlePasscodeSubmit = (e) => {
+    e.preventDefault();
+    if (passcode === '2233') {
+      localStorage.setItem('labor_passcode', '2233');
+      setIsAuthenticated(true);
+    } else {
+      alert(language === 'he' ? 'קוד שגוי' : 'Incorrect code');
+      setPasscode('');
+    }
+  };
 
   const handlePreviousWeek = () => {
     const prevWeek = moment(currentWeekStart).subtract(1, 'week').format('YYYY-MM-DD');
@@ -163,6 +185,30 @@ export default function LaborCostPage() {
     }
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <form onSubmit={handlePasscodeSubmit} className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
+          <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
+            {language === 'he' ? 'הכנס קוד גישה' : 'Enter Passcode'}
+          </h2>
+          <input
+            type="password"
+            value={passcode}
+            onChange={(e) => setPasscode(e.target.value)}
+            className="w-full text-center text-2xl tracking-widest p-3 border-2 border-gray-200 rounded-lg mb-6 focus:border-purple-500 focus:outline-none transition-colors"
+            placeholder="••••"
+            maxLength={4}
+            autoFocus
+          />
+          <Button type="submit" className="w-full h-12 text-lg bg-purple-600 hover:bg-purple-700">
+            {language === 'he' ? 'כניסה' : 'Enter'}
+          </Button>
+        </form>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -186,7 +232,7 @@ export default function LaborCostPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50 p-4 md:p-8">
       <div className="w-full">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{t('labor_cost_management')}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{language === 'he' ? 'סידור עבודה שבועי למקומות רחוב' : 'Weekly Schedule for street food places'}</h1>
           <p className="text-gray-600 mt-2">{t('manage_workers_schedules')}</p>
         </div>
 
