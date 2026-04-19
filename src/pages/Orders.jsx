@@ -115,7 +115,7 @@ export default function OrdersPage() {
           <table style="width:100%;border-collapse:collapse;">
             <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
             <tbody>
-              ${(order.items || []).map((it,i)=>`<tr style="background:${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.item_name||it.name||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.unit||''}</td></tr>`).join('')}
+              ${(order.items || []).map((it,i)=>`<tr style="background:${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.item_name||it.name||''}${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;font-weight:normal;">${language==='he'?'מק"ט:':'SKU:'} ${it.catalog_number}</span>` : ''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.unit||''}</td></tr>`).join('')}
             </tbody>
           </table>
         </div>
@@ -764,7 +764,7 @@ export default function OrdersPage() {
           <table style="width:100%;border-collapse:collapse;">
             <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
             <tbody>
-              ${(order.items || []).map((it,i)=>`<tr style="background:${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.item_name||it.name||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.unit||''}</td></tr>`).join('')}
+              ${(order.items || []).map((it,i)=>`<tr style="background:${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.item_name||it.name||''}${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;font-weight:normal;">${language==='he'?'מק"ט:':'SKU:'} ${it.catalog_number}</span>` : ''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.unit||''}</td></tr>`).join('')}
             </tbody>
           </table>
         </div>
@@ -950,7 +950,7 @@ export default function OrdersPage() {
           <table style="width:100%;border-collapse:collapse;">
             <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
             <tbody>
-              ${(order.items || []).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
+              ${(order.items || []).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;font-weight:normal;">${language==='he'?'מק"ט:':'SKU:'} ${it.catalog_number}</span>` : ''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
             </tbody>
           </table>
         </div>

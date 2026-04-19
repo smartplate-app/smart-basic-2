@@ -247,6 +247,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           orderItems.push({
             item_id: item.id,
             item_name: item.name,
+            catalog_number: item.catalog_number || "",
             quantity: quantity,
             unit: item.unit,
             price: item.price || 0,

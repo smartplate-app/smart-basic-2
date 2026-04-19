@@ -151,7 +151,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                 ${(order.items || []).map((item, index) => `
                   <tr style="background: ${index % 2 === 0 ? 'white' : '#f9fafb'};">
                     <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
-                    <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">${item.item_name}</td>
+                    <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">
+                      ${item.item_name}
+                      ${item.catalog_number ? `<br/><span style="font-size:12px; color:#6b7280; font-weight:normal;">${language === 'he' ? 'מק"ט:' : 'SKU:'} ${item.catalog_number}</span>` : ''}
+                    </td>
                     <td style="padding: 12px; font-weight: 600; color: #059669; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
                     <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.unit}</td>
                   </tr>
@@ -315,7 +318,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                       ${(order.items || []).map((item, index) => `
                         <tr style="background: ${index % 2 === 0 ? 'white' : '#f9fafb'};">
                           <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
-                          <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">${item.item_name}</td>
+                          <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">
+                      ${item.item_name}
+                      ${item.catalog_number ? `<br/><span style="font-size:12px; color:#6b7280; font-weight:normal;">${language === 'he' ? 'מק"ט:' : 'SKU:'} ${item.catalog_number}</span>` : ''}
+                    </td>
                           <td style="padding: 12px; font-weight: 600; color: #059669; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
                           <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.unit}</td>
                         </tr>
@@ -525,7 +531,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
                                           {order.items && order.items.map((item, index) => (
                                               <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9fafb' }}>
                                                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{index + 1}</td>
-                                                  <td style={{ padding: '12px', fontWeight: '500', borderBottom: '1px solid #e5e7eb' }}>{item.item_name || item.item || item.name}</td>
+                                                  <td style={{ padding: '12px', fontWeight: '500', borderBottom: '1px solid #e5e7eb' }}>
+                                                      {item.item_name || item.item || item.name}
+                                                      {item.catalog_number && (
+                                                          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 'normal', marginTop: '2px' }}>
+                                                              {language === 'he' ? 'מק"ט:' : 'SKU:'} {item.catalog_number}
+                                                          </div>
+                                                      )}
+                                                  </td>
                                                   <td style={{ padding: '12px', fontWeight: '600', color: '#059669', borderBottom: '1px solid #e5e7eb' }}>{item.quantity}</td>
                                                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{item.unit}</td>
                                               </tr>

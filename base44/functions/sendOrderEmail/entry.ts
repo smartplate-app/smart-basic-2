@@ -61,7 +61,10 @@ Deno.serve(async (req) => {
 
     const itemsRows = items.map((it) => `
       <tr>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${(it.item_name || '').toString()}</td>
+        <td style="padding:6px 8px;border:1px solid #e5e7eb;">
+          ${(it.item_name || '').toString()}
+          ${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;">SKU: ${it.catalog_number}</span>` : ''}
+        </td>
         <td style="padding:6px 8px;border:1px solid #e5e7eb;">${Number(it.quantity || 0)}</td>
         <td style="padding:6px 8px;border:1px solid #e5e7eb;">${(it.unit || '').toString()}</td>
         <td style="padding:6px 8px;border:1px solid #e5e7eb;">₪${Number(it.total || (Number(it.price || 0) * Number(it.quantity || 0))).toFixed(2)}</td>
@@ -117,7 +120,7 @@ Deno.serve(async (req) => {
 </html>`;
 
     // Build plain text alternative (better deliverability for Exchange/Office365)
-    const itemsTxt = items.map((it) => `• ${(it.item_name || '')} — ${Number(it.quantity || 0)} ${(it.unit || '')}`).join('\n');
+    const itemsTxt = items.map((it) => `• ${(it.item_name || '')}${it.catalog_number ? ` (SKU: ${it.catalog_number})` : ''} — ${Number(it.quantity || 0)} ${(it.unit || '')}`).join('\n');
     const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.`;
 
     const boundary = 'b44_boundary_' + Math.random().toString(36).slice(2);
