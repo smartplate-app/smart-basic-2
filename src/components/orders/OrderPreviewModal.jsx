@@ -45,7 +45,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
     r: order.restaurant_name,
     a: order.restaurant_address,
     d: order.delivery_date,
-    i: (order.items || []).map(it => ({ n: (it.item_name || it.item || it.name || ''), q: it.quantity, u: (it.unit || it.u || '') })),
+    i: (order.items || []).map(it => ({ n: (it.item_name || it.item || it.name || ''), c: (it.catalog_number || ''), q: it.quantity, u: (it.unit || it.u || '') })),
     t: order.notes,
     m: effectiveTotal
   };
