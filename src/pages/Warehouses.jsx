@@ -48,7 +48,7 @@ export default function WarehousesPage() {
         setAuthLoading(true);
         const currentUser = await User.me();
         setUser(currentUser);
-        setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_role === 'worker' || currentUser.store_user_read_only === true);
+        setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
         const targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
         await loadWarehouses(targetEmail);
       } catch (error) {

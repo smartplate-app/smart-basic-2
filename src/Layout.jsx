@@ -571,7 +571,10 @@ const AppLayout = ({ children, currentPageName }) => {
     const isWorkerAllowedPage = 
       currentPageName === 'Orders' || 
       currentPageName === 'SupplyReceipts' || 
-      currentPageName === 'MonthlyCount';
+      currentPageName === 'MonthlyCount' ||
+      currentPageName === 'Suppliers' ||
+      currentPageName === 'Items' ||
+      currentPageName === 'Warehouses';
 
     // A worker is restricted to view-only unless they are on one of the allowed pages
     const isWorkerAndRestricted = isWorker && !isWorkerAllowedPage;

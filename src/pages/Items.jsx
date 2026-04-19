@@ -276,7 +276,7 @@ export default function ItemsPage() {
         if (!mounted) return;
         
         setUser(currentUser);
-        setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_role === 'worker' || currentUser.store_user_read_only === true);
+        setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
 
         await new Promise(resolve => setTimeout(resolve, 500));
         
