@@ -179,16 +179,17 @@ export default function ItemsPage() {
         }
       } else {
         // Head store or no chain - include items created by owner and items attributed to owner via store_owner_email
-        const [ownCreated, ownedByStore, suppliers, warehouses] = await Promise.all([
+        const [ownCreated, ownedByStore, suppliers, storeSuppliers, warehouses] = await Promise.all([
           base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date"),
           base44.entities.Item.filter({ store_owner_email: effectiveEmail }, "-created_date"),
           base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name"),
+          base44.entities.Supplier.filter({ store_owner_email: effectiveEmail }, "name"),
           base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name")
         ]);
         const allItems = [...ownCreated, ...ownedByStore];
         itemsData = Array.from(new Map(allItems.map(i => [i.id, i])).values())
           .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-        suppliersData = suppliers;
+        suppliersData = [...suppliers, ...storeSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         warehousesData = warehouses;
       }
 

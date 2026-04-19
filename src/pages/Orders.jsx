@@ -228,9 +228,11 @@ export default function OrdersPage() {
         console.log(`[Orders] Loading data from: ${dataEmails.join(', ')}`);
         
         const orderPromises = dataEmails.map(e => base44.entities.Order.filter({ created_by: e }, "-created_date"));
-        const [ordersArrays, userSuppliers] = await Promise.all([
+        const targetEmail = controlledUserOwnerEmail || workingEmail;
+        const [ordersArrays, ownSuppliers, storeSuppliers] = await Promise.all([
           Promise.all(orderPromises),
-          base44.entities.Supplier.filter({ created_by: controlledUserOwnerEmail || workingEmail }, "name")
+          base44.entities.Supplier.filter({ created_by: targetEmail }, "name"),
+          base44.entities.Supplier.filter({ store_owner_email: targetEmail }, "name")
         ]);
         const mergedOrders = ordersArrays.flat();
         const seenIds = new Set();
@@ -239,16 +241,18 @@ export default function OrdersPage() {
           seenIds.add(o.id);
           return true;
         });
+        const userSuppliers = [...ownSuppliers, ...storeSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         suppliersData = userSuppliers;
         console.log(`[Orders] Loaded ${userSuppliers.length} suppliers for controlled user`);
       } else if (isStoreUser && storeOwnerEmail) {
         // Store user - show owner's orders + this user's orders (drafts etc.)
-        const [ownerSuppliers, ownerOrders, myOrders] = await Promise.all([
+        const [ownerSuppliers, ownerStoreSuppliers, ownerOrders, myOrders] = await Promise.all([
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
+          base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, "name"),
           base44.entities.Order.filter({ created_by: storeOwnerEmail }, "-created_date"),
           base44.entities.Order.filter({ created_by: currentUser.email }, "-created_date")
         ]);
-        suppliersData = ownerSuppliers;
+        suppliersData = [...ownerSuppliers, ...ownerStoreSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         const merged = [...ownerOrders, ...myOrders];
         const seen = new Set();
         ordersData = merged.filter(o => {
@@ -262,12 +266,14 @@ export default function OrdersPage() {
         if (chain.length > 0) {
           const headEmail = chain[0].head_store_user_email;
           // Load suppliers from head store + own, but only own orders
-          const [headSuppliers, ownSuppliers, ownOrders] = await Promise.all([
+          const [headSuppliers, headStoreSuppliers, ownSuppliers, ownStoreSuppliers, ownOrders] = await Promise.all([
             base44.entities.Supplier.filter({ created_by: headEmail }, "name"),
+            base44.entities.Supplier.filter({ store_owner_email: headEmail }, "name"),
             base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
+            base44.entities.Supplier.filter({ store_owner_email: currentUser.email }, "name"),
             base44.entities.Order.filter({ created_by: currentUser.email }, "-created_date")
           ]);
-          suppliersData = [...headSuppliers, ...ownSuppliers];
+          suppliersData = [...headSuppliers, ...headStoreSuppliers, ...ownSuppliers, ...ownStoreSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
           ordersData = ownOrders;
         }
       } else {
@@ -291,7 +297,11 @@ export default function OrdersPage() {
           allOrders = await base44.entities.Order.filter({ created_by: currentUser.email }, "-created_date");
         }
 
-        const suppliers = await base44.entities.Supplier.filter({ created_by: currentUser.email }, "name");
+        const [ownSuppliers, storeSuppliers] = await Promise.all([
+          base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
+          base44.entities.Supplier.filter({ store_owner_email: currentUser.email }, "name")
+        ]);
+        const suppliers = [...ownSuppliers, ...storeSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         ordersData = allOrders;
         suppliersData = suppliers;
       }
