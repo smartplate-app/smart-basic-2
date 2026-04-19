@@ -232,7 +232,7 @@ export default function LaborCostPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50 p-4 md:p-8">
       <div className="w-full">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{language === 'he' ? 'סידור עבודה שבועי למקומות רחוב' : 'Weekly Schedule for street food places'}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{language === 'he' ? 'סידור עבודה' : 'Weekly Schedule'}</h1>
           <p className="text-gray-600 mt-2">{t('manage_workers_schedules')}</p>
         </div>
 

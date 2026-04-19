@@ -183,8 +183,6 @@ const AppLayout = ({ children, currentPageName }) => {
           { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
           { title: t('nav_receipts'), url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false, workerHidden: false },
           { title: t('nav_suppliers'), url: createPageUrl("Suppliers"), icon: Users, adminOnly: false, workerHidden: false },
-          // Weekly Schedule (moved to position 5 and renamed)
-          { title: language === 'he' ? 'סידור עבודה שבועי למקומות רחוב' : 'Weekly Schedule for street food places', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true, isLightGray: true },
           // The rest
           { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
           { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
@@ -194,6 +192,7 @@ const AppLayout = ({ children, currentPageName }) => {
           { title: language === 'he' ? 'מחשבון הנדסת תפריט' : 'Menu Engineering Calculator', url: createPageUrl("MenuEngineering"), icon: Calculator, adminOnly: false, workerHidden: false },
           { title: language === 'he' ? 'העברות מלאי' : 'Inventory Transfers', url: createPageUrl("InventoryTransfers"), icon: ArrowLeftRight, adminOnly: false, workerHidden: true },
           { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
+          { title: language === 'he' ? 'סידור עבודה' : 'Weekly Schedule', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
 
           { title: t('user_profile'), url: createPageUrl("UserProfile"), icon: UserCircle, adminOnly: false, workerHidden: false },
           // Hidden diagnostics (not shown in nav), access via /#/pages/Diagnostics
