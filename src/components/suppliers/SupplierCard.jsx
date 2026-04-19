@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import SupplierSheetsImport from "./SupplierSheetsImport";
+
 import InvoiceScanner from "./InvoiceScanner";
 import { base44 } from "@/api/base44Client";
 import ItemForm from "../items/ItemForm";
@@ -24,7 +24,6 @@ import ItemForm from "../items/ItemForm";
 export default function SupplierCard({ supplier, onEdit, onDelete, onImportComplete }) {
   const { t, language } = useLanguage();
   const [showScanner, setShowScanner] = useState(false);
-  const [showSheetsImport, setShowSheetsImport] = useState(false);
   const [showDeleteItemsDialog, setShowDeleteItemsDialog] = useState(false);
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -126,15 +125,7 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setShowSheetsImport(true)}
-                  className="text-gray-400 hover:text-green-600"
-                  title={language === 'he' ? 'ייבוא פריטים מגוגל שיטס' : 'Import items from Google Sheets'}
-                >
-                  <FileSpreadsheet className="w-4 h-4" />
-                </Button>
+
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -231,21 +222,7 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
         </Card>
       </motion.div>
 
-      <Dialog open={showSheetsImport} onOpenChange={setShowSheetsImport}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{language === 'he' ? 'ייבוא פריטים מגוגל שיטס' : 'Import Items from Google Sheets'}</DialogTitle>
-          </DialogHeader>
-          <SupplierSheetsImport 
-            supplier={supplier}
-            onClose={() => setShowSheetsImport(false)}
-            onImportComplete={() => {
-              setShowSheetsImport(false);
-              if (onImportComplete) onImportComplete();
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+
 
       <Dialog open={showScanner} onOpenChange={setShowScanner}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
