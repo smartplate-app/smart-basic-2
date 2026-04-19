@@ -77,32 +77,41 @@ Deno.serve(async (req) => {
 
     const data = await getRes.json();
     const rows = data.values || [];
-    if (rows.length < 2) return Response.json({ error: 'Sheet has no data' }, { status: 400 });
+    if (rows.length === 0) return Response.json({ error: 'Sheet has no data' }, { status: 400 });
 
-    const headers = rows[0].map(h => String(h).trim());
-    const bodyRows = rows.slice(1).filter(r => r.some(c => String(c || '').trim() !== ''));
+    const allNonEmptyRows = rows.filter(r => r.some(c => String(c || '').trim() !== ''));
+    if (allNonEmptyRows.length === 0) return Response.json({ error: 'Sheet has no data' }, { status: 400 });
 
-    // Use LLM to map column indices
+    const sampleRows = allNonEmptyRows.slice(0, 15);
+
+    // Use LLM to map column indices and find data start
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `Map the following headers from a Google Sheet to the required fields for importing items.
-Headers: ${JSON.stringify(headers)}
+      prompt: `Analyze the following sample rows from a Google Sheet intended for importing restaurant suppliers and items.
+Sample rows (JSON format):
+${JSON.stringify(sampleRows)}
 
-Find the index (0-based) for the following fields. If a field doesn't exist, return -1 for it.
-Required fields to identify:
-- supplier_col_idx: Column for Supplier Name (ספק)
-- item_name_col_idx: Column for Item Name (שם פריט)
-- price_col_idx: Column for Price (מחיר)
+Your task is to figure out:
+1. Which row index (0-based relative to these sample rows) contains the column headers? If there are no headers and it's just data, set header_row_idx to -1.
+2. What is the row index where the actual data starts? (data_start_row_idx, 0-based relative to these sample rows)
+3. What are the column indices (0-based) for the required data fields?
+- supplier_col_idx: Column for Supplier Name (e.g. 'ספק', 'Supplier'). Sometimes a supplier is only specified in the first row of a group.
+- item_name_col_idx: Column for Item Name (e.g. 'שם פריט', 'Item')
+- price_col_idx: Column for Price (e.g. 'מחיר', 'Price')
 
 Optional fields:
-- unit_col_idx: Column for Unit (יחידת מידה)
-- catalog_number_col_idx: Column for Catalog Number (מק"ט)
-- discount_col_idx: Column for Discount (הנחה)
-- units_per_package_col_idx: Column for Units Per Package (כמות באריזה)
+- unit_col_idx: Column for Unit (e.g. 'יחידת מידה', 'Unit', 'קג', 'יח')
+- catalog_number_col_idx: Column for Catalog Number (e.g. 'מק"ט', 'SKU')
+- discount_col_idx: Column for Discount (e.g. 'הנחה', 'Discount')
+- units_per_package_col_idx: Column for Units Per Package (e.g. 'כמות באריזה')
 
-Return a JSON object with these exact keys mapping to their 0-based integer index.`,
+If an optional field is missing, return -1. 
+If the data is completely unstructured or missing supplier/item name, return supplier_col_idx: -1.
+Return a JSON object matching the schema exactly.`,
       response_json_schema: {
         type: 'object',
         properties: {
+          header_row_idx: { type: 'integer' },
+          data_start_row_idx: { type: 'integer' },
           supplier_col_idx: { type: 'integer' },
           item_name_col_idx: { type: 'integer' },
           price_col_idx: { type: 'integer' },
@@ -111,13 +120,21 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
           discount_col_idx: { type: 'integer' },
           units_per_package_col_idx: { type: 'integer' }
         },
-        required: ['supplier_col_idx', 'item_name_col_idx', 'price_col_idx']
+        required: ['header_row_idx', 'data_start_row_idx', 'supplier_col_idx', 'item_name_col_idx', 'price_col_idx']
       }
     });
 
     if (response.supplier_col_idx === -1 || response.item_name_col_idx === -1) {
       return Response.json({ error: 'Could not find required columns (Supplier and Item Name) in the sheet' }, { status: 400 });
     }
+
+    let startIndex = response.data_start_row_idx;
+    if (startIndex === undefined || startIndex === null) {
+      startIndex = response.header_row_idx !== -1 ? response.header_row_idx + 1 : 0;
+    }
+    startIndex = Math.max(0, startIndex);
+    
+    const bodyRows = allNonEmptyRows.slice(startIndex);
 
     const targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
     const existingSuppliers = await base44.entities.Supplier.filter({ created_by: targetEmail }, null, 5000);
@@ -181,7 +198,7 @@ Return a JSON object with these exact keys mapping to their 0-based integer inde
       const supplier = supplierMap.get(row.sName.toLowerCase());
       if (!supplier) continue;
 
-      const itemKey = `${supplier.name.trim().toLowerCase()}|${row.item_name.toLowerCase()}`;
+      const itemKey = `${supplier.name.trim().toLowerCase()}|${row.item_name.trim().toLowerCase()}`;
       if (existingItemsSet.has(itemKey)) continue;
       existingItemsSet.add(itemKey);
 

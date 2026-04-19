@@ -12,8 +12,29 @@ export default function ImportSuppliersItemsModal({ isOpen, onClose, onSuccess }
   
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [templateUrl, setTemplateUrl] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  const createTemplate = async () => {
+    try {
+      setCreating(true);
+      setError(null);
+      const { data } = await base44.functions.invoke('createSuppliersAndItemsTemplateSheet', {});
+      if (data?.url) {
+        setTemplateUrl(data.url);
+        setUrl(data.url);
+        window.open(data.url, '_blank');
+      } else {
+        setError(data?.error || "Failed to create template");
+      }
+    } catch (e) {
+      setError(e.message || "Error creating template");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const handleImport = async () => {
     if (!url) {
@@ -68,12 +89,27 @@ export default function ImportSuppliersItemsModal({ isOpen, onClose, onSuccess }
           </DialogTitle>
           <DialogDescription>
             {language === 'he' 
-              ? 'הדבק קישור לגוגל שיטס. המערכת תוסיף אוטומטית ספקים חסרים ואת כל הפריטים תחתיהם.' 
-              : 'Paste a link to a Google Sheet. The system will automatically add missing suppliers and all items under them.'}
+              ? 'הדבק קישור לגוגל שיטס. המערכת (בעזרת AI) תזהה את העמודות, תוסיף אוטומטית ספקים ופריטים חסרים, ותדלג על פריטים שכבר קיימים.' 
+              : 'Paste a link to a Google Sheet. The AI will automatically map the columns, add missing suppliers and items, and skip duplicates.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <div>
+              <p className="font-semibold text-blue-900 text-sm">
+                {language === 'he' ? 'אין לך קובץ מסודר?' : 'Need a formatted file?'}
+              </p>
+              <p className="text-xs text-blue-700">
+                {language === 'he' ? 'המערכת יכולה לקרוא כמעט כל פורמט, אבל תבנית מסודרת מונעת תקלות.' : 'The AI can read almost any format, but a template prevents issues.'}
+              </p>
+            </div>
+            <Button onClick={createTemplate} disabled={creating} className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap">
+              {creating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {language === 'he' ? 'צור תבנית אקסל' : 'Create Template'}
+            </Button>
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium">
               {language === 'he' ? 'נא להוסיף פה קישור ל Google Sheets:' : 'Google Sheets URL:'}
