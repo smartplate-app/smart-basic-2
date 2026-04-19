@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
 
 export default function AuthKick() {
-  const [phase, setPhase] = useState<'logout' | 'redirect' | 'error'>('logout');
+  const [phase, setPhase] = useState('logout');
   const [err, setErr] = useState('');
 
   useEffect(() => {
