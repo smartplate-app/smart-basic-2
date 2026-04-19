@@ -567,7 +567,21 @@ const AppLayout = ({ children, currentPageName }) => {
   })();
     const isAdminControllingUser = user?.admin_original_email && user?.acting_as_user_email;
 
-    const isViewer = (!user?.is_chain_head) && (storeUserRole === 'viewer' || user?.store_user_role === 'viewer' || user?.store_user_read_only === true);
+    // Determine if the current page is allowed for workers to edit
+    const isWorkerAllowedPage = 
+      currentPageName === 'Orders' || 
+      currentPageName === 'SupplyReceipts' || 
+      currentPageName === 'MonthlyCount';
+
+    // A worker is restricted to view-only unless they are on one of the allowed pages
+    const isWorkerAndRestricted = isWorker && !isWorkerAllowedPage;
+
+    const isViewer = (!user?.is_chain_head) && (
+      storeUserRole === 'viewer' || 
+      user?.store_user_role === 'viewer' || 
+      user?.store_user_read_only === true ||
+      isWorkerAndRestricted
+    );
 
     useEffect(() => {
       if (!user) return;

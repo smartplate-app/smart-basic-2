@@ -276,7 +276,7 @@ export default function SuppliersPage() {
 
                         if (mounted) {
                           setUser(currentUser);
-                          setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
+                          setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_role === 'worker' || currentUser.store_user_read_only === true);
                           const c = getCache('suppliers_v1');
                           const stale = isStale(c, 180000);
                           if (stale) {

@@ -42,6 +42,7 @@ export default function MonthlyCountPage() {
   const [importingSheet, setImportingSheet] = useState(false);
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [selectedCountsForMerge, setSelectedCountsForMerge] = useState([]);
+  const [isViewer, setIsViewer] = useState(false);
 
   const loadData = async (userEmail, retryAttempt = 0) => {
     try {
@@ -157,6 +158,7 @@ export default function MonthlyCountPage() {
         if (!mounted) return;
         
         setUser(currentUser);
+        setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_role === 'worker' || currentUser.store_user_read_only === true);
         setAuthLoading(false);
         
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -527,14 +529,16 @@ export default function MonthlyCountPage() {
               {importingSheet ? (t('importing') || 'Importing...') : (t('import_from_sheet_url') || 'Import from Sheet URL')}
             </Button>
 
-            <Button
-              onClick={() => setShowWarehouseManagement(true)}
-              variant="outline"
-              className="border-gray-600 text-gray-700 hover:bg-gray-100"
-            >
-              <WarehouseIcon className="w-5 h-5 ml-2" />
-              {t('manage_warehouses')}
-            </Button>
+            {!isViewer && (
+              <Button
+                onClick={() => setShowWarehouseManagement(true)}
+                variant="outline"
+                className="border-gray-600 text-gray-700 hover:bg-gray-100"
+              >
+                <WarehouseIcon className="w-5 h-5 ml-2" />
+                {t('manage_warehouses')}
+              </Button>
+            )}
             
             {/* removed import_from_screenshots button per request */}
 
@@ -617,13 +621,15 @@ export default function MonthlyCountPage() {
               <div>
                 <h3 className="font-semibold text-yellow-900 mb-2">{t('no_warehouses')}</h3>
                 <p className="text-sm text-yellow-800 mb-4">{t('create_warehouse_first')}</p>
-                <Button
-                  onClick={() => setShowWarehouseManagement(true)}
-                  className="bg-gray-900 hover:bg-gray-800 text-white"
-                >
-                  <WarehouseIcon className="w-4 h-4 ml-2" />
-                  {t('create_warehouse')}
-                </Button>
+                {!isViewer && (
+                  <Button
+                    onClick={() => setShowWarehouseManagement(true)}
+                    className="bg-gray-900 hover:bg-gray-800 text-white"
+                  >
+                    <WarehouseIcon className="w-4 h-4 ml-2" />
+                    {t('create_warehouse')}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

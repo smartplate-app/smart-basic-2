@@ -20,6 +20,7 @@ export default function WarehousesPage() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const { t } = useLanguage();
+  const [isViewer, setIsViewer] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -47,6 +48,7 @@ export default function WarehousesPage() {
         setAuthLoading(true);
         const currentUser = await User.me();
         setUser(currentUser);
+        setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_role === 'worker' || currentUser.store_user_read_only === true);
         const targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
         await loadWarehouses(targetEmail);
       } catch (error) {
@@ -118,13 +120,15 @@ export default function WarehousesPage() {
             <h1 className="text-3xl font-bold text-gray-900">{t('warehouse_management')}</h1>
             <p className="text-gray-600 mt-2">{t('manage_warehouses')}</p>
           </div>
-          <Button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
-          >
-            <Plus className="w-5 h-5 ml-2" />
-            {t('add_warehouse')}
-          </Button>
+          {!isViewer && (
+            <Button
+              onClick={() => setShowForm(!showForm)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              <Plus className="w-5 h-5 ml-2" />
+              {t('add_warehouse')}
+            </Button>
+          )}
         </div>
 
         <AnimatePresence>
@@ -251,32 +255,34 @@ export default function WarehousesPage() {
                             </div>
                           )}
                         </div>
-                        <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEdit(warehouse)}
-                            className="text-gray-400 hover:text-indigo-600"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={async () => {
-                              if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
-                              try {
-                                await Warehouse.delete(warehouse.id);
-                                setWarehouses(prev => prev.filter(w => w.id !== warehouse.id));
-                              } catch (e) {
-                                alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
-                              }
-                            }}
-                            className="text-gray-400 hover:text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        {!isViewer && (
+                          <div className="flex gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEdit(warehouse)}
+                              className="text-gray-400 hover:text-indigo-600"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={async () => {
+                                if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
+                                try {
+                                  await Warehouse.delete(warehouse.id);
+                                  setWarehouses(prev => prev.filter(w => w.id !== warehouse.id));
+                                } catch (e) {
+                                  alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
+                                }
+                              }}
+                              className="text-gray-400 hover:text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
