@@ -36,7 +36,9 @@ export default function MenuEngineeringPage() {
   const loadRecipes = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Recipe.filter({ type: 'sale_item' }, "-created_date");
+      const user = await base44.auth.me();
+      const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+      const data = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date");
       setRecipes(data);
     } catch (e) {
       console.error(e);
