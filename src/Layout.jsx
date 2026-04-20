@@ -330,7 +330,7 @@ const AppLayout = ({ children, currentPageName }) => {
   const loadAuth = async (attemptNumber = 0) => {
         try {
           const fastBoot = (isPwaInstalled || isIOS || localStorage.getItem('b44_installed') === '1') && localStorage.getItem('b44_user_cache');
-          if (!fastBoot) {
+          if (!fastBoot && !user) {
             setAuthLoading(true);
           }
           setError(null);
@@ -352,6 +352,9 @@ const AppLayout = ({ children, currentPageName }) => {
                   try { localStorage.setItem('b44_user_cache', JSON.stringify(currentUser)); } catch {}
                   setError(null);
                   setRetryCount(0);
+                  
+                  // if user was successfully fetched, stop loading screen
+                  setAuthLoading(false);
 
                   // Check if user is a store user (worker/manager) for someone else's store
                   // Always check StoreUser entity to verify they still have access
@@ -528,7 +531,7 @@ const AppLayout = ({ children, currentPageName }) => {
                 return;
               }
         // Stop spinner immediately in APK/WebView so user isn't stuck
-        setAuthLoading(false);
+        if (!user) setAuthLoading(false);
         let cooldownUntil = 0;
         try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
         const inCooldown = cooldownUntil > Date.now();
