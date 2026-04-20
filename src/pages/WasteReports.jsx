@@ -40,7 +40,7 @@ export default function WasteReports() {
           <Button variant={showForm ? 'default' : 'outline'} onClick={()=>setShowForm(true)}>{isHE ? 'דוח חדש' : 'New Report'}</Button>
         </div>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{isHE ? 'דוחות בזבוז' : 'Waste Reports'}</h1>
+          <h1 className="text-2xl font-bold">{isHE ? 'דיווח זריקות' : 'Waste Reports'}</h1>
         </div>
 
         {showForm ? (
