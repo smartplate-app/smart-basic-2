@@ -40,17 +40,17 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
       // Labor & Scheduling
       add_worker: {
         title: "הוספת עובד",
-        steps: "1. לך לדף 'ניהול עלות עבודה'\n2. לחץ על 'הוסף עובד חדש'\n3. מלא את פרטי העובד (שם, טלפון, תפקיד, סוג תשלום)\n4. לחץ 'שמור'",
+        steps: "1. יש להיכנס לדף 'סידור עבודה' (Weekly Schedule)\n2. ללחוץ על 'הוסף עובד חדש'\n3. למלא את פרטי העובד (שם, טלפון, תפקיד, סוג תשלום)\n4. וללחוץ 'שמור'",
         link: "LaborCost"
       },
       create_schedule: {
-        title: "יצירת לוח משמרות",
-        steps: "1. לך לדף 'ניהול עלות עבודה'\n2. בחר את השבוע הרצוי\n3. לחץ פעמיים על תא ביום ותפקיד להוספת משמרת\n4. בחר עובד, שעות התחלה וסיום\n5. לחץ 'שמור לוח משמרות'",
+        title: "יצירת סידור עבודה ועלות עבודה (Labor Cost)",
+        steps: "1. יש להיכנס לדף 'סידור עבודה' (Weekly Schedule) בתפריט.\n2. בחר את השבוע הרצוי שתרצה לערוך.\n3. לחץ פעמיים על משבצת (של יום ותפקיד) כדי להוסיף או לערוך משמרת.\n4. בחר עובד, הזן שעת התחלה וסיום, ולחץ 'שמור'.\n5. המערכת תחשב אוטומטית את עלות העבודה (Labor Cost) על בסיס נתוני העובדים והמשמרות.\n6. בסיום, לחץ 'שלח בוואטסאפ' כדי לשתף את הסידור עם העובדים.",
         link: "LaborCost"
       },
       send_schedule: {
         title: "שליחת לוח משמרות",
-        steps: "1. צור לוח משמרות\n2. לחץ על 'שלח ב-WhatsApp' לשליחה לעובדים\n3. או לחץ על 'שלח אימייל' לשליחה במייל",
+        steps: "1. לאחר שיצרת לוח משמרות (סידור עבודה)\n2. לחץ על כפתור 'שלח בוואטסאפ' לשליחה בקבוצת העובדים\n3. או לחץ על 'שלח אימייל' לשליחה במייל",
         link: "LaborCost"
       },
       // Orders
@@ -101,8 +101,8 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
         link: "LaborCost"
       },
       create_schedule: {
-        title: "Create Schedule",
-        steps: "1. Go to 'Labor Cost Management'\n2. Select the desired week\n3. Double-click a cell (day + position) to add shift\n4. Select worker, start and end times\n5. Click 'Save Schedule'",
+        title: "Create Weekly Schedule & Labor Cost",
+        steps: "1. Go to the 'Weekly Schedule' page from the menu.\n2. Select the desired week to manage.\n3. Double-click any cell (day + position) to add or edit a shift.\n4. Select the worker, specify start and end times, and click Save.\n5. The system automatically calculates your Labor Cost based on the shifts and worker wages.\n6. Once finished, click 'Send WhatsApp' to share the schedule with your team.",
         link: "LaborCost"
       },
       send_schedule: {
@@ -303,16 +303,27 @@ export default function AppHelpChat({ currentPage, suppliers, onSupplierAdded, o
 
   const matchGuideFromText = (text) => {
     const msg = (text || '').toLowerCase();
-    const phrases = [
-      // Hebrew
+    
+    const receiveSupplyPhrases = [
       'איך מקבלים חשבונית','איך מקבלים חשבוניות','איך לקבל חשבוניות','איך לקבל חשבונית',
       'סרוק חשבונית','סריקת חשבונית','סריקת חשבוניות','קבלת חשבוניות','קבלת חשבונית',
       'קליטת אספקה','לקלוט אספקה','קבלת סחורה','איך לקבל סחורה','איך מקבלים סחורה',
       'תעודת משלוח','תעודות משלוח',
-      // English
       'invoice','invoices','scan invoice','scanning invoice','receive supply','supply receipt','delivery note','delivery notes'
     ];
-    if (phrases.some(p => msg.includes(p))) return 'receive_supply';
+    if (receiveSupplyPhrases.some(p => msg.includes(p))) return 'receive_supply';
+
+    const schedulePhrases = [
+      'לוח משמרות', 'משמרות', 'סידור עבודה', 'schedule', 'shift', 'shifts', 'weekly schedule',
+      'עלות עבודה', 'לייבור', 'labor cost', 'labor', 'scedual'
+    ];
+    if (schedulePhrases.some(p => msg.includes(p))) return 'create_schedule';
+
+    const workerPhrases = [
+      'להוסיף עובד', 'הוספת עובד', 'עובדים', 'add worker', 'add employee', 'workers', 'employees'
+    ];
+    if (workerPhrases.some(p => msg.includes(p))) return 'add_worker';
+
     return null;
   };
 
