@@ -48,6 +48,13 @@ export const AuthProvider = ({ children }) => {
       } catch (appError) {
         console.error('App state check failed:', appError);
         
+        const isOffline = !navigator.onLine || appError.message?.toLowerCase().includes('network') || appError.code === 'ERR_NETWORK';
+        if (isOffline) {
+          setIsLoadingPublicSettings(false);
+          setIsLoadingAuth(false);
+          return;
+        }
+
         // Handle app-level errors
         if (appError.status === 403 && appError.data?.extra_data?.reason) {
           const reason = appError.data.extra_data.reason;
@@ -97,6 +104,13 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
     } catch (error) {
       console.error('User auth check failed:', error);
+      
+      const isOffline = !navigator.onLine || error.message?.toLowerCase().includes('network') || error.code === 'ERR_NETWORK';
+      if (isOffline) {
+        setIsLoadingAuth(false);
+        return;
+      }
+
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       

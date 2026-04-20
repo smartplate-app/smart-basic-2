@@ -163,17 +163,17 @@ const AppLayout = ({ children, currentPageName }) => {
   useEffect(() => {
   const p = new URLSearchParams(window.location.search);
   if (p.get('preview') === '1') return;
-  if (!authLoading) return;
+  if (!authLoading || user || localStorage.getItem('b44_user_cache')) return;
   const timer = setTimeout(() => {
   try {
-    if (authLoading) {
+    if (authLoading && !user) {
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
       window.location.replace('/WelcomePublic' + (window.location.search || ''));
     }
   } catch {}
   }, 8000);
   return () => clearTimeout(timer);
-  }, [authLoading]);
+  }, [authLoading, user]);
 
   const navigationItems = [
           { title: language === 'he' ? 'מתכונים' : 'Recipes', url: createPageUrl("Recipes"), icon: ChefHat, adminOnly: false, workerHidden: false },
@@ -333,7 +333,7 @@ const AppLayout = ({ children, currentPageName }) => {
 
   const loadAuth = async (attemptNumber = 0) => {
         try {
-          const fastBoot = (isPwaInstalled || isIOS || localStorage.getItem('b44_installed') === '1') && localStorage.getItem('b44_user_cache');
+          const fastBoot = !!localStorage.getItem('b44_user_cache');
           if (!fastBoot && !user) {
             setAuthLoading(true);
           }
@@ -787,7 +787,7 @@ const AppLayout = ({ children, currentPageName }) => {
     );
   }
 
-  if (error) {
+  if (error && !user && !localStorage.getItem('b44_user_cache')) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50 p-4">
         <Card className="max-w-md w-full shadow-xl">
