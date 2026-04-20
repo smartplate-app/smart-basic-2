@@ -12,6 +12,7 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
   const { language } = useLanguage();
   const isHe = language === 'he';
   const [open, setOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
 
@@ -60,8 +61,7 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
           vat_percent: Number(formData.vat_percent)
         });
         setOpen(false);
-        if (onComplete) onComplete();
-        window.location.reload();
+        setSuccessOpen(true);
       } else {
         setOpen(false);
         if (onComplete) onComplete();
@@ -128,9 +128,10 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
     }
   ];
 
-  if (!open) return null;
+  if (!open && !successOpen) return null;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={() => {}}> {/* Prevent closing by clicking outside */}
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden outline-none">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col items-center justify-center min-h-[420px] text-center relative" dir={isHe ? 'rtl' : 'ltr'}>
@@ -210,5 +211,30 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
         </div>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={successOpen} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-[400px] text-center" dir={isHe ? 'rtl' : 'ltr'}>
+        <div className="flex flex-col items-center py-6">
+          <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
+          <DialogTitle className="text-2xl font-bold mb-2">
+            {isHe ? 'הפעולה הושלמה בהצלחה!' : 'Action deployed successfully!'}
+          </DialogTitle>
+          <DialogDescription className="text-lg mb-6">
+            {isHe ? 'הנתונים נשמרו בהצלחה.' : 'The data was saved successfully.'}
+          </DialogDescription>
+          <Button 
+            className="w-full bg-green-600 hover:bg-green-700 text-white text-lg h-12"
+            onClick={() => {
+              setSuccessOpen(false);
+              if (onComplete) onComplete();
+              window.location.reload();
+            }}
+          >
+            {isHe ? 'אישור' : 'OK'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
