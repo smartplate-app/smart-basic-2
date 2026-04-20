@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Video, Share, Sun, Moon, ChefHat, BarChart3, Calculator } from "lucide-react";
@@ -51,6 +51,7 @@ const AppLayout = ({ children, currentPageName }) => {
   const [isIOS, setIsIOS] = useState(false);
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [showHelpChat, setShowHelpChat] = useState(false);
+  const hasLoadedAuth = useRef(false);
   // Keep sidebar visible; adjust only width via CSS
   useEffect(() => {
     setShowDesktopSidebar(true);
@@ -222,7 +223,10 @@ const AppLayout = ({ children, currentPageName }) => {
       currentPageName !== 'LoginHelper' &&
       currentPageName !== 'AuthKick'
     ) {
-      loadAuth();
+      if (!hasLoadedAuth.current) {
+        hasLoadedAuth.current = true;
+        loadAuth();
+      }
     } else {
       setAuthLoading(false);
     }

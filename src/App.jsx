@@ -5,7 +5,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, Outlet } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -21,6 +21,20 @@ const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
+
+const AppLayoutRoute = () => {
+  const location = useLocation();
+  const pathParts = location.pathname.split('/');
+  let currentPageName = pathParts[pathParts.length - 1];
+  if (!currentPageName || currentPageName === '') {
+    currentPageName = 'WelcomePublic';
+  }
+  return (
+    <LayoutWrapper currentPageName={currentPageName}>
+      <Outlet />
+    </LayoutWrapper>
+  );
+};
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
@@ -93,24 +107,18 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<LayoutWrapper currentPageName="WelcomePublic"><WelcomePublic /></LayoutWrapper>} />
-      <Route path="/WelcomePublic" element={<LayoutWrapper currentPageName="WelcomePublic"><WelcomePublic /></LayoutWrapper>} />
-      <Route path="/pages/WelcomePublic" element={<LayoutWrapper currentPageName="WelcomePublic"><WelcomePublic /></LayoutWrapper>} />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
-      <Route path="/Recipes" element={<LayoutWrapper currentPageName="Recipes"><RecipesPage /></LayoutWrapper>} />
-      <Route path="/CogsReports" element={<LayoutWrapper currentPageName="CogsReports"><CogsReportsPage /></LayoutWrapper>} />
-      <Route path="/MenuEngineering" element={<LayoutWrapper currentPageName="MenuEngineering"><MenuEngineeringPage /></LayoutWrapper>} />
-      <Route path="*" element={<PageNotFound />} />
+      <Route element={<AppLayoutRoute />}>
+        <Route path="/" element={<WelcomePublic />} />
+        <Route path="/WelcomePublic" element={<WelcomePublic />} />
+        <Route path="/pages/WelcomePublic" element={<WelcomePublic />} />
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route key={path} path={`/${path}`} element={<Page />} />
+        ))}
+        <Route path="/Recipes" element={<RecipesPage />} />
+        <Route path="/CogsReports" element={<CogsReportsPage />} />
+        <Route path="/MenuEngineering" element={<MenuEngineeringPage />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Route>
     </Routes>
   );
 };
