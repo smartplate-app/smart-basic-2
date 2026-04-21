@@ -207,6 +207,7 @@ const AppLayout = ({ children, currentPageName }) => {
           { title: language === 'he' ? 'בודק קישורים' : 'Link Checker', url: createPageUrl("LinkChecker"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'דף ברוך הבא (תצוגה)' : 'Welcome (Preview)', url: createPageUrl("Welcome"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'אסטרטגיית אינסטגרם' : 'IG Strategy', url: createPageUrl("InstagramBlueprint"), icon: Share, adminOnly: true, workerHidden: true },
+          { title: language === 'he' ? 'סטורי יוונית' : 'Greek Story', url: createPageUrl("InstagramStoryGreek"), icon: Share, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'קישורי פרומו VIP' : 'VIP Promo Links', url: createPageUrl("PromoLinks"), icon: Shield, adminOnly: true, workerHidden: true }
           ];
 
