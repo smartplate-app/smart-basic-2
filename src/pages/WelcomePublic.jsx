@@ -4,8 +4,36 @@ import AccessRequestDialog from "../components/access/AccessRequestDialog";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
 import { CheckCircle2, TrendingDown, Users, Receipt, ArrowRight, BarChart3, Clock, ShieldCheck } from "lucide-react";
-import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useLanguage } from "../components/LanguageProvider";
+
+const WELCOME_LANGS = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'he', name: 'עברית', flag: '🇮🇱' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'el', name: 'Ελληνικά', flag: '🇬🇷' },
+];
+
+function WelcomeLangSwitcher() {
+  const { language, setLanguage } = useLanguage();
+  const current = WELCOME_LANGS.find(l => l.code === language) || WELCOME_LANGS[0];
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-1.5 px-3 py-1.5 border rounded-md bg-white text-sm hover:bg-gray-50">
+        <span>{current.flag}</span><span>{current.name}</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 bg-white border rounded-md shadow-lg z-50 min-w-[140px]">
+          {WELCOME_LANGS.map(l => (
+            <button key={l.code} onClick={() => { setLanguage(l.code); setOpen(false); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-50 text-left">
+              <span>{l.flag}</span><span>{l.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const welcomeTranslations = {
   en: {
@@ -267,7 +295,7 @@ export default function WelcomePublic() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-32"><LanguageSwitcher /></div>
+              <WelcomeLangSwitcher />
               <Button variant="ghost" onClick={handleSignIn} className="font-semibold hidden sm:flex">{t('wp_sign_in')}</Button>
               <Button onClick={() => setOpenRequest(true)} className="bg-[#107c41] hover:bg-[#0c5e31] text-white">{t('wp_get_started')}</Button>
             </div>
