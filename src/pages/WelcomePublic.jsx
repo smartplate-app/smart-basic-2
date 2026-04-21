@@ -13,7 +13,7 @@ const welcomeTranslations = {
     "wp_get_started": "Get Started",
     "wp_hero_title": "The Ultimate Food Cost App for Restaurants & the Hospitality Industry",
     "wp_hero_title_highlight": "Food Cost App",
-    "wp_hero_subtitle": "Take control of your restaurant's profitability. Keep your combined costs under the magic 60% mark.",
+    "wp_hero_subtitle": "Take control of your restaurant's profitability. Keep it below 60% food cost and labor cost combined together.",
     "wp_request_access": "Request Access",
     "wp_login_dashboard": "Login to Dashboard",
     "wp_no_credit_card": "No credit card required",
@@ -61,7 +61,7 @@ const welcomeTranslations = {
     "wp_get_started": "התחל עכשיו",
     "wp_hero_title": "אפליקציית ניהול עלות המזון האולטימטיבית למסעדות ותעשיית האירוח",
     "wp_hero_title_highlight": "אפליקציית ניהול עלות המזון",
-    "wp_hero_subtitle": "קח שליטה על הרווחיות של המסעדה שלך. שמור על העלויות המשולבות שלך מתחת לרף הקסם של 60%.",
+    "wp_hero_subtitle": "קח שליטה על הרווחיות של המסעדה שלך. שמור על עלות מזון ועלות עבודה משולבים יחד מתחת ל-60%.",
     "wp_request_access": "בקש גישה",
     "wp_login_dashboard": "התחבר לדשבורד",
     "wp_no_credit_card": "ללא כרטיס אשראי",
@@ -109,7 +109,7 @@ const welcomeTranslations = {
     "wp_get_started": "Loslegen",
     "wp_hero_title": "Die ultimative Food-Cost-App für Restaurants und die Gastronomie",
     "wp_hero_title_highlight": "Food-Cost-App",
-    "wp_hero_subtitle": "Übernehmen Sie die Kontrolle über die Rentabilität Ihres Restaurants. Halten Sie Ihre kombinierten Kosten unter der magischen 60%-Marke.",
+    "wp_hero_subtitle": "Übernehmen Sie die Kontrolle über die Rentabilität Ihres Restaurants. Halten Sie Lebensmittelkosten und Arbeitskosten zusammen unter 60%.",
     "wp_request_access": "Zugang anfordern",
     "wp_login_dashboard": "Zum Dashboard anmelden",
     "wp_no_credit_card": "Keine Kreditkarte erforderlich",
@@ -157,7 +157,7 @@ const welcomeTranslations = {
     "wp_get_started": "Ξεκινήστε",
     "wp_hero_title": "Η απόλυτη εφαρμογή κόστους τροφίμων για εστιατόρια και τον κλάδο της φιλοξενίας",
     "wp_hero_title_highlight": "εφαρμογή κόστους τροφίμων",
-    "wp_hero_subtitle": "Αναλάβετε τον έλεγχο της κερδοφορίας του εστιατορίου σας. Κρατήστε το συνδυασμένο κόστος σας κάτω από το μαγικό όριο του 60%.",
+    "wp_hero_subtitle": "Αναλάβετε τον έλεγχο της κερδοφορίας του εστιατορίου σας. Κρατήστε το κόστος τροφίμων και το κόστος εργασίας σε συνδυασμό κάτω από 60%.",
     "wp_request_access": "Ζητήστε Πρόσβαση",
     "wp_login_dashboard": "Είσοδος στον Πίνακα Ελέγχου",
     "wp_no_credit_card": "Δεν απαιτείται πιστωτική κάρτα",
@@ -354,8 +354,6 @@ export default function WelcomePublic() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed" dangerouslySetInnerHTML={{ __html: t('wp_comparison_text').replace('Smart Plate Basic', '<strong>Smart Plate Basic</strong>') }} />
-              
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start">
                   <CheckCircle2 className="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
