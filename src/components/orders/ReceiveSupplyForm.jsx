@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 
-export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false }) {
+export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user }) {
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
   const [availableSuppliers, setAvailableSuppliers] = useState(Array.isArray(suppliers) ? suppliers : []);
@@ -90,16 +90,18 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   useEffect(() => {
     if (formData.invoice_total !== undefined && formData.invoice_total !== null && !inclVatInput) {
       setInclVatInput(String(formData.invoice_total));
-      const vatRate = formData.is_zero_vat ? 1 : 1.17;
+      const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+      const vatRate = formData.is_zero_vat ? 1 : userVatMultiplier;
       setExclVatInput(String((formData.invoice_total / vatRate).toFixed(2)));
     }
-  }, [formData.invoice_total, formData.is_zero_vat]);
+  }, [formData.invoice_total, formData.is_zero_vat, user]);
 
   const handleExclVatChange = (raw) => {
      setExclVatInput(raw);
      const parsed = parseFloat(raw.replace(',', '.'));
      if (!isNaN(parsed)) {
-        const vatRate = formData.is_zero_vat ? 1 : 1.17;
+        const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+        const vatRate = formData.is_zero_vat ? 1 : userVatMultiplier;
         const incl = parsed * vatRate;
         const finalIncl = formData.is_refund ? -Math.abs(incl) : Math.abs(incl);
         setInclVatInput(finalIncl.toFixed(2));
@@ -111,7 +113,8 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
      setInclVatInput(raw);
      const parsed = parseFloat(raw.replace(',', '.'));
      if (!isNaN(parsed)) {
-        const vatRate = formData.is_zero_vat ? 1 : 1.17;
+        const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+        const vatRate = formData.is_zero_vat ? 1 : userVatMultiplier;
         const excl = parsed / vatRate;
         const finalExcl = formData.is_refund ? -Math.abs(excl) : Math.abs(excl);
         setExclVatInput(finalExcl.toFixed(2));
@@ -627,7 +630,8 @@ const handleAutoScan = async () => {
 
       const finalIncl = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
       setInclVatInput(String(finalIncl));
-      const vatRate = isZeroVat ? 1 : 1.17;
+      const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+      const vatRate = isZeroVat ? 1 : userVatMultiplier;
       setExclVatInput(String((finalIncl / vatRate).toFixed(2)));
 
       const noTotalFound = !isFinite(adjustedInvoiceTotal) || Math.abs(adjustedInvoiceTotal) === 0;
@@ -1404,7 +1408,8 @@ const handleAutoScan = async () => {
                                 setFormData(prev => ({ ...prev, is_zero_vat: zeroVat }));
                                 const currentIncl = parseFloat(inclVatInput);
                                 if (!isNaN(currentIncl)) {
-                                  const vatRate = zeroVat ? 1 : 1.17;
+                                  const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+                                  const vatRate = zeroVat ? 1 : userVatMultiplier;
                                   const newExcl = currentIncl / vatRate;
                                   setExclVatInput(newExcl.toFixed(2));
                                 }

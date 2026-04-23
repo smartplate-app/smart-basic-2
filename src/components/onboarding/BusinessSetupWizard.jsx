@@ -19,7 +19,7 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
   const [formData, setFormData] = useState({
     business_name: '',
     business_address: '',
-    vat_percent: 17
+    vat_percent: 18
   });
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
       setFormData({
         business_name: user.business_name || '',
         business_address: user.business_address || '',
-        vat_percent: typeof user.vat_percent === 'number' ? user.vat_percent : 17
+        vat_percent: typeof user.vat_percent === 'number' ? user.vat_percent : 18
       });
       setOpen(true);
     } else {

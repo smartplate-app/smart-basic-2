@@ -435,6 +435,7 @@ export default function SupplyReceiptsPage() {
                   receipt={editingReceipt}
                   suppliers={suppliers}
                   noOrderMode={true}
+                  user={user}
                   onSubmit={handleReceiptSubmit}
                   onCancel={() => {
                     setShowForm(false);
@@ -451,6 +452,7 @@ export default function SupplyReceiptsPage() {
                    receipt={null}
                    suppliers={suppliers}
                    noOrderMode={false}
+                   user={user}
                    onSubmit={handleReceiptSubmit}
                    onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
                  />
@@ -463,6 +465,7 @@ export default function SupplyReceiptsPage() {
                   receipt={null}
                   suppliers={suppliers}
                   noOrderMode={true}
+                  user={user}
                   onSubmit={handleReceiptSubmit}
                   onCancel={() => {
                     setShowNoOrderForm(false);

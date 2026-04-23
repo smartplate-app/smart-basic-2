@@ -371,7 +371,7 @@ export default function DashboardPage() {
       }
 
       // Calculate food cost (remove VAT from receipts unless they are zero VAT)
-      const VAT_RATE = 1.17;
+      const VAT_RATE = 1 + (currentUser?.vat_percent ?? 18) / 100;
       const filteredReceipts = (allReceipts || []).filter(r => {
         const dateStr = r.invoice_date || r.received_date;
         if (!dateStr) return false;
@@ -816,11 +816,12 @@ export default function DashboardPage() {
   };
 
   // Derived KPIs for consulting banner (computed early for hooks below)
-  const actualSalesExVAT = actualSales / 1.17;
+  const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+  const actualSalesExVAT = actualSales / userVatMultiplier;
   const effectiveLaborCost = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
   const effectiveFoodCost = (useManualFood && manualFoodCost > 0) ? manualFoodCost : calculatedFoodCost;
   const actualLaborPercent = actualSalesExVAT > 0 ? (effectiveLaborCost / actualSalesExVAT) * 100 : 0;
-  const weeklySalesExVAT = latestPredictedWeeklySales > 0 ? latestPredictedWeeklySales / 1.17 : 0;
+  const weeklySalesExVAT = latestPredictedWeeklySales > 0 ? latestPredictedWeeklySales / userVatMultiplier : 0;
   const weeklyLaborPercent = weeklySalesExVAT > 0 ? ((latestWeeklyLaborCost || 0) / weeklySalesExVAT) * 100 : 0;
   const actualFoodPercent = actualSalesExVAT > 0 ? (effectiveFoodCost / actualSalesExVAT) * 100 : 0;
   const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
@@ -835,9 +836,10 @@ export default function DashboardPage() {
 
   // OS notification when combined cost exceeds goal (before early returns)
   useEffect(() => {
-    const predictedSalesExVATLocal = (predictedSales || 0) / 1.17;
+    const localUserVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+    const predictedSalesExVATLocal = (predictedSales || 0) / localUserVatMultiplier;
     const combinedGoalPercentLocal = 60;
-    const actualSalesExVATLocal = (actualSales || 0) / 1.17;
+    const actualSalesExVATLocal = (actualSales || 0) / localUserVatMultiplier;
     const effectiveLaborCostLocal = (useManualLabor && manualLaborCost > 0) ? manualLaborCost : calculatedLaborCost;
     const actualLaborPercentLocal = actualSalesExVATLocal > 0 ? (effectiveLaborCostLocal / actualSalesExVATLocal) * 100 : 0;
     const effectiveFoodCostLocal = (useManualFood && manualFoodCost > 0) ? manualFoodCost : calculatedFoodCost;
@@ -907,7 +909,8 @@ export default function DashboardPage() {
   // Goal calculations
   const operatingDays = isKosher ? 26 : 31;
   const footfallMonthlyPrediction = (dailyCustomers || 0) * (avgPerPerson || 0) * operatingDays;
-  const predictedSalesExVAT = predictedSales / 1.17;
+  const currentVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+  const predictedSalesExVAT = predictedSales / currentVatMultiplier;
   const combinedGoalPercent = 60;
   const laborGoalAmount = predictedSalesExVAT * (laborGoalPercent / 100);
   const foodGoalAmount = predictedSalesExVAT * (foodGoalPercent / 100);
