@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "../components/LanguageProvider";
 import { Plus, Search, Edit, Trash2, Lock, BarChart3, FileText, Calculator } from "lucide-react";
 import CogsReportForm from "../components/cogs/CogsReportForm";
+import ImportPosReportModal from "../components/cogs/ImportPosReportModal";
 
 export default function CogsReportsPage() {
   const { language } = useLanguage();
@@ -18,6 +19,7 @@ export default function CogsReportsPage() {
   
   const [showForm, setShowForm] = useState(false);
   const [editingReport, setEditingReport] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const handleAuth = (e) => {
     e.preventDefault();
@@ -97,13 +99,22 @@ export default function CogsReportsPage() {
               {language === 'he' ? 'עקוב אחר עלות סחורה נמכרת ושולי רווח' : 'Track Cost of Goods Sold and profit margins'}
             </p>
           </div>
-          <Button 
-            onClick={() => { setEditingReport(null); setShowForm(true); }}
-            className="bg-[#d4a373] hover:bg-[#b88c60] text-white border-none rounded-full px-6"
-          >
-            <Plus className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
-            {language === 'he' ? 'דוח COGS חדש' : 'New COGS Report'}
-          </Button>
+          <div className="flex flex-wrap gap-2 justify-end">
+            <Button 
+              onClick={() => setShowImportModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white border-none rounded-full px-6 shadow-sm"
+            >
+              <FileText className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'קליטת דוח קופה' : 'Import POS Report'}
+            </Button>
+            <Button 
+              onClick={() => { setEditingReport(null); setShowForm(true); }}
+              className="bg-[#d4a373] hover:bg-[#b88c60] text-white border-none rounded-full px-6 shadow-sm"
+            >
+              <Plus className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'דוח COGS חדש' : 'New COGS Report'}
+            </Button>
+          </div>
         </div>
 
         <div className="relative">
@@ -212,6 +223,16 @@ export default function CogsReportsPage() {
             onCancel={() => setShowForm(false)}
           />
         )}
+        
+        <ImportPosReportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onSuccess={(prefilledReport) => {
+            setEditingReport(prefilledReport);
+            setShowForm(true);
+            setShowImportModal(false);
+          }}
+        />
       </div>
     </div>
   );
