@@ -71,12 +71,25 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
 
   const handleUpdateItem = (index, field, value) => {
     const newItems = [...formData.items];
-    newItems[index][field] = Number(value) || 0;
+    
+    if (value === '') {
+      newItems[index][field] = '';
+    } else {
+      newItems[index][field] = Number(value) || 0;
+    }
     
     if (field === 'quantity_sold') {
-      newItems[index].total_sales = newItems[index].quantity_sold * newItems[index].unit_price;
-    } else if (field === 'total_sales') {
-      // If manually overriding total sales, we might want to keep it, but usually it's qty * price
+      newItems[index].total_sales = (Number(newItems[index].quantity_sold) || 0) * (Number(newItems[index].unit_price) || 0);
+    }
+
+    const qty = Number(newItems[index].quantity_sold) || 0;
+    const cost = Number(newItems[index].unit_cost) || 0;
+    const sales = Number(newItems[index].total_sales) || 0;
+    
+    if (sales > 0) {
+      newItems[index].cost_percentage = ((qty * cost) / sales) * 100;
+    } else {
+      newItems[index].cost_percentage = 0;
     }
 
     const totals = recalculateTotals(newItems);
@@ -242,8 +255,26 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
                     />
                   </div>
 
-                  <div className="text-sm font-bold w-16 text-center text-green-600" title="Cost %">
-                    {Number(item.cost_percentage).toFixed(1)}%
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs text-gray-500 w-16 text-center">{language === 'he' ? 'עלות יח\':' : 'Unit Cost:'}</div>
+                    <Input 
+                      type="number" 
+                      step="0.01"
+                      className="w-20 h-8 font-bold text-red-600" 
+                      value={item.unit_cost === undefined ? '' : item.unit_cost}
+                      onChange={(e) => handleUpdateItem(idx, 'unit_cost', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center w-20">
+                    <div className="text-sm font-bold text-green-600" title="Cost %">
+                      {Number(item.cost_percentage).toFixed(1)}%
+                    </div>
+                    {item.recipe_id ? (
+                      <span className="text-[10px] bg-green-100 text-green-800 px-1 rounded">{language === 'he' ? 'אוטומטי' : 'Auto'}</span>
+                    ) : (
+                      <span className="text-[10px] bg-orange-100 text-orange-800 px-1 rounded">{language === 'he' ? 'ידני' : 'Manual'}</span>
+                    )}
                   </div>
                   
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRemoveItem(idx)}>
