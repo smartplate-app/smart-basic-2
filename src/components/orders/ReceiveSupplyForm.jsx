@@ -82,12 +82,108 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     };
   });
 
-  const [invoiceTotalInput, setInvoiceTotalInput] = useState(String((typeof formData.invoice_total === 'number' && !isNaN(formData.invoice_total)) ? formData.invoice_total : (formData.invoice_total || '')));
+  const [exclVatInput, setExclVatInput] = useState("");
+  const [inclVatInput, setInclVatInput] = useState("");
+
   useEffect(() => {
-    setInvoiceTotalInput(String((typeof formData.invoice_total === 'number' && !isNaN(formData.invoice_total)) ? formData.invoice_total : (formData.invoice_total || '')));
+    if (formData.invoice_total !== undefined && formData.invoice_total !== null && !inclVatInput) {
+      setInclVatInput(String(formData.invoice_total));
+      setExclVatInput(String((formData.invoice_total / 1.17).toFixed(2)));
+    }
   }, [formData.invoice_total]);
 
+  const handleExclVatChange = (raw) => {
+     setExclVatInput(raw);
+     const parsed = parseFloat(raw.replace(',', '.'));
+     if (!isNaN(parsed)) {
+        const incl = parsed * 1.17;
+        const finalIncl = formData.is_refund ? -Math.abs(incl) : Math.abs(incl);
+        setInclVatInput(finalIncl.toFixed(2));
+        updateInvoiceTotal(finalIncl);
+     }
+  };
+
+  const handleInclVatChange = (raw) => {
+     setInclVatInput(raw);
+     const parsed = parseFloat(raw.replace(',', '.'));
+     if (!isNaN(parsed)) {
+        const excl = parsed / 1.17;
+        const finalExcl = formData.is_refund ? -Math.abs(excl) : Math.abs(excl);
+        setExclVatInput(finalExcl.toFixed(2));
+        const finalIncl = formData.is_refund ? -Math.abs(parsed) : Math.abs(parsed);
+        updateInvoiceTotal(finalIncl);
+     }
+  };
+
+  const updateInvoiceTotal = (val) => {
+     setFormData(prev => {
+        const { calculatedTotal, totalsMatch } = recalculateTotals(prev.verified_items, val);
+        return { ...prev, invoice_total: val, calculated_total: calculatedTotal, totals_match: totalsMatch };
+     });
+  };
+
   const [uploading, setUploading] = useState(false);
+  const [openOrders, setOpenOrders] = useState([]);
+  const [selectedOpenOrderIds, setSelectedOpenOrderIds] = useState([]);
+
+  useEffect(() => {
+    if (formData.supplier_id && !receipt) {
+       base44.entities.Order.filter({ supplier_id: formData.supplier_id }).then(orders => {
+          const open = orders.filter(o => o.status === 'sent' || o.status === 'confirmed');
+          setOpenOrders(open);
+       });
+    } else {
+       setOpenOrders([]);
+    }
+  }, [formData.supplier_id, receipt]);
+
+  useEffect(() => {
+    if (order && !selectedOpenOrderIds.includes(order.id)) {
+      setSelectedOpenOrderIds(prev => [...prev, order.id]);
+    }
+  }, [order]);
+
+  const handleLoadItemsFromOrders = () => {
+     const selectedOrders = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
+     if (order && selectedOpenOrderIds.includes(order.id) && !selectedOrders.find(o => o.id === order.id)) {
+       selectedOrders.push(order);
+     }
+     
+     const combinedItems = [];
+     selectedOrders.forEach(o => {
+       (o.items || []).forEach(oi => {
+          const existing = combinedItems.find(i => i.item_id === oi.item_id && i.item_name === (oi.item_name || oi.name));
+          if (existing) {
+             existing.ordered_quantity += Number(oi.quantity || 0);
+             existing.received_quantity += Number(oi.quantity || 0);
+          } else {
+             combinedItems.push({
+               item_id: oi.item_id,
+               item_name: oi.item_name || oi.name,
+               ordered_quantity: Number(oi.quantity || 0),
+               received_quantity: Number(oi.quantity || 0),
+               unit: oi.unit || 'unit',
+               catalog_price: Number(oi.price || 0),
+               actual_price: Number(oi.price || 0),
+               catalog_discount: Number(oi.discount || 0),
+               actual_discount: Number(oi.discount || 0),
+               price_changed: false,
+               discount_changed: false,
+               has_issue: false,
+               issue_note: "",
+               units_per_package: 1
+             });
+          }
+       });
+     });
+     
+     if (combinedItems.length > 0) {
+        setFormData(prev => {
+          const { calculatedTotal, totalsMatch } = recalculateTotals(combinedItems, prev.invoice_total);
+          return { ...prev, verified_items: combinedItems, calculated_total: calculatedTotal, totals_match: totalsMatch };
+        });
+     }
+  };
   const [scanning, setScanning] = useState(false);
   const [matching, setMatching] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -521,7 +617,9 @@ const handleAutoScan = async () => {
       const invoiceNum = sanitizeInvoiceNumber(response.invoice_number || '');
       const chosenDate = response.invoice_date_invoice || response.invoice_date || response.invoice_date_printed || formData.received_date;
 
-      setInvoiceTotalInput(String(adjustedInvoiceTotal));
+      const finalIncl = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
+      setInclVatInput(String(finalIncl));
+      setExclVatInput(String((finalIncl / 1.17).toFixed(2)));
 
       const noTotalFound = !isFinite(adjustedInvoiceTotal) || Math.abs(adjustedInvoiceTotal) === 0;
 
@@ -792,7 +890,19 @@ const handleAutoScan = async () => {
       const confirmed = window.confirm(msg);
       if (!confirmed) return;
     }
-    onSubmit(formData);
+
+    let finalData = { ...formData };
+    if (selectedOpenOrderIds.length > 0) {
+      const selectedOrdersObj = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
+      if (order && selectedOpenOrderIds.includes(order.id) && !selectedOrdersObj.find(o => o.id === order.id)) {
+        selectedOrdersObj.push(order);
+      }
+      finalData.order_id = selectedOrdersObj[0]?.id || "";
+      finalData.linked_order_ids = selectedOpenOrderIds;
+      finalData.order_number = selectedOrdersObj.map(o => o.order_number).join(', ');
+    }
+
+    onSubmit(finalData);
   };
 
   const removeImage = (index) => {
@@ -864,7 +974,38 @@ const handleAutoScan = async () => {
 
               {(formData.supplier_id || receipt) && (
                 <>
-                  <div className="space-y-2">
+                  {!receipt && openOrders.length > 0 && (
+                    <div className="space-y-2 mt-4 bg-orange-50/50 p-4 rounded-xl border border-orange-200">
+                      <Label className="text-orange-800 font-bold text-base flex items-center gap-2">
+                        <PackageCheck className="w-5 h-5" />
+                        {language === 'he' ? 'הזמנות פתוחות לספק זה (ניתן לסמן מספר הזמנות)' : 'Open orders for this supplier (can select multiple)'}
+                      </Label>
+                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
+                        {openOrders.map(o => (
+                          <label key={o.id} className={`flex items-center gap-3 text-sm p-3 rounded-lg border cursor-pointer transition-colors ${selectedOpenOrderIds.includes(o.id) ? 'bg-orange-100 border-orange-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
+                            <input
+                              type="checkbox"
+                              checked={selectedOpenOrderIds.includes(o.id)}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setSelectedOpenOrderIds(prev => checked ? [...prev, o.id] : prev.filter(id => id !== o.id));
+                              }}
+                              className="rounded w-5 h-5 accent-orange-600"
+                            />
+                            <span className="font-bold text-gray-900">{o.order_number}</span>
+                            <span className="text-gray-500">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+                            <span className="text-green-600 font-bold ml-auto rtl:mr-auto rtl:ml-0">₪{(o.total_cost || 0).toFixed(2)}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {selectedOpenOrderIds.length > 0 && (
+                        <Button type="button" onClick={handleLoadItemsFromOrders} className="w-full mt-2 bg-orange-600 hover:bg-orange-700 text-white">
+                          {language === 'he' ? `משוך פריטים מ-${selectedOpenOrderIds.length} הזמנות נבחרות` : `Load items from ${selectedOpenOrderIds.length} selected orders`}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  <div className="space-y-2 mt-4">
                     <Label>{t('receipt_images')} *</Label>
                     <div
                       className={`border-2 border-dashed rounded-lg p-4 ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
@@ -1120,39 +1261,37 @@ const handleAutoScan = async () => {
                               required
                             />
                           </div>
-                          <div>
-                            <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</Label>
-                            <Input
-                              type="text"
-                              inputMode="decimal"
-                              value={invoiceTotalInput}
-                              onChange={(e) => {
-                                const raw = e.target.value;
-                                setInvoiceTotalInput(raw);
-                                const normalized = raw.replace(',', '.');
-                                const parsed = parseFloat(normalized);
-                                if (!isNaN(parsed) && isFinite(parsed)) {
-                                  setFormData(prev => {
-                                    const { calculatedTotal, totalsMatch } = recalculateTotals(prev.verified_items, parsed);
-                                    return { ...prev, invoice_total: parsed, calculated_total: calculatedTotal, totals_match: totalsMatch };
-                                  });
-                                }
-                              }}
-                              onBlur={() => {
-                                const normalized = String(invoiceTotalInput || '').replace(',', '.');
-                                const parsed = parseFloat(normalized);
-                                const finalVal = (!isNaN(parsed) && isFinite(parsed)) ? parsed : 0;
-                                setInvoiceTotalInput(String(finalVal));
-                                setFormData(prev => {
-                                  const { calculatedTotal, totalsMatch } = recalculateTotals(prev.verified_items, finalVal);
-                                  return { ...prev, invoice_total: finalVal, calculated_total: calculatedTotal, totals_match: totalsMatch };
-                                });
-                              }}
-                              className="mt-1 font-bold text-lg text-blue-700"
-                              placeholder="0.00"
-                              required
-                            />
-                          </div>
+                          {formData.document_type === 'delivery_note' ? (
+                            <div className="bg-gray-100 p-3 rounded-lg border">
+                              <Label className="text-sm text-gray-700 font-bold">{language === 'he' ? 'תעודת משלוח (ללא סכום)' : 'Delivery Note (No amount)'}</Label>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label className="text-xs text-gray-600">{language === 'he' ? 'סכום לפני מע״מ' : 'Total (Excl. VAT)'}</Label>
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={exclVatInput}
+                                  onChange={(e) => handleExclVatChange(e.target.value)}
+                                  className="mt-1 font-bold text-lg"
+                                  placeholder="0.00"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</Label>
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={inclVatInput}
+                                  onChange={(e) => handleInclVatChange(e.target.value)}
+                                  className="mt-1 font-bold text-lg text-blue-700"
+                                  placeholder="0.00"
+                                  required={formData.document_type !== 'delivery_note'}
+                                />
+                              </div>
+                            </div>
+                          )}
                           {formData.verified_items.length > 0 && (
                             <div>
                               <Label className="text-xs text-gray-600">{t('calculated_total')}</Label>
@@ -1170,32 +1309,65 @@ const handleAutoScan = async () => {
 
                       <div className="bg-white border rounded-lg p-3 mt-3 space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div>
-                            <Label className="text-xs text-gray-600">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
-                            <Select
-                              value={formData.document_type || 'invoice'}
-                              onValueChange={(val) => setFormData(prev => ({ ...prev, document_type: val }))}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder={language === 'he' ? 'בחר סוג מסמך' : 'Select document type'} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="delivery_note">{language === 'he' ? 'תעודת משלוח' : 'Delivery note'}</SelectItem>
-                                <SelectItem value="invoice">{language === 'he' ? 'חשבונית' : 'Invoice'}</SelectItem>
-                                <SelectItem value="summary_invoice">{language === 'he' ? 'חשבונית מרכזת' : 'Summary invoice'}</SelectItem>
-                              </SelectContent>
-                            </Select>
+                          <div className="col-span-full">
+                            <Label className="text-xs text-gray-600 mb-2 block">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
+                            <div className="flex gap-2 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, document_type: 'invoice' }));
+                                }}
+                                className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${formData.document_type === 'invoice' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                              >
+                                🧾 {language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, document_type: 'delivery_note', invoice_total: 0 }));
+                                  setInclVatInput("0");
+                                  setExclVatInput("0");
+                                }}
+                                className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                              >
+                                📦 {language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, document_type: 'summary_invoice' }));
+                                }}
+                                className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                              >
+                                📊 {language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}
+                              </button>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 flex-wrap">
-                          <label className="flex items-center gap-2 text-sm">
+                          <label className="flex items-center gap-2 text-sm font-semibold p-2 bg-white border rounded shadow-sm cursor-pointer hover:bg-gray-50">
                             <input
                               type="checkbox"
                               checked={!!formData.is_refund}
-                              onChange={(e) => setFormData(prev => ({ ...prev, is_refund: e.target.checked }))}
-                              className="rounded"
+                              onChange={(e) => {
+                                const isRefund = e.target.checked;
+                                setFormData(prev => ({ ...prev, is_refund: isRefund }));
+                                
+                                const currentIncl = parseFloat(inclVatInput);
+                                if (!isNaN(currentIncl)) {
+                                   const newIncl = isRefund ? -Math.abs(currentIncl) : Math.abs(currentIncl);
+                                   setInclVatInput(newIncl.toFixed(2));
+                                   updateInvoiceTotal(newIncl);
+                                }
+                                const currentExcl = parseFloat(exclVatInput);
+                                if (!isNaN(currentExcl)) {
+                                   const newExcl = isRefund ? -Math.abs(currentExcl) : Math.abs(currentExcl);
+                                   setExclVatInput(newExcl.toFixed(2));
+                                }
+                              }}
+                              className="rounded w-4 h-4 accent-orange-600"
                             />
-                            <span>{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</span>
+                            <span className={formData.is_refund ? 'text-orange-600' : ''}>{language === 'he' ? 'חשבונית זיכוי (-)' : 'Refund invoice (-)'}</span>
                           </label>
                           <label className="flex items-center gap-2 text-sm">
                             <input

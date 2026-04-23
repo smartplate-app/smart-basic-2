@@ -199,6 +199,7 @@ export default function SupplyReceiptsPage() {
         reviewed: !!receiptData.reviewed,
         linked_receipt_id: receiptData.linked_receipt_id || "",
         document_type: receiptData.document_type || "invoice",
+        linked_order_ids: receiptData.linked_order_ids || [],
         summarized_delivery_note_ids: Array.isArray(receiptData.summarized_delivery_note_ids) ? receiptData.summarized_delivery_note_ids : []
       };
 
@@ -206,6 +207,13 @@ export default function SupplyReceiptsPage() {
         await base44.entities.SupplyReceipt.update(editingReceipt.id, cleanData);
       } else {
         await base44.entities.SupplyReceipt.create(cleanData);
+        // Close linked open orders as delivered
+        const linkedOrderIds = [cleanData.order_id, ...(cleanData.linked_order_ids || [])].filter(Boolean);
+        if (linkedOrderIds.length > 0) {
+          await Promise.all(linkedOrderIds.map(orderId =>
+            base44.entities.Order.update(orderId, { status: 'delivered' }).catch(() => {})
+          ));
+        }
       }
 
       // Reset all form-related states
@@ -262,7 +270,6 @@ export default function SupplyReceiptsPage() {
       if (statusFilter === 'needs_review') return !!receipt.needs_review;
       if (statusFilter === 'invoices') return receipt.document_type === 'invoice' || receipt.document_type === 'summary_invoice';
       if (statusFilter === 'delivery_notes') return receipt.document_type === 'delivery_note';
-      if (['verified','has_issues','pending'].includes(statusFilter)) return receipt.status === statusFilter;
       return true;
     })();
     const matchesSupplier = supplierFilter === "all" || receipt.supplier_name === supplierFilter;
@@ -494,9 +501,6 @@ export default function SupplyReceiptsPage() {
                  <SelectItem value="refund_invoice">{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</SelectItem>
                  <SelectItem value="awaiting_credit">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</SelectItem>
                  <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</SelectItem>
-                 <SelectItem value="verified">{tt('status_verified','מאומת','Verified')}</SelectItem>
-                 <SelectItem value="has_issues">{tt('status_has_issues','יש בעיות','Has issues')}</SelectItem>
-                 <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -634,9 +638,6 @@ export default function SupplyReceiptsPage() {
                       <SelectItem value="refund_invoice">{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</SelectItem>
                       <SelectItem value="awaiting_credit">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</SelectItem>
                       <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</SelectItem>
-                      <SelectItem value="verified">{tt('status_verified','מאומת','Verified')}</SelectItem>
-                      <SelectItem value="has_issues">{tt('status_has_issues','יש בעיות','Has issues')}</SelectItem>
-                      <SelectItem value="pending">{tt('status_pending','ממתין','Pending')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button onClick={() => setFiltersOpen(false)} className="w-full">{tt('apply','החל','Apply')}</Button>
