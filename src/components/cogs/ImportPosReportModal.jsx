@@ -11,10 +11,10 @@ export default function ImportPosReportModal({ isOpen, onClose, onSuccess }) {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+  const processFile = async (file) => {
     if (!file) return;
 
     setLoading(true);
@@ -69,8 +69,26 @@ export default function ImportPosReportModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
+  const handleFileChange = (e) => {
+    processFile(e.target.files[0]);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFile(e.dataTransfer.files[0]);
+    }
   };
 
   return (
@@ -109,7 +127,16 @@ export default function ImportPosReportModal({ isOpen, onClose, onSuccess }) {
           </div>
         )}
 
-        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
+        <div 
+          className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-colors ${
+            isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => !loading && fileInputRef.current?.click()}
+          style={{ cursor: loading ? 'default' : 'pointer' }}
+        >
           <input
             type="file"
             accept=".xlsx,.xls,.csv"
@@ -119,10 +146,13 @@ export default function ImportPosReportModal({ isOpen, onClose, onSuccess }) {
             disabled={loading}
           />
           
+          <div className="text-center mb-4 text-gray-500 pointer-events-none">
+            {language === 'he' ? 'גרור ושחרר את הקובץ כאן, או לחץ להעלאה' : 'Drag and drop your file here, or click to upload'}
+          </div>
+
           <Button 
             size="lg" 
-            className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white"
-            onClick={handleButtonClick}
+            className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white pointer-events-none"
             disabled={loading}
           >
             {loading ? (
