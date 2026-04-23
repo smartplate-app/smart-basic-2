@@ -21,30 +21,20 @@ Deno.serve(async (req) => {
             json_schema: {
                 type: "object",
                 properties: {
-                    items: {
-                        type: "array",
-                        description: "List of items sold from the POS report. Ignore categories, subtotals, and grand totals.",
-                        items: {
-                            type: "object",
-                            properties: {
-                                item_name: { type: "string", description: "Name of the product/item (e.g., פריט, Item, שם פריט)" },
-                                quantity_sold: { type: "number", description: "Total quantity sold for this item (e.g., כמות, Qty, Sold)" },
-                                total_sales: { type: "number", description: "Total sales/revenue amount for this item (e.g., סה״כ, סכום, Total Sales, סה״כ מכירות)" }
-                            },
-                            required: ["item_name", "quantity_sold", "total_sales"]
-                        }
-                    }
+                    item_name: { type: "string", description: "Name of the product/item (e.g., פריט, Item, שם פריט)" },
+                    quantity_sold: { type: "number", description: "Total quantity sold for this item (e.g., כמות, Qty, Sold)" },
+                    total_sales: { type: "number", description: "Total sales/revenue amount for this item (e.g., סה״כ, סכום, Total Sales, סה״כ מכירות)" }
                 },
-                required: ["items"]
+                required: ["item_name", "quantity_sold", "total_sales"]
             }
         });
 
-        if (extractRes.status !== 'success' || !extractRes.output || !extractRes.output.items) {
+        if (extractRes.status !== 'success' || !Array.isArray(extractRes.output)) {
             console.error("Extraction failed or invalid output:", extractRes);
             return Response.json({ error: 'Failed to extract data from the file. Please ensure it is a valid POS report with Item, Quantity, and Sales columns.' }, { status: 400 });
         }
 
-        const extractedItems = extractRes.output.items;
+        const extractedItems = extractRes.output;
         
         // Fetch user's recipes to match and get cost data
         const workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
