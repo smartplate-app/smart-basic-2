@@ -182,15 +182,16 @@ export default function CogsReportsPage() {
                 </div>
 
                 <div className="bg-[#fdfbf7] rounded-xl border border-[#e5dfd3] overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-[#d4a373] text-white">
-                      <tr>
-                        <th className="p-3 text-right rtl:text-right">{language === 'he' ? 'פריט' : 'Item'}</th>
-                        <th className="p-3 text-center">{language === 'he' ? 'כמות נמכרת' : 'Qty Sold'}</th>
-                        <th className="p-3 text-center">{language === 'he' ? 'אחוז עלות' : 'Cost %'}</th>
-                        <th className="p-3 text-center">{language === 'he' ? 'סה"כ מכירות' : 'Total Sales'}</th>
-                      </tr>
-                    </thead>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[#d4a373] text-white sticky top-0 z-10 shadow-sm">
+                        <tr>
+                          <th className="p-3 text-right rtl:text-right">{language === 'he' ? 'פריט' : 'Item'}</th>
+                          <th className="p-3 text-center">{language === 'he' ? 'כמות נמכרת' : 'Qty Sold'}</th>
+                          <th className="p-3 text-center">{language === 'he' ? 'אחוז עלות' : 'Cost %'}</th>
+                          <th className="p-3 text-center">{language === 'he' ? 'סה"כ מכירות' : 'Total Sales'}</th>
+                        </tr>
+                      </thead>
                     <tbody className="divide-y divide-[#e5dfd3]">
                       {(report.items || []).map((item, idx) => (
                         <tr key={idx} className="hover:bg-white transition-colors">
@@ -202,6 +203,7 @@ export default function CogsReportsPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
                 </div>
               </CardContent>
             </Card>

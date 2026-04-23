@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trash2, Search } from "lucide-react";
+import { Trash2, Search, ArrowUpDown } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
 
@@ -24,6 +24,7 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
   const [recipes, setRecipes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   useEffect(() => {
     base44.entities.Recipe.filter({ type: 'sale_item' }).then(setRecipes);
@@ -139,6 +140,30 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
     r.name.toLowerCase().includes(searchTerm.toLowerCase())
   ).slice(0, 5);
 
+  const handleSort = (key) => {
+    let direction = 'desc';
+    if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = 'asc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedItems = [...formData.items].map((item, index) => ({ ...item, originalIndex: index }));
+  if (sortConfig.key) {
+    sortedItems.sort((a, b) => {
+      const aVal = a[sortConfig.key];
+      const bVal = b[sortConfig.key];
+      
+      if (aVal === undefined && bVal === undefined) return 0;
+      if (aVal === undefined) return 1;
+      if (bVal === undefined) return -1;
+      
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -230,63 +255,100 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
               )}
             </div>
 
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-              {formData.items.map((item, idx) => (
-                <div key={idx} className="flex flex-wrap md:flex-nowrap items-center gap-2 bg-white p-3 rounded-md border shadow-sm">
-                  <div className="flex-1 min-w-[150px] font-medium text-sm">{item.item_name}</div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="text-xs text-gray-500 w-12 text-center">{language === 'he' ? 'כמות:' : 'Qty:'}</div>
-                    <Input 
-                      type="number" 
-                      className="w-20 h-8" 
-                      value={item.quantity_sold}
-                      onChange={(e) => handleUpdateItem(idx, 'quantity_sold', e.target.value)}
-                    />
+            <div className="relative border rounded-xl overflow-hidden bg-white shadow-sm">
+              <div className="max-h-[400px] overflow-y-auto">
+                <table className="w-full text-sm text-left rtl:text-right">
+                  <thead className="bg-[#d4a373] text-white sticky top-0 z-10 shadow-sm">
+                    <tr>
+                      <th className="p-3 font-bold cursor-pointer hover:bg-white/10 transition-colors select-none" onClick={() => handleSort('item_name')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'פריט' : 'Item'} {sortConfig.key === 'item_name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                        </div>
+                      </th>
+                      <th className="p-3 font-bold text-center cursor-pointer hover:bg-white/10 transition-colors select-none" onClick={() => handleSort('quantity_sold')}>
+                        <div className="flex items-center justify-center gap-1">
+                          {language === 'he' ? 'כמות נמכרת' : 'Qty Sold'} {sortConfig.key === 'quantity_sold' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                        </div>
+                      </th>
+                      <th className="p-3 font-bold text-center cursor-pointer hover:bg-white/10 transition-colors select-none" onClick={() => handleSort('unit_cost')}>
+                        <div className="flex items-center justify-center gap-1">
+                          {language === 'he' ? 'עלות יח\'' : 'Unit Cost'} {sortConfig.key === 'unit_cost' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                        </div>
+                      </th>
+                      <th className="p-3 font-bold text-center cursor-pointer hover:bg-white/10 transition-colors select-none" onClick={() => handleSort('cost_percentage')}>
+                        <div className="flex items-center justify-center gap-1">
+                          {language === 'he' ? 'אחוז עלות' : 'Cost %'} {sortConfig.key === 'cost_percentage' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                        </div>
+                      </th>
+                      <th className="p-3 font-bold text-center cursor-pointer hover:bg-white/10 transition-colors select-none" onClick={() => handleSort('total_sales')}>
+                        <div className="flex items-center justify-center gap-1">
+                          {language === 'he' ? 'סה"כ מכירות' : 'Total Sales'} {sortConfig.key === 'total_sales' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                        </div>
+                      </th>
+                      <th className="p-3 text-center w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e5dfd3]">
+                    {sortedItems.map((item) => {
+                      const idx = item.originalIndex;
+                      return (
+                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                          <td className="p-2 font-medium text-gray-800 align-middle">
+                            {item.item_name}
+                          </td>
+                          <td className="p-2 align-middle">
+                            <Input 
+                              type="number" 
+                              className="w-20 h-8 mx-auto text-center" 
+                              value={item.quantity_sold}
+                              onChange={(e) => handleUpdateItem(idx, 'quantity_sold', e.target.value)}
+                            />
+                          </td>
+                          <td className="p-2 align-middle">
+                            <Input 
+                              type="number" 
+                              step="0.01"
+                              className="w-20 h-8 mx-auto font-bold text-red-600 text-center" 
+                              value={item.unit_cost === undefined ? '' : item.unit_cost}
+                              onChange={(e) => handleUpdateItem(idx, 'unit_cost', e.target.value)}
+                            />
+                          </td>
+                          <td className="p-2 text-center align-middle">
+                            <div className="flex flex-col items-center justify-center">
+                              <div className="font-bold text-green-600" title="Cost %">
+                                {Number(item.cost_percentage).toFixed(1)}%
+                              </div>
+                              {item.recipe_id ? (
+                                <span className="text-[10px] bg-green-100 text-green-800 px-1 rounded mt-0.5">{language === 'he' ? 'אוטומטי' : 'Auto'}</span>
+                              ) : (
+                                <span className="text-[10px] bg-orange-100 text-orange-800 px-1 rounded mt-0.5">{language === 'he' ? 'ידני' : 'Manual'}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-2 align-middle">
+                            <Input 
+                              type="number" 
+                              className="w-24 h-8 mx-auto font-bold text-[#d4a373] text-center" 
+                              value={item.total_sales}
+                              onChange={(e) => handleUpdateItem(idx, 'total_sales', e.target.value)}
+                            />
+                          </td>
+                          <td className="p-2 text-center align-middle">
+                            <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 mx-auto" onClick={() => handleRemoveItem(idx)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {formData.items.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    {language === 'he' ? 'לא נוספו פריטים לדוח' : 'No items added to report'}
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="text-xs text-gray-500 w-16 text-center">{language === 'he' ? 'מכירות:' : 'Sales:'}</div>
-                    <Input 
-                      type="number" 
-                      className="w-24 h-8 font-bold text-blue-600" 
-                      value={item.total_sales}
-                      onChange={(e) => handleUpdateItem(idx, 'total_sales', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="text-xs text-gray-500 w-16 text-center">{language === 'he' ? 'עלות יח\':' : 'Unit Cost:'}</div>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      className="w-20 h-8 font-bold text-red-600" 
-                      value={item.unit_cost === undefined ? '' : item.unit_cost}
-                      onChange={(e) => handleUpdateItem(idx, 'unit_cost', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center w-20">
-                    <div className="text-sm font-bold text-green-600" title="Cost %">
-                      {Number(item.cost_percentage).toFixed(1)}%
-                    </div>
-                    {item.recipe_id ? (
-                      <span className="text-[10px] bg-green-100 text-green-800 px-1 rounded">{language === 'he' ? 'אוטומטי' : 'Auto'}</span>
-                    ) : (
-                      <span className="text-[10px] bg-orange-100 text-orange-800 px-1 rounded">{language === 'he' ? 'ידני' : 'Manual'}</span>
-                    )}
-                  </div>
-                  
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRemoveItem(idx)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-              {formData.items.length === 0 && (
-                <div className="text-center py-8 text-gray-500 text-sm border border-dashed rounded-md bg-gray-50">
-                  {language === 'he' ? 'לא נוספו פריטים לדוח' : 'No items added to report'}
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
