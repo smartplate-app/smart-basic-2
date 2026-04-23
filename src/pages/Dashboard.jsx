@@ -370,7 +370,7 @@ export default function DashboardPage() {
         setLatestPredictedWeeklySales(0);
       }
 
-      // Calculate food cost (remove VAT from receipts since invoice_total includes VAT)
+      // Calculate food cost (remove VAT from receipts unless they are zero VAT)
       const VAT_RATE = 1.17;
       const filteredReceipts = (allReceipts || []).filter(r => {
         const dateStr = r.invoice_date || r.received_date;
@@ -382,7 +382,8 @@ export default function DashboardPage() {
       filteredReceipts.forEach(receipt => {
         const receiptTotal = receipt.invoice_total || receipt.calculated_total || 0;
         // Remove VAT from receipt total
-        totalFoodCost += receiptTotal / VAT_RATE;
+        const receiptVatRate = receipt.is_zero_vat ? 1 : VAT_RATE;
+        totalFoodCost += receiptTotal / receiptVatRate;
       });
 
       // Branch transfers: add incoming, subtract outgoing (costs assumed excl. VAT)

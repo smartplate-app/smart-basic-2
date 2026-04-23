@@ -47,6 +47,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       linked_receipt_id: receipt.linked_receipt_id || "",
       summarized_delivery_note_ids: receipt.summarized_delivery_note_ids || [],
       document_type: receipt.document_type || "invoice",
+      is_zero_vat: !!receipt.is_zero_vat,
       manual_entry_mode: true // Already has data, show edit mode
       };
     }
@@ -78,6 +79,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       awaiting_credit: false,
       summarized_delivery_note_ids: [],
       document_type: "invoice",
+      is_zero_vat: false,
       manual_entry_mode: false
     };
   });
@@ -88,15 +90,17 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   useEffect(() => {
     if (formData.invoice_total !== undefined && formData.invoice_total !== null && !inclVatInput) {
       setInclVatInput(String(formData.invoice_total));
-      setExclVatInput(String((formData.invoice_total / 1.17).toFixed(2)));
+      const vatRate = formData.is_zero_vat ? 1 : 1.17;
+      setExclVatInput(String((formData.invoice_total / vatRate).toFixed(2)));
     }
-  }, [formData.invoice_total]);
+  }, [formData.invoice_total, formData.is_zero_vat]);
 
   const handleExclVatChange = (raw) => {
      setExclVatInput(raw);
      const parsed = parseFloat(raw.replace(',', '.'));
      if (!isNaN(parsed)) {
-        const incl = parsed * 1.17;
+        const vatRate = formData.is_zero_vat ? 1 : 1.17;
+        const incl = parsed * vatRate;
         const finalIncl = formData.is_refund ? -Math.abs(incl) : Math.abs(incl);
         setInclVatInput(finalIncl.toFixed(2));
         updateInvoiceTotal(finalIncl);
@@ -107,7 +111,8 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
      setInclVatInput(raw);
      const parsed = parseFloat(raw.replace(',', '.'));
      if (!isNaN(parsed)) {
-        const excl = parsed / 1.17;
+        const vatRate = formData.is_zero_vat ? 1 : 1.17;
+        const excl = parsed / vatRate;
         const finalExcl = formData.is_refund ? -Math.abs(excl) : Math.abs(excl);
         setExclVatInput(finalExcl.toFixed(2));
         const finalIncl = formData.is_refund ? -Math.abs(parsed) : Math.abs(parsed);
@@ -545,8 +550,9 @@ const handleAutoScan = async () => {
             const inv = sanitizeInvoiceNumber(resp.invoice_number || '');
             const dateChosen = resp.invoice_date_invoice || resp.invoice_date || resp.invoice_date_printed || formData.received_date;
             const dup = supplierId ? await checkDuplicateInvoice(inv, supplierId, receipt?.id) : false;
+            const isZeroVat = vat === 0 && excl === incl && incl > 0;
             // duplicate flag shown inline per-card; confirmation happens at save time
-            return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, duplicate: dup, document_type: 'invoice' };
+            return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, is_zero_vat: isZeroVat, duplicate: dup, document_type: 'invoice' };
           })
         );
         setScannedDocs(results);
@@ -617,9 +623,12 @@ const handleAutoScan = async () => {
       const invoiceNum = sanitizeInvoiceNumber(response.invoice_number || '');
       const chosenDate = response.invoice_date_invoice || response.invoice_date || response.invoice_date_printed || formData.received_date;
 
+      const isZeroVat = vat === 0 && excl === incl && incl > 0;
+
       const finalIncl = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
       setInclVatInput(String(finalIncl));
-      setExclVatInput(String((finalIncl / 1.17).toFixed(2)));
+      const vatRate = isZeroVat ? 1 : 1.17;
+      setExclVatInput(String((finalIncl / vatRate).toFixed(2)));
 
       const noTotalFound = !isFinite(adjustedInvoiceTotal) || Math.abs(adjustedInvoiceTotal) === 0;
 
@@ -630,6 +639,7 @@ const handleAutoScan = async () => {
           invoice_date: chosenDate,
           invoice_total: adjustedInvoiceTotal,
           is_refund: responseIsRefund,
+          is_zero_vat: isZeroVat,
           calculated_total: 0, // Reset calculated total as items are not scanned yet
           totals_match: false, // Reset totals match
           manual_entry_mode: true // Automatically switch to manual entry mode to allow editing/adding
@@ -658,6 +668,7 @@ const handleAutoScan = async () => {
           invoice_date: chosenDate,
           invoice_total: invoiceTotal,
           is_refund: responseIsRefund,
+          is_zero_vat: isZeroVat,
           calculated_total: calculatedTotal,
           totals_match: totalsMatch
         }));
@@ -1213,6 +1224,21 @@ const handleAutoScan = async () => {
                                   />
                                   <span>{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</span>
                                 </label>
+                                <label className="flex items-center gap-2 text-sm mt-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!doc.is_zero_vat}
+                                    onChange={(e) => setScannedDocs(prev => {
+                                      const copy = [...prev];
+                                      copy[idx] = { ...copy[idx], is_zero_vat: e.target.checked };
+                                      return copy;
+                                    })}
+                                    className="rounded accent-green-600"
+                                  />
+                                  <span className={doc.is_zero_vat ? 'text-green-700 font-bold' : ''}>
+                                    {language === 'he' ? 'ללא מע״מ (0%)' : 'No VAT (0%)'}
+                                  </span>
+                                </label>
                                 {doc.duplicate && (
                                   <Alert variant="destructive">
                                     <AlertDescription>
@@ -1368,6 +1394,26 @@ const handleAutoScan = async () => {
                               className="rounded w-4 h-4 accent-orange-600"
                             />
                             <span className={formData.is_refund ? 'text-orange-600' : ''}>{language === 'he' ? 'חשבונית זיכוי (-)' : 'Refund invoice (-)'}</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={!!formData.is_zero_vat}
+                              onChange={(e) => {
+                                const zeroVat = e.target.checked;
+                                setFormData(prev => ({ ...prev, is_zero_vat: zeroVat }));
+                                const currentIncl = parseFloat(inclVatInput);
+                                if (!isNaN(currentIncl)) {
+                                  const vatRate = zeroVat ? 1 : 1.17;
+                                  const newExcl = currentIncl / vatRate;
+                                  setExclVatInput(newExcl.toFixed(2));
+                                }
+                              }}
+                              className="rounded accent-green-600"
+                            />
+                            <span className={formData.is_zero_vat ? 'text-green-700 font-bold' : ''}>
+                              {language === 'he' ? 'ללא מע״מ (0%)' : 'No VAT (0%)'}
+                            </span>
                           </label>
                           <label className="flex items-center gap-2 text-sm">
                             <input
@@ -1647,6 +1693,7 @@ const handleAutoScan = async () => {
                                 calculated_total: 0,
                                 totals_match: false,
                                 is_refund: !!d.is_refund,
+                                is_zero_vat: !!d.is_zero_vat,
                                 refund_received: !!(d.is_refund && formData.refund_received),
                                 awaiting_credit: !!formData.awaiting_credit,
                                 reviewed: !!(formData.needs_review && formData.reviewed),

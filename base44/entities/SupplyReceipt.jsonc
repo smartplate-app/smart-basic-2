@@ -1,0 +1,236 @@
+{
+  "name": "SupplyReceipt",
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string",
+      "description": "ID of the related order (null for manual receipts)"
+    },
+    "order_number": {
+      "type": "string",
+      "description": "Order number for easy reference"
+    },
+    "supplier_name": {
+      "type": "string",
+      "description": "Name of the supplier"
+    },
+    "supplier_id": {
+      "type": "string",
+      "description": "ID of the supplier"
+    },
+    "supplier_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Supplier email address for receipt notifications"
+    },
+    "received_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the supply was received"
+    },
+    "receipt_images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs of uploaded receipt images"
+    },
+    "verified_items": {
+      "type": "array",
+      "description": "Items that were verified upon receipt",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "ordered_quantity": {
+            "type": "number"
+          },
+          "certificate_quantity": {
+            "type": "number"
+          },
+          "received_quantity": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "catalog_price": {
+            "type": "number",
+            "description": "Original price from catalog"
+          },
+          "catalog_discount": {
+            "type": "number",
+            "description": "Original discount from catalog"
+          },
+          "actual_price": {
+            "type": "number",
+            "description": "Actual price on receipt"
+          },
+          "actual_discount": {
+            "type": "number",
+            "description": "Actual discount on receipt"
+          },
+          "price_changed": {
+            "type": "boolean",
+            "description": "Whether price differs from catalog"
+          },
+          "discount_changed": {
+            "type": "boolean",
+            "description": "Whether discount differs from catalog"
+          },
+          "has_issue": {
+            "type": "boolean"
+          },
+          "issue_note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "price_changes_summary": {
+      "type": "array",
+      "description": "Summary of all price/discount changes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_name": {
+            "type": "string"
+          },
+          "old_price": {
+            "type": "number"
+          },
+          "new_price": {
+            "type": "number"
+          },
+          "price_change_percent": {
+            "type": "number"
+          },
+          "old_discount": {
+            "type": "number"
+          },
+          "new_discount": {
+            "type": "number"
+          },
+          "change_type": {
+            "type": "string",
+            "enum": [
+              "price_increase",
+              "price_decrease",
+              "discount_increase",
+              "discount_decrease",
+              "both_changed"
+            ]
+          }
+        }
+      }
+    },
+    "has_price_changes": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether any items had price or discount changes"
+    },
+    "invoice_total": {
+      "type": "number",
+      "default": 0,
+      "description": "Total from scanned invoice"
+    },
+    "invoice_number": {
+      "type": "string",
+      "description": "Invoice number from document"
+    },
+    "invoice_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date from invoice"
+    },
+    "calculated_total": {
+      "type": "number",
+      "default": 0,
+      "description": "Calculated total from items"
+    },
+    "totals_match": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether invoice and calculated totals match"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the receipt"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "verified",
+        "has_issues",
+        "pending"
+      ],
+      "default": "pending",
+      "description": "Status of the receipt verification"
+    },
+    "is_refund": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this invoice is a refund/credit (\u05d6\u05d9\u05db\u05d5\u05d9)"
+    },
+    "is_zero_vat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this invoice has 0% VAT (e.g. fruits and vegetables)"
+    },
+    "needs_review": {
+      "type": "boolean",
+      "default": false,
+      "description": "Flag to indicate this receipt requires further review"
+    },
+    "review_note": {
+      "type": "string",
+      "description": "Optional reason/note for review"
+    },
+    "refund_received": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the requested credit/refund has been received"
+    },
+    "awaiting_credit": {
+      "type": "boolean",
+      "default": false,
+      "description": "Awaiting credit from supplier"
+    },
+    "reviewed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this issue was reviewed and resolved"
+    },
+    "linked_receipt_id": {
+      "type": "string",
+      "description": "ID of the original SupplyReceipt this credit invoice relates to"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "delivery_note",
+        "invoice",
+        "summary_invoice"
+      ],
+      "default": "invoice",
+      "description": "Document type: Delivery note, Invoice, or Summary invoice (manual choice)"
+    },
+    "summarized_delivery_note_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of delivery note SupplyReceipts summarized by this summary invoice"
+    }
+  },
+  "required": [
+    "order_number",
+    "supplier_name",
+    "received_date"
+  ]
+}
