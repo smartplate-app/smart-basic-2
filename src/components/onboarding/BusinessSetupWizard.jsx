@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { useLanguage } from '../LanguageProvider';
 import { Store, MapPin, Percent, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AccessRequestDialog from '../access/AccessRequestDialog';
 
 export default function BusinessSetupWizard({ user, onComplete, forceShow = false }) {
   const { language } = useLanguage();
@@ -15,6 +16,8 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
   const [successOpen, setSuccessOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
+  const [accessRequestOpen, setAccessRequestOpen] = useState(false);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
 
   const [formData, setFormData] = useState({
     business_name: '',
@@ -32,15 +35,22 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
 
     // Only show to head users (owners) who haven't completed this info
     const isOwner = !user.store_user_owner_email && !user.acting_as_store_email;
-    const needsSetup = !user.business_name || !user.business_address || typeof user.vat_percent === 'undefined';
 
-    if (isOwner && needsSetup) {
-      setFormData({
-        business_name: user.business_name || '',
-        business_address: user.business_address || '',
-        vat_percent: typeof user.vat_percent === 'number' ? user.vat_percent : 18
-      });
-      setOpen(true);
+    if (isOwner) {
+      if (!user.business_name) {
+        setShowAccessDenied(true);
+        setOpen(true);
+      } else if (!user.business_address || typeof user.vat_percent === 'undefined') {
+        setShowAccessDenied(false);
+        setFormData({
+          business_name: user.business_name || '',
+          business_address: user.business_address || '',
+          vat_percent: typeof user.vat_percent === 'number' ? user.vat_percent : 18
+        });
+        setOpen(true);
+      } else {
+        setOpen(false);
+      }
     } else {
       setOpen(false);
     }
@@ -135,6 +145,38 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
     <Dialog open={open} onOpenChange={() => {}}> {/* Prevent closing by clicking outside */}
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden outline-none">
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col items-center justify-center min-h-[420px] text-center relative" dir={isHe ? 'rtl' : 'ltr'}>
+          {showAccessDenied ? (
+            <div className="flex flex-col items-center w-full max-w-md">
+              <div className="mb-6 bg-white p-4 rounded-full shadow-md border border-red-100 text-red-500">
+                <Store className="w-12 h-12" />
+              </div>
+              <DialogTitle className="text-2xl font-extrabold text-gray-900 mb-4">
+                {isHe ? 'אין לך גישה' : 'Access Denied'}
+              </DialogTitle>
+              <DialogDescription className="text-gray-600 text-lg mb-8">
+                {isHe 
+                  ? 'נראה שהחשבון שלך טרם אושר. אינך יכול לפתוח מסעדה חדשה ללא הזמנה. אנא בקש גישה.' 
+                  : 'Your account has not been approved yet. You cannot start a new restaurant without an invite. Please request access.'}
+              </DialogDescription>
+              <div className="flex gap-4 w-full">
+                <Button 
+                  onClick={async () => {
+                    await base44.auth.logout('/WelcomePublic');
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {isHe ? 'התנתק' : 'Logout'}
+                </Button>
+                <Button 
+                  onClick={() => setAccessRequestOpen(true)}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isHe ? 'בקש גישה' : 'Request Access'}
+                </Button>
+              </div>
+            </div>
+          ) : (
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -159,18 +201,22 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
               </div>
             </motion.div>
           </AnimatePresence>
+          )}
 
           {/* Dots */}
-          <div className="absolute bottom-6 flex gap-2" dir="ltr">
-            {steps.map((_, i) => (
-              <div 
-                key={i} 
-                className={`h-2.5 rounded-full transition-all duration-300 ${i === step ? 'w-8 bg-blue-600' : 'w-2.5 bg-blue-200'}`}
-              />
-            ))}
-          </div>
+          {!showAccessDenied && (
+            <div className="absolute bottom-6 flex gap-2" dir="ltr">
+              {steps.map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`h-2.5 rounded-full transition-all duration-300 ${i === step ? 'w-8 bg-blue-600' : 'w-2.5 bg-blue-200'}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
+        {!showAccessDenied && (
         <div className="p-4 bg-white border-t flex justify-between items-center" dir={isHe ? 'rtl' : 'ltr'}>
           <div className="text-sm text-gray-500 font-medium">
             {isHe ? `שלב ${step + 1} מתוך ${steps.length}` : `Step ${step + 1} of ${steps.length}`}
@@ -209,6 +255,7 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
             </Button>
           </div>
         </div>
+        )}
       </DialogContent>
     </Dialog>
 
@@ -235,6 +282,8 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
         </div>
       </DialogContent>
     </Dialog>
+    
+    <AccessRequestDialog open={accessRequestOpen} onOpenChange={setAccessRequestOpen} />
     </>
   );
 }
