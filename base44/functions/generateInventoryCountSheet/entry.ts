@@ -117,6 +117,31 @@ Deno.serve(async (req) => {
       }
     });
 
+    try {
+      await sheetsRequest(sheetsToken, `/v4/spreadsheets/${fileMeta.id}:batchUpdate`, {
+        method: 'POST',
+        body: {
+          requests: [
+            {
+              setBasicFilter: {
+                filter: {
+                  range: {
+                    sheetId: 0,
+                    startRowIndex: 0,
+                    endRowIndex: rows.length + 1,
+                    startColumnIndex: 0,
+                    endColumnIndex: headers.length
+                  }
+                }
+              }
+            }
+          ]
+        }
+      });
+    } catch (filterError) {
+      console.error('Failed to set basic filter:', filterError);
+    }
+
     const shareTo = (user.drive_share_email || workingEmail).trim();
     if (shareTo) { await ensureShared(driveToken, fileMeta.id, shareTo); }
 
