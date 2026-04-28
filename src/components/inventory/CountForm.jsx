@@ -39,6 +39,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const [availableSearch, setAvailableSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [exportingSheets, setExportingSheets] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const handleExportToSheets = async () => {
     try {
@@ -446,9 +447,9 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                   <div className="flex-1 space-y-2 w-full">
                     <Label htmlFor="add_item_select" className="text-base font-bold text-gray-900 mb-2">{t('add_item')}</Label>
                     <div className="relative mt-2">
-                      <Popover open={(availableSearch !== "" && filteredAvailableItems.length > 0)} onOpenChange={(open) => {
+                      <Popover open={(isSearchFocused || availableSearch !== "") && filteredAvailableItems.length > 0} onOpenChange={(open) => {
                         if (!open) {
-                           // Keep search text but close dropdown if needed
+                           setIsSearchFocused(false);
                         }
                       }}>
                         <PopoverTrigger asChild>
@@ -459,6 +460,11 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                               value={availableSearch}
                               onChange={(e) => {
                                 setAvailableSearch(e.target.value);
+                              }}
+                              onFocus={() => setIsSearchFocused(true)}
+                              onBlur={() => {
+                                // Short delay to allow clicking on dropdown items before closing
+                                setTimeout(() => setIsSearchFocused(false), 200);
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
