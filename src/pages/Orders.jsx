@@ -31,6 +31,7 @@ export default function OrdersPage() {
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("");
   const [datePreset, setDatePreset] = useState("all");
+  const [sortBy, setSortBy] = useState("none");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [loading, setLoading] = useState(true);
@@ -1212,6 +1213,24 @@ export default function OrdersPage() {
         return matchesSearch && matchesStatus && matchesSupplier && matchesCustomer && matchesDate;
       });
 
+  const sortedOrders = useMemo(() => {
+    let sorted = [...filteredOrders];
+    if (sortBy === 'supplier_asc') {
+      sorted.sort((a, b) => (a.supplier_name || '').localeCompare(b.supplier_name || ''));
+    } else if (sortBy === 'supplier_desc') {
+      sorted.sort((a, b) => (b.supplier_name || '').localeCompare(a.supplier_name || ''));
+    } else if (sortBy === 'cost_asc') {
+      sorted.sort((a, b) => (a.total_cost || 0) - (b.total_cost || 0));
+    } else if (sortBy === 'cost_desc') {
+      sorted.sort((a, b) => (b.total_cost || 0) - (a.total_cost || 0));
+    } else if (sortBy === 'status_asc') {
+      sorted.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
+    } else if (sortBy === 'status_desc') {
+      sorted.sort((a, b) => (b.status || '').localeCompare(a.status || ''));
+    }
+    return sorted;
+  }, [filteredOrders, sortBy]);
+
 
 
 
@@ -1483,7 +1502,7 @@ export default function OrdersPage() {
               <Loader className="w-8 h-8 animate-spin text-gray-600 mx-auto mb-2" />
               <p className="text-gray-600">{t('loading')}</p>
             </div>
-          ) : filteredOrders.length === 0 ? (
+          ) : sortedOrders.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               {t('no_orders_to_display')}
             </div>
@@ -1692,27 +1711,42 @@ export default function OrdersPage() {
         </Drawer>
 
         {/* Desktop View */}
-        <div className="hidden md:block bg-white rounded-lg shadow">
-          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <table className="w-full">
-              <thead className="bg-transparent border-b border-gray-100">
+        <div className="hidden md:block bg-white rounded-lg shadow relative">
+          <div className="overflow-x-auto overflow-y-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <table className="w-full relative">
+              <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
                 <tr>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
-                    {safeT('supplier','ספק','Supplier')}
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                    <div className="flex items-center justify-start rtl:justify-end gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
+                      {safeT('supplier','ספק','Supplier')}
+                      <span className={`text-[10px] ${sortBy.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {sortBy === 'supplier_asc' ? '↑' : sortBy === 'supplier_desc' ? '↓' : '⇅'}
+                      </span>
+                    </div>
                   </th>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                     {safeT('order_number','מספר הזמנה','Order #')}
                   </th>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                     {safeT('delivery_date','תאריך אספקה','Delivery date')}
                   </th>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
-                    {safeT('total_cost','עלות כוללת','Total cost')}
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                    <div className="flex items-center justify-start rtl:justify-end gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'cost_asc' ? 'cost_desc' : 'cost_asc')}>
+                      {safeT('total_cost','עלות כוללת','Total cost')}
+                      <span className={`text-[10px] ${sortBy.startsWith('cost') ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {sortBy === 'cost_asc' ? '↑' : sortBy === 'cost_desc' ? '↓' : '⇅'}
+                      </span>
+                    </div>
                   </th>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
-                    {safeT('status','סטטוס','Status')}
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                    <div className="flex items-center justify-start rtl:justify-end gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'status_asc' ? 'status_desc' : 'status_asc')}>
+                      {safeT('status','סטטוס','Status')}
+                      <span className={`text-[10px] ${sortBy.startsWith('status') ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {sortBy === 'status_asc' ? '↑' : sortBy === 'status_desc' ? '↓' : '⇅'}
+                      </span>
+                    </div>
                   </th>
-                  <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500">
+                  <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                   </th>
                 </tr>
               </thead>
@@ -1725,7 +1759,7 @@ export default function OrdersPage() {
                         <p className="text-gray-600">{t('loading')}</p>
                       </td>
                     </tr>
-                  ) : filteredOrders.map((order) => {
+                  ) : sortedOrders.map((order) => {
                     const statusColors = {
                       sent: "bg-blue-50 text-blue-600",
                       confirmed: "bg-green-50 text-green-600",
@@ -1821,7 +1855,7 @@ export default function OrdersPage() {
             </table>
           </div>
 
-          {!loading && filteredOrders.length === 0 && (
+          {!loading && sortedOrders.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               {t('no_orders_to_display')}
             </div>
