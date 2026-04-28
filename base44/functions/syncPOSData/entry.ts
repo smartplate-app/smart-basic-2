@@ -32,7 +32,7 @@ export async function performSync(base44, connection) {
     });
     total_sales = restaurant_sales;
   } else if (connection.pos_type === 'tabit') {
-    const authRes = await fetch('https://ros-rp-beta.tabit.cloud/login', {
+    const authRes = await fetch('https://ros-rp.tabit.cloud/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: connection.tabit_email, password: connection.tabit_password })
@@ -81,7 +81,7 @@ export async function performSync(base44, connection) {
       let branchToken = token;
       
       if (orgId) {
-        const orgRes = await fetch(`https://ros-rp-beta.tabit.cloud/Organizations/${orgId}/change`, {
+        const orgRes = await fetch(`https://ros-rp.tabit.cloud/Organizations/${orgId}/change`, {
           method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!orgRes.ok) {
@@ -94,7 +94,7 @@ export async function performSync(base44, connection) {
 
       for (let day = 1; day <= today.getDate(); day++) {
         const dateStr = `${currentMonth}-${String(day).padStart(2, '0')}`;
-        const repRes = await fetch(`https://ros-rp-beta.tabit.cloud/reports/daily-totals?businessDate=${dateStr}`, {
+        const repRes = await fetch(`https://ros-rp.tabit.cloud/reports/daily-totals?businessDate=${dateStr}`, {
           headers: { 'Authorization': `Bearer ${branchToken}` }
         });
         if (repRes.ok) {
