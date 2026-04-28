@@ -490,11 +490,11 @@ const AppLayout = ({ children, currentPageName }) => {
                   }
 
                   const currentPath = location.pathname;
-                  // Respect hash-based page targets (Welcome/WelcomePublic); also never redirect in incognito
-                  if (isIncognito || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')))) {
-                    // do not override incognito/public welcome
-                  } else if (currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/') {
-                    // Do not auto-redirect to Orders from root. Let WelcomePublic handle it.
+                  const isWelcomePage = currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/' || currentPath.toLowerCase().includes('welcomepublic') || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')));
+                  
+                  if (isWelcomePage && currentUser && !isIncognito) {
+                    window.location.replace(createPageUrl('Orders'));
+                    return;
                   }
       
       setAuthLoading(false);
@@ -544,6 +544,12 @@ const AppLayout = ({ children, currentPageName }) => {
         const oauthBack = params.has('code') || params.has('state');
         if (attemptNumber < 3 || inCooldown || oauthBack || isPwaInstalled) {
           setTimeout(() => loadAuth(attemptNumber + 1), 1200);
+          return;
+        }
+        
+        const hasUsedApp = !!localStorage.getItem('b44_user_cache') || !!localStorage.getItem('b44_installed');
+        if (hasUsedApp) {
+          base44.auth.redirectToLogin(window.location.pathname + window.location.search);
           return;
         }
         window.location.replace('/WelcomePublic' + (window.location.search || ''));
