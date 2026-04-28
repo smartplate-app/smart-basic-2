@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2 } from "lucide-react";
+import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/LanguageProvider";
 
@@ -671,13 +672,13 @@ const handleCleanOrphans = async (ownerEmail) => {
             <h1 className="text-3xl font-bold text-gray-900">{t('items_title')}</h1>
             <p className="text-gray-600 mt-2">{t('items_greeting', { name: user.full_name })}</p>
           </div>
-          <div className="flex gap-3 flex-wrap items-center w-full">
+          <div className="flex gap-3 flex-wrap items-center w-full md:w-auto mt-4 md:mt-0">
             <div className="flex bg-white rounded-lg shadow-sm border">
               <Button
                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('cards')}
-                className={viewMode === 'cards' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                className={viewMode === 'cards' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white' : 'text-gray-600 hover:bg-gray-100'}
               >
                 <LayoutGrid className="w-5 h-5" />
               </Button>
@@ -685,48 +686,43 @@ const handleCleanOrphans = async (ownerEmail) => {
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                className={viewMode === 'list' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white' : 'text-gray-600 hover:bg-gray-100'}
               >
                 <List className="w-5 h-5" />
               </Button>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowImportModal(true)}
-              className="gap-2"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              {language === 'he' ? 'ייבוא מגוגל שיטס' : 'Import from Google Sheets'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleExportToSheets}
-              className="gap-2"
-            >
-              {exporting ? <Loader className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-              {safeT('export_to_sheets','ייצוא ל-Google Sheets','Export to Google Sheets')}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleGenerateCatalogPdf}
-              className="gap-2"
-              disabled={generatingPdf}
-            >
-              {generatingPdf ? <Loader className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-              {language === 'he' ? 'הפק קטלוג' : 'Generate Catalog'}
-            </Button>
 
-            {!isViewer && (
-              <Button
-                variant="outline"
-                onClick={handleFindDuplicates}
-                disabled={cleaning}
-                className="gap-2"
-              >
-                {cleaning ? <Loader className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                {language === 'he' ? 'נקה כפולים' : 'Clean Doubles'}
-              </Button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <MoreHorizontal className="w-4 h-4" />
+                  {language === 'he' ? 'פעולות נוספות' : 'More Actions'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={language === 'he' ? 'start' : 'end'} className="w-56">
+                <DropdownMenuItem onClick={() => setShowImportModal(true)}>
+                  <FileUp className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                  {language === 'he' ? 'ייבוא מגוגל שיטס' : 'Import from Google Sheets'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportToSheets}>
+                  {exporting ? <Loader className="w-4 h-4 rtl:ml-2 ltr:mr-2 animate-spin" /> : <FileDown className="w-4 h-4 rtl:ml-2 ltr:mr-2" />}
+                  {safeT('export_to_sheets','ייצוא ל-Google Sheets','Export to Google Sheets')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleGenerateCatalogPdf} disabled={generatingPdf}>
+                  {generatingPdf ? <Loader className="w-4 h-4 rtl:ml-2 ltr:mr-2 animate-spin" /> : <FileText className="w-4 h-4 rtl:ml-2 ltr:mr-2" />}
+                  {language === 'he' ? 'הפק קטלוג' : 'Generate Catalog'}
+                </DropdownMenuItem>
+                {!isViewer && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleFindDuplicates} disabled={cleaning}>
+                      {cleaning ? <Loader className="w-4 h-4 rtl:ml-2 ltr:mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />}
+                      {language === 'he' ? 'נקה כפולים' : 'Clean Doubles'}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {!isViewer && (
             <Button
@@ -734,9 +730,9 @@ const handleCleanOrphans = async (ownerEmail) => {
                 setShowForm(!showForm);
                 setEditingItem(null);
               }}
-              className="bg-gray-900 hover:bg-gray-800 text-white"
+              className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
             >
-              <Plus className="w-5 h-5 ml-2" />
+              <Plus className="w-5 h-5 rtl:ml-2 ltr:mr-2" />
               {t('add_new_item')}
             </Button>
             )}

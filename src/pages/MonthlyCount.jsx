@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, Warehouse as WarehouseIcon, RefreshCw, LayoutGrid, List, FileSpreadsheet, Camera, Upload, Merge } from "lucide-react";
+import { Plus, Search, Loader, Warehouse as WarehouseIcon, RefreshCw, LayoutGrid, List, FileSpreadsheet, Camera, Upload, Merge, MoreHorizontal, FileDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
@@ -43,6 +44,8 @@ export default function MonthlyCountPage() {
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [selectedCountsForMerge, setSelectedCountsForMerge] = useState([]);
   const [isViewer, setIsViewer] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportDatePreset, setExportDatePreset] = useState("month");
 
   const loadData = async (userEmail, retryAttempt = 0) => {
     try {
@@ -500,57 +503,13 @@ export default function MonthlyCountPage() {
             <h1 className="text-3xl font-bold text-gray-900">{t('monthly_count_title')}</h1>
             <p className="text-gray-600 mt-2">{t('monthly_count_greeting', { name: user.full_name })}</p>
           </div>
-          <div className="flex gap-3 flex-wrap">
-            {(user?.role === 'admin' || user?.admin_original_email) && (
-              <Button
-                onClick={() => setShowMergeModal(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                <Merge className="w-5 h-5 ml-2 rtl:mr-2 rtl:ml-0" />
-                {language === 'he' ? 'מזג ספירות (אדמין)' : 'Merge Counts (Admin)'}
-              </Button>
-            )}
-            <Button
-              onClick={handleGenerateCountSheet}
-              variant="outline"
-              disabled={generatingSheet}
-              className="gap-2"
-            >
-              <FileSpreadsheet className="w-5 h-5" />
-              {generatingSheet ? (t('generating') || 'Generating...') : (t('generate_count_sheet') || 'Generate Count Sheet')}
-            </Button>
-
-            <Button
-              onClick={handleImportCountFromSheet}
-              variant="outline"
-              disabled={importingSheet}
-              className="gap-2"
-            >
-              <Upload className="w-5 h-5" />
-              {importingSheet ? (t('importing') || 'Importing...') : (t('import_from_sheet_url') || 'Import from Sheet URL')}
-            </Button>
-
-            {!isViewer && (
-              <Button
-                onClick={() => setShowWarehouseManagement(true)}
-                variant="outline"
-                className="border-gray-600 text-gray-700 hover:bg-gray-100"
-              >
-                <WarehouseIcon className="w-5 h-5 ml-2" />
-                {t('manage_warehouses')}
-              </Button>
-            )}
-            
-            {/* removed import_from_screenshots button per request */}
-
-            {/* removed import_from_excel button per request */}
-
-              <div className="flex bg-white rounded-lg shadow-sm border">
+          <div className="flex gap-3 flex-wrap items-center w-full md:w-auto mt-4 md:mt-0">
+            <div className="flex bg-white rounded-lg shadow-sm border">
               <Button
                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('cards')}
-                className={viewMode === 'cards' ? 'bg-gray-900 hover:bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                className={viewMode === 'cards' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white' : 'text-gray-600 hover:bg-gray-100'}
               >
                 <LayoutGrid className="w-5 h-5" />
               </Button>
@@ -558,40 +517,73 @@ export default function MonthlyCountPage() {
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-gray-900 hover:bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                className={viewMode === 'list' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white' : 'text-gray-600 hover:bg-gray-100'}
               >
                 <List className="w-5 h-5" />
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Input type="date" value={exportStartDate} onChange={(e) => setExportStartDate(e.target.value)} />
-              <Input type="date" value={exportEndDate} onChange={(e) => setExportEndDate(e.target.value)} />
-              <Button onClick={handleExportToSheets} disabled={exporting || filteredCounts.length === 0} variant="outline" className="gap-2">
-                <FileSpreadsheet className="w-4 h-4" /> {exporting ? (t('saving') || 'Saving...') : (t('save_to_google_sheets') || 'Save to Google Sheets')}
-              </Button>
-            </div>
-            
-            <Button
-              onClick={handleNewDailyCount}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-              disabled={items.length === 0}
-            >
-              <Plus className="w-5 h-5 ml-2" />
-              {t('new_daily_count') || 'New Daily Count'}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <MoreHorizontal className="w-4 h-4" />
+                  {language === 'he' ? 'פעולות נוספות' : 'More Actions'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={language === 'he' ? 'start' : 'end'} className="w-56">
+                <DropdownMenuItem onClick={handleGenerateCountSheet} disabled={generatingSheet}>
+                  <FileSpreadsheet className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                  {generatingSheet ? (t('generating') || 'Generating...') : (t('generate_count_sheet') || 'Generate Count Sheet')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImportCountFromSheet} disabled={importingSheet}>
+                  <Upload className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                  {importingSheet ? (t('importing') || 'Importing...') : (t('import_from_sheet_url') || 'Import from Sheet URL')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowExportDialog(true)}>
+                  <FileDown className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                  {language === 'he' ? 'ייצוא היסטוריית ספירות' : 'Export Counts History'}
+                </DropdownMenuItem>
+                {!isViewer && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setShowWarehouseManagement(true)}>
+                      <WarehouseIcon className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                      {t('manage_warehouses')}
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {(user?.role === 'admin' || user?.admin_original_email) && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setShowMergeModal(true)} className="text-purple-600 focus:text-purple-600">
+                      <Merge className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                      {language === 'he' ? 'מזג ספירות (אדמין)' : 'Merge Counts (Admin)'}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            <Button
-              onClick={() => {
-                setShowCountForm(!showCountForm);
-                setEditingCount(null);
-              }}
-              className="bg-gray-900 hover:bg-gray-800 text-white"
-              disabled={warehouses.length === 0}
-            >
-              <Plus className="w-5 h-5 ml-2" />
-              {t('new_count')}
-            </Button>
+            {!isViewer && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="bg-[#d4a373] hover:bg-[#b88c60] text-white" disabled={warehouses.length === 0}>
+                    <Plus className="w-5 h-5 rtl:ml-2 ltr:mr-2" />
+                    {t('new_count') || 'New Count'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={language === 'he' ? 'start' : 'end'} className="w-56">
+                  <DropdownMenuItem onClick={() => { setShowCountForm(true); setEditingCount(null); }}>
+                    <Plus className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                    {language === 'he' ? 'ספירה רגילה (ריקה)' : 'Regular Count (Empty)'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleNewDailyCount} disabled={items.length === 0}>
+                    <LayoutGrid className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                    {language === 'he' ? 'ספירת אקספרס (ממלאת הכל)' : 'Express Count (Fills all)'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 
@@ -737,6 +729,69 @@ export default function MonthlyCountPage() {
           </>
         )}
         
+        <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{language === 'he' ? 'ייצוא היסטוריית ספירות' : 'Export Counts History'}</DialogTitle>
+              <DialogDescription>
+                {language === 'he' ? 'בחר את הטווח שממנו תרצה לייצא את נתוני הספירות שבוצעו.' : 'Select the date range to export count data from.'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{language === 'he' ? 'טווח תאריכים' : 'Date Range'}</label>
+                <Select value={exportDatePreset} onValueChange={(v) => {
+                  setExportDatePreset(v);
+                  const now = new Date();
+                  if (v === 'week') {
+                    const s = new Date(now); s.setDate(s.getDate() - s.getDay());
+                    const e = new Date(s); e.setDate(s.getDate() + 6);
+                    setExportStartDate(s.toISOString().slice(0,10)); setExportEndDate(e.toISOString().slice(0,10));
+                  } else if (v === 'month') {
+                    const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    setExportStartDate(s.toISOString().slice(0,10)); setExportEndDate(e.toISOString().slice(0,10));
+                  } else if (v === 'year') {
+                    const s = new Date(now.getFullYear(), 0, 1);
+                    const e = new Date(now.getFullYear(), 11, 31);
+                    setExportStartDate(s.toISOString().slice(0,10)); setExportEndDate(e.toISOString().slice(0,10));
+                  } else if (v === 'last_year') {
+                    const s = new Date(now.getFullYear() - 1, 0, 1);
+                    const e = new Date(now.getFullYear() - 1, 11, 31);
+                    setExportStartDate(s.toISOString().slice(0,10)); setExportEndDate(e.toISOString().slice(0,10));
+                  }
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'he' ? 'בחר טווח' : 'Select range'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="month">{language === 'he' ? 'החודש' : 'This Month'}</SelectItem>
+                    <SelectItem value="week">{language === 'he' ? 'השבוע' : 'This Week'}</SelectItem>
+                    <SelectItem value="year">{language === 'he' ? 'מתחילת השנה' : 'Year to Date'}</SelectItem>
+                    <SelectItem value="last_year">{language === 'he' ? 'שנה שעברה' : 'Last Year'}</SelectItem>
+                    <SelectItem value="custom">{language === 'he' ? 'טווח תאריכים מותאם...' : 'Custom Range...'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {exportDatePreset === 'custom' && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Input type="date" value={exportStartDate} onChange={(e) => setExportStartDate(e.target.value)} />
+                  <span>-</span>
+                  <Input type="date" value={exportEndDate} onChange={(e) => setExportEndDate(e.target.value)} />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowExportDialog(false)}>{t('cancel') || 'Cancel'}</Button>
+              <Button onClick={() => { setShowExportDialog(false); handleExportToSheets(); }} disabled={exporting || filteredCounts.length === 0} className="bg-[#d4a373] hover:bg-[#b88c60] text-white">
+                {exporting ? <Loader className="w-4 h-4 animate-spin rtl:ml-2 ltr:mr-2" /> : <FileSpreadsheet className="w-4 h-4 rtl:ml-2 ltr:mr-2" />}
+                {t('save_to_google_sheets') || 'Save to Google Sheets'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={showMergeModal} onOpenChange={(open) => { setShowMergeModal(open); if(!open) setSelectedCountsForMerge([]); }}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
