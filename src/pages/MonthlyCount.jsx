@@ -31,7 +31,7 @@ export default function MonthlyCountPage() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [networkError, setNetworkError] = useState(null);
-  const [viewMode, setViewMode] = useState("cards");
+  const [viewMode, setViewMode] = useState("list");
   const [showExcelImport, setShowExcelImport] = useState(false);
   const [showScreenshotImport, setShowScreenshotImport] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
