@@ -436,7 +436,7 @@ export default function SupplyReceiptsPage() {
                 setEditingReceipt(null); // Clear editing state
                 setSelectedOrder(null); // Clear any selected order
               }}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
             >
               <PackageCheck className="w-5 h-5 ml-2" />
               {tt('supply_without_order','קבלה ללא הזמנה','Supply without order')}

@@ -1032,7 +1032,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           type="button"
                           onClick={handleAutoScan}
                           disabled={scanning}
-                          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white dark:text-white"
+                          className="flex-1 bg-[#d4a373] hover:bg-[#b88c60] text-white dark:text-white"
                         >
                           {scanning ? (
                             <>
