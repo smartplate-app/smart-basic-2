@@ -304,9 +304,7 @@ export default function MonthlyCountPage() {
 
   const handleDeleteCount = async (count) => {
     const id = typeof count === 'string' ? count : count?.id;
-    const name = typeof count === 'string' ? '' : (count?.name || count?.warehouse_name || '');
     if (!id) return;
-    if (!confirm(`${t('delete')} ${name ? `"${name}"` : (t('count') || 'count')}?`)) return;
     try {
       await base44.entities.InventoryCount.delete(id);
       await loadData(user.email);

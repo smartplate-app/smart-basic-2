@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Download } from "lucide-react";
+import { Pencil, Trash2, FileText, MoreHorizontal, Download } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import {
   Table,
@@ -16,9 +17,13 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useLanguage } from "../LanguageProvider";
 
 export default function CountListView({ counts, onEdit, onDelete, onExport }) {
+  const [deleteDialogItem, setDeleteDialogItem] = useState(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const { t, language } = useLanguage();
 
   const statusColors = {
@@ -96,49 +101,95 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
                     {t(`status_${count.status}`)}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-3 text-center">
-                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                <TableCell className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-center gap-1 flex-nowrap">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(count)}
-                      className="border-indigo-600 text-indigo-600 hover:bg-indigo-50"
-                    >
-                      <Pencil className="w-4 h-4 mr-1" />
-                      {t('edit')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => onExport && onExport(count)}
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      className="text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                      title={t('export_pdf') || 'Export PDF'}
                     >
-                      <Download className="w-4 h-4 mr-1" />
-                      {t('export_pdf') || 'Export PDF'}
+                      <Download className="w-4 h-4" />
                     </Button>
-
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onDelete && onDelete(count)}
-                      className="border-red-600 text-red-600 hover:bg-red-50"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(count)}
+                      className="text-gray-500 hover:text-indigo-600 hover:bg-indigo-50"
+                      title={t('edit')}
                     >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      {t('delete')}
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setDeleteDialogItem(count);
+                        setDeleteConfirmationText("");
+                      }}
+                      className="text-gray-500 hover:text-red-600 hover:bg-red-50"
+                      title={t('delete')}
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                </TableRow>
+                ))}
+                </TableBody>
+                </Table>
+                </div>
 
-      {counts.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          {t('no_counts_to_display')}
-        </div>
-      )}
-    </div>
-  );
-}
+                {counts.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                {t('no_counts_to_display')}
+                </div>
+                )}
+
+                <Dialog open={!!deleteDialogItem} onOpenChange={(open) => !open && setDeleteDialogItem(null)}>
+                <DialogContent>
+                <DialogHeader>
+                <DialogTitle>{language === 'he' ? 'מחיקת ספירה' : 'Delete Count'}</DialogTitle>
+                <DialogDescription>
+                {language === 'he' 
+                ? `האם אתה בטוח שברצונך למחוק את הספירה "${deleteDialogItem?.name || deleteDialogItem?.warehouse_name}"? פעולה זו אינה ניתנת לביטול.` 
+                : `Are you sure you want to delete the count "${deleteDialogItem?.name || deleteDialogItem?.warehouse_name}"? This action cannot be undone.`}
+                <br /><br />
+                <span className="font-semibold text-gray-900">
+                {language === 'he' ? 'כדי למחוק, הקלד "מחיקה" למטה:' : 'To delete, type "delete" below:'}
+                </span>
+                </DialogDescription>
+                </DialogHeader>
+                <div className="py-2">
+                <Input 
+                value={deleteConfirmationText}
+                onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                placeholder={language === 'he' ? 'מחיקה' : 'delete'}
+                className="font-semibold text-center"
+                />
+                </div>
+                <DialogFooter>
+                <Button variant="outline" onClick={() => setDeleteDialogItem(null)}>
+                {language === 'he' ? 'ביטול' : 'Cancel'}
+                </Button>
+                <Button 
+                variant="destructive" 
+                disabled={
+                (language === 'he' ? deleteConfirmationText !== 'מחיקה' : deleteConfirmationText.toLowerCase() !== 'delete')
+                }
+                onClick={() => {
+                if (onDelete && deleteDialogItem) {
+                  onDelete(deleteDialogItem);
+                }
+                setDeleteDialogItem(null);
+                }}
+                >
+                {language === 'he' ? 'מחק' : 'Delete'}
+                </Button>
+                </DialogFooter>
+                </DialogContent>
+                </Dialog>
+                </div>
+                );
+                }
