@@ -2,11 +2,11 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
-import { Download, Trash2, Edit, MoreHorizontal, FileText, Image as ImageIcon } from "lucide-react";
+import { Download, Trash2, Edit, MoreHorizontal, FileText, Image as ImageIcon, Search } from "lucide-react";
 import PdfThumbnail from "./PdfThumbnail";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
-export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false, sortBy, onSortChange }) {
+export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false, sortBy, onSortChange, invoiceNumberFilter, onInvoiceNumberFilterChange }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
 
@@ -59,8 +59,23 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </span>
                 </div>
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
-                {safeT('invoice_number', 'מספר חשבונית', 'Invoice #')}
+              <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 align-top">
+                <div className="flex flex-col gap-1.5 mt-2">
+                  <span>{safeT('invoice_number', 'מספר חשבונית', 'Invoice #')}</span>
+                  {onInvoiceNumberFilterChange && (
+                    <div className="relative max-w-[130px]">
+                      <Search className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 ${isRTL ? 'right-2' : 'left-2'}`} />
+                      <input 
+                        type="text" 
+                        value={invoiceNumberFilter || ''}
+                        onChange={(e) => onInvoiceNumberFilterChange(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        placeholder={language === 'he' ? 'חיפוש...' : 'Search...'}
+                        className={`w-full text-xs h-7 rounded-md border border-gray-200 bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all font-normal text-gray-900 ${isRTL ? 'pl-2 pr-7' : 'pr-2 pl-7'}`}
+                      />
+                    </div>
+                  )}
+                </div>
               </th>
               <th 
                 className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none"

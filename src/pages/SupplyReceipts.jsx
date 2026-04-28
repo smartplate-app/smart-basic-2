@@ -33,7 +33,21 @@ export default function SupplyReceiptsPage() {
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [supplierFilterOpen, setSupplierFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState("none");
+  const [invoiceNumberFilter, setInvoiceNumberFilter] = useState("");
   const [refundReceivedOnly, setRefundReceivedOnly] = useState(false);
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setSupplierFilter("all");
+    setSortBy("none");
+    setInvoiceNumberFilter("");
+    setDatePreset("all");
+    setDateFrom("");
+    setDateTo("");
+    setRefundReceivedOnly(false);
+    setReviewedOnly(false);
+  };
   const [reviewedOnly, setReviewedOnly] = useState(false);
   const [datePreset, setDatePreset] = useState("all"); // all | week | month | year | custom
   const [dateFrom, setDateFrom] = useState("");
@@ -43,6 +57,7 @@ export default function SupplyReceiptsPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [networkError, setNetworkError] = useState(false);
   const { t, language } = useLanguage();
+  const isRTL = language === 'he' || language === 'ar';
   const tt = (key, he, en) => {
     const s = t(key);
     return (!s || s === key) ? (language === 'he' ? he : (en || key)) : s;
@@ -296,9 +311,10 @@ export default function SupplyReceiptsPage() {
     }
 
     if (matchesSearch && matchesStatus && matchesSupplier && matchesDate) {
-    if (statusFilter === 'refund_invoice' && refundReceivedOnly && !receipt.refund_received) return false;
-    if (statusFilter === 'needs_review' && reviewedOnly && !receipt.reviewed) return false;
-    return true;
+      if (statusFilter === 'refund_invoice' && refundReceivedOnly && !receipt.refund_received) return false;
+      if (statusFilter === 'needs_review' && reviewedOnly && !receipt.reviewed) return false;
+      if (invoiceNumberFilter && !receipt.invoice_number?.toLowerCase().includes(invoiceNumberFilter.toLowerCase())) return false;
+      return true;
     }
     return false;
   });
@@ -492,8 +508,23 @@ export default function SupplyReceiptsPage() {
            </Button>
          </div>
 
-         <div className="flex flex-col gap-3 mb-4">
-            <div className="flex flex-nowrap overflow-x-auto pb-1 gap-2 -mx-4 px-4 md:mx-0 md:px-0" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+         <div className="flex flex-col gap-3 mb-4 relative">
+            <div className={`absolute top-0 w-12 h-full bg-gradient-to-l from-gray-50 to-transparent pointer-events-none z-10 md:hidden ${isRTL ? 'left-[-16px]' : 'right-[-16px]'}`}></div>
+            <div className={`absolute top-0 w-12 h-full bg-gradient-to-r from-gray-50 to-transparent pointer-events-none z-10 md:hidden ${isRTL ? 'right-[-16px]' : 'left-[-16px]'}`}></div>
+            <div 
+              className="flex flex-nowrap overflow-x-auto pb-1 gap-2 -mx-4 px-4 md:mx-0 md:px-0 snap-x" 
+              style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+              ref={(el) => {
+                if (el && !el.dataset.scrolled) {
+                  el.dataset.scrolled = 'true';
+                  setTimeout(() => {
+                    const direction = (language === 'he' || language === 'ar') ? -50 : 50;
+                    el.scrollBy({ left: direction, behavior: 'smooth' });
+                    setTimeout(() => el.scrollBy({ left: -direction, behavior: 'smooth' }), 300);
+                  }, 600);
+                }
+              }}
+            >
               {[
                 { id: 'all', label: tt('all_statuses','כל הסטטוסים','All') },
                 { id: 'invoices', label: language === 'he' ? 'חשבוניות' : 'Invoices' },
@@ -518,6 +549,11 @@ export default function SupplyReceiptsPage() {
 
             <div className="hidden md:flex flex-col gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm mb-6">
               <div className="flex flex-wrap items-center gap-3">
+                {(searchTerm || statusFilter !== 'all' || supplierFilter !== 'all' || sortBy !== 'none' || invoiceNumberFilter || datePreset !== 'all') && (
+                  <Button variant="ghost" onClick={clearFilters} className="text-gray-500 hover:text-red-600 hover:bg-red-50 px-3 h-10 rounded-xl transition-colors">
+                    {tt('clear_filters','נקה מסננים','Clear')}
+                  </Button>
+                )}
                 <div className="relative flex-1 min-w-[200px] max-w-sm">
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
@@ -826,7 +862,10 @@ export default function SupplyReceiptsPage() {
                     </div>
                   )}
 
-                  <Button onClick={() => setFiltersOpen(false)} className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700 mt-4 rounded-xl">{tt('apply','החל מסננים','Apply')}</Button>
+                  <div className="flex gap-3 mt-4 w-full">
+                    <Button onClick={() => setFiltersOpen(false)} className="flex-1 h-12 text-base font-bold bg-green-600 hover:bg-green-700 rounded-xl">{tt('apply','החל מסננים','Apply')}</Button>
+                    <Button onClick={() => { clearFilters(); setFiltersOpen(false); }} variant="outline" className="flex-1 h-12 text-base font-bold text-red-600 border-red-200 hover:bg-red-50 rounded-xl">{tt('clear','נקה מסננים','Clear')}</Button>
+                  </div>
                 </div>
               </DrawerContent>
             </Drawer>
@@ -840,6 +879,8 @@ export default function SupplyReceiptsPage() {
                loading={loading}
                sortBy={sortBy}
                onSortChange={setSortBy}
+               invoiceNumberFilter={invoiceNumberFilter}
+               onInvoiceNumberFilterChange={setInvoiceNumberFilter}
                />
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
