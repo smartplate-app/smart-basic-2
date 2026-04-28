@@ -374,7 +374,8 @@ export default function MonthlyCountPage() {
   const handleGenerateCountSheet = async () => {
     try {
       setGeneratingSheet(true);
-      const { data } = await base44.functions.invoke('generateInventoryCountSheet', {});
+      const payload = warehouseFilter !== 'all' ? { warehouse_id: warehouseFilter } : {};
+      const { data } = await base44.functions.invoke('generateInventoryCountSheet', payload);
       if (data?.sheet?.webViewLink) {
         window.open(data.sheet.webViewLink, '_blank');
       }
@@ -543,26 +544,6 @@ export default function MonthlyCountPage() {
             {/* removed import_from_screenshots button per request */}
 
             {/* removed import_from_excel button per request */}
-            
-            <Button
-              onClick={handleGenerateCountSheet}
-              variant="outline"
-              disabled={generatingSheet}
-              className="gap-2"
-            >
-              <FileSpreadsheet className="w-5 h-5" />
-              {generatingSheet ? (t('generating') || 'Generating...') : (t('generate_count_sheet') || 'Generate Count Sheet')}
-            </Button>
-
-            <Button
-              onClick={handleImportCountFromSheet}
-              variant="outline"
-              disabled={importingSheet}
-              className="gap-2"
-            >
-              <Upload className="w-5 h-5" />
-              {importingSheet ? (t('importing') || 'Importing...') : (t('import_from_sheet_url') || 'Import from Sheet URL')}
-            </Button>
 
               <div className="flex bg-white rounded-lg shadow-sm border">
               <Button

@@ -61,13 +61,18 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { targetEmail, sheet_name } = await req.json().catch(() => ({}));
+    const { targetEmail, sheet_name, warehouse_id } = await req.json().catch(() => ({}));
     const workingEmail = targetEmail || user.acting_as_store_email || user.email;
 
     const driveToken = await base44.asServiceRole.connectors.getAccessToken('googledrive');
     const sheetsToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
 
-    const items = await base44.entities.Item.filter({ created_by: workingEmail }, 'name');
+    let items = [];
+    if (warehouse_id) {
+      items = await base44.entities.Item.filter({ created_by: workingEmail, warehouse_id }, 'name', 5000);
+    } else {
+      items = await base44.entities.Item.filter({ created_by: workingEmail }, 'name', 5000);
+    }
 
     const headers = [
       'supplier_name',
@@ -75,18 +80,20 @@ Deno.serve(async (req) => {
       'unit',
       'catalog_number',
       'price_per_unit',
+      'warehouse_name',
       'counted_qty',
       'notes'
     ];
 
     const rows = (items || [])
-      .sort((a,b) => (a.supplier_name||'').localeCompare(b.supplier_name||'') || (a.name||'').localeCompare(b.name||''))
+      .sort((a,b) => (a.warehouse_name||'').localeCompare(b.warehouse_name||'') || (a.supplier_name||'').localeCompare(b.supplier_name||'') || (a.name||'').localeCompare(b.name||''))
       .map(it => [
         it.supplier_name || '',
         it.name || '',
         it.unit || '',
         it.catalog_number || '',
         Number(it.price || 0),
+        it.warehouse_name || '',
         '',
         ''
       ]);

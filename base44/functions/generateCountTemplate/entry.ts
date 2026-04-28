@@ -21,11 +21,11 @@ Deno.serve(async (req) => {
             items = await base44.entities.Item.filter({ 
                 warehouse_id: warehouse_id,
                 created_by: user.email 
-            }, 'name');
+            }, 'name', 5000);
         } else {
             items = await base44.entities.Item.filter({ 
                 created_by: user.email 
-            }, 'name');
+            }, 'name', 5000);
         }
 
         // Get all warehouses for the warehouse column
