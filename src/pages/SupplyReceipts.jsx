@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText, Check, ChevronsUpDown } from "lucide-react";
@@ -417,7 +417,7 @@ export default function SupplyReceiptsPage() {
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               <PackageCheck className="w-5 h-5 ml-2" />
-              {tt('supply_without_order','קבלה ללא הזמנה','Supply without order')}
+              {tt('supply_with_or_without_order', 'קבלת אספקה (עם או בלי הזמנה)', 'Supply (With/Without order)')}
             </Button>
 
           </div>
