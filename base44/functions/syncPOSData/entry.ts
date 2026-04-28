@@ -32,7 +32,7 @@ export async function performSync(base44, connection) {
     });
     total_sales = restaurant_sales;
   } else if (connection.pos_type === 'tabit') {
-    const authRes = await fetch('https://chef-app.tabit.cloud/login', {
+    const authRes = await fetch('https://ros-rp-beta.tabit.cloud/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: connection.tabit_email, password: connection.tabit_password })
