@@ -38,6 +38,9 @@ export async function performSync(base44, connection) {
       body: JSON.stringify({ email: connection.tabit_email, password: connection.tabit_password })
     });
     if (!authRes.ok) {
+      if (authRes.status === 401) {
+        throw new Error('שם המשתמש או הסיסמה של Tabit שגויים. אנא ודאו שאתם משתמשים בפרטים הנכונים של Tabit Chef.');
+      }
       const errText = await authRes.text();
       throw new Error(`Tabit auth failed: ${authRes.status} ${errText.substring(0, 50)}`);
     }
