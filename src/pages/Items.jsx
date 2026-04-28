@@ -17,6 +17,7 @@ import ItemEditModal from "../components/items/ItemEditModal";
 import ItemListView from "../components/items/ItemListView";
 import SelectionBar from "../components/items/SelectionBar";
 import ImportSuppliersItemsModal from "../components/items/ImportSuppliersItemsModal";
+import CleanDuplicatesModal from "../components/items/CleanDuplicatesModal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function ItemsPage() {
@@ -49,6 +50,7 @@ export default function ItemsPage() {
   const [deleting, setDeleting] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [cleaning, setCleaning] = useState(false);
+  const [showCleanModal, setShowCleanModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [supplierFilterOpen, setSupplierFilterOpen] = useState(false);
 
@@ -501,22 +503,30 @@ const handleCleanOrphans = async (ownerEmail) => {
     }
   };
 
-  const handleFindDuplicates = async () => {
+  const handleFindDuplicates = () => {
     if (isViewer) return;
-    if (window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק פריטים כפולים? הפעולה אינה ניתנת לביטול.' : 'Are you sure you want to delete duplicate items? This cannot be undone.')) {
-      setCleaning(true);
-      try {
-        const { data } = await base44.functions.invoke('findAndRemoveDuplicates', { type: 'items' });
-        if (data?.success) {
-          alert((language === 'he' ? 'נמחקו פריטים כפולים: ' : 'Deleted duplicate items: ') + data.deletedCount);
-          await loadData(user);
-        } else {
-          alert(data?.error || 'Error');
-        }
-      } catch (e) {
-        alert(e.message || 'Error');
+    setShowCleanModal(true);
+  };
+
+  const handleConfirmDuplicatesDelete = async (idsToDelete) => {
+    if (!idsToDelete || idsToDelete.length === 0) return;
+    
+    // We can reuse the same logic as bulk delete for store or normal entity
+    try {
+      if (user?.store_user_owner_email || user?.acting_as_store_email) {
+        await Promise.all(idsToDelete.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
+      } else {
+        await Promise.all(idsToDelete.map(id => base44.entities.Item.delete(id)));
       }
-      setCleaning(false);
+      
+      // Update local state and reload
+      setSelectedIds(prev => prev.filter(id => !idsToDelete.includes(id)));
+      await loadData(user);
+      
+      alert(language === 'he' ? `נמחקו ${idsToDelete.length} פריטים בהצלחה.` : `Successfully deleted ${idsToDelete.length} items.`);
+    } catch (e) {
+      console.error("Duplicate delete failed:", e);
+      throw e; // Modal handles alert
     }
   };
 
@@ -718,8 +728,8 @@ const handleCleanOrphans = async (ownerEmail) => {
                 {!isViewer && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleFindDuplicates} disabled={cleaning}>
-                      {cleaning ? <Loader className="w-4 h-4 rtl:ml-2 ltr:mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />}
+                    <DropdownMenuItem onClick={handleFindDuplicates}>
+                      <Wand2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
                       {language === 'he' ? 'נקה כפולים' : 'Clean Doubles'}
                     </DropdownMenuItem>
                   </>
@@ -1011,6 +1021,13 @@ const handleCleanOrphans = async (ownerEmail) => {
           isOpen={showImportModal}
           onClose={() => setShowImportModal(false)}
           onSuccess={() => loadData(user)}
+        />
+
+        <CleanDuplicatesModal
+          isOpen={showCleanModal}
+          onClose={() => setShowCleanModal(false)}
+          items={items}
+          onDelete={handleConfirmDuplicatesDelete}
         />
     </div>
   );
