@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText } from "lucide-react";
+import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText, Check, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { AnimatePresence } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -29,6 +31,7 @@ export default function SupplyReceiptsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
+  const [supplierFilterOpen, setSupplierFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState("none");
   const [refundReceivedOnly, setRefundReceivedOnly] = useState(false);
   const [reviewedOnly, setReviewedOnly] = useState(false);
@@ -519,19 +522,64 @@ export default function SupplyReceiptsPage() {
                   />
                 </div>
                 
-                <Select value={supplierFilter} onValueChange={setSupplierFilter}>
-                  <SelectTrigger className="h-10 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[160px]">
-                    <SelectValue placeholder={tt('supplier','ספק','Supplier')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{tt('all_suppliers','כל הספקים','All suppliers')}</SelectItem>
-                    {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
-                      .sort((a,b) => a.localeCompare(b))
-                      .map(name => (
-                        <SelectItem key={name} value={name}>{name}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={supplierFilterOpen} onOpenChange={setSupplierFilterOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={supplierFilterOpen}
+                      className="h-10 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[160px] justify-between font-normal hover:bg-gray-100/50 text-gray-700"
+                    >
+                      {supplierFilter === "all" 
+                        ? tt('all_suppliers','כל הספקים','All suppliers')
+                        : supplierFilter}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 rtl:mr-2 rtl:ml-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[220px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder={tt('search_supplier','חפש ספק...','Search supplier...')} />
+                      <CommandList>
+                        <CommandEmpty>{tt('no_suppliers_found','לא נמצאו ספקים','No suppliers found')}</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            value="all"
+                            onSelect={() => {
+                              setSupplierFilter("all");
+                              setSupplierFilterOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 ${
+                                supplierFilter === "all" ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            {tt('all_suppliers','כל הספקים','All suppliers')}
+                          </CommandItem>
+                          {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                            .sort((a,b) => a.localeCompare(b))
+                            .map(name => (
+                              <CommandItem
+                                key={name}
+                                value={name}
+                                onSelect={() => {
+                                  setSupplierFilter(name);
+                                  setSupplierFilterOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 ${
+                                    supplierFilter === name ? "opacity-100" : "opacity-0"
+                                  }`}
+                                />
+                                {name}
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
 
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="h-10 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[140px]">
