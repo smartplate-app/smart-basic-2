@@ -201,67 +201,70 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
       </div>
 
       {/* MOBILE VIEW */}
-      <div className="md:hidden divide-y divide-gray-50">
+      <div className="md:hidden space-y-4 p-4 bg-gray-50">
         {loading ? (
           Array(4).fill(0).map((_, i) => (
-             <div key={i} className="px-4 py-3 animate-pulse">
-               <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
-               <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+             <div key={i} className="bg-white rounded-xl shadow-sm p-4 animate-pulse border border-gray-100">
+               <div className="h-5 bg-gray-200 rounded w-1/3 mb-3"></div>
+               <div className="flex justify-between">
+                 <div className="h-4 bg-gray-100 rounded w-1/4"></div>
+                 <div className="h-4 bg-gray-100 rounded w-1/4"></div>
+               </div>
              </div>
           ))
         ) : receipts.length === 0 ? (
-          <div className="px-4 py-8 text-center text-gray-500 text-sm">
+          <div className="px-4 py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-100">
             {t('no_receipts_to_display') || 'אין קבלות להצגה'}
           </div>
         ) : (
           receipts.map((r) => (
             <div
               key={r.id}
-              className="px-4 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md cursor-pointer transition-shadow"
               onClick={() => onEdit && onEdit(r)}
             >
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-3">
                 <div>
-                  <div className="font-semibold text-gray-900 text-sm">{r.supplier_name || '-'}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{r.invoice_number || '-'}</div>
+                  <div className="font-bold text-gray-900 text-base">{r.supplier_name || '-'}</div>
+                  <div className="text-sm text-gray-500 mt-1">{r.invoice_number || '-'}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-bold text-blue-700">
+                  <div className="text-lg font-bold text-blue-700">
                     {typeof r.invoice_total !== 'undefined' ? `₪${fmtCurrency(r.invoice_total)}` : '-'}
                   </div>
-                  <div className="text-xs text-gray-400 mt-0.5">{fmtDate(r.received_date)}</div>
+                  <div className="text-xs text-gray-400 mt-1">{fmtDate(r.received_date)}</div>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Badge variant="outline" className={`border-none text-[10px] px-1.5 py-0 ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                  <Badge variant="outline" className={`border-none text-xs font-semibold px-2 py-0.5 ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
                     {t(`status_${r.status}`) || r.status || '-'}
                   </Badge>
                   {r.is_refund && (
-                    <Badge className="bg-purple-50 text-purple-700 border-none font-normal text-[10px] px-1.5 py-0">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
+                    <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-xs px-2 py-0.5">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
                   )}
                   {r.needs_review && (
-                    <Badge className="bg-amber-50 text-amber-700 border-none font-normal text-[10px] px-1.5 py-0">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                    <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-xs px-2 py-0.5">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
                   )}
                 </div>
                 
-                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
                     <a
                       href={r.receipt_images[0]}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-7 h-7 rounded overflow-hidden border border-gray-200 bg-white flex items-center justify-center relative"
+                      className="w-8 h-8 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center relative hover:border-gray-300 transition-colors"
                     >
                       {isPdf(r.receipt_images[0]) ? (
-                        <FileText className="w-3 h-3 text-gray-400" />
+                        <FileText className="w-4 h-4 text-gray-400" />
                       ) : (
-                        <ImageIcon className="w-3 h-3 text-gray-400" />
+                        <ImageIcon className="w-4 h-4 text-gray-400" />
                       )}
                       {r.receipt_images.length > 1 && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <span className="text-[8px] text-white font-bold">+{r.receipt_images.length-1}</span>
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                          <span className="text-[9px] text-white font-medium">+{r.receipt_images.length-1}</span>
                         </div>
                       )}
                     </a>
@@ -269,15 +272,44 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg -mr-2">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full bg-gray-50 hover:bg-gray-100 border border-transparent">
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-40">
+                    <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-48">
                       <DropdownMenuItem onClick={() => onEdit && onEdit(r)}>
                         <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
                         {safeT('edit', 'עריכה', 'Edit')}
                       </DropdownMenuItem>
+                      {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
+                        <DropdownMenuItem onClick={() => window.open(r.receipt_images[0], '_blank')}>
+                          <Download className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+                          {safeT('download', 'הורד', 'Download')}
+                        </DropdownMenuItem>
+                      )}
+                      {(r.is_refund || r.needs_review) && <DropdownMenuSeparator />}
+                      {r.is_refund && (
+                        <DropdownMenuItem onClick={(e) => {
+                          e.preventDefault();
+                          if (onQuickUpdate) onQuickUpdate(r.id, { refund_received: !r.refund_received });
+                        }}>
+                          <div className="flex items-center justify-between w-full">
+                            <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
+                            <input type="checkbox" checked={!!r.refund_received} readOnly className="pointer-events-none accent-purple-600 rounded" />
+                          </div>
+                        </DropdownMenuItem>
+                      )}
+                      {r.needs_review && (
+                        <DropdownMenuItem onClick={(e) => {
+                          e.preventDefault();
+                          if (onQuickUpdate) onQuickUpdate(r.id, { reviewed: !r.reviewed });
+                        }}>
+                          <div className="flex items-center justify-between w-full">
+                            <span>{language === 'he' ? 'נבדק' : 'Reviewed'}</span>
+                            <input type="checkbox" checked={!!r.reviewed} readOnly className="pointer-events-none accent-amber-600 rounded" />
+                          </div>
+                        </DropdownMenuItem>
+                      )}
                       {onDelete && (
                         <>
                           <DropdownMenuSeparator />

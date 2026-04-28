@@ -417,7 +417,7 @@ export default function SupplyReceiptsPage() {
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               <PackageCheck className="w-5 h-5 ml-2" />
-              {tt('supply_with_or_without_order', 'קבלת אספקה (עם או בלי הזמנה)', 'Supply (With/Without order)')}
+              {tt('supply_without_order','קבלה ללא הזמנה','Supply without order')}
             </Button>
 
           </div>
@@ -482,14 +482,14 @@ export default function SupplyReceiptsPage() {
             {/* Mobile Filters Drawer trigger */}
          <div className="md:hidden mb-4">
            <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
-             {tt('filters','מסננים','Filters')}
+             {tt('filters','מסננים ומיון','Filters & Sort')}
            </Button>
          </div>
 
          <div className="flex flex-col gap-3 mb-4">
-            <div className="flex flex-nowrap overflow-x-auto pb-1 gap-2" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+            <div className="flex flex-nowrap overflow-x-auto pb-1 gap-2 -mx-4 px-4 md:mx-0 md:px-0" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
               {[
-                { id: 'all', label: tt('all_statuses','הכל','All') },
+                { id: 'all', label: tt('all_statuses','כל הסטטוסים','All') },
                 { id: 'invoices', label: language === 'he' ? 'חשבוניות' : 'Invoices' },
                 { id: 'delivery_notes', label: language === 'he' ? 'תעודות משלוח' : 'Delivery Notes' },
                 { id: 'refund_invoice', label: language === 'he' ? 'זיכויים' : 'Refunds' },
@@ -499,9 +499,9 @@ export default function SupplyReceiptsPage() {
                 <button
                   key={status.id}
                   onClick={() => setStatusFilter(status.id)}
-                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                  className={`flex-shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                     statusFilter === status.id 
-                      ? 'bg-gray-900 text-white border-gray-900 shadow-sm' 
+                      ? 'bg-green-600 text-white border-green-600 shadow-sm' 
                       : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                   }`}
                 >
@@ -690,20 +690,35 @@ export default function SupplyReceiptsPage() {
             <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DrawerContent>
                 <DrawerHeader>
-                  <DrawerTitle>{tt('filters','מסננים','Filters')}</DrawerTitle>
+                  <DrawerTitle>{tt('filters','מסננים ומיון','Filters & Sort')}</DrawerTitle>
                 </DrawerHeader>
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4 pb-8 max-h-[80vh] overflow-y-auto">
                   <div className="relative">
-                    <Search className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 w-3 h-3" />
-                                          <Input
-                      placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      placeholder={tt('search_receipts','חיפוש קבלות (לפי ספק או מס׳ קבלה)','Search receipts')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="h-8 pr-7 rounded-md text-xs"
+                      className="h-12 pr-10 rounded-xl bg-gray-50/50 border-gray-200 focus-visible:bg-white transition-colors"
                     />
                   </div>
+                  
+                  <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                    <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200">
+                      <SelectValue placeholder={tt('supplier','ספק','Supplier')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{tt('all_suppliers','כל הספקים','All suppliers')}</SelectItem>
+                      {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                        .sort((a,b) => a.localeCompare(b))
+                        .map(name => (
+                          <SelectItem key={name} value={name}>{name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200">
                       <SelectValue placeholder={tt('receipt_status','סטטוס קבלה','Receipt status')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -715,7 +730,108 @@ export default function SupplyReceiptsPage() {
                       <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button onClick={() => setFiltersOpen(false)} className="w-full">{tt('apply','החל','Apply')}</Button>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200">
+                      <SelectValue placeholder={tt('sort','מיון לפי','Sort')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{tt('no_sort','ללא מיון','No sort')}</SelectItem>
+                      <SelectItem value="amount_asc">{tt('amount_low_to_high','סכום: נמוך ← גבוה','Amount: Low to High')}</SelectItem>
+                      <SelectItem value="amount_desc">{tt('amount_high_to_low','סכום: גבוה ← נמוך','Amount: High to Low')}</SelectItem>
+                      <SelectItem value="supplier_asc">{tt('supplier_az','ספק: א ← ת','Supplier: A-Z')}</SelectItem>
+                      <SelectItem value="supplier_desc">{tt('supplier_za','ספק: ת ← א','Supplier: Z-A')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <div className="space-y-2">
+                    <Select
+                      value={datePreset}
+                      onValueChange={(v) => {
+                        setDatePreset(v);
+                        const now = new Date();
+                        if (v === 'week') {
+                          const s = new Date(now);
+                          const dow = s.getDay();
+                          s.setDate(s.getDate() - dow);
+                          s.setHours(0,0,0,0);
+                          const e = new Date(s);
+                          e.setDate(s.getDate() + 6);
+                          e.setHours(23,59,59,999);
+                          setDateFrom(s.toISOString().slice(0,10));
+                          setDateTo(e.toISOString().slice(0,10));
+                        } else if (v === 'month') {
+                          const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                          const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                          setDateFrom(s.toISOString().slice(0,10));
+                          setDateTo(e.toISOString().slice(0,10));
+                        } else if (v === 'year') {
+                          const s = new Date(now.getFullYear(), 0, 1);
+                          const e = new Date(now.getFullYear(), 11, 31);
+                          setDateFrom(s.toISOString().slice(0,10));
+                          setDateTo(e.toISOString().slice(0,10));
+                        } else if (v === 'last_year') {
+                          const s = new Date(now.getFullYear() - 1, 0, 1);
+                          const e = new Date(now.getFullYear() - 1, 11, 31);
+                          setDateFrom(s.toISOString().slice(0,10));
+                          setDateTo(e.toISOString().slice(0,10));
+                        } else if (v === 'all') {
+                          setDateFrom("");
+                          setDateTo("");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200">
+                        <SelectValue placeholder={tt('timeframe','תאריכים','Dates')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{tt('all_time','כל הזמן','All time')}</SelectItem>
+                        <SelectItem value="week">{tt('current_week','השבוע','This week')}</SelectItem>
+                        <SelectItem value="month">{tt('current_month','החודש','This month')}</SelectItem>
+                        <SelectItem value="year">{tt('current_year','מתחילת השנה','Year to date')}</SelectItem>
+                        <SelectItem value="last_year">{tt('last_year','שנה שעברה','Last year')}</SelectItem>
+                        <SelectItem value="custom">{tt('custom_range','טווח מותאם אישית...','Custom range')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {datePreset === 'custom' && (
+                      <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-200 pt-2">
+                        <Input
+                          type="date"
+                          value={dateFrom}
+                          onChange={(e) => setDateFrom(e.target.value)}
+                          className="h-12 rounded-xl flex-1 bg-gray-50/50 border-gray-200"
+                        />
+                        <span className="text-gray-400">-</span>
+                        <Input
+                          type="date"
+                          value={dateTo}
+                          onChange={(e) => setDateTo(e.target.value)}
+                          className="h-12 rounded-xl flex-1 bg-gray-50/50 border-gray-200"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Extra filters for refunds/review */}
+                  {(statusFilter === 'refund_invoice' || statusFilter === 'needs_review') && (
+                    <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
+                      {statusFilter === 'refund_invoice' && (
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
+                          <input type="checkbox" className="rounded accent-green-600 w-5 h-5" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
+                          <span>{tt('credit_received','הצג רק זיכויים שהתקבלו','Show only received credits')}</span>
+                        </label>
+                      )}
+                      {statusFilter === 'needs_review' && (
+                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
+                          <input type="checkbox" className="rounded accent-green-600 w-5 h-5" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
+                          <span>{tt('reviewed','הצג רק חשבוניות שנסקרו','Show only reviewed')}</span>
+                        </label>
+                      )}
+                    </div>
+                  )}
+
+                  <Button onClick={() => setFiltersOpen(false)} className="w-full h-12 text-base font-bold bg-green-600 hover:bg-green-700 mt-4 rounded-xl">{tt('apply','החל מסננים','Apply')}</Button>
                 </div>
               </DrawerContent>
             </Drawer>

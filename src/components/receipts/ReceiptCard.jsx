@@ -45,29 +45,24 @@ export default function ReceiptCard({ receipt, onEdit }) {
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
                 <h3 className="font-bold text-lg text-gray-900">
-                  {t('receipt')} #{receipt.order_number}
+                  {receipt.supplier_name}
                 </h3>
-                <Badge className={`${status.color} border flex items-center gap-1`}>
+                <Badge className={`${status.color} border-none font-semibold flex items-center gap-1`}>
                   <StatusIcon className="w-3 h-3" />
                   {status.label}
                 </Badge>
                 {receipt.is_refund && (
-                  <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
+                  <Badge className="bg-purple-50 text-purple-700 border-none">{t('refund') || 'Refund'}</Badge>
                 )}
                 {receipt.needs_review && (
-                  <Badge className="bg-amber-100 text-amber-800">{t('needs_review') || 'Review'}</Badge>
+                  <Badge className="bg-amber-50 text-amber-700 border-none">{t('needs_review') || 'Review'}</Badge>
                 )}
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Building2 className="w-4 h-4" />
-                  <span>{t('supplier')}: {receipt.supplier_name}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>{t('received_date')}: {new Date(receipt.received_date).toLocaleDateString('he-IL')}</span>
+                  <span>{new Date(receipt.received_date).toLocaleDateString('he-IL')}</span>
                 </div>
               </div>
             </div>
@@ -76,7 +71,7 @@ export default function ReceiptCard({ receipt, onEdit }) {
                 variant="ghost"
                 size="icon"
                 onClick={() => onEdit(receipt)}
-                className="text-gray-500 hover:text-green-600"
+                className="text-gray-400 hover:text-gray-900 rounded-full bg-gray-50 hover:bg-gray-100"
               >
                 <Edit className="w-4 h-4" />
               </Button>
