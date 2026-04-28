@@ -30,6 +30,7 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("");
+  const [datePreset, setDatePreset] = useState("all");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [loading, setLoading] = useState(true);
@@ -1400,10 +1401,75 @@ export default function OrdersPage() {
                 onChange={(e) => setCustomerFilter(e.target.value)}
                 className="h-11 md:h-10 rounded-lg"
               />
-              <div className="flex items-center gap-2">
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 md:h-10 rounded-lg" />
-                <span className="text-gray-500">–</span>
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 md:h-10 rounded-lg" />
+              <div className="flex items-center bg-gray-50/50 border border-gray-200 rounded-lg p-1 shadow-sm md:w-auto w-full overflow-x-auto">
+                <Select
+                  value={datePreset}
+                  onValueChange={(v) => {
+                    setDatePreset(v);
+                    const now = new Date();
+                    if (v === 'week') {
+                      const s = new Date(now);
+                      const dow = s.getDay(); // 0=Sunday
+                      s.setDate(s.getDate() - dow);
+                      s.setHours(0,0,0,0);
+                      const e = new Date(s);
+                      e.setDate(s.getDate() + 6);
+                      e.setHours(23,59,59,999);
+                      setDateStart(s.toISOString().slice(0,10));
+                      setDateEnd(e.toISOString().slice(0,10));
+                    } else if (v === 'month') {
+                      const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                      const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                      setDateStart(s.toISOString().slice(0,10));
+                      setDateEnd(e.toISOString().slice(0,10));
+                    } else if (v === 'year') {
+                      const s = new Date(now.getFullYear(), 0, 1);
+                      const e = new Date(now.getFullYear(), 11, 31);
+                      setDateStart(s.toISOString().slice(0,10));
+                      setDateEnd(e.toISOString().slice(0,10));
+                    } else if (v === 'last_year') {
+                      const s = new Date(now.getFullYear() - 1, 0, 1);
+                      const e = new Date(now.getFullYear() - 1, 11, 31);
+                      setDateStart(s.toISOString().slice(0,10));
+                      setDateEnd(e.toISOString().slice(0,10));
+                    } else if (v === 'all') {
+                      setDateStart("");
+                      setDateEnd("");
+                    } else if (v === 'custom') {
+                      // Keep current dateStart and dateEnd
+                    }
+                  }}
+                >
+                  <SelectTrigger className={`h-11 md:h-8 border-transparent shadow-none w-auto min-w-[120px] transition-colors ${datePreset !== 'custom' ? 'bg-white font-medium shadow-sm rounded-md text-gray-900' : 'bg-transparent text-gray-600'}`}>
+                    <SelectValue placeholder={safeT('timeframe','תאריכים','Dates')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{safeT('all_time','כל הזמן','All time')}</SelectItem>
+                    <SelectItem value="week">{safeT('current_week','השבוע','This week')}</SelectItem>
+                    <SelectItem value="month">{safeT('current_month','החודש','This month')}</SelectItem>
+                    <SelectItem value="year">{safeT('current_year','מתחילת השנה','Year to date')}</SelectItem>
+                    <SelectItem value="last_year">{safeT('last_year','שנה שעברה','Last year')}</SelectItem>
+                    <SelectItem value="custom">{safeT('custom_range','מותאם אישית','Custom range')}</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {datePreset === 'custom' && (
+                  <div className="flex items-center gap-1.5 px-2 ml-1 border-l border-gray-200 rtl:border-l-0 rtl:border-r rtl:mr-1 animate-in fade-in zoom-in duration-200">
+                    <Input
+                      type="date"
+                      value={dateStart}
+                      onChange={(e) => setDateStart(e.target.value)}
+                      className="h-11 md:h-8 w-32 px-2 text-sm bg-white border-transparent shadow-sm rounded-md"
+                    />
+                    <span className="text-gray-400">-</span>
+                    <Input
+                      type="date"
+                      value={dateEnd}
+                      onChange={(e) => setDateEnd(e.target.value)}
+                      className="h-11 md:h-8 w-32 px-2 text-sm bg-white border-transparent shadow-sm rounded-md"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1560,10 +1626,63 @@ export default function OrdersPage() {
                 onChange={(e) => setCustomerFilter(e.target.value)}
                 className="h-11 rounded-lg"
               />
-              <div className="flex items-center gap-2">
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 rounded-lg" />
-                <span className="text-gray-500">–</span>
-                <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg" />
+              <div className="flex flex-col gap-2">
+                <Select
+                  value={datePreset}
+                  onValueChange={(v) => {
+                    setDatePreset(v);
+                    const now = new Date();
+                    if (v === 'week') {
+                      const s = new Date(now);
+                      const dow = s.getDay();
+                      s.setDate(s.getDate() - dow);
+                      s.setHours(0,0,0,0);
+                      const e = new Date(s);
+                      e.setDate(s.getDate() + 6);
+                      e.setHours(23,59,59,999);
+                      setDateStart(s.toISOString().slice(0,10));
+                      setDateEnd(e.toISOString().slice(0,10));
+                    } else if (v === 'month') {
+                      const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                      const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                      setDateStart(s.toISOString().slice(0,10));
+                      setDateEnd(e.toISOString().slice(0,10));
+                    } else if (v === 'year') {
+                      const s = new Date(now.getFullYear(), 0, 1);
+                      const e = new Date(now.getFullYear(), 11, 31);
+                      setDateStart(s.toISOString().slice(0,10));
+                      setDateEnd(e.toISOString().slice(0,10));
+                    } else if (v === 'last_year') {
+                      const s = new Date(now.getFullYear() - 1, 0, 1);
+                      const e = new Date(now.getFullYear() - 1, 11, 31);
+                      setDateStart(s.toISOString().slice(0,10));
+                      setDateEnd(e.toISOString().slice(0,10));
+                    } else if (v === 'all') {
+                      setDateStart("");
+                      setDateEnd("");
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-11 rounded-lg">
+                    <SelectValue placeholder={safeT('timeframe','תאריכים','Dates')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{safeT('all_time','כל הזמן','All time')}</SelectItem>
+                    <SelectItem value="week">{safeT('current_week','השבוע','This week')}</SelectItem>
+                    <SelectItem value="month">{safeT('current_month','החודש','This month')}</SelectItem>
+                    <SelectItem value="year">{safeT('current_year','מתחילת השנה','Year to date')}</SelectItem>
+                    <SelectItem value="last_year">{safeT('last_year','שנה שעברה','Last year')}</SelectItem>
+                    <SelectItem value="custom">{safeT('custom_range','מותאם אישית','Custom range')}</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {datePreset === 'custom' && (
+                  <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-200">
+                    <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 rounded-lg flex-1" />
+                    <span className="text-gray-500">–</span>
+                    <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg flex-1" />
+                  </div>
+                )}
               </div>
               <Button onClick={() => setFiltersOpen(false)} className="w-full">{safeT('apply', 'החל', 'Apply')}</Button>
             </div>
