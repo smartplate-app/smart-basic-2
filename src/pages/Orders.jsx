@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Share, Copy, FileCode } from "lucide-react";
+import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Share, Copy, FileCode, MoreHorizontal, PackageCheck } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnimatePresence } from "framer-motion";
@@ -1462,46 +1463,52 @@ export default function OrdersPage() {
                       <span className="text-lg font-bold text-green-600">₪{(order.total_cost || 0).toFixed(2)}</span>
                     </div>
                     
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {!isViewer && (
-                        <Button
-                          onClick={(e) => { e.stopPropagation(); handleResend(order); }}
-                          className="flex-1 min-w-[100px] h-11 rounded-lg text-sm bg-[#d4a373] hover:bg-[#b88c60] text-white"
-                        >
-                          <Share className="w-4 h-4 mr-1" />
-                          {safeT('share','שתף','Share')}
-                        </Button>
-                      )}
-                      {!isViewer && order.status === 'sent' && (
-                        <Button
-                          variant="outline"
-                          onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                          className="flex-1 min-w-[100px] h-11 rounded-lg text-sm border-green-300 text-green-700 hover:bg-green-50"
-                        >
-                          {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
-                        </Button>
-                      )}
-                      {!isViewer && (
-                        <>
+                    {!isViewer && (
+                      <div className="pt-3 border-t mt-3 flex items-center justify-between">
+                        {order.status === 'sent' ? (
                           <Button
                             variant="outline"
-                            onClick={(e) => { e.stopPropagation(); handleEdit(order); }}
-                            className="flex-1 min-w-[100px] h-11 rounded-lg text-sm border-gray-300 text-gray-700 hover:bg-gray-50"
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                            className="text-green-700 border-green-200 bg-green-50/50 hover:bg-green-100 rounded-lg h-9 px-4"
                           >
-                            <Edit className="w-4 h-4 mr-1" />
-                            {t('edit')}
+                            <PackageCheck className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                            {safeT('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
                           </Button>
+                        ) : (
+                          <div></div>
+                        )}
+                        
+                        <div className="flex items-center gap-1">
                           <Button
-                            variant="outline"
-                            onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
-                            className="flex-1 min-w-[100px] h-11 rounded-lg text-sm border-red-300 text-red-600 hover:bg-red-50"
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); handleResend(order); }}
+                            className="h-9 w-9 text-gray-500 hover:text-gray-900 rounded-full"
                           >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            {t('delete')}
+                            <Share className="w-4 h-4" />
                           </Button>
-                        </>
-                      )}
-                    </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-gray-900 rounded-full" onClick={(e) => e.stopPropagation()}>
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-48">
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(order); }}>
+                                <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+                                {safeT('edit', 'עריכה', 'Edit')}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(order); }} className="text-red-600 focus:text-red-600">
+                                <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                                {safeT('delete', 'מחק', 'Delete')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </Card>
               );
@@ -1567,29 +1574,28 @@ export default function OrdersPage() {
         <div className="hidden md:block bg-white rounded-lg shadow">
           <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <table className="w-full">
-              <thead className="bg-gray-100 border-b">
+              <thead className="bg-transparent border-b border-gray-100">
                 <tr>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
                     {safeT('supplier','ספק','Supplier')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
                     {safeT('order_number','מספר הזמנה','Order #')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
                     {safeT('delivery_date','תאריך אספקה','Delivery date')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
                     {safeT('total_cost','עלות כוללת','Total cost')}
                   </th>
-                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
                     {safeT('status','סטטוס','Status')}
                   </th>
-                  <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {safeT('actions', 'פעולות', 'Actions')}
+                  <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500">
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-50">
                 <AnimatePresence>
                   {loading ? (
                     <tr>
@@ -1600,10 +1606,10 @@ export default function OrdersPage() {
                     </tr>
                   ) : filteredOrders.map((order) => {
                     const statusColors = {
-                      sent: "bg-blue-50 text-blue-700 border-blue-200",
-                      confirmed: "bg-green-50 text-green-700 border-green-200",
-                      delivered: "bg-purple-50 text-purple-700 border-purple-200",
-                      draft: "bg-yellow-50 text-yellow-700 border-yellow-200"
+                      sent: "bg-blue-50 text-blue-600",
+                      confirmed: "bg-green-50 text-green-600",
+                      delivered: "bg-purple-50 text-purple-600",
+                      draft: "bg-gray-100 text-gray-600"
                     };
 
                     const statusLabels = {
@@ -1620,75 +1626,68 @@ export default function OrdersPage() {
                         onClick={() => handleOpenPreview(order)}
                         onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
                       >
-                        <td className="px-3 py-2 text-right">
-                          <div className="text-sm font-medium text-gray-900">{order.supplier_name}</div>
+                        <td className="px-4 py-4 text-right align-middle">
+                          <div className="text-sm font-semibold text-gray-900">{order.supplier_name}</div>
                           {order.restaurant_name && (
-                            <div className="text-xs text-gray-500">{order.restaurant_name}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">{order.restaurant_name}</div>
                           )}
                         </td>
-                        <td className="px-3 py-2 text-right text-sm text-gray-500">
+                        <td className="px-4 py-4 text-right text-sm text-gray-500 align-middle">
                           {order.order_number || '—'}
                         </td>
-                        <td className="px-3 py-2 text-right text-sm text-gray-700">
+                        <td className="px-4 py-4 text-right text-sm text-gray-600 align-middle">
                           {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
                         </td>
-                        <td className="px-3 py-2 text-right text-sm font-bold text-green-600">
+                        <td className="px-4 py-4 text-right text-sm font-bold text-gray-900 align-middle">
                           ₪{(order.total_cost || 0).toFixed(2)}
                         </td>
-                        <td className="px-3 py-2 text-right">
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
+                        <td className="px-4 py-4 text-right align-middle">
+                          <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border-none ${statusColors[order.status]}`}>
                             {statusLabels[order.status] || order.status}
                           </span>
                         </td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center justify-center gap-1.5 pointer-events-auto">
-                            {!isViewer && (
+                        <td className="px-4 py-4 text-right align-middle">
+                          <div className="flex items-center justify-end gap-2 pointer-events-auto">
+                            {!isViewer && order.status === 'sent' && (
                               <Button
+                                variant="outline"
                                 size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleResend(order);
-                                }}
-                                className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
+                                onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                                className="h-8 px-3 text-xs bg-green-50/50 border-green-200 text-green-700 hover:bg-green-100 rounded-lg shadow-sm"
                               >
-                                <Share className="w-3 h-3 mr-1" />
-                                {safeT('share','שתף','Share')}
+                                <PackageCheck className="w-3 h-3 rtl:ml-1 ltr:mr-1" />
+                                {safeT('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
                               </Button>
                             )}
-                                                      {!isViewer && order.status === 'sent' && (
-                                                        <Button
-                                                          onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                                                          className="flex-1 h-11 rounded-lg text-base bg-green-600 hover:bg-green-700 text-white"
-                                                        >
-                                                          {safeT('receive_scan', 'קבלה/סריקה', 'Receive/Scan')}
-                                                        </Button>
-                                                      )}
-                                                      {!isViewer && (
+                            {!isViewer && (
                               <>
                                 <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEdit(order);
-                                  }}
-                                  className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => { e.stopPropagation(); handleResend(order); }}
+                                  className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg"
+                                  title={safeT('share','שתף','Share')}
                                 >
-                                                                        <Edit className="w-3 h-3 mr-1" />
-                                                                        {safeT('edit', 'עריכה', 'Edit')}
-                                                                      </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(order);
-                                  }}
-                                  className="border-red-300 text-red-600 hover:bg-red-50"
-                                >
-                                                                        <Trash2 className="w-3 h-3 mr-1" />
-                                                                        {safeT('delete', 'מחק', 'Delete')}
-                                                                      </Button>
+                                  <Share className="w-4 h-4" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg" onClick={(e) => e.stopPropagation()}>
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-40">
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(order); }}>
+                                      <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+                                      {safeT('edit', 'עריכה', 'Edit')}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(order); }} className="text-red-600 focus:text-red-600">
+                                      <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                                      {safeT('delete', 'מחק', 'Delete')}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </>
                             )}
                           </div>
