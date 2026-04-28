@@ -47,7 +47,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
           <thead className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
             <tr>
               <th 
-                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none"
+                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-bottom pb-4"
                 onClick={() => {
                   if (onSortChange) onSortChange(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc');
                 }}
@@ -59,8 +59,8 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </span>
                 </div>
               </th>
-              <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 align-top">
-                <div className="flex flex-col gap-1.5 mt-2">
+              <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 align-bottom">
+                <div className="flex flex-col gap-1.5 justify-end h-full">
                   <span>{safeT('invoice_number', 'מספר חשבונית', 'Invoice #')}</span>
                   {onInvoiceNumberFilterChange && (
                     <div className="relative max-w-[130px]">
@@ -78,7 +78,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                 </div>
               </th>
               <th 
-                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none"
+                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-bottom pb-4"
                 onClick={() => {
                   if (onSortChange) onSortChange(sortBy === 'date_desc' ? 'date_asc' : 'date_desc');
                 }}
@@ -91,7 +91,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                 </div>
               </th>
               <th 
-                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none"
+                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-bottom pb-4"
                 onClick={() => {
                   if (onSortChange) onSortChange(sortBy === 'amount_desc' ? 'amount_asc' : 'amount_desc');
                 }}
@@ -103,13 +103,13 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </span>
                 </div>
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
+              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 align-bottom pb-4">
                 {safeT('status', 'סטטוס', 'Status')}
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
+              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 align-bottom pb-4">
                 {safeT('files', 'קבצים', 'Files')}
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500">
+              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 align-bottom pb-4">
               </th>
             </tr>
           </thead>
