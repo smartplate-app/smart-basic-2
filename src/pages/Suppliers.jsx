@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Scan, Loader, Store, ArrowLeft, Download, BarChart3 } from "lucide-react";
+import { Plus, Search, Scan, Loader, Store, ArrowLeft, Download, BarChart3, List, LayoutGrid } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/LanguageProvider";
 import { createPageUrl } from "@/utils";
@@ -35,6 +35,7 @@ export default function SuppliersPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const { t, language } = useLanguage();
+  const [viewMode, setViewMode] = useState('list');
 
   const [isViewer, setIsViewer] = useState(false);
 
@@ -556,7 +557,27 @@ export default function SuppliersPage() {
                           <h1 className="text-3xl font-bold text-gray-900">{t('suppliers_title')}</h1>
                           <p className="text-gray-600 mt-2">{t('suppliers_greeting', { name: user.acting_as_store_name || user.full_name })}</p>
                         </div>
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-3 flex-wrap items-center">
+            <div className="flex bg-white rounded-lg shadow-sm border rtl:ml-2 ltr:mr-2">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                title={language === 'he' ? 'רשימה' : 'List'}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('grid')}
+                className={viewMode === 'grid' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                title={language === 'he' ? 'כרטיסים' : 'Grid'}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+            </div>
             <Button
               onClick={generateReport}
               variant="outline"
@@ -779,17 +800,33 @@ export default function SuppliersPage() {
             <p className="text-gray-500">{t('start_by_adding_supplier')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredSuppliers.map((supplier) => (
-              <SupplierCard
-                key={supplier.id}
-                supplier={supplier}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onImportComplete={() => loadData(user)}
-              />
-            ))}
-          </div>
+          <>
+            {viewMode === 'list' && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto hidden md:block mb-4">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'ספק' : 'Supplier'}</th>
+                      <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'איש קשר וטלפון' : 'Contact'}</th>
+                      <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'אימייל' : 'Email'}</th>
+                      <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{t('created_at') || 'תאריך'}</th>
+                      <th className={`p-3 font-semibold text-gray-600 text-left rtl:text-right`}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSuppliers.map((supplier) => (
+                      <SupplierCard key={supplier.id} supplier={supplier} onEdit={handleEdit} onDelete={handleDelete} onImportComplete={() => loadData(user)} viewMode="list" />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${viewMode === 'list' ? 'md:hidden' : ''}`}>
+              {filteredSuppliers.map((supplier) => (
+                <SupplierCard key={supplier.id} supplier={supplier} onEdit={handleEdit} onDelete={handleDelete} onImportComplete={() => loadData(user)} viewMode="grid" />
+              ))}
+            </div>
+          </>
         )}
       </div>
 

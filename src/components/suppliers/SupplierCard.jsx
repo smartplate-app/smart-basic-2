@@ -21,7 +21,7 @@ import InvoiceScanner from "./InvoiceScanner";
 import { base44 } from "@/api/base44Client";
 import ItemForm from "../items/ItemForm";
 
-export default function SupplierCard({ supplier, onEdit, onDelete, onImportComplete }) {
+export default function SupplierCard({ supplier, onEdit, onDelete, onImportComplete, viewMode = "grid" }) {
   const { t, language } = useLanguage();
   const [showScanner, setShowScanner] = useState(false);
   const [showDeleteItemsDialog, setShowDeleteItemsDialog] = useState(false);
@@ -98,6 +98,30 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
 
   return (
     <>
+      {viewMode === 'list' ? (
+        <tr className="hover:bg-blue-50 transition-colors border-b border-gray-100 group">
+          <td className="p-3 align-middle font-medium text-gray-900">{supplier.name}</td>
+          <td className="p-3 align-middle">
+            {supplier.contact_person && <div className="text-sm font-medium">{supplier.contact_person}</div>}
+            <a href={`tel:${supplier.phone}`} className="text-xs text-green-600 hover:underline">{supplier.phone || '-'}</a>
+          </td>
+          <td className="p-3 align-middle text-sm">
+            {supplier.email ? <a href={`mailto:${supplier.email}`} className="text-blue-600 hover:underline">{supplier.email}</a> : '-'}
+          </td>
+          <td className="p-3 align-middle text-sm text-gray-500">
+            {new Date(supplier.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-CA')}
+          </td>
+          <td className="p-3 align-middle">
+            <div className="flex items-center justify-end gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" onClick={() => setShowAddItemDialog(true)} className="h-8 w-8 text-gray-400 hover:text-blue-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={t('add_item') || 'הוסף פריט'}><Plus className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setShowScanner(true)} className="h-8 w-8 text-gray-400 hover:text-green-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import items from image'}><Camera className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => setShowDeleteItemsDialog(true)} className="h-8 w-8 text-gray-400 hover:text-orange-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={t('delete_all_items') || 'מחק את כל הפריטים'}><PackageX className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => onEdit(supplier)} className="h-8 w-8 text-gray-400 hover:text-blue-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none"><Edit className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={() => onDelete(supplier.id)} className="h-8 w-8 text-gray-400 hover:text-red-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none"><Trash2 className="w-4 h-4" /></Button>
+            </div>
+          </td>
+        </tr>
+      ) : (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -221,7 +245,7 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
           </CardContent>
         </Card>
       </motion.div>
-
+      )}
 
 
       <Dialog open={showScanner} onOpenChange={setShowScanner}>
