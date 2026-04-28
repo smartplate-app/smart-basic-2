@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp } from "lucide-react";
+import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp, Check, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/LanguageProvider";
 
@@ -48,6 +50,7 @@ export default function ItemsPage() {
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [cleaning, setCleaning] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [supplierFilterOpen, setSupplierFilterOpen] = useState(false);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -765,19 +768,64 @@ const handleCleanOrphans = async (ownerEmail) => {
               className="pr-10"
             />
           </div>
-          <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
-            <SelectTrigger>
-              <SelectValue placeholder={t('select_supplier')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('all_suppliers')}</SelectItem>
-              {suppliers.map(supplier => (
-                <SelectItem key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={supplierFilterOpen} onOpenChange={setSupplierFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={supplierFilterOpen}
+                className="w-full justify-between bg-white text-gray-700 h-10"
+              >
+                {selectedSupplier === "all" 
+                  ? t('all_suppliers') 
+                  : suppliers.find(s => s.id === selectedSupplier)?.name || t('all_suppliers')}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50 rtl:mr-2 rtl:ml-0" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-0" align="start">
+              <Command>
+                <CommandInput placeholder={t('select_supplier') + '...'} />
+                <CommandList>
+                  <CommandEmpty>{language === 'he' ? 'לא נמצאו ספקים' : 'No suppliers found'}</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="all"
+                      onSelect={() => {
+                        setSelectedSupplier("all");
+                        setSupplierFilterOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={`mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 ${
+                          selectedSupplier === "all" ? "opacity-100" : "opacity-0"
+                        }`}
+                      />
+                      {t('all_suppliers')}
+                    </CommandItem>
+                    {suppliers
+                    .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                    .map((supplier) => (
+                      <CommandItem
+                        key={supplier.id}
+                        value={supplier.name || supplier.id}
+                        onSelect={() => {
+                          setSelectedSupplier(supplier.id);
+                          setSupplierFilterOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={`mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 ${
+                            selectedSupplier === supplier.id ? "opacity-100" : "opacity-0"
+                          }`}
+                        />
+                        {supplier.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
           <div className="flex flex-wrap items-center gap-2 w-full">
             <Button
               variant="destructive"
