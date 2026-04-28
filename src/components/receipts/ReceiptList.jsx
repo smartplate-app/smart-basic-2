@@ -6,7 +6,7 @@ import { Download, Trash2, Edit, MoreHorizontal, FileText, Image as ImageIcon } 
 import PdfThumbnail from "./PdfThumbnail";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
-export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false }) {
+export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false, sortBy, onSortChange }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
 
@@ -41,22 +41,52 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
   };
 
   return (
-    <div className="bg-white rounded-lg shadow border border-gray-100">
-      <div className="hidden md:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <table className="w-full">
-          <thead className="bg-transparent border-b border-gray-100">
+    <div className="bg-white rounded-lg shadow border border-gray-100 relative">
+      <div className="hidden md:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-h-[70vh]">
+        <table className="w-full relative">
+          <thead className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
             <tr>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
-                {safeT('supplier', 'ספק', 'Supplier')}
+              <th 
+                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none"
+                onClick={() => {
+                  if (onSortChange) onSortChange(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc');
+                }}
+              >
+                <div className="flex items-center gap-1 justify-start rtl:justify-end">
+                  {safeT('supplier', 'ספק', 'Supplier')}
+                  <span className={`text-[10px] ${sortBy?.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {sortBy === 'supplier_asc' ? '↑' : sortBy === 'supplier_desc' ? '↓' : '⇅'}
+                  </span>
+                </div>
               </th>
               <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
                 {safeT('invoice_number', 'מספר חשבונית', 'Invoice #')}
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
-                {safeT('received_date', 'תאריך קבלה', 'Date')}
+              <th 
+                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none"
+                onClick={() => {
+                  if (onSortChange) onSortChange(sortBy === 'date_desc' ? 'date_asc' : 'date_desc');
+                }}
+              >
+                <div className="flex items-center gap-1 justify-start rtl:justify-end">
+                  {safeT('received_date', 'תאריך קבלה', 'Date')}
+                  <span className={`text-[10px] ${sortBy?.startsWith('date') ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {sortBy === 'date_asc' ? '↑' : sortBy === 'date_desc' ? '↓' : '⇅'}
+                  </span>
+                </div>
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
-                {safeT('invoice_total', 'סכום בחשבונית', 'Amount')}
+              <th 
+                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none"
+                onClick={() => {
+                  if (onSortChange) onSortChange(sortBy === 'amount_desc' ? 'amount_asc' : 'amount_desc');
+                }}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  {safeT('invoice_total', 'סכום בחשבונית', 'Amount')}
+                  <span className={`text-[10px] ${sortBy?.startsWith('amount') ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {sortBy === 'amount_asc' ? '↑' : sortBy === 'amount_desc' ? '↓' : '⇅'}
+                  </span>
+                </div>
               </th>
               <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500">
                 {safeT('status', 'סטטוס', 'Status')}

@@ -316,6 +316,12 @@ export default function SupplyReceiptsPage() {
     if (sortBy === 'amount_desc') {
       return [...filteredReceipts].sort((a,b) => (parseFloat(b.invoice_total||0) - parseFloat(a.invoice_total||0)));
     }
+    if (sortBy === 'date_asc') {
+      return [...filteredReceipts].sort((a,b) => new Date(a.received_date) - new Date(b.received_date));
+    }
+    if (sortBy === 'date_desc') {
+      return [...filteredReceipts].sort((a,b) => new Date(b.received_date) - new Date(a.received_date));
+    }
     return filteredReceipts;
   }, [filteredReceipts, sortBy]);
 
@@ -581,18 +587,7 @@ export default function SupplyReceiptsPage() {
                   </PopoverContent>
                 </Popover>
 
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-10 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[140px]">
-                    <SelectValue placeholder={tt('sort','מיון לפי','Sort')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{tt('no_sort','ללא מיון','No sort')}</SelectItem>
-                    <SelectItem value="amount_asc">{tt('amount_low_to_high','סכום: נמוך ← גבוה','Amount: Low to High')}</SelectItem>
-                    <SelectItem value="amount_desc">{tt('amount_high_to_low','סכום: גבוה ← נמוך','Amount: High to Low')}</SelectItem>
-                    <SelectItem value="supplier_asc">{tt('supplier_az','ספק: א ← ת','Supplier: A-Z')}</SelectItem>
-                    <SelectItem value="supplier_desc">{tt('supplier_za','ספק: ת ← א','Supplier: Z-A')}</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Removed Select dropdown for sorting as per user request - clicking on table headers handles this now */}
 
                 <div className="flex items-center bg-gray-50/50 border border-gray-200 rounded-xl p-1 shadow-sm">
                   <Select
@@ -843,6 +838,8 @@ export default function SupplyReceiptsPage() {
                onDelete={handleDeleteReceipt}
                onQuickUpdate={handleQuickUpdate}
                loading={loading}
+               sortBy={sortBy}
+               onSortChange={setSortBy}
                />
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
