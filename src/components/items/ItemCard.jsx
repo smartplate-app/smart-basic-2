@@ -15,7 +15,7 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
   };
 
   const finalPrice = item.price_after_discount || (item.price && item.discount > 0 
-    ? item.price / (1 + (item.discount / 100))
+    ? item.price * (1 - (item.discount / 100))
     : item.price);
 
   return (

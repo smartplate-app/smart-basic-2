@@ -207,7 +207,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
               <span className="text-sm text-green-700">{t('final_price') || 'Final Price'}:</span>
               <span className="text-lg font-bold text-green-700">
                 {(formData.price && formData.discount 
-                  ? (formData.price / (1 + (formData.discount / 100))).toFixed(2)
+                  ? (formData.price * (1 - (formData.discount / 100))).toFixed(2)
                   : (formData.price || 0).toFixed(2)
                 )}
               </span>
@@ -224,7 +224,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
                 })()}:
               </span>
               <span className="text-md font-bold text-green-700">
-                {((formData.price ? (formData.price / (1 + ((formData.discount || 0) / 100))) : 0) / (formData.units_per_package || 1)).toFixed(2)}
+                {((formData.price ? (formData.price * (1 - ((formData.discount || 0) / 100))) : 0) / (formData.units_per_package || 1)).toFixed(2)}
               </span>
             </div>
           </div>

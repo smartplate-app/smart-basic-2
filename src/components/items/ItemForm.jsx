@@ -159,7 +159,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
 
   const calculatePriceAfterDiscount = (price, discount) => {
     if (!price || !discount) return price || 0;
-    return price / (1 + (discount / 100));
+    return price * (1 - (discount / 100));
   };
 
   const handleSubmit = (e) => {
@@ -438,7 +438,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
                 <span className="text-sm text-green-700">{t('final_price') || 'מחיר סופי'}:</span>
                 <span className="text-lg font-bold text-green-700">
                   {(currentItem.price && currentItem.discount 
-                    ? (currentItem.price / (1 + (currentItem.discount / 100))).toFixed(2)
+                    ? (currentItem.price * (1 - (currentItem.discount / 100))).toFixed(2)
                     : (currentItem.price || 0).toFixed(2)
                   )}
                 </span>
@@ -455,7 +455,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
                   })()}:
                 </span>
                 <span className="text-md font-bold text-green-700">
-                  {((currentItem.price ? (currentItem.price / (1 + ((currentItem.discount || 0) / 100))) : 0) / (currentItem.units_per_package || 1)).toFixed(2)}
+                  {((currentItem.price ? (currentItem.price * (1 - ((currentItem.discount || 0) / 100))) : 0) / (currentItem.units_per_package || 1)).toFixed(2)}
                 </span>
               </div>
             </div>
