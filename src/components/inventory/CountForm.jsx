@@ -447,97 +447,87 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                   <div className="flex-1 space-y-2 w-full">
                     <Label htmlFor="add_item_select" className="text-base font-bold text-gray-900 mb-2">{t('add_item')}</Label>
                     <div className="relative mt-2">
-                      <Popover open={(isSearchFocused || availableSearch !== "") && filteredAvailableItems.length > 0} onOpenChange={(open) => {
-                        if (!open) {
-                           setIsSearchFocused(false);
-                        }
-                      }}>
-                        <PopoverTrigger asChild>
-                          <div className="relative">
-                            <Input
-                              id="add_item_select"
-                              placeholder={language === 'he' ? 'הקלד פריט לחיפוש ולהוספה...' : 'Type to search item...'}
-                              value={availableSearch}
-                              onChange={(e) => {
-                                setAvailableSearch(e.target.value);
-                              }}
-                              onFocus={() => setIsSearchFocused(true)}
-                              onBlur={() => {
-                                // Short delay to allow clicking on dropdown items before closing
-                                setTimeout(() => setIsSearchFocused(false), 200);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  if (filteredAvailableItems.length > 0) {
-                                    // Auto add the first result on enter
-                                    const item = items.find(i => i.id === filteredAvailableItems[0].id);
-                                    if (item && !formData.items.some(ci => ci.item_id === item.id)) {
-                                       setFormData(prev => ({
-                                        ...prev,
-                                        items: [{
-                                          item_id: item.id,
-                                          item_name: item.name,
-                                          counted_quantity: "",
-                                          unit: item.unit,
-                                          price_per_unit: item.price || 0,
-                                          total_cost: 0,
-                                          notes: ""
-                                        }, ...prev.items]
-                                      }));
-                                      setAvailableSearch('');
-                                    }
-                                  }
+                      <div className="relative">
+                        <Input
+                          id="add_item_select"
+                          placeholder={language === 'he' ? 'הקלד פריט לחיפוש ולהוספה...' : 'Type to search item...'}
+                          value={availableSearch}
+                          onChange={(e) => {
+                            setAvailableSearch(e.target.value);
+                          }}
+                          onFocus={() => setIsSearchFocused(true)}
+                          onBlur={() => {
+                            // Short delay to allow clicking on dropdown items before closing
+                            setTimeout(() => setIsSearchFocused(false), 200);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (filteredAvailableItems.length > 0) {
+                                // Auto add the first result on enter
+                                const item = items.find(i => i.id === filteredAvailableItems[0].id);
+                                if (item && !formData.items.some(ci => ci.item_id === item.id)) {
+                                   setFormData(prev => ({
+                                    ...prev,
+                                    items: [{
+                                      item_id: item.id,
+                                      item_name: item.name,
+                                      counted_quantity: "",
+                                      unit: item.unit,
+                                      price_per_unit: item.price || 0,
+                                      total_cost: 0,
+                                      notes: ""
+                                    }, ...prev.items]
+                                  }));
+                                  setAvailableSearch('');
+                                  setIsSearchFocused(false);
                                 }
+                              }
+                            }
+                          }}
+                          className="w-full h-12 text-base font-normal bg-white pr-10 rtl:pl-10 rtl:pr-3"
+                          autoComplete="off"
+                        />
+                        <ArrowUpDown className="absolute top-1/2 -translate-y-1/2 right-3 rtl:left-3 rtl:right-auto h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
+                      </div>
+                      
+                      {isSearchFocused && (
+                        <div className="absolute top-full left-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-[300px] overflow-y-auto p-1">
+                          {filteredAvailableItems.map(item => (
+                            <div
+                              key={item.id}
+                              className={`flex items-center w-full justify-between p-3 cursor-pointer hover:bg-gray-100 rounded-md transition-colors`}
+                              onClick={() => {
+                                if (!formData.items.some(ci => ci.item_id === item.id)) {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    items: [{
+                                      item_id: item.id,
+                                      item_name: item.name,
+                                      counted_quantity: "",
+                                      unit: item.unit,
+                                      price_per_unit: item.price || 0,
+                                      total_cost: 0,
+                                      notes: ""
+                                    }, ...prev.items]
+                                  }));
+                                }
+                                setAvailableSearch("");
+                                setIsSearchFocused(false);
                               }}
-                              className="w-full h-12 text-base font-normal bg-white pr-10 rtl:pl-10 rtl:pr-3"
-                              autoComplete="off"
-                            />
-                            <ArrowUpDown className="absolute top-1/2 -translate-y-1/2 right-3 rtl:left-3 rtl:right-auto h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
-                          </div>
-                        </PopoverTrigger>
-                        <PopoverContent 
-                          className="p-0 z-50 w-full" 
-                          align="start" 
-                          style={{ width: 'var(--radix-popover-trigger-width)' }}
-                          onOpenAutoFocus={(e) => e.preventDefault()}
-                        >
-                          <div className="max-h-[300px] overflow-y-auto p-1">
-                            {filteredAvailableItems.map(item => (
-                              <div
-                                key={item.id}
-                                className={`flex items-center w-full justify-between p-3 cursor-pointer hover:bg-gray-100 rounded-md transition-colors`}
-                                onClick={() => {
-                                  if (!formData.items.some(ci => ci.item_id === item.id)) {
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      items: [{
-                                        item_id: item.id,
-                                        item_name: item.name,
-                                        counted_quantity: "",
-                                        unit: item.unit,
-                                        price_per_unit: item.price || 0,
-                                        total_cost: 0,
-                                        notes: ""
-                                      }, ...prev.items]
-                                    }));
-                                  }
-                                  setAvailableSearch("");
-                                }}
-                              >
-                                <span className="text-gray-900">{item.name}</span>
-                                <span className="text-gray-500 text-sm mx-2">({item.unit})</span>
-                                {item.price > 0 && <span className="text-gray-400 text-sm ml-auto rtl:mr-auto rtl:ml-0">- ₪{item.price}</span>}
-                              </div>
-                            ))}
-                            {filteredAvailableItems.length === 0 && (
-                              <div className="p-4 text-center text-gray-500 text-sm">
-                                {availableSearch ? (language === 'he' ? 'לא נמצאו פריטים' : 'No results') : t('no_available_items')}
-                              </div>
-                            )}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                            >
+                              <span className="text-gray-900">{item.name}</span>
+                              <span className="text-gray-500 text-sm mx-2">({item.unit})</span>
+                              {item.price > 0 && <span className="text-gray-400 text-sm ml-auto rtl:mr-auto rtl:ml-0">- ₪{item.price}</span>}
+                            </div>
+                          ))}
+                          {filteredAvailableItems.length === 0 && (
+                            <div className="p-4 text-center text-gray-500 text-sm">
+                              {availableSearch ? (language === 'he' ? 'לא נמצאו פריטים' : 'No results') : t('no_available_items')}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Button
