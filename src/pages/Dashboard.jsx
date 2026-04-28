@@ -1019,6 +1019,24 @@ export default function DashboardPage() {
                 )
               )
             )}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const res = await base44.functions.invoke('syncPOSData', {});
+                  if (res.data?.success) {
+                    window.location.reload();
+                  } else {
+                    alert(language === 'he' ? 'שגיאה בייבוא מ-POS: ' + (res.data?.error || '') : 'Error syncing POS: ' + (res.data?.error || ''));
+                  }
+                } catch (e) {
+                  alert(language === 'he' ? 'שגיאה: ' + e.message : 'Error: ' + e.message);
+                }
+              }}
+              className="bg-white flex items-center gap-2"
+            >
+              🔄 {language === 'he' ? 'ייבוא מ-POS' : 'Sync POS'}
+            </Button>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}

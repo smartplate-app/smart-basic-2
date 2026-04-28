@@ -14,6 +14,7 @@ import RecipesPage from './pages/Recipes';
 import CogsReportsPage from './pages/CogsReports';
 import MenuEngineeringPage from './pages/MenuEngineering';
 import InstagramStoryGreek from './pages/InstagramStoryGreek';
+import POSSettings from './pages/POSSettings';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -119,6 +120,7 @@ const AuthenticatedApp = () => {
         <Route path="/CogsReports" element={<CogsReportsPage />} />
         <Route path="/MenuEngineering" element={<MenuEngineeringPage />} />
         <Route path="/InstagramStoryGreek" element={<InstagramStoryGreek />} />
+        <Route path="/pos-settings" element={<POSSettings />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>

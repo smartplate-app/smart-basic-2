@@ -1,0 +1,49 @@
+{
+  "name": "POSConnection",
+  "type": "object",
+  "properties": {
+    "pos_type": {
+      "type": "string",
+      "enum": [
+        "tabit",
+        "beecomm"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "tabit_email": {
+      "type": "string"
+    },
+    "tabit_password": {
+      "type": "string"
+    },
+    "tabit_branches": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "beecomm_email": {
+      "type": "string"
+    },
+    "beecomm_password": {
+      "type": "string"
+    },
+    "beecomm_restaurant_id": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "last_synced": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "pos_type",
+    "label"
+  ]
+}
