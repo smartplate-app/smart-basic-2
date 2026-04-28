@@ -63,7 +63,7 @@ export default function SupplyReceiptsPage() {
     return (!s || s === key) ? (language === 'he' ? he : (en || key)) : s;
   };
   const [activeTab, setActiveTab] = useState('receipts');
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('list');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const startYRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
