@@ -2,7 +2,8 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Trash2, Edit, MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import PdfThumbnail from "./PdfThumbnail";
 
 export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false }) {
@@ -30,154 +31,188 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
   const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
   // (Replaced by real image thumbnails via PdfThumbnail component)
 
-  const statusVariant = (status) => {
-    if (status === 'verified') return 'default';
-    if (status === 'has_issues') return 'destructive';
-    return 'secondary';
+  const statusColors = {
+    verified: "bg-green-50 text-green-600",
+    has_issues: "bg-red-50 text-red-600",
+    pending: "bg-yellow-50 text-yellow-600"
   };
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
-      <div className={`hidden md:grid grid-cols-8 gap-2 px-4 py-2 text-xs font-semibold text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-        <div>{t('supplier') || 'Supplier'}</div>
-        <div>{t('order_number') || 'Order #'}</div>
-        <div>{t('invoice_number') || 'Invoice #'}</div>
-        <div>{t('received_date') || 'Date'}</div>
-        <div>{t('invoice_total') || 'Amount'}</div>
-        <div>{t('status') || 'Status'}</div>
-        <div>{t('files') || 'Files'}</div>
-        <div className={isRTL ? 'text-left' : 'text-right'}>{t('actions') || 'Actions'}</div>
-      </div>
-      <div className="divide-y">
-        {loading ? (
-          Array(4).fill(0).map((_, i) => (
-            <div key={i} className="px-4 py-3 animate-pulse">
-              <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
-              <div className="h-4 bg-gray-100 rounded w-1/2"></div>
-            </div>
-          ))
-        ) : (
-          receipts.map((r) => (
-            <div
-              key={r.id}
-              className={`px-4 py-3 flex flex-col md:grid md:grid-cols-8 md:items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
-            >
-              {/* Supplier + items count (if any) */}
-              <div>
-                <div className="font-medium">{r.supplier_name || '-'}</div>
-                {Array.isArray(r.verified_items) && r.verified_items.length > 0 && (
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    {(t('items') || 'Items')}: {r.verified_items.length}
-                  </div>
-                )}
-                {r.notes && (
-                  <div className="text-xs text-amber-700 mt-0.5 truncate max-w-[220px]">
-                    {(t('notes') || 'Notes')}: {r.notes}
-                  </div>
-                )}
-              </div>
-
-              {/* Order and invoice numbers */}
-              <div className="text-sm text-gray-600">{r.order_number || '-'}</div>
-              <div className="text-sm text-gray-600">{r.invoice_number || '-'}</div>
-
-              {/* Date */}
-              <div className="text-sm">{fmtDate(r.received_date)}</div>
-
-              {/* Amount */}
-              <div className="text-sm font-semibold text-blue-700">
-                {typeof r.invoice_total !== 'undefined' ? fmtCurrency(r.invoice_total) : '-'}
-              </div>
-
-              {/* Status */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant={statusVariant(r.status)}>
-                  {t(`status_${r.status}`) || r.status || '-'}
-                </Badge>
-                {r.is_refund && (
-                  <>
-                    <Badge className="bg-purple-100 text-purple-800">{t('refund') || 'Refund'}</Badge>
-                    <label className="flex items-center gap-1 text-xs">
-                      <input
-                        type="checkbox"
-                        checked={!!r.refund_received}
-                        onChange={(e) => onQuickUpdate && onQuickUpdate(r.id, { refund_received: e.target.checked })}
-                      />
-                      <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
-                    </label>
-                  </>
-                )}
-                {r.needs_review && (
-                  <>
-                    <Badge className="bg-amber-100 text-amber-800">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
-                    <label className="flex items-center gap-1 text-xs">
-                      <input
-                        type="checkbox"
-                        checked={!!r.reviewed}
-                        onChange={(e) => onQuickUpdate && onQuickUpdate(r.id, { reviewed: e.target.checked })}
-                      />
-                      <span>{language === 'he' ? 'נבדק' : 'Reviewed'}</span>
-                    </label>
-                  </>
-                )}
-                {r.linked_receipt_id && (
-                  <Badge className="bg-blue-100 text-blue-800">{language === 'he' ? 'מקושר' : 'Linked'}</Badge>
-                )}
-              </div>
-
-              {/* Files / images */}
-              <div>
-                {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 ? (
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={r.receipt_images[0]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative block w-12 h-12 rounded-md overflow-hidden border bg-white"
-                      title={(t('open_file') || 'Open file')}
-                    >
-                      {isPdf(r.receipt_images[0]) ? (
-                        <PdfThumbnail url={r.receipt_images[0]} size={48} />
-                      ) : (
-                        <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover pointer-events-none" />
-                      )}
-                      {r.receipt_images.length > 1 && (
-                        <span className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-[10px] px-1 rounded-tl">
-                          +{r.receipt_images.length - 1}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <table className="w-full text-sm">
+          <thead className="bg-transparent border-b border-gray-100">
+            <tr>
+              <th className={`px-4 py-4 font-semibold text-gray-500 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('supplier') || 'Supplier'}</th>
+              <th className={`px-4 py-4 font-semibold text-gray-500 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('invoice_number') || 'Invoice #'}</th>
+              <th className={`px-4 py-4 font-semibold text-gray-500 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('received_date') || 'Date'}</th>
+              <th className={`px-4 py-4 font-semibold text-gray-500 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('invoice_total') || 'Amount'}</th>
+              <th className={`px-4 py-4 font-semibold text-gray-500 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('status') || 'Status'}</th>
+              <th className={`px-4 py-4 font-semibold text-gray-500 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>{t('files') || 'Files'}</th>
+              <th className={`px-4 py-4 font-semibold text-gray-500 whitespace-nowrap ${isRTL ? 'text-left' : 'text-right'}`}></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {loading ? (
+              Array(4).fill(0).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                  <td className="px-4 py-4"><div className="h-4 bg-gray-100 rounded w-16"></div></td>
+                  <td className="px-4 py-4"><div className="h-4 bg-gray-100 rounded w-20"></div></td>
+                  <td className="px-4 py-4"><div className="h-4 bg-gray-100 rounded w-16"></div></td>
+                  <td className="px-4 py-4"><div className="h-6 bg-gray-100 rounded-full w-20"></div></td>
+                  <td className="px-4 py-4"><div className="h-8 bg-gray-200 rounded w-8"></div></td>
+                  <td className="px-4 py-4"><div className="h-8 bg-gray-100 rounded w-8 ml-auto"></div></td>
+                </tr>
+              ))
+            ) : receipts.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="px-4 py-12 text-center text-gray-500">
+                  {t('no_receipts_to_display') || 'No receipts to display'}
+                </td>
+              </tr>
+            ) : (
+              receipts.map((r) => (
+                <tr key={r.id} className="hover:bg-blue-50/50 transition-colors group cursor-pointer" onClick={() => onEdit && onEdit(r)}>
+                  <td className={`px-4 py-4 align-middle whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="font-semibold text-gray-900">{r.supplier_name || '-'}</div>
+                    {(Array.isArray(r.verified_items) && r.verified_items.length > 0) && (
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {r.verified_items.length} {t('items') || 'Items'}
+                      </div>
+                    )}
+                    {r.notes && (
+                      <div className="text-xs text-amber-600 mt-0.5 truncate max-w-[200px]">
+                        {r.notes}
+                      </div>
+                    )}
+                  </td>
+                  <td className={`px-4 py-4 align-middle whitespace-nowrap text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {r.invoice_number || '-'}
+                    {r.order_number && (
+                      <div className="text-xs text-gray-400 mt-0.5">{r.order_number}</div>
+                    )}
+                  </td>
+                  <td className={`px-4 py-4 align-middle whitespace-nowrap text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {fmtDate(r.received_date)}
+                  </td>
+                  <td className={`px-4 py-4 align-middle whitespace-nowrap font-bold text-gray-900 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {typeof r.invoice_total !== 'undefined' ? `₪${fmtCurrency(r.invoice_total)}` : '-'}
+                  </td>
+                  <td className={`px-4 py-4 align-middle whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${statusColors[r.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {t(`status_${r.status}`) || r.status || '-'}
+                      </span>
+                      {r.is_refund && (
+                        <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-600">
+                          {t('refund') || 'Refund'}
                         </span>
                       )}
-                    </a>
-                    <a href={r.receipt_images[0]} download target="_blank" rel="noopener noreferrer" title={t('download') || 'Download'}>
-                      <Button size="icon" variant="ghost" aria-label={t('download') || 'Download'}>
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    </a>
-                  </div>
-                ) : (
-                  <span className="text-xs text-gray-400">-</span>
-                )}
-              </div>
+                      {r.needs_review && (
+                        <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-600">
+                          {language === 'he' ? 'לבדיקה' : 'Review'}
+                        </span>
+                      )}
+                      {r.linked_receipt_id && (
+                        <span className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-600">
+                          {language === 'he' ? 'מקושר' : 'Linked'}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className={`px-4 py-4 align-middle whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`} onClick={(e) => e.stopPropagation()}>
+                    {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={r.receipt_images[0]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="relative block w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:border-gray-300 transition-colors"
+                          title={(t('open_file') || 'Open file')}
+                        >
+                          {isPdf(r.receipt_images[0]) ? (
+                            <PdfThumbnail url={r.receipt_images[0]} size={40} />
+                          ) : (
+                            <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover pointer-events-none" />
+                          )}
+                          {r.receipt_images.length > 1 && (
+                            <span className="absolute bottom-0 right-0 bg-black/60 text-white text-[9px] px-1 rounded-tl-md font-medium backdrop-blur-sm">
+                              +{r.receipt_images.length - 1}
+                            </span>
+                          )}
+                        </a>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className={`px-4 py-4 align-middle whitespace-nowrap ${isRTL ? 'text-left' : 'text-right'}`} onClick={(e) => e.stopPropagation()}>
+                    <div className={`flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity`}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-48">
+                          {onEdit && (
+                            <DropdownMenuItem onClick={() => onEdit(r)}>
+                              <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+                              {t('edit') || 'Edit'}
+                            </DropdownMenuItem>
+                          )}
+                          {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
+                            <DropdownMenuItem onClick={() => window.open(r.receipt_images[0], '_blank')}>
+                              <Download className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+                              {t('download') || 'Download'}
+                            </DropdownMenuItem>
+                          )}
+                          
+                          {(r.is_refund || r.needs_review) && <DropdownMenuSeparator />}
+                          
+                          {r.is_refund && (
+                            <DropdownMenuItem onClick={(e) => {
+                              e.preventDefault();
+                              if (onQuickUpdate) onQuickUpdate(r.id, { refund_received: !r.refund_received });
+                            }}>
+                              <div className="flex items-center justify-between w-full">
+                                <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
+                                <input type="checkbox" checked={!!r.refund_received} readOnly className="pointer-events-none accent-purple-600 rounded" />
+                              </div>
+                            </DropdownMenuItem>
+                          )}
+                          
+                          {r.needs_review && (
+                            <DropdownMenuItem onClick={(e) => {
+                              e.preventDefault();
+                              if (onQuickUpdate) onQuickUpdate(r.id, { reviewed: !r.reviewed });
+                            }}>
+                              <div className="flex items-center justify-between w-full">
+                                <span>{language === 'he' ? 'נבדק' : 'Reviewed'}</span>
+                                <input type="checkbox" checked={!!r.reviewed} readOnly className="pointer-events-none accent-amber-600 rounded" />
+                              </div>
+                            </DropdownMenuItem>
+                          )}
 
-              {/* Actions */}
-              <div className={`flex md:justify-end ${isRTL ? 'md:justify-start' : ''}`}>
-                <Button size="sm" variant="outline" onClick={() => onEdit && onEdit(r)}>
-                  {t('edit') || 'Edit'}
-                </Button>
-                {onDelete && (
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="ml-2"
-                    onClick={() => onDelete(r)}
-                    title={t('delete') || 'Delete'}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" /> {t('delete') || 'Delete'}
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+                          {onDelete && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => onDelete(r)} className="text-red-600 focus:text-red-600">
+                                <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                                {t('delete') || 'Delete'}
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
