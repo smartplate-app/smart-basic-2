@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader, X, AlertCircle, Check, Package } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Loader, X, AlertCircle, Check, Package, ChevronsUpDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../LanguageProvider";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +38,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   const [itemQuantities, setItemQuantities] = React.useState({});
   const [currentStock, setCurrentStock] = React.useState({}); // Track current stock per item
   const [itemSearch, setItemSearch] = React.useState("");
+  const [supplierOpen, setSupplierOpen] = React.useState(false);
 
 
   React.useEffect(() => {
@@ -291,30 +294,51 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
+          <div className="space-y-2 flex flex-col">
             <Label htmlFor="supplier">{t('supplier')} *</Label>
-            <Select
-              value={currentOrder.supplier_id}
-              onValueChange={handleSupplierChange}
-              disabled={!!order}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('select_supplier')} />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers && suppliers.length > 0 ? (
-                  suppliers.map(supplier => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <div className="px-2 py-4 text-center text-gray-500 text-sm">
-                    {t('no_suppliers_available') || 'אין ספקים זמינים'}
-                  </div>
-                )}
-              </SelectContent>
-            </Select>
+            <Popover open={supplierOpen} onOpenChange={setSupplierOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={supplierOpen}
+                  className="w-full justify-between font-normal bg-transparent border-input"
+                  disabled={!!order}
+                >
+                  {currentOrder.supplier_id
+                    ? suppliers?.find((supplier) => supplier.id === currentOrder.supplier_id)?.name
+                    : t('select_supplier')}
+                  <ChevronsUpDown className={`h-4 w-4 shrink-0 opacity-50 ${language === 'he' ? 'mr-2' : 'ml-2'}`} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align={language === 'he' ? 'end' : 'start'}>
+                <Command>
+                  <CommandInput placeholder={safeT('search_supplier', 'חפש ספק...', 'Search supplier...')} />
+                  <CommandList>
+                    <CommandEmpty>{t('no_suppliers_available') || 'אין ספקים זמינים'}</CommandEmpty>
+                    <CommandGroup>
+                      {suppliers && suppliers.map((supplier) => (
+                        <CommandItem
+                          key={supplier.id}
+                          value={supplier.name}
+                          onSelect={() => {
+                            handleSupplierChange(supplier.id);
+                            setSupplierOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={`h-4 w-4 ${language === 'he' ? 'ml-2' : 'mr-2'} ${
+                              currentOrder.supplier_id === supplier.id ? "opacity-100" : "opacity-0"
+                            }`}
+                          />
+                          {supplier.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">
