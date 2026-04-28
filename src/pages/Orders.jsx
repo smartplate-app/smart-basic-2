@@ -684,8 +684,18 @@ export default function OrdersPage() {
     setShowForm(true);
   };
 
-  const handleResend = (order) => {
+  const handleOpenPreview = (order) => {
+    const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
+    if (selectedSupplier && selectedSupplier.minimum_order_amount > 0 && order.total_cost < selectedSupplier.minimum_order_amount && order.status === 'draft') {
+      alert(language === 'he' ? `לא ניתן לשלוח את ההזמנה. לספק זה מוגדר מינימום להזמנה של ₪${selectedSupplier.minimum_order_amount}. אנא הוסף פריטים להזמנה.` : `Cannot send order. This supplier has a minimum order amount of ₪${selectedSupplier.minimum_order_amount}.`);
+      if (!isViewer) handleEdit(order);
+      return;
+    }
     setPreviewOrder(order);
+  };
+
+  const handleResend = (order) => {
+    handleOpenPreview(order);
   };
 
   const doEmailSend = async (order) => {
@@ -1428,7 +1438,7 @@ export default function OrdersPage() {
                 <Card 
                   key={order.id} 
                   className="p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => setPreviewOrder(order)}
+                  onClick={() => handleOpenPreview(order)}
                 >
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
@@ -1607,7 +1617,7 @@ export default function OrdersPage() {
                       <tr
                         key={order.id}
                         className="hover:bg-blue-50 cursor-pointer transition-colors"
-                        onClick={() => setPreviewOrder(order)}
+                        onClick={() => handleOpenPreview(order)}
                         onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
                       >
                         <td className="px-3 py-2 text-right">

@@ -22,7 +22,8 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
     grant_amount: "",
     grant_document_url: "",
     accounting_code: "",
-    storenext_id: ""
+    storenext_id: "",
+    minimum_order_amount: ""
   });
   const [uploading, setUploading] = React.useState(false);
 
@@ -45,6 +46,18 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
       }
       payload.grant_amount = normalized;
     }
+
+    if (payload.minimum_order_amount === "" || payload.minimum_order_amount === null || typeof payload.minimum_order_amount === 'undefined') {
+      delete payload.minimum_order_amount;
+    } else {
+      const normalizedMin = Number(String(payload.minimum_order_amount).replace(',', '.'));
+      if (Number.isNaN(normalizedMin)) {
+        alert(language === 'he' ? 'מינימום להזמנה אינו מספר תקין' : 'Minimum order amount is not a valid number');
+        return;
+      }
+      payload.minimum_order_amount = normalizedMin;
+    }
+
     onSubmit(payload);
   };
 
@@ -180,6 +193,19 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }) {
                 onChange={(e) => handleChange("grant_notes", e.target.value)}
                 placeholder={language === 'he' ? 'תאר כאן את פרטי המענק או ההנחה המיוחדת...' : 'Describe grant or special discount details...'}
                 rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minimum_order_amount">{language === 'he' ? 'מינימום להזמנה (₪)' : 'Minimum Order Amount (₪)'}</Label>
+              <Input
+                id="minimum_order_amount"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
+                value={formData.minimum_order_amount || ""}
+                onChange={(e) => handleChange("minimum_order_amount", e.target.value)}
+                placeholder={language === 'he' ? 'סכום מינימום' : 'Minimum amount'}
               />
             </div>
 

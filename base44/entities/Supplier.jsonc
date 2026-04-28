@@ -51,6 +51,10 @@
     "storenext_id": {
       "type": "string",
       "description": "StoreNext Supplier ID (GLN) if integrated"
+    },
+    "minimum_order_amount": {
+      "type": "number",
+      "description": "Minimum order amount required by the supplier"
     }
   },
   "required": [
