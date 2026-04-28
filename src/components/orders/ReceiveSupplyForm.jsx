@@ -1300,11 +1300,6 @@ const handleAutoScan = async () => {
                               required
                             />
                           </div>
-                          {formData.document_type === 'delivery_note' ? (
-                            <div className="bg-gray-100 p-3 rounded-lg border">
-                              <Label className="text-sm text-gray-700 font-bold">{language === 'he' ? 'תעודת משלוח (ללא סכום)' : 'Delivery Note (No amount)'}</Label>
-                            </div>
-                          ) : (
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <Label className="text-xs text-gray-600">{language === 'he' ? 'סכום לפני מע״מ' : 'Total (Excl. VAT)'}</Label>
@@ -1318,7 +1313,7 @@ const handleAutoScan = async () => {
                                 />
                               </div>
                               <div>
-                                <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</Label>
+                                <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) {formData.document_type !== 'delivery_note' && '*'}</Label>
                                 <Input
                                   type="text"
                                   inputMode="decimal"
@@ -1330,7 +1325,6 @@ const handleAutoScan = async () => {
                                 />
                               </div>
                             </div>
-                          )}
                           {formData.verified_items.length > 0 && (
                             <div>
                               <Label className="text-xs text-gray-600">{t('calculated_total')}</Label>
@@ -1364,9 +1358,7 @@ const handleAutoScan = async () => {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setFormData(prev => ({ ...prev, document_type: 'delivery_note', invoice_total: 0, is_refund: false }));
-                                  setInclVatInput("0");
-                                  setExclVatInput("0");
+                                  setFormData(prev => ({ ...prev, document_type: 'delivery_note', is_refund: false }));
                                 }}
                                 className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
