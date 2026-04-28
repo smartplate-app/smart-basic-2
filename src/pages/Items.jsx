@@ -847,26 +847,6 @@ const handleCleanOrphans = async (ownerEmail) => {
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              variant="outline"
-              className="border-red-300 text-red-600 hover:bg-red-50"
-              disabled={selectedWarehouseId === 'all'}
-              onClick={async () => {
-                if (selectedWarehouseId === 'all') return;
-                const wh = warehouses.find(w => w.id === selectedWarehouseId);
-                if (!wh) return;
-                if (!confirm(`Delete warehouse "${wh.name}"?`)) return;
-                try {
-                  await base44.entities.Warehouse.delete(selectedWarehouseId);
-                  setWarehouses(prev => prev.filter(w => w.id !== selectedWarehouseId));
-                  setSelectedWarehouseId('all');
-                } catch (e) {
-                  alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
-                }
-              }}
-            >
-              <Trash2 className="w-4 h-4 mr-2" /> {language === 'he' ? 'מחק מחסן' : 'Delete Warehouse'}
-            </Button>
           </div>
         </div>
 
