@@ -37,18 +37,60 @@ export async function performSync(base44, connection) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: connection.tabit_email, password: connection.tabit_password })
     });
+    if (!authRes.ok) {
+      const errText = await authRes.text();
+      throw new Error(`Tabit auth failed: ${authRes.status} ${errText.substring(0, 50)}`);
+    }
     const authData = await authRes.json();
     const token = authData.il?.access_token || authData.access_token;
-    if (!token) throw new Error('Tabit auth failed');
+    if (!token) throw new Error('Tabit auth failed: No token returned');
 
+    // Find all available orgs
+    const allOrgs = authData.il?.organizations || authData.organizations || [];
+    
     const branches = connection.tabit_branches || [];
+    let orgIdsToSync = [];
+    
+    if (branches.length === 0) {
+      // No branches provided. Sync everything we have access to
+      if (allOrgs.length > 0) {
+        orgIdsToSync = allOrgs.map(o => o._id || o.id);
+      } else {
+        // Fallback: just use the default token without org change
+        orgIdsToSync = [null];
+      }
+    } else {
+      // Find org ID by branch name
+      for (const branchName of branches) {
+        const org = allOrgs.find(o => 
+          (o.name && o.name.toLowerCase() === branchName.toLowerCase()) || 
+          (o._id === branchName) || 
+          (o.id === branchName)
+        );
+        if (org) {
+          orgIdsToSync.push(org._id || org.id);
+        } else {
+          // Fallback to exactly what the user wrote if not found
+          orgIdsToSync.push(branchName);
+        }
+      }
+    }
+
     const today = new Date();
-    for (const orgId of branches) {
-      const orgRes = await fetch(`https://ros-rp-beta.tabit.cloud/Organizations/${orgId}/change`, {
-        method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const orgData = await orgRes.json();
-      const branchToken = orgData.access_token || token;
+    for (const orgId of orgIdsToSync) {
+      let branchToken = token;
+      
+      if (orgId) {
+        const orgRes = await fetch(`https://ros-rp-beta.tabit.cloud/Organizations/${orgId}/change`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!orgRes.ok) {
+          const errText = await orgRes.text();
+          throw new Error(`Tabit org change failed for ${orgId}: ${orgRes.status} ${errText.substring(0, 50)}`);
+        }
+        const orgData = await orgRes.json();
+        branchToken = orgData.access_token || token;
+      }
 
       for (let day = 1; day <= today.getDate(); day++) {
         const dateStr = `${currentMonth}-${String(day).padStart(2, '0')}`;
@@ -56,8 +98,12 @@ export async function performSync(base44, connection) {
           headers: { 'Authorization': `Bearer ${branchToken}` }
         });
         if (repRes.ok) {
-          const repData = await repRes.json();
-          restaurant_sales += (repData.netSales || 0) / 100;
+          try {
+            const repData = await repRes.json();
+            restaurant_sales += (repData.netSales || 0) / 100;
+          } catch (err) {
+            // ignore JSON error on daily totals
+          }
         }
       }
     }

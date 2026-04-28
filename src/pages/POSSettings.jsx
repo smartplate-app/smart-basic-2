@@ -134,8 +134,9 @@ export default function POSSettings() {
                     <Input type="password" value={formData.tabit_password} onChange={e => setFormData({...formData, tabit_password: e.target.value})} />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">מזהי סניפים (Organization IDs מופרדים בפסיק)</label>
-                    <Input value={formData.tabit_branches} onChange={e => setFormData({...formData, tabit_branches: e.target.value})} placeholder="לדוגמה: org1, org2" />
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">שם המסעדה / סניפים (אופציונלי)</label>
+                    <Input value={formData.tabit_branches} onChange={e => setFormData({...formData, tabit_branches: e.target.value})} placeholder="לדוגמה: הסניף הגדול (השאירו ריק אם יש סניף בודד)" />
+                    <p className="text-xs text-gray-500 mt-1">אם המסעדה היא חלק מרשת, כתבו את שם המסעדה בדיוק כפי שמופיע ב-Tabit Chef (ניתן לכתוב מספר סניפים מופרדים בפסיק).</p>
                   </div>
                 </div>
               )}
