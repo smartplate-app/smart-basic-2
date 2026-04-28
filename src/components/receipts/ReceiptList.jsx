@@ -47,21 +47,21 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
           <thead className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
             <tr>
               <th 
-                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-bottom pb-4"
+                className="px-4 pt-4 pb-3 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-top"
                 onClick={() => {
                   if (onSortChange) onSortChange(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc');
                 }}
               >
-                <div className="flex items-center gap-1 justify-start rtl:justify-end">
+                <div className="flex items-center gap-1 justify-start rtl:justify-end h-5">
                   {safeT('supplier', 'ספק', 'Supplier')}
                   <span className={`text-[10px] ${sortBy?.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
                     {sortBy === 'supplier_asc' ? '↑' : sortBy === 'supplier_desc' ? '↓' : '⇅'}
                   </span>
                 </div>
               </th>
-              <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 align-bottom">
-                <div className="flex flex-col gap-1.5 justify-end h-full">
-                  <span>{safeT('invoice_number', 'מספר חשבונית', 'Invoice #')}</span>
+              <th className="px-4 pt-4 pb-3 text-right text-xs font-semibold text-gray-500 align-top">
+                <div className="flex flex-col gap-2">
+                  <span className="flex items-center justify-start rtl:justify-end h-5">{safeT('invoice_number', 'מספר חשבונית', 'Invoice #')}</span>
                   {onInvoiceNumberFilterChange && (
                     <div className="relative max-w-[130px]">
                       <Search className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 ${isRTL ? 'right-2' : 'left-2'}`} />
@@ -78,12 +78,12 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                 </div>
               </th>
               <th 
-                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-bottom pb-4"
+                className="px-4 pt-4 pb-3 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-top"
                 onClick={() => {
                   if (onSortChange) onSortChange(sortBy === 'date_desc' ? 'date_asc' : 'date_desc');
                 }}
               >
-                <div className="flex items-center gap-1 justify-start rtl:justify-end">
+                <div className="flex items-center gap-1 justify-start rtl:justify-end h-5">
                   {safeT('received_date', 'תאריך קבלה', 'Date')}
                   <span className={`text-[10px] ${sortBy?.startsWith('date') ? 'text-gray-900' : 'text-gray-400'}`}>
                     {sortBy === 'date_asc' ? '↑' : sortBy === 'date_desc' ? '↓' : '⇅'}
@@ -91,25 +91,25 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                 </div>
               </th>
               <th 
-                className="px-4 py-4 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-bottom pb-4"
+                className="px-4 pt-4 pb-3 text-right text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-top"
                 onClick={() => {
                   if (onSortChange) onSortChange(sortBy === 'amount_desc' ? 'amount_asc' : 'amount_desc');
                 }}
               >
-                <div className="flex items-center justify-end gap-1">
+                <div className="flex items-center justify-end gap-1 h-5">
                   {safeT('invoice_total', 'סכום בחשבונית', 'Amount')}
                   <span className={`text-[10px] ${sortBy?.startsWith('amount') ? 'text-gray-900' : 'text-gray-400'}`}>
                     {sortBy === 'amount_asc' ? '↑' : sortBy === 'amount_desc' ? '↓' : '⇅'}
                   </span>
                 </div>
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 align-bottom pb-4">
-                {safeT('status', 'סטטוס', 'Status')}
+              <th className="px-4 pt-4 pb-3 text-right text-xs font-semibold text-gray-500 align-top">
+                <div className="flex items-center justify-start rtl:justify-end h-5">{safeT('status', 'סטטוס', 'Status')}</div>
               </th>
-              <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 align-bottom pb-4">
-                {safeT('files', 'קבצים', 'Files')}
+              <th className="px-4 pt-4 pb-3 text-right text-xs font-semibold text-gray-500 align-top">
+                <div className="flex items-center justify-start rtl:justify-end h-5">{safeT('files', 'קבצים', 'Files')}</div>
               </th>
-              <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 align-bottom pb-4">
+              <th className="px-4 pt-4 pb-3 text-left text-xs font-semibold text-gray-500 align-top">
               </th>
             </tr>
           </thead>
