@@ -45,7 +45,7 @@ export default function SupplyReceiptsPage() {
     return (!s || s === key) ? (language === 'he' ? he : (en || key)) : s;
   };
   const [activeTab, setActiveTab] = useState('receipts');
-  const [viewMode, setViewMode] = useState('list');
+  const [viewMode, setViewMode] = useState('grid');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const startYRef = useRef(0);
   const [pullDist, setPullDist] = useState(0);
@@ -423,7 +423,7 @@ export default function SupplyReceiptsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="receipts">{tt('receipts_tab','קבלות','Receipts')}</TabsTrigger>
-            <TabsTrigger value="monthly_report">{tt('monthly_report','דוח חודשי','Monthly Report')}</TabsTrigger>
+            <TabsTrigger value="monthly_report">{tt('monthly_summary','סיכום חודשי','Monthly Summary')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="receipts">
@@ -483,29 +483,41 @@ export default function SupplyReceiptsPage() {
            </Button>
          </div>
 
-         <div className="hidden md:flex flex-wrap items-center gap-1 mb-4">
+         <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-nowrap overflow-x-auto pb-1 gap-2" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+              {[
+                { id: 'all', label: tt('all_statuses','הכל','All') },
+                { id: 'invoices', label: language === 'he' ? 'חשבוניות' : 'Invoices' },
+                { id: 'delivery_notes', label: language === 'he' ? 'תעודות משלוח' : 'Delivery Notes' },
+                { id: 'refund_invoice', label: language === 'he' ? 'זיכויים' : 'Refunds' },
+                { id: 'awaiting_credit', label: language === 'he' ? 'ממתין לזיכוי' : 'Awaiting Credit' },
+                { id: 'needs_review', label: language === 'he' ? 'לבדיקה' : 'Needs Review' }
+              ].map(status => (
+                <button
+                  key={status.id}
+                  onClick={() => setStatusFilter(status.id)}
+                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                    statusFilter === status.id 
+                      ? 'bg-gray-900 text-white border-gray-900 shadow-sm' 
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {status.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="hidden md:flex flex-wrap items-center gap-2">
               <div className="relative">
-                <Search className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 w-3 h-3" />
-                                 <Input
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
                   placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-8 pr-7 rounded-md text-xs"
+                  className="h-9 pr-9 rounded-md text-sm min-w-[200px]"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                               <SelectTrigger className="h-8 rounded-md px-2 text-xs border-gray-200 shadow-none bg-white">
-                  <SelectValue placeholder={tt('receipt_status','סטטוס קבלה','Receipt status')} />
-                </SelectTrigger>
-                <SelectContent>
-                 <SelectItem value="all">{tt('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
-                 <SelectItem value="invoices">{language === 'he' ? 'חשבוניות מס' : 'Tax invoices'}</SelectItem>
-                 <SelectItem value="delivery_notes">{language === 'he' ? 'תעודות משלוח' : 'Delivery notes'}</SelectItem>
-                 <SelectItem value="refund_invoice">{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</SelectItem>
-                 <SelectItem value="awaiting_credit">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</SelectItem>
-                 <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</SelectItem>
-                </SelectContent>
-              </Select>
+            </div>
 
               {/* Extra filters for refunds/review */}
               {statusFilter === 'refund_invoice' && (

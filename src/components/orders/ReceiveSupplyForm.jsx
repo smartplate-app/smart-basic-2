@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -1023,7 +1023,7 @@ const handleAutoScan = async () => {
                   <div className="space-y-2 mt-4">
                     <Label>{t('receipt_images')} *</Label>
                     <div
-                      className={`border-2 border-dashed rounded-lg p-4 ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'}`}
+                      className={`relative border-2 border-dashed rounded-2xl p-6 transition-colors overflow-hidden ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50/50 hover:bg-gray-50'}`}
                       onDragOver={onDragOverUpload}
                       onDragLeave={onDragLeaveUpload}
                       onDrop={onDropUpload}
@@ -1038,19 +1038,28 @@ const handleAutoScan = async () => {
                       />
                       <label
                         htmlFor="receipt-upload"
-                        className="flex flex-col items-center gap-2 cursor-pointer"
+                        className="flex flex-col items-center gap-3 cursor-pointer relative z-10"
                       >
                         {uploading ? (
-                          <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+                          <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
+                            <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+                          </div>
                         ) : (
-                          <Upload className="w-8 h-8 text-gray-400" />
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-500 to-orange-400 p-[2px] shadow-lg">
+                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center border-2 border-white hover:bg-gray-50 transition-colors">
+                              <Camera className="w-8 h-8 text-gray-800" strokeWidth={1.5} />
+                            </div>
+                          </div>
                         )}
-                        <span className="text-sm text-gray-600">{safeT('click_to_upload_images', '\u05dc\u05d7\u05e6\u05d5 \u05dc\u05d4\u05e2\u05dc\u05d0\u05ea \u05ea\u05de\u05d5\u05e0\u05d5\u05ea', 'Click to upload images')}</span>
-                        <span className="text-xs text-gray-500">{safeT('supports_images_pdf', 'תמיכה: תמונות/PDF', 'Supports: images/PDF')}</span>
-                        <span className="text-xs text-gray-500">
-                          {language === 'he' ? 'או גררו ושחררו כאן קבצים (תמונות/PDF)' : 'or drag & drop files here (images/PDF)'}
+                        <span className="text-base font-bold text-gray-800 text-center">
+                          {safeT('click_to_upload_images', 'צלם או העלה קבלה', 'Take photo or upload receipt')}
+                        </span>
+                        <span className="text-xs text-gray-500 max-w-xs text-center">
+                          {language === 'he' ? 'תמיכה בתמונות ומסמכי PDF. ניתן גם לגרור לכאן.' : 'Supports images/PDF. You can also drag & drop here.'}
                         </span>
                       </label>
+                      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                      <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
                     </div>
 
                     {formData.receipt_images.length > 0 && (
@@ -1341,64 +1350,64 @@ const handleAutoScan = async () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div className="col-span-full">
                             <Label className="text-xs text-gray-600 mb-2 block">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
-                            <div className="flex gap-2 flex-wrap">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setFormData(prev => ({ ...prev, document_type: 'invoice' }));
+                                  setFormData(prev => ({ ...prev, document_type: 'invoice', is_refund: false }));
                                 }}
-                                className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${formData.document_type === 'invoice' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'invoice' && !formData.is_refund ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                🧾 {language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}
+                                <span className="text-2xl">🧾</span>
+                                <span>{language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setFormData(prev => ({ ...prev, document_type: 'delivery_note', invoice_total: 0 }));
+                                  setFormData(prev => ({ ...prev, document_type: 'delivery_note', invoice_total: 0, is_refund: false }));
                                   setInclVatInput("0");
                                   setExclVatInput("0");
                                 }}
-                                className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                📦 {language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}
+                                <span className="text-2xl">📦</span>
+                                <span>{language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setFormData(prev => ({ ...prev, document_type: 'summary_invoice' }));
+                                  setFormData(prev => ({ ...prev, document_type: 'summary_invoice', is_refund: false }));
                                 }}
-                                className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                📊 {language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}
+                                <span className="text-2xl">📊</span>
+                                <span>{language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, document_type: 'invoice', is_refund: true }));
+                                  const currentIncl = parseFloat(inclVatInput);
+                                  if (!isNaN(currentIncl)) {
+                                     const newIncl = -Math.abs(currentIncl);
+                                     setInclVatInput(newIncl.toFixed(2));
+                                     updateInvoiceTotal(newIncl);
+                                  }
+                                  const currentExcl = parseFloat(exclVatInput);
+                                  if (!isNaN(currentExcl)) {
+                                     const newExcl = -Math.abs(currentExcl);
+                                     setExclVatInput(newExcl.toFixed(2));
+                                  }
+                                }}
+                                className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                              >
+                                <span className="text-2xl">🔄</span>
+                                <span>{language === 'he' ? 'חשבונית זיכוי (-)' : 'Refund (-)'}</span>
                               </button>
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 flex-wrap">
-                          <label className="flex items-center gap-2 text-sm font-semibold p-2 bg-white border rounded shadow-sm cursor-pointer hover:bg-gray-50">
-                            <input
-                              type="checkbox"
-                              checked={!!formData.is_refund}
-                              onChange={(e) => {
-                                const isRefund = e.target.checked;
-                                setFormData(prev => ({ ...prev, is_refund: isRefund }));
-                                
-                                const currentIncl = parseFloat(inclVatInput);
-                                if (!isNaN(currentIncl)) {
-                                   const newIncl = isRefund ? -Math.abs(currentIncl) : Math.abs(currentIncl);
-                                   setInclVatInput(newIncl.toFixed(2));
-                                   updateInvoiceTotal(newIncl);
-                                }
-                                const currentExcl = parseFloat(exclVatInput);
-                                if (!isNaN(currentExcl)) {
-                                   const newExcl = isRefund ? -Math.abs(currentExcl) : Math.abs(currentExcl);
-                                   setExclVatInput(newExcl.toFixed(2));
-                                }
-                              }}
-                              className="rounded w-4 h-4 accent-orange-600"
-                            />
-                            <span className={formData.is_refund ? 'text-orange-600' : ''}>{language === 'he' ? 'חשבונית זיכוי (-)' : 'Refund invoice (-)'}</span>
-                          </label>
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"

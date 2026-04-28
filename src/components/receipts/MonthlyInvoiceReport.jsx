@@ -103,6 +103,9 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   }, [monthReceipts, supplierById, t, sortMode]);
 
   const grandTotal = useMemo(() => grouped.reduce((sum, g) => sum + g.total, 0), [grouped]);
+  const totalReceipts = monthReceipts.length;
+  const totalSuppliers = grouped.length;
+  const avgReceipt = totalReceipts > 0 ? (grandTotal / totalReceipts) : 0;
 
   return (
     <div className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -110,7 +113,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
         <CardHeader>
           <CardTitle className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <span>{t('monthly_report') || 'Monthly Report'}</span>
+              <span>{language === 'he' ? 'סיכום חודשי' : (t('monthly_summary') || 'Monthly Summary')}</span>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -305,6 +308,24 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
+              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'סה"כ הוצאות' : 'Total Expenses'}</span>
+              <span className="text-2xl font-bold text-gray-900">₪{grandTotal.toFixed(0)}</span>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
+              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'מספר קבלות' : 'Total Receipts'}</span>
+              <span className="text-2xl font-bold text-gray-900">{totalReceipts}</span>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
+              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'מספר ספקים' : 'Total Suppliers'}</span>
+              <span className="text-2xl font-bold text-gray-900">{totalSuppliers}</span>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
+              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'ממוצע לקבלה' : 'Avg. Receipt'}</span>
+              <span className="text-2xl font-bold text-gray-900">₪{avgReceipt.toFixed(0)}</span>
+            </div>
+          </div>
           <div className="overflow-x-auto w-full">
             <table className="w-full min-w-[700px] border-collapse">
               <thead>
