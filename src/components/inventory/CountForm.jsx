@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Trash2, Save, WifiOff, Upload, FileSpreadsheet, Loader, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
@@ -29,7 +30,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     status: "in_progress"
   });
 
-  const [selectedItemId, setSelectedItemId] = useState("");
+
   const [savingCatalog, setSavingCatalog] = useState(false);
   const [filteredAvailableItems, setFilteredAvailableItems] = useState([]);
   const [hasDraft, setHasDraft] = useState(false);
@@ -214,7 +215,6 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
       warehouse_name: warehouse?.name || "",
       items: count ? prev.items : newItems
     }));
-    setSelectedItemId("");
   };
 
   const handleCreateWarehouse = async () => {
@@ -267,33 +267,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     }
   };
 
-  const addItem = () => {
-    if (!selectedItemId) return;
-    
-    const item = items.find(i => i.id === selectedItemId);
-    if (!item) return;
 
-    if (formData.items.some(countItem => countItem.item_id === item.id)) {
-      alert(t('item_already_added'));
-      return;
-    }
-
-    const newItem = {
-      item_id: item.id,
-      item_name: item.name,
-      counted_quantity: "",
-      unit: item.unit,
-      price_per_unit: item.price || 0,
-      total_cost: 0,
-      notes: ""
-    };
-
-    setFormData(prev => ({
-      ...prev,
-      items: [...prev.items, newItem]
-    }));
-    setSelectedItemId("");
-  };
 
   const updateItemQuantity = (index, quantity) => {
     const newItems = [...formData.items];
@@ -470,39 +444,122 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
               <div className="space-y-4">
                 <div className="flex flex-col md:flex-row items-end gap-2">
                   <div className="flex-1 space-y-2 w-full">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        placeholder={language === 'he' ? 'חפש פריט...' : 'Search item...'}
-                        value={availableSearch}
-                        onChange={(e) => setAvailableSearch(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); } }}
-                        className="w-full"
-                      />
+                    <Label htmlFor="add_item_select" className="text-base font-bold text-gray-900 mb-2">{t('add_item')}</Label>
+                    <div className="relative mt-2">
+                      <Popover open={(availableSearch !== "" && filteredAvailableItems.length > 0)} onOpenChange={(open) => {
+                        if (!open) {
+                           // Keep search text but close dropdown if needed
+                        }
+                      }}>
+                        <PopoverTrigger asChild>
+                          <div className="relative">
+                            <Input
+                              id="add_item_select"
+                              placeholder={language === 'he' ? 'הקלד פריט לחיפוש ולהוספה...' : 'Type to search item...'}
+                              value={availableSearch}
+                              onChange={(e) => {
+                                setAvailableSearch(e.target.value);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  if (filteredAvailableItems.length > 0) {
+                                    // Auto add the first result on enter
+                                    const item = items.find(i => i.id === filteredAvailableItems[0].id);
+                                    if (item && !formData.items.some(ci => ci.item_id === item.id)) {
+                                       setFormData(prev => ({
+                                        ...prev,
+                                        items: [{
+                                          item_id: item.id,
+                                          item_name: item.name,
+                                          counted_quantity: "",
+                                          unit: item.unit,
+                                          price_per_unit: item.price || 0,
+                                          total_cost: 0,
+                                          notes: ""
+                                        }, ...prev.items]
+                                      }));
+                                      setAvailableSearch('');
+                                    }
+                                  }
+                                }
+                              }}
+                              className="w-full h-12 text-base font-normal bg-white pr-10 rtl:pl-10 rtl:pr-3"
+                              autoComplete="off"
+                            />
+                            <ArrowUpDown className="absolute top-1/2 -translate-y-1/2 right-3 rtl:left-3 rtl:right-auto h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent 
+                          className="p-0 z-50 w-full" 
+                          align="start" 
+                          style={{ width: 'var(--radix-popover-trigger-width)' }}
+                          onOpenAutoFocus={(e) => e.preventDefault()}
+                        >
+                          <div className="max-h-[300px] overflow-y-auto p-1">
+                            {filteredAvailableItems.map(item => (
+                              <div
+                                key={item.id}
+                                className={`flex items-center w-full justify-between p-3 cursor-pointer hover:bg-gray-100 rounded-md transition-colors`}
+                                onClick={() => {
+                                  if (!formData.items.some(ci => ci.item_id === item.id)) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      items: [{
+                                        item_id: item.id,
+                                        item_name: item.name,
+                                        counted_quantity: "",
+                                        unit: item.unit,
+                                        price_per_unit: item.price || 0,
+                                        total_cost: 0,
+                                        notes: ""
+                                      }, ...prev.items]
+                                    }));
+                                  }
+                                  setAvailableSearch("");
+                                }}
+                              >
+                                <span className="text-gray-900">{item.name}</span>
+                                <span className="text-gray-500 text-sm mx-2">({item.unit})</span>
+                                {item.price > 0 && <span className="text-gray-400 text-sm ml-auto rtl:mr-auto rtl:ml-0">- ₪{item.price}</span>}
+                              </div>
+                            ))}
+                            {filteredAvailableItems.length === 0 && (
+                              <div className="p-4 text-center text-gray-500 text-sm">
+                                {availableSearch ? (language === 'he' ? 'לא נמצאו פריטים' : 'No results') : t('no_available_items')}
+                              </div>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
-                    <Label htmlFor="add_item_select">{t('add_item')}</Label>
-                    <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-                      {/* Prevent Enter in trigger from submitting the form */}
-                      <SelectTrigger id="add_item_select">
-                        <SelectValue placeholder={
-                          filteredAvailableItems.length === 0 ? (availableSearch ? (language === 'he' ? 'לא נמצאו פריטים' : 'No results') : t('no_available_items')) : t('select_item')
-                        } />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filteredAvailableItems.map(item => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.name} ({item.unit}) {item.price > 0 ? `- ${item.price}` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                   <Button
                     type="button"
-                    onClick={addItem}
-                    disabled={!selectedItemId}
-                    className="bg-green-600 hover:bg-green-700 w-full md:w-auto"
+                    onClick={() => {
+                      if (filteredAvailableItems.length > 0) {
+                         const item = items.find(i => i.id === filteredAvailableItems[0].id);
+                         if (item && !formData.items.some(ci => ci.item_id === item.id)) {
+                           setFormData(prev => ({
+                            ...prev,
+                            items: [{
+                              item_id: item.id,
+                              item_name: item.name,
+                              counted_quantity: "",
+                              unit: item.unit,
+                              price_per_unit: item.price || 0,
+                              total_cost: 0,
+                              notes: ""
+                            }, ...prev.items]
+                          }));
+                          setAvailableSearch('');
+                         }
+                      }
+                    }}
+                    disabled={filteredAvailableItems.length === 0}
+                    className="bg-green-600 hover:bg-green-700 w-full md:w-auto h-12 text-base"
                   >
-                    <Plus className="w-4 h-4 mr-1" />
+                    <Plus className="w-5 h-5 mr-2" />
                     {t('add_item')}
                   </Button>
                 </div>
