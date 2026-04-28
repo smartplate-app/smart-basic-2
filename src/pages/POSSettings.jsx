@@ -125,6 +125,9 @@ export default function POSSettings() {
 
               {formData.pos_type === 'tabit' && (
                 <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-md text-sm text-blue-800 mb-4">
+                    <strong>שים לב:</strong> הגדרת חיבור זה תשמש באופן אוטומטי את כל המשתמשים במסעדה לסנכרון מול Tabit. (מערכת Tabit Chef).
+                  </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">אימייל Tabit</label>
                     <Input value={formData.tabit_email} onChange={e => setFormData({...formData, tabit_email: e.target.value})} />

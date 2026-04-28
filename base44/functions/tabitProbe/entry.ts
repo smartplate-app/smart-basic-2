@@ -1,10 +1,8 @@
 Deno.serve(async (req) => {
   const urls = [
-    "https://il-office.tabit.cloud/api/login",
-    "https://il-office.tabit.cloud/login",
-    "https://office.tabit.cloud/login",
-    "https://bof-rp-beta.tabit.cloud/api/login",
-    "https://bof-rp-beta.tabit.cloud/login"
+    "https://reporting-server.tabit.cloud/login",
+    "https://reporting-server.tabit.cloud/api/login",
+    "https://office.tabit.cloud/api/login"
   ];
   const results = {};
   for (const url of urls) {

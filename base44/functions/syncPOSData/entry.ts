@@ -135,7 +135,12 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-    const connections = await base44.entities.POSConnection.filter({ created_by: user.email, is_active: true });
+    let connections = await base44.entities.POSConnection.filter({ created_by: user.email, is_active: true });
+    if (!connections || connections.length === 0) {
+      // Fallback: use any active global Tabit connection
+      connections = await base44.asServiceRole.entities.POSConnection.filter({ pos_type: 'tabit', is_active: true });
+    }
+    
     if (!connections || connections.length === 0) return Response.json({ success: false, error: 'No active POS connection' });
 
     const result = await performSync(base44, connections[0]);
