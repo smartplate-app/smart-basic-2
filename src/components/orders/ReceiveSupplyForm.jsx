@@ -369,6 +369,11 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
           ...prev,
           receipt_images: [...prev.receipt_images, ...urls]
         }));
+        
+        // Auto-scan after upload
+        setTimeout(() => {
+          handleAutoScanWithUrls([...formData.receipt_images, ...urls]);
+        }, 300);
       }
     } catch (error) {
       console.error("Error uploading images:", error);
@@ -481,80 +486,46 @@ useEffect(() => {
 }, [formData.supplier_id, formData.document_type]);
 
 const handleAutoScan = async () => {
-    if (!formData.receipt_images.length) {
-      alert(t('click_to_upload_images'));
-      return;
-    }
+  if (!formData.receipt_images.length) {
+    alert(t('click_to_upload_images'));
+    return;
+  }
+  handleAutoScanWithUrls(formData.receipt_images);
+};
 
-    if (noOrderMode && !formData.supplier_id) {
-      alert(t('supplier_required'));
-      return;
-    }
+const handleAutoScanWithUrls = async (urlsToScan) => {
+  if (!urlsToScan || !urlsToScan.length) return;
+  if (noOrderMode && !formData.supplier_id) {
+    alert(t('supplier_required'));
+    return;
+  }
 
-    try {
-      setScanning(true);
+  try {
+    setScanning(true);
 
-      if (formData.receipt_images.length > 1) {
-        const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
-        const results = await Promise.all(
-          formData.receipt_images.map(async (url) => {
-            const resp = await base44.integrations.Core.InvokeLLM({
-              prompt: `You are extracting header fields from a HEBREW supplier invoice image.
-
-            EXTRACTION RULES (HEBREW ONLY):
-            - Prefer invoice date labeled "תאריך חשבונית" or "תאריך מסמך". Do NOT use "תאריך הדפסה" or "שעת הדפסה".
-            - Extract both dates if present: invoice_date_invoice and invoice_date_printed.
-            - Totals: extract all three if available:
-            • total_excl_vat = סכום ללא מע"מ / מחיר כולל (before VAT)
-            • vat_amount = מע"מ
-            • total_incl_vat = סה"כ לתשלום OR סה"כ כולל מע"מ (after VAT). Prefer the bold bottom number.
-            - Invoice number: number/code following "מספר חשבונית" / "חשבונית מס'" / "מס' חשבונית" / "חשבונית".
-            - Values may contain commas or dots.
-
-            Return valid JSON:
-            {
-            "invoice_number": "string",
-            "invoice_date_invoice": "YYYY-MM-DD",
-            "invoice_date_printed": "YYYY-MM-DD",
-            "total_excl_vat": number,
-            "vat_amount": number,
-            "total_incl_vat": number,
-            "is_refund": boolean
-            }
-
-            NOTES:
-            - If the document includes "זיכוי" or "החזר", set is_refund=true.
-            - Dates must be YYYY-MM-DD. If only DD/MM/YY present, convert to YYYY-MM-DD.
-            - Do not include line items.`,
-              file_urls: [url],
-              response_json_schema: {
-                type: "object",
-                properties: {
-                  invoice_number: { type: "string" },
-                  invoice_date_invoice: { type: "string" },
-                  invoice_date_printed: { type: "string" },
-                  total_excl_vat: { type: "number" },
-                  vat_amount: { type: "number" },
-                  total_incl_vat: { type: "number" },
-                  is_refund: { type: "boolean" }
-                }
-              }
-            });
-            const isRefund = Boolean(resp.is_refund);
-            const incl = Number(resp.total_incl_vat);
-            const excl = Number(resp.total_excl_vat);
-            const vat = Number(resp.vat_amount);
-            let totalCandidate = (isFinite(incl) && incl > 0) ? incl : ((isFinite(excl) && isFinite(vat)) ? (excl + vat) : Number(resp.invoice_total || 0));
-            let total = (typeof totalCandidate === 'number' && isFinite(totalCandidate)) ? totalCandidate : 0;
-            total = isRefund ? -Math.abs(total) : Math.abs(total);
-            const inv = sanitizeInvoiceNumber(resp.invoice_number || '');
-            const dateChosen = resp.invoice_date_invoice || resp.invoice_date || resp.invoice_date_printed || formData.received_date;
-            const dup = supplierId ? await checkDuplicateInvoice(inv, supplierId, receipt?.id) : false;
-            const isZeroVat = vat === 0 && excl === incl && incl > 0;
-            // duplicate flag shown inline per-card; confirmation happens at save time
-            return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, is_zero_vat: isZeroVat, duplicate: dup, document_type: 'invoice' };
-          })
-        );
+    if (urlsToScan.length > 1) {
+      const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
+      const results = await Promise.all(
+        urlsToScan.map(async (url) => {
+          const { data } = await base44.functions.invoke('scanAndMatchReceipt', {
+            file_urls: [url],
+            supplier_id: supplierId || null,
+          });
+          const resp = data?.header || {};
+          const isRefund = Boolean(resp.is_refund);
+          const incl = Number(resp.total_incl_vat);
+          const excl = Number(resp.total_excl_vat);
+          const vat = Number(resp.vat_amount);
+          let totalCandidate = (isFinite(incl) && incl > 0) ? incl : ((isFinite(excl) && isFinite(vat)) ? (excl + vat) : Number(resp.invoice_total || 0));
+          let total = (typeof totalCandidate === 'number' && isFinite(totalCandidate)) ? totalCandidate : 0;
+          total = isRefund ? -Math.abs(total) : Math.abs(total);
+          const inv = sanitizeInvoiceNumber(resp.invoice_number || '');
+          const dateChosen = resp.invoice_date || formData.received_date;
+          const dup = supplierId ? await checkDuplicateInvoice(inv, supplierId, receipt?.id) : false;
+          const isZeroVat = vat === 0 && excl === incl && incl > 0;
+          return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, is_zero_vat: isZeroVat, duplicate: dup, document_type: 'invoice' };
+        })
+      );
         setScannedDocs(results);
         scrollToDetails();
         setFormData(prev => ({ ...prev, manual_entry_mode: true }));
@@ -567,50 +538,17 @@ const handleAutoScan = async () => {
         return;
       }
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are extracting header fields from a HEBREW supplier invoice image.
-
-      EXTRACTION RULES (HEBREW ONLY):
-      - Prefer invoice date labeled "תאריך חשבונית" or "תאריך מסמך". Do NOT use "תאריך הדפסה" or "שעת הדפסה".
-      - Extract both dates if present: invoice_date_invoice and invoice_date_printed.
-      - Totals: extract all three if available:
-      • total_excl_vat = סכום ללא מע"מ / מחיר כולל (before VAT)
-      • vat_amount = מע"מ
-      • total_incl_vat = סה"כ לתשלום OR סה"כ כולל מע"מ (after VAT). Prefer the bold bottom number.
-      - Invoice number: number/code following "מספר חשבונית" / "חשבונית מס'" / "מס' חשבונית" / "חשבונית".
-      - Values may contain commas or dots.
-
-      Return valid JSON:
-      {
-      "invoice_number": "string",
-      "invoice_date_invoice": "YYYY-MM-DD",
-      "invoice_date_printed": "YYYY-MM-DD",
-      "total_excl_vat": number,
-      "vat_amount": number,
-      "total_incl_vat": number,
-      "is_refund": boolean
-      }
-
-      NOTES:
-      - If the document includes "זיכוי" or "החזר", set is_refund=true.
-      - Dates must be YYYY-MM-DD. If only DD/MM/YY present, convert to YYYY-MM-DD.
-      - Do not include line items.`,
-        file_urls: formData.receipt_images,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            invoice_number: { type: "string" },
-            invoice_date_invoice: { type: "string" },
-            invoice_date_printed: { type: "string" },
-            total_excl_vat: { type: "number" },
-            vat_amount: { type: "number" },
-            total_incl_vat: { type: "number" },
-            is_refund: { type: "boolean" }
-          }
-        }
+      const { data } = await base44.functions.invoke('scanAndMatchReceipt', {
+        file_urls: urlsToScan,
+        supplier_id: formData.supplier_id || null,
       });
 
-      console.log('Scanned invoice header data:', response);
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to scan receipt');
+      }
+
+      const response = data.header || {};
+      console.log('Scanned invoice header and items data:', data);
 
       const responseIsRefund = Boolean(response.is_refund);
       const incl = Number(response.total_incl_vat);
@@ -621,9 +559,29 @@ const handleAutoScan = async () => {
       adjustedInvoiceTotal = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
 
       const invoiceNum = sanitizeInvoiceNumber(response.invoice_number || '');
-      const chosenDate = response.invoice_date_invoice || response.invoice_date || response.invoice_date_printed || formData.received_date;
+      const chosenDate = response.invoice_date || formData.received_date;
 
       const isZeroVat = vat === 0 && excl === incl && incl > 0;
+      
+      const rows = Array.isArray(data.items) ? data.items : [];
+      const mappedItems = rows.map(r => ({
+        item_id: r.item_id || "",
+        item_name: r.item_name || r.name_extracted || r.name || "",
+        ordered_quantity: 0,
+        certificate_quantity: 0,
+        received_quantity: Number(r.quantity || 0),
+        unit: r.unit || "unit",
+        catalog_price: 0,
+        catalog_discount: 0,
+        actual_price: Number(r.price || 0),
+        actual_discount: 0,
+        price_changed: false,
+        discount_changed: false,
+        has_issue: !r.item_id || Number(r.match_confidence || 0) < 0.6,
+        issue_note: (!r.item_id || Number(r.match_confidence || 0) < 0.6) ? 'Low confidence match' : '',
+        units_per_package: 1,
+        price_after_discount: 0,
+      }));
 
       const finalIncl = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
       setInclVatInput(String(finalIncl));
@@ -634,6 +592,8 @@ const handleAutoScan = async () => {
       const noTotalFound = !isFinite(adjustedInvoiceTotal) || Math.abs(adjustedInvoiceTotal) === 0;
 
       if (noOrderMode) {
+        const { calculatedTotal, totalsMatch } = recalculateTotals(mappedItems, adjustedInvoiceTotal);
+
         setFormData(prev => ({
           ...prev,
           invoice_number: invoiceNum,
@@ -641,8 +601,9 @@ const handleAutoScan = async () => {
           invoice_total: adjustedInvoiceTotal,
           is_refund: responseIsRefund,
           is_zero_vat: isZeroVat,
-          calculated_total: 0, // Reset calculated total as items are not scanned yet
-          totals_match: false, // Reset totals match
+          verified_items: mappedItems,
+          calculated_total: calculatedTotal,
+          totals_match: totalsMatch,
           manual_entry_mode: true // Automatically switch to manual entry mode to allow editing/adding
         }));
 
@@ -658,10 +619,32 @@ const handleAutoScan = async () => {
         // Duplicate warning shown via inline alert in the form (duplicateExists state)
 
       } else {
-        // Original flow for orders - only update invoice details from scan
         const invoiceTotal = adjustedInvoiceTotal;
-        // Recalculate totals based on existing items and newly scanned invoice total
-        const { calculatedTotal, totalsMatch } = recalculateTotals(formData.verified_items, invoiceTotal);
+        
+        let newItems = [...formData.verified_items];
+        // Merge scanned items with existing order items
+        if (newItems.length > 0 && mappedItems.length > 0) {
+           // Reset received quantities to 0 for ordered items before applying scanned quantities
+           newItems = newItems.map(item => ({ ...item, received_quantity: 0 }));
+           mappedItems.forEach(mi => {
+              const existingIndex = newItems.findIndex(ni => 
+                 (ni.item_id && mi.item_id && ni.item_id === mi.item_id) || 
+                 (ni.item_name === mi.item_name)
+              );
+              if (existingIndex >= 0) {
+                 newItems[existingIndex].received_quantity = mi.received_quantity;
+                 newItems[existingIndex].actual_price = mi.actual_price;
+                 newItems[existingIndex].has_issue = mi.has_issue;
+                 newItems[existingIndex].issue_note = mi.issue_note;
+              } else {
+                 newItems.push(mi);
+              }
+           });
+        } else if (mappedItems.length > 0) {
+           newItems = mappedItems;
+        }
+
+        const { calculatedTotal, totalsMatch } = recalculateTotals(newItems, invoiceTotal);
 
         setFormData(prev => ({
           ...prev,
@@ -670,8 +653,10 @@ const handleAutoScan = async () => {
           invoice_total: invoiceTotal,
           is_refund: responseIsRefund,
           is_zero_vat: isZeroVat,
+          verified_items: newItems,
           calculated_total: calculatedTotal,
-          totals_match: totalsMatch
+          totals_match: totalsMatch,
+          manual_entry_mode: true
         }));
 
         scrollToDetails();
@@ -693,48 +678,7 @@ const handleAutoScan = async () => {
     }
   };
 
-  const handleScanAndMatchItems = async () => {
-      if (!formData.receipt_images.length) { alert(t('click_to_upload_images')); return; }
-      if (noOrderMode && !formData.supplier_id) { alert(t('supplier_required')); return; }
-      try {
-        setMatching(true);
-        const { data } = await base44.functions.invoke('scanAndMatchReceipt', {
-          file_urls: formData.receipt_images,
-          supplier_id: formData.supplier_id || null,
-        });
-        const rows = Array.isArray(data?.items) ? data.items : [];
-        const mapped = rows.map(r => ({
-          item_id: r.item_id || "",
-          item_name: r.item_name || r.name_extracted || r.name || "",
-          ordered_quantity: 0,
-          certificate_quantity: 0,
-          received_quantity: Number(r.quantity || 0),
-          unit: r.unit || "unit",
-          catalog_price: 0,
-          catalog_discount: 0,
-          actual_price: Number(r.price || 0),
-          actual_discount: 0,
-          price_changed: false,
-          discount_changed: false,
-          has_issue: !r.item_id || Number(r.match_confidence || 0) < 0.6,
-          issue_note: (!r.item_id || Number(r.match_confidence || 0) < 0.6) ? 'Low confidence match' : '',
-          units_per_package: 1,
-          price_after_discount: 0,
-        }));
-        const { calculatedTotal, totalsMatch } = recalculateTotals(mapped, formData.invoice_total);
-        setFormData(prev => ({
-          ...prev,
-          verified_items: mapped,
-          calculated_total: calculatedTotal,
-          totals_match: totalsMatch,
-          manual_entry_mode: true,
-        }));
-      } catch (e) {
-        alert((language === 'he' ? 'שגיאה בהתאמת פריטים' : 'Error matching items') + ': ' + (e?.message || e));
-      } finally {
-        setMatching(false);
-      }
-    };
+
 
      const handleSkipScanAndEnterManually = () => {
     // When user clicks "Enter Manually", show the form with empty fields

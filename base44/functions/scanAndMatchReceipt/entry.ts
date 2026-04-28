@@ -33,16 +33,35 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_urls required' }, { status: 400 });
     }
 
-    // 1) Extract item lines from the document (Heb/Eng supported)
+    // 1) Extract header and item lines from the document (Heb/Eng supported)
     const llm = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `You are extracting line items from Hebrew/English supplier invoices. Return ONLY items.
-Fields per item: name, quantity (number), unit (string), price (number, pre-discount if unclear), total (number).
-Ignore headers, subtotals, tax lines. Normalize units to: kg | liter | unit | case when possible.
+      prompt: `You are extracting header fields AND line items from a HEBREW supplier invoice image. Do a deep reading of the Hebrew text and DO NOT invent words that are not on the invoice.
+      
+EXTRACTION RULES (HEBREW ONLY):
+- Header fields:
+  - invoice_number: number/code following "מספר חשבונית" / "חשבונית מס'" / "מס' חשבונית" / "חשבונית"
+  - invoice_date_invoice / invoice_date_printed: YYYY-MM-DD
+  - total_excl_vat: סכום ללא מע"מ / מחיר כולל (before VAT)
+  - vat_amount: מע"מ
+  - total_incl_vat: סה"כ לתשלום OR סה"כ כולל מע"מ (after VAT). Prefer the bold bottom number.
+  - is_refund: boolean, if the document includes "זיכוי" or "החזר"
+- Line items:
+  - Return ONLY items in the 'items' array.
+  - Fields per item: name (exact Hebrew name from invoice), quantity (number), unit (string), price (number, pre-discount if unclear), total (number).
+  - Ignore headers, subtotals, tax lines. Normalize units to: kg | liter | unit | case when possible.
+  - Do NOT invent items. Extract exactly what is written.
 JSON only.`,
       file_urls,
       response_json_schema: {
         type: 'object',
         properties: {
+          invoice_number: { type: 'string' },
+          invoice_date_invoice: { type: 'string' },
+          invoice_date_printed: { type: 'string' },
+          total_excl_vat: { type: 'number' },
+          vat_amount: { type: 'number' },
+          total_incl_vat: { type: 'number' },
+          is_refund: { type: 'boolean' },
           items: {
             type: 'array',
             items: {
@@ -144,7 +163,18 @@ JSON only.`,
       return { ...row, name_extracted: rawName, item_id: null, item_name: null, match_confidence: 0 };
     });
 
-    return Response.json({ success: true, items: matched });
+    return Response.json({ 
+      success: true, 
+      header: {
+        invoice_number: llm.invoice_number,
+        invoice_date: llm.invoice_date_invoice || llm.invoice_date_printed,
+        total_excl_vat: llm.total_excl_vat,
+        vat_amount: llm.vat_amount,
+        total_incl_vat: llm.total_incl_vat,
+        is_refund: llm.is_refund
+      },
+      items: matched 
+    });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
   }
