@@ -758,86 +758,79 @@ const handleCleanOrphans = async (ownerEmail) => {
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6 bg-gray-50 py-3 px-2 md:px-3 items-start">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <div className="flex flex-col lg:flex-row gap-3 mb-6 bg-gray-50 py-3 px-2 md:px-3 items-center w-full">
+          <div className="relative flex-1 w-full min-w-[150px]">
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               placeholder={t('search_items')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10"
+              className="pr-9 h-10"
             />
           </div>
-          <Popover open={supplierFilterOpen} onOpenChange={setSupplierFilterOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={supplierFilterOpen}
-                className="w-full justify-between bg-white text-gray-700 h-10"
-              >
-                {selectedSupplier === "all" 
-                  ? t('all_suppliers') 
-                  : suppliers.find(s => s.id === selectedSupplier)?.name || t('all_suppliers')}
-                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50 rtl:mr-2 rtl:ml-0" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0" align="start">
-              <Command>
-                <CommandInput placeholder={t('select_supplier') + '...'} />
-                <CommandList>
-                  <CommandEmpty>{language === 'he' ? 'לא נמצאו ספקים' : 'No suppliers found'}</CommandEmpty>
-                  <CommandGroup>
-                    <CommandItem
-                      value="all"
-                      onSelect={() => {
-                        setSelectedSupplier("all");
-                        setSupplierFilterOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={`mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 ${
-                          selectedSupplier === "all" ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
-                      {t('all_suppliers')}
-                    </CommandItem>
-                    {suppliers
-                    .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-                    .map((supplier) => (
+          <div className="flex-1 w-full min-w-[150px]">
+            <Popover open={supplierFilterOpen} onOpenChange={setSupplierFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={supplierFilterOpen}
+                  className="w-full justify-between bg-white text-gray-700 h-10"
+                >
+                  {selectedSupplier === "all" 
+                    ? t('all_suppliers') 
+                    : suppliers.find(s => s.id === selectedSupplier)?.name || t('all_suppliers')}
+                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50 rtl:mr-2 rtl:ml-0" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder={t('select_supplier') + '...'} />
+                  <CommandList>
+                    <CommandEmpty>{language === 'he' ? 'לא נמצאו ספקים' : 'No suppliers found'}</CommandEmpty>
+                    <CommandGroup>
                       <CommandItem
-                        key={supplier.id}
-                        value={supplier.name || supplier.id}
+                        value="all"
                         onSelect={() => {
-                          setSelectedSupplier(supplier.id);
+                          setSelectedSupplier("all");
                           setSupplierFilterOpen(false);
                         }}
                       >
                         <Check
                           className={`mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 ${
-                            selectedSupplier === supplier.id ? "opacity-100" : "opacity-0"
+                            selectedSupplier === "all" ? "opacity-100" : "opacity-0"
                           }`}
                         />
-                        {supplier.name}
+                        {t('all_suppliers')}
                       </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          <div className="flex flex-wrap items-center gap-2 w-full">
-            <Button
-              variant="destructive"
-              disabled={selectedIds.length === 0}
-              onClick={() => setShowDeleteDialog(true)}
-              className="min-w-[120px]"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              {language === 'he' ? 'מחיקה' : 'Delete'}
-            </Button>
+                      {suppliers
+                        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                        .map((supplier) => (
+                          <CommandItem
+                            key={supplier.id}
+                            value={supplier.name || supplier.id}
+                            onSelect={() => {
+                              setSelectedSupplier(supplier.id);
+                              setSupplierFilterOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0 ${
+                                selectedSupplier === supplier.id ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            {supplier.name}
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="flex-1 w-full min-w-[150px]">
             <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10 bg-white">
                 <SelectValue placeholder={t('warehouse') + ' — ' + t('filter')} />
               </SelectTrigger>
               <SelectContent>
@@ -847,6 +840,17 @@ const handleCleanOrphans = async (ownerEmail) => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="w-full lg:w-auto shrink-0">
+            <Button
+              variant="destructive"
+              disabled={selectedIds.length === 0}
+              onClick={() => setShowDeleteDialog(true)}
+              className="w-full lg:w-auto h-10"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {language === 'he' ? 'מחיקה' : 'Delete'}
+            </Button>
           </div>
         </div>
 
