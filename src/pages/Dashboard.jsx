@@ -17,6 +17,7 @@ import moment from "moment";
 
 import { notifyOS } from "../components/notifications/notify";
 import SalesImportModal from "../components/sales/SalesImportModal";
+import POSSettings from "./POSSettings";
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
@@ -1102,7 +1103,7 @@ export default function DashboardPage() {
         </Dialog>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-4xl">
+          <TabsList className="grid w-full grid-cols-3 max-w-4xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
@@ -1110,6 +1111,10 @@ export default function DashboardPage() {
             <TabsTrigger value="afc" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'דוח AFC' : 'AFC Report'}
+            </TabsTrigger>
+            <TabsTrigger value="pos_settings" className="flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4" />
+              {language === 'he' ? 'הגדרות קופה' : 'POS Settings'}
             </TabsTrigger>
           </TabsList>
 
@@ -1816,6 +1821,11 @@ export default function DashboardPage() {
                 </CardContent>
                 </Card>
                 </TabsContent>
+
+          {/* POS Settings Tab */}
+          <TabsContent value="pos_settings" className="space-y-6">
+            <POSSettings />
+          </TabsContent>
           </Tabs>
       </div>
 
