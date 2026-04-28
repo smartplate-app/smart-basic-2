@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -1358,7 +1358,7 @@ const handleAutoScan = async () => {
                                 }}
                                 className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'invoice' && !formData.is_refund ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <span className="text-2xl">🧾</span>
+                                <Receipt className={`w-8 h-8 ${formData.document_type === 'invoice' && !formData.is_refund ? 'text-green-600' : 'text-gray-500'}`} strokeWidth={1.5} />
                                 <span>{language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}</span>
                               </button>
                               <button
@@ -1370,7 +1370,7 @@ const handleAutoScan = async () => {
                                 }}
                                 className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <span className="text-2xl">📦</span>
+                                <Package className={`w-8 h-8 ${formData.document_type === 'delivery_note' ? 'text-blue-600' : 'text-gray-500'}`} strokeWidth={1.5} />
                                 <span>{language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}</span>
                               </button>
                               <button
@@ -1380,7 +1380,7 @@ const handleAutoScan = async () => {
                                 }}
                                 className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <span className="text-2xl">📊</span>
+                                <BarChart3 className={`w-8 h-8 ${formData.document_type === 'summary_invoice' ? 'text-purple-600' : 'text-gray-500'}`} strokeWidth={1.5} />
                                 <span>{language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}</span>
                               </button>
                               <button
@@ -1401,7 +1401,7 @@ const handleAutoScan = async () => {
                                 }}
                                 className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <span className="text-2xl">🔄</span>
+                                <RefreshCcw className={`w-8 h-8 ${formData.is_refund ? 'text-orange-600' : 'text-gray-500'}`} strokeWidth={1.5} />
                                 <span>{language === 'he' ? 'חשבונית זיכוי (-)' : 'Refund (-)'}</span>
                               </button>
                             </div>
