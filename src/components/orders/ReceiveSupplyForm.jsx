@@ -208,11 +208,8 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     try {
       const el = invoiceDetailsRef?.current;
       if (!el) return;
-      const y = Math.max(0, (el.getBoundingClientRect().top + window.scrollY) - 100);
-      window.scrollTo({ top: y, behavior: 'smooth' });
-      setTimeout(() => {
-        (invoiceNumberRef?.current || firstDocInvoiceRef?.current)?.focus?.();
-      }, 350);
+      // Use smooth scroll but ensure it targets the correct scrollable parent (Dialog)
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch {}
   };
 
