@@ -507,124 +507,136 @@ export default function SupplyReceiptsPage() {
               ))}
             </div>
 
-            <div className="hidden md:flex flex-wrap items-center gap-2">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder={tt('search_receipts','חיפוש בקבלות','Search receipts')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-9 pr-9 rounded-md text-sm min-w-[200px]"
-                />
+            <div className="hidden md:flex flex-col gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm mb-6">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative flex-1 min-w-[200px] max-w-sm">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder={tt('search_receipts','חיפוש קבלות (לפי ספק או מס׳ קבלה)','Search receipts')}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-10 pr-9 rounded-xl bg-gray-50/50 border-gray-200 focus-visible:bg-white transition-colors"
+                  />
+                </div>
+                
+                <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                  <SelectTrigger className="h-10 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[160px]">
+                    <SelectValue placeholder={tt('supplier','ספק','Supplier')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{tt('all_suppliers','כל הספקים','All suppliers')}</SelectItem>
+                    {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                      .sort((a,b) => a.localeCompare(b))
+                      .map(name => (
+                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-10 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[140px]">
+                    <SelectValue placeholder={tt('sort','מיון לפי','Sort')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{tt('no_sort','ללא מיון','No sort')}</SelectItem>
+                    <SelectItem value="amount_asc">{tt('amount_low_to_high','סכום: נמוך ← גבוה','Amount: Low to High')}</SelectItem>
+                    <SelectItem value="amount_desc">{tt('amount_high_to_low','סכום: גבוה ← נמוך','Amount: High to Low')}</SelectItem>
+                    <SelectItem value="supplier_asc">{tt('supplier_az','ספק: א ← ת','Supplier: A-Z')}</SelectItem>
+                    <SelectItem value="supplier_desc">{tt('supplier_za','ספק: ת ← א','Supplier: Z-A')}</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="flex items-center bg-gray-50/50 border border-gray-200 rounded-xl p-1 shadow-sm">
+                  <Select
+                    value={datePreset}
+                    onValueChange={(v) => {
+                      setDatePreset(v);
+                      const now = new Date();
+                      if (v === 'week') {
+                        const s = new Date(now);
+                        const dow = s.getDay(); // 0=Sunday
+                        s.setDate(s.getDate() - dow);
+                        s.setHours(0,0,0,0);
+                        const e = new Date(s);
+                        e.setDate(s.getDate() + 6);
+                        e.setHours(23,59,59,999);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'month') {
+                        const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                        const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'year') {
+                        const s = new Date(now.getFullYear(), 0, 1);
+                        const e = new Date(now.getFullYear(), 11, 31);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'last_year') {
+                        const s = new Date(now.getFullYear() - 1, 0, 1);
+                        const e = new Date(now.getFullYear() - 1, 11, 31);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'all') {
+                        setDateFrom("");
+                        setDateTo("");
+                      } else if (v === 'custom') {
+                        // Keep current dateFrom and dateTo
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={`h-8 border-transparent shadow-none w-auto min-w-[120px] transition-colors ${datePreset !== 'custom' ? 'bg-white font-medium shadow-sm rounded-lg text-green-700' : 'bg-transparent text-gray-600'}`}>
+                      <SelectValue placeholder={tt('timeframe','תאריכים','Dates')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{tt('all_time','כל הזמן','All time')}</SelectItem>
+                      <SelectItem value="week">{tt('current_week','השבוע','This week')}</SelectItem>
+                      <SelectItem value="month">{tt('current_month','החודש','This month')}</SelectItem>
+                      <SelectItem value="year">{tt('current_year','מתחילת השנה','Year to date')}</SelectItem>
+                      <SelectItem value="last_year">{tt('last_year','שנה שעברה','Last year')}</SelectItem>
+                      <SelectItem value="custom">{tt('custom_range','טווח תאריכים מותאם...','Custom range')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {datePreset === 'custom' && (
+                    <div className="flex items-center gap-1.5 px-2 ml-1 border-l border-gray-200 rtl:border-l-0 rtl:border-r rtl:mr-1 animate-in fade-in zoom-in duration-200">
+                      <Input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                        className="h-8 w-32 px-2 text-sm bg-white border-transparent shadow-sm rounded-lg"
+                      />
+                      <span className="text-gray-400">-</span>
+                      <Input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => setDateTo(e.target.value)}
+                        className="h-8 w-32 px-2 text-sm bg-white border-transparent shadow-sm rounded-lg"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
               {/* Extra filters for refunds/review */}
-              {statusFilter === 'refund_invoice' && (
-                <label className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md border border-gray-200 bg-white">
-                  <input type="checkbox" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
-                  <span>{tt('credit_received','התקבל זיכוי','Credit received')}</span>
-                </label>
+              {(statusFilter === 'refund_invoice' || statusFilter === 'needs_review') && (
+                <div className="flex gap-3 pt-2 border-t border-gray-100">
+                  {statusFilter === 'refund_invoice' && (
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input type="checkbox" className="rounded accent-green-600 w-4 h-4" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
+                      <span>{tt('credit_received','הצג רק זיכויים שהתקבלו','Show only received credits')}</span>
+                    </label>
+                  )}
+                  {statusFilter === 'needs_review' && (
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input type="checkbox" className="rounded accent-green-600 w-4 h-4" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
+                      <span>{tt('reviewed','הצג רק חשבוניות שנסקרו','Show only reviewed')}</span>
+                    </label>
+                  )}
+                </div>
               )}
-              {statusFilter === 'needs_review' && (
-                <label className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md border border-gray-200 bg-white">
-                  <input type="checkbox" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
-                  <span>{tt('reviewed','נסקר','Reviewed')}</span>
-                </label>
-              )}
-
-              {/* Supplier filter */}
-              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
-                               <SelectTrigger className="h-8 rounded-md px-2 text-xs border-gray-200 shadow-none bg-white">
-                  <SelectValue placeholder={tt('supplier','ספק','Supplier')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{tt('all_suppliers','כל הספקים','All suppliers')}</SelectItem>
-                  {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
-                    .sort((a,b) => a.localeCompare(b))
-                    .map(name => (
-                      <SelectItem key={name} value={name}>{name}</SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-
-              {/* Sort by amount */}
-              <Select value={sortBy} onValueChange={setSortBy}>
-                               <SelectTrigger className="h-8 rounded-md px-2 text-xs border-gray-200 shadow-none bg-white">
-                  <SelectValue placeholder={tt('sort','מיון','Sort')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">{tt('no_sort','ללא מיון','No sort')}</SelectItem>
-                  <SelectItem value="amount_asc">{tt('amount_low_to_high','סכום: נמוך → גבוה','Amount: Low → High')}</SelectItem>
-                  <SelectItem value="amount_desc">{tt('amount_high_to_low','סכום: גבוה → נמוך','Amount: High → Low')}</SelectItem>
-                  <SelectItem value="supplier_asc">{tt('supplier_az','ספק א→ת','Supplier A–Z')}</SelectItem>
-                  <SelectItem value="supplier_desc">{tt('supplier_za','ספק ת→א','Supplier Z–A')}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Timeframe preset */}
-              <Select
-                               value={datePreset}
-                               onValueChange={(v) => {
-                  setDatePreset(v);
-                  const now = new Date();
-                  if (v === 'week') {
-                    const s = new Date(now);
-                    const dow = s.getDay(); // 0=Sunday
-                    s.setDate(s.getDate() - dow);
-                    s.setHours(0,0,0,0);
-                    const e = new Date(s);
-                    e.setDate(s.getDate() + 6);
-                    e.setHours(23,59,59,999);
-                    setDateFrom(s.toISOString().slice(0,10));
-                    setDateTo(e.toISOString().slice(0,10));
-                  } else if (v === 'month') {
-                    const s = new Date(now.getFullYear(), now.getMonth(), 1);
-                    const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                    setDateFrom(s.toISOString().slice(0,10));
-                    setDateTo(e.toISOString().slice(0,10));
-                  } else if (v === 'year') {
-                    const s = new Date(now.getFullYear(), 0, 1);
-                    const e = new Date(now.getFullYear(), 11, 31);
-                    setDateFrom(s.toISOString().slice(0,10));
-                    setDateTo(e.toISOString().slice(0,10));
-                  } else if (v === 'all') {
-                    setDateFrom("");
-                    setDateTo("");
-                  }
-                }}
-              >
-                <SelectTrigger className="h-8 rounded-md px-2 text-xs border-gray-200 shadow-none bg-white">
-                  <SelectValue placeholder={tt('timeframe','טווח זמן','Timeframe')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{tt('all_time','כל הזמן','All time')}</SelectItem>
-                  <SelectItem value="week">{tt('current_week','שבוע נוכחי','Current week')}</SelectItem>
-                  <SelectItem value="month">{tt('current_month','חודש נוכחי','Current month')}</SelectItem>
-                  <SelectItem value="year">{tt('current_year','שנה נוכחית','Current year')}</SelectItem>
-                  <SelectItem value="custom">{tt('custom_range','טווח מותאם','Custom range')}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* From / To dates */}
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => { setDateFrom(e.target.value); setDatePreset('custom'); }}
-                placeholder={tt('from_date','מתאריך','From date')}
-                className="h-9 rounded-full px-3 text-sm"
-                disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
-              />
-              <span className="text-[11px] text-gray-500">{tt('between_dates','בין תאריכים','Between dates')}</span>
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={(e) => { setDateTo(e.target.value); setDatePreset('custom'); }}
-                placeholder={tt('to_date','עד תאריך','To date')}
-                className="h-9 rounded-full px-3 text-sm"
-                disabled={datePreset !== 'custom' && datePreset !== 'week' && datePreset !== 'month' && datePreset !== 'year' && datePreset !== 'all' && false}
-              />
             </div>
+          </div>
 
             {/* Mobile Filters Drawer */}
             <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
