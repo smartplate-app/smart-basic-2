@@ -508,15 +508,24 @@ const handleCleanOrphans = async (ownerEmail) => {
     setShowCleanModal(true);
   };
 
-  const handleConfirmDuplicatesDelete = async (idsToDelete) => {
+  const handleConfirmDuplicatesDelete = async (idsToDelete, mappingToKeep) => {
     if (!idsToDelete || idsToDelete.length === 0) return;
     
-    // We can reuse the same logic as bulk delete for store or normal entity
     try {
-      if (user?.store_user_owner_email || user?.acting_as_store_email) {
-        await Promise.all(idsToDelete.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
+      if (mappingToKeep && Object.keys(mappingToKeep).length > 0) {
+        const { data } = await base44.functions.invoke('replaceAndDeleteItems', { 
+          idsToDelete, 
+          mappingToKeep 
+        });
+        if (!data?.success) {
+          throw new Error(data?.error || 'Failed to replace and delete items');
+        }
       } else {
-        await Promise.all(idsToDelete.map(id => base44.entities.Item.delete(id)));
+        if (user?.store_user_owner_email || user?.acting_as_store_email) {
+          await Promise.all(idsToDelete.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
+        } else {
+          await Promise.all(idsToDelete.map(id => base44.entities.Item.delete(id)));
+        }
       }
       
       // Update local state and reload

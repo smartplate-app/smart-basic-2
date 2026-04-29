@@ -91,7 +91,20 @@ export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete 
     if (selectedIds.length === 0) return;
     setDeleting(true);
     try {
-      await onDelete(selectedIds);
+      const mappingToKeep = {};
+      duplicateGroups.forEach(group => {
+        const keptItems = group.items.filter(item => !selectedIds.includes(item.id));
+        const deletedItems = group.items.filter(item => selectedIds.includes(item.id));
+        
+        if (keptItems.length > 0 && deletedItems.length > 0) {
+          const targetKeptItem = keptItems[0];
+          deletedItems.forEach(delItem => {
+            mappingToKeep[delItem.id] = targetKeptItem.id;
+          });
+        }
+      });
+
+      await onDelete(selectedIds, mappingToKeep);
       onClose();
     } catch (e) {
       console.error(e);
