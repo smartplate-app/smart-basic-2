@@ -1,9 +1,10 @@
 Deno.serve(async (req) => {
   try {
     const urls = [
+      'https://ros-rp.tabit.cloud/login',
       'https://us-ros.tabit.cloud/login',
-      'https://us-ros-beta.tabit.cloud/login',
-      'https://ros.tabit.cloud/login'
+      'https://ros-rp-beta.tabit.cloud/login',
+      'https://us-ros-beta.tabit.cloud/login'
     ];
     
     const results = {};
@@ -12,7 +13,7 @@ Deno.serve(async (req) => {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'test@test.com', password: 'test' })
+          body: JSON.stringify({ email: 'cafe.xoho@gmail.com ', password: 'xohoby3090' })
         });
         results[url] = { status: res.status, text: await res.text().catch(() => 'no text') };
       } catch (e) {
