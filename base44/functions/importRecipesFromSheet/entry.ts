@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       let allRowsData = "";
 
       for (const sheetName of sheetNames) {
-        const range = `'${sheetName}'!A1:Z200`;
+        const range = `'${sheetName}'!A1:Z1000`;
         const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`, {
           headers: { 'Authorization': `Bearer ${accessToken}` }
         });
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
         const rows = data.values || [];
         if (rows.length < 2) continue;
 
-        allRowsData += `\n\n--- גיליון: ${sheetName} ---\n` + JSON.stringify(rows.slice(0, 200));
+        allRowsData += `\n\n--- גיליון: ${sheetName} ---\n` + JSON.stringify(rows.slice(0, 1000));
       }
 
       if (!allRowsData) {
@@ -70,21 +70,23 @@ Deno.serve(async (req) => {
       // Use LLM to parse all sheets at once
       const prompt = `You are parsing a restaurant Google Sheets file into structured JSON.
 
-The file has at least 2 tabs. Common tab names (in Hebrew or English):
-- "הכנות" / "Preps" / "prep" → these are PREP RECIPES (type: 'prep_recipe')
-- "מתכונים" / "Recipes" / "מנות" / "Menu" → these are SALE ITEMS (type: 'sale_item')
-- "מרכיבים" / "חומרי גלם" / "Items" / "Ingredients" → these are raw ingredients (items array)
+The file has multiple tabs.
+1. Ingredients/Items tabs (e.g. "מרכיבים", "חומרי גלם", "Items", "Ingredients") contain lists of raw materials with prices.
+2. Prep Recipes tabs (e.g. "הכנות", "Preps") contain recipes that yield a batch of an ingredient (e.g. 1kg of sauce). type: 'prep_recipe'.
+3. Sale Items / Menu tabs (e.g. "מתכונים", "מנות", "Menu", "Recipes") contain recipes for dishes sold to customers. type: 'sale_item'.
+
+If a tab name is ambiguous, infer the type based on the content (if it yields a batch like "1 kg" or "2 liter", it's likely a prep_recipe. If it has a selling price, it's a sale_item).
 
 IMPORTANT RULES:
 1. The file structure can vary wildly - columns may be in any order, in Hebrew or English.
-2. There may OR MAY NOT be a separate ingredients tab. If there is no ingredients tab, extract ingredient names only from the recipe/prep tabs.
+2. If NO ingredients tab exists, extract ingredient names only from the recipe/prep tabs.
 3. Each recipe/prep block typically has: a recipe name, yield quantity+unit, and a list of ingredients with quantity+unit.
-4. Preps tab → type: 'prep_recipe'. Recipe/Menu tab → type: 'sale_item'.
+4. Preps → type: 'prep_recipe'. Sale items → type: 'sale_item'.
 5. If a sale_item uses a prep_recipe as ingredient, use the prep_recipe name as item_name.
-6. If ingredients tab exists: extract items array with name, unit, price, supplier_name.
-7. If NO ingredients tab: return items array as EMPTY [] - do NOT invent items.
-8. For yield_unit and ingredient units, normalize to: unit/kg/gram/liter/ml/case.
-9. Recipes with NO ingredients listed are still valid - just use empty ingredients array.
+6. If ingredients tab exists: extract ALL items into the items array with name, unit, price, supplier_name.
+7. Normalize units to: unit/kg/gram/liter/ml/case.
+8. EXTRACT EVERY SINGLE RECIPE, PREP RECIPE, AND ITEM. DO NOT SKIP ANY. Some files are long, process ALL of them.
+9. Use the EXACT ingredient names from the items list whenever possible to avoid missing items. If a recipe says 'flour 1kg' but the item is 'flour', use 'flour' as the item_name.
 
 Tab data:
 ${allRowsData}
@@ -92,6 +94,7 @@ ${allRowsData}
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
+        model: 'gemini_3_1_pro', // Use a more capable model for accurate large-scale extraction
         response_json_schema: {
           type: 'object',
           properties: {
