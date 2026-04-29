@@ -190,6 +190,8 @@ ${allRowsData}
       }
     }
 
+    const { mappedItems } = await req.json().catch(() => ({})) || {};
+
     const missingItemsMap = new Map();
     for (const r of allRecipes) {
       for (const ing of (r.ingredients || [])) {
@@ -199,6 +201,12 @@ ${allRowsData}
         let found = futureItemMap.get(itemNameLower);
         if (!found) {
           found = Array.from(futureItemMap.values()).find(i => i.name?.toLowerCase().includes(itemNameLower) || itemNameLower.includes(i.name?.toLowerCase()));
+        }
+
+        // Check if user mapped this missing item to an existing one
+        if (!found && mappedItems && mappedItems[itemNameLower]) {
+           const mappedId = mappedItems[itemNameLower];
+           found = Array.from(futureItemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
         }
 
         if (!found) {
@@ -223,7 +231,8 @@ ${allRowsData}
         success: true,
         requires_prices: true,
         missing_items: Array.from(missingItemsMap.values()),
-        parsedData: { items: allItems, recipes: allRecipes }
+        parsedData: { items: allItems, recipes: allRecipes },
+        existing_items: Array.from(itemMap.values()).map(i => ({ id: i.id, name: i.name })).filter(i => i.id && i.name)
       });
     }
 
@@ -343,6 +352,12 @@ ${allRowsData}
         let item = itemMap.get(itemNameLower);
         if (!item) {
           item = Array.from(itemMap.values()).find(i => i.name.toLowerCase().includes(itemNameLower) || itemNameLower.includes(i.name.toLowerCase()));
+        }
+        
+        // If still not found, check if it was mapped by the user
+        if (!item && mappedItems && mappedItems[itemNameLower]) {
+           const mappedId = mappedItems[itemNameLower];
+           item = Array.from(itemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
         }
         
         const cost = item ? (Number(item.price_after_discount || item.price || 0) * Number(ing.quantity)) : 0;

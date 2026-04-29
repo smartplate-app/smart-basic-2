@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
 import { Loader2, FileSpreadsheet } from "lucide-react";
@@ -16,6 +17,8 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
   const [missingItems, setMissingItems] = useState([]);
   const [parsedData, setParsedData] = useState(null);
   const [providedPrices, setProvidedPrices] = useState({});
+  const [existingItems, setExistingItems] = useState([]);
+  const [mappedItems, setMappedItems] = useState({});
 
   const handleGenerateTemplate = async () => {
     setGenerating(true);
@@ -46,6 +49,7 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
       if (retryWithPrices) {
         payload.parsedData = parsedData;
         payload.providedPrices = providedPrices;
+        payload.mappedItems = mappedItems;
       }
 
       const response = await base44.functions.invoke('importRecipesFromSheet', payload);
@@ -53,11 +57,16 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
       if (response.data && response.data.requires_prices) {
         setMissingItems(response.data.missing_items);
         setParsedData(response.data.parsedData);
+        setExistingItems(response.data.existing_items || []);
+        
         const initialPrices = {};
+        const initialMapped = {};
         response.data.missing_items.forEach(item => {
           initialPrices[item.name.trim().toLowerCase()] = "";
+          initialMapped[item.name.trim().toLowerCase()] = "";
         });
         setProvidedPrices(initialPrices);
+        setMappedItems(initialMapped);
         return;
       }
 
@@ -99,24 +108,48 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
           <div className="space-y-4 mt-4 border-t pt-4">
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-md text-sm">
               {language === 'he' 
-                ? 'נמצאו מרכיבים שאינם קיימים ברשימת הפריטים שלך (ייתכן והשמות אינם זהים לחלוטין). אנא הזן את המחיר עבור כל פריט כדי להוסיף אותו כפריט חדש. לחלופין, תוכל לגשת לדף ״פריטים״, ללחוץ על ״ייצוא ל-Google Sheets״, להעתיק את רשימת הפריטים שלך ללשונית חדשה (כמו ״מרכיבים״) בקובץ שלך, ולייבא שוב.' 
-                : 'Found ingredients that do not exist in your items list (names might not match exactly). Please enter the price for each item to add them as new items. Alternatively, you can go to the Items page, click "Export to Google Sheets", copy your items list into a new tab (like "Ingredients") in your file, and import again.'}
+                ? 'נמצאו מרכיבים שאינם קיימים במדויק ברשימת הפריטים שלך. אנא בחר פריט קיים כדי לקשר אליו, או הזן מחיר כדי ליצור אותו כפריט חדש.' 
+                : 'Found ingredients that do not exist exactly in your items list. Please select an existing item to link, or enter a price to create it as a new item.'}
             </div>
-            <div className="max-h-60 overflow-y-auto space-y-3 p-1">
-              {missingItems.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className="flex-1 text-sm font-medium">{item.name}</div>
-                  <div className="w-24 text-xs text-gray-500">{item.unit}</div>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder={language === 'he' ? 'מחיר' : 'Price'}
-                    className="w-24 h-8"
-                    value={providedPrices[item.name.trim().toLowerCase()] || ""}
-                    onChange={(e) => setProvidedPrices({ ...providedPrices, [item.name.trim().toLowerCase()]: e.target.value })}
-                  />
-                </div>
-              ))}
+            <div className="max-h-80 overflow-y-auto space-y-3 p-1 bg-gray-50/50 rounded-md">
+              {missingItems.map((item, idx) => {
+                const key = item.name.trim().toLowerCase();
+                const isMapped = !!mappedItems[key];
+                return (
+                  <div key={idx} className="flex flex-col gap-2 p-3 border border-gray-200 rounded-md bg-white shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 text-sm font-bold text-gray-800">{item.name} <span className="text-xs text-gray-500 font-normal mx-1">({item.unit})</span></div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Select
+                        value={mappedItems[key] || "new"}
+                        onValueChange={(val) => setMappedItems({ ...mappedItems, [key]: val === "new" ? "" : val })}
+                      >
+                        <SelectTrigger className="flex-1 h-9">
+                          <SelectValue placeholder={language === 'he' ? 'בחר פריט קיים...' : 'Select existing item...'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new" className="font-bold text-[#107c41] bg-green-50/50">{language === 'he' ? '+ צור כפריט חדש' : '+ Create new item'}</SelectItem>
+                          {existingItems.map(ei => (
+                            <SelectItem key={ei.id} value={ei.id}>{ei.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      {!isMapped && (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder={language === 'he' ? 'מחיר' : 'Price'}
+                          className="w-24 h-9 font-medium"
+                          value={providedPrices[key] || ""}
+                          onChange={(e) => setProvidedPrices({ ...providedPrices, [key]: e.target.value })}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             {error && (
               <div className="p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
