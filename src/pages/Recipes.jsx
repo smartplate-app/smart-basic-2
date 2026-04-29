@@ -10,6 +10,7 @@ import ImportIngredientsModal from "../components/recipes/ImportIngredientsModal
 import RecipeListView from "../components/recipes/RecipeListView";
 import MenuScanModal from "../components/recipes/MenuScanModal";
 import MenuImageUploadModal from "../components/recipes/MenuImageUploadModal";
+import CleanDuplicateRecipesModal from "../components/recipes/CleanDuplicateRecipesModal";
 
 export default function RecipesPage() {
   const { language } = useLanguage();
@@ -25,7 +26,6 @@ export default function RecipesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [cleaning, setCleaning] = useState(false);
   
   const [scanningMenu, setScanningMenu] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
@@ -104,21 +104,25 @@ export default function RecipesPage() {
     setShowImportModal(true);
   };
 
-  const handleFindDuplicates = async () => {
-    if (window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק מתכונים כפולים? הפעולה אינה ניתנת לביטול.' : 'Are you sure you want to delete duplicate recipes? This cannot be undone.')) {
-      setCleaning(true);
-      try {
-        const { data } = await base44.functions.invoke('findAndRemoveDuplicates', { type: 'recipes' });
-        if (data?.success) {
-          alert((language === 'he' ? 'נמחקו מתכונים כפולים: ' : 'Deleted duplicate recipes: ') + data.deletedCount);
-          loadRecipes();
-        } else {
-          alert(data?.error || 'Error');
-        }
-      } catch (e) {
-        alert(e.message || 'Error');
+  const [showCleanModal, setShowCleanModal] = useState(false);
+
+  const handleFindDuplicates = () => {
+    setShowCleanModal(true);
+  };
+
+  const handleCleanDuplicates = async (idsToDelete, mappingToKeep) => {
+    try {
+      const { data } = await base44.functions.invoke('replaceAndDeleteRecipes', { 
+        idsToDelete, 
+        mappingToKeep 
+      });
+      if (data?.success) {
+        loadRecipes();
+      } else {
+        throw new Error(data?.error || 'Unknown error during cleanup');
       }
-      setCleaning(false);
+    } catch (e) {
+      throw e; // rethrow to be caught by the modal
     }
   };
 
@@ -196,7 +200,6 @@ export default function RecipesPage() {
             
             <Button 
               onClick={handleFindDuplicates}
-              disabled={cleaning}
               className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4"
             >
               <Wand2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
@@ -346,6 +349,13 @@ export default function RecipesPage() {
           onClose={() => setShowImageUploadModal(false)}
           onUpload={handleMenuUpload}
           scanningMenu={scanningMenu}
+        />
+
+        <CleanDuplicateRecipesModal
+          isOpen={showCleanModal}
+          onClose={() => setShowCleanModal(false)}
+          recipes={recipes}
+          onDelete={handleCleanDuplicates}
         />
       </div>
     </div>

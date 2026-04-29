@@ -216,8 +216,13 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={true} onOpenChange={(open) => {
+      // Don't close if editing item modal is open
+      if (!open && !editingItem) onCancel();
+    }}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => {
+        if (editingItem) e.preventDefault();
+      }}>
         <DialogHeader>
           <DialogTitle>{recipe ? (language === 'he' ? 'עריכת מתכון' : 'Edit Recipe') : (language === 'he' ? 'מתכון חדש' : 'New Recipe')}</DialogTitle>
         </DialogHeader>
@@ -425,8 +430,9 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                 <div key={idx} className="flex items-center gap-2 bg-gray-50 p-2 rounded-md border">
                   <div 
                     className={`flex-1 font-medium text-sm flex items-center gap-1.5 ${!ing.is_prep_recipe ? 'cursor-pointer hover:text-[#d4a373] transition-colors' : ''}`}
-                    onClick={() => {
+                    onClick={(e) => {
                       if (!ing.is_prep_recipe) {
+                        e.stopPropagation();
                         const itemToEdit = ing.original_item || items.find(i => i.id === ing.item_id);
                         if (itemToEdit) setEditingItem(itemToEdit);
                       }
