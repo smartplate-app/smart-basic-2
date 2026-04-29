@@ -16,6 +16,7 @@ import InstagramCampaignDE from "@/components/marketing/InstagramCampaignDE";
 import InstagramCampaignHE from "@/components/marketing/InstagramCampaignHE";
 import PromoVideo from "./PromoVideo";
 import BusinessSetupWizard from "@/components/onboarding/BusinessSetupWizard";
+import TabitTesterModal from "@/components/emulator/TabitTesterModal";
 
 export default function AdminDashboard() {
   const { t, language } = useLanguage();
@@ -48,6 +49,7 @@ export default function AdminDashboard() {
   const [seoDomain, setSeoDomain] = useState("foodcostapp.com");
   const [seoLoading, setSeoLoading] = useState(false);
   const [seoResult, setSeoResult] = useState(null);
+  const [showTabitTester, setShowTabitTester] = useState(false);
 
   const handleCheckSeo = async () => {
     try {
@@ -625,6 +627,14 @@ export default function AdminDashboard() {
                     <Globe className="w-4 h-4" />
                     {language === 'he' ? 'בודק מיקומים בגוגל' : 'SEO Rank Checker'}
                   </Button>
+                  <Button
+                    onClick={() => setShowTabitTester(true)}
+                    variant="outline"
+                    className="flex items-center gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+                  >
+                    <TestTube className="w-4 h-4" />
+                    {language === 'he' ? 'בדיקת התחברות לטאביט' : 'Tabit Tester'}
+                  </Button>
                 </div>
               </div>
 
@@ -1148,6 +1158,11 @@ export default function AdminDashboard() {
         user={currentUser} 
         forceShow={showBusinessSetupPreview} 
         onComplete={() => setShowBusinessSetupPreview(false)} 
+      />
+
+      <TabitTesterModal 
+        isOpen={showTabitTester} 
+        onClose={() => setShowTabitTester(false)} 
       />
 
       <Dialog open={showSeoModal} onOpenChange={setShowSeoModal}>
