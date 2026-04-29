@@ -100,6 +100,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       quantity: initialQuantity,
       unit: defaultRecipeUnit,
       cost: initialCost,
+      unit_price: initialCost,
       original_item: item // Store the original item to recalculate cost when unit changes
     }];
     setFormData({
@@ -112,26 +113,35 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
 
   const handleUpdateIngredient = (index, field, value) => {
     const newIngredients = [...formData.ingredients];
-    const oldQty = Number(newIngredients[index].quantity) || 1;
-    const oldCost = Number(newIngredients[index].cost) || 0;
+    const ing = { ...newIngredients[index] };
+    newIngredients[index] = ing;
     
-    newIngredients[index][field] = value;
+    if (ing.unit_price === undefined) {
+      const oldQty = Number(ing.quantity) || 1;
+      const oldCost = Number(ing.cost) || 0;
+      ing.unit_price = oldQty > 0 ? oldCost / oldQty : 0;
+    }
+    
+    ing[field] = value;
     
     if (field === 'quantity' || field === 'unit') {
-      const item = newIngredients[index].original_item || items.find(i => i.id === newIngredients[index].item_id);
+      const qty = Number(ing.quantity) || 0;
+      const item = ing.original_item || items.find(i => i.id === ing.item_id);
+      const prep = prepRecipes.find(r => r.id === ing.item_id);
+      
       if (item) {
-        newIngredients[index].cost = getIngredientCost(item, Number(newIngredients[index].quantity), newIngredients[index].unit);
-      } else {
-        const prep = prepRecipes.find(r => r.id === newIngredients[index].item_id);
+        ing.cost = getIngredientCost(item, qty, ing.unit);
+        ing.unit_price = qty > 0 ? ing.cost / qty : ing.unit_price;
+      } else if (prep || ing.is_prep_recipe) {
         if (prep) {
-          // If it's a prep recipe, cost is total_cost * quantity
-          newIngredients[index].cost = (prep.total_cost || 0) * Number(newIngredients[index].quantity);
-        } else if (field === 'quantity') {
-          // Fallback if neither item nor prep recipe is found
-          // Calculate implied unit price from old cost and old quantity
-          const impliedUnitPrice = oldQty > 0 ? oldCost / oldQty : 0;
-          newIngredients[index].cost = impliedUnitPrice * Number(newIngredients[index].quantity);
+          const costPerUnit = prep.yield_quantity > 0 ? (prep.total_cost || 0) / prep.yield_quantity : (prep.total_cost || 0);
+          ing.cost = costPerUnit * qty;
+          ing.unit_price = costPerUnit;
+        } else {
+          ing.cost = (ing.unit_price || 0) * qty;
         }
+      } else {
+        ing.cost = (ing.unit_price || 0) * qty;
       }
     }
 
@@ -213,12 +223,14 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   };
 
   const handleAddPrepRecipe = (prep) => {
+    const costPerUnit = prep.yield_quantity > 0 ? (prep.total_cost || 0) / prep.yield_quantity : (prep.total_cost || 0);
     const newIngredients = [...formData.ingredients, {
       item_id: prep.id,
       item_name: prep.name,
       quantity: 1,
-      unit: 'unit',
-      cost: prep.total_cost || 0,
+      unit: prep.yield_unit || 'unit',
+      cost: costPerUnit,
+      unit_price: costPerUnit,
       is_prep_recipe: true
     }];
     setFormData({
