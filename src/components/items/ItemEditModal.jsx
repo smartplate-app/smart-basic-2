@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "../LanguageProvider";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Loader, ChefHat } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { base44 } from "@/api/base44Client";
 
 export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onClose, onSave }) {
   const [formData, setFormData] = React.useState(item || {});
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   React.useEffect(() => {
     if (item) {
@@ -67,7 +69,14 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <Tabs defaultValue="details" className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">{language === 'he' ? 'פרטי פריט' : 'Item Details'}</TabsTrigger>
+            <TabsTrigger value="recipes">{language === 'he' ? 'מתכונים מקושרים' : 'Linked Recipes'}</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="details" className="space-y-4 pt-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">{t('item_name')} *</Label>
             <Input
@@ -256,16 +265,85 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1 bg-[#d4a373] hover:bg-[#b88c60]">
-              {t('save')}
-            </Button>
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              {t('cancel')}
-            </Button>
-          </div>
-        </form>
+              <div className="flex gap-3 pt-4">
+                <Button type="submit" className="flex-1 bg-[#d4a373] hover:bg-[#b88c60]">
+                  {t('save')}
+                </Button>
+                <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+                  {t('cancel')}
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="recipes" className="pt-2">
+            <LinkedRecipesTab itemId={item?.id} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function LinkedRecipesTab({ itemId }) {
+  const [recipes, setRecipes] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const { language } = useLanguage();
+
+  React.useEffect(() => {
+    if (!itemId) {
+      setLoading(false);
+      return;
+    }
+    const fetchRecipes = async () => {
+      try {
+        setLoading(true);
+        const allRecipes = await base44.entities.Recipe.filter({});
+        const linked = allRecipes.filter(r => 
+          r.ingredients?.some(ing => ing.item_id === itemId)
+        );
+        setRecipes(linked);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecipes();
+  }, [itemId]);
+
+  if (loading) return <div className="py-8 text-center"><Loader className="w-6 h-6 animate-spin mx-auto text-gray-500" /></div>;
+
+  if (recipes.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <ChefHat className="w-12 h-12 mx-auto mb-3 opacity-20" />
+        <p>{language === 'he' ? 'פריט זה אינו משוייך לאף מתכון.' : 'This item is not linked to any recipes.'}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 pb-4">
+      <p className="text-sm text-gray-500 mb-4">
+        {language === 'he' ? `פריט זה מופיע ב-${recipes.length} מתכונים:` : `This item appears in ${recipes.length} recipes:`}
+      </p>
+      {recipes.map(r => {
+        const ingredient = r.ingredients.find(ing => ing.item_id === itemId);
+        return (
+          <div key={r.id} className="p-3 border rounded-lg bg-gray-50 flex justify-between items-center">
+            <div>
+              <div className="font-semibold text-gray-800">{r.name}</div>
+              <div className="text-xs text-gray-500">{language === 'he' ? 'סוג: ' : 'Type: '} {r.type === 'prep_recipe' ? (language === 'he' ? 'הכנה' : 'Prep') : (language === 'he' ? 'מנה למכירה' : 'Sale Item')}</div>
+            </div>
+            {ingredient && (
+              <div className="text-sm font-medium text-gray-600 bg-white px-2 py-1 rounded border" dir="ltr">
+                {ingredient.quantity} {ingredient.unit}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
