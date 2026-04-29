@@ -11,9 +11,9 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Missing idsToDelete' }, { status: 400 });
         }
         
-        const targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email;
-        const api = targetEmail ? base44.asServiceRole.entities : base44.entities;
-        const queryEmail = targetEmail || user.email;
+        const isAdminImpersonating = user.role === 'admin' && user.acting_as_user_email;
+        const queryEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
+        const api = isAdminImpersonating ? base44.asServiceRole.entities : base44.entities;
 
         // Fetch deleted items to get their warehouse_ids
         const deletedItems = [];
@@ -76,10 +76,26 @@ Deno.serve(async (req) => {
         // Helper to update linked entities
         const processEntityUpdates = async (entityName, processFn) => {
             try {
-                let records = await api[entityName].filter({ created_by: queryEmail });
-                if (targetEmail) {
-                     const records2 = await api[entityName].filter({ store_owner_email: queryEmail });
-                     records = [...records, ...records2];
+                let records = [];
+                if (isAdminImpersonating) {
+                    try {
+                        const storeUsers = await base44.asServiceRole.entities.StoreUser.filter({ owner_email: queryEmail });
+                        const allowedEmails = [queryEmail, ...storeUsers.map(u => u.user_email)];
+                        
+                        for (const email of allowedEmails) {
+                            const r = await api[entityName].filter({ created_by: email });
+                            if (r) records = [...records, ...r];
+                        }
+                        
+                        try {
+                            const r2 = await api[entityName].filter({ store_owner_email: queryEmail });
+                            if (r2) records = [...records, ...r2];
+                        } catch(e) {}
+                    } catch(e) {
+                        records = await api[entityName].filter({ created_by: queryEmail });
+                    }
+                } else {
+                    records = await api[entityName].filter({});
                 }
 
                 const updates = [];
