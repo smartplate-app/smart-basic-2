@@ -62,16 +62,38 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { targetEmail, sheet_name, warehouse_id } = await req.json().catch(() => ({}));
-    const workingEmail = targetEmail || user.acting_as_store_email || user.email;
+    const workingEmail = targetEmail || user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
 
     const driveToken = await base44.asServiceRole.connectors.getAccessToken('googledrive');
     const sheetsToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
 
+    const isAdminImpersonating = user.role === 'admin' && (targetEmail || user.acting_as_user_email || user.acting_as_store_email);
+    
     let items = [];
-    if (warehouse_id) {
-      items = await base44.entities.Item.filter({ created_by: workingEmail, warehouse_id }, 'name', 5000);
+    if (isAdminImpersonating) {
+      const api = base44.asServiceRole.entities;
+      let records = [];
+      try {
+        const storeUsers = await api.StoreUser.filter({ owner_email: workingEmail });
+        const allowedEmails = [workingEmail, ...storeUsers.map(u => u.user_email)];
+        for (const email of allowedEmails) {
+          const r = await api.Item.filter({ created_by: email }, 'name', 5000);
+          if (r) records = [...records, ...r];
+        }
+        try {
+          const r2 = await api.Item.filter({ store_owner_email: workingEmail }, 'name', 5000);
+          if (r2) records = [...records, ...r2];
+        } catch(e) {}
+      } catch(e) {
+        records = await api.Item.filter({ created_by: workingEmail }, 'name', 5000);
+      }
+      items = Array.from(new Map(records.map(r => [r.id, r])).values());
     } else {
-      items = await base44.entities.Item.filter({ created_by: workingEmail }, 'name', 5000);
+      items = await base44.entities.Item.filter({}, 'name', 10000);
+    }
+
+    if (warehouse_id) {
+      items = items.filter(it => it.warehouse_id === warehouse_id || (it.warehouse_ids && it.warehouse_ids.includes(warehouse_id)));
     }
 
     const headers = [
@@ -86,17 +108,24 @@ Deno.serve(async (req) => {
     ];
 
     const rows = (items || [])
-      .sort((a,b) => (a.warehouse_name||'').localeCompare(b.warehouse_name||'') || (a.supplier_name||'').localeCompare(b.supplier_name||'') || (a.name||'').localeCompare(b.name||''))
-      .map(it => [
-        it.supplier_name || '',
-        it.name || '',
-        it.unit || '',
-        it.catalog_number || '',
-        Number(it.price || 0),
-        it.warehouse_name || '',
-        '',
-        ''
-      ]);
+      .sort((a,b) => {
+        const whA = a.warehouse_names && a.warehouse_names.length > 0 ? a.warehouse_names.join(', ') : (a.warehouse_name || '');
+        const whB = b.warehouse_names && b.warehouse_names.length > 0 ? b.warehouse_names.join(', ') : (b.warehouse_name || '');
+        return whA.localeCompare(whB) || (a.supplier_name||'').localeCompare(b.supplier_name||'') || (a.name||'').localeCompare(b.name||'');
+      })
+      .map(it => {
+        const whNames = it.warehouse_names && it.warehouse_names.length > 0 ? it.warehouse_names.join(', ') : (it.warehouse_name || '');
+        return [
+          it.supplier_name || '',
+          it.name || '',
+          it.unit || '',
+          it.catalog_number || '',
+          Number(it.price || 0),
+          whNames,
+          '',
+          ''
+        ];
+      });
 
     const root = await findOrCreateFolder(driveToken, 'SmartPlateUploads', null);
     const userFolder = await findOrCreateFolder(driveToken, workingEmail, root.id);

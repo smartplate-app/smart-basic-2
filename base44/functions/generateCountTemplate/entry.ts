@@ -13,19 +13,37 @@ Deno.serve(async (req) => {
         }
 
         const body = await req.json();
-        const { warehouse_id, language = 'he' } = body;
+        const { warehouse_id, language = 'he', targetEmail } = body;
+
+        const workingEmail = targetEmail || user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
+        const isAdminImpersonating = user.role === 'admin' && (targetEmail || user.acting_as_user_email || user.acting_as_store_email);
 
         // Get warehouse items
         let items = [];
-        if (warehouse_id) {
-            items = await base44.entities.Item.filter({ 
-                warehouse_id: warehouse_id,
-                created_by: user.email 
-            }, 'name', 5000);
+        if (isAdminImpersonating) {
+            const api = base44.asServiceRole.entities;
+            let records = [];
+            try {
+                const storeUsers = await api.StoreUser.filter({ owner_email: workingEmail });
+                const allowedEmails = [workingEmail, ...storeUsers.map(u => u.user_email)];
+                for (const email of allowedEmails) {
+                    const r = await api.Item.filter({ created_by: email }, 'name', 5000);
+                    if (r) records = [...records, ...r];
+                }
+                try {
+                    const r2 = await api.Item.filter({ store_owner_email: workingEmail }, 'name', 5000);
+                    if (r2) records = [...records, ...r2];
+                } catch(e) {}
+            } catch(e) {
+                records = await api.Item.filter({ created_by: workingEmail }, 'name', 5000);
+            }
+            items = Array.from(new Map(records.map(r => [r.id, r])).values());
         } else {
-            items = await base44.entities.Item.filter({ 
-                created_by: user.email 
-            }, 'name', 5000);
+            items = await base44.entities.Item.filter({}, 'name', 10000);
+        }
+
+        if (warehouse_id) {
+            items = items.filter(it => it.warehouse_id === warehouse_id || (it.warehouse_ids && it.warehouse_ids.includes(warehouse_id)));
         }
 
         // Get all warehouses for the warehouse column
@@ -61,7 +79,7 @@ Deno.serve(async (req) => {
         
         // Add all items
         items.forEach(item => {
-            const warehouseName = item.warehouse_name || '';
+            const warehouseName = item.warehouse_names && item.warehouse_names.length > 0 ? item.warehouse_names.join(', ') : (item.warehouse_name || '');
             const itemPrice = item.price || '';
             const row = [
                 `"${item.name || ''}"`,

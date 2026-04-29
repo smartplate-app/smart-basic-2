@@ -81,10 +81,32 @@ Deno.serve(async (req) => {
     const spreadsheetId = payload?.spreadsheetId || payload?.sheetId || null;
 
     // Which email to use for data scope (respect admin control context)
-    const workingEmail = user.acting_as_store_email || user.email;
+    const workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
+    const isAdminImpersonating = user.role === 'admin' && (user.acting_as_user_email || user.acting_as_store_email);
 
     // Load items created by this user (catalog items)
-    const items = await base44.entities.Item.filter({ created_by: workingEmail }, 'name');
+    let items = [];
+    if (isAdminImpersonating) {
+      const api = base44.asServiceRole.entities;
+      let records = [];
+      try {
+        const storeUsers = await api.StoreUser.filter({ owner_email: workingEmail });
+        const allowedEmails = [workingEmail, ...storeUsers.map(u => u.user_email)];
+        for (const email of allowedEmails) {
+          const r = await api.Item.filter({ created_by: email }, 'name', 5000);
+          if (r) records = [...records, ...r];
+        }
+        try {
+          const r2 = await api.Item.filter({ store_owner_email: workingEmail }, 'name', 5000);
+          if (r2) records = [...records, ...r2];
+        } catch(e) {}
+      } catch(e) {
+        records = await api.Item.filter({ created_by: workingEmail }, 'name', 5000);
+      }
+      items = Array.from(new Map(records.map(r => [r.id, r])).values());
+    } else {
+      items = await base44.entities.Item.filter({}, 'name', 10000);
+    }
 
     const headers = ['name', 'unit', 'price', 'discount'];
     const rows = (items || []).map((it) => [
