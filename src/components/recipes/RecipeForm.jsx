@@ -6,6 +6,7 @@ import { Trash2, Plus, Search } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ItemEditModal from "../items/ItemEditModal";
 
 export default function RecipeForm({ recipe, onSave, onCancel }) {
   const { language } = useLanguage();
@@ -22,12 +23,17 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   });
   const [items, setItems] = useState([]);
   const [prepRecipes, setPrepRecipes] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => {
     base44.entities.Item.filter({}, "name").then(setItems);
     base44.entities.Recipe.filter({ type: "prep_recipe" }, "name").then(setPrepRecipes);
+    base44.entities.Supplier.filter({}, "name").then(setSuppliers);
+    base44.entities.Warehouse.filter({}, "name").then(setWarehouses);
   }, []);
 
   const UNITS = [
@@ -158,6 +164,39 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     r.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (!recipe || r.id !== recipe.id) // prevent self-reference
   );
+
+  const handleItemSave = async (updatedItem) => {
+    try {
+      await base44.entities.Item.update(updatedItem.id, updatedItem);
+      
+      // Update local items state
+      setItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
+      
+      // Recalculate cost for the ingredient in the recipe form
+      const newIngredients = formData.ingredients.map(ing => {
+        if (ing.item_id === updatedItem.id) {
+          return {
+            ...ing,
+            item_name: updatedItem.name,
+            original_item: updatedItem,
+            cost: getIngredientCost(updatedItem, ing.quantity, ing.unit)
+          };
+        }
+        return ing;
+      });
+      
+      setFormData({
+        ...formData,
+        ingredients: newIngredients,
+        total_cost: calculateTotalCost(newIngredients)
+      });
+      
+      setEditingItem(null);
+    } catch (error) {
+      console.error('Failed to update item:', error);
+      alert(language === 'he' ? 'שגיאה בשמירת הפריט' : 'Error saving item');
+    }
+  };
 
   const handleAddPrepRecipe = (prep) => {
     const newIngredients = [...formData.ingredients, {
@@ -384,7 +423,16 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
             <div className="space-y-2">
               {formData.ingredients.map((ing, idx) => (
                 <div key={idx} className="flex items-center gap-2 bg-gray-50 p-2 rounded-md border">
-                  <div className="flex-1 font-medium text-sm flex items-center gap-1.5">
+                  <div 
+                    className={`flex-1 font-medium text-sm flex items-center gap-1.5 ${!ing.is_prep_recipe ? 'cursor-pointer hover:text-[#d4a373] transition-colors' : ''}`}
+                    onClick={() => {
+                      if (!ing.is_prep_recipe) {
+                        const itemToEdit = ing.original_item || items.find(i => i.id === ing.item_id);
+                        if (itemToEdit) setEditingItem(itemToEdit);
+                      }
+                    }}
+                    title={!ing.is_prep_recipe ? (language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item') : ''}
+                  >
                     {!ing.is_prep_recipe && (ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name) && (
                       <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded shrink-0">
                         {ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name}
@@ -393,7 +441,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     {ing.is_prep_recipe && (
                       <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'הכנה' : 'PREP'}</span>
                     )}
-                    {ing.item_name}
+                    <span className={!ing.is_prep_recipe ? 'underline decoration-dotted underline-offset-2' : ''}>{ing.item_name}</span>
                   </div>
                   <Input 
                     type="number" 
@@ -443,6 +491,17 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
           </div>
         </form>
       </DialogContent>
+      
+      {editingItem && (
+        <ItemEditModal
+          item={editingItem}
+          suppliers={suppliers}
+          warehouses={warehouses}
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          onSave={handleItemSave}
+        />
+      )}
     </Dialog>
   );
 }
