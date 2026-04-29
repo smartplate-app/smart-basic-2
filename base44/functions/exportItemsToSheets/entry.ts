@@ -86,27 +86,23 @@ Deno.serve(async (req) => {
 
     // Load items created by this user (catalog items)
     let items = [];
-    if (isAdminImpersonating) {
-      const api = base44.asServiceRole.entities;
-      let records = [];
-      try {
-        const storeUsers = await api.StoreUser.filter({ owner_email: workingEmail });
-        const allowedEmails = [workingEmail, ...storeUsers.map(u => u.user_email)];
-        for (const email of allowedEmails) {
-          const r = await api.Item.filter({ created_by: email }, 'name', 5000);
-          if (r) records = [...records, ...r];
-        }
-        try {
-          const r2 = await api.Item.filter({ store_owner_email: workingEmail }, 'name', 5000);
-          if (r2) records = [...records, ...r2];
-        } catch(e) {}
-      } catch(e) {
-        records = await api.Item.filter({ created_by: workingEmail }, 'name', 5000);
+    const api = isAdminImpersonating ? base44.asServiceRole.entities : base44.entities;
+    let records = [];
+    try {
+      const storeUsers = await api.StoreUser.filter({ owner_email: workingEmail });
+      const allowedEmails = [workingEmail, ...storeUsers.map(u => u.user_email)];
+      for (const email of allowedEmails) {
+        const r = await api.Item.filter({ created_by: email }, 'name', 5000);
+        if (r) records = [...records, ...r];
       }
-      items = Array.from(new Map(records.map(r => [r.id, r])).values());
-    } else {
-      items = await base44.entities.Item.filter({}, 'name', 10000);
+      try {
+        const r2 = await api.Item.filter({ store_owner_email: workingEmail }, 'name', 5000);
+        if (r2) records = [...records, ...r2];
+      } catch(e) {}
+    } catch(e) {
+      records = await api.Item.filter({ created_by: workingEmail }, 'name', 5000);
     }
+    items = Array.from(new Map(records.map(r => [r.id, r])).values());
 
     const headers = ['name', 'unit', 'price', 'discount'];
     const rows = (items || []).map((it) => [
