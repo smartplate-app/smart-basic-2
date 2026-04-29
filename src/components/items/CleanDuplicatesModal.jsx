@@ -13,33 +13,53 @@ export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete 
 
   useEffect(() => {
     if (isOpen && items.length > 0) {
-      // Group by normalized name
-      const groups = {};
-      items.forEach(item => {
-        const name = (item.name || '').trim().toLowerCase();
-        if (!name) return;
-        if (!groups[name]) groups[name] = [];
-        groups[name].push(item);
+      const normalize = (s) => (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+      // Union-Find to cluster similar items
+      const n = items.length;
+      const parent = items.map((_, i) => i);
+      const find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+      const union = (a, b) => { parent[find(a)] = find(b); };
+
+      for (let i = 0; i < n; i++) {
+        const nameI = normalize(items[i].name);
+        if (!nameI) continue;
+        for (let j = i + 1; j < n; j++) {
+          const nameJ = normalize(items[j].name);
+          if (!nameJ) continue;
+          // Exact match OR one name contains the other (partial similarity)
+          if (nameI === nameJ || nameI.includes(nameJ) || nameJ.includes(nameI)) {
+            union(i, j);
+          }
+        }
+      }
+
+      // Build groups from clusters
+      const clusterMap = {};
+      items.forEach((item, i) => {
+        const root = find(i);
+        if (!clusterMap[root]) clusterMap[root] = [];
+        clusterMap[root].push(item);
       });
 
       const duplicates = [];
       const autoSelectIds = [];
 
-      for (const name in groups) {
-        if (groups[name].length > 1) {
-          // Sort so newest is first
-          const sorted = groups[name].sort((a, b) => {
+      for (const root in clusterMap) {
+        const cluster = clusterMap[root];
+        if (cluster.length > 1) {
+          const sorted = cluster.sort((a, b) => {
             const dateA = new Date(a.updated_date || a.created_date).getTime();
             const dateB = new Date(b.updated_date || b.created_date).getTime();
             return dateB - dateA;
           });
-          
+
           duplicates.push({
             name: sorted[0].name,
             items: sorted
           });
 
-          // Auto-select all except the newest one (the first one)
+          // Auto-select all except the newest
           sorted.slice(1).forEach(item => autoSelectIds.push(item.id));
         }
       }
