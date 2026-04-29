@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.26';
 
 function parseSpreadsheetId(input) {
   if (!input) return null;
@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       if (parsedData.items) allItems.push(...parsedData.items);
       if (parsedData.recipes) allRecipes.push(...parsedData.recipes);
     } else {
-      const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
+      const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlesheets');
 
       // Get all sheets
       const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=false`, {
