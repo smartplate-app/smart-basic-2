@@ -305,7 +305,6 @@ export default function WelcomePublic() {
 
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-blue-50 opacity-50" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 mb-6">
@@ -333,7 +332,7 @@ export default function WelcomePublic() {
       </div>
 
       {/* Features Section */}
-      <div className="py-20 bg-gray-50">
+      <div className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900">{t('wp_features_title')}</h2>
