@@ -68,27 +68,25 @@ Deno.serve(async (req) => {
       }
 
       // Use LLM to parse all sheets at once
-      const prompt = `קלט: נתונים ממספר גיליונות בגוגל שיטס.
-הנתונים יכולים להכיל פריטי מלאי (חומרי גלם) או מתכונים (הכנות מטבח או מנות סופיות).
-אנא נתח את הנתונים והחזר JSON עם שני מערכים:
-1. items: פריטי מלאי (חומרי גלם). שדות: name, unit (unit/kg/gram/liter/ml/case), price (מספר), catalog_number, supplier_name (שם הספק - חשוב מאוד לחלץ מעמודת הספק אם קיימת).
-2. recipes: מתכונים. שדות: 
-   - name: שם המתכון
-   - type: 'prep_recipe' (הכנת מטבח) או 'sale_item' (מנה למכירה)
-   - yield_quantity: כמות תוצר (מספר, ברירת מחדל 1)
-   - yield_unit: יחידת מידה של התוצר (unit/kg/gram/liter/ml)
-   - sale_price: מחיר מכירה (למנות סופיות, מספר)
-   - ingredients: מערך של מרכיבים, כל אחד עם { item_name: שם המרכיב, quantity: כמות (מספר), unit: יחידת מידה }.
+      const prompt = `You are parsing a restaurant Google Sheets file into structured JSON.
 
-שים לב למבנה הנתונים:
-- ייתכן שהמתכונים מוצגים בצורה אנכית/טבלאית מורכבת. למשל, עמודה אחת מכילה את הכותרות ("שם הכנת מטבח", "יחידת מידה", "משקל כולל") והעמודה השנייה את הערכים ("חמוצים יפנים", "ק"ג", "5").
-- מתחת לזה ייתכן שיופיעו כותרות למרכיבים ("כמות יחידות", "שם פריט המלאי") ומתחתיהן שורות של המרכיבים עצמם.
-- עליך להבין את המבנה הלוגי מתוך הנתונים ולחלץ את כל המתכונים והמרכיבים שלהם.
-- אם הגיליון מכיל מנות סופיות (למשל "שם המנה בתפריט"), סווג אותן כ-'sale_item'. אם זה "הכנת מטבח", סווג כ-'prep_recipe'.
-- עבור פריטי מלאי, חפש עמודה של "שם הספק" (או דומה) ושייך את שם הספק לכל פריט.
-- קשר בין מתכוני הכנה למנות סופיות: אם מנה סופית משתמשת בהכנת מטבח כמרכיב, רשום את שם הכנת המטבח ב-item_name של המרכיב.
+The file has at least 2 tabs. Common tab names (in Hebrew or English):
+- "הכנות" / "Preps" / "prep" → these are PREP RECIPES (type: 'prep_recipe')
+- "מתכונים" / "Recipes" / "מנות" / "Menu" → these are SALE ITEMS (type: 'sale_item')
+- "מרכיבים" / "חומרי גלם" / "Items" / "Ingredients" → these are raw ingredients (items array)
 
-הנתונים:
+IMPORTANT RULES:
+1. The file structure can vary wildly - columns may be in any order, in Hebrew or English.
+2. There may OR MAY NOT be a separate ingredients tab. If there is no ingredients tab, extract ingredient names only from the recipe/prep tabs.
+3. Each recipe/prep block typically has: a recipe name, yield quantity+unit, and a list of ingredients with quantity+unit.
+4. Preps tab → type: 'prep_recipe'. Recipe/Menu tab → type: 'sale_item'.
+5. If a sale_item uses a prep_recipe as ingredient, use the prep_recipe name as item_name.
+6. If ingredients tab exists: extract items array with name, unit, price, supplier_name.
+7. If NO ingredients tab: return items array as EMPTY [] - do NOT invent items.
+8. For yield_unit and ingredient units, normalize to: unit/kg/gram/liter/ml/case.
+9. Recipes with NO ingredients listed are still valid - just use empty ingredients array.
+
+Tab data:
 ${allRowsData}
 `;
 
@@ -145,6 +143,35 @@ ${allRowsData}
       if (response.items) allItems.push(...response.items);
       if (response.recipes) allRecipes.push(...response.recipes);
     }
+
+    const fetchWithFallback = async (entityType) => {
+      let data = await base44.asServiceRole.entities[entityType].filter({ created_by: user.email }, 'name', 10000);
+      
+      let targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+      if (!user.store_user_owner_email) {
+        try {
+          const recs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+          if (recs.length > 0) targetEmail = recs[0].owner_email;
+        } catch(e){}
+      }
+
+      if (targetEmail !== user.email) {
+        const ownerData = await base44.asServiceRole.entities[entityType].filter({ created_by: targetEmail }, 'name', 10000);
+        data = [...data, ...ownerData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      }
+
+      if (user.chain_id && !user.is_chain_head) {
+        try {
+          const chain = await base44.asServiceRole.entities.Chain.filter({ id: user.chain_id });
+          if (chain.length > 0) {
+            const headEmail = chain[0].head_store_user_email;
+            const headData = await base44.asServiceRole.entities[entityType].filter({ created_by: headEmail }, 'name', 10000);
+            data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+          }
+        } catch(e){}
+      }
+      return data;
+    };
 
     // Fetch existing items to avoid duplicates
     const existingItems = await fetchWithFallback('Item');
