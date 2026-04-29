@@ -80,13 +80,14 @@ If a tab name is ambiguous, infer the type based on the content (if it yields a 
 IMPORTANT RULES:
 1. The file structure can vary wildly - columns may be in any order, in Hebrew or English.
 2. If NO ingredients tab exists, extract ingredient names only from the recipe/prep tabs.
-3. Each recipe/prep block typically has: a recipe name, yield quantity+unit, and a list of ingredients with quantity+unit.
+3. Each recipe/prep block typically has: a recipe name, yield quantity+unit, and a list of ingredients with quantity+unit. The recipe name is usually the single cell right above the "yield" or "ingredients" headers. If a prep recipe has no title, name it "Prep of " + the first ingredient name.
 4. Preps → type: 'prep_recipe'. Sale items → type: 'sale_item'.
 5. If a sale_item uses a prep_recipe as ingredient, use the prep_recipe name as item_name.
 6. If ingredients tab exists: extract ALL items into the items array with name, unit, price, supplier_name.
 7. Normalize units to: unit/kg/gram/liter/ml/case.
 8. EXTRACT EVERY SINGLE RECIPE, PREP RECIPE, AND ITEM. DO NOT SKIP ANY. Some files are long, process ALL of them.
 9. Use the EXACT ingredient names from the items list whenever possible to avoid missing items. If a recipe says 'flour 1kg' but the item is 'flour', use 'flour' as the item_name.
+10. Ensure you capture the "Preps" / "הכנות" tab completely. Look for any standalone text cells above tables - those are the Recipe Names! If there really is no name at all, use "הכנה: " + the first ingredient name.
 
 Tab data:
 ${allRowsData}
