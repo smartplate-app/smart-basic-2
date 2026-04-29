@@ -30,10 +30,51 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => {
-    base44.entities.Item.filter({}, "name", 10000).then(setItems);
-    base44.entities.Recipe.filter({ type: "prep_recipe" }, "name", 10000).then(setPrepRecipes);
-    base44.entities.Supplier.filter({}, "name", 10000).then(setSuppliers);
-    base44.entities.Warehouse.filter({}, "name", 10000).then(setWarehouses);
+    const loadData = async () => {
+      let currentUser;
+      try { currentUser = await base44.auth.me(); } catch(e){}
+      
+      if (!currentUser) {
+        base44.entities.Item.filter({}, "name", 10000).then(setItems);
+        base44.entities.Recipe.filter({ type: "prep_recipe" }, "name", 10000).then(setPrepRecipes);
+        base44.entities.Supplier.filter({}, "name", 10000).then(setSuppliers);
+        base44.entities.Warehouse.filter({}, "name", 10000).then(setWarehouses);
+        return;
+      }
+
+      let targetEmail = currentUser.acting_as_store_email || currentUser.store_user_owner_email || currentUser.email;
+      if (!currentUser.store_user_owner_email) {
+        try {
+          const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+          if (recs.length > 0) targetEmail = recs[0].owner_email;
+        } catch(e){}
+      }
+
+      const fetchWithFallback = async (entity, field, extraQuery = {}) => {
+         let data = await base44.entities[entity].filter({ created_by: targetEmail, ...extraQuery }, field, 10000);
+         if (targetEmail !== currentUser.email) {
+           const myData = await base44.entities[entity].filter({ created_by: currentUser.email, ...extraQuery }, field, 10000);
+           data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+         }
+         if (currentUser.chain_id && !currentUser.is_chain_head) {
+           try {
+             const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
+             if (chain.length > 0) {
+               const headEmail = chain[0].head_store_user_email;
+               const headData = await base44.entities[entity].filter({ created_by: headEmail, ...extraQuery }, field, 10000);
+               data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+             }
+           } catch(e){}
+         }
+         return data;
+      };
+
+      setItems(await fetchWithFallback('Item', 'name'));
+      setSuppliers(await fetchWithFallback('Supplier', 'name'));
+      setWarehouses(await fetchWithFallback('Warehouse', 'name'));
+      setPrepRecipes(await fetchWithFallback('Recipe', 'name', { type: 'prep_recipe' }));
+    };
+    loadData();
   }, []);
 
   const UNITS = [
