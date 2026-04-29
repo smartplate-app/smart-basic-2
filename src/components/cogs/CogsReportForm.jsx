@@ -27,7 +27,45 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
   useEffect(() => {
-    base44.entities.Recipe.filter({ type: 'sale_item' }).then(setRecipes);
+    const loadRecipes = async () => {
+      let currentUser;
+      try { currentUser = await base44.auth.me(); } catch(e){}
+      
+      if (!currentUser) {
+        const data = await base44.entities.Recipe.filter({ type: 'sale_item' });
+        setRecipes(data || []);
+        return;
+      }
+
+      let targetEmail = currentUser.acting_as_store_email || currentUser.store_user_owner_email || currentUser.email;
+      if (!currentUser.store_user_owner_email) {
+        try {
+          const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+          if (recs.length > 0) targetEmail = recs[0].owner_email;
+        } catch(e){}
+      }
+
+      let data = await base44.entities.Recipe.filter({ created_by: targetEmail, type: 'sale_item' });
+      
+      if (targetEmail !== currentUser.email) {
+        const myData = await base44.entities.Recipe.filter({ created_by: currentUser.email, type: 'sale_item' });
+        data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      }
+
+      if (currentUser.chain_id && !currentUser.is_chain_head) {
+        try {
+          const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
+          if (chain.length > 0) {
+            const headEmail = chain[0].head_store_user_email;
+            const headData = await base44.entities.Recipe.filter({ created_by: headEmail, type: 'sale_item' });
+            data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+          }
+        } catch(e){}
+      }
+
+      setRecipes(data || []);
+    };
+    loadRecipes();
   }, []);
 
   const recalculateTotals = (items) => {
