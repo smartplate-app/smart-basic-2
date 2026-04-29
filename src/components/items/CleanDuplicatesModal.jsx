@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader, Trash2, CheckSquare, Square } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader, Trash2, CheckSquare, Square, Search } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 
 export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete }) {
@@ -10,6 +11,20 @@ export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete 
   const [duplicateGroups, setDuplicateGroups] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleting, setDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredGroups = useMemo(() => {
+    if (!searchTerm.trim()) return duplicateGroups;
+    const term = searchTerm.toLowerCase();
+    return duplicateGroups.filter(group => 
+      group.name.toLowerCase().includes(term) ||
+      group.items.some(item => 
+        item.name.toLowerCase().includes(term) || 
+        (item.supplier_name && item.supplier_name.toLowerCase().includes(term)) ||
+        (item.catalog_number && item.catalog_number.toLowerCase().includes(term))
+      )
+    );
+  }, [duplicateGroups, searchTerm]);
 
   useEffect(() => {
     if (isOpen && items.length > 0) {
@@ -80,7 +95,7 @@ export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete 
       setSelectedIds([]);
     } else {
       const allIds = [];
-      duplicateGroups.forEach(group => {
+      filteredGroups.forEach(group => {
         group.items.forEach(item => allIds.push(item.id));
       });
       setSelectedIds(allIds);
@@ -137,20 +152,37 @@ export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete 
             </div>
           ) : (
             <>
-              <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
-                <span className="font-semibold">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 p-3 rounded-lg border gap-3">
+                <span className="font-semibold shrink-0 mt-1 sm:mt-0">
                   {language === 'he' ? `נבחרו ${selectedIds.length} מתוך ${totalDuplicates} פריטים למחיקה` : `${selectedIds.length} of ${totalDuplicates} items selected for deletion`}
                 </span>
-                <Button variant="outline" size="sm" onClick={toggleAll} className="gap-2">
-                  {selectedIds.length > 0 ? (
-                    <><Square className="w-4 h-4" /> {language === 'he' ? 'נקה בחירה' : 'Clear selection'}</>
-                  ) : (
-                    <><CheckSquare className="w-4 h-4" /> {language === 'he' ? 'בחר הכל' : 'Select all'}</>
-                  )}
-                </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-64">
+                    <Search className={`absolute top-2.5 ${language === 'he' ? 'right-2.5' : 'left-2.5'} text-gray-400 w-4 h-4`} />
+                    <Input
+                      placeholder={language === 'he' ? 'חיפוש פריט או ספק...' : 'Search item or supplier...'}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className={`h-9 bg-white ${language === 'he' ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
+                    />
+                  </div>
+                  <Button variant="outline" size="sm" onClick={toggleAll} className="gap-2 shrink-0 h-9">
+                    {selectedIds.length > 0 ? (
+                      <><Square className="w-4 h-4" /> {language === 'he' ? 'נקה בחירה' : 'Clear selection'}</>
+                    ) : (
+                      <><CheckSquare className="w-4 h-4" /> {language === 'he' ? 'בחר הכל' : 'Select all'}</>
+                    )}
+                  </Button>
+                </div>
               </div>
 
-              {duplicateGroups.map((group, idx) => (
+              {filteredGroups.length === 0 && duplicateGroups.length > 0 && (
+                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed">
+                  {language === 'he' ? 'לא נמצאו פריטים תואמים לחיפוש.' : 'No items matched your search.'}
+                </div>
+              )}
+
+              {filteredGroups.map((group, idx) => (
                 <div key={idx} className="border rounded-lg overflow-hidden">
                   <div className="bg-gray-100 px-4 py-2 font-bold border-b text-gray-800">
                     {group.name} <span className="text-sm font-normal text-gray-500 ml-2 rtl:mr-2 rtl:ml-0">({group.items.length} {language === 'he' ? 'גרסאות' : 'versions'})</span>
