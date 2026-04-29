@@ -147,7 +147,7 @@ ${allRowsData}
     }
 
     // Fetch existing items to avoid duplicates
-    const existingItems = await base44.entities.Item.filter({ created_by: user.email });
+    const existingItems = await fetchWithFallback('Item');
     const itemMap = new Map(existingItems.map(it => [it.name.trim().toLowerCase(), it]));
 
     // Check for missing ingredients
@@ -199,7 +199,7 @@ ${allRowsData}
     }
 
     // Handle Suppliers
-    const existingSuppliers = await base44.entities.Supplier.filter({ created_by: user.email });
+    const existingSuppliers = await fetchWithFallback('Supplier');
     const supplierMap = new Map(existingSuppliers.map(s => [s.name.trim().toLowerCase(), s]));
     
     // Find unique new suppliers from items
@@ -302,7 +302,7 @@ ${allRowsData}
     }
 
     // Fetch existing recipes to avoid duplicates
-    const existingRecipes = await base44.entities.Recipe.filter({ created_by: user.email });
+    const existingRecipes = await fetchWithFallback('Recipe');
     const recipeMap = new Map(existingRecipes.map(r => [r.name.trim().toLowerCase(), r]));
 
     // Process and save recipes

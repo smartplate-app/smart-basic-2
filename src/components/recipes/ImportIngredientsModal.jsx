@@ -97,8 +97,8 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
           <div className="space-y-4 mt-4 border-t pt-4">
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-md text-sm">
               {language === 'he' 
-                ? 'נמצאו מרכיבים שאינם קיימים ברשימת הפריטים שלך. אנא הזן את המחיר עבור כל פריט כדי להמשיך בייבוא.' 
-                : 'Found ingredients that do not exist in your items list. Please enter the price for each item to continue.'}
+                ? 'נמצאו מרכיבים שאינם קיימים ברשימת הפריטים שלך (ייתכן והשמות אינם זהים לחלוטין). אנא הזן את המחיר עבור כל פריט כדי להוסיף אותו כפריט חדש, או חזור לאחור וודא שהשמות תואמים.' 
+                : 'Found ingredients that do not exist in your items list (names might not match exactly). Please enter the price for each item to add them as new items, or go back and ensure names match.'}
             </div>
             <div className="max-h-60 overflow-y-auto space-y-3 p-1">
               {missingItems.map((item, idx) => (
