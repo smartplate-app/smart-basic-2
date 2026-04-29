@@ -635,6 +635,26 @@ export default function AdminDashboard() {
                     <TestTube className="w-4 h-4" />
                     {language === 'he' ? 'בדיקת התחברות לטאביט' : 'Tabit Tester'}
                   </Button>
+                  <Button
+                    onClick={async (e) => {
+                      const btn = e.currentTarget;
+                      const originalText = btn.innerHTML;
+                      btn.innerHTML = 'Running sync...';
+                      try {
+                        const res = await base44.functions.invoke('syncXohoSales', {});
+                        alert(JSON.stringify(res.data, null, 2));
+                      } catch (err) {
+                        alert('Error: ' + err.message);
+                      } finally {
+                        btn.innerHTML = originalText;
+                      }
+                    }}
+                    variant="outline"
+                    className="flex items-center gap-2 border-pink-500 text-pink-600 hover:bg-pink-50"
+                  >
+                    <TestTube className="w-4 h-4" />
+                    Test syncXohoSales
+                  </Button>
                 </div>
               </div>
 
