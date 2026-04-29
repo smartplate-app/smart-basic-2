@@ -75,17 +75,22 @@ Deno.serve(async (req) => {
         
         // Add all items
         items.forEach(item => {
-            const warehouseName = item.warehouse_names && item.warehouse_names.length > 0 ? item.warehouse_names.join(', ') : (item.warehouse_name || '');
-            const itemPrice = item.price || '';
-            const row = [
-                `"${item.name || ''}"`,
-                '', // Empty quantity
-                `"${item.unit || 'unit'}"`,
-                itemPrice, // Price from catalog (or empty if not set)
-                `"${warehouseName}"`,
-                ''
-            ];
-            csvRows.push(row.join(','));
+            const warehouses = item.warehouse_names && item.warehouse_names.length > 0 
+                ? item.warehouse_names 
+                : (item.warehouse_name ? [item.warehouse_name] : ['']);
+            
+            warehouses.forEach(whName => {
+                const itemPrice = item.price || '';
+                const row = [
+                    `"${item.name || ''}"`,
+                    '', // Empty quantity
+                    `"${item.unit || 'unit'}"`,
+                    itemPrice, // Price from catalog (or empty if not set)
+                    `"${whName}"`,
+                    ''
+                ];
+                csvRows.push(row.join(','));
+            });
         });
 
         const csvContent = csvRows.join('\n');

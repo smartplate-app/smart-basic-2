@@ -103,21 +103,34 @@ Deno.serve(async (req) => {
       'notes'
     ];
 
-    const rows = (items || [])
+    let flatItems = [];
+    (items || []).forEach(it => {
+      const warehouses = it.warehouse_names && it.warehouse_names.length > 0 
+        ? it.warehouse_names 
+        : (it.warehouse_name ? [it.warehouse_name] : ['']);
+      
+      warehouses.forEach(whName => {
+        flatItems.push({
+          ...it,
+          single_warehouse_name: whName
+        });
+      });
+    });
+
+    const rows = flatItems
       .sort((a,b) => {
-        const whA = a.warehouse_names && a.warehouse_names.length > 0 ? a.warehouse_names.join(', ') : (a.warehouse_name || '');
-        const whB = b.warehouse_names && b.warehouse_names.length > 0 ? b.warehouse_names.join(', ') : (b.warehouse_name || '');
-        return whA.localeCompare(whB) || (a.supplier_name||'').localeCompare(b.supplier_name||'') || (a.name||'').localeCompare(b.name||'');
+        return (a.single_warehouse_name||'').localeCompare(b.single_warehouse_name||'') || 
+               (a.supplier_name||'').localeCompare(b.supplier_name||'') || 
+               (a.name||'').localeCompare(b.name||'');
       })
       .map(it => {
-        const whNames = it.warehouse_names && it.warehouse_names.length > 0 ? it.warehouse_names.join(', ') : (it.warehouse_name || '');
         return [
           it.supplier_name || '',
           it.name || '',
           it.unit || '',
           it.catalog_number || '',
           Number(it.price || 0),
-          whNames,
+          it.single_warehouse_name || '',
           '',
           ''
         ];
