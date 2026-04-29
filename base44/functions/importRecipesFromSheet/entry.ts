@@ -92,7 +92,6 @@ ${allRowsData}
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
-        model: 'gemini_3_flash', // Use a model with larger context window and good reasoning
         response_json_schema: {
           type: 'object',
           properties: {

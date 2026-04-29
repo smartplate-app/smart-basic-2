@@ -62,9 +62,11 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
       }
 
       if (response.data && response.data.success) {
+        const itemsCount = response.data.created_items_count ?? 0;
+        const recipesCount = response.data.created_recipes_count ?? 0;
         alert(language === 'he' 
-          ? `יובאו בהצלחה ${response.data.created_items_count} מרכיבים ו-${response.data.created_recipes_count} מתכונים.` 
-          : `Successfully imported ${response.data.created_items_count} ingredients and ${response.data.created_recipes_count} recipes.`);
+          ? `יובאו בהצלחה ${itemsCount} מרכיבים ו-${recipesCount} מתכונים.` 
+          : `Successfully imported ${itemsCount} ingredients and ${recipesCount} recipes.`);
         onSuccess();
         onClose();
       } else {
