@@ -32,24 +32,37 @@ export async function performSync(base44, connection) {
     });
     total_sales = restaurant_sales;
   } else if (connection.pos_type === 'tabit') {
-    const authRes = await fetch('https://ros-rp.tabit.cloud/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: connection.tabit_email, password: connection.tabit_password })
-    });
-    if (!authRes.ok) {
-      if (authRes.status === 401) {
-        throw new Error('שם המשתמש או הסיסמה של Tabit שגויים. אנא ודאו שאתם משתמשים בפרטים הנכונים של Tabit Chef.');
+    const tabitEndpoints = [
+      'https://ros-rp.tabit.cloud',
+      'https://us-ros.tabit.cloud',
+      'https://ros-rp-beta.tabit.cloud',
+      'https://us-ros-beta.tabit.cloud'
+    ];
+    let authRes, authData, baseUrl;
+
+    for (const endpoint of tabitEndpoints) {
+      const res = await fetch(`${endpoint}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: connection.tabit_email, password: connection.tabit_password })
+      });
+      if (res.ok) {
+        authRes = res;
+        authData = await res.json();
+        baseUrl = endpoint;
+        break;
       }
-      const errText = await authRes.text();
-      throw new Error(`Tabit auth failed: ${authRes.status} ${errText.substring(0, 50)}`);
     }
-    const authData = await authRes.json();
-    const token = authData.il?.access_token || authData.access_token;
+
+    if (!authRes || !authRes.ok) {
+      throw new Error('שם המשתמש או הסיסמה של Tabit שגויים. אנא ודאו שאתם משתמשים בפרטים הנכונים של Tabit Chef.');
+    }
+    
+    const token = authData.us?.access_token || authData.il?.access_token || authData.access_token;
     if (!token) throw new Error('Tabit auth failed: No token returned');
 
     // Find all available orgs
-    const allOrgs = authData.il?.organizations || authData.organizations || [];
+    const allOrgs = authData.us?.organizations || authData.il?.organizations || authData.organizations || [];
     
     let orgIdsToSync = [];
     
@@ -66,7 +79,7 @@ export async function performSync(base44, connection) {
       let branchToken = token;
       
       if (orgId) {
-        const orgRes = await fetch(`https://ros-rp.tabit.cloud/Organizations/${orgId}/change`, {
+        const orgRes = await fetch(`${baseUrl}/Organizations/${orgId}/change`, {
           method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!orgRes.ok) {
@@ -79,7 +92,7 @@ export async function performSync(base44, connection) {
 
       for (let day = 1; day <= today.getDate(); day++) {
         const dateStr = `${currentMonth}-${String(day).padStart(2, '0')}`;
-        const repRes = await fetch(`https://ros-rp.tabit.cloud/reports/daily-totals?businessDate=${dateStr}`, {
+        const repRes = await fetch(`${baseUrl}/reports/daily-totals?businessDate=${dateStr}`, {
           headers: { 'Authorization': `Bearer ${branchToken}` }
         });
         if (repRes.ok) {

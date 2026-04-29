@@ -1,13 +1,9 @@
 Deno.serve(async (req) => {
   try {
     const urls = [
-      'https://reporting-server.tabit.cloud/login',
-      'https://reporting-server.tabit.cloud/api/login',
-      'https://reporting-server.tabit.cloud/auth/login',
-      'https://reporting-server.tabit.cloud/api/v1/auth/login',
-      'https://ros-rp.tabit.cloud/api/login',
-      'https://ros-rp.tabit.cloud/auth/login',
-      'https://analytics.tabit.cloud/chef/handler.ashx'
+      'https://us-ros.tabit.cloud/login',
+      'https://us-ros-beta.tabit.cloud/login',
+      'https://ros.tabit.cloud/login'
     ];
     
     const results = {};
