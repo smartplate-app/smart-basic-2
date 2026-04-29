@@ -18,12 +18,6 @@
     "tabit_password": {
       "type": "string"
     },
-    "tabit_branches": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
     "beecomm_email": {
       "type": "string"
     },

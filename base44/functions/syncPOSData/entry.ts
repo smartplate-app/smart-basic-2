@@ -51,32 +51,14 @@ export async function performSync(base44, connection) {
     // Find all available orgs
     const allOrgs = authData.il?.organizations || authData.organizations || [];
     
-    const branches = connection.tabit_branches || [];
     let orgIdsToSync = [];
     
-    if (branches.length === 0) {
-      // No branches provided. Sync everything we have access to
-      if (allOrgs.length > 0) {
-        orgIdsToSync = allOrgs.map(o => o._id || o.id);
-      } else {
-        // Fallback: just use the default token without org change
-        orgIdsToSync = [null];
-      }
+    // Sync everything we have access to
+    if (allOrgs.length > 0) {
+      orgIdsToSync = allOrgs.map(o => o._id || o.id);
     } else {
-      // Find org ID by branch name
-      for (const branchName of branches) {
-        const org = allOrgs.find(o => 
-          (o.name && o.name.toLowerCase() === branchName.toLowerCase()) || 
-          (o._id === branchName) || 
-          (o.id === branchName)
-        );
-        if (org) {
-          orgIdsToSync.push(org._id || org.id);
-        } else {
-          // Fallback to exactly what the user wrote if not found
-          orgIdsToSync.push(branchName);
-        }
-      }
+      // Fallback: just use the default token without org change
+      orgIdsToSync = [null];
     }
 
     const today = new Date();
