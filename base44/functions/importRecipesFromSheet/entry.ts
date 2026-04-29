@@ -150,7 +150,7 @@ ${allRowsData}
     const fetchWithFallback = async (entityType) => {
       let data = await base44.asServiceRole.entities[entityType].filter({ created_by: user.email }, 'name', 10000);
       
-      let targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+      let targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
       if (!user.store_user_owner_email) {
         try {
           const recs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email, is_active: true });
