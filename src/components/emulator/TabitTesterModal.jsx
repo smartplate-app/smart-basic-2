@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader, AlertCircle, CheckCircle2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -12,6 +13,24 @@ export default function TabitTesterModal({ isOpen, onClose }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonResults, setJsonResults] = useState(null);
+
+  const handleParseJson = () => {
+    try {
+      const data = JSON.parse(jsonInput);
+      const token = data.il?.access_token || data.access_token;
+      setJsonResults({
+        success: true,
+        tokenFound: !!token,
+        tokenPreview: token ? (token.substring(0, 20) + "...") : null,
+        organizationsCount: data.organizations?.length || 0,
+        keys: Object.keys(data)
+      });
+    } catch (err) {
+      setJsonResults({ success: false, error: err.message });
+    }
+  };
 
   const testLogin = async (e) => {
     e.preventDefault();
@@ -43,10 +62,11 @@ export default function TabitTesterModal({ isOpen, onClose }) {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="api" className="mt-4">
-          <TabsList className="w-full grid grid-cols-2">
+        <Tabs defaultValue="json" className="mt-4">
+          <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="api">API Endpoint Tester</TabsTrigger>
             <TabsTrigger value="iframe">Live Browser (Iframe)</TabsTrigger>
+            <TabsTrigger value="json">Paste JSON</TabsTrigger>
           </TabsList>
 
           <TabsContent value="api" className="space-y-4 pt-4">
@@ -138,6 +158,61 @@ export default function TabitTesterModal({ isOpen, onClose }) {
                 sandbox="allow-same-origin allow-scripts allow-forms"
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="json" className="space-y-4 pt-4">
+            <p className="text-sm text-gray-600">
+              Paste the JSON response you extracted from the network tab here.
+            </p>
+            <Textarea 
+              value={jsonInput}
+              onChange={(e) => setJsonInput(e.target.value)}
+              placeholder="Paste JSON here..."
+              className="h-64 font-mono text-sm"
+            />
+            <Button onClick={handleParseJson} disabled={!jsonInput} className="bg-blue-600 hover:bg-blue-700 text-white">
+              Parse JSON
+            </Button>
+            
+            {jsonResults && (
+              <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+                {jsonResults.success ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-green-700 font-medium">
+                      <CheckCircle2 className="w-5 h-5" /> Successfully Parsed
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <div className="bg-white p-3 rounded border">
+                        <div className="text-xs text-gray-500 font-bold uppercase">Token Found</div>
+                        <div className="mt-1 font-mono text-sm">{jsonResults.tokenFound ? 'YES' : 'NO'}</div>
+                        {jsonResults.tokenPreview && (
+                          <div className="mt-1 text-xs text-gray-400 break-all">{jsonResults.tokenPreview}</div>
+                        )}
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <div className="text-xs text-gray-500 font-bold uppercase">Organizations</div>
+                        <div className="mt-1 font-mono text-sm">{jsonResults.organizationsCount}</div>
+                      </div>
+                    </div>
+                    <div className="bg-white p-3 rounded border mt-2">
+                      <div className="text-xs text-gray-500 font-bold uppercase mb-1">Response Keys</div>
+                      <div className="flex flex-wrap gap-2">
+                        {jsonResults.keys.map(k => (
+                          <span key={k} className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700 font-mono">
+                            {k}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-red-600 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    Invalid JSON: {jsonResults.error}
+                  </div>
+                )}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
