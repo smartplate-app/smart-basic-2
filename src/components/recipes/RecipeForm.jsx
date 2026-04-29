@@ -30,10 +30,10 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   const [editingItem, setEditingItem] = useState(null);
 
   useEffect(() => {
-    base44.entities.Item.filter({}, "name").then(setItems);
-    base44.entities.Recipe.filter({ type: "prep_recipe" }, "name").then(setPrepRecipes);
-    base44.entities.Supplier.filter({}, "name").then(setSuppliers);
-    base44.entities.Warehouse.filter({}, "name").then(setWarehouses);
+    base44.entities.Item.filter({}, "name", 10000).then(setItems);
+    base44.entities.Recipe.filter({ type: "prep_recipe" }, "name", 10000).then(setPrepRecipes);
+    base44.entities.Supplier.filter({}, "name", 10000).then(setSuppliers);
+    base44.entities.Warehouse.filter({}, "name", 10000).then(setWarehouses);
   }, []);
 
   const UNITS = [
@@ -112,12 +112,26 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
 
   const handleUpdateIngredient = (index, field, value) => {
     const newIngredients = [...formData.ingredients];
+    const oldQty = Number(newIngredients[index].quantity) || 1;
+    const oldCost = Number(newIngredients[index].cost) || 0;
+    
     newIngredients[index][field] = value;
     
     if (field === 'quantity' || field === 'unit') {
       const item = newIngredients[index].original_item || items.find(i => i.id === newIngredients[index].item_id);
       if (item) {
         newIngredients[index].cost = getIngredientCost(item, Number(newIngredients[index].quantity), newIngredients[index].unit);
+      } else {
+        const prep = prepRecipes.find(r => r.id === newIngredients[index].item_id);
+        if (prep) {
+          // If it's a prep recipe, cost is total_cost * quantity
+          newIngredients[index].cost = (prep.total_cost || 0) * Number(newIngredients[index].quantity);
+        } else if (field === 'quantity') {
+          // Fallback if neither item nor prep recipe is found
+          // Calculate implied unit price from old cost and old quantity
+          const impliedUnitPrice = oldQty > 0 ? oldCost / oldQty : 0;
+          newIngredients[index].cost = impliedUnitPrice * Number(newIngredients[index].quantity);
+        }
       }
     }
 

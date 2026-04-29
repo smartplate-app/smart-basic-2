@@ -45,7 +45,7 @@ export default function RecipesPage() {
   const loadRecipes = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Recipe.filter({}, "-created_date");
+      const data = await base44.entities.Recipe.filter({}, "-created_date", 10000);
       setRecipes(data);
     } catch (e) {
       console.error(e);
