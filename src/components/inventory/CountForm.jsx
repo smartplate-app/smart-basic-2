@@ -255,7 +255,9 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
       });
       await Promise.all(itemUpdates);
 
-      alert(`${t('items_saved_to_warehouse_catalog_success', { count: formData.items.length, warehouseName: formData.warehouse_name })}`);
+      alert(language === 'he' 
+        ? `נשמרו בהצלחה ${formData.items.length} פריטים לקטלוג המחסן "${formData.warehouse_name}"`
+        : `Successfully saved ${formData.items.length} items to "${formData.warehouse_name}" catalog`);
       
       if (onWarehouseCatalogSaved) {
         onWarehouseCatalogSaved();
@@ -566,9 +568,13 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                       <div className="bg-cyan-50 border-2 border-cyan-200 rounded-lg p-4">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                           <div>
-                            <p className="font-semibold text-cyan-900">{t('save_items_to_warehouse_catalog_title')}</p>
+                            <p className="font-semibold text-cyan-900">
+                              {language === 'he' ? 'שמור פריטים לקטלוג המחסן' : 'Save items to warehouse catalog'}
+                            </p>
                             <p className="text-sm text-cyan-700">
-                              {t('save_items_to_warehouse_catalog_description', { count: formData.items.length, warehouseName: formData.warehouse_name })}
+                              {language === 'he' 
+                                ? `שמור את ${formData.items.length} הפריטים כקטלוג הקבוע של "${formData.warehouse_name}"`
+                                : `Save ${formData.items.length} items as the default catalog for "${formData.warehouse_name}"`}
                             </p>
                           </div>
                           <Button
@@ -585,7 +591,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                             ) : (
                               <>
                                 <Save className="w-4 h-4 mr-2" />
-                                {t('save_to_warehouse_catalog')}
+                                {language === 'he' ? 'שמור לקטלוג מחסן' : 'Save to Warehouse Catalog'}
                               </>
                             )}
                           </Button>
@@ -593,9 +599,9 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                       </div>
                     )}
 
-                    <div className="border rounded-lg overflow-x-auto">
+                    <div className="border rounded-lg overflow-x-auto overflow-y-auto max-h-[60vh]">
                       <Table>
-                        <TableHeader>
+                        <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                           <TableRow>
                             <TableHead>{t('item_name')}</TableHead>
                             <TableHead>{t('counted_quantity')}</TableHead>
