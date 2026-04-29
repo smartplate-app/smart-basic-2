@@ -104,9 +104,10 @@ Deno.serve(async (req) => {
     }
     items = Array.from(new Map(records.map(r => [r.id, r])).values());
 
-    const headers = ['name', 'unit', 'price', 'discount'];
+    const headers = ['name', 'supplier_name', 'unit', 'price', 'discount'];
     const rows = (items || []).map((it) => [
       it.name || '',
+      it.supplier_name || '',
       it.unit || '',
       (typeof it.price === 'number' ? it.price : Number(it.price) || 0),
       (typeof it.discount === 'number' ? it.discount : Number(it.discount) || 0)
@@ -115,7 +116,7 @@ Deno.serve(async (req) => {
     const title = `COGS Items - ${user.business_name || workingEmail}`;
 
     // Get OAuth token from app connector (already authorized)
-    const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlesheets');
 
     let targetSpreadsheetId = spreadsheetId;
     let sheetTitle = 'Items';
@@ -131,7 +132,7 @@ Deno.serve(async (req) => {
 
     const allValues = [headers, ...rows];
     const endRow = allValues.length;
-    const endCol = 'D'; // A..D
+    const endCol = 'E'; // A..E
     const range = `${sheetTitle}!A1:${endCol}${endRow}`;
 
     await writeValues(accessToken, targetSpreadsheetId, range, allValues);
