@@ -952,8 +952,6 @@ const handleCleanOrphans = async (ownerEmail) => {
         selectedCount={selectedIds.length}
         currentWarehouseName={selectedWarehouseId !== 'all' ? (warehouses.find(w => w.id === selectedWarehouseId)?.name || '') : ''}
         warehouses={warehouses}
-        targetWarehouseId={selectedWarehouseId !== 'all' ? selectedWarehouseId : ''}
-        onChangeTargetWarehouse={(id) => setSelectedWarehouseId(id)}
         onRemoveFromCurrent={async () => {
           if (selectedWarehouseId === 'all') return;
           const wh = warehouses.find(w => w.id === selectedWarehouseId);
@@ -981,28 +979,45 @@ const handleCleanOrphans = async (ownerEmail) => {
           setSelectedIds([]);
           loadData(user);
         }}
-        onAddToCurrent={async () => {
-          const targetId = selectedWarehouseId;
-          if (!targetId || targetId === 'all') { alert(safeT('select_warehouse_first','בחר/י מחסן תחילה','Select a warehouse first')); return; }
-          const wh = warehouses.find(w => w.id === targetId);
-          if (!wh) return;
-          const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
-          const next = Array.from(new Set([...existing, ...selectedIds]));
-          await base44.entities.Warehouse.update(wh.id, { catalog_items: next });
-          // Also update items
+        onAssignToWarehouses={async (targetIds) => {
+          if (!targetIds || targetIds.length === 0) return;
+          
+          const targetWarehouses = warehouses.filter(w => targetIds.includes(w.id));
+          if (targetWarehouses.length === 0) return;
+
+          // Update each warehouse's catalog_items
+          await Promise.all(targetWarehouses.map(async (wh) => {
+            const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
+            const next = Array.from(new Set([...existing, ...selectedIds]));
+            return base44.entities.Warehouse.update(wh.id, { catalog_items: next });
+          }));
+
+          // Update each item
           await Promise.all(selectedIds.map(async (itemId) => {
             const item = items.find(i => i.id === itemId);
             if (!item) return;
-            const currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
-            const currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
-            if (currentWids.includes(wh.id)) return;
-            await base44.entities.Item.update(item.id, {
-              warehouse_ids: [...currentWids, wh.id],
-              warehouse_names: [...currentWnames, wh.name],
-              warehouse_id: currentWids.length === 0 ? wh.id : item.warehouse_id,
-              warehouse_name: currentWnames.length === 0 ? wh.name : item.warehouse_name
+            let currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
+            let currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
+            
+            let updated = false;
+            targetWarehouses.forEach(wh => {
+              if (!currentWids.includes(wh.id)) {
+                currentWids.push(wh.id);
+                currentWnames.push(wh.name);
+                updated = true;
+              }
             });
+
+            if (updated) {
+              await base44.entities.Item.update(item.id, {
+                warehouse_ids: currentWids,
+                warehouse_names: currentWnames,
+                warehouse_id: item.warehouse_id || currentWids[0],
+                warehouse_name: item.warehouse_name || currentWnames[0]
+              });
+            }
           }));
+
           setSelectedIds([]);
           loadData(user);
         }}
