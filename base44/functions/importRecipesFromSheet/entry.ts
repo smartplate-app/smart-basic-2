@@ -24,46 +24,51 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { spreadsheetUrl, spreadsheetId: rawId } = await req.json();
+    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, providedPrices } = await req.json();
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
 
-    const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
-
-    // Get all sheets
-    const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=false`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-    if (!metaRes.ok) {
-      return Response.json({ error: 'Failed to read spreadsheet metadata' }, { status: 500 });
-    }
-    const metaData = await metaRes.json();
-    const sheetNames = metaData.sheets.map(s => s.properties.title);
-
     let allItems = [];
     let allRecipes = [];
-    let allRowsData = "";
 
-    for (const sheetName of sheetNames) {
-      const range = `'${sheetName}'!A1:Z200`;
-      const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`, {
+    if (parsedData) {
+      if (parsedData.items) allItems.push(...parsedData.items);
+      if (parsedData.recipes) allRecipes.push(...parsedData.recipes);
+    } else {
+      const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
+
+      // Get all sheets
+      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?includeGridData=false`, {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       });
-      if (!getRes.ok) continue;
-      
-      const data = await getRes.json();
-      const rows = data.values || [];
-      if (rows.length < 2) continue;
+      if (!metaRes.ok) {
+        return Response.json({ error: 'Failed to read spreadsheet metadata' }, { status: 500 });
+      }
+      const metaData = await metaRes.json();
+      const sheetNames = metaData.sheets.map(s => s.properties.title);
 
-      allRowsData += `\n\n--- גיליון: ${sheetName} ---\n` + JSON.stringify(rows.slice(0, 200));
-    }
+      let allRowsData = "";
 
-    if (!allRowsData) {
-      return Response.json({ error: 'No data found in spreadsheet' }, { status: 400 });
-    }
+      for (const sheetName of sheetNames) {
+        const range = `'${sheetName}'!A1:Z200`;
+        const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        if (!getRes.ok) continue;
+        
+        const data = await getRes.json();
+        const rows = data.values || [];
+        if (rows.length < 2) continue;
 
-    // Use LLM to parse all sheets at once
-    const prompt = `קלט: נתונים ממספר גיליונות בגוגל שיטס.
+        allRowsData += `\n\n--- גיליון: ${sheetName} ---\n` + JSON.stringify(rows.slice(0, 200));
+      }
+
+      if (!allRowsData) {
+        return Response.json({ error: 'No data found in spreadsheet' }, { status: 400 });
+      }
+
+      // Use LLM to parse all sheets at once
+      const prompt = `קלט: נתונים ממספר גיליונות בגוגל שיטס.
 הנתונים יכולים להכיל פריטי מלאי (חומרי גלם) או מתכונים (הכנות מטבח או מנות סופיות).
 אנא נתח את הנתונים והחזר JSON עם שני מערכים:
 1. items: פריטי מלאי (חומרי גלם). שדות: name, unit (unit/kg/gram/liter/ml/case), price (מספר), catalog_number, supplier_name (שם הספק - חשוב מאוד לחלץ מעמודת הספק אם קיימת).
@@ -87,58 +92,111 @@ Deno.serve(async (req) => {
 ${allRowsData}
 `;
 
-    const response = await base44.integrations.Core.InvokeLLM({
-      prompt,
-      model: 'gemini_3_flash', // Use a model with larger context window and good reasoning
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          items: {
-            type: 'array',
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        model: 'gemini_3_flash', // Use a model with larger context window and good reasoning
+        response_json_schema: {
+          type: 'object',
+          properties: {
             items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                unit: { type: 'string' },
-                price: { type: 'number' },
-                catalog_number: { type: 'string' },
-                supplier_name: { type: 'string' }
-              },
-              required: ['name']
-            }
-          },
-          recipes: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                type: { type: 'string', enum: ['prep_recipe', 'sale_item'] },
-                yield_quantity: { type: 'number' },
-                yield_unit: { type: 'string' },
-                sale_price: { type: 'number' },
-                ingredients: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      item_name: { type: 'string' },
-                      quantity: { type: 'number' },
-                      unit: { type: 'string' }
-                    },
-                    required: ['item_name', 'quantity']
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  unit: { type: 'string' },
+                  price: { type: 'number' },
+                  catalog_number: { type: 'string' },
+                  supplier_name: { type: 'string' }
+                },
+                required: ['name']
+              }
+            },
+            recipes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  type: { type: 'string', enum: ['prep_recipe', 'sale_item'] },
+                  yield_quantity: { type: 'number' },
+                  yield_unit: { type: 'string' },
+                  sale_price: { type: 'number' },
+                  ingredients: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        item_name: { type: 'string' },
+                        quantity: { type: 'number' },
+                        unit: { type: 'string' }
+                      },
+                      required: ['item_name', 'quantity']
+                    }
                   }
-                }
-              },
-              required: ['name', 'type', 'ingredients']
+                },
+                required: ['name', 'type', 'ingredients']
+              }
             }
           }
         }
-      }
-    });
+      });
 
-    if (response.items) allItems.push(...response.items);
-    if (response.recipes) allRecipes.push(...response.recipes);
+      if (response.items) allItems.push(...response.items);
+      if (response.recipes) allRecipes.push(...response.recipes);
+    }
+
+    // Fetch existing items to avoid duplicates
+    const existingItems = await base44.entities.Item.filter({ created_by: user.email });
+    const itemMap = new Map(existingItems.map(it => [it.name.trim().toLowerCase(), it]));
+
+    // Check for missing ingredients
+    const futureItemMap = new Map(itemMap);
+    for (const it of allItems) {
+      if (it.name) futureItemMap.set(it.name.trim().toLowerCase(), it);
+    }
+    for (const r of allRecipes) {
+      if (r.type === 'prep_recipe' && r.name) {
+        futureItemMap.set(r.name.trim().toLowerCase(), r);
+      }
+    }
+
+    const missingItemsMap = new Map();
+    for (const r of allRecipes) {
+      for (const ing of (r.ingredients || [])) {
+        const itemNameLower = (ing.item_name || '').trim().toLowerCase();
+        if (!itemNameLower) continue;
+        
+        let found = futureItemMap.get(itemNameLower);
+        if (!found) {
+          found = Array.from(futureItemMap.values()).find(i => i.name?.toLowerCase().includes(itemNameLower) || itemNameLower.includes(i.name?.toLowerCase()));
+        }
+
+        if (!found) {
+          if (providedPrices && Object.prototype.hasOwnProperty.call(providedPrices, itemNameLower)) {
+            const newItem = {
+              name: ing.item_name,
+              unit: normalizeUnit(ing.unit),
+              price: Number(providedPrices[itemNameLower]) || 0,
+              supplier_name: 'כללי'
+            };
+            allItems.push(newItem);
+            futureItemMap.set(itemNameLower, newItem);
+          } else {
+            missingItemsMap.set(itemNameLower, { name: ing.item_name, unit: ing.unit });
+          }
+        }
+      }
+    }
+
+    if (missingItemsMap.size > 0) {
+      return Response.json({
+        success: true,
+        requires_prices: true,
+        missing_items: Array.from(missingItemsMap.values()),
+        parsedData: { items: allItems, recipes: allRecipes }
+      });
+    }
 
     // Handle Suppliers
     const existingSuppliers = await base44.entities.Supplier.filter({ created_by: user.email });
@@ -169,10 +227,6 @@ ${allRowsData}
       defaultSupplier = await base44.entities.Supplier.create({ name: 'כללי', supplier_type: 'simple' });
       supplierMap.set('כללי', defaultSupplier);
     }
-
-    // Fetch existing items to avoid duplicates
-    const existingItems = await base44.entities.Item.filter({ created_by: user.email });
-    const itemMap = new Map(existingItems.map(it => [it.name.trim().toLowerCase(), it]));
 
     // Process and save items
     const validItems = allItems.filter(it => it.name).map(it => {

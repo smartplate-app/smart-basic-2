@@ -13,6 +13,9 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [missingItems, setMissingItems] = useState([]);
+  const [parsedData, setParsedData] = useState(null);
+  const [providedPrices, setProvidedPrices] = useState({});
 
   const handleGenerateTemplate = async () => {
     setGenerating(true);
@@ -31,17 +34,32 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  const handleImport = async (e) => {
-    e.preventDefault();
+  const handleImport = async (e, retryWithPrices = false) => {
+    if (e) e.preventDefault();
     if (!url) return;
 
     setLoading(true);
     setError("");
 
     try {
-      const response = await base44.functions.invoke('importRecipesFromSheet', {
-        spreadsheetUrl: url
-      });
+      const payload = { spreadsheetUrl: url };
+      if (retryWithPrices) {
+        payload.parsedData = parsedData;
+        payload.providedPrices = providedPrices;
+      }
+
+      const response = await base44.functions.invoke('importRecipesFromSheet', payload);
+
+      if (response.data && response.data.requires_prices) {
+        setMissingItems(response.data.missing_items);
+        setParsedData(response.data.parsedData);
+        const initialPrices = {};
+        response.data.missing_items.forEach(item => {
+          initialPrices[item.name.trim().toLowerCase()] = "";
+        });
+        setProvidedPrices(initialPrices);
+        return;
+      }
 
       if (response.data && response.data.success) {
         alert(language === 'he' 
@@ -75,46 +93,88 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} mt-2`}>
-          <Button type="button" variant="outline" onClick={handleGenerateTemplate} disabled={generating} className="text-[#107c41] border-[#107c41] bg-green-50 hover:bg-green-100">
-            {generating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            {language === 'he' ? 'הורד תבנית לדוגמה' : 'Generate Template'}
-          </Button>
-        </div>
-
-        <form onSubmit={handleImport} className="space-y-4 mt-4 border-t pt-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {language === 'he' ? 'קישור לגיליון (URL)' : 'Spreadsheet URL'}
-            </label>
-            <Input
-              type="url"
-              placeholder="https://docs.google.com/spreadsheets/d/..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              required
-              className={isRTL ? 'text-right' : 'text-left'}
-              dir="ltr"
-            />
-          </div>
-
-          {error && (
-            <div className="p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
-              {error}
+        {missingItems.length > 0 ? (
+          <div className="space-y-4 mt-4 border-t pt-4">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-md text-sm">
+              {language === 'he' 
+                ? 'נמצאו מרכיבים שאינם קיימים ברשימת הפריטים שלך. אנא הזן את המחיר עבור כל פריט כדי להמשיך בייבוא.' 
+                : 'Found ingredients that do not exist in your items list. Please enter the price for each item to continue.'}
             </div>
-          )}
+            <div className="max-h-60 overflow-y-auto space-y-3 p-1">
+              {missingItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <div className="flex-1 text-sm font-medium">{item.name}</div>
+                  <div className="w-24 text-xs text-gray-500">{item.unit}</div>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder={language === 'he' ? 'מחיר' : 'Price'}
+                    className="w-24 h-8"
+                    value={providedPrices[item.name.trim().toLowerCase()] || ""}
+                    onChange={(e) => setProvidedPrices({ ...providedPrices, [item.name.trim().toLowerCase()]: e.target.value })}
+                  />
+                </div>
+              ))}
+            </div>
+            {error && (
+              <div className="p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
+                {error}
+              </div>
+            )}
+            <DialogFooter className="mt-6">
+              <Button type="button" variant="outline" onClick={() => { setMissingItems([]); setParsedData(null); }} disabled={loading}>
+                {language === 'he' ? 'חזור' : 'Back'}
+              </Button>
+              <Button type="button" onClick={() => handleImport(null, true)} disabled={loading} className="bg-[#107c41] hover:bg-[#0c5e31]">
+                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {language === 'he' ? 'המשך ייבוא' : 'Continue Import'}
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <>
+            <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} mt-2`}>
+              <Button type="button" variant="outline" onClick={handleGenerateTemplate} disabled={generating} className="text-[#107c41] border-[#107c41] bg-green-50 hover:bg-green-100">
+                {generating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                {language === 'he' ? 'הורד תבנית לדוגמה' : 'Generate Template'}
+              </Button>
+            </div>
 
-          <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              {language === 'he' ? 'ביטול' : 'Cancel'}
-            </Button>
-            <Button type="submit" disabled={loading || !url} className="bg-[#107c41] hover:bg-[#0c5e31]">
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {language === 'he' ? 'ייבא נתונים' : 'Import Data'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <form onSubmit={(e) => handleImport(e, false)} className="space-y-4 mt-4 border-t pt-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  {language === 'he' ? 'קישור לגיליון (URL)' : 'Spreadsheet URL'}
+                </label>
+                <Input
+                  type="url"
+                  placeholder="https://docs.google.com/spreadsheets/d/..."
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  required
+                  className={isRTL ? 'text-right' : 'text-left'}
+                  dir="ltr"
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
+                  {error}
+                </div>
+              )}
+
+              <DialogFooter className="mt-6">
+                <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+                  {language === 'he' ? 'ביטול' : 'Cancel'}
+                </Button>
+                <Button type="submit" disabled={loading || !url} className="bg-[#107c41] hover:bg-[#0c5e31]">
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {language === 'he' ? 'ייבא נתונים' : 'Import Data'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
