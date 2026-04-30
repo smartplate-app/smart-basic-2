@@ -544,7 +544,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         </div>
 
         <div className="flex gap-3 justify-end">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} className="min-h-[44px] md:min-h-0">
             {safeT('cancel', 'ביטול', 'Cancel')}
           </Button>
           <Button
@@ -577,11 +577,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               const orderData = { ...currentOrder, items: orderItems, total_cost: totalCost };
               if (onSaveDraft) onSaveDraft(orderData);
             }}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white min-h-[44px] md:min-h-0"
           >
             {safeT('save_draft', 'שמור טיוטה', 'Save Draft')}
           </Button>
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white">
+          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white min-h-[44px] md:min-h-0">
             {order ? t('update_order') : t('send_order')}
           </Button>
         </div>

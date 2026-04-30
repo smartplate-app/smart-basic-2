@@ -1166,19 +1166,35 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
               </div>
               <span>{language === 'he' ? 'עוזר' : 'Help'}</span>
             </button>
-            <Link to={createPageUrl('Dashboard')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}>
+            <Link 
+              to={createPageUrl('Dashboard')} 
+              onClick={(e) => { if (location.pathname === createPageUrl('Dashboard') || location.pathname === createPageUrl('Dashboard') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
+            >
               <BarChart2 className="h-5 w-5" />
               <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
             </Link>
-            <Link to={createPageUrl('Orders')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}>
+            <Link 
+              to={createPageUrl('Orders')} 
+              onClick={(e) => { if (location.pathname === createPageUrl('Orders') || location.pathname === createPageUrl('Orders') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
+            >
               <ShoppingCart className="h-5 w-5" />
               <span>{language === 'he' ? 'הזמנות' : 'Orders'}</span>
             </Link>
-            <Link to={createPageUrl('Suppliers')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}>
+            <Link 
+              to={createPageUrl('Suppliers')} 
+              onClick={(e) => { if (location.pathname === createPageUrl('Suppliers') || location.pathname === createPageUrl('Suppliers') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
+            >
               <Users className="h-5 w-5" />
               <span>{language === 'he' ? 'ספקים' : 'Suppliers'}</span>
             </Link>
-            <Link to={createPageUrl('UserProfile')} preventScrollReset className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}>
+            <Link 
+              to={createPageUrl('UserProfile')} 
+              onClick={(e) => { if (location.pathname === createPageUrl('UserProfile') || location.pathname === createPageUrl('UserProfile') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
+            >
               <UserCircle className="h-5 w-5" />
               <span>{language === 'he' ? 'פרופיל' : 'Profile'}</span>
             </Link>

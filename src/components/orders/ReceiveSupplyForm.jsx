@@ -1032,7 +1032,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           type="button"
                           onClick={handleAutoScan}
                           disabled={scanning}
-                          className="flex-1 bg-[#d4a373] hover:bg-[#b88c60] text-white dark:text-white"
+                          className="flex-1 bg-[#d4a373] hover:bg-[#b88c60] text-white dark:text-white min-h-[44px] md:min-h-0"
                         >
                           {scanning ? (
                             <>
@@ -1053,7 +1053,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             type="button"
                             onClick={handleSkipScanAndEnterManually}
                             variant="outline"
-                            className="flex-1"
+                            className="flex-1 min-h-[44px] md:min-h-0"
                           >
                             <Plus className="w-4 h-4 ml-2" />
                             {t('enter_manually') || 'הזן ידנית'}
@@ -1604,7 +1604,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         <>
                           <Button
                             type="button"
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white min-h-[44px] md:min-h-0"
                             disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date)}
                             onClick={async () => {
                               const hasDups = scannedDocs.some(d => d.duplicate);
@@ -1663,7 +1663,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             <PackageCheck className="w-4 h-4 ml-2" />
                             {language === 'he' ? 'שמור הכל' : 'Save all'}
                           </Button>
-                          <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+                          <Button type="button" variant="outline" onClick={onCancel} className="flex-1 min-h-[44px] md:min-h-0">
                             {safeT('cancel', 'ביטול', 'Cancel')}
                           </Button>
                         </>
@@ -1671,7 +1671,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         <>
                           <Button 
                             type="submit" 
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white min-h-[44px] md:min-h-0"
                                                      disabled={!formData.invoice_number || formData.receipt_images.length === 0}
                           >
                             <PackageCheck className="w-4 h-4 ml-2" />
@@ -1682,13 +1682,13 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               type="button"
                               variant="destructive"
                               onClick={() => onDelete(receipt)}
-                              className="flex-1"
+                              className="flex-1 min-h-[44px] md:min-h-0"
                             >
                               <Trash2 className="w-4 h-4 ml-2" />
                               {safeT('delete', 'מחק', 'Delete')}
                             </Button>
                           )}
-                          <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+                          <Button type="button" variant="outline" onClick={onCancel} className="flex-1 min-h-[44px] md:min-h-0">
                             {safeT('cancel', 'ביטול', 'Cancel')}
                           </Button>
                         </>

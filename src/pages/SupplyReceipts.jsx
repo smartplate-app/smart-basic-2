@@ -373,9 +373,14 @@ export default function SupplyReceiptsPage() {
       onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); const u = user || await base44.auth.me(); await loadData(u.email, storeOwnerEmailState); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
     >
       <div className="w-full">
-        {/* Pull to Refresh Indicator (mobile) */}
-        <div className="md:hidden flex items-center justify-center text-xs text-gray-500 h-8 transition-transform" style={{ transform: `translateY(${pullDist}px)` }}>
-          {refreshing ? (<><Loader className="w-3 h-3 mr-1 animate-spin" /> {t('refreshing') || 'Refreshing...'}</>) : (pullDist > 0 ? (t('pull_to_refresh') || 'Pull to refresh') : null)}
+        {/* Native-style Pull to Refresh Indicator */}
+        <div 
+          className="md:hidden fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none transition-transform" 
+          style={{ transform: `translateY(${refreshing ? 60 : pullDist - 40}px)`, opacity: pullDist > 10 || refreshing ? 1 : 0 }}
+        >
+          <div className="bg-white rounded-full shadow-lg h-10 w-10 flex items-center justify-center border border-gray-100">
+            <Loader className={`w-5 h-5 text-green-600 ${refreshing ? 'animate-spin' : ''}`} style={{ transform: !refreshing ? `rotate(${pullDist * 2}deg)` : 'none' }} />
+          </div>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>

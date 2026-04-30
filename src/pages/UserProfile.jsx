@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Loader, Save, Upload, X, CalendarPlus, Trash2 } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 export default function UserProfilePage() {
   const { t, language } = useLanguage();
   const { toast } = useToast();
+  const isRTL = language === 'he' || language === 'ar';
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,6 +35,20 @@ export default function UserProfilePage() {
   const [driveAuthorized, setDriveAuthorized] = useState(null);
   const [driveChecking, setDriveChecking] = useState(false);
   const [driveAccount, setDriveAccount] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await base44.functions.invoke('deleteUserAccount', {});
+      await base44.auth.logout('/');
+    } catch (e) {
+      toast({ title: t('error') + ': ' + e.message, variant: "destructive" });
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   useEffect(() => {
     loadUserData();
@@ -498,8 +514,46 @@ export default function UserProfilePage() {
           </CardContent>
         </Card>
 
+        <Card className="mt-6 border-red-200">
+          <CardHeader>
+            <CardTitle className="text-red-600">{language === 'he' ? 'מחיקת חשבון' : 'Delete Account'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              {language === 'he'
+                ? 'מחיקת החשבון תסיר את כל המידע האישי שלך מהמערכת לצמיתות. פעולה זו אינה הפיכה.'
+                : 'Deleting your account will permanently remove all your personal data from the system. This action cannot be undone.'}
+            </p>
+            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'מחק את החשבון שלי' : 'Delete My Account'}
+            </Button>
+          </CardContent>
+        </Card>
 
       </div>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600">{language === 'he' ? 'האם אתה בטוח?' : 'Are you sure?'}</DialogTitle>
+            <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
+              {language === 'he'
+                ? 'פעולה זו תמחק לחלוטין את חשבונך ואת כל הנתונים המקושרים אליו ממסד הנתונים שלנו. לא ניתן יהיה לשחזר מידע זה.'
+                : 'This action will completely delete your account and all associated data from our database. This information cannot be recovered.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 sm:justify-start gap-2 flex-row-reverse">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>
+              {language === 'he' ? 'ביטול' : 'Cancel'}
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleting}>
+              {deleting ? <Loader className="w-4 h-4 animate-spin mr-2" /> : null}
+              {language === 'he' ? 'כן, מחק את החשבון' : 'Yes, Delete Account'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
