@@ -82,6 +82,7 @@ export default function LaborCostPage() {
       setPositions(positionsData);
       setWorkers(workersData);
       setSchedules(schedulesData);
+      setCache('labor_v1', { positions: positionsData, workers: workersData, schedules: schedulesData });
     } catch (error) {
       console.error("Error loading data:", error);
       
@@ -106,7 +107,11 @@ export default function LaborCostPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadData();
+      const c = getCache('labor_v1');
+      const stale = isStale(c, 180000);
+      if (stale || !c?.data) {
+        loadData();
+      }
     }
   }, [isAuthenticated]);
 

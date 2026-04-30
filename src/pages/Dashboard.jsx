@@ -17,6 +17,7 @@ import moment from "moment";
 
 import { notifyOS } from "../components/notifications/notify";
 import SalesImportModal from "../components/sales/SalesImportModal";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 
 export default function DashboardPage() {
   const { t, language } = useLanguage();
@@ -168,10 +169,25 @@ export default function DashboardPage() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
+      // Use controlled user's email if admin is controlling; otherwise own
+      let workingEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
+      // If this user is a store manager/worker, show the head owner's data on the dashboard
+      let ownerEmail = currentUser.store_user_owner_email || null;
+      if (!ownerEmail) {
+        try {
+          const recs = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+          if (recs.length > 0) ownerEmail = recs[0].owner_email || null;
+        } catch (_) {}
+      }
+      if (ownerEmail) {
+        workingEmail = ownerEmail;
+      }
+
       // Bootstrap fast render from cache (especially helpful when installed as PWA)
-      const cacheKey = `dashboard_cache_${currentUser.email || 'me'}_${selectedMonth}`;
-      const cached = (() => { try { return JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch { return null; } })();
-      if (cached) {
+      const cacheKey = `dashboard_cache_${workingEmail}_${selectedMonth}`;
+      const c = getCache(cacheKey);
+      if (c?.data) {
+        const cached = c.data;
         setDashboardData(cached.dashboardData || null);
         setPredictedSales(cached.predictedSales || 0);
         setLaborGoalPercent(cached.laborGoalPercent ?? 25);
@@ -188,24 +204,13 @@ export default function DashboardPage() {
         setPredictedSalesToDate(cached.predictedSalesToDate || 0);
         setPredictedMonthlyLabor(cached.predictedMonthlyLabor || 0);
         setHasScheduleData(Boolean(cached.hasScheduleData));
-        // goal is fixed at 60%; ignore cached combinedGoalPercent if present
         setLoading(false);
+        
+        if (!isStale(c, 180000)) {
+          return;
+        }
       } else {
         setLoading(true);
-      }
-
-      // Use controlled user's email if admin is controlling; otherwise own
-      let workingEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
-      // If this user is a store manager/worker, show the head owner's data on the dashboard
-      let ownerEmail = currentUser.store_user_owner_email || null;
-      if (!ownerEmail) {
-        try {
-          const recs = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
-          if (recs.length > 0) ownerEmail = recs[0].owner_email || null;
-        } catch (_) {}
-      }
-      if (ownerEmail) {
-        workingEmail = ownerEmail;
       }
 
       // Load all data in parallel for faster loading
@@ -404,17 +409,17 @@ export default function DashboardPage() {
       try {
         const snapshot = {
           dashboardData: existingData || null,
-          predictedSales,
-          laborGoalPercent,
-          foodGoalPercent,
-          managementSalary,
-          monthlyRent,
-          actualSales,
-          totalTips,
-          manualLaborCost,
-          useManualLabor,
-          manualFoodCost: manualFoodCost || 0,
-          useManualFood: Boolean(existingData?.use_manual_food),
+          predictedSales: existingData ? (existingData.predicted_sales || existingData.total_sales || 0) : 0,
+          laborGoalPercent: existingData ? (existingData.labor_goal_percent || 25) : 25,
+          foodGoalPercent: existingData ? (existingData.food_goal_percent || 30) : 30,
+          managementSalary: existingData ? (existingData.management_salary || 0) : 0,
+          monthlyRent: existingData ? (existingData.monthly_rent_incl_vat || 0) : 0,
+          actualSales: existingData ? ((Number(existingData.restaurant_sales || 0) + Number(existingData.delivery_takeaway_sales || 0)) || (existingData.total_sales || 0)) : 0,
+          totalTips: existingData ? (existingData.total_tips || 0) : 0,
+          manualLaborCost: existingData ? Number(existingData.manual_labor_cost || 0) : 0,
+          useManualLabor: existingData ? Boolean(existingData.use_manual_labor) : false,
+          manualFoodCost: existingData ? Number(existingData.manual_food_cost || 0) : 0,
+          useManualFood: existingData ? Boolean(existingData.use_manual_food) : false,
           calculatedLaborCost: Math.round(mtdLabor),
           calculatedFoodCost: adjustedFoodCost,
           predictedLaborToDate,
@@ -423,7 +428,7 @@ export default function DashboardPage() {
           hasScheduleData,
           combinedGoalPercent: 60
         };
-        localStorage.setItem(`dashboard_cache_${workingEmail}_${selectedMonth}`, JSON.stringify(snapshot));
+        setCache(`dashboard_cache_${workingEmail}_${selectedMonth}`, snapshot);
       } catch (_) {}
 
 
