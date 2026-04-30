@@ -11,6 +11,7 @@ import RecipeListView from "../components/recipes/RecipeListView";
 import MenuScanModal from "../components/recipes/MenuScanModal";
 import MenuImageUploadModal from "../components/recipes/MenuImageUploadModal";
 import CleanDuplicateRecipesModal from "../components/recipes/CleanDuplicateRecipesModal";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 
 export default function RecipesPage() {
   const { language } = useLanguage();
@@ -36,6 +37,11 @@ export default function RecipesPage() {
     e.preventDefault();
     if (passcode === "2233") {
       setIsAuthenticated(true);
+      // Check cache first before fetching
+      const c = getCache('recipes_v1');
+      if (c?.data) {
+        setRecipes(c.data.recipes || []);
+      }
       loadRecipes();
     } else {
       alert(language === 'he' ? 'קוד שגוי' : 'Invalid code');
@@ -51,6 +57,7 @@ export default function RecipesPage() {
       if (!currentUser) {
         const data = await base44.entities.Recipe.filter({}, "-created_date", 10000);
         setRecipes(data || []);
+        setCache('recipes_v1', { recipes: data || [] });
         setLoading(false);
         return;
       }
@@ -82,6 +89,7 @@ export default function RecipesPage() {
       }
 
       setRecipes(data || []);
+      setCache('recipes_v1', { recipes: data || [] });
     } catch (e) {
       console.error(e);
     }

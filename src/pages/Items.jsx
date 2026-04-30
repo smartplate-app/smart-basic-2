@@ -19,6 +19,7 @@ import SelectionBar from "../components/items/SelectionBar";
 import ImportSuppliersItemsModal from "../components/items/ImportSuppliersItemsModal";
 import CleanDuplicatesModal from "../components/items/CleanDuplicatesModal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 
 export default function ItemsPage() {
   const [items, setItems] = useState([]);
@@ -53,6 +54,17 @@ export default function ItemsPage() {
   const [showCleanModal, setShowCleanModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [supplierFilterOpen, setSupplierFilterOpen] = useState(false);
+
+  // Hydrate from cache for instant UI
+  React.useEffect(() => {
+    const c = getCache('items_v1');
+    if (c?.data) {
+      setItems(c.data.items || []);
+      setSuppliers(c.data.suppliers || []);
+      setWarehouses(c.data.warehouses || []);
+      setLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -206,6 +218,7 @@ export default function ItemsPage() {
       setItems(itemsData);
       setSuppliers(suppliersData);
       setWarehouses(finalWarehouses);
+      setCache('items_v1', { items: itemsData, suppliers: suppliersData, warehouses: finalWarehouses });
       console.log(`[Items] Loaded ${itemsData.length} items, ${suppliersData.length} suppliers, ${finalWarehouses.length} warehouses`);
 
       setNetworkError(null);
@@ -287,7 +300,11 @@ export default function ItemsPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         if (mounted) {
-          await loadData(currentUser);
+          const c = getCache('items_v1');
+          const stale = isStale(c, 180000);
+          if (stale) {
+            await loadData(currentUser);
+          }
         }
       } catch (error) {
         console.error(`[Items] Authentication error (attempt ${retryCount + 1}):`, error);

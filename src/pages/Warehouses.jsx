@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "../components/LanguageProvider";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 
 export default function WarehousesPage() {
   const [warehouses, setWarehouses] = useState([]);
@@ -29,11 +30,21 @@ export default function WarehousesPage() {
     is_active: true
   });
 
+  // Hydrate from cache for instant UI
+  useEffect(() => {
+    const c = getCache('warehouses_v1');
+    if (c?.data) {
+      setWarehouses(c.data.warehouses || []);
+      setLoading(false);
+    }
+  }, []);
+
   const loadWarehouses = async (targetEmail) => {
     try {
       setLoading(true);
       const data = await Warehouse.filter({ created_by: targetEmail }, "name");
       setWarehouses(data);
+      setCache('warehouses_v1', { warehouses: data });
     } catch (error) {
       console.error("Error loading warehouses:", error);
       setWarehouses([]);

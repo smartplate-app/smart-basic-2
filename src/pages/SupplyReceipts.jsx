@@ -12,6 +12,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import MonthlyInvoiceReport from "../components/receipts/MonthlyInvoiceReport";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
 import ReceiptCard from "../components/receipts/ReceiptCard";
@@ -70,6 +71,17 @@ export default function SupplyReceiptsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [storeOwnerEmailState, setStoreOwnerEmailState] = useState(null);
 
+  // Hydrate from cache for instant UI
+  useEffect(() => {
+    const c = getCache('receipts_v1');
+    if (c?.data) {
+      setReceipts(c.data.receipts || []);
+      setOrders(c.data.orders || []);
+      setSuppliers(c.data.suppliers || []);
+      setLoading(false);
+    }
+  }, []);
+
   const loadData = async (userEmail, storeOwnerEmail = null, retryCount = 0) => {
     try {
       setLoading(true);
@@ -110,6 +122,7 @@ export default function SupplyReceiptsPage() {
       setReceipts(receiptsData);
       setOrders(ordersData);
       setSuppliers(mergedSuppliers);
+      setCache('receipts_v1', { receipts: receiptsData, orders: ordersData, suppliers: mergedSuppliers });
       
       console.log(`[SupplyReceipts] Loaded ${mergedSuppliers.length} suppliers from ${Array.from(suppliersEmails).join(', ')}`);
     } catch (error) {
@@ -166,7 +179,12 @@ export default function SupplyReceiptsPage() {
           
           // Pass store owner email separately so we can load suppliers from owner
           setStoreOwnerEmailState(storeOwnerEmail || null);
-          await loadData(workingEmail, storeOwnerEmail);
+          
+          const c = getCache('receipts_v1');
+          const stale = isStale(c, 180000);
+          if (stale) {
+            await loadData(workingEmail, storeOwnerEmail);
+          }
         }
       } catch (error) {
         console.error("Authentication failed:", error);

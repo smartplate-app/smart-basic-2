@@ -17,6 +17,7 @@ import CountListView from "../components/inventory/CountListView";
 import WarehouseManagement from "../components/inventory/WarehouseManagement";
 import ExcelInventoryImport from "../components/inventory/ExcelInventoryImport";
 import MultiScreenshotCountImport from "../components/inventory/MultiScreenshotCountImport";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 
 export default function MonthlyCountPage() {
   const [counts, setCounts] = useState([]);
@@ -46,6 +47,17 @@ export default function MonthlyCountPage() {
   const [isViewer, setIsViewer] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportDatePreset, setExportDatePreset] = useState("month");
+
+  // Hydrate from cache for instant UI
+  useEffect(() => {
+    const c = getCache('monthly_count_v1');
+    if (c?.data) {
+      setCounts(c.data.counts || []);
+      setWarehouses(c.data.warehouses || []);
+      setItems(c.data.items || []);
+      setLoading(false);
+    }
+  }, []);
 
   const loadData = async (userEmail, retryAttempt = 0) => {
     try {
@@ -84,6 +96,7 @@ export default function MonthlyCountPage() {
       console.log("[MonthlyCount] Loading items...");
       const itemsData = await base44.entities.Item.filter({ created_by: userEmail }, "name");
       setItems(itemsData);
+      setCache('monthly_count_v1', { counts: countsData, warehouses: warehousesData, items: itemsData });
       console.log(`[MonthlyCount] Successfully loaded ${itemsData.length} items`);
       
       setNetworkError(null);
@@ -188,7 +201,11 @@ export default function MonthlyCountPage() {
             workingEmail = storeOwnerEmail;
           }
           
-          await loadData(workingEmail);
+          const c = getCache('monthly_count_v1');
+          const stale = isStale(c, 180000);
+          if (stale) {
+            await loadData(workingEmail);
+          }
         }
       } catch (error) {
         console.error(`[MonthlyCount] Authentication error (attempt ${retryAttempt + 1}):`, error);

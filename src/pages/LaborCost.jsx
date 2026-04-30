@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
+import { getCache, setCache, isStale } from "../components/utils/cache";
 import moment from "moment";
 
 // Set week to start on Sunday (Israel standard)
@@ -34,6 +35,17 @@ export default function LaborCostPage() {
   const { t, language } = useLanguage();
   const [passcode, setPasscode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Hydrate from cache for instant UI
+  useEffect(() => {
+    const c = getCache('labor_v1');
+    if (c?.data) {
+      setPositions(c.data.positions || []);
+      setWorkers(c.data.workers || []);
+      setSchedules(c.data.schedules || []);
+      setLoading(false);
+    }
+  }, []);
 
   const loadData = async (retryCount = 0) => {
     try {
