@@ -240,20 +240,23 @@ export default function DashboardPage() {
 
       // Process dashboard data
       const existingData = allDashboardData[0];
+      
+      const calculatedTotalSales = filteredWeeklySales.reduce((sum, r) => sum + (r.total_sales_incl_vat || 0), 0);
+      const calculatedRestaurantSales = filteredWeeklySales.reduce((sum, r) => sum + (r.restaurant_sales || 0), 0);
+      const calculatedDeliverySales = filteredWeeklySales.reduce((sum, r) => sum + (r.delivery_sales || 0) + (r.wolt_sales || 0) + (r.takeaway_sales || 0), 0);
+
       if (existingData) {
         setDashboardData(existingData);
-        setPredictedSales(existingData.predicted_sales || existingData.total_sales || 0);
+        setPredictedSales(existingData.predicted_sales || calculatedTotalSales || 0);
         setLaborGoalPercent(existingData.labor_goal_percent || 25);
         setFoodGoalPercent(existingData.food_goal_percent || 30);
         setManagementSalary(existingData.management_salary || 0);
         setMonthlyRent(existingData.monthly_rent_incl_vat || 0);
         // Sales & tips
-        const dineIn = Number(existingData.restaurant_sales || 0);
-        const dta = Number(existingData.delivery_takeaway_sales || 0);
-        setRestaurantSales(dineIn);
-        setDeliverySales(dta);
-        setActualSales((dineIn + dta) || (existingData.total_sales || 0));
-        setTotalTips(existingData.total_tips || 0);
+        setRestaurantSales(calculatedRestaurantSales);
+        setDeliverySales(calculatedDeliverySales);
+        setActualSales(calculatedTotalSales);
+        setTotalTips(0);
         // Manual labor override
         const mlc = Number(existingData.manual_labor_cost || 0);
         setManualLaborCost(mlc);
@@ -266,15 +269,15 @@ export default function DashboardPage() {
         setUseManualFood(Boolean(existingData.use_manual_food));
       } else {
         setDashboardData(null);
-        setPredictedSales(0);
+        setPredictedSales(calculatedTotalSales);
         setLaborGoalPercent(25);
         setFoodGoalPercent(30);
         setManagementSalary(0);
         setMonthlyRent(0);
-        setActualSales(0);
+        setActualSales(calculatedTotalSales);
         setTotalTips(0);
-        setRestaurantSales(0);
-        setDeliverySales(0);
+        setRestaurantSales(calculatedRestaurantSales);
+        setDeliverySales(calculatedDeliverySales);
         setManualLaborCost(0);
         setUseManualLabor(false);
         setManualFoodCost(0);
@@ -466,7 +469,7 @@ export default function DashboardPage() {
         total_sales: (Number(restaurantSales) || 0) + (Number(deliverySales) || 0),
         restaurant_sales: Number(restaurantSales) || 0,
         delivery_takeaway_sales: Number(deliverySales) || 0,
-        total_tips: parseFloat(totalTips) || 0,
+        total_tips: 0,
         manual_labor_cost: parseFloat(manualLaborCost) || 0,
         use_manual_labor: useManualLabor,
         manual_food_cost: parseFloat(manualFoodCost) || 0,
@@ -505,7 +508,7 @@ export default function DashboardPage() {
           total_sales: (Number(restaurantSales) || 0) + (Number(deliverySales) || 0),
           restaurant_sales: Number(restaurantSales) || 0,
           delivery_takeaway_sales: Number(deliverySales) || 0,
-          total_tips: parseFloat(totalTips) || 0,
+          total_tips: 0,
           manual_labor_cost: parseFloat(newLaborCost) || 0,
           use_manual_labor: newUseManual,
           manual_food_cost: parseFloat(manualFoodCost) || 0,
@@ -1219,93 +1222,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* POS Sales Imports */}
-            <Card>
-              <CardHeader className={`flex flex-row items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
-                  {language === 'he' ? 'ייבוא נתוני מכירות (קופה)' : 'Imported POS Sales'}
-                </CardTitle>
-                <Button 
-                  size="sm" 
-                  onClick={() => setShowSalesImportModal(true)}
-                  className={`flex items-center gap-1 bg-[#d4a373] hover:bg-[#b88c60] text-white ${isRTL ? 'flex-row-reverse' : ''}`}
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  {language === 'he' ? 'ייבוא דוח קופה' : 'Import POS Report'}
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {weeklySalesRecords.length === 0 ? (
-                  <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'לא יובאו נתוני מכירות לחודש זה.' : 'No sales data imported for this month.'}
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div className={`p-3 bg-blue-50 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div className="text-xs text-[#d4a373] font-medium">{language === 'he' ? 'סה"כ יובא' : 'Total Imported'}</div>
-                        <div className="text-lg font-bold text-blue-900">
-                          {formatCurrency(weeklySalesRecords.reduce((sum, r) => sum + (r.total_sales_incl_vat || 0), 0))}
-                        </div>
-                      </div>
-                      <div className={`p-3 bg-gray-50 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div className="text-xs text-gray-600 font-medium">{language === 'he' ? 'מסעדה' : 'Restaurant'}</div>
-                        <div className="text-lg font-bold text-gray-900">
-                          {formatCurrency(weeklySalesRecords.reduce((sum, r) => sum + (r.restaurant_sales || 0), 0))}
-                        </div>
-                      </div>
-                      <div className={`p-3 bg-gray-50 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div className="text-xs text-gray-600 font-medium">{language === 'he' ? 'משלוחים + וולט' : 'Delivery + Wolt'}</div>
-                        <div className="text-lg font-bold text-gray-900">
-                          {formatCurrency(weeklySalesRecords.reduce((sum, r) => sum + (r.delivery_sales || 0) + (r.wolt_sales || 0), 0))}
-                        </div>
-                      </div>
-                      <div className={`p-3 bg-gray-50 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div className="text-xs text-gray-600 font-medium">{language === 'he' ? 'טייק אווי' : 'Takeaway'}</div>
-                        <div className="text-lg font-bold text-gray-900">
-                          {formatCurrency(weeklySalesRecords.reduce((sum, r) => sum + (r.takeaway_sales || 0), 0))}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'he' ? 'תאריך' : 'Date'}</TableHead>
-                            <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'he' ? 'סה"כ' : 'Total'}</TableHead>
-                            <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'he' ? 'מסעדה' : 'Restaurant'}</TableHead>
-                            <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'he' ? 'משלוחים' : 'Delivery'}</TableHead>
-                            <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'he' ? 'וולט' : 'Wolt'}</TableHead>
-                            <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'he' ? 'T/A' : 'T/A'}</TableHead>
-                            <TableHead className={isRTL ? 'text-right' : 'text-left'}>{language === 'he' ? 'צילום' : 'Image'}</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {weeklySalesRecords.map((record) => (
-                            <TableRow key={record.id}>
-                              <TableCell>{moment(record.week_start_date).format('DD/MM/YYYY')}</TableCell>
-                              <TableCell className="font-bold">{formatCurrency(record.total_sales_incl_vat)}</TableCell>
-                              <TableCell>{formatCurrency(record.restaurant_sales)}</TableCell>
-                              <TableCell>{formatCurrency(record.delivery_sales)}</TableCell>
-                              <TableCell>{formatCurrency(record.wolt_sales)}</TableCell>
-                              <TableCell>{formatCurrency(record.takeaway_sales)}</TableCell>
-                              <TableCell>
-                                {record.source_file_url && (
-                                  <a href={record.source_file_url} target="_blank" rel="noreferrer" className="text-[#d4a373] hover:underline text-xs">
-                                    {language === 'he' ? 'צפה' : 'View'}
-                                  </a>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+
 
             {/* Monthly Rent (incl. VAT) + 7% Check */}
             <Card>
@@ -1749,40 +1666,7 @@ export default function DashboardPage() {
           </Tabs>
       </div>
 
-      <SalesImportModal 
-        isOpen={showSalesImportModal} 
-        onClose={() => setShowSalesImportModal(false)} 
-        onSave={() => loadData()} 
-      />
 
-      <Dialog open={showMondayReminder} onOpenChange={setShowMondayReminder}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
-              {language === 'he' ? 'תזכורת: ייבוא מכירות שבועיות' : 'Reminder: Import Weekly Sales'}
-            </DialogTitle>
-            <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
-              {language === 'he' 
-                ? 'היום יום שני! אל תשכח להעלות צילום מסך של נתוני המכירות מהקופה (POS) של השבוע שעבר כדי לשמור על מעקב מדויק.' 
-                : 'It\'s Monday! Don\'t forget to upload a screenshot of your POS sales data from last week to keep your tracking accurate.'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setShowMondayReminder(false)}>
-              {language === 'he' ? 'אחר כך' : 'Later'}
-            </Button>
-            <Button 
-              className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
-              onClick={() => {
-                setShowMondayReminder(false);
-                setShowSalesImportModal(true);
-              }}
-            >
-              {language === 'he' ? 'ייבא עכשיו' : 'Import Now'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
