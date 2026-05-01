@@ -1,0 +1,97 @@
+{
+  "name": "UserInvite",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Unique invite token"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email of invited user"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Full name of invited user"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number (optional)"
+    },
+    "invite_type": {
+      "type": "string",
+      "enum": [
+        "chain_store",
+        "store_user"
+      ],
+      "description": "Type of invite: chain_store (sub-store manager) or store_user (worker/manager within same store)"
+    },
+    "chain_id": {
+      "type": "string",
+      "description": "Chain ID (for chain_store invites)"
+    },
+    "chain_name": {
+      "type": "string",
+      "description": "Chain name (for chain_store invites)"
+    },
+    "store_id": {
+      "type": "string",
+      "description": "Store ID (for store_user invites)"
+    },
+    "store_name": {
+      "type": "string",
+      "description": "Store name"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "manager",
+        "worker"
+      ],
+      "description": "Role for store_user invites"
+    },
+    "inviter_email": {
+      "type": "string",
+      "description": "Email of person who sent the invite"
+    },
+    "inviter_name": {
+      "type": "string",
+      "description": "Name of person who sent the invite"
+    },
+    "restaurant_name": {
+      "type": "string",
+      "description": "Name of the restaurant (for store_user invites)"
+    },
+    "restaurant_address": {
+      "type": "string",
+      "description": "Address of the restaurant (for store_user invites)"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this invite expires"
+    },
+    "used": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this invite has been used"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this invite was used"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "token",
+    "email",
+    "full_name",
+    "invite_type",
+    "inviter_email"
+  ]
+}

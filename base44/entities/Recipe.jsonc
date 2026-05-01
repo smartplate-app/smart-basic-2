@@ -104,6 +104,10 @@
       "type": "string",
       "default": "unit",
       "description": "Unit of the yield"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
     }
   },
   "required": [

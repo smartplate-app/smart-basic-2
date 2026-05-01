@@ -1,0 +1,43 @@
+{
+  "name": "AccessRequest",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Requester full name"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Requester email"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Requester phone"
+    },
+    "business_name": {
+      "type": "string",
+      "description": "Business/restaurant name"
+    },
+    "message": {
+      "type": "string",
+      "description": "Optional message from requester"
+    },
+    "page_url": {
+      "type": "string",
+      "description": "Page URL where request was submitted"
+    },
+    "user_agent": {
+      "type": "string",
+      "description": "Requester user agent"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ]
+}

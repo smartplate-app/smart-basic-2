@@ -98,6 +98,10 @@
     "store_owner_email": {
       "type": "string",
       "description": "Email of the store owner (for chain sub-stores)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
     }
   },
   "required": [

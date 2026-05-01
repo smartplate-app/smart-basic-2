@@ -1,0 +1,69 @@
+{
+  "name": "SupportTicket",
+  "type": "object",
+  "properties": {
+    "subject": {
+      "type": "string",
+      "description": "Ticket subject"
+    },
+    "message": {
+      "type": "string",
+      "description": "Detailed issue description"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "default": "normal",
+      "description": "Priority level"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "resolved",
+        "closed"
+      ],
+      "default": "open",
+      "description": "Ticket status"
+    },
+    "user_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Requester email"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Requester full name"
+    },
+    "preferred_language": {
+      "type": "string",
+      "enum": [
+        "he",
+        "en"
+      ],
+      "default": "he",
+      "description": "UI language of requester"
+    },
+    "page_url": {
+      "type": "string",
+      "description": "Page where the issue occurred"
+    },
+    "user_agent": {
+      "type": "string",
+      "description": "Requester browser user-agent"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "subject",
+    "message"
+  ]
+}

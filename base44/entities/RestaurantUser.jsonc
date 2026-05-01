@@ -1,0 +1,65 @@
+{
+  "name": "RestaurantUser",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "User email (used as username)"
+    },
+    "password": {
+      "type": "string",
+      "description": "Hashed password"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Full name"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "store_id": {
+      "type": "string",
+      "description": "Store/Restaurant ID this user belongs to"
+    },
+    "store_name": {
+      "type": "string",
+      "description": "Store name"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the restaurant owner"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "manager",
+        "worker"
+      ],
+      "default": "worker",
+      "description": "User role"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether user is active"
+    },
+    "last_login": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last login timestamp"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "email",
+    "password",
+    "full_name",
+    "role"
+  ]
+}

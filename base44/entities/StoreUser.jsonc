@@ -1,0 +1,52 @@
+{
+  "name": "StoreUser",
+  "type": "object",
+  "properties": {
+    "store_id": {
+      "type": "string",
+      "description": "ID of the ChainStore this user belongs to"
+    },
+    "store_name": {
+      "type": "string",
+      "description": "Name of the store for easy reference"
+    },
+    "user_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email of the user"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Full name of the user"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "manager",
+        "worker",
+        "viewer"
+      ],
+      "default": "worker",
+      "description": "Role: manager (full access), worker (limited actions), or viewer (read-only)"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the store owner who invited this user"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this user is currently active"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "store_id",
+    "user_email",
+    "role",
+    "owner_email"
+  ]
+}

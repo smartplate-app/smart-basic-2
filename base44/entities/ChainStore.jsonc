@@ -1,0 +1,40 @@
+{
+  "name": "ChainStore",
+  "type": "object",
+  "properties": {
+    "chain_id": {
+      "type": "string",
+      "description": "ID of the chain this store belongs to"
+    },
+    "chain_name": {
+      "type": "string",
+      "description": "Name of the chain"
+    },
+    "store_name": {
+      "type": "string",
+      "description": "Name of this store/branch"
+    },
+    "store_address": {
+      "type": "string",
+      "description": "Store address"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of user managing this store"
+    },
+    "is_head_store": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is the head store of the chain"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "chain_id",
+    "store_name",
+    "user_email"
+  ]
+}

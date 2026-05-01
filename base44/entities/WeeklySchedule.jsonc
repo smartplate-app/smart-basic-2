@@ -1,0 +1,189 @@
+{
+  "name": "WeeklySchedule",
+  "type": "object",
+  "properties": {
+    "week_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date of the week (Monday)"
+    },
+    "week_number": {
+      "type": "string",
+      "description": "Week number (e.g., '1', '2', '52')"
+    },
+    "year": {
+      "type": "string",
+      "description": "Year (e.g., '2024')"
+    },
+    "predicted_weekly_sales": {
+      "type": "number",
+      "default": 0,
+      "description": "Predicted sales for the week (including VAT)"
+    },
+    "shifts": {
+      "type": "array",
+      "description": "All shifts for the week",
+      "items": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "enum": [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday",
+              "saturday",
+              "sunday"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "job_position_id": {
+            "type": "string",
+            "description": "ID of the job position"
+          },
+          "job_position": {
+            "type": "string",
+            "description": "Name of the job position"
+          },
+          "position_row_id": {
+            "type": "string",
+            "description": "Optional: ID of the position row this shift belongs to (for multiple rows per position)"
+          },
+          "department": {
+            "type": "string",
+            "description": "Department (floor, kitchen, cleaning)"
+          },
+          "position_type": {
+            "type": "string",
+            "description": "Specific position type (waiter, bartender, chef, etc.)"
+          },
+          "worker_id": {
+            "type": "string"
+          },
+          "worker_name": {
+            "type": "string"
+          },
+          "start_time": {
+            "type": "string"
+          },
+          "end_time": {
+            "type": "string"
+          },
+          "hours_worked": {
+            "type": "number"
+          },
+          "overtime_rate": {
+            "type": "string",
+            "enum": [
+              "regular",
+              "125",
+              "150"
+            ],
+            "default": "regular",
+            "description": "Overtime rate: regular (100%), 125%, or 150%"
+          },
+          "base_payment": {
+            "type": "number",
+            "description": "Base payment before overtime multiplier"
+          },
+          "payment_for_shift": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "position_rows": {
+      "type": "array",
+      "description": "Optional rows per position to allow multiple parallel lines with different default/per-day times",
+      "items": {
+        "type": "object",
+        "properties": {
+          "row_id": {
+            "type": "string"
+          },
+          "position_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "description": "User-editable row name (e.g., Opening, Evening, Trainee)"
+          },
+          "default_start_time": {
+            "type": "string"
+          },
+          "default_end_time": {
+            "type": "string"
+          },
+          "per_day_times": {
+            "type": "object",
+            "description": "Map of day -> {start, end} to override defaults for specific days",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "row_id",
+          "position_id",
+          "label"
+        ]
+      }
+    },
+    "position_order": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Custom order of position IDs for display"
+    },
+    "total_hours": {
+      "type": "number",
+      "default": 0,
+      "description": "Total hours for all workers this week"
+    },
+    "total_cost": {
+      "type": "number",
+      "default": 0,
+      "description": "Total labor cost for the week"
+    },
+    "labor_cost_percentage": {
+      "type": "number",
+      "default": 0,
+      "description": "Labor cost as percentage of sales (excluding VAT)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "completed"
+      ],
+      "default": "draft",
+      "description": "Schedule status"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "week_start_date",
+    "week_number"
+  ]
+}

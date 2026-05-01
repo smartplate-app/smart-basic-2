@@ -55,6 +55,10 @@
     "minimum_order_amount": {
       "type": "number",
       "description": "Minimum order amount required by the supplier"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
     }
   },
   "required": [
