@@ -641,7 +641,7 @@ export default function AdminDashboard() {
                       const originalText = btn.innerHTML;
                       btn.innerHTML = 'Running sync...';
                       try {
-                        const res = await base44.functions.invoke('syncXohoSales', {});
+                        const res = await base44.functions.invoke('importFromExternalDashboard', { url: 'https://rosa-app-41540b5f.base44.app/KonaDashboard', month: '2026-05' });
                         alert(JSON.stringify(res.data, null, 2));
                       } catch (err) {
                         alert('Error: ' + err.message);
@@ -653,7 +653,7 @@ export default function AdminDashboard() {
                     className="flex items-center gap-2 border-pink-500 text-pink-600 hover:bg-pink-50"
                   >
                     <TestTube className="w-4 h-4" />
-                    Test syncXohoSales
+                    Test Rosa Sync
                   </Button>
                 </div>
               </div>

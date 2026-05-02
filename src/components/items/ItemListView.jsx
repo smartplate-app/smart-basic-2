@@ -87,9 +87,9 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
         <ArrowLeftRight className="w-4 h-4 animate-pulse text-blue-400" />
         <span>{language === 'he' ? 'החליקו לצדדים לצפייה בפרטים נוספים' : 'Swipe left/right for more details'}</span>
       </div>
-      <div className="relative overflow-x-auto md:overflow-auto md:max-h-[calc(100vh-250px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-[inset_-12px_0_12px_-12px_rgba(0,0,0,0.1),inset_12px_0_12px_-12px_rgba(0,0,0,0.1)]">
+      <div className="relative overflow-auto max-h-[calc(100vh-250px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-[inset_-12px_0_12px_-12px_rgba(0,0,0,0.1),inset_12px_0_12px_-12px_rgba(0,0,0,0.1)]">
         <table className="w-full min-w-max caption-bottom text-sm">
-          <TableHeader className="md:sticky md:top-0 z-50 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm">
+          <TableHeader className="sticky top-0 z-50 bg-white supports-[backdrop-filter]:bg-white/80 backdrop-blur border-b shadow-sm">
             <TableRow> {/* Replaced <tr> with <TableRow> */}
               <TableHead className="bg-white px-3 py-3 text-center">
                 <Checkbox checked={allSelected} onCheckedChange={() => onToggleSelectAll && onToggleSelectAll(items)} aria-label="Select all" className="h-5 w-5 sm:h-4 sm:w-4" />
