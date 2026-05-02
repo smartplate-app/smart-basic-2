@@ -1,0 +1,86 @@
+{
+  "name": "MonthlyDashboardData",
+  "type": "object",
+  "properties": {
+    "month": {
+      "type": "string",
+      "description": "Month in YYYY-MM format"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Explicitly defined created_by to allow overriding"
+    },
+    "predicted_sales": {
+      "type": "number",
+      "default": 0,
+      "description": "Predicted sales for the month (including VAT)"
+    },
+    "labor_goal_percent": {
+      "type": "number",
+      "default": 25,
+      "description": "Goal percentage for labor cost"
+    },
+    "food_goal_percent": {
+      "type": "number",
+      "default": 30,
+      "description": "Goal percentage for food cost"
+    },
+    "management_salary": {
+      "type": "number",
+      "default": 0,
+      "description": "Monthly salary for management/owners (fixed cost)"
+    },
+    "manual_labor_cost": {
+      "type": "number",
+      "default": 0,
+      "description": "Manually entered labor cost for the month"
+    },
+    "use_manual_labor": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to use the manual labor cost instead of calculated"
+    },
+    "manual_food_cost": {
+      "type": "number",
+      "default": 0,
+      "description": "Manually entered food cost for the month"
+    },
+    "use_manual_food": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to use the manual food cost instead of calculated"
+    },
+    "total_sales": {
+      "type": "number",
+      "default": 0,
+      "description": "Total sales for the month"
+    },
+    "restaurant_sales": {
+      "type": "number",
+      "default": 0,
+      "description": "Dine-in restaurant sales (incl. VAT)"
+    },
+    "delivery_takeaway_sales": {
+      "type": "number",
+      "default": 0,
+      "description": "Delivery + takeaway sales (incl. VAT)"
+    },
+    "total_tips": {
+      "type": "number",
+      "default": 0,
+      "description": "Total tips for the month"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "monthly_rent_incl_vat": {
+      "type": "number",
+      "default": 0,
+      "description": "Monthly rent including VAT (\u20aa)"
+    }
+  },
+  "required": [
+    "month"
+  ]
+}
