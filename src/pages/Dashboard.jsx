@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, BarChart3, FileSpreadsheet, Download, Share, Upload, PlusCircle } from "lucide-react";
+import { Loader, TrendingUp, TrendingDown, AlertCircle, Save, Edit2, BarChart3, FileSpreadsheet, Download, Share, Upload, PlusCircle, RefreshCw } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, BarChart, Bar } from "recharts";
 import moment from "moment";
@@ -59,6 +59,8 @@ export default function DashboardPage() {
   const [hasScheduleData, setHasScheduleData] = useState(false);
   const [exportingMonthly, setExportingMonthly] = useState(false);
   const [importingData, setImportingData] = useState(false);
+  const [externalLink, setExternalLink] = useState("");
+  const [syncingExternal, setSyncingExternal] = useState(false);
   const [inventoryCounts, setInventoryCounts] = useState([]);
   const [monthReceipts, setMonthReceipts] = useState([]);
   const [monthOrders, setMonthOrders] = useState([]);
@@ -554,6 +556,36 @@ export default function DashboardPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const handleSyncFromLink = async () => {
+    if (!externalLink) return;
+
+    try {
+      setSyncingExternal(true);
+      const response = await base44.functions.invoke('importFromExternalDashboard', { url: externalLink, month: selectedMonth });
+      
+      if (response.data && response.data.success) {
+        const d = response.data.data.data || response.data.data;
+        if (d) {
+          setActualSales(d.total_sales || 0);
+          setRestaurantSales(d.restaurant_sales || 0);
+          if (d.use_manual_labor) {
+            setUseManualLabor(true);
+            setManualLaborCost(d.manual_labor_cost || 0);
+          }
+        }
+        alert(language === 'he' ? 'הנתונים סונכרנו בהצלחה מהקישור!' : 'Data synced successfully from link!');
+        await loadData();
+      } else {
+        throw new Error(response.data?.error || 'Sync failed');
+      }
+    } catch (error) {
+      console.error("Error syncing from link:", error);
+      alert(language === 'he' ? 'שגיאה בסנכרון: ' + error.message : 'Error syncing: ' + error.message);
+    } finally {
+      setSyncingExternal(false);
+    }
   };
 
   const handleImportFromSheet = async () => {
@@ -1142,6 +1174,24 @@ export default function DashboardPage() {
                     );
                   })}
                 </select>
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Input 
+                    type="url" 
+                    placeholder={language === 'he' ? 'הדבק קישור (למשל Rosa)...' : 'Paste external link...'} 
+                    value={externalLink}
+                    onChange={(e) => setExternalLink(e.target.value)}
+                    className="w-48 h-8 text-sm"
+                  />
+                  <Button 
+                    onClick={handleSyncFromLink}
+                    disabled={syncingExternal || !externalLink}
+                    size="sm"
+                    className={`flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm rounded-full px-4 transition-all hover:shadow-md ${isRTL ? 'flex-row-reverse' : ''}`}
+                  >
+                    {syncingExternal ? <Loader className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                    {language === 'he' ? 'סנכרן מקישור' : 'Sync from Link'}
+                  </Button>
+                </div>
                 <Button 
                   onClick={handleImportFromSheet}
                   disabled={importingData}
@@ -1299,7 +1349,7 @@ export default function DashboardPage() {
                         setUseManualLabor(val); 
                         autoSaveManualLabor(manualLaborCost, val); 
                       }} />
-                      <span className="text-sm">{language === 'he' ? 'השתמש בעלות עבודה ידנית' : 'Use manual labor cost'}</span>
+                      <span className="text-sm">{language === 'he' ? 'השתמש בעלות מוזנת/מיובאת' : 'Use imported/manual labor cost'}</span>
                     </div>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <Input
@@ -1317,7 +1367,7 @@ export default function DashboardPage() {
                     </div>
                     {useManualLabor && (
                       <div className={`text-xs text-yellow-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div>{language === 'he' ? 'מצב ידני — נשמר אוטומטית' : 'Manual mode — auto-saved'}</div>
+                        <div>{language === 'he' ? 'מצב מותאם אישית (הוזן ידנית או ע"י קישור) — נשמר אוטומטית' : 'Custom override (Manual or Link) — auto-saved'}</div>
                         {manualLaborLastUpdated && (
                           <div className="text-white/70 mt-1" dir={isRTL ? 'rtl' : 'ltr'}>
                             {language === 'he' ? 'עודכן לאחרונה: ' : 'Last updated: '}
