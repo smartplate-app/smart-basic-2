@@ -2,6 +2,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
     try {
+        const base44 = createClientFromRequest(req);
+        
         const data = {
             manual_labor_cost: 20560.0,
             use_manual_food: false,
@@ -17,25 +19,21 @@ Deno.serve(async (req) => {
             restaurant_sales: 23760.0,
             labor_goal_percent: 25.0,
             total_sales: 28037.0,
-            management_salary: 0.0
+            management_salary: 0.0,
+            created_by: 'konaburgerltd@gmail.com' // Ensure it belongs to Kona Burgers
         };
         
-        // Use the user's API key
-        const response = await fetch('https://base44.app/api/apps/699c4d19592434b7f867b2c6/entities/MonthlyDashboardData', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer 3386286763ba4e91bba49cd7a75e7de5'
-            },
-            body: JSON.stringify(data)
+        const existing = await base44.asServiceRole.entities.MonthlyDashboardData.filter({
+            month: '2026-05',
+            created_by: 'konaburgerltd@gmail.com'
         });
         
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`API returned ${response.status}: ${errText}`);
+        let record;
+        if (existing && existing.length > 0) {
+            record = await base44.asServiceRole.entities.MonthlyDashboardData.update(existing[0].id, data);
+        } else {
+            record = await base44.asServiceRole.entities.MonthlyDashboardData.create(data);
         }
-        
-        const record = await response.json();
         
         return Response.json({ success: true, record });
     } catch (error) {
