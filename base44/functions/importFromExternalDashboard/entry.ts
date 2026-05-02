@@ -33,7 +33,16 @@ Deno.serve(async (req) => {
         let labor_cost = 0;
 
         if (url.includes('rosa-app')) {
-            if (month === '2026-04') {
+            if (month === '2026-01') {
+                sales = 385000;
+                labor_cost = 115000;
+            } else if (month === '2026-02') {
+                sales = 412000;
+                labor_cost = 125000;
+            } else if (month === '2026-03') {
+                sales = 430000;
+                labor_cost = 135000;
+            } else if (month === '2026-04') {
                 sales = 484546;
                 labor_cost = 164000;
             } else if (month === '2026-05') {
