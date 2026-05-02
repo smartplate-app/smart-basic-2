@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
                 restaurant_sales: sales, 
                 delivery_takeaway_sales: 0,
                 manual_labor_cost: labor_cost,
-                use_manual_labor: false, // Set to false to indicate it came from an external source (not manual)
+                use_manual_labor: true, // Must be true so frontend uses the imported labor cost instead of calculating
                 use_manual_food: false
             };
 
