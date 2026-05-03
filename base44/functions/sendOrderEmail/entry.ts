@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 function base64UrlEncode(str) {
   const utf8 = new TextEncoder().encode(str);
@@ -123,59 +123,18 @@ Deno.serve(async (req) => {
     const itemsTxt = items.map((it) => `• ${(it.item_name || '')}${it.catalog_number ? ` (SKU: ${it.catalog_number})` : ''} — ${Number(it.quantity || 0)} ${(it.unit || '')}`).join('\n');
     const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.`;
 
-    const boundary = 'b44_boundary_' + Math.random().toString(36).slice(2);
-
-    // Gmail send via connector access token
-    const accessToken = await base44.asServiceRole.connectors.getAccessToken('gmail');
-    if (!accessToken) {
-      return Response.json({ error: 'Gmail connector not authorized' }, { status: 500 });
-    }
-    // Identify sender Gmail address (used in From header)
-    let senderEmail = '';
-    try {
-      const prof = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
-      const p = await prof.json();
-      senderEmail = p?.emailAddress || '';
-    } catch (_) {}
-
     const sendTo = async (rcpt) => {
-      const headers = [
-        `From: ${fromDisplay} <${senderEmail || replyTo || 'no-reply@smartplate.org'}>`,
-        `To: ${rcpt}`,
-        `Reply-To: ${replyTo}`,
-        `Subject: ${subject}`,
-        'MIME-Version: 1.0',
-        `Content-Type: multipart/alternative; boundary="${boundary}"`,
-        '',
-      ];
-      const raw = headers.join('\r\n') +
-        `--${boundary}\r\n` +
-        'Content-Type: text/plain; charset=UTF-8\r\n' +
-        'Content-Transfer-Encoding: 7bit\r\n\r\n' +
-        text + '\r\n' +
-        `--${boundary}\r\n` +
-        'Content-Type: text/html; charset=UTF-8\r\n' +
-        'Content-Transfer-Encoding: 7bit\r\n\r\n' +
-        html + '\r\n' +
-        `--${boundary}--`;
-      const encoded = base64UrlEncode(raw);
-
-      const resp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ raw: encoded })
-      });
-
-      if (!resp.ok) {
-        return { to: rcpt, ok: false, error: await resp.text() };
+      try {
+        await base44.integrations.Core.SendEmail({
+          to: rcpt,
+          subject: subject,
+          body: html,
+          from_name: fromDisplay
+        });
+        return { to: rcpt, ok: true };
+      } catch (err) {
+        return { to: rcpt, ok: false, error: err.message };
       }
-      const data = await resp.json();
-      return { to: rcpt, ok: true, id: data?.id || null };
     };
 
     const results = [];
