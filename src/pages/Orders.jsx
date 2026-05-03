@@ -745,6 +745,13 @@ export default function OrdersPage() {
   const handleSendNow = async (order) => {
     if (!order) return;
 
+    const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
+    if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+      await doEmailSend(order);
+      alert(language === 'he' ? 'ההזמנה נשלחה בהצלחה למייל של הספק!' : 'Order was successfully sent to the supplier\'s email!');
+      return;
+    }
+
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `You have received a new order from "${order.restaurant_name || ''}"\n\n*${safeT('order_number', 'מספר הזמנה', 'Order')}:* ${ensuredNumber}`;
     
