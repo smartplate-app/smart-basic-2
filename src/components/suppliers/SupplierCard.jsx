@@ -30,8 +30,10 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
   const [warehouses, setWarehouses] = useState([]);
 
   React.useEffect(() => {
-    loadWarehouses();
-  }, []);
+    if (showAddItemDialog && warehouses.length === 0) {
+      loadWarehouses();
+    }
+  }, [showAddItemDialog]);
 
   const loadWarehouses = async () => {
     try {
