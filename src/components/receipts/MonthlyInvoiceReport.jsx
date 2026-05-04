@@ -140,7 +140,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                       setDriveAuthorized(false);
                     }
                     if (!isAuth) {
-                      alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
+                      alert(language === 'he' ? 'אנא התחבר ל-Google Drive תחילה.' : (t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.'));
                       return;
                     }
 
@@ -159,10 +159,10 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
 
                     setShowDriveConfirm(true);
                   } catch (e) {
-                    alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
+                    alert((language === 'he' ? 'שגיאה בהעלאה' : (t('upload_failed') || 'Upload failed')) + `: ${e?.message || e}`);
                   }
                 }}>
-                  {t('upload_to_drive') || 'Upload to Google Drive'}
+                  {language === 'he' ? 'העלה ל-Google Drive' : (t('upload_to_drive') || 'Upload to Google Drive')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={async () => {
                   setUploadResult(null);
@@ -211,7 +211,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   } catch {
                     isAuth = false;
                   }
-                  if (!isAuth) { alert(t('connect_drive_prompt') || 'Please connect Google Drive first.'); return; }
+                  if (!isAuth) { alert(language === 'he' ? 'אנא התחבר ל-Google Drive תחילה.' : (t('connect_drive_prompt') || 'Please connect Google Drive first.')); return; }
 
                   // Ensure share email exists (for admin preview use target user's share)
                   const adminControlling = !!(me?.role === 'admin' && (me?.acting_as_store_email || me?.acting_as_user_email));
@@ -236,18 +236,18 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
 
                   const { data } = await base44.functions.invoke('exportMonthlyInvoicesSheet', payload);
                   if (data?.sheet?.webViewLink) {
-                    alert((t('export_completed') || 'Export completed') + `\n${data.sheet.webViewLink}`);
+                    alert((language === 'he' ? 'הייצוא הושלם בהצלחה' : (t('export_completed') || 'Export completed')) + `\n${data.sheet.webViewLink}`);
                     window.open(data.sheet.webViewLink, '_blank');
                   } else {
-                    alert(t('export_completed') || 'Export completed');
+                    alert(language === 'he' ? 'הייצוא הושלם בהצלחה' : (t('export_completed') || 'Export completed'));
                   }
                 } catch (e) {
-                  alert((t('export_failed') || 'Export failed') + `: ${e?.message || e}`);
+                  alert((language === 'he' ? 'שגיאה בייצוא' : (t('export_failed') || 'Export failed')) + `: ${e?.message || e}`);
                 }
               }}
             >
               <FileSpreadsheet className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-              {t('export_sheet') || 'Export Sheet'}
+              {language === 'he' ? 'ייצא לאקסל' : (t('export_sheet') || 'Export Sheet')}
             </Button>
             
             <Button
@@ -258,15 +258,15 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                  try {
                    const { data } = await base44.functions.invoke('checkDriveAuth', {});
                    setDriveAuthorized(!!data?.authorized);
-                   alert(data?.authorized ? (t('drive_connected') || 'Google Drive is connected') : (t('drive_not_connected') || 'Google Drive is not connected'));
+                   alert(data?.authorized ? (language === 'he' ? 'Google Drive מחובר' : (t('drive_connected') || 'Google Drive is connected')) : (language === 'he' ? 'Google Drive אינו מחובר' : (t('drive_not_connected') || 'Google Drive is not connected')));
                  } catch (e) {
                    setDriveAuthorized(false);
-                   alert(t('drive_not_connected') || 'Google Drive is not connected');
+                   alert(language === 'he' ? 'Google Drive אינו מחובר' : (t('drive_not_connected') || 'Google Drive is not connected'));
                  }
                }}
             >
               <HardDrive className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-              {t('check_drive') || 'Check Drive'}
+              {language === 'he' ? 'בדוק חיבור לדרייב' : (t('check_drive') || 'Check Drive')}
             </Button>
             
             {(me?.role !== 'admin' || me?.acting_as_store_email || me?.acting_as_user_email) && (
@@ -277,7 +277,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 className="h-11 md:h-10 px-4 rounded-lg bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
               >
                 <LinkIcon className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-                {t('connect_drive') || 'Connect Drive'}
+                {language === 'he' ? 'חבר לדרייב' : (t('connect_drive') || 'Connect Drive')}
               </Button>
             )}
           </div>
@@ -303,13 +303,13 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             
             <Select value={sortMode} onValueChange={setSortMode}>
               <SelectTrigger className="h-11 md:h-11 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[160px] focus:bg-white transition-colors">
-                <SelectValue placeholder={t('sort_by') || 'Sort'} />
+                <SelectValue placeholder={language === 'he' ? 'מיון...' : (t('sort_by') || 'Sort')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
-                <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
-                <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
-                <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
+                <SelectItem value="supplier_asc">{language === 'he' ? 'ספק: א-ת' : (t('supplier_az') || 'Supplier A–Z')}</SelectItem>
+                <SelectItem value="supplier_desc">{language === 'he' ? 'ספק: ת-א' : (t('supplier_za') || 'Supplier Z–A')}</SelectItem>
+                <SelectItem value="total_desc">{language === 'he' ? 'סה"כ: מהגבוה לנמוך' : (t('total_high_low') || 'Total High→Low')}</SelectItem>
+                <SelectItem value="total_asc">{language === 'he' ? 'סה"כ: מהנמוך לגבוה' : (t('total_low_high') || 'Total Low→High')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -348,17 +348,17 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             <table className="w-full min-w-[700px] border-collapse">
               <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
                 <tr>
-                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('supplier') || 'Supplier'}</th>
-                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('invoice_number') || 'Invoice #'}</th>
-                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('invoice_date') || 'Date'}</th>
-                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('invoice_total') || 'Total'}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'ספק' : (t('supplier') || 'Supplier')}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מספר חשבונית' : (t('invoice_number') || 'Invoice #')}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תאריך' : (t('invoice_date') || 'Date')}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סה"כ' : (t('invoice_total') || 'Total')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-50">
                 {grouped.length === 0 && (
                   <tr>
                     <td className="px-4 py-8 text-center text-gray-500" colSpan={4}>
-                      {t('no_receipts_to_display') || 'No receipts to display'}
+                      {language === 'he' ? 'אין קבלות להצגה בחודש זה' : (t('no_receipts_to_display') || 'No receipts to display')}
                     </td>
                   </tr>
                 )}
@@ -367,7 +367,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   <React.Fragment key={group.supplier_id}>
                     <tr className="bg-green-50/50 border-t border-green-100">
                       <td className="px-4 py-3 font-semibold text-gray-900">{group.supplier_name}</td>
-                      <td className="px-4 py-3 text-sm text-gray-500" colSpan={2}>{t('total') || 'Total'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500" colSpan={2}>{language === 'he' ? 'סה"כ' : (t('total') || 'Total')}</td>
                       <td className="px-4 py-3 font-bold text-green-700">₪{group.total.toFixed(2)}</td>
                     </tr>
                     {group.receipts.map(r => (
@@ -400,7 +400,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
 
                 {grouped.length > 0 && (
                   <tr className="bg-purple-50/50 border-t-2 border-purple-200">
-                    <td className="px-4 py-4 font-bold text-gray-900">{t('grand_total') || 'Grand Total'}</td>
+                    <td className="px-4 py-4 font-bold text-gray-900">{language === 'he' ? 'סך הכל כללי' : (t('grand_total') || 'Grand Total')}</td>
                     <td className="px-4 py-4" colSpan={2}></td>
                     <td className="px-4 py-4 font-bold text-purple-700 text-lg">₪{grandTotal.toFixed(2)}</td>
                   </tr>
@@ -434,8 +434,8 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             <Input type="email" value={connectEmail} onChange={(e) => setConnectEmail(e.target.value)} placeholder="you@gmail.com" />
           </div>
           <div className="flex gap-2 justify-end mt-4">
-            <Button variant="outline" onClick={() => setShowConnect(false)}>{t('cancel') || 'Cancel'}</Button>
-            <Button onClick={async () => { try { const email = (connectEmail || '').trim(); if (!email) { alert(t('enter_google_email') || 'Enter the Google email'); return; } const adminControlling = !!(me?.role === 'admin' && (me?.acting_as_store_email || me?.acting_as_user_email)); if (adminControlling) { let tu = targetUser; if (!tu) { const users = await base44.entities.User.filter({ email: targetEmail }); tu = Array.isArray(users) && users.length ? users[0] : null; setTargetUser(tu); } if (!tu?.id) { alert('User not found'); return; } await base44.entities.User.update(tu.id, { drive_share_email: email }); setTargetUser({ ...tu, drive_share_email: email }); } else { await base44.auth.updateMe({ drive_share_email: email }); const u2 = await base44.auth.me(); setMe(u2); } alert(t('saved') || 'Saved'); setShowConnect(false); } catch (e) { alert((t('error_saving') || 'Error') + ': ' + (e?.message || e)); } }} className="bg-green-600 hover:bg-green-700">{t('save') || 'Save'}</Button>
+            <Button variant="outline" onClick={() => setShowConnect(false)}>{language === 'he' ? 'ביטול' : (t('cancel') || 'Cancel')}</Button>
+            <Button onClick={async () => { try { const email = (connectEmail || '').trim(); if (!email) { alert(t('enter_google_email') || 'Enter the Google email'); return; } const adminControlling = !!(me?.role === 'admin' && (me?.acting_as_store_email || me?.acting_as_user_email)); if (adminControlling) { let tu = targetUser; if (!tu) { const users = await base44.entities.User.filter({ email: targetEmail }); tu = Array.isArray(users) && users.length ? users[0] : null; setTargetUser(tu); } if (!tu?.id) { alert('User not found'); return; } await base44.entities.User.update(tu.id, { drive_share_email: email }); setTargetUser({ ...tu, drive_share_email: email }); } else { await base44.auth.updateMe({ drive_share_email: email }); const u2 = await base44.auth.me(); setMe(u2); } alert(t('saved') || 'Saved'); setShowConnect(false); } catch (e) { alert((t('error_saving') || 'Error') + ': ' + (e?.message || e)); } }} className="bg-green-600 hover:bg-green-700">{language === 'he' ? 'שמור' : (t('save') || 'Save')}</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -468,7 +468,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             </div>
           </div>
           <div className="flex gap-2 justify-end mt-4">
-            <Button variant="outline" onClick={() => setShowDriveConfirm(false)}>{t('cancel') || 'Cancel'}</Button>
+            <Button variant="outline" onClick={() => setShowDriveConfirm(false)}>{language === 'he' ? 'ביטול' : (t('cancel') || 'Cancel')}</Button>
             <Button
               onClick={async () => {
                 try {
@@ -495,16 +495,16 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   setShowDriveConfirm(false);
                   
                   const link = data?.parentFolder?.webViewLink || (uploadTarget === 'dropbox' && data?.parentFolder?.path ? `https://www.dropbox.com/home${data.parentFolder.path}` : '');
-                  alert((t('upload_completed') || 'Upload completed') + (link ? `\n${link}` : ''));
+                  alert((language === 'he' ? 'העלאה הושלמה בהצלחה' : (t('upload_completed') || 'Upload completed')) + (link ? `\n${link}` : ''));
                 } catch (e) {
-                  alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
+                  alert((language === 'he' ? 'העלאה נכשלה' : (t('upload_failed') || 'Upload failed')) + `: ${e?.message || e}`);
                 } finally {
                   setUploading(false);
                 }
               }}
               className="bg-green-600 hover:bg-green-700"
             >
-              {t('upload') || 'Upload'}
+              {language === 'he' ? 'העלה' : (t('upload') || 'Upload')}
             </Button>
           </div>
         </DialogContent>
