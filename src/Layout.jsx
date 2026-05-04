@@ -1239,8 +1239,6 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
 
 export default function Layout({ children, currentPageName }) {
   return (
-    <LanguageProvider>
-      <AppLayout currentPageName={currentPageName}>{children}</AppLayout>
-    </LanguageProvider>
+    <AppLayout currentPageName={currentPageName}>{children}</AppLayout>
   )
 }
