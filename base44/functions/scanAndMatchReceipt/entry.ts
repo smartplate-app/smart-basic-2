@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_urls required' }, { status: 400 });
     }
 
+    const currentYear = new Date().getFullYear();
     // 1) Extract header and item lines from the document (Heb/Eng supported)
     const llm = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are extracting header fields AND line items from a HEBREW supplier invoice image. Do a deep reading of the Hebrew text and DO NOT invent words that are not on the invoice.
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
 EXTRACTION RULES (HEBREW ONLY):
 - Header fields:
   - invoice_number: number/code following "מספר חשבונית" / "חשבונית מס'" / "מס' חשבונית" / "חשבונית"
-  - invoice_date_invoice / invoice_date_printed: YYYY-MM-DD
+  - invoice_date_invoice / invoice_date_printed: YYYY-MM-DD. IMPORTANT: The current year is ${currentYear}. Do NOT guess future years like 2026 unless explicitly written as 2026. If the year is written as two digits (e.g. "25"), assume 2025, not 2026.
   - total_excl_vat: סכום ללא מע"מ / מחיר כולל (before VAT)
   - vat_amount: מע"מ
   - total_incl_vat: סה"כ לתשלום OR סה"כ כולל מע"מ (after VAT). Prefer the bold bottom number.
