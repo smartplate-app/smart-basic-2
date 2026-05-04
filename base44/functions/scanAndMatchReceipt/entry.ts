@@ -17,30 +17,39 @@ Deno.serve(async (req) => {
     const currentYear = new Date().getFullYear();
     // 1) Extract header fields from the document (Heb/Eng supported)
     const llm = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `You are extracting header fields from a HEBREW supplier invoice image. Do a deep reading of the Hebrew text and DO NOT invent words that are not on the invoice.
-      
-EXTRACTION RULES (HEBREW ONLY):
-- Header fields:
-  - invoice_number: number/code following "מספר חשבונית" / "חשבונית מס'" / "מס' חשבונית" / "חשבונית"
-  - invoice_date_invoice / invoice_date_printed: YYYY-MM-DD. IMPORTANT: The current year is ${currentYear}. Do NOT guess future years like 2026 unless explicitly written as 2026. If the year is written as two digits (e.g. "25"), assume 2025, not 2026.
-  - total_excl_vat: סכום ללא מע"מ / מחיר כולל (before VAT)
-  - vat_amount: מע"מ
-  - total_incl_vat: סה"כ לתשלום OR סה"כ כולל מע"מ (after VAT). Prefer the bold bottom number.
-  - is_refund: boolean, if the document includes "זיכוי" or "החזר"
-JSON only.`,
+      model: 'gpt_5_4',
+      prompt: `You are an expert accountant extracting data from an Israeli supplier invoice/delivery note image. Read the Hebrew text carefully. DO NOT invent or hallucinate data.
+
+CRITICAL EXTRACTION RULES:
+1. invoice_number:
+   - Look for "מספר חשבונית", "חשבונית מס'", "מס' חשבונית", "תעודת משלוח", "מספר מסמך", or "מזהה".
+   - Extract EXACTLY the invoice number (digits, sometimes with dashes or letters). Do NOT extract phone numbers or dates.
+2. invoice_date:
+   - Look for "תאריך", "תאריך הפקה", "תאריך מסמך", "Date".
+   - Format strictly as YYYY-MM-DD. If the year is "24" -> 2024, "25" -> 2025. (The current year is ${currentYear}). Do not invent future dates.
+3. total_incl_vat:
+   - Look for "סה"כ לתשלום", "סה"כ כולל מע"מ", "לתשלום ש"ח", "סה"כ".
+   - This is the final absolute bottom-line total you have to pay. Extract the exact numeric value. 
+4. total_excl_vat:
+   - Look for "סה"כ לפני מע"מ", "סכום פטור", "סכום חייב", "ללא מע"מ".
+5. vat_amount:
+   - Look for "סכום מע"מ", "מע"מ 17%", "מע"מ".
+6. is_refund:
+   - Set to true ONLY if the document says "חשבונית זיכוי", "זיכוי", "החזר", or if the total is explicitly negative.
+
+Extract these values precisely. If a value is missing, return 0 for amounts or empty string for text.`,
       file_urls,
       response_json_schema: {
         type: 'object',
         properties: {
           invoice_number: { type: 'string' },
-          invoice_date_invoice: { type: 'string' },
-          invoice_date_printed: { type: 'string' },
+          invoice_date: { type: 'string' },
           total_excl_vat: { type: 'number' },
           vat_amount: { type: 'number' },
           total_incl_vat: { type: 'number' },
           is_refund: { type: 'boolean' }
         },
-        required: ['invoice_number']
+        required: ['invoice_number', 'invoice_date', 'total_incl_vat']
       }
     });
 
@@ -48,7 +57,7 @@ JSON only.`,
       success: true, 
       header: {
         invoice_number: llm.invoice_number,
-        invoice_date: llm.invoice_date_invoice || llm.invoice_date_printed,
+        invoice_date: llm.invoice_date,
         total_excl_vat: llm.total_excl_vat,
         vat_amount: llm.vat_amount,
         total_incl_vat: llm.total_incl_vat,
