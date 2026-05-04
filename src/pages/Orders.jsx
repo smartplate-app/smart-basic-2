@@ -827,6 +827,11 @@ export default function OrdersPage() {
             });
           }
           setPreviewOrder(null);
+          if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+            setTimeout(() => {
+              alert(language === 'he' ? `ההזמנה שותפה, וגם נשלחה במקביל למייל של הספק: ${selectedSupplier.email}` : `Order shared, and also sent in parallel to supplier email: ${selectedSupplier.email}`);
+            }, 500);
+          }
           return;
         } catch (shareErr) {
           console.warn('Share failed', shareErr);
@@ -900,6 +905,11 @@ export default function OrdersPage() {
           title: `You have received a new order from "${order.restaurant_name || ''}"`,
           text: text
         });
+        if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+          setTimeout(() => {
+            alert(language === 'he' ? `ההזמנה שותפה, וגם נשלחה במקביל למייל של הספק: ${selectedSupplier.email}` : `Order shared, and also sent in parallel to supplier email: ${selectedSupplier.email}`);
+          }, 500);
+        }
       }
       setPreviewOrder(null);
     } catch (e) {
