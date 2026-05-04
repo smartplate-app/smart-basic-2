@@ -2,9 +2,10 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
-import { Download, Trash2, Edit, MoreHorizontal, FileText, Image as ImageIcon, Search } from "lucide-react";
+import { Download, Trash2, Edit, MoreHorizontal, FileText, Image as ImageIcon, Search, Check } from "lucide-react";
 import PdfThumbnail from "./PdfThumbnail";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false, sortBy, onSortChange, invoiceNumberFilter, onInvoiceNumberFilterChange }) {
   const { t, language } = useLanguage();
@@ -165,18 +166,43 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </td>
                   <td className="px-4 py-4 text-center align-middle">
                     <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                      <Badge variant="outline" className={`border-none ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
-                        {t(`status_${r.status}`) || r.status || '-'}
-                      </Badge>
-                      {r.is_refund && (
-                        <Badge className="bg-purple-50 text-purple-700 border-none font-normal">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
-                      )}
-                      {r.needs_review && (
-                        <Badge className="bg-amber-50 text-amber-700 border-none font-normal">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
-                      )}
-                      {r.linked_receipt_id && (
-                        <Badge className="bg-blue-50 text-blue-700 border-none font-normal">{language === 'he' ? 'מקושר' : 'Linked'}</Badge>
-                      )}
+                      <TooltipProvider>
+                        <Tooltip delayDuration={300}>
+                          <TooltipTrigger asChild>
+                            <Badge variant="outline" className={`cursor-help border-none ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                              {t(`status_${r.status}`) || r.status || '-'}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-blue-50 border-blue-100 text-gray-800 shadow-md text-xs p-3" side="top">
+                            <div className="font-bold text-blue-900 mb-2">{language === 'he' ? 'מקרא סטטוסים:' : 'Status Legend:'}</div>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-400"></div>{language === 'he' ? 'ממתין - טרם אומת' : 'Pending - Not verified yet'}</div>
+                              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div>{language === 'he' ? 'תקין - נבדק ואושר' : 'Verified - Checked and approved'}</div>
+                              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div>{language === 'he' ? 'חריגות - קיימת בעיה במחיר/כמות' : 'Has Issues - Price/qty mismatch'}</div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      {(() => {
+                        const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
+                        if (isResolved) {
+                          return <Badge className="bg-emerald-50 text-emerald-700 border-none font-normal flex items-center gap-1">{language === 'he' ? 'התקבל' : 'Received'} <Check className="w-3 h-3" /></Badge>;
+                        }
+                        return (
+                          <>
+                            {r.is_refund && (
+                              <Badge className="bg-purple-50 text-purple-700 border-none font-normal">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
+                            )}
+                            {r.needs_review && (
+                              <Badge className="bg-amber-50 text-amber-700 border-none font-normal">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                            )}
+                            {r.awaiting_credit && (
+                              <Badge className="bg-orange-50 text-orange-700 border-none font-normal">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </td>
                   <td className="px-4 py-4 text-center align-middle" onClick={(e) => e.stopPropagation()}>
@@ -283,15 +309,43 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Badge variant="outline" className={`border-none text-xs font-semibold px-2 py-0.5 ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
-                    {t(`status_${r.status}`) || r.status || '-'}
-                  </Badge>
-                  {r.is_refund && (
-                    <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-xs px-2 py-0.5">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
-                  )}
-                  {r.needs_review && (
-                    <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-xs px-2 py-0.5">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
-                  )}
+                  <TooltipProvider>
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className={`cursor-help border-none text-xs font-semibold px-2 py-0.5 ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                          {t(`status_${r.status}`) || r.status || '-'}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-blue-50 border-blue-100 text-gray-800 shadow-md text-xs p-3" side="top">
+                        <div className="font-bold text-blue-900 mb-2">{language === 'he' ? 'מקרא סטטוסים:' : 'Status Legend:'}</div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-400"></div>{language === 'he' ? 'ממתין - טרם אומת' : 'Pending - Not verified yet'}</div>
+                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div>{language === 'he' ? 'תקין - נבדק ואושר' : 'Verified - Checked and approved'}</div>
+                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div>{language === 'he' ? 'חריגות - קיימת בעיה במחיר/כמות' : 'Has Issues - Price/qty mismatch'}</div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  {(() => {
+                    const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
+                    if (isResolved) {
+                      return <Badge className="bg-emerald-50 text-emerald-700 border-none font-medium text-xs px-2 py-0.5 flex items-center gap-1">{language === 'he' ? 'התקבל' : 'Received'} <Check className="w-3 h-3" /></Badge>;
+                    }
+                    return (
+                      <>
+                        {r.is_refund && (
+                          <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-xs px-2 py-0.5">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
+                        )}
+                        {r.needs_review && (
+                          <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-xs px-2 py-0.5">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                        )}
+                        {r.awaiting_credit && (
+                          <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-xs px-2 py-0.5">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
                 
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
