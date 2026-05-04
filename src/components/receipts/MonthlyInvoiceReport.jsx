@@ -300,18 +300,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 <ChevronRight className="w-4 h-4 text-gray-600" />
               </Button>
             </div>
-            
-            <Select value={sortMode} onValueChange={setSortMode}>
-              <SelectTrigger className="h-11 md:h-11 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[160px] focus:bg-white transition-colors">
-                <SelectValue placeholder={language === 'he' ? 'מיון...' : (t('sort_by') || 'Sort')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="supplier_asc">{language === 'he' ? 'ספק: א-ת' : (t('supplier_az') || 'Supplier A–Z')}</SelectItem>
-                <SelectItem value="supplier_desc">{language === 'he' ? 'ספק: ת-א' : (t('supplier_za') || 'Supplier Z–A')}</SelectItem>
-                <SelectItem value="total_desc">{language === 'he' ? 'סה"כ: מהגבוה לנמוך' : (t('total_high_low') || 'Total High→Low')}</SelectItem>
-                <SelectItem value="total_asc">{language === 'he' ? 'סה"כ: מהנמוך לגבוה' : (t('total_low_high') || 'Total Low→High')}</SelectItem>
-              </SelectContent>
-            </Select>
 
             <div className="relative flex-1 min-w-[200px] max-w-sm">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -344,14 +332,28 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               <span className="text-2xl font-bold text-gray-900">₪{avgReceipt.toFixed(0)}</span>
             </div>
           </div>
-          <div className="overflow-x-auto w-full">
-            <table className="w-full min-w-[700px] border-collapse">
+          <div className="overflow-auto max-h-[60vh] w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <table className="w-full min-w-[700px] border-collapse relative">
               <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
                 <tr>
-                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'ספק' : (t('supplier') || 'Supplier')}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="inline-flex items-center gap-1 cursor-pointer hover:text-gray-900 transition-colors" onClick={() => setSortMode(sortMode === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
+                      {language === 'he' ? 'ספק' : (t('supplier') || 'Supplier')}
+                      <span className={`text-[10px] ${sortMode.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {sortMode === 'supplier_asc' ? '↑' : sortMode === 'supplier_desc' ? '↓' : '⇅'}
+                      </span>
+                    </div>
+                  </th>
                   <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מספר חשבונית' : (t('invoice_number') || 'Invoice #')}</th>
                   <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תאריך' : (t('invoice_date') || 'Date')}</th>
-                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סה"כ' : (t('invoice_total') || 'Total')}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="inline-flex items-center gap-1 cursor-pointer hover:text-gray-900 transition-colors" onClick={() => setSortMode(sortMode === 'total_desc' ? 'total_asc' : 'total_desc')}>
+                      {language === 'he' ? 'סה"כ' : (t('invoice_total') || 'Total')}
+                      <span className={`text-[10px] ${sortMode.startsWith('total') ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {sortMode === 'total_asc' ? '↑' : sortMode === 'total_desc' ? '↓' : '⇅'}
+                      </span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-50">
@@ -399,10 +401,10 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 ))}
 
                 {grouped.length > 0 && (
-                  <tr className="bg-purple-50/50 border-t-2 border-purple-200">
-                    <td className="px-4 py-4 font-bold text-gray-900">{language === 'he' ? 'סך הכל כללי' : (t('grand_total') || 'Grand Total')}</td>
-                    <td className="px-4 py-4" colSpan={2}></td>
-                    <td className="px-4 py-4 font-bold text-purple-700 text-lg">₪{grandTotal.toFixed(2)}</td>
+                  <tr className="sticky bottom-0 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    <td className="bg-purple-50 px-4 py-4 font-bold text-gray-900 border-t-2 border-purple-200">{language === 'he' ? 'סך הכל כללי' : (t('grand_total') || 'Grand Total')}</td>
+                    <td className="bg-purple-50 px-4 py-4 border-t-2 border-purple-200" colSpan={2}></td>
+                    <td className="bg-purple-50 px-4 py-4 font-bold text-purple-700 text-lg border-t-2 border-purple-200">₪{grandTotal.toFixed(2)}</td>
                   </tr>
                 )}
               </tbody>
