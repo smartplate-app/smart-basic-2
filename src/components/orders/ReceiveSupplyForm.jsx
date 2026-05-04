@@ -1062,7 +1062,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             className="flex-1 min-h-[44px] md:min-h-0"
                           >
                             <Plus className="w-4 h-4 ml-2" />
-                            {t('enter_manually') || 'הזן ידנית'}
+                            {safeT('enter_manually', 'הזן ידנית', 'Enter manually')}
                           </Button>
                         )}
                       </div>
@@ -1074,7 +1074,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       <div ref={invoiceDetailsRef} style={{ scrollMarginTop: '96px' }} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                           <Scan className="w-5 h-5" />
-                          {t('invoice_details') || 'פרטי חשבונית'}
+                          {safeT('invoice_details', 'פרטי חשבונית', 'Invoice Details')}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="invoice-details-section">
                           {scannedDocs.map((doc, idx) => (
@@ -1088,7 +1088,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   )}
                                 </a>
                                 <div>
-                                  <Label className="text-xs text-gray-600">{t('invoice_number')} *</Label>
+                                  <Label className="text-xs text-gray-600">{safeT('invoice_number', 'מספר חשבונית', 'Invoice Number')} *</Label>
                                   <Input
                                     ref={idx === 0 ? firstDocInvoiceRef : null}
                                     value={doc.invoice_number}
@@ -1115,7 +1115,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   />
                                 </div>
                                 <div>
-                                  <Label className="text-xs text-gray-600">{t('invoice_date')} *</Label>
+                                  <Label className="text-xs text-gray-600">{safeT('invoice_date', 'תאריך חשבונית', 'Invoice Date')} *</Label>
                                   <Input
                                      type="date"
                                      value={doc.invoice_date}
@@ -1130,7 +1130,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                    />
                                 </div>
                                 <div>
-                                  <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) *</Label>
+                                  <Label className="text-xs text-gray-600">{safeT('invoice_total', 'סכום בחשבונית', 'Invoice Total')} ({safeT('including_vat', 'כולל מע"ם', 'Including VAT')}) *</Label>
                                   <Input
                                     type="text"
                                     inputMode="decimal"
@@ -1202,7 +1202,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 {doc.duplicate && (
                                   <Alert variant="destructive">
                                     <AlertDescription>
-                                      {t('invoice_already_scanned') || 'This invoice number was already scanned for this supplier.'}
+                                      {safeT('invoice_already_scanned', 'חשבונית זו כבר נסרקה עבור ספק זה.', 'This invoice number was already scanned for this supplier.')}
                                     </AlertDescription>
                                   </Alert>
                                 )}
@@ -1217,11 +1217,11 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       <div ref={invoiceDetailsRef} style={{ scrollMarginTop: '96px' }} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
                           <Scan className="w-5 h-5" />
-                          {t('invoice_details') || 'פרטי חשבונית'}
+                          {safeT('invoice_details', 'פרטי חשבונית', 'Invoice Details')}
                         </h3>
                         <div className="grid grid-cols-1 gap-3">
                           <div>
-                            <Label className="text-xs text-gray-600">{t('invoice_number')} *</Label>
+                            <Label className="text-xs text-gray-600">{safeT('invoice_number', 'מספר חשבונית', 'Invoice Number')} *</Label>
                             <Input
                               ref={invoiceNumberRef}
                               value={formData.invoice_number}
@@ -1232,12 +1232,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 if (supplierId) { checkDuplicateInvoice(val, supplierId, receipt?.id); }
                               }}
                               className="mt-1 font-semibold"
-                              placeholder={t('enter_invoice_number') || 'הזן מספר חשבונית'}
+                              placeholder={safeT('enter_invoice_number', 'הזן מספר חשבונית', 'Enter invoice number')}
                               required
                             />
                           </div>
                           <div>
-                            <Label className="text-xs text-gray-600">{t('invoice_date')} *</Label>
+                            <Label className="text-xs text-gray-600">{safeT('invoice_date', 'תאריך חשבונית', 'Invoice Date')} *</Label>
                             <Input
                               type="date"
                               value={formData.invoice_date}
@@ -1260,7 +1260,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 />
                               </div>
                               <div>
-                                <Label className="text-xs text-gray-600">{t('invoice_total')} ({t('including_vat') || 'כולל מע"ם'}) {formData.document_type !== 'delivery_note' && '*'}</Label>
+                                <Label className="text-xs text-gray-600">{safeT('invoice_total', 'סכום בחשבונית', 'Invoice Total')} ({safeT('including_vat', 'כולל מע"ם', 'Including VAT')}) {formData.document_type !== 'delivery_note' && '*'}</Label>
                                 <Input
                                   type="text"
                                   inputMode="decimal"
@@ -1274,7 +1274,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             </div>
                           {formData.verified_items.length > 0 && (
                             <div>
-                              <Label className="text-xs text-gray-600">{t('calculated_total')}</Label>
+                              <Label className="text-xs text-gray-600">{safeT('calculated_total', 'סכום מחושב', 'Calculated Total')}</Label>
                               <Input
                                 type="number"
                                 step="0.01"
@@ -1521,7 +1521,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                       <Input
                                         value={item.item_name}
                                         onChange={(e) => updateVerifiedItem(index, 'item_name', e.target.value)}
-                                        placeholder={t('item_name') || 'שם פריט'}
+                                        placeholder={safeT('item_name', 'שם פריט', 'Item Name')}
                                         className="font-medium flex-1"
                                       />
                                       <Button
