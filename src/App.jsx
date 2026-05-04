@@ -1,5 +1,6 @@
 import './App.css'
 import { Toaster } from "@/components/ui/toaster"
+import { GlobalToaster } from "@/components/GlobalToaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
@@ -150,6 +151,7 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <Toaster />
+        <GlobalToaster />
         <VisualEditAgent />
       </QueryClientProvider>
     </AuthProvider>
