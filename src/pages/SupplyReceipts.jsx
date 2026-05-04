@@ -904,6 +904,8 @@ export default function SupplyReceiptsPage() {
                onSortChange={setSortBy}
                invoiceNumberFilter={invoiceNumberFilter}
                onInvoiceNumberFilterChange={setInvoiceNumberFilter}
+               statusFilter={statusFilter}
+               onStatusFilterChange={setStatusFilter}
                />
             ) : (
               <div className="grid gap-6 md:grid-cols-2">

@@ -7,7 +7,7 @@ import PdfThumbnail from "./PdfThumbnail";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false, sortBy, onSortChange, invoiceNumberFilter, onInvoiceNumberFilterChange }) {
+export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false, sortBy, onSortChange, invoiceNumberFilter, onInvoiceNumberFilterChange, statusFilter, onStatusFilterChange }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
 
@@ -104,8 +104,25 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </span>
                 </div>
               </th>
-              <th className="px-4 pt-4 pb-3 text-center text-xs font-semibold text-gray-500 align-top">
-                <div className="flex items-center justify-center h-5">{safeT('status', 'סטטוס', 'Status')}</div>
+              <th className="px-4 pt-3 pb-3 text-center text-xs font-semibold text-gray-500 align-top">
+                <div className="flex flex-col gap-1.5 items-center">
+                  <span className="flex items-center justify-center h-5">{safeT('status', 'סטטוס', 'Status')}</span>
+                  {onStatusFilterChange && (
+                    <select 
+                      value={statusFilter || 'all'} 
+                      onChange={(e) => onStatusFilterChange(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`text-[10px] h-8 rounded-lg border border-gray-200 bg-white shadow-sm focus:border-green-500 outline-none w-full max-w-[100px] text-gray-700`}
+                    >
+                      <option value="all">{language === 'he' ? 'הכל' : 'All'}</option>
+                      <option value="invoices">{language === 'he' ? 'חשבוניות' : 'Invoices'}</option>
+                      <option value="delivery_notes">{language === 'he' ? 'תעודות' : 'Deliveries'}</option>
+                      <option value="refund_invoice">{language === 'he' ? 'זיכויים' : 'Refunds'}</option>
+                      <option value="awaiting_credit">{language === 'he' ? 'ממתין' : 'Awaiting'}</option>
+                      <option value="needs_review">{language === 'he' ? 'בדיקה' : 'Review'}</option>
+                    </select>
+                  )}
+                </div>
               </th>
               <th className="px-4 pt-4 pb-3 text-center text-xs font-semibold text-gray-500 align-top">
                 <div className="flex items-center justify-center h-5">{safeT('files', 'קבצים', 'Files')}</div>
@@ -165,11 +182,11 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                     {typeof r.invoice_total !== 'undefined' ? `₪${fmtCurrency(r.invoice_total)}` : '-'}
                   </td>
                   <td className="px-4 py-4 text-center align-middle">
-                    <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                    <div className="flex items-center justify-center gap-1 flex-wrap">
                       <TooltipProvider>
                         <Tooltip delayDuration={300}>
                           <TooltipTrigger asChild>
-                            <Badge variant="outline" className={`cursor-help border-none ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                            <Badge variant="outline" className={`cursor-help border-none text-[10px] px-1.5 py-0.5 h-auto leading-none ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
                               {t(`status_${r.status}`) || r.status || '-'}
                             </Badge>
                           </TooltipTrigger>
@@ -187,18 +204,18 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                       {(() => {
                         const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
                         if (isResolved) {
-                          return <Badge className="bg-emerald-50 text-emerald-700 border-none font-normal flex items-center gap-1">{language === 'he' ? 'התקבל' : 'Received'} <Check className="w-3 h-3" /></Badge>;
+                          return <Badge className="bg-emerald-50 text-emerald-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none flex items-center gap-0.5">{language === 'he' ? 'התקבל' : 'Received'} <Check className="w-2.5 h-2.5" /></Badge>;
                         }
                         return (
                           <>
                             {r.is_refund && (
-                              <Badge className="bg-purple-50 text-purple-700 border-none font-normal">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
+                              <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
                             )}
                             {r.needs_review && (
-                              <Badge className="bg-amber-50 text-amber-700 border-none font-normal">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                              <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
                             )}
                             {r.awaiting_credit && (
-                              <Badge className="bg-orange-50 text-orange-700 border-none font-normal">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
+                              <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
                             )}
                           </>
                         );
@@ -308,11 +325,11 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               </div>
               
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="flex items-center gap-1 flex-wrap">
                   <TooltipProvider>
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
-                        <Badge variant="outline" className={`cursor-help border-none text-xs font-semibold px-2 py-0.5 ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                        <Badge variant="outline" className={`cursor-help border-none text-[10px] px-1.5 py-0.5 h-auto leading-none ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
                           {t(`status_${r.status}`) || r.status || '-'}
                         </Badge>
                       </TooltipTrigger>
@@ -330,18 +347,18 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   {(() => {
                     const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
                     if (isResolved) {
-                      return <Badge className="bg-emerald-50 text-emerald-700 border-none font-medium text-xs px-2 py-0.5 flex items-center gap-1">{language === 'he' ? 'התקבל' : 'Received'} <Check className="w-3 h-3" /></Badge>;
+                      return <Badge className="bg-emerald-50 text-emerald-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none flex items-center gap-0.5">{language === 'he' ? 'התקבל' : 'Received'} <Check className="w-2.5 h-2.5" /></Badge>;
                     }
                     return (
                       <>
                         {r.is_refund && (
-                          <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-xs px-2 py-0.5">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
+                          <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
                         )}
                         {r.needs_review && (
-                          <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-xs px-2 py-0.5">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                          <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
                         )}
                         {r.awaiting_credit && (
-                          <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-xs px-2 py-0.5">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
+                          <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
                         )}
                       </>
                     );
