@@ -239,6 +239,24 @@ export default function WelcomePublic() {
   const isRTL = language === 'he' || language === 'ar';
 
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        if (sessionStorage.getItem('b44_logout_in_progress')) return;
+        const hasCache = !!localStorage.getItem('b44_user_cache');
+        if (hasCache) {
+          window.location.replace(createPageUrl('Orders'));
+          return;
+        }
+        const isAuthed = await base44.auth.isAuthenticated();
+        if (isAuthed) {
+          window.location.replace(createPageUrl('Orders'));
+        }
+      } catch (e) {}
+    };
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
     document.title = "Food Cost App | Smart Plate Basic for Restaurants";
     
     const setMetaTag = (name, content, isProperty = false) => {
