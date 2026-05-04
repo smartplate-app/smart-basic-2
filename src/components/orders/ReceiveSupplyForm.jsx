@@ -1006,18 +1006,24 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                     {formData.receipt_images.length > 0 && (
                       <div className="grid grid-cols-3 gap-2 mt-2">
                         {formData.receipt_images.map((url, index) => (
-                          <div key={index} className="relative">
-                            {isPdfUrl(url) ? (
-                              <PdfThumbnail url={url} size={96} className="w-full h-24" />
-                            ) : (
-                              <img src={url} alt={language === 'he' ? 'קבלה' : 'Receipt'} className="w-full h-24 object-cover rounded" />
-                            )}
+                          <div key={index} className="relative group">
+                            <a href={url} target="_blank" rel="noopener noreferrer" className="block w-full h-24 rounded border border-gray-200 overflow-hidden hover:border-blue-500 transition-colors" title={language === 'he' ? 'הגדל תמונה' : 'Enlarge image'}>
+                              {isPdfUrl(url) ? (
+                                <PdfThumbnail url={url} size={96} className="w-full h-full object-cover" />
+                              ) : (
+                                <img src={url} alt={language === 'he' ? 'קבלה' : 'Receipt'} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                              )}
+                            </a>
                             <Button
                               type="button"
                               variant="destructive"
                               size="icon"
-                              className="absolute top-1 right-1 h-6 w-6"
-                              onClick={() => removeImage(index)}
+                              className="absolute top-1 right-1 h-6 w-6 opacity-80 hover:opacity-100 shadow-sm"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeImage(index);
+                              }}
                             >
                               <X className="w-4 h-4" />
                             </Button>
@@ -1074,13 +1080,13 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           {scannedDocs.map((doc, idx) => (
                             <Card key={doc.file_url || idx} className="overflow-hidden">
                               <CardContent className="pt-4 space-y-3">
-                                <div className="aspect-video bg-white/40 rounded border">
+                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="block aspect-video bg-white/40 rounded border hover:border-blue-500 transition-colors overflow-hidden group" title={language === 'he' ? 'הגדל תמונה' : 'Enlarge image'}>
                                   {isPdfUrl(doc.file_url) ? (
-                                    <PdfThumbnail url={doc.file_url} size={160} className="w-full h-full" />
+                                    <PdfThumbnail url={doc.file_url} size={160} className="w-full h-full object-cover" />
                                   ) : (
-                                    <img src={doc.file_url} alt={`Invoice ${idx+1}`} className="w-full h-full object-contain" />
+                                    <img src={doc.file_url} alt={`Invoice ${idx+1}`} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
                                   )}
-                                </div>
+                                </a>
                                 <div>
                                   <Label className="text-xs text-gray-600">{t('invoice_number')} *</Label>
                                   <Input
