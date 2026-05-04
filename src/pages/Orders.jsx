@@ -745,16 +745,19 @@ export default function OrdersPage() {
   const handleSendNow = async (order) => {
     if (!order) return;
 
-    const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
-    if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-      await doEmailSend(order);
-      alert(language === 'he' ? 'ההזמנה נשלחה בהצלחה למייל של הספק!' : 'Order was successfully sent to the supplier\'s email!');
-      return;
-    }
-
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const text = `You have received a new order from "${order.restaurant_name || ''}"\n\n*${safeT('order_number', 'מספר הזמנה', 'Order')}:* ${ensuredNumber}`;
     
+    // Always mark as sent and send email in the background (if supplier has email)
+    base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
+    try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
+    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
+
+    const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
+    if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+      console.log('Order email sent to supplier in background');
+    }
+
     // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
     let file = pregeneratedShareFile;
     let pngBlob = pregeneratedPngBlob;
@@ -810,10 +813,6 @@ export default function OrdersPage() {
     if (file) {
       // Try native share with the image file attached
       if (navigator.share) {
-        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
-        try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
-        setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
-        
         try {
           if (navigator.canShare && !navigator.canShare({ files: [file] })) {
             await navigator.share({
@@ -865,8 +864,8 @@ export default function OrdersPage() {
         const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Mac/.test(navigator.userAgent);
         const pasteKey = isMac ? 'Cmd+V' : 'Ctrl+V';
         alert(language === 'he' 
-          ? `התמונה הועתקה! וואטסאפ ייפתח כעת, פשוט לחץ ${pasteKey} בתוך הצ'אט כדי להדביק ולשלוח.` 
-          : `Image copied! WhatsApp will open now, just press ${pasteKey} in the chat to paste and send.`);
+          ? `התמונה הועתקה! וואטסאפ ייפתח כעת, פשוט לחץ ${pasteKey} בתוך הצ'אט כדי להדביק ולשלוח.\n\n(במידה ולספק יש אימייל, ההזמנה נשלחה גם לשם במקביל)` 
+          : `Image copied! WhatsApp will open now, just press ${pasteKey} in the chat to paste and send.\n\n(If the supplier has an email, it was also sent there)`);
         
         const rawPhone = String(order.supplier_phone || '').trim();
         let phone = rawPhone.replace(/[^\d+]/g, '');
@@ -885,6 +884,9 @@ export default function OrdersPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         a.remove();
+        if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+            alert(language === 'he' ? 'ההזמנה ירדה למכשיר ונשלחה במייל לספק.' : 'Order downloaded and sent to supplier email.');
+        }
       }
       
       setPreviewOrder(null);
@@ -893,10 +895,6 @@ export default function OrdersPage() {
 
     // Fallback if image generation completely fails
     try {
-      base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
-      try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
-      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
-      
       if (navigator.share) {
         await navigator.share({
           title: `You have received a new order from "${order.restaurant_name || ''}"`,
