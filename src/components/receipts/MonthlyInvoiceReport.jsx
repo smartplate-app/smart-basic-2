@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { base44 } from "@/api/base44Client";
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Search, CloudUpload, FileSpreadsheet, HardDrive, Link as LinkIcon } from "lucide-react";
 
 function normalizeText(str) {
   if (!str) return '';
@@ -109,205 +109,223 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
 
   return (
     <div className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <span>{language === 'he' ? 'סיכום חודשי' : (t('monthly_summary') || 'Monthly Summary')}</span>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    disabled={uploading}
-                    className={`bg-green-600 hover:bg-green-700 shrink-0 ${isRTL ? 'order-first' : ''}`}
-                  >
-                    {uploading ? (t('uploading') || 'Uploading...') : (language === 'he' ? 'העלה לענן' : 'Upload to Cloud')}
-                    <ChevronDown className="w-4 h-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={async () => {
-                    setUploadResult(null);
-                    setUploadTarget('drive');
-                    try {
-                      let isAuth = false;
-                      try {
-                        const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
-                        isAuth = !!auth?.authorized;
-                        setDriveAuthorized(isAuth);
-                      } catch (authErr) {
-                        isAuth = false;
-                        setDriveAuthorized(false);
-                      }
-                      if (!isAuth) {
-                        alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
-                        return;
-                      }
-
-                      let me = null;
-                      try { me = await base44.auth.me(); } catch {}
-                      if ((me?.role !== 'admin') && !me?.drive_share_email) {
-                        setShowConnect(true);
-                        return;
-                      }
-
-                      try {
-                        const { data } = await base44.functions.invoke('driveWhoAmI', {});
-                        setDriveAccount(data?.user || null);
-                      } catch {}
-                      setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
-
-                      setShowDriveConfirm(true);
-                    } catch (e) {
-                      alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
-                    }
-                  }}>
-                    {t('upload_to_drive') || 'Upload to Google Drive'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={async () => {
-                    setUploadResult(null);
-                    setUploadTarget('dropbox');
-                    try {
-                      let isAuth = false;
-                      try {
-                        const { data: auth } = await base44.functions.invoke('checkDropboxAuth', {});
-                        isAuth = !!auth?.authorized;
-                      } catch (authErr) {
-                        isAuth = false;
-                      }
-                      if (!isAuth) {
-                        alert(language === 'he' ? 'אנא התחבר ל-Dropbox תחילה.' : 'Please connect Dropbox first.');
-                        return;
-                      }
-
-                      let me = null;
-                      try { me = await base44.auth.me(); } catch {}
-                      
-                      setDriveAccount({ displayName: 'Dropbox' });
-                      setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
-
-                      setShowDriveConfirm(true);
-                    } catch (e) {
-                      alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
-                    }
-                  }}>
-                    {language === 'he' ? 'העלה ל-Dropbox' : 'Upload to Dropbox'}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
-              <label className="text-sm text-gray-600">{t('month') || 'Month'}</label>
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Button variant="outline" size="icon" onClick={() => setMonth(moment(month + '-01').subtract(1, 'month').format('YYYY-MM'))}>
-                  <ChevronLeft className="w-4 h-4" />
+      <div className="mb-4">
+        
+        {/* Main Header & Actions */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  disabled={uploading}
+                  className="bg-[#d4a373] hover:bg-[#b88c60] text-white shrink-0 h-11 md:h-10 px-5 rounded-lg shadow-sm"
+                >
+                  <CloudUpload className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                  {uploading ? (t('uploading') || 'Uploading...') : (language === 'he' ? 'העלה לענן' : 'Upload to Cloud')}
+                  <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
-                <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-32 sm:w-36 md:w-40" />
-                <Button variant="outline" size="icon" onClick={() => setMonth(moment(month + '-01').add(1, 'month').format('YYYY-MM'))}>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-               <div className="flex items-center gap-2 shrink-0">
-                <label className="text-sm text-gray-600">{t('sort_by') || 'Sort'}</label>
-                <Select value={sortMode} onValueChange={setSortMode}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder={t('sort_by') || 'Sort'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
-                    <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
-                    <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
-                    <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2 flex-1 min-w-[220px]">
-                <label className="text-sm text-gray-600">{t('search') || 'Search'}</label>
-                <Input
-                  value={itemSearch}
-                  onChange={(e) => setItemSearch(e.target.value)}
-                  placeholder={language === 'he' ? 'חפש פריט לפי שם' : 'Search item name'}
-                  className="w-full md:w-56"
-                />
-              </div>
-              <Button
-                 variant="outline"
-                 disabled={uploading}
-                 className="shrink-0"
-                 onClick={async () => {
-                   try {
-                     const { data } = await base44.functions.invoke('checkDriveAuth', {});
-                     setDriveAuthorized(!!data?.authorized);
-                     alert(data?.authorized ? (t('drive_connected') || 'Google Drive is connected') : (t('drive_not_connected') || 'Google Drive is not connected'));
-                   } catch (e) {
-                     setDriveAuthorized(false);
-                     alert(t('drive_not_connected') || 'Google Drive is not connected');
-                   }
-                 }}
-              >
-                {t('check_drive') || 'Check Drive'}
-              </Button>
-              <Button
-                 variant="outline"
-                 disabled={uploading}
-                 className="shrink-0"
-                 onClick={async () => {
-                   try {
-                     // Auth check
-                     let isAuth = false;
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={async () => {
+                  setUploadResult(null);
+                  setUploadTarget('drive');
+                  try {
+                    let isAuth = false;
                     try {
                       const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
                       isAuth = !!auth?.authorized;
                       setDriveAuthorized(isAuth);
-                    } catch {
+                    } catch (authErr) {
+                      isAuth = false;
+                      setDriveAuthorized(false);
+                    }
+                    if (!isAuth) {
+                      alert(t('connect_drive_prompt') || 'Please connect Google Drive first. If you do not see a consent prompt, contact the app owner to enable Drive for your account.');
+                      return;
+                    }
+
+                    let me = null;
+                    try { me = await base44.auth.me(); } catch {}
+                    if ((me?.role !== 'admin') && !me?.drive_share_email) {
+                      setShowConnect(true);
+                      return;
+                    }
+
+                    try {
+                      const { data } = await base44.functions.invoke('driveWhoAmI', {});
+                      setDriveAccount(data?.user || null);
+                    } catch {}
+                    setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
+
+                    setShowDriveConfirm(true);
+                  } catch (e) {
+                    alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
+                  }
+                }}>
+                  {t('upload_to_drive') || 'Upload to Google Drive'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={async () => {
+                  setUploadResult(null);
+                  setUploadTarget('dropbox');
+                  try {
+                    let isAuth = false;
+                    try {
+                      const { data: auth } = await base44.functions.invoke('checkDropboxAuth', {});
+                      isAuth = !!auth?.authorized;
+                    } catch (authErr) {
                       isAuth = false;
                     }
-                    if (!isAuth) { alert(t('connect_drive_prompt') || 'Please connect Google Drive first.'); return; }
-
-                    // Ensure share email exists (for admin preview use target user's share)
-                    const adminControlling = !!(me?.role === 'admin' && (me?.acting_as_store_email || me?.acting_as_user_email));
-                    const shareEmail = adminControlling ? (targetUser?.drive_share_email || '') : (me?.drive_share_email || '');
-                    if (!shareEmail) { setShowConnect(true); return; }
-
-                    const payload = {
-                      month,
-                      targetEmail,
-                      shareEmail,
-                      receipts: monthReceipts.map(r => ({
-                        id: r.id,
-                        supplier_id: r.supplier_id,
-                        supplier_name: r.supplier_name,
-                        invoice_number: r.invoice_number,
-                        invoice_date: r.invoice_date,
-                        received_date: r.received_date,
-                        invoice_total: r.invoice_total,
-                        receipt_images: r.receipt_images,
-                      })),
-                    };
-
-                    const { data } = await base44.functions.invoke('exportMonthlyInvoicesSheet', payload);
-                    if (data?.sheet?.webViewLink) {
-                      alert((t('export_completed') || 'Export completed') + `\n${data.sheet.webViewLink}`);
-                      window.open(data.sheet.webViewLink, '_blank');
-                    } else {
-                      alert(t('export_completed') || 'Export completed');
+                    if (!isAuth) {
+                      alert(language === 'he' ? 'אנא התחבר ל-Dropbox תחילה.' : 'Please connect Dropbox first.');
+                      return;
                     }
+
+                    let me = null;
+                    try { me = await base44.auth.me(); } catch {}
+                    
+                    setDriveAccount({ displayName: 'Dropbox' });
+                    setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
+
+                    setShowDriveConfirm(true);
                   } catch (e) {
-                    alert((t('export_failed') || 'Export failed') + `: ${e?.message || e}`);
+                    alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
                   }
-                }}
+                }}>
+                  {language === 'he' ? 'העלה ל-Dropbox' : 'Upload to Dropbox'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+               variant="outline"
+               disabled={uploading}
+               className="h-11 md:h-10 px-4 rounded-lg bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+               onClick={async () => {
+                 try {
+                   // Auth check
+                   let isAuth = false;
+                  try {
+                    const { data: auth } = await base44.functions.invoke('checkDriveAuth', {});
+                    isAuth = !!auth?.authorized;
+                    setDriveAuthorized(isAuth);
+                  } catch {
+                    isAuth = false;
+                  }
+                  if (!isAuth) { alert(t('connect_drive_prompt') || 'Please connect Google Drive first.'); return; }
+
+                  // Ensure share email exists (for admin preview use target user's share)
+                  const adminControlling = !!(me?.role === 'admin' && (me?.acting_as_store_email || me?.acting_as_user_email));
+                  const shareEmail = adminControlling ? (targetUser?.drive_share_email || '') : (me?.drive_share_email || '');
+                  if (!shareEmail) { setShowConnect(true); return; }
+
+                  const payload = {
+                    month,
+                    targetEmail,
+                    shareEmail,
+                    receipts: monthReceipts.map(r => ({
+                      id: r.id,
+                      supplier_id: r.supplier_id,
+                      supplier_name: r.supplier_name,
+                      invoice_number: r.invoice_number,
+                      invoice_date: r.invoice_date,
+                      received_date: r.received_date,
+                      invoice_total: r.invoice_total,
+                      receipt_images: r.receipt_images,
+                    })),
+                  };
+
+                  const { data } = await base44.functions.invoke('exportMonthlyInvoicesSheet', payload);
+                  if (data?.sheet?.webViewLink) {
+                    alert((t('export_completed') || 'Export completed') + `\n${data.sheet.webViewLink}`);
+                    window.open(data.sheet.webViewLink, '_blank');
+                  } else {
+                    alert(t('export_completed') || 'Export completed');
+                  }
+                } catch (e) {
+                  alert((t('export_failed') || 'Export failed') + `: ${e?.message || e}`);
+                }
+              }}
+            >
+              <FileSpreadsheet className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+              {t('export_sheet') || 'Export Sheet'}
+            </Button>
+            
+            <Button
+               variant="outline"
+               disabled={uploading}
+               className="h-11 md:h-10 px-4 rounded-lg bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+               onClick={async () => {
+                 try {
+                   const { data } = await base44.functions.invoke('checkDriveAuth', {});
+                   setDriveAuthorized(!!data?.authorized);
+                   alert(data?.authorized ? (t('drive_connected') || 'Google Drive is connected') : (t('drive_not_connected') || 'Google Drive is not connected'));
+                 } catch (e) {
+                   setDriveAuthorized(false);
+                   alert(t('drive_not_connected') || 'Google Drive is not connected');
+                 }
+               }}
+            >
+              <HardDrive className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+              {t('check_drive') || 'Check Drive'}
+            </Button>
+            
+            {(me?.role !== 'admin' || me?.acting_as_store_email || me?.acting_as_user_email) && (
+              <Button 
+                variant="outline" 
+                disabled={uploading} 
+                onClick={() => setShowConnect(true)} 
+                className="h-11 md:h-10 px-4 rounded-lg bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
               >
-                {t('export_sheet') || 'Export Sheet'}
+                <LinkIcon className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+                {t('connect_drive') || 'Connect Drive'}
               </Button>
-              {(me?.role !== 'admin' || me?.acting_as_store_email || me?.acting_as_user_email) && (
-                <Button variant="outline" disabled={uploading} onClick={() => setShowConnect(true)} className="shrink-0">
-                  {t('connect_drive') || 'Connect Drive'}
-                </Button>
-              )}
+            )}
+          </div>
+        </div>
+
+        {/* Filters Box */}
+        <div className="flex flex-col gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm mb-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5 p-1 bg-gray-50/50 border border-gray-200 rounded-xl">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-white hover:shadow-sm transition-all" onClick={() => setMonth(moment(month + '-01').subtract(1, 'month').format('YYYY-MM'))}>
+                <ChevronLeft className="w-4 h-4 text-gray-600" />
+              </Button>
+              <Input 
+                type="month" 
+                value={month} 
+                onChange={(e) => setMonth(e.target.value)} 
+                className="h-9 w-32 md:w-36 rounded-lg bg-transparent border-transparent shadow-none font-medium text-center focus-visible:bg-white focus-visible:border-gray-300 focus-visible:shadow-sm transition-all" 
+              />
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-white hover:shadow-sm transition-all" onClick={() => setMonth(moment(month + '-01').add(1, 'month').format('YYYY-MM'))}>
+                <ChevronRight className="w-4 h-4 text-gray-600" />
+              </Button>
             </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+            
+            <Select value={sortMode} onValueChange={setSortMode}>
+              <SelectTrigger className="h-11 md:h-11 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[160px] focus:bg-white transition-colors">
+                <SelectValue placeholder={t('sort_by') || 'Sort'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="supplier_asc">{t('supplier_az') || 'Supplier A–Z'}</SelectItem>
+                <SelectItem value="supplier_desc">{t('supplier_za') || 'Supplier Z–A'}</SelectItem>
+                <SelectItem value="total_desc">{t('total_high_low') || 'Total High→Low'}</SelectItem>
+                <SelectItem value="total_asc">{t('total_low_high') || 'Total Low→High'}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                value={itemSearch}
+                onChange={(e) => setItemSearch(e.target.value)}
+                placeholder={language === 'he' ? 'חפש פריט לפי שם...' : 'Search item name...'}
+                className="h-11 pr-9 rounded-xl bg-gray-50/50 border-gray-200 focus-visible:bg-white transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
               <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'סה"כ הוצאות' : 'Total Expenses'}</span>
@@ -328,18 +346,18 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
           </div>
           <div className="overflow-x-auto w-full">
             <table className="w-full min-w-[700px] border-collapse">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className={`border p-2 text-xs font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('supplier') || 'Supplier'}</th>
-                  <th className="border p-2 text-xs font-semibold">{t('invoice_number') || 'Invoice #'}</th>
-                  <th className="border p-2 text-xs font-semibold">{t('invoice_date') || 'Date'}</th>
-                  <th className="border p-2 text-xs font-semibold">{t('invoice_total') || 'Total'}</th>
+              <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
+                <tr>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('supplier') || 'Supplier'}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('invoice_number') || 'Invoice #'}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('invoice_date') || 'Date'}</th>
+                  <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>{t('invoice_total') || 'Total'}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white divide-y divide-gray-50">
                 {grouped.length === 0 && (
                   <tr>
-                    <td className="border p-4 text-center text-gray-500" colSpan={4}>
+                    <td className="px-4 py-8 text-center text-gray-500" colSpan={4}>
                       {t('no_receipts_to_display') || 'No receipts to display'}
                     </td>
                   </tr>
@@ -347,22 +365,22 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
 
                 {grouped.map(group => (
                   <React.Fragment key={group.supplier_id}>
-                    <tr className="bg-emerald-50">
-                      <td className="border p-2 font-semibold">{group.supplier_name}</td>
-                      <td className="border p-2 text-sm text-gray-600" colSpan={2}>{t('total') || 'Total'}</td>
-                      <td className="border p-2 font-bold text-emerald-700">₪{group.total.toFixed(2)}</td>
+                    <tr className="bg-green-50/50 border-t border-green-100">
+                      <td className="px-4 py-3 font-semibold text-gray-900">{group.supplier_name}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500" colSpan={2}>{t('total') || 'Total'}</td>
+                      <td className="px-4 py-3 font-bold text-green-700">₪{group.total.toFixed(2)}</td>
                     </tr>
                     {group.receipts.map(r => (
                       <tr
                         key={r.id}
-                        className="hover:bg-gray-50 cursor-pointer"
+                        className="hover:bg-blue-50 cursor-pointer transition-colors"
                         onDoubleClick={() => setSelected(r)}
                         title={t('double_click_to_view') || 'Double click to view'}
                       >
-                        <td className="border p-2 text-sm">
-                          <div>{group.supplier_name}</div>
+                        <td className="px-4 py-3 text-sm text-gray-700 align-middle">
+                          <div className="font-medium">{group.supplier_name}</div>
                           {itemSearch && Array.isArray(r.verified_items) && (
-                            <div className="text-xs text-gray-500 mt-1 truncate max-w-[240px]">
+                            <div className="text-xs text-gray-400 mt-0.5 truncate max-w-[240px]">
                               {(r.verified_items || [])
                                 .map(it => it.item_name)
                                 .filter(Boolean)
@@ -372,19 +390,19 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                             </div>
                           )}
                         </td>
-                        <td className="border p-2 text-sm font-medium">{r.invoice_number || '-'}</td>
-                        <td className="border p-2 text-sm">{moment(r.invoice_date || r.received_date).format('DD/MM/YYYY')}</td>
-                        <td className="border p-2 text-sm">₪{Number(r.invoice_total || 0).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500 align-middle">{r.invoice_number || '-'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 align-middle">{moment(r.invoice_date || r.received_date).format('DD/MM/YYYY')}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-gray-900 align-middle">₪{Number(r.invoice_total || 0).toFixed(2)}</td>
                       </tr>
                     ))}
                     </React.Fragment>
                 ))}
 
                 {grouped.length > 0 && (
-                  <tr className="bg-purple-50">
-                    <td className="border p-2 font-bold">{t('grand_total') || 'Grand Total'}</td>
-                    <td className="border p-2" colSpan={2}></td>
-                    <td className="border p-2 font-bold text-purple-700">₪{grandTotal.toFixed(2)}</td>
+                  <tr className="bg-purple-50/50 border-t-2 border-purple-200">
+                    <td className="px-4 py-4 font-bold text-gray-900">{t('grand_total') || 'Grand Total'}</td>
+                    <td className="px-4 py-4" colSpan={2}></td>
+                    <td className="px-4 py-4 font-bold text-purple-700 text-lg">₪{grandTotal.toFixed(2)}</td>
                   </tr>
                 )}
               </tbody>
@@ -402,8 +420,8 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Connect Drive dialog */}
       <Dialog open={showConnect} onOpenChange={setShowConnect}>
