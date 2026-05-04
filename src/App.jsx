@@ -98,10 +98,13 @@ const AuthenticatedApp = () => {
     location.pathname.toLowerCase().includes('welcomeincognito')
   );
 
+  let hasUserCache = false;
+  try { hasUserCache = !!localStorage.getItem('b44_user_cache') && !sessionStorage.getItem('b44_logout_in_progress'); } catch {}
+
   // Show loading spinner while checking app public settings or auth (skip for public routes to prevent flicker)
-  if ((isLoadingPublicSettings || isLoadingAuth) && !isPublicRoute) {
+  if ((isLoadingPublicSettings || isLoadingAuth) && (!isPublicRoute || hasUserCache)) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
+      <div className="fixed inset-0 flex items-center justify-center bg-white z-[9999]">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
       </div>
     );

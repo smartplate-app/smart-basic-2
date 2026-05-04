@@ -24,7 +24,7 @@ const AppLayout = ({ children, currentPageName }) => {
   const [showDesktopSidebar, setShowDesktopSidebar] = useState(true);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(() => {
-    return !(
+    const isPublic = (
       currentPageName === 'OrderDetails' ||
       currentPageName === 'WorkerPortal' ||
       currentPageName === 'Register' ||
@@ -37,6 +37,9 @@ const AppLayout = ({ children, currentPageName }) => {
       currentPageName === 'LoginHelper' ||
       currentPageName === 'AuthKick'
     );
+    let hasCache = false;
+    try { hasCache = !!localStorage.getItem('b44_user_cache') && !sessionStorage.getItem('b44_logout_in_progress'); } catch {}
+    return !isPublic || hasCache;
   });
   const [showWorkerInvite, setShowWorkerInvite] = useState(false);
   const [error, setError] = useState(null);
@@ -358,8 +361,13 @@ const AppLayout = ({ children, currentPageName }) => {
                   setError(null);
                   setRetryCount(0);
                   
-                  // if user was successfully fetched, stop loading screen
-                  setAuthLoading(false);
+                  // if user was successfully fetched, stop loading screen (unless on Welcome page)
+                  const currentPathCheck = location.pathname;
+                  const isWelcomeCheck = currentPathCheck === '/' || currentPathCheck === '/pages' || currentPathCheck === '' || currentPathCheck === '/pages/' || currentPathCheck.toLowerCase().includes('welcomepublic') || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')));
+                  
+                  if (!isWelcomeCheck) {
+                    setAuthLoading(false);
+                  }
 
                   // Check if user is a store user (worker/manager) for someone else's store
                   // Always check StoreUser entity to verify they still have access
@@ -489,10 +497,7 @@ const AppLayout = ({ children, currentPageName }) => {
                     console.log('[Layout] Could not attach chain context:', e?.message || e);
                   }
 
-                  const currentPath = location.pathname;
-                  const isWelcomePage = currentPath === '/' || currentPath === '/pages' || currentPath === '' || currentPath === '/pages/' || currentPath.toLowerCase().includes('welcomepublic') || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')));
-                  
-                  if (isWelcomePage && currentUser && !isIncognito) {
+                  if (isWelcomeCheck && currentUser && !isIncognito) {
                     window.location.replace(createPageUrl('Orders'));
                     return;
                   }
