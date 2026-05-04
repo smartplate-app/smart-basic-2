@@ -1384,7 +1384,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               onChange={(e) => setFormData(prev => ({ ...prev, needs_review: e.target.checked }))}
                               className="rounded"
                             />
-                            <span>{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</span>
+                            <span>{language === 'he' ? 'לבדיקה ואישור' : 'Needs review'}</span>
                           </label>
                           {formData.is_refund && (
                             <label className="flex items-center gap-2 text-sm">

@@ -119,7 +119,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                       <option value="delivery_notes">{language === 'he' ? 'תעודות' : 'Deliveries'}</option>
                       <option value="refund_invoice">{language === 'he' ? 'זיכויים' : 'Refunds'}</option>
                       <option value="awaiting_credit">{language === 'he' ? 'ממתין' : 'Awaiting'}</option>
-                      <option value="needs_review">{language === 'he' ? 'בדיקה' : 'Review'}</option>
+                      <option value="needs_review">{language === 'he' ? 'לבדיקה ואישור' : 'Review'}</option>
                     </select>
                   )}
                 </div>
@@ -212,7 +212,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                               <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
                             )}
                             {r.needs_review && (
-                              <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
+                              <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'לבדיקה ואישור' : 'Review'}</Badge>
                             )}
                             {r.awaiting_credit && (
                               <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>

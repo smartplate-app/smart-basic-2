@@ -554,7 +554,7 @@ export default function SupplyReceiptsPage() {
                 { id: 'delivery_notes', label: language === 'he' ? 'תעודות משלוח' : 'Delivery Notes' },
                 { id: 'refund_invoice', label: language === 'he' ? 'זיכויים' : 'Refunds' },
                 { id: 'awaiting_credit', label: language === 'he' ? 'ממתין לזיכוי' : 'Awaiting Credit' },
-                { id: 'needs_review', label: language === 'he' ? 'לבדיקה' : 'Needs Review' }
+                { id: 'needs_review', label: language === 'he' ? 'לבדיקה ואישור' : 'Needs Review' }
               ].map(status => (
                 <button
                   key={status.id}
@@ -781,7 +781,7 @@ export default function SupplyReceiptsPage() {
                       <SelectItem value="delivery_notes">{language === 'he' ? 'תעודות משלוח' : 'Delivery notes'}</SelectItem>
                       <SelectItem value="refund_invoice">{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</SelectItem>
                       <SelectItem value="awaiting_credit">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</SelectItem>
-                      <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה נוספת' : 'Needs review'}</SelectItem>
+                      <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה ואישור' : 'Needs review'}</SelectItem>
                     </SelectContent>
                   </Select>
 
