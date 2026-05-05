@@ -29,11 +29,13 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 
 const AppLayoutRoute = () => {
   const location = useLocation();
-  const pathParts = location.pathname.split('/');
-  let currentPageName = pathParts[pathParts.length - 1];
-  if (!currentPageName || currentPageName === '') {
-    currentPageName = 'WelcomePublic';
+  let pathToUse = location.pathname;
+  if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
+    pathToUse = location.hash.substring(1);
   }
+  const pathParts = pathToUse.split('/').filter(Boolean);
+  let currentPageName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'WelcomePublic';
+  
   return (
     <LayoutWrapper currentPageName={currentPageName}>
       <AnimatePresence mode="wait">
