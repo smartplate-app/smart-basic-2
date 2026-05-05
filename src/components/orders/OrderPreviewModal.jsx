@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { X, Smartphone, Monitor, Copy, Check, Download, Share, MessageCircle, Loader } from 'lucide-react';
+import { X, Smartphone, Monitor, Copy, Check, Download, Share, MessageCircle, Loader, Mail } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
 
-export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
+export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail }) {
   const { t, language } = useLanguage();
   const safeT = (key, he, en) => {
     const v = t(key);
@@ -584,18 +584,26 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
 
         <div className="flex flex-wrap sm:flex-nowrap gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0">
           <Button
-            onClick={onClose}
+            onClick={async () => {
+              if (onSendEmail) {
+                setSending(true);
+                try { await onSendEmail(); } catch(e) {}
+                setSending(false);
+              }
+            }}
             variant="outline"
-            className="flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+            disabled={downloading || sending}
           >
-            {safeT('close','סגור','Close')}
+            {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+            {safeT('send_email', 'אימייל', 'Email')}
           </Button>
 
           <Button
             onClick={handleDownloadJPG}
             variant="outline"
             className="flex-1 sm:flex-none gap-2"
-            disabled={downloading}
+            disabled={downloading || sending}
           >
             <Download className="w-4 h-4" /> {safeT('download_image','הורד תמונה','Download JPG')}
           </Button>
@@ -613,7 +621,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend }) {
             data-testid="order-preview-send"
           >
             {sending ? <Loader className="w-5 h-5 mr-2 animate-spin" /> : <MessageCircle className="w-5 h-5 mr-2" />}
-            {safeT('send_message','הודעה / וואטסאפ / אימייל','Message / WhatsApp / Email')}
+            {safeT('send_message_whatsapp','הודעה / וואטסאפ','Messages / WhatsApp')}
           </Button>
         </div>
       </motion.div>

@@ -1927,6 +1927,17 @@ export default function OrdersPage() {
           isOpen={!!previewOrder}
           onClose={() => setPreviewOrder(null)}
           onSend={() => handleSendNow(previewOrder)}
+          onSendEmail={async () => {
+            const selectedSupplier = suppliers.find(s => s.name === previewOrder.supplier_name || s.id === previewOrder.supplier_id);
+            if (!selectedSupplier || !selectedSupplier.email || selectedSupplier.email.trim() === '') {
+              alert(language === 'he' ? 'לספק זה לא מוגדרת כתובת אימייל במערכת.' : 'This supplier does not have an email address configured.');
+              return;
+            }
+            await doEmailSend(previewOrder);
+            setTimeout(() => {
+              alert(language === 'he' ? 'ההזמנה נשלחה בהצלחה לאימייל של הספק!' : 'Order sent successfully to supplier email!');
+            }, 500);
+          }}
         />
       )}
     </div>
