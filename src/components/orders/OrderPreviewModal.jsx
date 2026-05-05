@@ -599,14 +599,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             {safeT('send_email', 'אימייל', 'Email')}
           </Button>
 
-          <Button
-            onClick={handleDownloadJPG}
-            variant="outline"
-            className="flex-1 sm:flex-none gap-2"
-            disabled={downloading || sending}
-          >
-            <Download className="w-4 h-4" /> {safeT('download_image','הורד תמונה','Download JPG')}
-          </Button>
+
 
           <Button
             onClick={async () => { 
