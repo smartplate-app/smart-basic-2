@@ -614,7 +614,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             data-testid="order-preview-send"
           >
             {sending ? <Loader className="w-5 h-5 mr-2 animate-spin" /> : <MessageCircle className="w-5 h-5 mr-2" />}
-            {safeT('send_message_whatsapp','הודעה / וואטסאפ','Messages / WhatsApp')}
+            {safeT('send_message_whatsapp','הודעה / וואטסאפ','MESSEGES / WHATSAPP')}
           </Button>
         </div>
       </motion.div>
