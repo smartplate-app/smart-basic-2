@@ -201,7 +201,16 @@ ${allRowsData}
         
         let found = futureItemMap.get(itemNameLower);
         if (!found) {
-          found = Array.from(futureItemMap.values()).find(i => i.name?.toLowerCase().includes(itemNameLower) || itemNameLower.includes(i.name?.toLowerCase()));
+          found = Array.from(futureItemMap.values()).find(i => {
+             if (!i.name) return false;
+             const n1 = itemNameLower.replace(/[^\p{L}\p{N}]/gu, '');
+             const n2 = i.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+             if (n1 === n2) return true;
+             if (n1.length > 3 && n2.length > 3) {
+               return n1.includes(n2) || n2.includes(n1);
+             }
+             return false;
+          });
         }
 
         // Check if user mapped this missing item to an existing one
@@ -344,6 +353,59 @@ ${allRowsData}
     const existingRecipes = await fetchWithFallback('Recipe');
     const recipeMap = new Map(existingRecipes.map(r => [r.name.trim().toLowerCase(), r]));
 
+    // Calculate costs iteratively for prep recipes before inserting
+    let costChanged = true;
+    let passes = 0;
+    while(costChanged && passes < 5) {
+       costChanged = false;
+       passes++;
+       for (const r of allRecipes) {
+           if (r.type === 'prep_recipe') {
+               let totalCost = 0;
+               for (const ing of (r.ingredients || [])) {
+                   const itemNameLower = (ing.item_name || '').trim().toLowerCase();
+                   let item = itemMap.get(itemNameLower);
+                   if (!item) {
+                       item = Array.from(itemMap.values()).find(i => {
+                          if (!i.name) return false;
+                          const n1 = itemNameLower.replace(/[^\p{L}\p{N}]/gu, '');
+                          const n2 = i.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+                          if (n1 === n2) return true;
+                          if (n1.length > 3 && n2.length > 3) return n1.includes(n2) || n2.includes(n1);
+                          return false;
+                       });
+                   }
+                   if (!item && mappedItems && mappedItems[itemNameLower]) {
+                      const mappedId = mappedItems[itemNameLower];
+                      item = Array.from(itemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
+                   }
+                   totalCost += (item ? Number(item.price_after_discount || item.price || 0) : 0) * (Number(ing.quantity) || 0);
+               }
+               const unitPrice = (Number(r.yield_quantity) || 1) > 0 ? (totalCost / Number(r.yield_quantity)) : totalCost;
+               
+               const pName = r.name.trim().toLowerCase();
+               let pItem = itemMap.get(pName);
+               if (pItem && Math.abs((pItem.price || 0) - unitPrice) > 0.001) {
+                   pItem.price = unitPrice;
+                   // Note: we update it in memory so it can be used in subsequent recipes calculation
+                   costChanged = true;
+               }
+           }
+       }
+    }
+
+    // Update the prep recipes items in the DB with the newly calculated prices
+    for (const r of allRecipes) {
+       if (r.type === 'prep_recipe') {
+           const pName = r.name.trim().toLowerCase();
+           const pItem = itemMap.get(pName);
+           if (pItem && pItem.id && pItem.price > 0) {
+               // Fire and forget updating the prep item price in DB
+               base44.entities.Item.update(pItem.id, { price: pItem.price, price_after_discount: pItem.price }).catch(() => {});
+           }
+       }
+    }
+
     // Process and save recipes
     const validRecipes = allRecipes.filter(r => r.name).map(r => {
       let totalCost = 0;
@@ -352,7 +414,16 @@ ${allRowsData}
         // Try to find exact match, or partial match
         let item = itemMap.get(itemNameLower);
         if (!item) {
-          item = Array.from(itemMap.values()).find(i => i.name.toLowerCase().includes(itemNameLower) || itemNameLower.includes(i.name.toLowerCase()));
+          item = Array.from(itemMap.values()).find(i => {
+             if (!i.name) return false;
+             const n1 = itemNameLower.replace(/[^\p{L}\p{N}]/gu, '');
+             const n2 = i.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+             if (n1 === n2) return true;
+             if (n1.length > 3 && n2.length > 3) {
+               return n1.includes(n2) || n2.includes(n1);
+             }
+             return false;
+          });
         }
         
         // If still not found, check if it was mapped by the user
