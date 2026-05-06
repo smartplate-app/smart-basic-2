@@ -23,7 +23,7 @@ export default function PriceChangesPage() {
         try {
             const user = await base44.auth.me();
             if (!user) return;
-            const data = await base44.entities.PriceChangeLog.list("-created_date", 200);
+            const data = await base44.entities.PriceChangeLog.list("-created_date", 1000);
             setLogs(data || []);
         } catch (e) {
             console.error(e);
@@ -48,7 +48,7 @@ export default function PriceChangesPage() {
         const targetDate = log.effective_date || log.created_date;
         return {
             name: log.item_name,
-            date: new Date(targetDate).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', { month: 'short', day: 'numeric' }),
+            date: new Date(targetDate).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
             pctChange: Number(pct.toFixed(2)),
             isUp: diff > 0,
             oldPrice: log.old_price,
@@ -68,13 +68,13 @@ export default function PriceChangesPage() {
         const history = [];
         if (sorted.length > 0) {
             history.push({
-                date: new Date(sorted[0].effective_date || sorted[0].created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US'),
+                date: new Date(sorted[0].effective_date || sorted[0].created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
                 price: sorted[0].old_price,
                 label: language === 'he' ? 'מחיר התחלתי' : 'Initial'
             });
             sorted.forEach((l, idx) => {
                 history.push({
-                    date: new Date(l.effective_date || l.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US'),
+                    date: new Date(l.effective_date || l.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
                     price: l.new_price,
                     label: `${language === 'he' ? 'עדכון' : 'Update'} ${idx + 1}`
                 });
