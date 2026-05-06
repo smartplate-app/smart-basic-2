@@ -1,0 +1,42 @@
+{
+  "name": "PriceChangeLog",
+  "type": "object",
+  "properties": {
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "item",
+        "recipe"
+      ],
+      "description": "Whether it's a raw item or a POS recipe"
+    },
+    "item_id": {
+      "type": "string"
+    },
+    "item_name": {
+      "type": "string"
+    },
+    "change_type": {
+      "type": "string",
+      "enum": [
+        "cost",
+        "sale_price"
+      ],
+      "description": "What changed: the cost or the selling price"
+    },
+    "old_price": {
+      "type": "number"
+    },
+    "new_price": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "item_type",
+    "item_id",
+    "item_name",
+    "change_type",
+    "old_price",
+    "new_price"
+  ]
+}
