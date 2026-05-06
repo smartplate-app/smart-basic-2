@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Search, Loader, TrendingUp, TrendingDown, RefreshCw, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function PriceChangesPage() {
     const { t, language } = useLanguage();
@@ -15,6 +16,7 @@ export default function PriceChangesPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
+    const [selectedItem, setSelectedItem] = useState(null);
 
     const loadLogs = async () => {
         setLoading(true);
@@ -52,6 +54,33 @@ export default function PriceChangesPage() {
             newPrice: log.new_price
         };
     });
+
+    const handleItemClick = (itemName) => {
+        setSelectedItem(itemName);
+    };
+
+    const getSelectedItemHistory = () => {
+        if (!selectedItem) return [];
+        const itemLogs = logs.filter(l => l.item_name === selectedItem);
+        const sorted = [...itemLogs].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+        
+        const history = [];
+        if (sorted.length > 0) {
+            history.push({
+                date: new Date(sorted[0].created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US'),
+                price: sorted[0].old_price,
+                label: language === 'he' ? 'מחיר התחלתי' : 'Initial'
+            });
+            sorted.forEach((l, idx) => {
+                history.push({
+                    date: new Date(l.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US'),
+                    price: l.new_price,
+                    label: `${language === 'he' ? 'עדכון' : 'Update'} ${idx + 1}`
+                });
+            });
+        }
+        return history;
+    };
 
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
@@ -149,7 +178,14 @@ export default function PriceChangesPage() {
                                     />
                                     <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
                                     <ReferenceLine y={0} stroke="#9ca3af" />
-                                    <Bar dataKey="pctChange" radius={[4, 4, 0, 0]}>
+                                    <Bar 
+                                        dataKey="pctChange" 
+                                        radius={[4, 4, 0, 0]}
+                                        onClick={(data) => {
+                                            if (data && data.name) handleItemClick(data.name);
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    >
                                         {chartData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.isUp ? '#ef4444' : '#22c55e'} />
                                         ))}
@@ -194,7 +230,11 @@ export default function PriceChangesPage() {
                                 const pct = log.old_price > 0 ? (diff / log.old_price) * 100 : 0;
                                 const isUp = diff > 0;
                                 return (
-                                    <tr key={log.id} className="bg-white border-b hover:bg-gray-50 transition-colors">
+                                    <tr 
+                                        key={log.id} 
+                                        className="bg-white border-b hover:bg-gray-100 transition-colors cursor-pointer"
+                                        onClick={() => handleItemClick(log.item_name)}
+                                    >
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             {new Date(log.created_date).toLocaleString(language === 'he' ? 'he-IL' : 'en-US')}
                                         </td>
@@ -224,6 +264,59 @@ export default function PriceChangesPage() {
                     </table>
                 </div>
             </Card>
+            {/* Single Item History Modal */}
+            <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>{selectedItem} - {language === 'he' ? 'היסטוריית מחירים' : 'Price History'}</DialogTitle>
+                    </DialogHeader>
+                    <div className="h-[300px] w-full mt-4">
+                        {selectedItem && (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={getSelectedItemHistory()} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                    <XAxis 
+                                        dataKey="date" 
+                                        tick={{ fontSize: 12, fill: '#6b7280' }} 
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <YAxis 
+                                        tick={{ fontSize: 12, fill: '#6b7280' }} 
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(val) => `₪${val}`}
+                                        domain={['auto', 'auto']}
+                                    />
+                                    <RechartsTooltip 
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                const data = payload[0].payload;
+                                                return (
+                                                    <div className="bg-white p-3 border border-gray-200 shadow-lg rounded-lg">
+                                                        <p className="font-bold text-gray-900">{data.date}</p>
+                                                        <p className="text-sm text-gray-500">{data.label}</p>
+                                                        <p className="font-bold text-blue-600 mt-1">₪{Number(data.price).toFixed(2)}</p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Line 
+                                        type="monotone" 
+                                        dataKey="price" 
+                                        stroke="#3b82f6" 
+                                        strokeWidth={3}
+                                        dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
+                                        activeDot={{ r: 6 }}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
