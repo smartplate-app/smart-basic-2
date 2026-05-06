@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { base44 } from "@/api/base44Client";
-import { ChevronLeft, ChevronRight, ChevronDown, Search, CloudUpload, FileSpreadsheet, HardDrive, Link as LinkIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Search, CloudUpload, FileSpreadsheet, HardDrive, Link as LinkIcon, Send } from "lucide-react";
 
 function normalizeText(str) {
   if (!str) return '';
@@ -248,6 +248,39 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
             >
               <FileSpreadsheet className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
               {language === 'he' ? 'ייצא לאקסל' : (t('export_sheet') || 'Export Sheet')}
+            </Button>
+            
+            <Button
+               variant="outline"
+               disabled={uploading}
+               className="h-11 md:h-10 px-4 rounded-lg bg-white border-gray-200 text-blue-700 hover:bg-blue-50 shadow-sm border-blue-200"
+               onClick={async () => {
+                 const unsent = monthReceipts.filter(r => Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && !r.dokka_synced);
+                 if (unsent.length === 0) {
+                   alert(language === 'he' ? 'אין חשבוניות חדשות עם קבצים מצורפים לשלוח ל-Dokka החודש' : 'No new invoices with attachments to send to Dokka this month');
+                   return;
+                 }
+                 if (!window.confirm(language === 'he' ? `לשלוח ${unsent.length} חשבוניות חדשות ל-Dokka?` : `Send ${unsent.length} new invoices to Dokka?`)) return;
+                 
+                 setUploading(true);
+                 let successCount = 0;
+                 let errorCount = 0;
+                 
+                 for (const r of unsent) {
+                    try {
+                      const { data } = await base44.functions.invoke('sendInvoiceToDokka', { receiptId: r.id });
+                      if (data?.success) successCount++;
+                      else errorCount++;
+                    } catch(e) {
+                      errorCount++;
+                    }
+                 }
+                 setUploading(false);
+                 alert(language === 'he' ? `נשלחו ${successCount} חשבוניות בהצלחה.${errorCount > 0 ? ` נכשלו ${errorCount}.` : ''}` : `Sent ${successCount} successfully.${errorCount > 0 ? ` Failed ${errorCount}.` : ''}`);
+               }}
+            >
+              <Send className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-blue-600" />
+              {language === 'he' ? 'שלח ל-Dokka' : 'Send to Dokka'}
             </Button>
             
             <Button
