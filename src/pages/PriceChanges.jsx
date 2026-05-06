@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../components/LanguageProvider";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Loader, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
+import { Search, Loader, TrendingUp, TrendingDown, RefreshCw, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
 
 export default function PriceChangesPage() {
     const { t, language } = useLanguage();
@@ -12,6 +14,7 @@ export default function PriceChangesPage() {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
+    const [typeFilter, setTypeFilter] = useState("all");
 
     const loadLogs = async () => {
         setLoading(true);
@@ -31,9 +34,44 @@ export default function PriceChangesPage() {
         loadLogs();
     }, []);
 
-    const filteredLogs = logs.filter(log => 
-        (log.item_name || "").toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredLogs = logs.filter(log => {
+        const matchesSearch = (log.item_name || "").toLowerCase().includes(search.toLowerCase());
+        const matchesType = typeFilter === "all" || log.item_type === typeFilter;
+        return matchesSearch && matchesType;
+    });
+
+    const chartData = [...filteredLogs].slice(0, 30).reverse().map(log => {
+        const diff = log.new_price - log.old_price;
+        const pct = log.old_price > 0 ? (diff / log.old_price) * 100 : 0;
+        return {
+            name: log.item_name,
+            date: new Date(log.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', { month: 'short', day: 'numeric' }),
+            pctChange: Number(pct.toFixed(2)),
+            isUp: diff > 0,
+            oldPrice: log.old_price,
+            newPrice: log.new_price
+        };
+    });
+
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+                <div className="bg-white p-3 border border-gray-200 shadow-lg rounded-lg">
+                    <p className="font-bold text-gray-900">{data.name}</p>
+                    <p className="text-sm text-gray-500">{data.date}</p>
+                    <div className="mt-2 space-y-1 text-sm">
+                        <p>{language === 'he' ? 'מחיר ישן:' : 'Old Price:'} ₪{Number(data.oldPrice).toFixed(2)}</p>
+                        <p>{language === 'he' ? 'מחיר חדש:' : 'New Price:'} ₪{Number(data.newPrice).toFixed(2)}</p>
+                        <p className={`font-bold ${data.isUp ? 'text-red-600' : 'text-green-600'}`}>
+                            {language === 'he' ? 'שינוי:' : 'Change:'} {data.pctChange > 0 ? '+' : ''}{data.pctChange}%
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -46,8 +84,8 @@ export default function PriceChangesPage() {
                         {language === 'he' ? 'מעקב אחר שינויי עלויות ומחירי מכירה' : 'Track cost and sale price changes'}
                     </p>
                 </div>
-                <div className="flex items-center gap-2 w-full md:w-auto">
-                    <div className="relative w-full md:w-64">
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <div className="relative w-full md:w-48">
                         <Search className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} w-4 h-4 text-gray-400`} />
                         <Input 
                             value={search}
@@ -56,11 +94,72 @@ export default function PriceChangesPage() {
                             className={`${isRTL ? 'pr-9' : 'pl-9'} h-10`}
                         />
                     </div>
+                    <div className="w-full md:w-40">
+                        <Select value={typeFilter} onValueChange={setTypeFilter}>
+                            <SelectTrigger className="h-10">
+                                <Filter className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+                                <SelectValue placeholder={language === 'he' ? 'סוג פריט' : 'Item Type'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{language === 'he' ? 'הכל' : 'All'}</SelectItem>
+                                <SelectItem value="item">{language === 'he' ? 'חומרי גלם (עלות)' : 'Raw Items (Cost)'}</SelectItem>
+                                <SelectItem value="recipe">{language === 'he' ? 'מנות קופה (מכירה)' : 'POS Items (Sale)'}</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <Button onClick={loadLogs} variant="outline" size="icon" className="h-10 w-10 shrink-0">
                         <RefreshCw className="w-4 h-4" />
                     </Button>
                 </div>
             </div>
+
+            {/* Chart Section */}
+            <Card className="mb-6">
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">
+                        {language === 'he' ? 'מגמות שינוי מחירים (%)' : 'Price Change Trends (%)'}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="h-[250px] w-full">
+                        {loading ? (
+                            <div className="h-full flex items-center justify-center">
+                                <Loader className="w-6 h-6 animate-spin text-gray-400" />
+                            </div>
+                        ) : chartData.length === 0 ? (
+                            <div className="h-full flex items-center justify-center text-gray-500">
+                                {language === 'he' ? 'אין נתונים להצגה בגרף' : 'No data for chart'}
+                            </div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                                    <XAxis 
+                                        dataKey="name" 
+                                        tick={{ fontSize: 12, fill: '#6b7280' }} 
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(val) => val.length > 10 ? val.substring(0, 10) + '...' : val}
+                                    />
+                                    <YAxis 
+                                        tick={{ fontSize: 12, fill: '#6b7280' }} 
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(val) => `${val}%`}
+                                    />
+                                    <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
+                                    <ReferenceLine y={0} stroke="#9ca3af" />
+                                    <Bar dataKey="pctChange" radius={[4, 4, 0, 0]}>
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.isUp ? '#ef4444' : '#22c55e'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
 
             <Card>
                 <div className="overflow-x-auto">
