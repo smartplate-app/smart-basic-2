@@ -29,6 +29,11 @@
     },
     "new_price": {
       "type": "number"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the price change actually occurred"
     }
   },
   "required": [

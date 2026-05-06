@@ -45,9 +45,10 @@ export default function PriceChangesPage() {
     const chartData = [...filteredLogs].slice(0, 30).reverse().map(log => {
         const diff = log.new_price - log.old_price;
         const pct = log.old_price > 0 ? (diff / log.old_price) * 100 : 0;
+        const targetDate = log.effective_date || log.created_date;
         return {
             name: log.item_name,
-            date: new Date(log.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', { month: 'short', day: 'numeric' }),
+            date: new Date(targetDate).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', { month: 'short', day: 'numeric' }),
             pctChange: Number(pct.toFixed(2)),
             isUp: diff > 0,
             oldPrice: log.old_price,
@@ -62,18 +63,18 @@ export default function PriceChangesPage() {
     const getSelectedItemHistory = () => {
         if (!selectedItem) return [];
         const itemLogs = logs.filter(l => l.item_name === selectedItem);
-        const sorted = [...itemLogs].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+        const sorted = [...itemLogs].sort((a, b) => new Date(a.effective_date || a.created_date) - new Date(b.effective_date || b.created_date));
         
         const history = [];
         if (sorted.length > 0) {
             history.push({
-                date: new Date(sorted[0].created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US'),
+                date: new Date(sorted[0].effective_date || sorted[0].created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US'),
                 price: sorted[0].old_price,
                 label: language === 'he' ? 'מחיר התחלתי' : 'Initial'
             });
             sorted.forEach((l, idx) => {
                 history.push({
-                    date: new Date(l.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US'),
+                    date: new Date(l.effective_date || l.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US'),
                     price: l.new_price,
                     label: `${language === 'he' ? 'עדכון' : 'Update'} ${idx + 1}`
                 });
@@ -236,7 +237,7 @@ export default function PriceChangesPage() {
                                         onClick={() => handleItemClick(log.item_name)}
                                     >
                                         <td className="px-4 py-3 whitespace-nowrap">
-                                            {new Date(log.created_date).toLocaleString(language === 'he' ? 'he-IL' : 'en-US')}
+                                            {new Date(log.effective_date || log.created_date).toLocaleString(language === 'he' ? 'he-IL' : 'en-US')}
                                         </td>
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             {log.item_type === 'recipe' 
