@@ -2,7 +2,9 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../LanguageProvider";
-import { Download, Trash2, Edit, MoreHorizontal, FileText, Image as ImageIcon, Search, Check } from "lucide-react";
+import { Download, Trash2, Edit, MoreHorizontal, FileText, Image as ImageIcon, Search, Check, Send } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { useState } from "react";
 import PdfThumbnail from "./PdfThumbnail";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -39,6 +41,31 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
   const safeT = (key, he, en) => {
     const s = t(key);
     return (!s || s === key) ? (language === 'he' ? he : (en || key)) : s;
+  };
+
+  const [sendingToDokka, setSendingToDokka] = useState(null);
+
+  const handleSendToDokka = async (e, receipt) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!receipt.receipt_images || receipt.receipt_images.length === 0) {
+        alert(language === 'he' ? 'אין קובץ מצורף לשלוח' : 'No file attached to send');
+        return;
+    }
+    setSendingToDokka(receipt.id);
+    try {
+        const { data } = await base44.functions.invoke('sendInvoiceToDokka', { receiptId: receipt.id });
+        if (data && data.success) {
+            alert(language === 'he' ? 'נשלח בהצלחה ל-DOKKA' : 'Sent to DOKKA successfully');
+            if (onQuickUpdate) onQuickUpdate(receipt.id, { dokka_synced: true });
+        } else {
+            alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + (data?.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + err.message);
+    } finally {
+        setSendingToDokka(null);
+    }
   };
 
   return (
@@ -398,10 +425,18 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                         {safeT('edit', 'עריכה', 'Edit')}
                       </DropdownMenuItem>
                       {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
-                        <DropdownMenuItem onClick={() => window.open(r.receipt_images[0], '_blank')}>
-                          <Download className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-                          {safeT('download', 'הורד', 'Download')}
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem onClick={() => window.open(r.receipt_images[0], '_blank')}>
+                            <Download className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+                            {safeT('download', 'הורד', 'Download')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleSendToDokka(e, r)} disabled={sendingToDokka === r.id}>
+                            <Send className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-blue-500" />
+                            {sendingToDokka === r.id 
+                                ? (language === 'he' ? 'שולח...' : 'Sending...') 
+                                : (language === 'he' ? 'שלח ל-Dokka' : 'Send to Dokka')}
+                          </DropdownMenuItem>
+                        </>
                       )}
                       {(r.is_refund || r.needs_review) && <DropdownMenuSeparator />}
                       {r.is_refund && (

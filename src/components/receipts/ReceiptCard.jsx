@@ -3,7 +3,9 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Calendar, Package, CheckCircle, AlertCircle, Clock, Edit } from "lucide-react";
+import { Building2, Calendar, Package, CheckCircle, AlertCircle, Clock, Edit, Send } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { useState } from "react";
 import { useLanguage } from "../LanguageProvider";
 import PdfThumbnail from "./PdfThumbnail";
 
@@ -34,6 +36,31 @@ export default function ReceiptCard({ receipt, onEdit }) {
 
   const status = statusConfig[receipt.status] || statusConfig.pending;
   const StatusIcon = status.icon;
+
+  const [sendingToDokka, setSendingToDokka] = useState(false);
+
+  const handleSendToDokka = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!receipt.receipt_images || receipt.receipt_images.length === 0) {
+        alert(t('no_file_attached') || 'No file attached to send');
+        return;
+    }
+    setSendingToDokka(true);
+    try {
+        const { data } = await base44.functions.invoke('sendInvoiceToDokka', { receiptId: receipt.id });
+        if (data && data.success) {
+            alert('Sent to DOKKA successfully');
+            // If there's an onEdit passed, we could optionally refresh it, but alerting is enough
+        } else {
+            alert('Error: ' + (data?.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Error: ' + err.message);
+    } finally {
+        setSendingToDokka(false);
+    }
+  };
 
   return (
     <motion.div
@@ -66,16 +93,31 @@ export default function ReceiptCard({ receipt, onEdit }) {
                 </div>
               </div>
             </div>
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onEdit(receipt)}
-                className="text-gray-400 hover:text-gray-900 rounded-full bg-gray-50 hover:bg-gray-100"
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {receipt.receipt_images && receipt.receipt_images.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendToDokka}
+                  disabled={sendingToDokka}
+                  className="text-blue-600 hover:bg-blue-50"
+                  title="Send to Dokka"
+                >
+                  <Send className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                  {sendingToDokka ? '...' : 'Dokka'}
+                </Button>
+              )}
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(receipt)}
+                  className="text-gray-400 hover:text-gray-900 rounded-full bg-gray-50 hover:bg-gray-100"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
