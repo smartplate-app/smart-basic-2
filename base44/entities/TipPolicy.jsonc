@@ -1,0 +1,43 @@
+{
+  "name": "TipPolicy",
+  "type": "object",
+  "properties": {
+    "policy_name": {
+      "type": "string",
+      "description": "Name of the tip distribution policy"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this policy becomes effective"
+    },
+    "percentage_allocations": {
+      "type": "array",
+      "description": "Percent-of-gross allocations to specific job positions; each bucket is later distributed to workers in that position proportionally by hours",
+      "items": {
+        "type": "object",
+        "properties": {
+          "job_position_id": {
+            "type": "string",
+            "description": "Target JobPosition ID"
+          },
+          "job_position_name": {
+            "type": "string",
+            "description": "Target JobPosition name (for reference)"
+          },
+          "percentage": {
+            "type": "number",
+            "description": "Percentage from gross tips (0-100)"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "policy_name"
+  ]
+}

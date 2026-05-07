@@ -1,0 +1,70 @@
+{
+  "name": "ScheduleTemplate",
+  "type": "object",
+  "properties": {
+    "template_name": {
+      "type": "string",
+      "description": "Name of the template"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of this template"
+    },
+    "shifts": {
+      "type": "array",
+      "description": "All shifts in the template",
+      "items": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "enum": [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday",
+              "saturday",
+              "sunday"
+            ]
+          },
+          "job_position_id": {
+            "type": "string"
+          },
+          "job_position": {
+            "type": "string"
+          },
+          "worker_id": {
+            "type": "string"
+          },
+          "worker_name": {
+            "type": "string"
+          },
+          "start_time": {
+            "type": "string"
+          },
+          "end_time": {
+            "type": "string"
+          },
+          "hours_worked": {
+            "type": "number"
+          },
+          "payment_for_shift": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is the default template to load for new weeks"
+    }
+  },
+  "required": [
+    "template_name"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Warehouse",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Warehouse or storage location name"
+    },
+    "location": {
+      "type": "string",
+      "description": "Physical location or address"
+    },
+    "description": {
+      "type": "string",
+      "description": "Additional details about the warehouse"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this warehouse is currently active"
+    },
+    "catalog_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of item IDs that belong to this warehouse catalog"
+    },
+    "daily_count_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable daily inventory counting reminders for this warehouse"
+    },
+    "daily_count_time": {
+      "type": "string",
+      "default": "16:00",
+      "description": "Local reminder time in HH:mm (Asia/Jerusalem)"
+    },
+    "daily_count_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Item IDs that are always included in the daily count for this warehouse"
+    },
+    "last_daily_count_reminder_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last date (YYYY-MM-DD) a reminder was sent to avoid duplicates"
+    },
+    "waste_preset_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Preset Item IDs always shown when reporting waste for this warehouse"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
