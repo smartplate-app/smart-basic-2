@@ -308,8 +308,8 @@ const AppLayout = ({ children, currentPageName }) => {
                 const authed = await base44.auth.isAuthenticated();
                 const atRoot = location.pathname === '/' || location.pathname === '' || location.pathname === '/pages' || location.pathname === '/pages/';
                 if (authed && oauthBack) {
-                  try { window.history.replaceState({}, '', createPageUrl('Orders')); } catch {}
-                  window.location.replace(createPageUrl('Orders'));
+                  try { window.history.replaceState({}, '', createPageUrl('Recipes')); } catch {}
+                  window.location.replace(createPageUrl('Recipes'));
                 }
               } catch {}
             })();
@@ -499,7 +499,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   }
 
                   if (isWelcomeCheck && currentUser && !isIncognito) {
-                    window.location.replace(createPageUrl('Orders'));
+                    window.location.replace(createPageUrl('Recipes'));
                     return;
                   }
       
