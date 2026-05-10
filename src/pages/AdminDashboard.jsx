@@ -636,6 +636,13 @@ export default function AdminDashboard() {
                     {language === 'he' ? 'בדיקת התחברות לטאביט' : 'Tabit Tester'}
                   </Button>
                   <Button
+                    onClick={() => switchToUser({ email: "demo@foodcostapp.com", full_name: "Demo Account", business_name: "Demo Restaurant" })}
+                    className="flex items-center gap-2 bg-[#d4a373] hover:bg-[#b88c60] text-white"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {language === 'he' ? 'הצג חשבון דמו ללקוחות' : 'View Demo Account'}
+                  </Button>
+                  <Button
                     onClick={async (e) => {
                       const btn = e.currentTarget;
                       const originalText = btn.innerHTML;
