@@ -88,8 +88,43 @@ export default function RecipesPage() {
         } catch(e){}
       }
 
-      setRecipes(data || []);
-      setCache('recipes_v1', { recipes: data || [] });
+      // Ensure we only show recipes belonging to the TARGET context (controlled user/store)
+      const allowedEmails = new Set([targetEmail]);
+      if (currentUser.email && targetEmail !== currentUser.email && !currentUser.acting_as_user_email && !currentUser.acting_as_store_email) {
+        // Normal store worker
+        allowedEmails.add(currentUser.email);
+      }
+      try {
+        let effChainId = null;
+        try {
+          const stores2 = await base44.entities.ChainStore.filter({ user_email: targetEmail });
+          if (stores2?.length) effChainId = stores2[0].chain_id;
+        } catch {}
+        if (!effChainId && targetEmail === (currentUser.email || '')) {
+          effChainId = currentUser.chain_id || null;
+        }
+        if (effChainId) {
+          try {
+            const chainRec2 = await base44.entities.Chain.filter({ id: effChainId });
+            let headEmail2 = chainRec2?.[0]?.head_store_user_email || null;
+            if (!headEmail2) {
+              const storesInChain2 = await base44.entities.ChainStore.filter({ chain_id: effChainId });
+              const headStore2 = storesInChain2?.find(s => s.is_head_store);
+              headEmail2 = headStore2?.user_email || null;
+            }
+            if (headEmail2) allowedEmails.add(headEmail2);
+          } catch {}
+        }
+      } catch {}
+
+      const allowedEmailsLower = new Set(Array.from(allowedEmails).map(e => (e || '').toLowerCase()));
+      const filteredData = (data || []).filter((r) =>
+        allowedEmailsLower.has((r.created_by || '').toLowerCase()) || 
+        allowedEmailsLower.has((r.data?.created_by || '').toLowerCase())
+      );
+
+      setRecipes(filteredData);
+      setCache('recipes_v1', { recipes: filteredData });
     } catch (e) {
       console.error(e);
     }

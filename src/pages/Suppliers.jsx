@@ -221,11 +221,16 @@ export default function SuppliersPage() {
                     }
                   } catch {}
 
+                  const allowedEmailsLower = new Set(Array.from(allowedEmails).map(e => (e || '').toLowerCase()));
                   suppliersData = suppliersData.filter((s) =>
-                    allowedEmails.has(s.created_by) || allowedEmails.has(s.data?.created_by) || (s.store_owner_email && allowedEmails.has(s.store_owner_email))
+                    allowedEmailsLower.has((s.created_by || '').toLowerCase()) || 
+                    allowedEmailsLower.has((s.data?.created_by || '').toLowerCase()) || 
+                    (s.store_owner_email && allowedEmailsLower.has(s.store_owner_email.toLowerCase()))
                   );
                   itemsData = itemsData.filter((it) =>
-                    allowedEmails.has(it.created_by) || allowedEmails.has(it.data?.created_by) || (it.store_owner_email && allowedEmails.has(it.store_owner_email))
+                    allowedEmailsLower.has((it.created_by || '').toLowerCase()) || 
+                    allowedEmailsLower.has((it.data?.created_by || '').toLowerCase()) || 
+                    (it.store_owner_email && allowedEmailsLower.has(it.store_owner_email.toLowerCase()))
                   );
 
                   setSuppliers(suppliersData);

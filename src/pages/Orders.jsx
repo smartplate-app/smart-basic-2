@@ -330,10 +330,54 @@ export default function OrdersPage() {
         seenIds.add(o.id);
         uniq.push(o);
       }
-      console.log(`[Orders] Successfully loaded ${uniq.length} orders (after merging drafts), ${suppliersData.length} suppliers`);
-      setOrders(uniq);
+
+      // Ensure we only show orders/suppliers belonging to the TARGET context (controlled user/store)
+      const allowedEmails = new Set([workingEmail]);
+      if (storeOwnerEmail) allowedEmails.add(storeOwnerEmail);
+      try {
+        let effChainId = null;
+        try {
+          const stores2 = await base44.entities.ChainStore.filter({ user_email: workingEmail });
+          if (stores2?.length) effChainId = stores2[0].chain_id;
+        } catch {}
+        if (!effChainId && workingEmail === (currentUser.email || '')) {
+          effChainId = currentUser.chain_id || null;
+        }
+        if (effChainId) {
+          try {
+            const chainRec2 = await base44.entities.Chain.filter({ id: effChainId });
+            let headEmail2 = chainRec2?.[0]?.head_store_user_email || null;
+            if (!headEmail2) {
+              const storesInChain2 = await base44.entities.ChainStore.filter({ chain_id: effChainId });
+              const headStore2 = storesInChain2?.find(s => s.is_head_store);
+              headEmail2 = headStore2?.user_email || null;
+            }
+            if (headEmail2) allowedEmails.add(headEmail2);
+          } catch {}
+        }
+      } catch {}
+
+      const allowedEmailsLower = new Set(Array.from(allowedEmails).map(e => (e || '').toLowerCase()));
+      
+      const filteredUniq = [];
+      for (const o of uniq) {
+        const creator = (o.created_by || '').toLowerCase();
+        const dataCreator = (o.data?.created_by || '').toLowerCase();
+        if (allowedEmailsLower.has(creator) || allowedEmailsLower.has(dataCreator)) {
+          filteredUniq.push(o);
+        }
+      }
+
+      suppliersData = suppliersData.filter((s) =>
+        allowedEmailsLower.has((s.created_by || '').toLowerCase()) || 
+        allowedEmailsLower.has((s.data?.created_by || '').toLowerCase()) || 
+        (s.store_owner_email && allowedEmailsLower.has(s.store_owner_email.toLowerCase()))
+      );
+
+      console.log(`[Orders] Successfully loaded ${filteredUniq.length} orders (after merging drafts), ${suppliersData.length} suppliers`);
+      setOrders(filteredUniq);
       setSuppliers(suppliersData);
-      setCache('orders_v1', { orders: uniq, suppliers: suppliersData });
+      setCache('orders_v1', { orders: filteredUniq, suppliers: suppliersData });
 
       setError(null);
       setRetryCount(0);
