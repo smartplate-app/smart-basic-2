@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Item name"
     },
+    "created_by": {
+      "type": "string",
+      "description": "Explicitly defined created_by to allow overriding"
+    },
     "supplier_id": {
       "type": "string",
       "description": "ID of the supplier this item belongs to"

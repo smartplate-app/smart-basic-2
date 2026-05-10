@@ -1,0 +1,55 @@
+{
+  "name": "TipEntry",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the tip entry"
+    },
+    "shift_type": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "evening",
+        "night"
+      ],
+      "default": "evening",
+      "description": "Shift type: morning, evening, or night"
+    },
+    "total_tips": {
+      "type": "number",
+      "default": 0,
+      "description": "Total tips collected for this shift"
+    },
+    "workers": {
+      "type": "array",
+      "description": "Workers who worked this shift and their tip allocation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "worker_id": {
+            "type": "string"
+          },
+          "worker_name": {
+            "type": "string"
+          },
+          "tip_amount": {
+            "type": "number"
+          },
+          "tip_percentage": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this tip entry"
+    }
+  },
+  "required": [
+    "date",
+    "total_tips"
+  ]
+}

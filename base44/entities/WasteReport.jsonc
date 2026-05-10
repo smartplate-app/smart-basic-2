@@ -1,0 +1,100 @@
+{
+  "name": "WasteReport",
+  "type": "object",
+  "properties": {
+    "warehouse_id": {
+      "type": "string",
+      "description": "ID of the warehouse"
+    },
+    "warehouse_name": {
+      "type": "string",
+      "description": "Warehouse name"
+    },
+    "report_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the waste report"
+    },
+    "shift": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "midday",
+        "evening",
+        "night",
+        "daily"
+      ],
+      "default": "daily",
+      "description": "Shift this report applies to"
+    },
+    "report_kind": {
+      "type": "string",
+      "enum": [
+        "waste",
+        "end_of_day"
+      ],
+      "default": "waste",
+      "description": "Type of report: regular waste vs end-of-day carryover marking"
+    },
+    "items": {
+      "type": "array",
+      "description": "Wasted items in this report or end-of-day item statuses",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "default": 0
+          },
+          "price_per_unit": {
+            "type": "number",
+            "default": 0
+          },
+          "total_cost": {
+            "type": "number",
+            "default": 0
+          },
+          "reason": {
+            "type": "string"
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "real_waste",
+              "can_sell_tomorrow"
+            ],
+            "default": "can_sell_tomorrow",
+            "description": "End-of-day marking: real waste (excluded) or can be sold tomorrow (included)"
+          }
+        }
+      }
+    },
+    "total_waste_value": {
+      "type": "number",
+      "default": 0,
+      "description": "Sum of total_cost across items"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "reported_by": {
+      "type": "string",
+      "description": "Email of the reporter"
+    }
+  },
+  "required": [
+    "warehouse_id",
+    "warehouse_name",
+    "report_date"
+  ]
+}

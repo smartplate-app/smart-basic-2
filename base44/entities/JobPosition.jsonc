@@ -1,0 +1,86 @@
+{
+  "name": "JobPosition",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Job position name (e.g., Chef, Waiter, Manager)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Job description"
+    },
+    "section": {
+      "type": "string",
+      "enum": [
+        "kitchen",
+        "service",
+        "bar",
+        "management",
+        "cleaning",
+        "other"
+      ],
+      "default": "other",
+      "description": "Department/section"
+    },
+    "default_payment_type": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "daily",
+        "hourly"
+      ],
+      "default": "monthly",
+      "description": "Default payment type for this position"
+    },
+    "default_payment_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Default payment amount for this position"
+    },
+    "default_start_time": {
+      "type": "string",
+      "default": "09:00",
+      "description": "Default shift start time for this position"
+    },
+    "default_end_time": {
+      "type": "string",
+      "default": "17:00",
+      "description": "Default shift end time for this position"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this position is currently active"
+    },
+    "tip_hourly_rate": {
+      "type": "number",
+      "default": 0,
+      "description": "Fixed tip-per-hour for this position (legacy; not used when using completion/percent allocation)"
+    },
+    "tip_allocation_percent": {
+      "type": "number",
+      "default": 0,
+      "description": "Percent allocation of the tip pool for this role (0-100)"
+    },
+    "tips_method": {
+      "type": "string",
+      "enum": [
+        "general_pool",
+        "fixed_hourly",
+        "percent_allocation",
+        "excluded"
+      ],
+      "default": "general_pool",
+      "description": "Tip compensation method for this position: completion from pool (general_pool), percent allocation, excluded from tips, or legacy fixed per hour"
+    },
+    "color": {
+      "type": "string",
+      "default": "#E6F4FF",
+      "description": "Hex color used to style this position across the weekly schedule"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

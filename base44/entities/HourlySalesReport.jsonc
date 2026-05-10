@@ -1,0 +1,56 @@
+{
+  "name": "HourlySalesReport",
+  "type": "object",
+  "properties": {
+    "month": {
+      "type": "string",
+      "description": "Month in YYYY-MM format"
+    },
+    "source": {
+      "type": "string",
+      "description": "Data source (e.g., pos_bi, manual)",
+      "default": "pos_bi"
+    },
+    "image_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Uploaded images/PDFs used for extraction"
+    },
+    "rows": {
+      "type": "array",
+      "description": "Aggregated sales per hour of day (0-23) for the month",
+      "items": {
+        "type": "object",
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "description": "Hour of day (0-23)"
+          },
+          "sales": {
+            "type": "number",
+            "description": "Total sales for this hour across the month"
+          }
+        },
+        "required": [
+          "hour",
+          "sales"
+        ]
+      }
+    },
+    "total_sales": {
+      "type": "number",
+      "default": 0,
+      "description": "Sum of sales across all hours"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes"
+    }
+  },
+  "required": [
+    "month",
+    "rows"
+  ]
+}

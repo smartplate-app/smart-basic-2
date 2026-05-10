@@ -1,0 +1,58 @@
+{
+  "name": "ToDo",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "To-do title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Scheduled date"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the task is completed"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the task was completed"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "food_cost",
+        "labor_cost",
+        "buildup",
+        "money_flow"
+      ],
+      "default": "food_cost",
+      "description": "Task category"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "Task priority"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "URL of an attached image for this task"
+    }
+  },
+  "required": [
+    "title",
+    "date"
+  ]
+}
