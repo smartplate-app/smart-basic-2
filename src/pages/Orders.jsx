@@ -230,11 +230,11 @@ export default function OrdersPage() {
         const dataEmails = controlledUserOwnerEmail ? [controlledUserOwnerEmail, workingEmail] : [workingEmail];
         console.log(`[Orders] Loading data from: ${dataEmails.join(', ')}`);
         
-        const orderPromises = dataEmails.map(e => base44.entities.Order.filter({ $or: [{ created_by: e }, { "data.created_by": e }] }, "-created_date"));
+        const orderPromises = dataEmails.map(e => base44.entities.Order.filter({ created_by: e }, "-created_date"));
         const targetEmail = controlledUserOwnerEmail || workingEmail;
         const [ordersArrays, ownSuppliers, storeSuppliers] = await Promise.all([
           Promise.all(orderPromises),
-          base44.entities.Supplier.filter({ $or: [{ created_by: targetEmail }, { "data.created_by": targetEmail }] }, "name"),
+          base44.entities.Supplier.filter({ created_by: targetEmail }, "name"),
           base44.entities.Supplier.filter({ store_owner_email: targetEmail }, "name")
         ]);
         const mergedOrders = ordersArrays.flat();
@@ -250,10 +250,10 @@ export default function OrdersPage() {
       } else if (isStoreUser && storeOwnerEmail) {
         // Store user - show owner's orders + this user's orders (drafts etc.)
         const [ownerSuppliers, ownerStoreSuppliers, ownerOrders, myOrders] = await Promise.all([
-          base44.entities.Supplier.filter({ $or: [{ created_by: storeOwnerEmail }, { "data.created_by": storeOwnerEmail }] }, "name"),
+          base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
           base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, "name"),
-          base44.entities.Order.filter({ $or: [{ created_by: storeOwnerEmail }, { "data.created_by": storeOwnerEmail }] }, "-created_date"),
-          base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { "data.created_by": currentUser.email }] }, "-created_date")
+          base44.entities.Order.filter({ created_by: storeOwnerEmail }, "-created_date"),
+          base44.entities.Order.filter({ created_by: currentUser.email }, "-created_date")
         ]);
         suppliersData = [...ownerSuppliers, ...ownerStoreSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         const merged = [...ownerOrders, ...myOrders];
@@ -270,11 +270,11 @@ export default function OrdersPage() {
           const headEmail = chain[0].head_store_user_email;
           // Load suppliers from head store + own, but only own orders
           const [headSuppliers, headStoreSuppliers, ownSuppliers, ownStoreSuppliers, ownOrders] = await Promise.all([
-            base44.entities.Supplier.filter({ $or: [{ created_by: headEmail }, { "data.created_by": headEmail }] }, "name"),
+            base44.entities.Supplier.filter({ created_by: headEmail }, "name"),
             base44.entities.Supplier.filter({ store_owner_email: headEmail }, "name"),
-            base44.entities.Supplier.filter({ $or: [{ created_by: currentUser.email }, { "data.created_by": currentUser.email }] }, "name"),
+            base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
             base44.entities.Supplier.filter({ store_owner_email: currentUser.email }, "name"),
-            base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { "data.created_by": currentUser.email }] }, "-created_date")
+            base44.entities.Order.filter({ created_by: currentUser.email }, "-created_date")
           ]);
           suppliersData = [...headSuppliers, ...headStoreSuppliers, ...ownSuppliers, ...ownStoreSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
           ordersData = ownOrders;
@@ -289,19 +289,19 @@ export default function OrdersPage() {
           const branchEmails = chainStores.filter(s => !s.is_head_store).map(s => s.user_email);
           
           const orderPromises = [
-            base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { "data.created_by": currentUser.email }] }, "-created_date")
+            base44.entities.Order.filter({ created_by: currentUser.email }, "-created_date")
           ];
           for (const email of branchEmails) {
-            orderPromises.push(base44.entities.Order.filter({ $or: [{ created_by: email }, { "data.created_by": email }] }, "-created_date"));
+            orderPromises.push(base44.entities.Order.filter({ created_by: email }, "-created_date"));
           }
           const ordersArrays = await Promise.all(orderPromises);
           allOrders = ordersArrays.flat();
         } else {
-          allOrders = await base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { "data.created_by": currentUser.email }] }, "-created_date");
+          allOrders = await base44.entities.Order.filter({ created_by: currentUser.email }, "-created_date");
         }
 
         const [ownSuppliers, storeSuppliers] = await Promise.all([
-          base44.entities.Supplier.filter({ $or: [{ created_by: currentUser.email }, { "data.created_by": currentUser.email }] }, "name"),
+          base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
           base44.entities.Supplier.filter({ store_owner_email: currentUser.email }, "name")
         ]);
         const suppliers = [...ownSuppliers, ...storeSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
@@ -312,14 +312,14 @@ export default function OrdersPage() {
       // Always include context user's drafts (supports admin-controlling + sub-users)
       let myDrafts = [];
       try {
-        myDrafts = await base44.entities.Order.filter({ status: 'draft', $or: [{ created_by: workingEmail }, { "data.created_by": workingEmail }] }, "-created_date");
+        myDrafts = await base44.entities.Order.filter({ created_by: workingEmail, status: 'draft' }, "-created_date");
       } catch (_) { myDrafts = []; }
 
       // Fallback: fetch drafts by status only and filter client-side by creator
       let fallbackDrafts = [];
       try {
         const draftsByStatus = await base44.entities.Order.filter({ status: 'draft' }, "-created_date");
-        fallbackDrafts = (draftsByStatus || []).filter(o => o?.created_by === workingEmail || o?.data?.created_by === workingEmail);
+        fallbackDrafts = (draftsByStatus || []).filter(o => o?.created_by === workingEmail);
       } catch (_) { fallbackDrafts = []; }
 
       const mergedAll = [...ordersData, ...myDrafts, ...fallbackDrafts];

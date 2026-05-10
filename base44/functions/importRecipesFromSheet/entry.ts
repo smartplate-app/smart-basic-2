@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, providedPrices, overrideTargetEmail } = await req.json();
+    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, providedPrices } = await req.json();
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
 
@@ -95,7 +95,7 @@ ${allRowsData}
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
-        model: 'claude_sonnet_4_6', // Use a more capable model for accurate large-scale extraction
+        model: 'gemini_3_1_pro', // Use a more capable model for accurate large-scale extraction
         response_json_schema: {
           type: 'object',
           properties: {
@@ -147,24 +147,17 @@ ${allRowsData}
       if (response.recipes) allRecipes.push(...response.recipes);
     }
 
-    let targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
-    if (!user.store_user_owner_email) {
-      try {
-        const recs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email, is_active: true });
-        if (recs.length > 0) targetEmail = recs[0].owner_email;
-      } catch(e){}
-    }
-    
-    if (overrideTargetEmail) {
-      targetEmail = overrideTargetEmail;
-    }
-    
-    // Add override from request for background invocation:
-
-
     const fetchWithFallback = async (entityType) => {
       let data = await base44.asServiceRole.entities[entityType].filter({ created_by: user.email }, 'name', 10000);
       
+      let targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
+      if (!user.store_user_owner_email) {
+        try {
+          const recs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+          if (recs.length > 0) targetEmail = recs[0].owner_email;
+        } catch(e){}
+      }
+
       if (targetEmail !== user.email) {
         const ownerData = await base44.asServiceRole.entities[entityType].filter({ created_by: targetEmail }, 'name', 10000);
         data = [...data, ...ownerData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
@@ -272,14 +265,14 @@ ${allRowsData}
         name: name,
         supplier_type: 'simple'
       }));
-      const createdSuppliers = await base44.asServiceRole.entities.Supplier.bulkCreate(suppliersToCreate.map(s => ({...s, created_by: targetEmail})));
+      const createdSuppliers = await base44.entities.Supplier.bulkCreate(suppliersToCreate);
       createdSuppliers.forEach(s => supplierMap.set(s.name.trim().toLowerCase(), s));
     }
     
     // Fallback default supplier if needed
     let defaultSupplier = supplierMap.get('כללי') || supplierMap.get('general');
     if (!defaultSupplier) {
-      defaultSupplier = await base44.asServiceRole.entities.Supplier.create({ name: 'כללי', supplier_type: 'simple', created_by: targetEmail });
+      defaultSupplier = await base44.entities.Supplier.create({ name: 'כללי', supplier_type: 'simple' });
       supplierMap.set('כללי', defaultSupplier);
     }
 
@@ -314,7 +307,7 @@ ${allRowsData}
                            existing.supplier_id !== itemData.supplier_id ||
                            existing.catalog_number !== itemData.catalog_number;
         if (hasChanges) {
-          await base44.asServiceRole.entities.Item.update(existing.id, itemData);
+          await base44.entities.Item.update(existing.id, itemData);
           updatedItemsCount++;
           itemMap.set(itemData.name.trim().toLowerCase(), { ...existing, ...itemData });
         }
@@ -324,7 +317,7 @@ ${allRowsData}
     }
 
     if (itemsToCreate.length > 0) {
-      const created = await base44.asServiceRole.entities.Item.bulkCreate(itemsToCreate.map(i => ({...i, created_by: targetEmail})));
+      const created = await base44.entities.Item.bulkCreate(itemsToCreate);
       createdItemsCount = created.length;
       created.forEach(it => itemMap.set(it.name.trim().toLowerCase(), it));
     }
@@ -350,7 +343,7 @@ ${allRowsData}
     }
 
     if (prepRecipeItemsToCreate.length > 0) {
-      const createdPrepItems = await base44.asServiceRole.entities.Item.bulkCreate(prepRecipeItemsToCreate.map(i => ({...i, created_by: targetEmail})));
+      const createdPrepItems = await base44.entities.Item.bulkCreate(prepRecipeItemsToCreate);
       for (const it of createdPrepItems) {
         itemMap.set(it.name.trim().toLowerCase(), it);
       }
@@ -408,7 +401,7 @@ ${allRowsData}
            const pItem = itemMap.get(pName);
            if (pItem && pItem.id && pItem.price > 0) {
                // Fire and forget updating the prep item price in DB
-               base44.asServiceRole.entities.Item.update(pItem.id, { price: pItem.price, price_after_discount: pItem.price }).catch(() => {});
+               base44.entities.Item.update(pItem.id, { price: pItem.price, price_after_discount: pItem.price }).catch(() => {});
            }
        }
     }
@@ -475,7 +468,7 @@ ${allRowsData}
                            existing.yield_unit !== recipeData.yield_unit ||
                            JSON.stringify(existing.ingredients) !== JSON.stringify(recipeData.ingredients);
         if (hasChanges) {
-          await base44.asServiceRole.entities.Recipe.update(existing.id, recipeData);
+          await base44.entities.Recipe.update(existing.id, recipeData);
           updatedRecipesCount++;
         }
       } else {
@@ -484,7 +477,7 @@ ${allRowsData}
     }
 
     if (recipesToCreate.length > 0) {
-      const created = await base44.asServiceRole.entities.Recipe.bulkCreate(recipesToCreate.map(r => ({...r, created_by: targetEmail})));
+      const created = await base44.entities.Recipe.bulkCreate(recipesToCreate);
       createdRecipesCount = created.length;
     }
 
