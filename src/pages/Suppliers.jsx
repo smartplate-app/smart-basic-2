@@ -222,10 +222,10 @@ export default function SuppliersPage() {
                   } catch {}
 
                   suppliersData = suppliersData.filter((s) =>
-                    allowedEmails.has(s.created_by) || (s.store_owner_email && allowedEmails.has(s.store_owner_email))
+                    allowedEmails.has(s.created_by) || allowedEmails.has(s.data?.created_by) || (s.store_owner_email && allowedEmails.has(s.store_owner_email))
                   );
                   itemsData = itemsData.filter((it) =>
-                    allowedEmails.has(it.created_by) || (it.store_owner_email && allowedEmails.has(it.store_owner_email))
+                    allowedEmails.has(it.created_by) || allowedEmails.has(it.data?.created_by) || (it.store_owner_email && allowedEmails.has(it.store_owner_email))
                   );
 
                   setSuppliers(suppliersData);

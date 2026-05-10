@@ -1,0 +1,75 @@
+{
+  "name": "KBArticle",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Article title"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly identifier"
+    },
+    "content": {
+      "type": "string",
+      "description": "Markdown content"
+    },
+    "excerpt": {
+      "type": "string",
+      "description": "Short summary"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "getting_started",
+        "orders",
+        "receipts",
+        "labor",
+        "account",
+        "other"
+      ],
+      "default": "other",
+      "description": "Category"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags"
+    },
+    "published": {
+      "type": "boolean",
+      "default": true,
+      "description": "Is published"
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "he",
+        "en"
+      ],
+      "default": "he",
+      "description": "Article language"
+    },
+    "media_images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "App screenshots or step images (URLs to images/GIFs)"
+    },
+    "media_video_url": {
+      "type": "string",
+      "description": "Short screen recording or video URL (MP4/GIF)"
+    },
+    "related_page": {
+      "type": "string",
+      "description": "Optional app page name this article refers to"
+    }
+  },
+  "required": [
+    "title",
+    "content"
+  ]
+}
