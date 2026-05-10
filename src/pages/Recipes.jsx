@@ -70,10 +70,10 @@ export default function RecipesPage() {
         } catch(e){}
       }
 
-      let data = await base44.entities.Recipe.filter({ $or: [{ created_by: targetEmail }, { "data.created_by": targetEmail }] }, "-created_date", 10000);
+      let data = await base44.entities.Recipe.filter({ created_by: targetEmail }, "-created_date", 10000);
       
       if (targetEmail !== currentUser.email) {
-        const myData = await base44.entities.Recipe.filter({ $or: [{ created_by: currentUser.email }, { "data.created_by": currentUser.email }] }, "-created_date", 10000);
+        const myData = await base44.entities.Recipe.filter({ created_by: currentUser.email }, "-created_date", 10000);
         data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       }
 
@@ -82,49 +82,14 @@ export default function RecipesPage() {
           const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
           if (chain.length > 0) {
             const headEmail = chain[0].head_store_user_email;
-            const headData = await base44.entities.Recipe.filter({ $or: [{ created_by: headEmail }, { "data.created_by": headEmail }] }, "-created_date", 10000);
+            const headData = await base44.entities.Recipe.filter({ created_by: headEmail }, "-created_date", 10000);
             data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           }
         } catch(e){}
       }
 
-      // Ensure we only show recipes belonging to the TARGET context (controlled user/store)
-      const allowedEmails = new Set([targetEmail]);
-      if (currentUser.email && targetEmail !== currentUser.email && !currentUser.acting_as_user_email && !currentUser.acting_as_store_email) {
-        // Normal store worker
-        allowedEmails.add(currentUser.email);
-      }
-      try {
-        let effChainId = null;
-        try {
-          const stores2 = await base44.entities.ChainStore.filter({ user_email: targetEmail });
-          if (stores2?.length) effChainId = stores2[0].chain_id;
-        } catch {}
-        if (!effChainId && targetEmail === (currentUser.email || '')) {
-          effChainId = currentUser.chain_id || null;
-        }
-        if (effChainId) {
-          try {
-            const chainRec2 = await base44.entities.Chain.filter({ id: effChainId });
-            let headEmail2 = chainRec2?.[0]?.head_store_user_email || null;
-            if (!headEmail2) {
-              const storesInChain2 = await base44.entities.ChainStore.filter({ chain_id: effChainId });
-              const headStore2 = storesInChain2?.find(s => s.is_head_store);
-              headEmail2 = headStore2?.user_email || null;
-            }
-            if (headEmail2) allowedEmails.add(headEmail2);
-          } catch {}
-        }
-      } catch {}
-
-      const allowedEmailsLower = new Set(Array.from(allowedEmails).map(e => (e || '').toLowerCase()));
-      const filteredData = (data || []).filter((r) =>
-        allowedEmailsLower.has((r.created_by || '').toLowerCase()) || 
-        allowedEmailsLower.has((r.data?.created_by || '').toLowerCase())
-      );
-
-      setRecipes(filteredData);
-      setCache('recipes_v1', { recipes: filteredData });
+      setRecipes(data || []);
+      setCache('recipes_v1', { recipes: data || [] });
     } catch (e) {
       console.error(e);
     }

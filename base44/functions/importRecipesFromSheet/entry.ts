@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, providedPrices, overrideTargetEmail } = await req.json();
+    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, providedPrices } = await req.json();
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
 
@@ -95,7 +95,7 @@ ${allRowsData}
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
-        model: 'claude_sonnet_4_6', // Use a more capable model for accurate large-scale extraction
+        model: 'gemini_3_1_pro', // Use a more capable model for accurate large-scale extraction
         response_json_schema: {
           type: 'object',
           properties: {
@@ -147,24 +147,17 @@ ${allRowsData}
       if (response.recipes) allRecipes.push(...response.recipes);
     }
 
-    let targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
-    if (!user.store_user_owner_email) {
-      try {
-        const recs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email, is_active: true });
-        if (recs.length > 0) targetEmail = recs[0].owner_email;
-      } catch(e){}
-    }
-    
-    if (overrideTargetEmail) {
-      targetEmail = overrideTargetEmail;
-    }
-    
-    // Add override from request for background invocation:
-
-
     const fetchWithFallback = async (entityType) => {
       let data = await base44.asServiceRole.entities[entityType].filter({ created_by: user.email }, 'name', 10000);
       
+      let targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
+      if (!user.store_user_owner_email) {
+        try {
+          const recs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+          if (recs.length > 0) targetEmail = recs[0].owner_email;
+        } catch(e){}
+      }
+
       if (targetEmail !== user.email) {
         const ownerData = await base44.asServiceRole.entities[entityType].filter({ created_by: targetEmail }, 'name', 10000);
         data = [...data, ...ownerData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
@@ -208,16 +201,7 @@ ${allRowsData}
         
         let found = futureItemMap.get(itemNameLower);
         if (!found) {
-          found = Array.from(futureItemMap.values()).find(i => {
-             if (!i.name) return false;
-             const n1 = itemNameLower.replace(/[^\p{L}\p{N}]/gu, '');
-             const n2 = i.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-             if (n1 === n2) return true;
-             if (n1.length > 3 && n2.length > 3) {
-               return n1.includes(n2) || n2.includes(n1);
-             }
-             return false;
-          });
+          found = Array.from(futureItemMap.values()).find(i => i.name?.toLowerCase().includes(itemNameLower) || itemNameLower.includes(i.name?.toLowerCase()));
         }
 
         // Check if user mapped this missing item to an existing one
@@ -272,14 +256,14 @@ ${allRowsData}
         name: name,
         supplier_type: 'simple'
       }));
-      const createdSuppliers = await base44.asServiceRole.entities.Supplier.bulkCreate(suppliersToCreate.map(s => ({...s, created_by: targetEmail})));
+      const createdSuppliers = await base44.entities.Supplier.bulkCreate(suppliersToCreate);
       createdSuppliers.forEach(s => supplierMap.set(s.name.trim().toLowerCase(), s));
     }
     
     // Fallback default supplier if needed
     let defaultSupplier = supplierMap.get('כללי') || supplierMap.get('general');
     if (!defaultSupplier) {
-      defaultSupplier = await base44.asServiceRole.entities.Supplier.create({ name: 'כללי', supplier_type: 'simple', created_by: targetEmail });
+      defaultSupplier = await base44.entities.Supplier.create({ name: 'כללי', supplier_type: 'simple' });
       supplierMap.set('כללי', defaultSupplier);
     }
 
@@ -314,7 +298,7 @@ ${allRowsData}
                            existing.supplier_id !== itemData.supplier_id ||
                            existing.catalog_number !== itemData.catalog_number;
         if (hasChanges) {
-          await base44.asServiceRole.entities.Item.update(existing.id, itemData);
+          await base44.entities.Item.update(existing.id, itemData);
           updatedItemsCount++;
           itemMap.set(itemData.name.trim().toLowerCase(), { ...existing, ...itemData });
         }
@@ -324,7 +308,7 @@ ${allRowsData}
     }
 
     if (itemsToCreate.length > 0) {
-      const created = await base44.asServiceRole.entities.Item.bulkCreate(itemsToCreate.map(i => ({...i, created_by: targetEmail})));
+      const created = await base44.entities.Item.bulkCreate(itemsToCreate);
       createdItemsCount = created.length;
       created.forEach(it => itemMap.set(it.name.trim().toLowerCase(), it));
     }
@@ -350,7 +334,7 @@ ${allRowsData}
     }
 
     if (prepRecipeItemsToCreate.length > 0) {
-      const createdPrepItems = await base44.asServiceRole.entities.Item.bulkCreate(prepRecipeItemsToCreate.map(i => ({...i, created_by: targetEmail})));
+      const createdPrepItems = await base44.entities.Item.bulkCreate(prepRecipeItemsToCreate);
       for (const it of createdPrepItems) {
         itemMap.set(it.name.trim().toLowerCase(), it);
       }
@@ -360,59 +344,6 @@ ${allRowsData}
     const existingRecipes = await fetchWithFallback('Recipe');
     const recipeMap = new Map(existingRecipes.map(r => [r.name.trim().toLowerCase(), r]));
 
-    // Calculate costs iteratively for prep recipes before inserting
-    let costChanged = true;
-    let passes = 0;
-    while(costChanged && passes < 5) {
-       costChanged = false;
-       passes++;
-       for (const r of allRecipes) {
-           if (r.type === 'prep_recipe') {
-               let totalCost = 0;
-               for (const ing of (r.ingredients || [])) {
-                   const itemNameLower = (ing.item_name || '').trim().toLowerCase();
-                   let item = itemMap.get(itemNameLower);
-                   if (!item) {
-                       item = Array.from(itemMap.values()).find(i => {
-                          if (!i.name) return false;
-                          const n1 = itemNameLower.replace(/[^\p{L}\p{N}]/gu, '');
-                          const n2 = i.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-                          if (n1 === n2) return true;
-                          if (n1.length > 3 && n2.length > 3) return n1.includes(n2) || n2.includes(n1);
-                          return false;
-                       });
-                   }
-                   if (!item && mappedItems && mappedItems[itemNameLower]) {
-                      const mappedId = mappedItems[itemNameLower];
-                      item = Array.from(itemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
-                   }
-                   totalCost += (item ? Number(item.price_after_discount || item.price || 0) : 0) * (Number(ing.quantity) || 0);
-               }
-               const unitPrice = (Number(r.yield_quantity) || 1) > 0 ? (totalCost / Number(r.yield_quantity)) : totalCost;
-               
-               const pName = r.name.trim().toLowerCase();
-               let pItem = itemMap.get(pName);
-               if (pItem && Math.abs((pItem.price || 0) - unitPrice) > 0.001) {
-                   pItem.price = unitPrice;
-                   // Note: we update it in memory so it can be used in subsequent recipes calculation
-                   costChanged = true;
-               }
-           }
-       }
-    }
-
-    // Update the prep recipes items in the DB with the newly calculated prices
-    for (const r of allRecipes) {
-       if (r.type === 'prep_recipe') {
-           const pName = r.name.trim().toLowerCase();
-           const pItem = itemMap.get(pName);
-           if (pItem && pItem.id && pItem.price > 0) {
-               // Fire and forget updating the prep item price in DB
-               base44.asServiceRole.entities.Item.update(pItem.id, { price: pItem.price, price_after_discount: pItem.price }).catch(() => {});
-           }
-       }
-    }
-
     // Process and save recipes
     const validRecipes = allRecipes.filter(r => r.name).map(r => {
       let totalCost = 0;
@@ -421,16 +352,7 @@ ${allRowsData}
         // Try to find exact match, or partial match
         let item = itemMap.get(itemNameLower);
         if (!item) {
-          item = Array.from(itemMap.values()).find(i => {
-             if (!i.name) return false;
-             const n1 = itemNameLower.replace(/[^\p{L}\p{N}]/gu, '');
-             const n2 = i.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-             if (n1 === n2) return true;
-             if (n1.length > 3 && n2.length > 3) {
-               return n1.includes(n2) || n2.includes(n1);
-             }
-             return false;
-          });
+          item = Array.from(itemMap.values()).find(i => i.name.toLowerCase().includes(itemNameLower) || itemNameLower.includes(i.name.toLowerCase()));
         }
         
         // If still not found, check if it was mapped by the user
@@ -475,7 +397,7 @@ ${allRowsData}
                            existing.yield_unit !== recipeData.yield_unit ||
                            JSON.stringify(existing.ingredients) !== JSON.stringify(recipeData.ingredients);
         if (hasChanges) {
-          await base44.asServiceRole.entities.Recipe.update(existing.id, recipeData);
+          await base44.entities.Recipe.update(existing.id, recipeData);
           updatedRecipesCount++;
         }
       } else {
@@ -484,7 +406,7 @@ ${allRowsData}
     }
 
     if (recipesToCreate.length > 0) {
-      const created = await base44.asServiceRole.entities.Recipe.bulkCreate(recipesToCreate.map(r => ({...r, created_by: targetEmail})));
+      const created = await base44.entities.Recipe.bulkCreate(recipesToCreate);
       createdRecipesCount = created.length;
     }
 

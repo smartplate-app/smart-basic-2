@@ -15,10 +15,6 @@
       "default": "sale_item",
       "description": "Type of recipe"
     },
-    "created_by": {
-      "type": "string",
-      "description": "Explicitly defined created_by to allow overriding"
-    },
     "menu_category": {
       "type": "string",
       "default": "general",
