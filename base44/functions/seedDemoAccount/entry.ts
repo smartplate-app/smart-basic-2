@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         // 3. Prep Recipes
         const prepRecipe = await base44.asServiceRole.entities.Recipe.create({
             name: "Tomato Sauce (רוטב עגבניות / Σάλτσα ντομάτας)",
-            type: "prep",
+            type: "prep_recipe",
             batch_yield: 2,
             batch_unit: "liter",
             ingredients: [
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
         // 4. Sale Recipes
         const saleRecipe1 = await base44.asServiceRole.entities.Recipe.create({
             name: "Greek Salad (סלט יווני / Χωριάτικη Σαλάτα)",
-            type: "sale",
+            type: "sale_item",
             batch_yield: 1,
             batch_unit: "portion",
             ingredients: [
@@ -84,13 +84,14 @@ Deno.serve(async (req) => {
             ],
             total_cost: (0.2 * 5.5) + (0.15 * 4.2) + (0.1 * 45.0) + (0.05 * 35.0),
             sale_price: 52.0,
+            sold_count: 450,
             created_by: demoEmail,
             store_owner_email: demoEmail
         });
 
         const saleRecipe2 = await base44.asServiceRole.entities.Recipe.create({
             name: "Pasta Bolognese (פסטה בולונז / Μακαρόνια με κιμά)",
-            type: "sale",
+            type: "sale_item",
             batch_yield: 1,
             batch_unit: "portion",
             ingredients: [
@@ -100,15 +101,31 @@ Deno.serve(async (req) => {
             ],
             total_cost: (0.2 * (prepRecipe.total_cost / 2)) + (0.15 * 55.0) + (0.2 * 8.0),
             sale_price: 68.0,
+            sold_count: 320,
             created_by: demoEmail,
             store_owner_email: demoEmail
         });
 
         // 5. Monthly Dashboard Data
+        const currentMonth = new Date().toISOString().substring(0, 7);
+        const prevMonthDate = new Date();
+        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+        const previousMonth = prevMonthDate.toISOString().substring(0, 7);
+        
         await base44.asServiceRole.entities.MonthlyDashboardData.create({
-            month: new Date().toISOString().substring(0, 7),
+            month: currentMonth,
             predicted_sales: 150000,
             total_sales: 145000,
+            labor_goal_percent: 28,
+            food_goal_percent: 30,
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        await base44.asServiceRole.entities.MonthlyDashboardData.create({
+            month: previousMonth,
+            predicted_sales: 140000,
+            total_sales: 138000,
             labor_goal_percent: 28,
             food_goal_percent: 30,
             created_by: demoEmail,
