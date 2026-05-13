@@ -103,8 +103,9 @@ export default function ItemsPage() {
       });
 
       const effectiveEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
+      const isAdminControlling = currentUser?.role === 'admin' && effectiveEmail !== currentUser.email;
 
-      if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
+      if (isAdminControlling) {
         // Admin impersonation - load data securely from backend
         console.log('[Items] Loading as ADMIN impersonating:', effectiveEmail);
         const { data } = await base44.functions.invoke('getAdminData', { action: 'getUserData', userEmail: effectiveEmail });

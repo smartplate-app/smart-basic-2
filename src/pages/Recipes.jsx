@@ -63,16 +63,19 @@ export default function RecipesPage() {
       }
 
       let targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
-      const isAdminControlling = !!(currentUser.acting_as_store_email || currentUser.acting_as_user_email);
-      if (!isAdminControlling && !currentUser.store_user_owner_email) {
+      
+      // If user is not impersonating, check if they are a StoreUser for someone else
+      if (!currentUser.acting_as_store_email && !currentUser.acting_as_user_email && !currentUser.store_user_owner_email) {
         try {
           const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
           if (recs.length > 0) targetEmail = recs[0].owner_email;
         } catch(e){}
       }
 
+      const isAdminControlling = currentUser?.role === 'admin' && targetEmail !== currentUser.email;
+
       let data = [];
-      if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
+      if (isAdminControlling) {
         const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
         if (adminData?.success && adminData?.data?.recipes) {
           data = adminData.data.recipes;

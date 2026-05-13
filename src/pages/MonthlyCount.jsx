@@ -85,7 +85,9 @@ export default function MonthlyCountPage() {
 
       try {
         const currentUserReq = await base44.auth.me();
-        if (currentUserReq?.admin_original_email && currentUserReq?.acting_as_user_email) {
+        const isAdminControlling = currentUserReq?.role === 'admin' && userEmail !== currentUserReq.email;
+
+        if (isAdminControlling) {
             console.log("[MonthlyCount] Loading as admin impersonating...");
             const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: userEmail });
             if (data?.success) {

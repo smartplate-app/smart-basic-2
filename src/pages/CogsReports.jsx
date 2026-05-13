@@ -45,7 +45,8 @@ export default function CogsReportsPage() {
       }
 
       let targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
-      if (!currentUser.store_user_owner_email) {
+      
+      if (!currentUser.acting_as_store_email && !currentUser.acting_as_user_email && !currentUser.store_user_owner_email) {
         try {
           const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
           if (recs.length > 0) targetEmail = recs[0].owner_email;
@@ -53,8 +54,9 @@ export default function CogsReportsPage() {
       }
 
       let data = [];
+      const isAdminControlling = currentUser?.role === 'admin' && targetEmail !== currentUser.email;
 
-      if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
+      if (isAdminControlling) {
           const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
           if (adminData?.success && adminData?.data?.cogsReports) {
               data = adminData.data.cogsReports;

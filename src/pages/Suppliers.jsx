@@ -78,7 +78,7 @@ export default function SuppliersPage() {
                   } catch {}
                   const isStoreUser = !!storeOwnerEmail;
 
-                  const isAdminControlling = !!(currentUser?.admin_original_email && currentUser?.acting_as_user_email);
+                  const isAdminControlling = currentUser?.role === 'admin' && workingEmail !== currentUser.email;
 
                   if (isAdminControlling) {
                     console.log('[Suppliers] Loading as ADMIN impersonating:', workingEmail);

@@ -171,7 +171,7 @@ export default function OrdersPage() {
       
       // Use acting_as_store_email or acting_as_user_email if admin is controlling a user
       const workingEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
-      const isAdminControlling = !!(currentUser.acting_as_store_email || currentUser.acting_as_user_email);
+      const isAdminControlling = currentUser?.role === 'admin' && workingEmail !== currentUser.email;
 
       // Check if user is a store_user (worker/manager invited to someone else's store)
       // First check if saved on user object, then try to fetch from StoreUser entity
