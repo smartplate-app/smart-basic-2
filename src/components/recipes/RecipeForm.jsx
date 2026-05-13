@@ -271,6 +271,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       const qty = Number(ing.quantity) || 1;
       ing.cost = parsedCost;
       ing.unit_price = qty > 0 ? parsedCost / qty : 0;
+    } else if (field === 'unit_price') {
+      const parsedUnitPrice = Number(value) || 0;
+      const qty = Number(ing.quantity) || 0;
+      ing.unit_price = parsedUnitPrice;
+      ing.cost = parsedUnitPrice * qty;
     }
 
     setFormData({
@@ -629,14 +634,27 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       </SelectContent>
                     </Select>
                   )}
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    className="w-16 h-8 px-1 text-sm font-bold text-center" 
-                    value={ing.cost}
-                    onChange={(e) => handleUpdateIngredient(idx, 'cost', e.target.value)}
-                  />
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRemoveIngredient(idx)}>
+                  <div className="flex items-center gap-1" title={language === 'he' ? 'מחיר ליחידה' : 'Unit Price'}>
+                    <span className="text-[10px] text-gray-500 hidden xl:inline">{language === 'he' ? '₪ ליחידה' : '₪/unit'}</span>
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      className="w-16 h-8 px-1 text-sm text-center" 
+                      value={ing.unit_price !== undefined ? ing.unit_price : 0}
+                      onChange={(e) => handleUpdateIngredient(idx, 'unit_price', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1" title={language === 'he' ? 'סה״כ לשורה' : 'Total Cost'}>
+                    <span className="text-[10px] text-gray-500 hidden xl:inline">{language === 'he' ? 'סה״כ ₪' : 'Total ₪'}</span>
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      className="w-16 h-8 px-1 text-sm font-bold text-center" 
+                      value={ing.cost !== undefined ? ing.cost : 0}
+                      onChange={(e) => handleUpdateIngredient(idx, 'cost', e.target.value)}
+                    />
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 shrink-0" onClick={() => handleRemoveIngredient(idx)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
