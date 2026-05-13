@@ -126,10 +126,16 @@ Deno.serve(async (req) => {
         
         await base44.asServiceRole.entities.MonthlyDashboardData.create({
             month: currentMonth,
-            predicted_sales: 150000,
-            total_sales: 145000,
+            predicted_sales: 160000,
+            total_sales: 158000,
+            restaurant_sales: 130000,
+            delivery_takeaway_sales: 28000,
             labor_goal_percent: 28,
             food_goal_percent: 30,
+            monthly_rent_incl_vat: 11500,
+            use_manual_labor: true,
+            manual_labor_cost: 41000,
+            use_manual_food: false,
             created_by: demoEmail,
             store_owner_email: demoEmail
         });
@@ -137,9 +143,14 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.MonthlyDashboardData.create({
             month: previousMonth,
             predicted_sales: 140000,
-            total_sales: 138000,
+            total_sales: 142000,
+            restaurant_sales: 110000,
+            delivery_takeaway_sales: 32000,
             labor_goal_percent: 28,
             food_goal_percent: 30,
+            monthly_rent_incl_vat: 11500,
+            use_manual_labor: true,
+            manual_labor_cost: 38500,
             created_by: demoEmail,
             store_owner_email: demoEmail
         });
@@ -171,6 +182,22 @@ Deno.serve(async (req) => {
             verified_items: [
                 { item_id: createdItems[0].id, item_name: createdItems[0].name, received_quantity: 10, unit: "kg", actual_price: 5.5 },
                 { item_id: createdItems[1].id, item_name: createdItems[1].name, received_quantity: 10, unit: "kg", actual_price: 4.2 }
+            ],
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        // Add a large fake receipt to simulate monthly bulk purchases
+        await base44.asServiceRole.entities.SupplyReceipt.create({
+            order_number: "ORD-DEMO-002",
+            supplier_id: createdSuppliers[1].id,
+            supplier_name: createdSuppliers[1].name,
+            received_date: new Date().toISOString().substring(0, 10),
+            invoice_total: 42500.0,
+            status: "verified",
+            notes: "Monthly bulk meat and poultry order",
+            verified_items: [
+                { item_id: createdItems[4].id, item_name: createdItems[4].name, received_quantity: 500, unit: "kg", actual_price: 55.0 }
             ],
             created_by: demoEmail,
             store_owner_email: demoEmail
