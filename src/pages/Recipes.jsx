@@ -63,7 +63,8 @@ export default function RecipesPage() {
       }
 
       let targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
-      if (!currentUser.store_user_owner_email) {
+      const isAdminControlling = !!(currentUser.acting_as_store_email || currentUser.acting_as_user_email);
+      if (!isAdminControlling && !currentUser.store_user_owner_email) {
         try {
           const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
           if (recs.length > 0) targetEmail = recs[0].owner_email;

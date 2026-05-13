@@ -19,6 +19,10 @@
       "type": "string",
       "description": "Explicitly defined created_by to allow overriding"
     },
+    "store_owner_email": {
+      "type": "string",
+      "description": "Email of the store owner"
+    },
     "menu_category": {
       "type": "string",
       "default": "general",
