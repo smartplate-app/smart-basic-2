@@ -267,15 +267,15 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
         ing.cost = (ing.unit_price || 0) * qty;
       }
     } else if (field === 'cost') {
+      ing.cost = value === '' ? '' : Number(value);
       const parsedCost = Number(value) || 0;
       const qty = Number(ing.quantity) || 1;
-      ing.cost = parsedCost;
-      ing.unit_price = qty > 0 ? parsedCost / qty : 0;
+      ing.unit_price = qty > 0 ? Number((parsedCost / qty).toFixed(4)) : 0;
     } else if (field === 'unit_price') {
+      ing.unit_price = value === '' ? '' : Number(value);
       const parsedUnitPrice = Number(value) || 0;
       const qty = Number(ing.quantity) || 0;
-      ing.unit_price = parsedUnitPrice;
-      ing.cost = parsedUnitPrice * qty;
+      ing.cost = Number((parsedUnitPrice * qty).toFixed(4));
     }
 
     setFormData({
@@ -635,23 +635,25 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     </Select>
                   )}
                   <div className="flex items-center gap-1" title={language === 'he' ? 'מחיר ליחידה' : 'Unit Price'}>
-                    <span className="text-[10px] text-gray-500 hidden xl:inline">{language === 'he' ? '₪ ליחידה' : '₪/unit'}</span>
+                    <span className="text-[10px] text-gray-500 hidden md:inline whitespace-nowrap">{language === 'he' ? 'יחידה:' : 'Unit:'}</span>
                     <Input 
                       type="number" 
                       step="0.01" 
                       className="w-16 h-8 px-1 text-sm text-center" 
-                      value={ing.unit_price !== undefined ? ing.unit_price : 0}
+                      value={ing.unit_price !== undefined ? ing.unit_price : ""}
                       onChange={(e) => handleUpdateIngredient(idx, 'unit_price', e.target.value)}
+                      placeholder="0.00"
                     />
                   </div>
                   <div className="flex items-center gap-1" title={language === 'he' ? 'סה״כ לשורה' : 'Total Cost'}>
-                    <span className="text-[10px] text-gray-500 hidden xl:inline">{language === 'he' ? 'סה״כ ₪' : 'Total ₪'}</span>
+                    <span className="text-[10px] text-gray-500 hidden md:inline whitespace-nowrap">{language === 'he' ? 'סה״כ:' : 'Total:'}</span>
                     <Input 
                       type="number" 
                       step="0.01" 
                       className="w-16 h-8 px-1 text-sm font-bold text-center" 
-                      value={ing.cost !== undefined ? ing.cost : 0}
+                      value={ing.cost !== undefined ? ing.cost : ""}
                       onChange={(e) => handleUpdateIngredient(idx, 'cost', e.target.value)}
+                      placeholder="0.00"
                     />
                   </div>
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 shrink-0" onClick={() => handleRemoveIngredient(idx)}>
