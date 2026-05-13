@@ -911,7 +911,9 @@ export default function DashboardPage() {
   const weeklySalesExVAT = latestPredictedWeeklySales > 0 ? latestPredictedWeeklySales / userVatMultiplier : 0;
   const weeklyLaborPercent = weeklySalesExVAT > 0 ? ((latestWeeklyLaborCost || 0) / weeklySalesExVAT) * 100 : 0;
   const actualFoodPercent = actualSalesExVAT > 0 ? (effectiveFoodCost / actualSalesExVAT) * 100 : 0;
-  const actualCombinedPercent = actualLaborPercent + actualFoodPercent;
+  const woltCommissionAmount = (deliverySales / userVatMultiplier) * 0.24;
+  const woltPercentOfSales = actualSalesExVAT > 0 ? (woltCommissionAmount / actualSalesExVAT) * 100 : 0;
+  const actualCombinedPercent = actualLaborPercent + actualFoodPercent + woltPercentOfSales;
   const daysInMonthForProjection = moment(selectedMonth).daysInMonth();
   const projectedSalesInclVAT = (actualSales > 0 && projectionDaysElapsed > 0)
     ? (actualSales / projectionDaysElapsed) * daysInMonthForProjection
@@ -1274,8 +1276,8 @@ export default function DashboardPage() {
             <div className={`flex flex-col md:flex-row ${isRTL ? 'md:flex-row-reverse' : ''} gap-4`}>
               {/* Advisory box (left of sales on desktop) */}
               {showConsulting && (
-                <div className="md:w-1/2 w-full">
-                  <div className="h-full bg-rose-50 border border-rose-200 rounded-lg p-4 flex items-center">
+                <div className="w-full mb-4">
+                  <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 flex items-center">
                     <p className={`text-rose-700 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                       {language === 'he'
                         ? 'אם שכר הדירה גבוה מ-7% או עלות המזון + עלות העבודה מעל 60%, שקלו להשתמש בשירות הייעוץ שלנו — לפרטים נוספים: admin@smartplate.org'
@@ -1284,221 +1286,154 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )}
-              {/* Sales banner */}
-              <div className={showConsulting ? "md:w-1/2 w-full" : "w-full"}>
-                <Card className="bg-gradient-to-br from-amber-100 to-yellow-100 border border-amber-200">
-                  <CardContent className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="text-sm font-semibold text-amber-800">
-                      {language === 'he' ? 'מכירות חודשיות' : 'Monthly Sales'}
-                    </div>
-                    <div className="text-3xl font-extrabold text-amber-900 mt-1">
-                      {formatCurrency(actualSales)}
-                    </div>
-                    <div className="text-xs text-amber-700 mt-1">
-                      {language === 'he' ? 'כולל מסעדה + משלוחים (כולל מע״מ)' : 'Dine-in + delivery (incl. VAT)'}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
 
-            {/* Daily Average (MTD) */}
-            <Card>
-              <CardContent className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <div className="text-sm font-semibold text-gray-700">
-                  {language === 'he' ? 'ממוצע יומי (עד כה)' : 'Average Daily Sales (MTD)'}
+            <div className="max-w-4xl mx-auto mb-6 mt-4">
+              {/* Dark Header */}
+              <div className="bg-[#1f2937] text-white p-5 rounded-t-xl flex items-center justify-between shadow-md">
+                <div className={`text-xl font-medium flex items-center gap-3 w-full ${isRTL ? 'flex-row-reverse justify-end' : 'justify-end'}`}>
+                  <span>{moment(selectedMonth).format('MMMM YYYY')} MTD — ({projectionDaysElapsed} {language === 'he' ? 'ימים' : 'days'})</span>
+                  <span>📸</span>
                 </div>
-                <div className="text-2xl font-extrabold text-gray-900 mt-1">
-                  {formatCurrency(projectionAvgPerDay)}
+              </div>
+              
+              <div className="bg-white border border-gray-200 border-t-0 rounded-b-xl p-4 md:p-6 shadow-md">
+                {/* Sales Summary Cards */}
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
+                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מכירות וולט' : 'Delivery Sales'}</div>
+                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(deliverySales)}</div>
+                    {actualSales > 0 && (
+                      <div className="text-sm text-gray-400 mt-1">
+                        {((deliverySales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
+                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מחזור כולל מע"מ' : 'Total Sales (incl. VAT)'}</div>
+                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(actualSales)}</div>
+                  </div>
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
+                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מחזור נטו' : 'Net Sales'}</div>
+                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(actualSalesExVAT)}</div>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {language === 'he'
-                    ? `חושב לפי ${projectionDaysElapsed} ימים`
-                    : `Computed over ${projectionDaysElapsed} days`}
-                </div>
-              </CardContent>
-            </Card>
 
+                {/* Cost Breakdown Rows */}
+                <div className="space-y-4">
+                  {/* Food Cost Row */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-5 shadow-sm transition-all hover:shadow-md">
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                      <div className={`text-3xl font-bold ${actualFoodPercent > foodGoalPercent ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                        {actualFoodPercent.toFixed(1)}%
+                      </div>
+                      <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                        <span className="text-lg text-gray-400 font-medium">{formatCurrency(effectiveFoodCost)}</span>
+                        <span className="text-xl font-semibold text-gray-700">{language === 'he' ? 'קניינות (עלות מזון)' : 'Food Cost'} 🥩</span>
+                      </div>
+                    </div>
+                    <div className={`mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={useManualFood} onCheckedChange={(val) => { setUseManualFood(val); if(val) setEditMode(true); }} />
+                        <span className="text-sm text-gray-600">{language === 'he' ? 'הזנה ידנית' : 'Manual entry'}</span>
+                      </div>
+                      {useManualFood && (
+                        <Input
+                          type="number"
+                          value={manualFoodCost}
+                          onChange={(e) => { const v = parseFloat(e.target.value) || 0; setManualFoodCost(v); }}
+                          placeholder="0"
+                          className="w-32 bg-white"
+                        />
+                      )}
+                    </div>
+                  </div>
 
+                  {/* Labor Cost Row */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-5 shadow-sm transition-all hover:shadow-md">
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                      <div className={`text-3xl font-bold ${actualLaborPercent > laborGoalPercent ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                        {actualLaborPercent.toFixed(1)}%
+                      </div>
+                      <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                        <span className="text-lg text-gray-400 font-medium">{formatCurrency(effectiveLaborCost)}</span>
+                        <span className="text-xl font-semibold text-gray-700">{language === 'he' ? 'עלות כוח אדם כולל מעסיק' : 'Labor Cost'} 👷‍♂️</span>
+                      </div>
+                    </div>
+                    <div className={`mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={useManualLabor} onCheckedChange={(val) => { 
+                          setUseManualLabor(val); 
+                          autoSaveManualLabor(manualLaborCost, val); 
+                        }} />
+                        <span className="text-sm text-gray-600">{language === 'he' ? 'הזנה ידנית' : 'Manual entry'}</span>
+                      </div>
+                      {useManualLabor && (
+                        <Input
+                          type="number"
+                          value={manualLaborCost}
+                          onChange={(e) => { 
+                            const v = parseFloat(e.target.value) || 0; 
+                            setManualLaborCost(v); 
+                            autoSaveManualLabor(v, true); 
+                          }}
+                          placeholder="0"
+                          className="w-32 bg-white"
+                        />
+                      )}
+                    </div>
+                  </div>
 
-            {/* Monthly Rent (incl. VAT) + 7% Check */}
-            <Card>
-              <CardHeader className={isRTL ? 'text-right' : 'text-left'}>
-                <CardTitle>{language === 'he' ? 'שכר דירה חודשי (כולל מע"מ)' : 'Monthly Rent (incl. VAT)'}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                  <div className="space-y-2">
-                    <Label className={isRTL ? 'text-right block' : 'text-left block'}>
-                      {language === 'he' ? 'סכום שכר דירה' : 'Rent Amount'}
-                    </Label>
-                    <Input
-                      type="number"
-                      value={monthlyRent}
-                      onChange={(e) => setMonthlyRent(parseFloat(e.target.value) || 0)}
-                      placeholder="0"
-                      className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}
-                      disabled={!editMode}
-                    />
+                  {/* Wolt Row */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-5 shadow-sm transition-all hover:shadow-md">
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                      <div className={`text-3xl font-bold ${woltPercentOfSales > 10 ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                        {woltPercentOfSales.toFixed(1)}%
+                      </div>
+                      <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                        <span className="text-lg text-gray-400 font-medium">{formatCurrency(woltCommissionAmount)}</span>
+                        <span className="text-xl font-semibold text-gray-700">{language === 'he' ? 'עמלת וולט (24%)' : 'Wolt Commission (24%)'} 🚴</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rent Row */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-5 shadow-sm transition-all hover:shadow-md">
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                      <div className={`text-3xl font-bold ${isRentAbove7 ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                        {rentPercentOfSales.toFixed(1)}%
+                      </div>
+                      <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                        <span className="text-lg text-gray-400 font-medium">{formatCurrency(monthlyRent)}</span>
+                        <span className="text-xl font-semibold text-gray-700">{language === 'he' ? 'שכר דירה' : 'Rent'} 🏢</span>
+                      </div>
+                    </div>
                     {editMode && (
-                      <Button onClick={handleSave} disabled={saving} className="mt-2">
-                        {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        {language === 'he' ? ' שמור' : ' Save'}
-                      </Button>
+                      <div className={`mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <span className="text-sm text-gray-600">{language === 'he' ? 'סכום שכר דירה' : 'Rent Amount'}</span>
+                        <Input
+                          type="number"
+                          value={monthlyRent}
+                          onChange={(e) => setMonthlyRent(parseFloat(e.target.value) || 0)}
+                          placeholder="0"
+                          className="w-32 bg-white"
+                        />
+                      </div>
                     )}
                   </div>
-                  <div className={`bg-gray-50 rounded-lg p-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="text-sm text-gray-600">
-                      {language === 'he' ? 'תחזית מכירות (כולל מע"מ)' : 'Projected Sales (incl. VAT)'}
+
+                  {/* Total Costs Row */}
+                  <div className={`bg-white border-2 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between shadow-md transition-all ${isOverGoal ? 'border-red-500' : 'border-[#22c55e]'}`}>
+                    <div className={`text-4xl font-extrabold ${isOverGoal ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                      {actualCombinedPercent.toFixed(1)}%
                     </div>
-                    <div className="text-2xl font-bold">{formatCurrency(projectedSalesInclVAT)}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {language === 'he' ? `חושב לפי ${projectionDaysElapsed} ימים מדווחים` : `Based on ${projectionDaysElapsed} reported days`}
-                    </div>
-                  </div>
-                  <div className={`${isRentAbove7 ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'} rounded-lg p-3 border`}>
-                    <div className={`text-sm ${isRentAbove7 ? 'text-red-700' : 'text-green-700'}`}>
-                      {language === 'he' ? 'שכר דירה כאחוז מהמכירות' : 'Rent as % of sales'}
-                    </div>
-                    <div className={`text-2xl font-extrabold ${isRentAbove7 ? 'text-red-700' : 'text-green-700'}`}>
-                      {rentPercentOfSales.toFixed(1)}%
-                    </div>
-                    <div className="mt-1">
-                      <Badge className={isRentAbove7 ? 'bg-red-600 text-white' : 'bg-green-600 text-white'}>
-                        {isRentAbove7 ? (language === 'he' ? 'מעל 7%' : 'Above 7%') : (language === 'he' ? 'מתחת ל-7%' : 'Within 7%')}
-                      </Badge>
+                    <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                      <span className="text-2xl font-bold text-gray-800">{language === 'he' ? 'סה"כ עלויות' : 'Total Costs'} 📊</span>
                     </div>
                   </div>
+
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Calculated Costs Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-gradient-to-br from-gray-800 to-gray-900 text-white">
-                <CardHeader>
-                  <CardTitle className={`text-white text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'עלויות עבודה מסידור עבודה' : 'Labor Cost (from Schedules)'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-3xl font-bold mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {formatCurrency(effectiveLaborCost)}
-                  </div>
-                  <div className={`text-gray-300 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {actualLaborPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות החודשיות (ללא מע\"מ)' : 'of monthly sales (excl. VAT)'}
-                  </div>
-
-                  {/* Manual override controls - always visible inside this card */}
-                  <div className={`mt-3 space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Switch checked={useManualLabor} onCheckedChange={(val) => { 
-                        setUseManualLabor(val); 
-                        autoSaveManualLabor(manualLaborCost, val); 
-                      }} />
-                      <span className="text-sm">{language === 'he' ? 'השתמש בעלות מוזנת/מיובאת' : 'Use imported/manual labor cost'}</span>
-                    </div>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Input
-                        type="number"
-                        value={manualLaborCost}
-                        onChange={(e) => { 
-                          const v = parseFloat(e.target.value) || 0; 
-                          setManualLaborCost(v); 
-                          if (!useManualLabor) setUseManualLabor(true); 
-                          autoSaveManualLabor(v, true); 
-                        }}
-                        placeholder="0"
-                        className={`w-48 bg-white/10 border-white/20 ${isRTL ? 'text-right' : 'text-left'}`}
-                      />
-                    </div>
-                    {useManualLabor && (
-                      <div className={`text-xs text-yellow-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div>{language === 'he' ? 'מצב מותאם אישית (הוזן ידנית או ע"י קישור) — נשמר אוטומטית' : 'Custom override (Manual or Link) — auto-saved'}</div>
-                        {manualLaborLastUpdated && (
-                          <div className="text-white/70 mt-1" dir={isRTL ? 'rtl' : 'ltr'}>
-                            {language === 'he' ? 'עודכן לאחרונה: ' : 'Last updated: '}
-                            {moment(manualLaborLastUpdated).format('DD/MM/YYYY HH:mm')}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? `סה"כ עלות עבודה כולל עלויות מעסיק בתקופה ${selectedMonth}` : `Total labor cost incl. employer costs for ${selectedMonth}`}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-gray-600 to-gray-700 text-white">
-                <CardHeader>
-                  <CardTitle className={`text-white text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'קבלות אספקה (ללא מע"מ)' : 'Supply Receipts (excl. VAT)'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-3xl font-bold mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {formatCurrency(calculatedFoodCost)}
-                  </div>
-                  <div className={`text-gray-200 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {actualFoodPercent.toFixed(1)}% {language === 'he' ? 'מהמכירות (ללא מע"מ)' : 'of sales (excl. VAT)'}
-                  </div>
-
-                  {/* Manual override controls */}
-                  <div className={`mt-3 space-y-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Switch checked={useManualFood} onCheckedChange={setUseManualFood} />
-                      <span className="text-sm">{language === 'he' ? 'השתמש בעלות מזון ידנית' : 'Use manual food cost'}</span>
-                    </div>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Input
-                        type="number"
-                        value={manualFoodCost}
-                        onChange={(e) => { const v = parseFloat(e.target.value) || 0; setManualFoodCost(v); if (!useManualFood) setUseManualFood(true); }}
-                        placeholder="0"
-                        className={`w-48 bg-white/10 border-white/20 ${isRTL ? 'text-right' : 'text-left'}`}
-                      />
-                    </div>
-                    {useManualFood && (
-                      <div className={`text-xs text-yellow-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {language === 'he' ? 'מצב ידני — נשמר לחודש שנבחר למעלה' : 'Manual mode — saved for the selected month'}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={`text-gray-400 text-xs mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'סה"כ קבלות אספקה מתחילת החודש' : 'Total supply receipts from month start'}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className={`bg-gradient-to-br ${isOverGoal ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} text-white`}>
-                <CardHeader>
-                  <CardTitle className={`text-white text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'אחוז עלויות משולב' : 'Combined Cost %'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-3xl font-bold mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {actualCombinedPercent.toFixed(1)}%
-                    <span className="text-xl font-normal ml-2 rtl:mr-2 rtl:ml-0 opacity-90">
-                      ({formatCurrency(effectiveLaborCost + effectiveFoodCost)})
-                    </span>
-                  </div>
-                  <div className={`text-sm flex items-center gap-2 ${isRTL ? 'text-right flex-row-reverse' : 'text-left'}`}>
-                    {isOverGoal ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                    {isOverGoal 
-                      ? (language === 'he' ? 'מעל היעד ב-' : 'Over goal by ')
-                      : (language === 'he' ? 'מתחת ליעד ב-' : 'Under goal by ')
-                    }
-                    {Math.abs(actualCombinedPercent - combinedGoalPercent).toFixed(1)}%
-                  </div>
-                  <div className={`text-white/80 text-xs mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'יעד:' : 'Goal:'} {combinedGoalPercent.toFixed(0)}%
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
             </div>
 
             {/* Cost Breakdown Chart */}
