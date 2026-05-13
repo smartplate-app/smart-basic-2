@@ -82,13 +82,17 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
         let changed = false;
         const updatedIngredients = recipe.ingredients.map(ing => {
           const qty = Number(ing.quantity) || 0;
-          const item = fetchedItems.find(i => i.id === ing.item_id);
-          const prep = fetchedPrep.find(r => r.id === ing.item_id);
+          const item = fetchedItems.find(i => i.id === ing.item_id || (ing.item_name && i.name && i.name.toLowerCase() === ing.item_name.toLowerCase()));
+          const prep = fetchedPrep.find(r => r.id === ing.item_id || (ing.item_name && r.name && r.name.toLowerCase() === ing.item_name.toLowerCase()));
           
-          let newCost = ing.cost;
-          let newUnitPrice = ing.unit_price;
+          let newCost = ing.cost !== undefined && ing.cost !== null ? ing.cost : 0;
+          let newUnitPrice = ing.unit_price !== undefined && ing.unit_price !== null ? ing.unit_price : 0;
           
           if (item) {
+            // Ensure item_id and item_name are updated if matched by name
+            ing.item_id = item.id;
+            ing.item_name = item.name;
+            
             const price = item.price_after_discount || item.price || 0;
             const unitsPerPackage = item.units_per_package || 1;
             const contentPerUnit = item.content_per_unit || 1;
@@ -134,6 +138,9 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
             }
           } else if (prep || ing.is_prep_recipe) {
             if (prep) {
+              ing.item_id = prep.id;
+              ing.item_name = prep.name;
+
               const costPerUnit = prep.yield_quantity > 0 ? (prep.total_cost || 0) / prep.yield_quantity : (prep.total_cost || 0);
               const calculatedCost = costPerUnit * qty;
               if (calculatedCost !== ing.cost) {
@@ -640,7 +647,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       type="number" 
                       step="0.01" 
                       className="w-16 h-8 px-1 text-sm text-center" 
-                      value={ing.unit_price !== undefined ? ing.unit_price : ""}
+                      value={ing.unit_price !== undefined && ing.unit_price !== null ? ing.unit_price : ""}
                       onChange={(e) => handleUpdateIngredient(idx, 'unit_price', e.target.value)}
                       placeholder="0.00"
                     />
@@ -651,7 +658,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       type="number" 
                       step="0.01" 
                       className="w-16 h-8 px-1 text-sm font-bold text-center" 
-                      value={ing.cost !== undefined ? ing.cost : ""}
+                      value={ing.cost !== undefined && ing.cost !== null ? ing.cost : ""}
                       onChange={(e) => handleUpdateIngredient(idx, 'cost', e.target.value)}
                       placeholder="0.00"
                     />
