@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, ChefHat } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
@@ -59,6 +59,27 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
             </TableRow>
           ))}
         </TableBody>
+        <TableFooter className="bg-gray-100 dark:bg-gray-800">
+          <TableRow>
+            <TableCell colSpan={2} className={`font-bold text-lg ${isRTL ? 'text-left' : 'text-right'}`}>
+              {language === 'he' ? 'סה״כ:' : 'Total:'}
+            </TableCell>
+            <TableCell className="font-bold text-red-600 text-lg">
+              {recipes.reduce((sum, r) => sum + (Number(r.total_cost) || 0), 0).toFixed(2)}
+            </TableCell>
+            <TableCell className="font-bold text-green-600 text-lg">
+              {recipes.filter(r => r.type === 'sale_item').reduce((sum, r) => sum + (Number(r.sale_price) || 0), 0).toFixed(2)}
+            </TableCell>
+            <TableCell className="font-bold text-lg">
+              {(() => {
+                const totalCost = recipes.filter(r => r.type === 'sale_item').reduce((sum, r) => sum + (Number(r.total_cost) || 0), 0);
+                const totalSale = recipes.filter(r => r.type === 'sale_item').reduce((sum, r) => sum + (Number(r.sale_price) || 0), 0);
+                return totalSale > 0 ? `${((totalCost / (totalSale / 1.18)) * 100).toFixed(1)}%` : '-';
+              })()}
+            </TableCell>
+            <TableCell></TableCell>
+          </TableRow>
+        </TableFooter>
       </Table>
     </div>
   );
