@@ -141,30 +141,30 @@ export default function CogsReportsPage() {
   return (
     <div className="min-h-screen bg-[#f3f2f1] p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className={`bg-[#d4a373] p-6 rounded-xl text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'md:flex-row-reverse text-right' : 'text-left'}`}>
-          <div className={`flex flex-col ${isRTL ? 'items-end' : 'items-start'} w-full md:w-auto`}>
+        <div className={`bg-[#d4a373] p-6 rounded-xl text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+          <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
             <h1 className={`text-3xl font-bold flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <BarChart3 className="w-8 h-8 text-pink-200" />
+              <BarChart3 className="w-8 h-8 text-white/70" />
               <span className="text-white">COGS</span> {language === 'he' ? 'דוחות' : 'Reports'}
             </h1>
             <p className="mt-1 opacity-90 text-white font-medium">
               {language === 'he' ? 'עקוב אחר עלות סחורה נמכרת ושולי רווח' : 'Track Cost of Goods Sold and profit margins'}
             </p>
           </div>
-          <div className={`flex flex-col md:flex-row flex-wrap gap-3 w-full md:w-auto ${isRTL ? 'justify-start md:flex-row-reverse' : 'justify-end'}`}>
+          <div className={`flex flex-wrap gap-3 ${isRTL ? 'flex-row-reverse' : ''} justify-end`}>
             <Button 
               onClick={() => setShowImportModal(true)}
-              className={`bg-purple-600 hover:bg-purple-700 text-white border-none rounded-full px-6 shadow-sm flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`bg-[#8b5cf6] hover:bg-[#7c3aed] text-white border-none rounded-full px-6 shadow-sm flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
             >
-              <FileText className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <FileText className="w-5 h-5" />
               {language === 'he' ? 'קליטת דוח קופה' : 'Import POS Report'}
             </Button>
             <Button 
               onClick={() => { setEditingReport(null); setShowForm(true); }}
               variant="outline"
-              className={`bg-transparent hover:bg-white/20 text-white border-white/50 rounded-full px-6 shadow-sm flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`bg-transparent hover:bg-white/10 text-white border border-white/50 rounded-full px-6 shadow-sm flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
             >
-              <Plus className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              <Plus className="w-5 h-5" />
               {language === 'he' ? 'דוח COGS חדש' : 'New COGS Report'}
             </Button>
           </div>
