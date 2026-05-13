@@ -35,73 +35,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       try { currentUser = await base44.auth.me(); } catch(e){}
       
       if (!currentUser) {
-        base44.entities.Item.filter({}, "name", 10000).then(fetchedItems => {
-          setItems(fetchedItems);
-          if (recipe && recipe.ingredients && recipe.ingredients.length > 0) {
-            let changed = false;
-            const updatedIngredients = recipe.ingredients.map(ing => {
-              const qty = Number(ing.quantity) || 0;
-              const item = fetchedItems.find(i => i.id === ing.item_id);
-              let newCost = ing.cost;
-              let newUnitPrice = ing.unit_price;
-              
-              if (item) {
-                const price = item.price_after_discount || item.price || 0;
-                const unitsPerPackage = item.units_per_package || 1;
-                const contentPerUnit = item.content_per_unit || 1;
-                const purchaseUnit = item.unit || 'unit';
-                const contentUnit = item.content_unit || 'unit';
-                
-                let calculatedCost = qty * (price / unitsPerPackage);
-                if (ing.unit === purchaseUnit) {
-                  calculatedCost = (qty / unitsPerPackage) * price;
-                } else if (ing.unit === 'unit' && purchaseUnit === 'case') {
-                  calculatedCost = qty * (price / unitsPerPackage);
-                } else {
-                  let factor = null;
-                  if (ing.unit === contentUnit) factor = 1;
-                  else if (ing.unit === 'kg' && contentUnit === 'gram') factor = 1000;
-                  else if (ing.unit === 'gram' && contentUnit === 'kg') factor = 0.001;
-                  else if (ing.unit === 'liter' && contentUnit === 'ml') factor = 1000;
-                  else if (ing.unit === 'ml' && contentUnit === 'liter') factor = 0.001;
-                  
-                  if (factor !== null) {
-                    const totalContent = unitsPerPackage * contentPerUnit;
-                    const costPerContentUnit = price / totalContent;
-                    calculatedCost = qty * factor * costPerContentUnit;
-                  } else {
-                    let factor2 = null;
-                    if (ing.unit === purchaseUnit) factor2 = 1;
-                    else if (ing.unit === 'kg' && purchaseUnit === 'gram') factor2 = 1000;
-                    else if (ing.unit === 'gram' && purchaseUnit === 'kg') factor2 = 0.001;
-                    else if (ing.unit === 'liter' && purchaseUnit === 'ml') factor2 = 1000;
-                    else if (ing.unit === 'ml' && purchaseUnit === 'liter') factor2 = 0.001;
-                    
-                    if (factor2 !== null) {
-                      const costPerPurchaseUnit = price / unitsPerPackage;
-                      calculatedCost = qty * factor2 * costPerPurchaseUnit;
-                    }
-                  }
-                }
-                
-                if (calculatedCost !== ing.cost) {
-                  newCost = calculatedCost;
-                  newUnitPrice = qty > 0 ? calculatedCost / qty : newUnitPrice;
-                  changed = true;
-                }
-              }
-              return { ...ing, cost: newCost, unit_price: newUnitPrice, original_item: item };
-            });
-
-            if (changed) {
-              setFormData(prev => ({
-                ...prev,
-                ingredients: updatedIngredients,
-                total_cost: updatedIngredients.reduce((sum, ing) => sum + (Number(ing.cost) || 0), 0)
-              }));
-            }
-          }
-        });
+        base44.entities.Item.filter({}, "name", 10000).then(setItems);
         base44.entities.Recipe.filter({ type: "prep_recipe" }, "name", 10000).then(setPrepRecipes);
         base44.entities.Supplier.filter({}, "name", 10000).then(setSuppliers);
         base44.entities.Warehouse.filter({}, "name", 10000).then(setWarehouses);
@@ -332,6 +266,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       } else {
         ing.cost = (ing.unit_price || 0) * qty;
       }
+    } else if (field === 'cost') {
+      const parsedCost = Number(value) || 0;
+      const qty = Number(ing.quantity) || 1;
+      ing.cost = parsedCost;
+      ing.unit_price = qty > 0 ? parsedCost / qty : 0;
     }
 
     setFormData({
@@ -690,7 +629,13 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       </SelectContent>
                     </Select>
                   )}
-                  <div className="text-sm font-bold w-16 text-left">{Number(ing.cost).toFixed(2)}</div>
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    className="w-16 h-8 px-1 text-sm font-bold text-center" 
+                    value={ing.cost}
+                    onChange={(e) => handleUpdateIngredient(idx, 'cost', e.target.value)}
+                  />
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRemoveIngredient(idx)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
