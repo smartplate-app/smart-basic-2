@@ -104,7 +104,21 @@ export default function ItemsPage() {
 
       const effectiveEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
 
-      if (isStoreUser && storeOwnerEmail) {
+      if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
+        // Admin impersonation - load data securely from backend
+        console.log('[Items] Loading as ADMIN impersonating:', effectiveEmail);
+        const { data } = await base44.functions.invoke('getAdminData', { action: 'getUserData', userEmail: effectiveEmail });
+        if (data?.success && data?.data) {
+          itemsData = data.data.items || [];
+          suppliersData = data.data.suppliers || [];
+          warehousesData = data.data.inventory || []; // Wait, inventory is counts, getAdminData doesn't return warehouses! Let's update getAdminData too
+          
+          // Fix warehouse data by filtering properly
+          warehousesData = data.data.warehouses || [];
+        } else {
+          throw new Error('Failed to load admin data');
+        }
+      } else if (isStoreUser && storeOwnerEmail) {
         // Store user - load data from the store owner
         console.log('[Items] Loading as STORE USER from owner:', storeOwnerEmail);
         const [ownerItems, ownItemsByStoreOwner, managerCreated, ownerSuppliers, managerSuppliers, ownerWarehouses, myWarehouses] = await Promise.all([

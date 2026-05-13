@@ -70,9 +70,17 @@ export default function RecipesPage() {
         } catch(e){}
       }
 
-      let data1 = await base44.entities.Recipe.filter({ created_by: targetEmail }, "-created_date", 10000);
-      let data2 = await base44.entities.Recipe.filter({ store_owner_email: targetEmail }, "-created_date", 10000);
-      let data = [...data1, ...data2];
+      let data = [];
+      if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
+        const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getUserData', userEmail: targetEmail });
+        if (adminData?.success && adminData?.data?.recipes) {
+          data = adminData.data.recipes;
+        }
+      } else {
+        let data1 = await base44.entities.Recipe.filter({ created_by: targetEmail }, "-created_date", 10000);
+        let data2 = await base44.entities.Recipe.filter({ store_owner_email: targetEmail }, "-created_date", 10000);
+        data = [...data1, ...data2];
+      }
       
       if (targetEmail !== currentUser.email) {
         const myData1 = await base44.entities.Recipe.filter({ created_by: currentUser.email }, "-created_date", 10000);

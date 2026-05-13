@@ -44,7 +44,7 @@ export default function CogsReportsPage() {
         return;
       }
 
-      let targetEmail = currentUser.acting_as_store_email || currentUser.store_user_owner_email || currentUser.email;
+      let targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
       if (!currentUser.store_user_owner_email) {
         try {
           const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
@@ -52,22 +52,31 @@ export default function CogsReportsPage() {
         } catch(e){}
       }
 
-      let data = await base44.entities.CogsReport.filter({ created_by: targetEmail }, "-created_date");
-      
-      if (targetEmail !== currentUser.email) {
-        const myData = await base44.entities.CogsReport.filter({ created_by: currentUser.email }, "-created_date");
-        data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-      }
+      let data = [];
 
-      if (currentUser.chain_id && !currentUser.is_chain_head) {
-        try {
-          const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
-          if (chain.length > 0) {
-            const headEmail = chain[0].head_store_user_email;
-            const headData = await base44.entities.CogsReport.filter({ created_by: headEmail }, "-created_date");
-            data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
+          const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
+          if (adminData?.success && adminData?.data?.cogsReports) {
+              data = adminData.data.cogsReports;
           }
-        } catch(e){}
+      } else {
+          data = await base44.entities.CogsReport.filter({ created_by: targetEmail }, "-created_date");
+          
+          if (targetEmail !== currentUser.email) {
+            const myData = await base44.entities.CogsReport.filter({ created_by: currentUser.email }, "-created_date");
+            data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+          }
+
+          if (currentUser.chain_id && !currentUser.is_chain_head) {
+            try {
+              const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
+              if (chain.length > 0) {
+                const headEmail = chain[0].head_store_user_email;
+                const headData = await base44.entities.CogsReport.filter({ created_by: headEmail }, "-created_date");
+                data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+              }
+            } catch(e){}
+          }
       }
 
       setReports(data || []);
@@ -79,7 +88,13 @@ export default function CogsReportsPage() {
 
   const handleDelete = async (id) => {
     if (window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק דוח זה?' : 'Are you sure you want to delete this report?')) {
-      await base44.entities.CogsReport.delete(id);
+      let currentUser;
+      try { currentUser = await base44.auth.me(); } catch(e){}
+      if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
+          await base44.functions.invoke('deleteCogsReport', { reportId: id });
+      } else {
+          await base44.entities.CogsReport.delete(id);
+      }
       loadReports();
     }
   };

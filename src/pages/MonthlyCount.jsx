@@ -79,25 +79,44 @@ export default function MonthlyCountPage() {
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      console.log("[MonthlyCount] Loading counts...");
-      const countsData = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date");
+      let countsData = [];
+      let warehousesData = [];
+      let itemsData = [];
+
+      try {
+        const currentUserReq = await base44.auth.me();
+        if (currentUserReq?.admin_original_email && currentUserReq?.acting_as_user_email) {
+            console.log("[MonthlyCount] Loading as admin impersonating...");
+            const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: userEmail });
+            if (data?.success) {
+                countsData = data.data.inventory || [];
+                warehousesData = data.data.warehouses || [];
+                itemsData = data.data.items || [];
+            }
+        } else {
+            console.log("[MonthlyCount] Loading counts...");
+            countsData = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date");
+            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log("[MonthlyCount] Loading warehouses...");
+            warehousesData = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name");
+            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log("[MonthlyCount] Loading items...");
+            itemsData = await base44.entities.Item.filter({ created_by: userEmail }, "name");
+        }
+      } catch (e) {
+          console.error("Error fetching admin data for counts", e);
+      }
+
       setCounts(countsData);
       console.log(`[MonthlyCount] Successfully loaded ${countsData.length} counts`);
       
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log("[MonthlyCount] Loading warehouses...");
-      const warehousesData = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name");
       setWarehouses(warehousesData);
       console.log(`[MonthlyCount] Successfully loaded ${warehousesData.length} warehouses`);
       
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log("[MonthlyCount] Loading items...");
-      const itemsData = await base44.entities.Item.filter({ created_by: userEmail }, "name");
       setItems(itemsData);
-      setCache('monthly_count_v1', { counts: countsData, warehouses: warehousesData, items: itemsData });
       console.log(`[MonthlyCount] Successfully loaded ${itemsData.length} items`);
+
+      setCache('monthly_count_v1', { counts: countsData, warehouses: warehousesData, items: itemsData });
       
       setNetworkError(null);
       setRetryCount(0);

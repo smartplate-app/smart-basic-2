@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 import { Warehouse } from "@/entities/Warehouse";
 import { User } from "@/entities/User";
 import { Button } from "@/components/ui/button";
@@ -39,10 +40,18 @@ export default function WarehousesPage() {
     }
   }, []);
 
-  const loadWarehouses = async (targetEmail) => {
+  const loadWarehouses = async (targetEmail, currentUser) => {
     try {
       setLoading(true);
-      const data = await Warehouse.filter({ created_by: targetEmail }, "name");
+      let data = [];
+      if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
+        const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getUserData', userEmail: targetEmail });
+        if (adminData?.success && adminData?.data?.warehouses) {
+          data = adminData.data.warehouses;
+        }
+      } else {
+        data = await Warehouse.filter({ created_by: targetEmail }, "name");
+      }
       setWarehouses(data);
       setCache('warehouses_v1', { warehouses: data });
     } catch (error) {
@@ -61,7 +70,7 @@ export default function WarehousesPage() {
         setUser(currentUser);
         setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
         const targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
-        await loadWarehouses(targetEmail);
+        await loadWarehouses(targetEmail, currentUser);
       } catch (error) {
         console.error("Authentication failed:", error);
         await User.login();

@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
     try {
@@ -24,7 +24,13 @@ Deno.serve(async (req) => {
                 suppliers,
                 inventory,
                 workers,
-                schedules
+                schedules,
+                recipes,
+                warehouses,
+                cogsReports,
+                priceChanges,
+                wasteReports,
+                monthlyDashboardData
             ] = await Promise.all([
                 base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
                 base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
@@ -32,7 +38,13 @@ Deno.serve(async (req) => {
                 base44.asServiceRole.entities.Supplier.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
                 base44.asServiceRole.entities.InventoryCount.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
                 base44.asServiceRole.entities.Worker.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
-                base44.asServiceRole.entities.WeeklySchedule.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] })
+                base44.asServiceRole.entities.WeeklySchedule.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.Recipe.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.Warehouse.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.CogsReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.PriceChangeLog.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.WasteReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.MonthlyDashboardData.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] })
             ]);
 
             return Response.json({
@@ -44,7 +56,13 @@ Deno.serve(async (req) => {
                     suppliers,
                     inventory,
                     workers,
-                    schedules
+                    schedules,
+                    recipes,
+                    warehouses,
+                    cogsReports,
+                    priceChanges,
+                    wasteReports,
+                    monthlyDashboardData
                 }
             });
         }
@@ -59,7 +77,11 @@ Deno.serve(async (req) => {
                 workers,
                 schedules,
                 dashboardData,
-                positions
+                positions,
+                recipes,
+                warehouses,
+                cogsReports,
+                wasteReports
             ] = await Promise.all([
                 base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date'),
                 base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date'),
@@ -69,7 +91,11 @@ Deno.serve(async (req) => {
                 base44.asServiceRole.entities.Worker.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
                 base44.asServiceRole.entities.WeeklySchedule.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-week_start_date'),
                 base44.asServiceRole.entities.MonthlyDashboardData.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-month'),
-                base44.asServiceRole.entities.JobPosition.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] })
+                base44.asServiceRole.entities.JobPosition.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.Recipe.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.Warehouse.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.CogsReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.WasteReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] })
             ]);
 
             return Response.json({
@@ -83,7 +109,11 @@ Deno.serve(async (req) => {
                     workers,
                     schedules,
                     dashboardData,
-                    positions
+                    positions,
+                    recipes,
+                    warehouses,
+                    cogsReports,
+                    wasteReports
                 }
             });
         }
