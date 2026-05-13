@@ -498,7 +498,7 @@ export default function OrdersPage() {
           setOrders(prev => prev.map(o => (o.id === clientId) ? saved : o));
         }
       } else if (action === 'delete_order') {
-        await base44.entities.Order.delete(payload.id);
+        await base44.functions.invoke('deleteOrder', { orderId: payload.id });
         setOrders(prev => prev.filter(o => o.id !== payload.id));
       }
     };

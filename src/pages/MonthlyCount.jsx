@@ -80,27 +80,21 @@ export default function MonthlyCountPage() {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       console.log("[MonthlyCount] Loading counts...");
-      const countsData1 = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date");
-      const countsData2 = await base44.entities.InventoryCount.filter({ store_owner_email: userEmail }, "-count_date");
-      const countsData = [...countsData1, ...countsData2];
+      const countsData = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date");
       setCounts(countsData);
       console.log(`[MonthlyCount] Successfully loaded ${countsData.length} counts`);
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
       console.log("[MonthlyCount] Loading warehouses...");
-      const warehousesData1 = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name");
-      const warehousesData2 = await base44.entities.Warehouse.filter({ store_owner_email: userEmail }, "name");
-      const warehousesData = [...warehousesData1, ...warehousesData2].filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
+      const warehousesData = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name");
       setWarehouses(warehousesData);
       console.log(`[MonthlyCount] Successfully loaded ${warehousesData.length} warehouses`);
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
       console.log("[MonthlyCount] Loading items...");
-      const itemsData1 = await base44.entities.Item.filter({ created_by: userEmail }, "name");
-      const itemsData2 = await base44.entities.Item.filter({ store_owner_email: userEmail }, "name");
-      const itemsData = [...itemsData1, ...itemsData2].filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
+      const itemsData = await base44.entities.Item.filter({ created_by: userEmail }, "name");
       setItems(itemsData);
       setCache('monthly_count_v1', { counts: countsData, warehouses: warehousesData, items: itemsData });
       console.log(`[MonthlyCount] Successfully loaded ${itemsData.length} items`);
@@ -329,7 +323,8 @@ export default function MonthlyCountPage() {
     const id = typeof count === 'string' ? count : count?.id;
     if (!id) return;
     try {
-      await base44.entities.InventoryCount.delete(id);
+      const { data } = await base44.functions.invoke('deleteInventoryCount', { countId: id });
+      if (!data?.success) throw new Error(data?.error || 'Failed to delete count');
       await loadData(user.email);
     } catch (error) {
       console.error('Error deleting count:', error);

@@ -257,7 +257,8 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                               onClick={async () => {
                                 if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
                                 try {
-                                  await Warehouse.delete(warehouse.id);
+                                  const { data } = await base44.functions.invoke('deleteWarehouse', { warehouseId: warehouse.id });
+                                  if (!data?.success) throw new Error(data?.error || 'Failed to delete warehouse');
                                   const updated = await Warehouse.list();
                                   setLocalWarehouses(updated);
                                   if (showItemSelection?.id === warehouse.id) setShowItemSelection(null);
