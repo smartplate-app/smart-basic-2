@@ -302,9 +302,9 @@ export default function DashboardPage() {
         setManagementSalary(existingData.management_salary || 0);
         setMonthlyRent(existingData.monthly_rent_incl_vat || 0);
         // Sales & tips
-        setRestaurantSales(calculatedRestaurantSales);
-        setDeliverySales(calculatedDeliverySales);
-        setActualSales(calculatedTotalSales);
+        setRestaurantSales(calculatedRestaurantSales > 0 ? calculatedRestaurantSales : (Number(existingData.restaurant_sales) || 0));
+        setDeliverySales(calculatedDeliverySales > 0 ? calculatedDeliverySales : (Number(existingData.delivery_takeaway_sales) || 0));
+        setActualSales(calculatedTotalSales > 0 ? calculatedTotalSales : (Number(existingData.total_sales) || 0));
         setTotalTips(0);
         // Manual labor override
         const mlc = Number(existingData.manual_labor_cost || 0);
@@ -1482,6 +1482,9 @@ export default function DashboardPage() {
                 <CardContent>
                   <div className={`text-3xl font-bold mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {actualCombinedPercent.toFixed(1)}%
+                    <span className="text-xl font-normal ml-2 rtl:mr-2 rtl:ml-0 opacity-90">
+                      ({formatCurrency(effectiveLaborCost + effectiveFoodCost)})
+                    </span>
                   </div>
                   <div className={`text-sm flex items-center gap-2 ${isRTL ? 'text-right flex-row-reverse' : 'text-left'}`}>
                     {isOverGoal ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
