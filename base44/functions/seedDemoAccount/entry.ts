@@ -160,12 +160,12 @@ Deno.serve(async (req) => {
         });
 
         // 6. Orders
-        const order = await base44.asServiceRole.entities.Order.create({
+        const order1 = await base44.asServiceRole.entities.Order.create({
             supplier_id: createdSuppliers[0].id,
             supplier_name: createdSuppliers[0].name,
             order_number: "ORD-DEMO-001",
             status: "delivered",
-            total_cost: 250.0,
+            total_cost: 97.0,
             items: [
                 { item_id: createdItems[0].id, item_name: createdItems[0].name, quantity: 10, unit: "kg", price: 5.5, total: 55.0 },
                 { item_id: createdItems[1].id, item_name: createdItems[1].name, quantity: 10, unit: "kg", price: 4.2, total: 42.0 }
@@ -174,10 +174,38 @@ Deno.serve(async (req) => {
             store_owner_email: demoEmail
         });
 
+        const order2 = await base44.asServiceRole.entities.Order.create({
+            supplier_id: createdSuppliers[1].id,
+            supplier_name: createdSuppliers[1].name,
+            order_number: "ORD-DEMO-002",
+            status: "sent",
+            total_cost: 2750.0,
+            items: [
+                { item_id: createdItems[4].id, item_name: createdItems[4].name, quantity: 50, unit: "kg", price: 55.0, total: 2750.0 }
+            ],
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        const order3 = await base44.asServiceRole.entities.Order.create({
+            supplier_id: createdSuppliers[2].id,
+            supplier_name: createdSuppliers[2].name,
+            order_number: "ORD-DEMO-003",
+            status: "draft",
+            total_cost: 305.0,
+            items: [
+                { item_id: createdItems[3].id, item_name: createdItems[3].name, quantity: 5, unit: "liter", price: 35.0, total: 175.0 },
+                { item_id: createdItems[5].id, item_name: createdItems[5].name, quantity: 5, unit: "kg", price: 8.0, total: 40.0 },
+                { item_id: createdItems[2].id, item_name: createdItems[2].name, quantity: 2, unit: "kg", price: 45.0, total: 90.0 }
+            ],
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
         // 7. Receipts
         await base44.asServiceRole.entities.SupplyReceipt.create({
-            order_id: order.id,
-            order_number: order.order_number,
+            order_id: order1.id,
+            order_number: order1.order_number,
             supplier_id: createdSuppliers[0].id,
             supplier_name: createdSuppliers[0].name,
             received_date: new Date().toISOString().substring(0, 10),
