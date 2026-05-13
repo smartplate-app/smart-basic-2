@@ -7,27 +7,27 @@ Deno.serve(async (req) => {
         const demoEmail = 'demo@foodcostapp.com';
         
         // Cleanup existing demo data just in case
-        const existingSuppliers = await base44.asServiceRole.entities.Supplier.filter({ created_by: demoEmail });
+        const existingSuppliers = await base44.asServiceRole.entities.Supplier.filter({ store_owner_email: demoEmail });
         for (const s of existingSuppliers) {
             await base44.asServiceRole.entities.Supplier.delete(s.id);
         }
-        const existingItems = await base44.asServiceRole.entities.Item.filter({ created_by: demoEmail });
+        const existingItems = await base44.asServiceRole.entities.Item.filter({ store_owner_email: demoEmail });
         for (const i of existingItems) {
             await base44.asServiceRole.entities.Item.delete(i.id);
         }
-        const existingRecipes = await base44.asServiceRole.entities.Recipe.filter({ created_by: demoEmail });
+        const existingRecipes = await base44.asServiceRole.entities.Recipe.filter({ store_owner_email: demoEmail });
         for (const r of existingRecipes) {
             await base44.asServiceRole.entities.Recipe.delete(r.id);
         }
-        const existingOrders = await base44.asServiceRole.entities.Order.filter({ created_by: demoEmail });
+        const existingOrders = await base44.asServiceRole.entities.Order.filter({ store_owner_email: demoEmail });
         for (const o of existingOrders) {
             await base44.asServiceRole.entities.Order.delete(o.id);
         }
-        const existingReceipts = await base44.asServiceRole.entities.SupplyReceipt.filter({ created_by: demoEmail });
+        const existingReceipts = await base44.asServiceRole.entities.SupplyReceipt.filter({ store_owner_email: demoEmail });
         for (const sr of existingReceipts) {
             await base44.asServiceRole.entities.SupplyReceipt.delete(sr.id);
         }
-        const existingDashboard = await base44.asServiceRole.entities.MonthlyDashboardData.filter({ created_by: demoEmail });
+        const existingDashboard = await base44.asServiceRole.entities.MonthlyDashboardData.filter({ store_owner_email: demoEmail });
         for (const d of existingDashboard) {
             await base44.asServiceRole.entities.MonthlyDashboardData.delete(d.id);
         }
