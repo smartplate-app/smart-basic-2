@@ -22,7 +22,7 @@ export default function RecipesPage() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [viewMode, setViewMode] = useState("cards");
+  const [viewMode, setViewMode] = useState("list");
   
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
@@ -240,24 +240,7 @@ export default function RecipesPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 justify-end">
-            <div className="flex bg-white/20 rounded-full p-1 mr-2 rtl:ml-2 rtl:mr-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setViewMode('cards')}
-                className={`rounded-full h-8 w-8 ${viewMode === 'cards' ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setViewMode('list')}
-                className={`rounded-full h-8 w-8 ${viewMode === 'list' ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
+
             
             <Button 
               onClick={handleFindDuplicates}
