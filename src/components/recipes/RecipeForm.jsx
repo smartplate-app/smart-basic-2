@@ -603,7 +603,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
               {formData.ingredients.map((ing, idx) => (
                 <div key={idx} className="flex items-center gap-2 bg-gray-50 p-2 rounded-md border">
                   <div 
-                    className={`flex-1 font-medium text-sm flex items-center gap-1.5 ${!ing.is_prep_recipe ? 'cursor-pointer hover:text-[#d4a373] transition-colors' : ''}`}
+                    className={`flex-1 flex flex-col justify-center gap-0.5 ${!ing.is_prep_recipe ? 'cursor-pointer hover:text-[#d4a373] transition-colors' : ''}`}
                     onClick={(e) => {
                       if (!ing.is_prep_recipe) {
                         e.stopPropagation();
@@ -613,15 +613,29 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     }}
                     title={!ing.is_prep_recipe ? (language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item') : ''}
                   >
-                    {!ing.is_prep_recipe && (ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name) && (
-                      <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded shrink-0">
-                        {ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name}
-                      </span>
-                    )}
-                    {ing.is_prep_recipe && (
-                      <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'הכנה' : 'PREP'}</span>
-                    )}
-                    <span className={!ing.is_prep_recipe ? 'underline decoration-dotted underline-offset-2' : ''}>{ing.item_name}</span>
+                    <div className="flex items-center gap-1.5">
+                      {!ing.is_prep_recipe && (ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name) && (
+                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded shrink-0">
+                          {ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name}
+                        </span>
+                      )}
+                      {ing.is_prep_recipe && (
+                        <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'הכנה' : 'PREP'}</span>
+                      )}
+                      <span className={`font-medium text-sm ${!ing.is_prep_recipe ? 'underline decoration-dotted underline-offset-2' : ''}`}>{ing.item_name}</span>
+                    </div>
+                    {(() => {
+                      if (ing.is_prep_recipe) return null;
+                      const origItem = ing.original_item || items.find(i => i.id === ing.item_id);
+                      if (!origItem) return null;
+                      const cPrice = Number(origItem.price_after_discount || origItem.price || 0).toFixed(2);
+                      const cUnit = (origItem.units_per_package > 1 ? `${origItem.units_per_package} ` : '') + (language === 'he' ? (origItem.unit === 'case' ? 'אריזות' : origItem.unit === 'kg' ? 'ק״ג' : origItem.unit === 'gram' ? 'גרם' : origItem.unit === 'liter' ? 'ליטר' : origItem.unit === 'ml' ? 'מ״ל' : 'יחידה') : (origItem.unit || 'unit'));
+                      return (
+                        <div className="text-[10px] text-gray-500 font-normal">
+                          {language === 'he' ? 'מחירון:' : 'Catalog:'} ₪{cPrice} / {cUnit}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <Input 
                     type="number" 

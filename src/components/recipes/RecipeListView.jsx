@@ -43,7 +43,7 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
               </TableCell>
               <TableCell>
                 {recipe.type === 'sale_item' && recipe.sale_price > 0 
-                  ? `${((recipe.total_cost / recipe.sale_price) * 100).toFixed(1)}%` 
+                  ? `${((recipe.total_cost / (recipe.sale_price / 1.18)) * 100).toFixed(1)}%` 
                   : '-'}
               </TableCell>
               <TableCell>
