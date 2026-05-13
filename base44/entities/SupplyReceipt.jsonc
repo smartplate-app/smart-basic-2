@@ -240,5 +240,100 @@
     "order_number",
     "supplier_name",
     "received_date"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.acting_as_store_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.acting_as_store_email}}"
+        },
+        {
+          "created_by": "{{user.store_user_owner_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.store_user_owner_email}}"
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.acting_as_store_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.acting_as_store_email}}"
+        },
+        {
+          "created_by": "{{user.store_user_owner_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.store_user_owner_email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.acting_as_store_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.acting_as_store_email}}"
+        },
+        {
+          "created_by": "{{user.store_user_owner_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.store_user_owner_email}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.acting_as_store_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.acting_as_store_email}}"
+        },
+        {
+          "created_by": "{{user.store_user_owner_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.store_user_owner_email}}"
+        }
+      ]
+    }
+  }
 }
