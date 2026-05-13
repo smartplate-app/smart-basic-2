@@ -80,21 +80,27 @@ export default function MonthlyCountPage() {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       console.log("[MonthlyCount] Loading counts...");
-      const countsData = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date");
+      const countsData1 = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date");
+      const countsData2 = await base44.entities.InventoryCount.filter({ store_owner_email: userEmail }, "-count_date");
+      const countsData = [...countsData1, ...countsData2];
       setCounts(countsData);
       console.log(`[MonthlyCount] Successfully loaded ${countsData.length} counts`);
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
       console.log("[MonthlyCount] Loading warehouses...");
-      const warehousesData = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name");
+      const warehousesData1 = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name");
+      const warehousesData2 = await base44.entities.Warehouse.filter({ store_owner_email: userEmail }, "name");
+      const warehousesData = [...warehousesData1, ...warehousesData2].filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
       setWarehouses(warehousesData);
       console.log(`[MonthlyCount] Successfully loaded ${warehousesData.length} warehouses`);
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
       console.log("[MonthlyCount] Loading items...");
-      const itemsData = await base44.entities.Item.filter({ created_by: userEmail }, "name");
+      const itemsData1 = await base44.entities.Item.filter({ created_by: userEmail }, "name");
+      const itemsData2 = await base44.entities.Item.filter({ store_owner_email: userEmail }, "name");
+      const itemsData = [...itemsData1, ...itemsData2].filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
       setItems(itemsData);
       setCache('monthly_count_v1', { counts: countsData, warehouses: warehousesData, items: itemsData });
       console.log(`[MonthlyCount] Successfully loaded ${itemsData.length} items`);

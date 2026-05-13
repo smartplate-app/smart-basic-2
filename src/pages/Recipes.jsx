@@ -70,10 +70,14 @@ export default function RecipesPage() {
         } catch(e){}
       }
 
-      let data = await base44.entities.Recipe.filter({ $or: [{ created_by: targetEmail }, { store_owner_email: targetEmail }] }, "-created_date", 10000);
+      let data1 = await base44.entities.Recipe.filter({ created_by: targetEmail }, "-created_date", 10000);
+      let data2 = await base44.entities.Recipe.filter({ store_owner_email: targetEmail }, "-created_date", 10000);
+      let data = [...data1, ...data2];
       
       if (targetEmail !== currentUser.email) {
-        const myData = await base44.entities.Recipe.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date", 10000);
+        const myData1 = await base44.entities.Recipe.filter({ created_by: currentUser.email }, "-created_date", 10000);
+        const myData2 = await base44.entities.Recipe.filter({ store_owner_email: currentUser.email }, "-created_date", 10000);
+        const myData = [...myData1, ...myData2];
         data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       }
 
@@ -82,7 +86,9 @@ export default function RecipesPage() {
           const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
           if (chain.length > 0) {
             const headEmail = chain[0].head_store_user_email;
-            const headData = await base44.entities.Recipe.filter({ $or: [{ created_by: headEmail }, { store_owner_email: headEmail }] }, "-created_date", 10000);
+            const headData1 = await base44.entities.Recipe.filter({ created_by: headEmail }, "-created_date", 10000);
+            const headData2 = await base44.entities.Recipe.filter({ store_owner_email: headEmail }, "-created_date", 10000);
+            const headData = [...headData1, ...headData2];
             data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           }
         } catch(e){}

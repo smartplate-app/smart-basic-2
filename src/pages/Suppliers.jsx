@@ -174,25 +174,29 @@ export default function SuppliersPage() {
                         itemsData = ownItems;
                       }
                     } else {
-                      const [ownSuppliers, ownItems, storeSuppliers] = await Promise.all([
+                      const [ownSuppliers, ownItems1, storeSuppliers, ownItems2] = await Promise.all([
                         base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
                         base44.entities.Item.filter({ created_by: workingEmail }),
-                        base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date')
+                        base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
+                        base44.entities.Item.filter({ store_owner_email: workingEmail })
                       ]);
                       const allSuppliers = [...ownSuppliers, ...storeSuppliers];
                       suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-                      itemsData = ownItems;
+                      const allItems = [...ownItems1, ...ownItems2];
+                      itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
                     }
                   } else {
                     // Head store or no chain - load TARGET user's suppliers + any with store_owner_email
-                    const [ownSuppliers, ownItems, storeSuppliers] = await Promise.all([
+                    const [ownSuppliers, ownItems1, storeSuppliers, ownItems2] = await Promise.all([
                       base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
                       base44.entities.Item.filter({ created_by: workingEmail }),
-                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date')
+                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
+                      base44.entities.Item.filter({ store_owner_email: workingEmail })
                     ]);
                     const allSuppliers = [...ownSuppliers, ...storeSuppliers];
                     suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-                    itemsData = ownItems;
+                    const allItems = [...ownItems1, ...ownItems2];
+                    itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
                   }
 
                   // Ensure we only show suppliers belonging to the TARGET context (controlled user/store)

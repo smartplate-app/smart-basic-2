@@ -217,7 +217,7 @@ export default function OrdersPage() {
         // Also check if the controlled user is a store user (worker/manager)
         let controlledUserOwnerEmail = null;
         try {
-          const controlledStoreUserRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+          const controlledStoreUserRecords = await base44.asServiceRole?.entities?.StoreUser?.filter({ user_email: workingEmail, is_active: true }) || [];
           if (controlledStoreUserRecords.length > 0) {
             controlledUserOwnerEmail = controlledStoreUserRecords[0].owner_email;
             console.log(`[Orders] Controlled user is a store user, owner: ${controlledUserOwnerEmail}`);
@@ -226,27 +226,23 @@ export default function OrdersPage() {
           console.log("Could not fetch store user records for controlled user");
         }
         
-        // If controlled user is a store user, load from their owner
-        const dataEmails = controlledUserOwnerEmail ? [controlledUserOwnerEmail, workingEmail] : [workingEmail];
-        console.log(`[Orders] Loading data from: ${dataEmails.join(', ')}`);
-        
-        const orderPromises = dataEmails.map(e => base44.entities.Order.filter({ $or: [{ created_by: e }, { store_owner_email: e }] }, "-created_date"));
         const targetEmail = controlledUserOwnerEmail || workingEmail;
-        const [ordersArrays, ownSuppliers, storeSuppliers] = await Promise.all([
-          Promise.all(orderPromises),
-          base44.entities.Supplier.filter({ created_by: targetEmail }, "name"),
-          base44.entities.Supplier.filter({ store_owner_email: targetEmail }, "name")
-        ]);
-        const mergedOrders = ordersArrays.flat();
-        const seenIds = new Set();
-        ordersData = mergedOrders.filter(o => {
-          if (!o?.id || seenIds.has(o.id)) return false;
-          seenIds.add(o.id);
-          return true;
-        });
-        const userSuppliers = [...ownSuppliers, ...storeSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-        suppliersData = userSuppliers;
-        console.log(`[Orders] Loaded ${userSuppliers.length} suppliers for controlled user`);
+        try {
+          const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
+          if (data?.success) {
+            ordersData = data.data.orders || [];
+            suppliersData = data.data.suppliers || [];
+            if (controlledUserOwnerEmail) {
+              const { data: workerData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
+              if (workerData?.success) {
+                ordersData = [...ordersData, ...(workerData.data.orders || [])];
+                suppliersData = [...suppliersData, ...(workerData.data.suppliers || [])];
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error loading admin data:", e);
+        }
       } else if (isStoreUser && storeOwnerEmail) {
         // Store user - show owner's orders + this user's orders (drafts etc.)
         const [ownerSuppliers, ownerStoreSuppliers, ownerOrders, myOrders] = await Promise.all([
@@ -1203,7 +1199,8 @@ export default function OrdersPage() {
       return;
     }
     try {
-      await base44.entities.Order.delete(order.id);
+      const { data } = await base44.functions.invoke('deleteOrder', { orderId: order.id });
+      if (!data?.success) throw new Error(data?.error || 'Failed to delete order');
       await loadData(user);
     } catch (error) {
       console.error('Error deleting order:', error);

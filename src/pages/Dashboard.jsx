@@ -221,16 +221,58 @@ export default function DashboardPage() {
       const monthEnd = moment(selectedMonth).endOf('month');
       const endDate = today.isBefore(monthEnd) && today.isAfter(monthStart) ? today : monthEnd;
 
-      const [allDashboardData, allSchedules, allReceipts, allOrders, incomingTransfers, outgoingTransfers, allCounts, allWeeklySales] = await Promise.all([
-        base44.entities.MonthlyDashboardData.filter({ created_by: workingEmail, month: selectedMonth }),
-        base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
-        base44.entities.SupplyReceipt.filter({ created_by: workingEmail }),
-        base44.entities.Order.filter({ created_by: workingEmail }),
-        base44.entities.InventoryTransfer.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }),
-        base44.entities.InventoryTransfer.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' }),
-        base44.entities.InventoryCount.filter({ created_by: workingEmail }, "-count_date"),
-        base44.entities.WeeklySalesRecord.filter({ created_by: workingEmail }, "-week_start_date")
-      ]);
+      let allDashboardData = [];
+      let allSchedules = [];
+      let allReceipts = [];
+      let allOrders = [];
+      let incomingTransfers = [];
+      let outgoingTransfers = [];
+      let allCounts = [];
+      let allWeeklySales = [];
+
+      const isAdminControlling = workingEmail !== currentUser.email;
+
+      if (isAdminControlling) {
+          try {
+              const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
+              if (data?.success) {
+                  const d = data.data;
+                  allDashboardData = (d.dashboardData || []).filter(x => x.month === selectedMonth);
+                  allSchedules = d.schedules || [];
+                  allReceipts = d.receipts || [];
+                  allOrders = d.orders || [];
+                  allCounts = d.inventory || [];
+                  
+                  const [incT, outT, ws] = await Promise.all([
+                    base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }) || [],
+                    base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' }) || [],
+                    base44.asServiceRole?.entities?.WeeklySalesRecord?.filter({ created_by: workingEmail }, "-week_start_date") || []
+                  ]);
+                  incomingTransfers = incT;
+                  outgoingTransfers = outT;
+                  allWeeklySales = ws;
+              }
+          } catch(e) { console.error("Admin data fetch error:", e); }
+      } else {
+          const res = await Promise.all([
+            base44.entities.MonthlyDashboardData.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }], month: selectedMonth }),
+            base44.entities.WeeklySchedule.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }),
+            base44.entities.SupplyReceipt.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }),
+            base44.entities.Order.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }),
+            base44.entities.InventoryTransfer.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }),
+            base44.entities.InventoryTransfer.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' }),
+            base44.entities.InventoryCount.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }, "-count_date"),
+            base44.entities.WeeklySalesRecord.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }, "-week_start_date")
+          ]);
+          allDashboardData = res[0];
+          allSchedules = res[1];
+          allReceipts = res[2];
+          allOrders = res[3];
+          incomingTransfers = res[4];
+          outgoingTransfers = res[5];
+          allCounts = res[6];
+          allWeeklySales = res[7];
+      }
 
       setInventoryCounts(allCounts);
       

@@ -113,12 +113,43 @@ export default function SupplyReceiptsPage() {
         supplierFetches.push(base44.entities.Supplier.filter({ created_by: e }, "-created_date"));
         supplierFetches.push(base44.entities.Supplier.filter({ store_owner_email: e }, "-created_date"));
       });
-      const [receiptsData, ordersData, ...supplierLists] = await Promise.all([
-        base44.entities.SupplyReceipt.filter({ created_by: userEmail }, "-received_date"),
-        base44.entities.Order.filter({ created_by: userEmail }, "-created_date"),
-        ...supplierFetches
-      ]);
-      const mergedSuppliers = supplierLists.flat().filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+      let receiptsData = [];
+      let ordersData = [];
+      let mergedSuppliers = [];
+      
+      const currentUserReq = await base44.auth.me();
+      const isAdminControlling = userEmail !== currentUserReq.email;
+      if (isAdminControlling) {
+         try {
+             const targetEmail = storeOwnerEmail || userEmail;
+             const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
+             if (data?.success) {
+                 receiptsData = data.data.receipts || [];
+                 ordersData = data.data.orders || [];
+                 mergedSuppliers = data.data.suppliers || [];
+                 if (storeOwnerEmail) {
+                    const { data: workerData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: userEmail });
+                    if (workerData?.success) {
+                       receiptsData = [...receiptsData, ...(workerData.data.receipts || [])];
+                       ordersData = [...ordersData, ...(workerData.data.orders || [])];
+                       mergedSuppliers = [...mergedSuppliers, ...(workerData.data.suppliers || [])];
+                    }
+                 }
+             }
+         } catch(e) {
+             console.error("Admin data fetch error:", e);
+         }
+      } else {
+          const [resReceipts, resOrders, ...supplierLists] = await Promise.all([
+            base44.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, "-received_date"),
+            base44.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, "-created_date"),
+            ...supplierFetches
+          ]);
+          receiptsData = resReceipts;
+          ordersData = resOrders;
+          mergedSuppliers = supplierLists.flat().filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+      }
+      
       setReceipts(receiptsData);
       setOrders(ordersData);
       setSuppliers(mergedSuppliers);
@@ -161,7 +192,7 @@ export default function SupplyReceiptsPage() {
         if (isMounted) {
           setUser(currentUser);
           // Determine the working email based on user type
-          let workingEmail = currentUser.acting_as_store_email || currentUser.email;
+          let workingEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
           
           // Check if user is a store user (worker/manager)
           let storeOwnerEmail = currentUser.store_user_owner_email;
@@ -281,7 +312,10 @@ export default function SupplyReceiptsPage() {
       const details = `${receipt.supplier_name || ''} • ${receipt.invoice_number || '-'} • ${receipt.received_date || ''}`;
       const ok = window.confirm((t('confirm_delete_receipt') || 'Delete this receipt?') + '\n' + details);
       if (!ok) return;
-      await base44.entities.SupplyReceipt.delete(receipt.id);
+      
+      const { data } = await base44.functions.invoke('deleteSupplyReceipt', { receiptId: receipt.id });
+      if (!data?.success) throw new Error(data?.error || 'Failed to delete receipt');
+      
       setReceipts(prev => prev.filter(r => r.id !== receipt.id));
       alert(t('deleted_successfully') || 'Deleted successfully');
     } catch (e) {
