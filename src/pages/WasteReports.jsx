@@ -19,14 +19,39 @@ export default function WasteReports() {
 
   const loadAll = async () => {
     setLoading(true);
-    const [wh, its, reps] = await Promise.all([
-      base44.entities.Warehouse.list(),
-      base44.entities.Item.list(),
-      base44.entities.WasteReport.list()
-    ]);
-    setWarehouses(wh);
-    setItems(its);
-    setReports(reps.sort((a,b)=> (b.report_date||'').localeCompare(a.report_date||'')));
+    let currentUser;
+    try { currentUser = await base44.auth.me(); } catch(e){}
+    
+    let whData = [];
+    let itsData = [];
+    let repsData = [];
+
+    const isAdminControlling = !!(currentUser?.admin_original_email && currentUser?.acting_as_user_email);
+    let targetEmail = currentUser?.acting_as_store_email || currentUser?.acting_as_user_email || currentUser?.email;
+    
+    if (isAdminControlling) {
+        try {
+            const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
+            if (data?.success) {
+                whData = data.data.warehouses || [];
+                itsData = data.data.items || [];
+                repsData = data.data.wasteReports || [];
+            }
+        } catch(e) {}
+    } else {
+        const [wh, its, reps] = await Promise.all([
+          base44.entities.Warehouse.filter({ created_by: targetEmail }),
+          base44.entities.Item.filter({ created_by: targetEmail }),
+          base44.entities.WasteReport.filter({ created_by: targetEmail })
+        ]);
+        whData = wh;
+        itsData = its;
+        repsData = reps;
+    }
+    
+    setWarehouses(whData);
+    setItems(itsData);
+    setReports(repsData.sort((a,b)=> (b.report_date||'').localeCompare(a.report_date||'')));
     setLoading(false);
   };
 

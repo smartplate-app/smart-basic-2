@@ -74,11 +74,32 @@ export default function LaborCostPage() {
         if (chains?.length) headEmail = chains[0].head_store_user_email;
       }
 
-      const [positionsData, workersData, schedulesData] = await Promise.all([
-        base44.entities.JobPosition.filter({ created_by: headEmail || workingEmail }, "name"),
-        base44.entities.Worker.filter({ created_by: workingEmail }, "full_name"),
-        base44.entities.WeeklySchedule.filter({ created_by: workingEmail }, "-week_start_date")
-      ]);
+      let positionsData = [];
+      let workersData = [];
+      let schedulesData = [];
+      
+      const isAdminControlling = !!(user?.admin_original_email && user?.acting_as_user_email);
+      
+      if (isAdminControlling) {
+          try {
+              const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
+              if (data?.success) {
+                  positionsData = data.data.positions || [];
+                  workersData = data.data.workers || [];
+                  schedulesData = data.data.schedules || [];
+              }
+          } catch(e) { console.error("Admin fetch error", e); }
+      } else {
+          const res = await Promise.all([
+            base44.entities.JobPosition.filter({ created_by: headEmail || workingEmail }, "name"),
+            base44.entities.Worker.filter({ created_by: workingEmail }, "full_name"),
+            base44.entities.WeeklySchedule.filter({ created_by: workingEmail }, "-week_start_date")
+          ]);
+          positionsData = res[0];
+          workersData = res[1];
+          schedulesData = res[2];
+      }
+      
       setPositions(positionsData);
       setWorkers(workersData);
       setSchedules(schedulesData);

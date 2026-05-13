@@ -243,14 +243,19 @@ export default function DashboardPage() {
                   allOrders = d.orders || [];
                   allCounts = d.inventory || [];
                   
-                  const [incT, outT, ws] = await Promise.all([
-                    base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }) || [],
-                    base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' }) || [],
-                    base44.asServiceRole?.entities?.WeeklySalesRecord?.filter({ created_by: workingEmail }, "-week_start_date") || []
-                  ]);
-                  incomingTransfers = incT;
-                  outgoingTransfers = outT;
-                  allWeeklySales = ws;
+                  // Wrap with try-catch so it doesn't fail if asServiceRole is restricted on the client side
+                  try {
+                    const [incT, outT, ws] = await Promise.all([
+                      base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }) || [],
+                      base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, from_store_email: workingEmail, status: 'completed' }) || [],
+                      base44.asServiceRole?.entities?.WeeklySalesRecord?.filter({ created_by: workingEmail }, "-week_start_date") || []
+                    ]);
+                    incomingTransfers = incT;
+                    outgoingTransfers = outT;
+                    allWeeklySales = ws;
+                  } catch (e) {
+                      console.error("Admin fetch fallback error:", e);
+                  }
               }
           } catch(e) { console.error("Admin data fetch error:", e); }
       } else {

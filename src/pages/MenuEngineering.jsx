@@ -38,7 +38,17 @@ export default function MenuEngineeringPage() {
     try {
       const user = await base44.auth.me();
       const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-      const data = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date");
+      const isAdminControlling = !!(user?.admin_original_email && user?.acting_as_user_email);
+      let data = [];
+      
+      if (isAdminControlling) {
+          const res = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
+          if (res.data?.success) {
+              data = (res.data.data.recipes || []).filter(r => r.type === 'sale_item');
+          }
+      } else {
+          data = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date");
+      }
       setRecipes(data);
     } catch (e) {
       console.error(e);

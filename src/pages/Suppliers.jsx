@@ -78,7 +78,31 @@ export default function SuppliersPage() {
                   } catch {}
                   const isStoreUser = !!storeOwnerEmail;
 
-                  if (isStoreUser && storeOwnerEmail) {
+                  const isAdminControlling = !!(currentUser?.admin_original_email && currentUser?.acting_as_user_email);
+
+                  if (isAdminControlling) {
+                    console.log('[Suppliers] Loading as ADMIN impersonating:', workingEmail);
+                    try {
+                        const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
+                        if (data?.success) {
+                            suppliersData = data.data.suppliers || [];
+                            itemsData = data.data.items || [];
+                            if (storeOwnerEmail) {
+                                const { data: workerData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: currentUser.email });
+                                if (workerData?.success) {
+                                    suppliersData = [...suppliersData, ...(workerData.data.suppliers || [])];
+                                    itemsData = [...itemsData, ...(workerData.data.items || [])];
+                                }
+                            }
+                            
+                            // Ensure uniqueness
+                            suppliersData = suppliersData.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+                            itemsData = itemsData.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
+                        }
+                    } catch(e) {
+                        console.error("Admin data fetch error:", e);
+                    }
+                  } else if (isStoreUser && storeOwnerEmail) {
                     // Store user - load suppliers from the store owner + chain head (if any)
                     let headEmail = null;
                     try {

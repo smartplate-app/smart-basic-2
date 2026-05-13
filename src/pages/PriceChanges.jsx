@@ -23,7 +23,22 @@ export default function PriceChangesPage() {
         try {
             const user = await base44.auth.me();
             if (!user) return;
-            const data = await base44.entities.PriceChangeLog.list("-created_date", 1000);
+            
+            let data = [];
+            const isAdminControlling = !!(user?.admin_original_email && user?.acting_as_user_email);
+            const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.email;
+
+            if (isAdminControlling) {
+                try {
+                    const res = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
+                    if (res.data?.success) {
+                        data = res.data.data.priceChanges || [];
+                    }
+                } catch(e) {}
+            } else {
+                data = await base44.entities.PriceChangeLog.filter({ created_by: targetEmail }, "-created_date", 1000);
+            }
+            
             setLogs(data || []);
         } catch (e) {
             console.error(e);
