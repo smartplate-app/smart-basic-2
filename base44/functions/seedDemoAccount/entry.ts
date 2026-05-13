@@ -31,6 +31,10 @@ Deno.serve(async (req) => {
         for (const d of existingDashboard) {
             await base44.asServiceRole.entities.MonthlyDashboardData.delete(d.id);
         }
+        const existingCogsReports = await base44.asServiceRole.entities.CogsReport.filter({ store_owner_email: demoEmail });
+        for (const cr of existingCogsReports) {
+            await base44.asServiceRole.entities.CogsReport.delete(cr.id);
+        }
         
         // 1. Suppliers
         const suppliers = [
@@ -199,6 +203,24 @@ Deno.serve(async (req) => {
             verified_items: [
                 { item_id: createdItems[4].id, item_name: createdItems[4].name, received_quantity: 500, unit: "kg", actual_price: 55.0 }
             ],
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        // 8. COGS Reports
+        await base44.asServiceRole.entities.CogsReport.create({
+            name: "מאי 2026 MTD — (7 ימים)",
+            report_date: new Date().toISOString().substring(0, 10),
+            report_type: "actual",
+            total_sales: 145705,
+            total_cogs: 34532,
+            gross_profit: 111173,
+            cogs_percentage: 23.7,
+            items: [
+                { item_name: "Greek Salad (סלט יווני)", quantity_sold: 450, cost_percentage: 23.7, total_sales: 23400, unit_cost: 13.0, unit_price: 52.0 },
+                { item_name: "Pasta Bolognese (פסטה בולונז)", quantity_sold: 320, cost_percentage: 32.5, total_sales: 21760, unit_cost: 22.1, unit_price: 68.0 }
+            ],
+            notes: "Demo account COGS report",
             created_by: demoEmail,
             store_owner_email: demoEmail
         });
