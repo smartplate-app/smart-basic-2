@@ -229,7 +229,7 @@ export default function RecipesPage() {
   return (
     <div className="min-h-screen bg-[#f3f2f1] p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#d4a373] p-6 rounded-xl text-white shadow-md">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-black p-6 rounded-xl text-white shadow-md">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-3">
               <ChefHat className="w-8 h-8" />
@@ -245,7 +245,7 @@ export default function RecipesPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setViewMode('cards')}
-                className={`rounded-full h-8 w-8 ${viewMode === 'cards' ? 'bg-white text-[#d4a373]' : 'text-white hover:bg-white/20'}`}
+                className={`rounded-full h-8 w-8 ${viewMode === 'cards' ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}
               >
                 <LayoutGrid className="w-4 h-4" />
               </Button>
@@ -253,7 +253,7 @@ export default function RecipesPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setViewMode('list')}
-                className={`rounded-full h-8 w-8 ${viewMode === 'list' ? 'bg-white text-[#d4a373]' : 'text-white hover:bg-white/20'}`}
+                className={`rounded-full h-8 w-8 ${viewMode === 'list' ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -278,7 +278,7 @@ export default function RecipesPage() {
 
             <Button 
               onClick={handleGenerateSheet}
-              className="bg-white text-[#d4a373] hover:bg-gray-50 border-none rounded-full px-6 font-bold"
+              className="bg-white text-black hover:bg-gray-200 border-none rounded-full px-6 font-bold"
             >
               <FileSpreadsheet className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'ייבא מרכיבים' : 'Import Ingredients'}
