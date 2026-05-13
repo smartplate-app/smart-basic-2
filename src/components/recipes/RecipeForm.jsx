@@ -663,27 +663,32 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       </SelectContent>
                     </Select>
                   )}
-                  <div className="flex items-center gap-1" title={language === 'he' ? 'מחיר ליחידה' : 'Unit Price'}>
-                    <span className="text-[10px] text-gray-500 hidden md:inline whitespace-nowrap">{language === 'he' ? 'יחידה:' : 'Unit:'}</span>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      className="w-16 h-8 px-1 text-sm text-center" 
-                      value={ing.unit_price !== undefined && ing.unit_price !== null ? ing.unit_price : ""}
-                      onChange={(e) => handleUpdateIngredient(idx, 'unit_price', e.target.value)}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1" title={language === 'he' ? 'סה״כ לשורה' : 'Total Cost'}>
-                    <span className="text-[10px] text-gray-500 hidden md:inline whitespace-nowrap">{language === 'he' ? 'סה״כ:' : 'Total:'}</span>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      className="w-16 h-8 px-1 text-sm font-bold text-center" 
-                      value={ing.cost !== undefined && ing.cost !== null ? ing.cost : ""}
-                      onChange={(e) => handleUpdateIngredient(idx, 'cost', e.target.value)}
-                      placeholder="0.00"
-                    />
+                  <div className="flex flex-col gap-1 items-end">
+                    <div className="flex items-center gap-1" title={language === 'he' ? 'מחיר ליחידה' : 'Unit Price'}>
+                      <span className="text-[10px] text-gray-500 hidden md:inline whitespace-nowrap">{language === 'he' ? 'יחידה:' : 'Unit:'}</span>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        className="w-16 h-8 px-1 text-sm text-center" 
+                        value={ing.unit_price !== undefined && ing.unit_price !== null ? ing.unit_price : ""}
+                        onChange={(e) => handleUpdateIngredient(idx, 'unit_price', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1" title={language === 'he' ? 'סה״כ לשורה' : 'Total Cost'}>
+                      <span className="text-[10px] text-gray-500 hidden md:inline whitespace-nowrap">{language === 'he' ? 'סה״כ:' : 'Total:'}</span>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        className="w-16 h-8 px-1 text-sm font-bold text-center" 
+                        value={ing.cost !== undefined && ing.cost !== null ? ing.cost : ""}
+                        onChange={(e) => handleUpdateIngredient(idx, 'cost', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="text-[9px] text-gray-400 px-1 font-mono">
+                      {ing.quantity || 0} × {Number(ing.unit_price || 0).toFixed(2)} = {Number(ing.cost || 0).toFixed(2)}
+                    </div>
                   </div>
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 shrink-0" onClick={() => handleRemoveIngredient(idx)}>
                     <Trash2 className="w-4 h-4" />
