@@ -52,9 +52,13 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
 
       const fetchWithFallback = async (entity, field, extraQuery = {}) => {
          let data = await base44.entities[entity].filter({ created_by: targetEmail, ...extraQuery }, field, 10000);
+         let storeData = await base44.entities[entity].filter({ store_owner_email: targetEmail, ...extraQuery }, field, 10000);
+         data = [...data, ...storeData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+         
          if (targetEmail !== currentUser.email) {
            const myData = await base44.entities[entity].filter({ created_by: currentUser.email, ...extraQuery }, field, 10000);
-           data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+           const myStoreData = await base44.entities[entity].filter({ store_owner_email: currentUser.email, ...extraQuery }, field, 10000);
+           data = [...data, ...myData, ...myStoreData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
          }
          if (currentUser.chain_id && !currentUser.is_chain_head) {
            try {
@@ -88,6 +92,10 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
           let newCost = ing.cost !== undefined && ing.cost !== null ? ing.cost : 0;
           let newUnitPrice = ing.unit_price !== undefined && ing.unit_price !== null ? ing.unit_price : 0;
           
+          if (ing.cost === null || ing.cost === undefined || ing.unit_price === null || ing.unit_price === undefined) {
+            changed = true;
+          }
+
           if (item) {
             // Ensure item_id and item_name are updated if matched by name
             ing.item_id = item.id;

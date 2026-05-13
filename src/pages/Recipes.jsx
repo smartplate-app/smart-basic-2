@@ -22,7 +22,6 @@ export default function RecipesPage() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [viewMode, setViewMode] = useState("list");
   
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
@@ -297,70 +296,11 @@ export default function RecipesPage() {
           </select>
         </div>
 
-        {viewMode === 'list' ? (
-          <RecipeListView 
-            recipes={filteredRecipes} 
-            onEdit={(recipe) => { setEditingRecipe(recipe); setShowForm(true); }}
-            onDelete={handleDelete}
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredRecipes.map(recipe => (
-              <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-[#fdfbf7] border-[#e5dfd3] rounded-2xl">
-                <CardContent className="p-0">
-                  <div className="p-5 border-b border-[#e5dfd3] flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-xl text-red-500 flex items-center gap-2">
-                        <ChefHat className="w-5 h-5 text-orange-500" />
-                        {recipe.name}
-                      </h3>
-                      <span className="inline-block px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full mt-2 font-medium">
-                        {recipe.type === 'sale_item' 
-                          ? (language === 'he' ? 'פריט למכירה' : 'Sale Item') 
-                          : (language === 'he' ? 'מתכון הכנה' : 'Prep Recipe')}
-                      </span>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditingRecipe(recipe); setShowForm(true); }} className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(recipe.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="p-5 grid grid-cols-2 gap-4 bg-white">
-                    {recipe.type === 'sale_item' && (
-                      <div className="bg-green-50 p-3 rounded-xl text-center border border-green-100">
-                        <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'מחיר מכירה' : 'Sale Price'}</div>
-                        <div className="font-bold text-green-600 text-xl">{Number(recipe.sale_price || 0).toFixed(2)}</div>
-                        {recipe.sale_price > 0 && (
-                          <div className="text-[10px] text-gray-500 mt-1">
-                            {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
-                            {((recipe.total_cost / recipe.sale_price) * 100).toFixed(1)}%
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="bg-red-50 p-3 rounded-xl text-center border border-red-100">
-                      <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</div>
-                      <div className="font-bold text-red-500 text-xl">{Number(recipe.total_cost || 0).toFixed(2)}</div>
-                    </div>
-                  </div>
-                  <div className="px-5 py-3 bg-[#fdfbf7] flex justify-between items-center text-xs text-gray-500 font-medium">
-                    <div className="flex items-center gap-1">
-                      <Package className="w-4 h-4 text-orange-400" />
-                      {language === 'he' ? 'מרכיבים:' : 'Ingredients:'} {recipe.ingredients?.length || 0}
-                    </div>
-                    <div>
-                      {language === 'he' ? 'נוצר ב:' : 'Created:'} {new Date(recipe.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        <RecipeListView 
+          recipes={filteredRecipes} 
+          onEdit={(recipe) => { setEditingRecipe(recipe); setShowForm(true); }}
+          onDelete={handleDelete}
+        />
 
         {showForm && (
           <RecipeForm
