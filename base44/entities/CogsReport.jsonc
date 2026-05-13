@@ -71,6 +71,14 @@
     },
     "notes": {
       "type": "string"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Explicitly defined created_by to allow overriding"
+    },
+    "store_owner_email": {
+      "type": "string",
+      "description": "Email of the store owner"
     }
   },
   "required": [
