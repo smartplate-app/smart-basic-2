@@ -1,28 +1,11 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+
 Deno.serve(async (req) => {
   try {
-    const urls = [
-      'https://ros-rp.tabit.cloud/login',
-      'https://us-ros.tabit.cloud/login',
-      'https://ros-rp-beta.tabit.cloud/login',
-      'https://us-ros-beta.tabit.cloud/login'
-    ];
-    
-    const results = {};
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'cafe.xoho@gmail.com ', password: 'xohoby3090' })
-        });
-        results[url] = { status: res.status, text: await res.text().catch(() => 'no text') };
-      } catch (e) {
-        results[url] = { error: e.message };
-      }
-    }
-    
-    return Response.json(results);
-  } catch (e) {
-    return Response.json({ error: e.message });
+    const base44 = createClientFromRequest(req);
+    const result = await base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: 'demo@foodcostapp.com' }, { store_owner_email: 'demo@foodcostapp.com' }] });
+    return Response.json({ success: true, count: result.length, data: result });
+  } catch (error) {
+    return Response.json({ success: false, error: error.message });
   }
 });

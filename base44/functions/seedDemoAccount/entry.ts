@@ -19,6 +19,18 @@ Deno.serve(async (req) => {
         for (const r of existingRecipes) {
             await base44.asServiceRole.entities.Recipe.delete(r.id);
         }
+        const existingOrders = await base44.asServiceRole.entities.Order.filter({ created_by: demoEmail });
+        for (const o of existingOrders) {
+            await base44.asServiceRole.entities.Order.delete(o.id);
+        }
+        const existingReceipts = await base44.asServiceRole.entities.SupplyReceipt.filter({ created_by: demoEmail });
+        for (const sr of existingReceipts) {
+            await base44.asServiceRole.entities.SupplyReceipt.delete(sr.id);
+        }
+        const existingDashboard = await base44.asServiceRole.entities.MonthlyDashboardData.filter({ created_by: demoEmail });
+        for (const d of existingDashboard) {
+            await base44.asServiceRole.entities.MonthlyDashboardData.delete(d.id);
+        }
         
         // 1. Suppliers
         const suppliers = [

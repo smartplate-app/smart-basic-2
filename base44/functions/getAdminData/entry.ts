@@ -26,13 +26,13 @@ Deno.serve(async (req) => {
                 workers,
                 schedules
             ] = await Promise.all([
-                base44.asServiceRole.entities.Order.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.SupplyReceipt.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.Item.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.Supplier.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.InventoryCount.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.Worker.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.WeeklySchedule.filter({ created_by: userEmail })
+                base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.Item.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.Supplier.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.InventoryCount.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.Worker.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.WeeklySchedule.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] })
             ]);
 
             return Response.json({
@@ -61,15 +61,15 @@ Deno.serve(async (req) => {
                 dashboardData,
                 positions
             ] = await Promise.all([
-                base44.asServiceRole.entities.Order.filter({ created_by: userEmail }, '-created_date'),
-                base44.asServiceRole.entities.SupplyReceipt.filter({ created_by: userEmail }, '-created_date'),
-                base44.asServiceRole.entities.Item.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.Supplier.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.InventoryCount.filter({ created_by: userEmail }, '-created_date'),
-                base44.asServiceRole.entities.Worker.filter({ created_by: userEmail }),
-                base44.asServiceRole.entities.WeeklySchedule.filter({ created_by: userEmail }, '-week_start_date'),
-                base44.asServiceRole.entities.MonthlyDashboardData.filter({ created_by: userEmail }, '-month'),
-                base44.asServiceRole.entities.JobPosition.filter({ created_by: userEmail })
+                base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date'),
+                base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date'),
+                base44.asServiceRole.entities.Item.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.Supplier.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.InventoryCount.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date'),
+                base44.asServiceRole.entities.Worker.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }),
+                base44.asServiceRole.entities.WeeklySchedule.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-week_start_date'),
+                base44.asServiceRole.entities.MonthlyDashboardData.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-month'),
+                base44.asServiceRole.entities.JobPosition.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] })
             ]);
 
             return Response.json({

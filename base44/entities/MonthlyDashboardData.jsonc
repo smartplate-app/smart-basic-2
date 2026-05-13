@@ -78,6 +78,10 @@
       "type": "number",
       "default": 0,
       "description": "Monthly rent including VAT (\u20aa)"
+    },
+    "store_owner_email": {
+      "type": "string",
+      "description": "Email of the store owner"
     }
   },
   "required": [

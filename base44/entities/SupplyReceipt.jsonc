@@ -175,12 +175,12 @@
     "is_refund": {
       "type": "boolean",
       "default": false,
-      "description": "Whether this invoice is a refund/credit (\u05d6\u05d9\u05db\u05d5\u05d9)"
+      "description": "Whether this invoice is a refund/credit"
     },
     "is_zero_vat": {
       "type": "boolean",
       "default": false,
-      "description": "Whether this invoice has 0% VAT (e.g. fruits and vegetables)"
+      "description": "Whether this invoice has 0% VAT"
     },
     "needs_review": {
       "type": "boolean",
@@ -218,7 +218,7 @@
         "summary_invoice"
       ],
       "default": "invoice",
-      "description": "Document type: Delivery note, Invoice, or Summary invoice (manual choice)"
+      "description": "Document type"
     },
     "summarized_delivery_note_ids": {
       "type": "array",
@@ -226,6 +226,14 @@
         "type": "string"
       },
       "description": "IDs of delivery note SupplyReceipts summarized by this summary invoice"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Explicitly defined created_by to allow overriding"
+    },
+    "store_owner_email": {
+      "type": "string",
+      "description": "Email of the store owner"
     }
   },
   "required": [
