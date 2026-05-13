@@ -1302,20 +1302,46 @@ export default function DashboardPage() {
                 <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
                   <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
                     <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מכירות וולט' : 'Delivery Sales'}</div>
-                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(deliverySales)}</div>
-                    {actualSales > 0 && (
+                    {!editMode ? (
+                      <div className="text-3xl font-bold text-gray-900">{formatCurrency(deliverySales)}</div>
+                    ) : (
+                      <Input
+                        type="number"
+                        value={deliverySales}
+                        onChange={(e) => setDeliverySales(parseFloat(e.target.value) || 0)}
+                        className="w-32 mx-auto text-center font-bold"
+                      />
+                    )}
+                    {actualSales > 0 && !editMode && (
                       <div className="text-sm text-gray-400 mt-1">
                         {((deliverySales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}
                       </div>
                     )}
                   </div>
                   <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
-                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מחזור כולל מע"מ' : 'Total Sales (incl. VAT)'}</div>
-                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(actualSales)}</div>
+                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מכירות מסעדה' : 'Dine-in Sales'}</div>
+                    {!editMode ? (
+                      <div className="text-3xl font-bold text-gray-900">{formatCurrency(restaurantSales)}</div>
+                    ) : (
+                      <Input
+                        type="number"
+                        value={restaurantSales}
+                        onChange={(e) => setRestaurantSales(parseFloat(e.target.value) || 0)}
+                        className="w-32 mx-auto text-center font-bold"
+                      />
+                    )}
+                    {actualSales > 0 && !editMode && (
+                      <div className="text-sm text-gray-400 mt-1">
+                        {((restaurantSales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}
+                      </div>
+                    )}
                   </div>
                   <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
-                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מחזור נטו' : 'Net Sales'}</div>
-                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(actualSalesExVAT)}</div>
+                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מחזור כולל מע"מ' : 'Total Sales (incl. VAT)'}</div>
+                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(actualSales)}</div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      {language === 'he' ? 'מחזור נטו: ' : 'Net: '}{formatCurrency(actualSalesExVAT)}
+                    </div>
                   </div>
                 </div>
 
