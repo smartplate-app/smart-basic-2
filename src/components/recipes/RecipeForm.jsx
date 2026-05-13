@@ -8,6 +8,9 @@ import { base44 } from "@/api/base44Client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ItemEditModal from "../items/ItemEditModal";
 
+let cachedFormEntities = null;
+let lastEntitiesFetchTime = 0;
+
 export default function RecipeForm({ recipe, onSave, onCancel }) {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
@@ -73,13 +76,27 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
          return data;
       };
 
-      const fetchedItems = await fetchWithFallback('Item', 'name');
-      const fetchedPrep = await fetchWithFallback('Recipe', 'name', { type: 'prep_recipe' });
-      
+      let fetchedItems, fetchedPrep, fetchedSuppliers, fetchedWarehouses;
+
+      if (cachedFormEntities && (Date.now() - lastEntitiesFetchTime < 60000)) {
+        fetchedItems = cachedFormEntities.items;
+        fetchedPrep = cachedFormEntities.prepRecipes;
+        fetchedSuppliers = cachedFormEntities.suppliers;
+        fetchedWarehouses = cachedFormEntities.warehouses;
+      } else {
+        fetchedItems = await fetchWithFallback('Item', 'name');
+        fetchedPrep = await fetchWithFallback('Recipe', 'name', { type: 'prep_recipe' });
+        fetchedSuppliers = await fetchWithFallback('Supplier', 'name');
+        fetchedWarehouses = await fetchWithFallback('Warehouse', 'name');
+        
+        cachedFormEntities = { items: fetchedItems, prepRecipes: fetchedPrep, suppliers: fetchedSuppliers, warehouses: fetchedWarehouses };
+        lastEntitiesFetchTime = Date.now();
+      }
+
       setItems(fetchedItems);
-      setSuppliers(await fetchWithFallback('Supplier', 'name'));
-      setWarehouses(await fetchWithFallback('Warehouse', 'name'));
       setPrepRecipes(fetchedPrep);
+      setSuppliers(fetchedSuppliers);
+      setWarehouses(fetchedWarehouses);
 
       // Recalculate costs based on latest item prices
       if (recipe && recipe.ingredients && recipe.ingredients.length > 0) {
@@ -342,7 +359,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       await base44.entities.Item.update(updatedItem.id, updatedItem);
       
       // Update local items state
-      setItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
+      setItems(prev => {
+        const newItems = prev.map(i => i.id === updatedItem.id ? updatedItem : i);
+        if (cachedFormEntities) cachedFormEntities.items = newItems;
+        return newItems;
+      });
       
       // Recalculate cost for the ingredient in the recipe form
       const newIngredients = formData.ingredients.map(ing => {
