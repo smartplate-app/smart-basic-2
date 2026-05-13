@@ -79,6 +79,24 @@ export default function UserSwitcher({ user, onUserChange }) {
     }
   };
 
+  const handleSwitchToDemoAccount = async () => {
+    try {
+      setSwitching(true);
+      await base44.auth.updateMe({
+        admin_original_email: user.email,
+        acting_as_user_email: 'demo@foodcostapp.com',
+        acting_as_user_name: 'Demo Account',
+        acting_as_store_email: 'demo@foodcostapp.com',
+        acting_as_store_name: 'Demo Restaurant'
+      });
+      window.location.href = window.location.origin + '/pages/Dashboard';
+      window.location.reload();
+    } catch (error) {
+      console.error('[UserSwitcher] Switch to demo failed:', error);
+      setSwitching(false);
+    }
+  };
+
   if (!user) return null;
 
   const getInitials = (name) => {
@@ -91,6 +109,12 @@ export default function UserSwitcher({ user, onUserChange }) {
       .slice(0, 2);
   };
 
+  const displayUser = {
+    full_name: user.acting_as_user_name || user.full_name,
+    email: user.acting_as_user_email || user.email,
+    role: user.acting_as_user_email ? 'user' : user.role
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -101,15 +125,15 @@ export default function UserSwitcher({ user, onUserChange }) {
         >
           <Avatar className="w-8 h-8">
             <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-semibold">
-              {getInitials(user.full_name)}
+              {getInitials(displayUser.full_name)}
             </AvatarFallback>
           </Avatar>
           <div className={`flex flex-col flex-1 ${language === 'he' ? 'items-end' : 'items-start'}`}>
             <span className="text-sm font-medium text-gray-900 max-w-32 truncate">
-              {user.full_name}
+              {displayUser.full_name}
             </span>
             <span className="text-xs text-gray-500 max-w-32 truncate">
-              {user.email}
+              {displayUser.email}
             </span>
           </div>
           <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -120,14 +144,14 @@ export default function UserSwitcher({ user, onUserChange }) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium text-gray-900">
-              {user.full_name}
+              {displayUser.full_name}
             </p>
             <p className="text-xs text-gray-500">
-              {user.email}
+              {displayUser.email}
             </p>
-            {user.role && (
+            {displayUser.role && (
               <p className="text-xs text-blue-600 font-medium">
-                {user.role === 'admin' ? t('user_role_admin') : t('user_role_user')}
+                {displayUser.role === 'admin' ? t('user_role_admin') : t('user_role_user')}
               </p>
             )}
           </div>
@@ -183,13 +207,31 @@ export default function UserSwitcher({ user, onUserChange }) {
         )}
         
         
+        {user.role === 'admin' && !user.acting_as_user_email && (
+          <>
+            <DropdownMenuItem 
+              onClick={handleSwitchToDemoAccount}
+              disabled={switching}
+              className="cursor-pointer text-purple-600 hover:text-purple-700 hover:bg-purple-50 focus:bg-purple-50"
+            >
+              <div className="flex items-center gap-2 w-full">
+                <Store className="w-4 h-4 ml-2 rtl:mr-2 rtl:ml-0" />
+                <span className="flex-1 text-left rtl:text-right">{language === 'he' ? 'הצג חשבון דמו' : 'View Demo Account'}</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
         <DropdownMenuItem 
           onClick={handleLogout}
           disabled={isLoggingOut}
           className="cursor-pointer text-red-600 hover:text-red-700 focus:text-red-700 hover:bg-red-50 focus:bg-red-50"
         >
-          <LogOut className="w-4 h-4 ml-2" />
-          {isLoggingOut ? t('logging_out') : t('logout')}
+          <div className="flex items-center gap-2 w-full">
+            <LogOut className="w-4 h-4 ml-2 rtl:mr-2 rtl:ml-0" />
+            <span className="flex-1 text-left rtl:text-right">{isLoggingOut ? t('logging_out') : t('logout')}</span>
+          </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
