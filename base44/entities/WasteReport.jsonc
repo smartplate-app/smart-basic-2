@@ -104,10 +104,12 @@
           "created_by": "{{user.email}}"
         },
         {
-          "created_by": "{{user.acting_as_store_email}}"
+          "data.store_owner_email": "{{user.email}}"
         },
         {
-          "created_by": "{{user.store_user_owner_email}}"
+          "user_condition": {
+            "role": "admin"
+          }
         }
       ]
     },
@@ -117,10 +119,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "created_by": "{{user.acting_as_store_email}}"
-        },
-        {
-          "created_by": "{{user.store_user_owner_email}}"
+          "data.store_owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -135,10 +134,12 @@
           "created_by": "{{user.email}}"
         },
         {
-          "created_by": "{{user.acting_as_store_email}}"
+          "data.store_owner_email": "{{user.email}}"
         },
         {
-          "created_by": "{{user.store_user_owner_email}}"
+          "user_condition": {
+            "role": "admin"
+          }
         }
       ]
     },
@@ -148,10 +149,12 @@
           "created_by": "{{user.email}}"
         },
         {
-          "created_by": "{{user.acting_as_store_email}}"
+          "data.store_owner_email": "{{user.email}}"
         },
         {
-          "created_by": "{{user.store_user_owner_email}}"
+          "user_condition": {
+            "role": "admin"
+          }
         }
       ]
     }
