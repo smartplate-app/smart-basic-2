@@ -21,15 +21,21 @@
   ],
   "rls": {
     "create": {
-      "data.head_store_user_email": "{{user.email}}"
-    },
-    "read": {
       "$or": [
         {
           "data.head_store_user_email": "{{user.email}}"
         },
         {
-          "id": "{{user.chain_id}}"
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.head_store_user_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -39,10 +45,17 @@
       ]
     },
     "update": {
-      "data.head_store_user_email": "{{user.email}}"
+      "$or": [
+        {
+          "data.head_store_user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
-    "delete": {
-      "data.head_store_user_email": "{{user.email}}"
-    }
+    "delete": null
   }
 }
