@@ -101,32 +101,25 @@
     "create": {
       "$or": [
         {
-          "data.from_store_email": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "data.to_store_email": "{{user.email}}"
-        },
-        {
-          "data.from_store_email": "{{user.acting_as_store_email}}"
-        },
-        {
-          "data.to_store_email": "{{user.acting_as_store_email}}"
+          "user_condition": {
+            "role": "admin"
+          }
         }
       ]
     },
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.from_store_email": "{{user.email}}"
         },
         {
           "data.to_store_email": "{{user.email}}"
-        },
-        {
-          "data.from_store_email": "{{user.acting_as_store_email}}"
-        },
-        {
-          "data.to_store_email": "{{user.acting_as_store_email}}"
         },
         {
           "data.chain_id": "{{user.chain_id}}"
@@ -141,26 +134,24 @@
     "update": {
       "$or": [
         {
-          "data.from_store_email": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "data.to_store_email": "{{user.email}}"
-        },
-        {
-          "data.from_store_email": "{{user.acting_as_store_email}}"
-        },
-        {
-          "data.to_store_email": "{{user.acting_as_store_email}}"
+          "user_condition": {
+            "role": "admin"
+          }
         }
       ]
     },
     "delete": {
       "$or": [
         {
-          "data.from_store_email": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "data.from_store_email": "{{user.acting_as_store_email}}"
+          "user_condition": {
+            "role": "admin"
+          }
         }
       ]
     }
