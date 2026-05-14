@@ -44,14 +44,11 @@
           "data.user_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "admin"
-          }
+          "created_by": "{{user.email}}"
         },
         {
-          "data.chain_id": "{{user.chain_id}}",
           "user_condition": {
-            "is_chain_head": true
+            "role": "admin"
           }
         }
       ]
@@ -62,12 +59,15 @@
           "data.user_email": "{{user.email}}"
         },
         {
-          "data.chain_id": "{{user.chain_id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
             "role": "admin"
           }
+        },
+        {
+          "data.chain_id": "{{user.chain_id}}"
         }
       ]
     },
@@ -77,10 +77,7 @@
           "data.user_email": "{{user.email}}"
         },
         {
-          "data.chain_id": "{{user.chain_id}}",
-          "user_condition": {
-            "is_chain_head": true
-          }
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -95,10 +92,7 @@
           "data.user_email": "{{user.email}}"
         },
         {
-          "data.chain_id": "{{user.chain_id}}",
-          "user_condition": {
-            "is_chain_head": true
-          }
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
