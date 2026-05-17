@@ -38,7 +38,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
     setLoading(true);
     try {
       let activeSchedules = propSchedules;
-      if (activeSchedules === undefined) {
+      if (!activeSchedules || activeSchedules.length === 0) {
         const user = await base44.auth.me();
         let workingEmail = user.acting_as_store_email || user.email;
         let ownerEmail = user.store_user_owner_email || null;
@@ -107,6 +107,9 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
       };
       const { data } = await base44.functions.invoke('calculateTips', payload);
       setResult(data);
+    } catch (err) {
+      console.error(err);
+      alert("שגיאה בחישוב הטיפים: " + (err.message || "Unknown error"));
     } finally {
       setLoading(false);
     }

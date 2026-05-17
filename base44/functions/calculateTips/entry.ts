@@ -43,8 +43,12 @@ Deno.serve(async (req) => {
     // Load Workers
     const workerIds = workersInput.map(w => w.worker_id).filter(Boolean);
     const workerRecords = await Promise.all(workerIds.map(async (id) => {
-      const list = await base44.entities.Worker.filter({ id });
-      return list && list[0] ? list[0] : null;
+      try {
+        const list = await base44.entities.Worker.filter({ id });
+        return list && list[0] ? list[0] : null;
+      } catch (e) {
+        return null;
+      }
     }));
     const workersById = new Map();
     workerRecords.forEach((w, idx) => { if (w) workersById.set(w.id, w); });
@@ -177,7 +181,7 @@ Deno.serve(async (req) => {
       const used = useCash + useCredit;
 
       // Eligible workers: same job position as bucket
-      const group = normalizedWorkers.filter(w => w.job_position_id && w.job_position_id === b.job_position_id && w.hours > 0 && w.tips_method === 'percent_allocation');
+      const group = normalizedWorkers.filter(w => w.job_position_id && w.job_position_id === b.job_position_id && w.hours > 0 && w.tips_method !== 'fixed_hourly');
       const totalHours = group.reduce((s, w) => s + w.hours, 0);
       if (group.length === 0 || totalHours === 0) {
         // No eligible workers; return funds to residual pool
@@ -199,7 +203,7 @@ Deno.serve(async (req) => {
 
     // 3) Residual distribution among remaining eligible workers
     const pctPositionIds = new Set(pctBuckets.map(b => b.job_position_id).filter(Boolean));
-    const residualGroup = normalizedWorkers.filter(w => w.hours > 0 && w.tips_method === 'general_pool' && (!w.job_position_id || !pctPositionIds.has(w.job_position_id)));
+    const residualGroup = normalizedWorkers.filter(w => w.hours > 0 && w.tips_method !== 'fixed_hourly' && (!w.job_position_id || !pctPositionIds.has(w.job_position_id)));
     const residualTotal = cashPool + creditPool;
     const residualHours = residualGroup.reduce((s, w) => s + w.hours, 0);
 
@@ -219,7 +223,8 @@ Deno.serve(async (req) => {
     }
 
     // Finalize output
-    const results = [...perWorker.values()].map(r => {
+    const results = normalizedWorkers.map(w => {
+      const r = ensure(w.worker_id);
       const total = r.breakdown.hourly_fixed + r.breakdown.percent_share + r.breakdown.residual_share;
       return {
         ...r,
