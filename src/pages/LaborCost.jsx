@@ -294,11 +294,12 @@ export default function LaborCostPage() {
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-4xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-5xl">
             <TabsTrigger value="schedule">{language === 'he' ? 'סידור עבודה' : 'Schedule'}</TabsTrigger>
             <TabsTrigger value="goals">{language === 'he' ? 'יעדים' : 'Goals'}</TabsTrigger>
             <TabsTrigger value="positions">{t('positions')}</TabsTrigger>
             <TabsTrigger value="workers">{t('workers')}</TabsTrigger>
+            <TabsTrigger value="tips">{language === 'he' ? 'טיפים' : 'Tips'}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-6">
@@ -373,6 +374,11 @@ export default function LaborCostPage() {
               onUpdate={handleUpdateWorker}
               onDelete={handleDeleteWorker}
             />
+          </TabsContent>
+
+          <TabsContent value="tips" className="space-y-6">
+            <TipsSimulator />
+            <TipPolicyEditor />
           </TabsContent>
         </Tabs>
       </div>
