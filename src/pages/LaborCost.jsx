@@ -377,7 +377,7 @@ export default function LaborCostPage() {
           </TabsContent>
 
           <TabsContent value="tips" className="space-y-6">
-            <TipsSimulator />
+            <TipsSimulator schedules={schedules} positions={positions} />
             <TipPolicyEditor />
           </TabsContent>
         </Tabs>
