@@ -48,6 +48,7 @@ export default function TipsSimulator({ presetWorkers }) {
       const byWorker = new Map();
       for (const sh of shifts) {
         const wid = sh.worker_id;
+        const posId = sh.job_position_id || 'default';
         if (!wid) continue;
         const hrs = typeof sh.hours_worked === 'number' && sh.hours_worked > 0
           ? sh.hours_worked
@@ -58,10 +59,11 @@ export default function TipsSimulator({ presetWorkers }) {
               return ((eh * 60 + em) - (shh * 60 + sm)) / 60;
             })();
         if (hrs <= 0) continue;
-        const prev = byWorker.get(wid) || { worker_id: wid, hours: 0, job_position_id: sh.job_position_id };
+        
+        const key = `${wid}_${posId}`;
+        const prev = byWorker.get(key) || { worker_id: wid, hours: 0, job_position_id: sh.job_position_id };
         prev.hours += hrs;
-        prev.job_position_id = sh.job_position_id || prev.job_position_id;
-        byWorker.set(wid, prev);
+        byWorker.set(key, prev);
       }
 
       const workersPayload = Array.from(byWorker.values());

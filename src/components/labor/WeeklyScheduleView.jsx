@@ -115,19 +115,30 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     return totalMinutes / 60;
   };
 
-  const calculatePayment = (worker, hoursWorked, overtimeRate) => {
+  const calculatePayment = (worker, hoursWorked, overtimeRate, shiftPositionId) => {
             if (!worker) {
               return { basePayment: 0, totalPayment: 0, totalWithEmployerCost: 0 };
             }
 
+            let paymentAmount = worker.payment_amount || 0;
+            let paymentType = worker.payment_type || 'hourly';
+
+            if (shiftPositionId && worker.position_rates && worker.position_rates.length > 0) {
+              const rateOverride = worker.position_rates.find(r => r.position_id === shiftPositionId);
+              if (rateOverride) {
+                paymentAmount = rateOverride.amount;
+                paymentType = rateOverride.payment_type || paymentType;
+              }
+            }
+
             let basePaymentAmount = 0;
-            if (worker.payment_type === 'hourly') {
-              basePaymentAmount = hoursWorked * (worker.payment_amount || 0);
-            } else if (worker.payment_type === 'daily') {
-              basePaymentAmount = worker.payment_amount || 0;
-            } else if (worker.payment_type === 'monthly') {
+            if (paymentType === 'hourly') {
+              basePaymentAmount = hoursWorked * paymentAmount;
+            } else if (paymentType === 'daily') {
+              basePaymentAmount = paymentAmount;
+            } else if (paymentType === 'monthly') {
               const monthlyWorkingDays = 22; // This is a common assumption for monthly workers
-              const dailyRate = (worker.payment_amount || 0) / monthlyWorkingDays;
+              const dailyRate = paymentAmount / monthlyWorkingDays;
               basePaymentAmount = dailyRate * (hoursWorked / 8); // Assuming an 8-hour workday for prorating monthly
             }
 
@@ -338,9 +349,23 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const loadedShifts = template.shifts.map(s => {
       const dayIndex = days.findIndex(d => d.key === s.day);
       const shiftDate = moment(weekStartDate).day(dayIndex).format('YYYY-MM-DD');
+      
+      let basePayment = s.base_payment;
+      let paymentForShift = s.payment_for_shift;
+      
+      // Recalculate payment to ensure up-to-date worker rates
+      const worker = workers.find(w => w.id === s.worker_id);
+      if (worker) {
+        const calc = calculatePayment(worker, s.hours_worked, s.overtime_rate, s.job_position_id);
+        basePayment = calc.basePayment;
+        paymentForShift = calc.totalPayment;
+      }
+
       return {
         ...s,
         date: shiftDate,
+        base_payment: basePayment,
+        payment_for_shift: paymentForShift,
         id: undefined
       };
     });
@@ -404,7 +429,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             // The effective rate takes into account the eligibility for 150% overtime
             const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
             
-            const { basePayment, totalPayment } = calculatePayment(worker, editingShift.hours_worked, effectiveRate);
+            const { basePayment, totalPayment } = calculatePayment(worker, editingShift.hours_worked, effectiveRate, editingShift.job_position_id);
 
             setEditingShift({
               ...editingShift,
@@ -426,7 +451,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             // The effective rate takes into account the eligibility for 150% overtime
             const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
             
-            const { basePayment, totalPayment } = calculatePayment(worker, hours, effectiveRate);
+            const { basePayment, totalPayment } = calculatePayment(worker, hours, effectiveRate, editingShift.job_position_id);
 
             setEditingShift({
               ...editingShift,
@@ -681,9 +706,22 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         const originalShiftDate = moment(shift.date);
         const nextWeekShiftDate = originalShiftDate.add(1, 'week').format('YYYY-MM-DD');
 
+        let basePayment = shift.base_payment;
+        let paymentForShift = shift.payment_for_shift;
+        
+        // Recalculate payment to ensure up-to-date worker rates
+        const worker = workers.find(w => w.id === shift.worker_id);
+        if (worker) {
+          const calc = calculatePayment(worker, shift.hours_worked, shift.overtime_rate, shift.job_position_id);
+          basePayment = calc.basePayment;
+          paymentForShift = calc.totalPayment;
+        }
+
         return {
           ...shift,
           date: nextWeekShiftDate,
+          base_payment: basePayment,
+          payment_for_shift: paymentForShift,
           id: undefined
         };
       });
@@ -1078,13 +1116,29 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     if (src.day !== dst.day || src.positionId !== dst.positionId || src.rowId !== dst.rowId) {
       const destDateStr = moment(weekStartDate).day(days.findIndex(d => d.key === dst.day)).format('YYYY-MM-DD');
       const destPosition = positions.find(p => p.id === dst.positionId);
+      
+      let newPaymentForShift = updated.payment_for_shift;
+      let newBasePayment = updated.base_payment;
+      
+      // If position changed, recalculate payment
+      if (src.positionId !== dst.positionId) {
+        const worker = workers.find(w => w.id === updated.worker_id);
+        if (worker) {
+          const { basePayment, totalPayment } = calculatePayment(worker, updated.hours_worked, updated.overtime_rate, dst.positionId);
+          newBasePayment = basePayment;
+          newPaymentForShift = totalPayment;
+        }
+      }
+
       updated = {
         ...updated,
         day: dst.day,
         date: destDateStr,
         job_position_id: dst.positionId,
         job_position: destPosition?.name || updated.job_position,
-        position_row_id: dst.rowId
+        position_row_id: dst.rowId,
+        base_payment: newBasePayment,
+        payment_for_shift: newPaymentForShift
       };
     }
 

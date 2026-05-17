@@ -212,7 +212,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
         position_id: pid,
         position_name: p?.name || "",
         amount,
-        payment_type: p?.default_payment_type || formData.payment_type
+        payment_type: override?.payment_type || p?.default_payment_type || formData.payment_type
       };
     });
 
