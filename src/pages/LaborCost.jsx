@@ -21,6 +21,8 @@ import WeeklyScheduleView from "../components/labor/WeeklyScheduleView";
 import LaborGoalsTab from "../components/labor/LaborGoalsTab";
 import TipsSimulator from "../components/labor/TipsSimulator";
 import TipPolicyEditor from "../components/labor/TipPolicyEditor";
+import ImportLaborModal from "../components/labor/ImportLaborModal";
+import { FileSpreadsheet } from "lucide-react";
 
 export default function LaborCostPage() {
   const [positions, setPositions] = useState([]);
@@ -35,6 +37,7 @@ export default function LaborCostPage() {
   const { t, language } = useLanguage();
   const [passcode, setPasscode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   // Hydrate from cache for instant UI
   useEffect(() => {
@@ -269,10 +272,26 @@ export default function LaborCostPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50 p-4 md:p-8">
       <div className="w-full">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{language === 'he' ? 'סידור עבודה' : 'Weekly Schedule'}</h1>
-          <p className="text-gray-600 mt-2">{t('manage_workers_schedules')}</p>
+        <div className={`mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+          <div className={isRTL ? 'text-right' : ''}>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{language === 'he' ? 'סידור עבודה' : 'Weekly Schedule'}</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">{t('manage_workers_schedules')}</p>
+          </div>
+          <Button
+            variant="outline"
+            className="shrink-0 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700"
+            onClick={() => setShowImportModal(true)}
+          >
+            <FileSpreadsheet className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {language === 'he' ? 'יבוא עובדים מ-Google Sheets' : 'Import Workers from Sheets'}
+          </Button>
         </div>
+
+        <ImportLaborModal 
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onSuccess={loadData}
+        />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 max-w-4xl">
