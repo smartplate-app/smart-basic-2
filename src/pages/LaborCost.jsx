@@ -22,6 +22,7 @@ import LaborGoalsTab from "../components/labor/LaborGoalsTab";
 import TipsSimulator from "../components/labor/TipsSimulator";
 import TipPolicyEditor from "../components/labor/TipPolicyEditor";
 import ImportLaborModal from "../components/labor/ImportLaborModal";
+import LaborReportsTab from "../components/labor/LaborReportsTab";
 import { FileSpreadsheet } from "lucide-react";
 
 export default function LaborCostPage() {
@@ -300,6 +301,7 @@ export default function LaborCostPage() {
             <TabsTrigger value="positions" className="whitespace-nowrap shrink-0">{t('positions')}</TabsTrigger>
             <TabsTrigger value="workers" className="whitespace-nowrap shrink-0">{t('workers')}</TabsTrigger>
             <TabsTrigger value="tips" className="whitespace-nowrap shrink-0">{language === 'he' ? 'טיפים' : 'Tips'}</TabsTrigger>
+            <TabsTrigger value="reports" className="whitespace-nowrap shrink-0">{language === 'he' ? 'דוחות שכר' : 'Reports'}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-6">
@@ -398,6 +400,10 @@ export default function LaborCostPage() {
           <TabsContent value="tips" className="space-y-6">
             <TipsSimulator schedules={schedules} positions={positions} />
             <TipPolicyEditor />
+          </TabsContent>
+
+          <TabsContent value="reports" className="space-y-6">
+            <LaborReportsTab schedules={schedules} workers={workers} positions={positions} />
           </TabsContent>
         </Tabs>
       </div>
