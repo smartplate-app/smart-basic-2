@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader } from "lucide-react";
+import { Loader, Save } from "lucide-react";
 
 export default function TipsSimulator({ presetWorkers, schedules: propSchedules, positions: propPositions }) {
   const [workers, setWorkers] = useState(presetWorkers || []);
@@ -14,9 +14,37 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [localPositions, setLocalPositions] = useState([]);
 
   const activePositions = propPositions || localPositions;
+
+  const saveTips = async () => {
+    if (!result) return;
+    setSaving(true);
+    try {
+      const total_tips = (result.inputs.cash_tips || 0) + (result.inputs.credit_tips || 0);
+      const workersData = result.results.map(r => ({
+        worker_id: r.worker_id,
+        worker_name: r.worker_name,
+        tip_amount: r.total,
+        tip_percentage: total_tips > 0 ? (r.total / total_tips) * 100 : 0
+      }));
+
+      await base44.entities.TipEntry.create({
+        date: date,
+        shift_type: "evening",
+        total_tips: total_tips,
+        workers: workersData,
+        notes: `מדיניות: ${result.inputs.policy_name || 'ללא'}`
+      });
+      alert("הנתונים נשמרו בהצלחה!");
+    } catch(err) {
+      alert("שגיאה בשמירת נתונים: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -156,30 +184,44 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
 
       {result && (
         <Card>
-          <CardHeader>
-            <CardTitle>תוצאות</CardTitle>
-            <div className="text-sm text-gray-500">סה"כ שחולק: ₪{(result?.summary?.distributed_total || 0).toLocaleString()}</div>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>תוצאות מפורטות</CardTitle>
+              <div className="text-sm text-gray-500 mt-1">סה"כ שחולק: ₪{(result?.summary?.distributed_total || 0).toLocaleString()}</div>
+            </div>
+            <Button onClick={saveTips} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white gap-2">
+              {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              שמור נתוני טיפים
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="p-2 text-right">עובד</th>
-                    <th className="p-2 text-right">תפקיד</th>
-                    <th className="p-2 text-right">סה"כ</th>
-                    <th className="p-2 text-right">מזומן</th>
-                    <th className="p-2 text-right">אשראי</th>
+                    <th className="p-2 text-right font-semibold">עובד</th>
+                    <th className="p-2 text-right font-semibold">תפקיד</th>
+                    <th className="p-2 text-right font-semibold">שעות</th>
+                    <th className="p-2 text-right font-semibold">שיטה</th>
+                    <th className="p-2 text-right font-semibold">מזומן</th>
+                    <th className="p-2 text-right font-semibold">אשראי</th>
+                    <th className="p-2 text-right font-bold text-gray-900">סה"כ</th>
                   </tr>
                 </thead>
                 <tbody>
                   {result.results?.map((r) => (
-                    <tr key={r.worker_id} className="border-b">
-                      <td className="p-2">{r.worker_name}</td>
-                      <td className="p-2">{r.job_position_name || activePositions.find(p => p.id === r.job_position_id)?.name || ''}</td>
-                      <td className="p-2">₪{(r.total || 0).toLocaleString()}</td>
-                      <td className="p-2">₪{(r.total_cash || 0).toLocaleString()}</td>
-                      <td className="p-2">₪{(r.total_credit || 0).toLocaleString()}</td>
+                    <tr key={r.worker_id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="p-2 font-medium">{r.worker_name}</td>
+                      <td className="p-2 text-gray-600">{r.job_position_name || activePositions.find(p => p.id === r.job_position_id)?.name || ''}</td>
+                      <td className="p-2 text-gray-600">{r.hours?.toFixed(2) || 0}</td>
+                      <td className="p-2 text-xs text-gray-500">
+                        {r.tips_method === 'fixed_hourly' ? `₪${r.hourly_rate} לשעה` : 
+                         r.tips_method === 'percent_allocation' ? 'אחוזים' : 
+                         r.tips_method === 'general_pool' ? 'קופה כללית' : 'ללא טיפים'}
+                      </td>
+                      <td className="p-2 text-gray-600">₪{(r.total_cash || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                      <td className="p-2 text-gray-600">₪{(r.total_credit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                      <td className="p-2 font-bold text-green-700 bg-green-50/50">₪{(r.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>
                   ))}
                 </tbody>

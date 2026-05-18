@@ -228,6 +228,9 @@ Deno.serve(async (req) => {
       const total = r.breakdown.hourly_fixed + r.breakdown.percent_share + r.breakdown.residual_share;
       return {
         ...r,
+        hours: w.hours,
+        tips_method: w.tips_method,
+        hourly_rate: w.hourly_rate,
         total,
         total_cash: r.breakdown.hourly_fixed_cash + r.breakdown.percent_cash + r.breakdown.residual_cash,
         total_credit: r.breakdown.hourly_fixed_credit + r.breakdown.percent_credit + r.breakdown.residual_credit
