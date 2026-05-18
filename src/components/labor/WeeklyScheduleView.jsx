@@ -1221,9 +1221,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       <Card>
         <CardHeader>
           <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <CardTitle className={`text-2xl font-bold flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Calendar className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
-              {t('weekly_schedule')} - {moment(weekStartDate).format('DD/MM/YYYY')}
+            <CardTitle className={`text-xl md:text-2xl font-bold flex items-center flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Calendar className="w-5 h-5 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+              <span>{t('weekly_schedule')} - {moment(weekStartDate).format('DD/MM/YYYY')}</span>
             </CardTitle>
             
 

@@ -294,29 +294,39 @@ export default function LaborCostPage() {
         />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-5xl">
-            <TabsTrigger value="schedule">{language === 'he' ? 'סידור עבודה' : 'Schedule'}</TabsTrigger>
-            <TabsTrigger value="goals">{language === 'he' ? 'יעדים' : 'Goals'}</TabsTrigger>
-            <TabsTrigger value="positions">{t('positions')}</TabsTrigger>
-            <TabsTrigger value="workers">{t('workers')}</TabsTrigger>
-            <TabsTrigger value="tips">{language === 'he' ? 'טיפים' : 'Tips'}</TabsTrigger>
+          <TabsList className="flex w-full overflow-x-auto overflow-y-hidden justify-start sm:grid sm:grid-cols-5 max-w-5xl scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <TabsTrigger value="schedule" className="whitespace-nowrap shrink-0">{language === 'he' ? 'סידור עבודה' : 'Schedule'}</TabsTrigger>
+            <TabsTrigger value="goals" className="whitespace-nowrap shrink-0">{language === 'he' ? 'יעדים' : 'Goals'}</TabsTrigger>
+            <TabsTrigger value="positions" className="whitespace-nowrap shrink-0">{t('positions')}</TabsTrigger>
+            <TabsTrigger value="workers" className="whitespace-nowrap shrink-0">{t('workers')}</TabsTrigger>
+            <TabsTrigger value="tips" className="whitespace-nowrap shrink-0">{language === 'he' ? 'טיפים' : 'Tips'}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-6">
             {/* Week Navigation */}
-            <div className={`flex items-center justify-between bg-white rounded-lg shadow-sm p-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Button
-                variant="outline"
-                onClick={handlePreviousWeek}
-                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-              >
-                {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                {t('previous_week')}
-              </Button>
+            <div className={`flex flex-col sm:flex-row items-center justify-between bg-white rounded-lg shadow-sm p-3 sm:p-4 gap-3 sm:gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+              <div className={`flex items-center justify-between w-full sm:w-auto order-2 sm:order-none ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Button
+                  variant="outline"
+                  onClick={handlePreviousWeek}
+                  className={`flex items-center gap-1 px-3 sm:px-4 ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                  {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                  <span className="text-xs sm:text-sm">{t('previous_week')}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleNextWeek}
+                  className={`flex sm:hidden items-center gap-1 px-3 ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
+                  <span className="text-xs">{t('next_week')}</span>
+                  {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </Button>
+              </div>
 
-              <div className="flex flex-col items-center gap-2">
-                <div className={`flex items-center gap-2 text-lg font-semibold ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <CalendarIcon className="w-5 h-5 text-purple-600" />
+              <div className="flex flex-col items-center gap-1 sm:gap-2 text-center order-1 sm:order-none">
+                <div className={`flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-lg font-semibold ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 shrink-0" />
                   <span>
                     {moment(currentWeekStart).format('DD/MM/YYYY')} - {weekEnd.format('DD/MM/YYYY')}
                   </span>
@@ -326,7 +336,7 @@ export default function LaborCostPage() {
                     variant="outline"
                     size="sm"
                     onClick={handleToday}
-                    className="text-xs"
+                    className="text-[10px] sm:text-xs h-6 sm:h-8"
                   >
                     {t('current_week')}
                   </Button>
@@ -336,9 +346,9 @@ export default function LaborCostPage() {
               <Button
                 variant="outline"
                 onClick={handleNextWeek}
-                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                className={`hidden sm:flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''} order-3 sm:order-none`}
               >
-                {t('next_week')}
+                <span className="text-sm">{t('next_week')}</span>
                 {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </Button>
             </div>
