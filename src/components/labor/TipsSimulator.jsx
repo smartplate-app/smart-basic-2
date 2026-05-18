@@ -125,11 +125,11 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm text-gray-600">טיפ מזומן</label>
-              <Input type="number" value={cash} onChange={(e) => setCash(e.target.value)} />
+              <Input type="number" value={cash === 0 || cash === "0" ? "" : cash} placeholder="0" onChange={(e) => setCash(e.target.value)} />
             </div>
             <div>
               <label className="text-sm text-gray-600">טיפ אשראי</label>
-              <Input type="number" value={credit} onChange={(e) => setCredit(e.target.value)} />
+              <Input type="number" value={credit === 0 || credit === "0" ? "" : credit} placeholder="0" onChange={(e) => setCredit(e.target.value)} />
             </div>
             <div>
               <label className="text-sm text-gray-600">מדיניות</label>
