@@ -142,7 +142,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
             </div>
             <div>
               <label className="text-sm text-gray-600">תאריך משמרת</label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <Input type="date" value={date} dir="ltr" className="w-full text-left" onChange={(e) => setDate(e.target.value)} />
             </div>
           </div>
 
