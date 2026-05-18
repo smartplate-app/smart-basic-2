@@ -324,12 +324,21 @@ export default function LaborCostPage() {
                 </Button>
               </div>
 
-              <div className="flex flex-col items-center gap-1 sm:gap-2 text-center order-1 sm:order-none">
-                <div className={`flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-lg font-semibold ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="flex flex-col items-center gap-1 sm:gap-2 text-center order-1 sm:order-none relative">
+                <div className={`flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-lg font-semibold ${isRTL ? 'flex-row-reverse' : ''} cursor-pointer hover:text-purple-700 transition-colors`} title={language === 'he' ? 'לחץ לבחירת תאריך מלוח השנה' : 'Click to select date'}>
                   <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 shrink-0" />
                   <span>
                     {moment(currentWeekStart).format('DD/MM/YYYY')} - {weekEnd.format('DD/MM/YYYY')}
                   </span>
+                  <input
+                    type="date"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setCurrentWeekStart(moment(e.target.value).startOf('week').format('YYYY-MM-DD'));
+                      }
+                    }}
+                  />
                 </div>
                 {!isCurrentWeek && (
                   <Button

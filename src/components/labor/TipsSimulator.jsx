@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Loader, Save } from "lucide-react";
+import moment from "moment";
 
 export default function TipsSimulator({ presetWorkers, schedules: propSchedules, positions: propPositions }) {
   const [workers, setWorkers] = useState(presetWorkers || []);
@@ -11,6 +12,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
   const [selectedPolicy, setSelectedPolicy] = useState("");
   const [cash, setCash] = useState(0);
   const [credit, setCredit] = useState(0);
+  const [periodType, setPeriodType] = useState('day');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -31,12 +33,13 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         tip_percentage: total_tips > 0 ? (r.total / total_tips) * 100 : 0
       }));
 
+      const isWeek = result.inputs.period_type !== 'day';
       await base44.entities.TipEntry.create({
-        date: date,
+        date: result.inputs.period_date || date,
         shift_type: "evening",
         total_tips: total_tips,
         workers: workersData,
-        notes: `מדיניות: ${result.inputs.policy_name || 'ללא'}`
+        notes: `מדיניות: ${result.inputs.policy_name || 'ללא'} | ${isWeek ? 'חישוב שבועי' : 'חישוב יומי'}`
       });
       alert("הנתונים נשמרו בהצלחה!");
     } catch(err) {
@@ -81,25 +84,42 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         activeSchedules = await base44.entities.WeeklySchedule.filter({ created_by: workingEmail });
       }
 
-      // find schedule that contains the selected date
-      const target = activeSchedules.find(s => {
-        if (!s.week_start_date) return false;
-        const start = new Date(s.week_start_date);
-        const end = new Date(new Date(s.week_start_date).getTime() + 6 * 24 * 60 * 60 * 1000);
-        const d = new Date(date);
-        return d >= start && d <= end;
-      });
+      let shifts = [];
 
-      if (!target) {
-        alert("לא נמצא סידור עבודה לתאריך זה");
-        setLoading(false);
-        return;
+      if (periodType === 'day') {
+        const target = activeSchedules.find(s => {
+          if (!s.week_start_date) return false;
+          const start = new Date(s.week_start_date);
+          const end = new Date(new Date(s.week_start_date).getTime() + 6 * 24 * 60 * 60 * 1000);
+          const d = new Date(date);
+          return d >= start && d <= end;
+        });
+
+        if (!target) {
+          alert("לא נמצא סידור עבודה לשבוע של תאריך זה");
+          setLoading(false);
+          return;
+        }
+        shifts = (target?.shifts || []).filter(sh => sh.date === date);
+      } else {
+        let targetStart;
+        if (periodType === 'current_week') {
+          targetStart = moment().startOf('week').format('YYYY-MM-DD');
+        } else if (periodType === 'last_week') {
+          targetStart = moment().subtract(1, 'week').startOf('week').format('YYYY-MM-DD');
+        }
+        
+        const target = activeSchedules.find(s => s.week_start_date === targetStart);
+        if (!target) {
+          alert("לא נמצא סידור עבודה לשבוע הנבחר");
+          setLoading(false);
+          return;
+        }
+        shifts = target?.shifts || [];
       }
 
-      const shifts = (target?.shifts || []).filter(sh => sh.date === date);
-
       if (shifts.length === 0) {
-        alert("לא נמצאו משמרות לתאריך זה בסידור העבודה");
+        alert("לא נמצאו משמרות בסידור העבודה לתקופה שנבחרה");
         setLoading(false);
         return;
       }
@@ -134,6 +154,11 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         workers: workersPayload
       };
       const { data } = await base44.functions.invoke('calculateTips', payload);
+      
+      // Store period metadata for save context
+      data.inputs.period_type = periodType;
+      data.inputs.period_date = periodType === 'day' ? date : (periodType === 'current_week' ? moment().startOf('week').format('YYYY-MM-DD') : moment().subtract(1, 'week').startOf('week').format('YYYY-MM-DD'));
+      
       setResult(data);
     } catch (err) {
       console.error(err);
@@ -150,7 +175,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
           <CardTitle>חישוב טיפים לפי סידור</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="text-sm text-gray-600">טיפ מזומן</label>
               <Input type="number" value={cash === 0 || cash === "0" ? "" : cash} placeholder="0" onChange={(e) => setCash(e.target.value)} />
@@ -169,12 +194,26 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
               </select>
             </div>
             <div>
-              <label className="text-sm text-gray-600">תאריך משמרת</label>
-              <Input type="date" value={date} dir="ltr" className="w-full text-left" onChange={(e) => setDate(e.target.value)} />
+              <label className="text-sm text-gray-600">תקופת חישוב</label>
+              <select className="w-full border rounded-md h-10 px-2" value={periodType} onChange={(e) => setPeriodType(e.target.value)}>
+                <option value="day">יום ספציפי (מלוח שנה)</option>
+                <option value="current_week">שבוע נוכחי</option>
+                <option value="last_week">שבוע שעבר</option>
+              </select>
             </div>
+            {periodType === 'day' && (
+              <div>
+                <label className="text-sm text-gray-600">תאריך</label>
+                <Input type="date" value={date} dir="ltr" className="w-full text-left" onChange={(e) => setDate(e.target.value)} />
+              </div>
+            )}
           </div>
 
-          <p className="text-sm text-gray-500">השעות ייאספו אוטומטית מסידור העבודה ליום הנבחר לפי התפקידים המוגדרים.</p>
+          <p className="text-sm text-gray-500">
+            {periodType === 'day' 
+              ? 'השעות ייאספו אוטומטית מסידור העבודה ליום הנבחר לפי התפקידים המוגדרים.' 
+              : 'השעות ייאספו ויסוכמו מכל סידור העבודה של השבוע הנבחר עבור כל עובד.'}
+          </p>
 
           <Button onClick={run} className="bg-gray-900 hover:bg-gray-800" disabled={loading}>
             {loading ? <Loader className="w-4 h-4 animate-spin" /> : 'חשב'}
