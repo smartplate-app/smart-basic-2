@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +15,41 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
   const [periodType, setPeriodType] = useState("current_month"); // current_week | current_month | last_month | custom
   const [startDate, setStartDate] = useState(moment().startOf('month').format('YYYY-MM-DD'));
   const [endDate, setEndDate] = useState(moment().endOf('month').format('YYYY-MM-DD'));
+  const [tipEntries, setTipEntries] = useState([]);
+  const [loadingTips, setLoadingTips] = useState(false);
+
+  // Fetch tip entries for the selected date range
+  useEffect(() => {
+    const fetchTips = async () => {
+      setLoadingTips(true);
+      try {
+        const user = await base44.auth.me();
+        let workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.email;
+        let ownerEmail = user.store_user_owner_email || null;
+        if (!ownerEmail) {
+          try {
+            const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+            if (storeUserRecords.length > 0) ownerEmail = storeUserRecords[0].owner_email || null;
+          } catch (_) {}
+        }
+        if (ownerEmail) workingEmail = ownerEmail;
+
+        const entries = await base44.entities.TipEntry.filter({ created_by: workingEmail });
+        // Filter by date range manually since backend filter might not support complex date queries
+        const filtered = (entries || []).filter(entry => {
+          const entryDate = moment(entry.date);
+          return entryDate.isSameOrAfter(moment(startDate).startOf('day')) && 
+                 entryDate.isSameOrBefore(moment(endDate).endOf('day'));
+        });
+        setTipEntries(filtered);
+      } catch (err) {
+        console.error("Failed to load tip entries:", err);
+      } finally {
+        setLoadingTips(false);
+      }
+    };
+    fetchTips();
+  }, [startDate, endDate]);
 
   // Handle preset period changes
   const handlePeriodChange = (val) => {
@@ -83,6 +118,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           payment_for_shift: 0, // This is basically base + overtime
           employer_cost: 0,
           total_cost: 0,
+          total_tips: 0,
           positions: new Set()
         });
       }
@@ -104,12 +140,38 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       
       if (shift.job_position) record.positions.add(shift.job_position);
     });
+
+    // Add tips data from TipEntries
+    tipEntries.forEach(entry => {
+      if (!entry.workers) return;
+      entry.workers.forEach(w => {
+        if (!workerMap.has(w.worker_id)) {
+          // If worker received tips but has no shifts in this schedule range, add them
+          const worker = workers.find(wk => w.worker_id === wk.id);
+          workerMap.set(w.worker_id, {
+            worker_id: w.worker_id,
+            worker_name: w.worker_name || worker?.full_name || 'לא ידוע',
+            total_hours: 0,
+            total_shifts: 0,
+            base_payment: 0,
+            payment_for_shift: 0,
+            employer_cost: 0,
+            total_cost: 0,
+            total_tips: 0,
+            positions: new Set()
+          });
+        }
+        
+        const record = workerMap.get(w.worker_id);
+        record.total_tips += (w.tip_amount || 0);
+      });
+    });
     
     return Array.from(workerMap.values()).map(r => ({
       ...r,
       positions_list: Array.from(r.positions).join(', ')
     })).sort((a, b) => b.total_cost - a.total_cost); // Sort by highest cost first
-  }, [filteredShifts, workers]);
+  }, [filteredShifts, tipEntries, workers]);
 
   // Calculate grand totals
   const grandTotals = useMemo(() => {
@@ -118,8 +180,9 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       acc.shifts += curr.total_shifts;
       acc.payment += curr.payment_for_shift;
       acc.cost += curr.total_cost;
+      acc.tips += curr.total_tips;
       return acc;
-    }, { hours: 0, shifts: 0, payment: 0, cost: 0 });
+    }, { hours: 0, shifts: 0, payment: 0, cost: 0, tips: 0 });
   }, [summaryData]);
 
   const formatCurrency = (amount) => {
@@ -201,7 +264,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
               <div className={`text-sm text-purple-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'סה״כ עובדים' : 'Total Workers'}
@@ -218,9 +281,17 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 {grandTotals.hours.toFixed(1)}
               </div>
             </div>
+            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+              <div className={`text-sm text-emerald-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+                {language === 'he' ? 'סה״כ טיפים' : 'Total Tips'}
+              </div>
+              <div className={`text-2xl font-bold text-emerald-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {formatCurrency(grandTotals.tips)}
+              </div>
+            </div>
             <div className="bg-green-50 p-4 rounded-lg border border-green-100">
               <div className={`text-sm text-green-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
-                {language === 'he' ? 'תשלום לעובדים (ברוטו)' : 'Payment to Workers (Gross)'}
+                {language === 'he' ? 'שכר (ללא טיפים)' : 'Wages (excl. tips)'}
               </div>
               <div className={`text-2xl font-bold text-green-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {formatCurrency(grandTotals.payment)}
@@ -228,7 +299,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
             </div>
             <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
               <div className={`text-sm text-amber-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
-                {language === 'he' ? 'עלות כוללת מעביד' : 'Total Cost (w/ Employer)'}
+                {language === 'he' ? 'עלות כוללת למעסיק' : 'Total Employer Cost'}
               </div>
               <div className={`text-2xl font-bold text-amber-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {formatCurrency(grandTotals.cost)}
@@ -252,6 +323,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקידים' : 'Positions'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'משמרות' : 'Shifts'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שכר ברוטו' : 'Gross Pay'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
                       </tr>
@@ -263,6 +335,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                           <td className="p-3 text-gray-600 truncate max-w-[200px]" title={row.positions_list}>{row.positions_list}</td>
                           <td className="p-3 text-gray-600">{row.total_shifts}</td>
                           <td className="p-3 font-medium">{row.total_hours.toFixed(2)}</td>
+                          <td className="p-3 text-emerald-600 font-medium">{formatCurrency(row.total_tips)}</td>
                           <td className="p-3 text-green-700 font-medium">{formatCurrency(row.payment_for_shift)}</td>
                           <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
                         </tr>
@@ -271,6 +344,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                         <td className="p-3" colSpan={2}>{language === 'he' ? 'סה״כ' : 'Total'}</td>
                         <td className="p-3">{grandTotals.shifts}</td>
                         <td className="p-3">{grandTotals.hours.toFixed(2)}</td>
+                        <td className="p-3 text-emerald-600">{formatCurrency(grandTotals.tips)}</td>
                         <td className="p-3 text-green-700">{formatCurrency(grandTotals.payment)}</td>
                         <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost)}</td>
                       </tr>
