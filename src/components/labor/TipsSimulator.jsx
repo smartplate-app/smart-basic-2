@@ -30,6 +30,8 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         worker_id: r.worker_id,
         worker_name: r.worker_name,
         tip_amount: r.total,
+        cash_tips: r.total_cash || 0,
+        credit_tips: r.total_credit || 0,
         tip_percentage: total_tips > 0 ? (r.total / total_tips) * 100 : 0
       }));
 
