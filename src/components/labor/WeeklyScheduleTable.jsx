@@ -2,7 +2,7 @@ import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GripVertical, Plus, MoreHorizontal } from "lucide-react";
+import { GripVertical, Plus, MoreHorizontal, MessageCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import moment from "moment";
 
@@ -173,6 +173,12 @@ export default function WeeklyScheduleTable({
                                                           <span>{shift.start_time}-{shift.end_time}</span>
                                                           <span className="shift-cost text-[9px] opacity-80">{formatCurrency(shift.payment_for_shift || 0)}</span>
                                                         </div>
+                                                        {shift.notes && (
+                                                          <div className={`flex items-center gap-1 mt-1 text-[10px] text-gray-600 opacity-90 ${isRTL ? 'flex-row-reverse pr-4' : 'pl-4'}`}>
+                                                            <MessageCircle className="h-3 w-3 shrink-0" />
+                                                            <span className="truncate">{shift.notes}</span>
+                                                          </div>
+                                                        )}
                                                         {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
                                                           <Badge variant="secondary" className={`mt-0.5 text-[9px] px-1 py-0 h-4 ${isRTL ? 'mr-4' : 'ml-4'}`}>{shift.overtime_rate === '125' ? '125%' : (shift.overtime_rate === '150' ? '150%' : '')}</Badge>
                                                         )}
