@@ -469,7 +469,12 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         csvContent += `"${language === 'he' ? 'סה״כ ' : 'Total '}${w.worker_name}","",${w.total_shifts},${w.total_hours.toFixed(2)},${w.total_tips.toFixed(2)},${w.alema.toFixed(2)},${w.regular_pay.toFixed(2)},${w.management_bonus.toFixed(2)},${w.total_gross.toFixed(2)},${w.total_cost.toFixed(2)}\n`;
       });
       csvContent += language === 'he' ? `"סה״כ כללי","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Grand Total","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
-    } else if (reportType === "summary_position") {
+      csvContent += "\n";
+      csvContent += language === 'he' ? `"סיכום לפי מחלקות / תפקידים"\n` : `"Summary by Departments / Positions"\n`;
+      positionSummaryData.forEach(row => {
+        csvContent += `"${language === 'he' ? 'סה״כ למחלקה:' : 'Dept Total:'}","${row.position} (${row.workers_count} ${language === 'he' ? 'עובדים' : 'workers'})",${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},0,${row.total_gross.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
+      });
+      } else if (reportType === "summary_position") {
       csvContent += language === 'he' ? "תפקיד,מספר עובדים,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n" : "Position,Workers,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n";
       positionSummaryData.forEach(row => {
         csvContent += `"${row.position}",${row.workers_count},${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
@@ -776,7 +781,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           </div>
 
           {/* Report Data */}
-          <div className="overflow-x-auto border rounded-lg">
+          <div className="overflow-auto max-h-[70vh] border rounded-lg relative bg-white">
             {filteredShifts.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 {language === 'he' ? 'לא נמצאו משמרות לתקופה הנבחרת' : 'No shifts found for the selected period'}
@@ -785,7 +790,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
               <table className="w-full text-sm" dir={isRTL ? 'rtl' : 'ltr'}>
                 {reportType === "summary" && (
                   <>
-                    <thead className="bg-gray-100">
+                    <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Position'}</th>
@@ -844,12 +849,32 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                         <td className="p-3 text-green-700">{formatCurrency(grandTotals.payment)}</td>
                         <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost)}</td>
                       </tr>
+                      
+                      <tr className="bg-gray-200 font-bold border-t-4 border-gray-400">
+                        <td colSpan="10" className={`p-4 text-lg text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {language === 'he' ? 'סיכום לפי מחלקות / תפקידים' : 'Summary by Departments / Positions'}
+                        </td>
+                      </tr>
+                      {positionSummaryData.map((row, idx) => (
+                        <tr key={`pos-sum-${row.position}`} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
+                          <td className="p-3 font-medium text-gray-500">{language === 'he' ? 'סה״כ למחלקה:' : 'Dept Total:'}</td>
+                          <td className="p-3 font-bold text-gray-800">{row.position} <span className="text-xs font-normal text-gray-400">({row.workers_count} {language === 'he' ? 'עובדים' : 'workers'})</span></td>
+                          <td className="p-3 font-medium">{row.total_shifts}</td>
+                          <td className="p-3 font-medium">{row.total_hours.toFixed(1)}</td>
+                          <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                          <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                          <td className="p-3 text-blue-700 font-medium">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
+                          <td className="p-3 text-purple-700 font-medium">-</td>
+                          <td className="p-3 text-green-700 font-medium">{formatCurrency(row.total_gross)}</td>
+                          <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </>
                 )}
                 {reportType === "summary_position" && (
                   <>
-                    <thead className="bg-gray-100">
+                    <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Position'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
@@ -886,7 +911,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 )}
                 {reportType === "daily" && (
                   <>
-                    <thead className="bg-gray-100">
+                    <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תאריך' : 'Date'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
@@ -926,7 +951,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 )}
                 {reportType === "detailed" && (
                   <>
-                    <thead className="bg-gray-100">
+                    <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תאריך' : 'Date'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Role'}</th>
