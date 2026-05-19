@@ -1212,90 +1212,92 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-            {/* Header & Input */}
-            <div className="p-5 sm:p-6 border-b border-gray-100 bg-gray-50/30">
-              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                  <h3 className="text-lg font-bold text-gray-800 tracking-tight">
-                    {language === 'he' ? 'תחזית והוצאות' : 'Forecast & Costs'}
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    {language === 'he' ? 'הזן צפי מכירות לחודש הנוכחי כדי לחשב את אחוז העבודה' : 'Enter sales forecast to calculate labor %'}
-                  </p>
-                </div>
-                
-                <div className={`flex items-center gap-3 bg-white p-2 sm:p-1.5 rounded-xl border border-gray-200 shadow-sm w-full sm:w-auto ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={`bg-emerald-50 p-2 rounded-lg text-emerald-600 hidden sm:flex items-center justify-center ${isRTL ? 'ml-1' : 'mr-1'}`}>
-                    <DollarSign className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 sm:flex-initial">
-                    <Label className={`text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1 ${isRTL ? 'text-right pr-1' : 'text-left pl-1'}`}>
-                      {language === 'he' ? 'מכירות חודשיות (כולל מע״מ)' : 'Monthly Sales (incl. VAT)'}
-                    </Label>
-                    <div className="relative flex items-center">
-                      <Input
-                        type="number"
-                        min="0"
-                        step="1000"
-                        value={monthlyPredictedSales}
-                        onChange={(e) => setMonthlyPredictedSales(parseFloat(e.target.value) || 0)}
-                        className={`h-9 text-lg font-bold bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 w-full sm:w-32 ${isRTL ? 'text-right' : 'text-left'}`}
-                        placeholder="0"
-                      />
-                      <span className={`text-gray-400 font-medium px-2 border-gray-100 ${isRTL ? 'border-r' : 'border-l'}`}>
-                        {language === 'he' ? '₪' : '$'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+          <div className="bg-white border border-gray-900 overflow-hidden mb-6 flex flex-col">
+            
+            {/* Title Row - White */}
+            <div className={`p-3 sm:p-4 border-b border-gray-900 bg-white flex items-center justify-center sm:justify-start ${isRTL ? 'text-right flex-row-reverse' : 'text-left'}`}>
+              <div className="flex flex-wrap items-center gap-1.5 justify-center sm:justify-start">
+                <span className="text-[17px] sm:text-xl font-bold text-gray-900 whitespace-nowrap">
+                  {language === 'he' ? 'תחזית והוצאות.' : 'Forecast & Costs.'}
+                </span>
+                <span className="text-[15px] sm:text-xl text-gray-800 text-center sm:text-start">
+                  {language === 'he' ? 'הזן צפי מכירות לחודש הנוכחי כדי לחשב את אחוז העבודה.' : 'Enter sales forecast to calculate labor %.'}
+                </span>
               </div>
             </div>
 
-            {/* Metrics Grid */}
-            <div className={`grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-gray-100 ${isRTL ? 'lg:divide-x-reverse' : ''}`}>
-              <div className={`p-5 sm:p-6 flex flex-col justify-center ${isRTL ? 'text-right' : 'text-left'}`}>
-                <p className="text-xs font-medium text-gray-500 mb-1.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  {language === 'he' ? 'יעד שבועי (ללא מע״מ)' : 'Weekly Target (excl. VAT)'}
-                </p>
-                <p className="text-2xl font-bold text-gray-800">{formatCurrency(weeklyPredictedSalesWithoutVAT)}</p>
-                <p className="text-[10px] text-gray-400 mt-1">{language === 'he' ? 'בסיס לחישוב האחוז' : 'Base for calculation'}</p>
+            {/* Monthly Sales Row - Yellow */}
+            <div className={`p-3 sm:p-4 border-b border-gray-900 bg-[#fef5d4] flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-4 ${isRTL ? 'sm:text-right sm:flex-row-reverse' : 'sm:text-left'}`}>
+              <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5`}>
+                <span className="text-[17px] sm:text-xl font-bold text-gray-900 whitespace-nowrap">
+                  {language === 'he' ? 'מכירות חודשיות (כולל מע"מ): ₪' : 'Monthly Sales (incl. VAT): $'}
+                </span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={monthlyPredictedSales}
+                  onChange={(e) => setMonthlyPredictedSales(parseFloat(e.target.value) || 0)}
+                  className={`h-8 sm:h-9 w-28 sm:w-32 text-[17px] sm:text-xl font-bold bg-transparent border-0 border-b border-gray-900 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 px-1 text-center ${isRTL ? 'sm:text-right' : 'sm:text-left'}`}
+                  placeholder="0"
+                />
               </div>
+            </div>
 
-              <div className={`p-5 sm:p-6 flex flex-col justify-center ${isRTL ? 'text-right' : 'text-left'}`}>
-                <p className="text-xs font-medium text-gray-500 mb-1.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                  {t('total_hours')}
-                </p>
-                <p className="text-2xl font-bold text-gray-800">{totalHours.toFixed(1)} <span className="text-sm font-medium text-gray-400">{t('hrs')}</span></p>
-                <p className="text-[10px] text-gray-400 mt-1">{language === 'he' ? 'סך השעות בסידור' : 'Total scheduled hours'}</p>
+            {/* Weekly Target Row - Blue */}
+            <div className={`p-3 sm:p-4 border-b border-gray-900 bg-[#dbebf9] flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 ${isRTL ? 'sm:text-right sm:flex-row-reverse' : 'sm:text-left'}`}>
+              <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5`}>
+                <span className="text-[17px] sm:text-xl font-bold text-gray-900 whitespace-nowrap">
+                  {language === 'he' ? 'יעד שבועי (ללא מע"מ).' : 'Weekly Target (excl. VAT).'}
+                </span>
+                <span className="text-[15px] sm:text-xl text-gray-800 text-center sm:text-start">
+                  {language === 'he' ? 'בסיס לחישוב האחוז.' : 'Base for calculation.'}
+                </span>
               </div>
+              <span className="text-[17px] sm:text-2xl font-bold text-gray-900">{formatCurrency(weeklyPredictedSalesWithoutVAT)}</span>
+            </div>
 
-              <div className={`p-5 sm:p-6 flex flex-col justify-center ${isRTL ? 'text-right' : 'text-left'}`}>
-                <p className="text-xs font-medium text-gray-500 mb-1.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                  {t('total_labor_cost')}
-                </p>
-                <p className="text-2xl font-bold text-indigo-600">{formatCurrency(totalCostWithEmployer)}</p>
-                <p className="text-[10px] text-gray-400 mt-1 truncate" title={language === 'he' ? 'כולל תוספות יחסיות והפרשות' : 'Incl. bonuses & overhead'}>
-                  {language === 'he' ? 'כולל תוספות והפרשות' : 'Incl. bonuses & overhead'}
-                </p>
+            {/* Total Hours Row - Pink */}
+            <div className={`p-3 sm:p-4 border-b border-gray-900 bg-[#f6d5d5] flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 ${isRTL ? 'sm:text-right sm:flex-row-reverse' : 'sm:text-left'}`}>
+              <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5`}>
+                <span className="text-[17px] sm:text-xl font-bold text-gray-900 whitespace-nowrap">
+                  {t('total_hours')}.
+                </span>
+                <span className="text-[15px] sm:text-xl text-gray-800 text-center sm:text-start">
+                  {language === 'he' ? 'סך השעות בסידור.' : 'Total scheduled hours.'}
+                </span>
               </div>
+              <span className="text-[17px] sm:text-2xl font-bold text-gray-900">{totalHours.toFixed(1)}</span>
+            </div>
 
-              <div className={`p-5 sm:p-6 flex flex-col justify-center relative overflow-hidden ${laborPercentage > 30 ? 'bg-rose-50/40' : 'bg-emerald-50/40'} ${isRTL ? 'text-right' : 'text-left'}`}>
-                <div className={`absolute top-0 ${isRTL ? 'left-0' : 'right-0'} w-1 h-full ${laborPercentage > 30 ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
-                <p className={`text-xs font-bold uppercase tracking-wider mb-1.5 ${laborPercentage > 30 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                  {language === 'he' ? 'אחוז עבודה' : 'Labor %'}
-                </p>
-                <p className={`text-3xl font-black tracking-tight ${laborPercentage > 30 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                  {laborPercentage.toFixed(1)}%
-                </p>
+            {/* Total Labor Cost Row - Yellow */}
+            <div className={`p-3 sm:p-4 border-b border-gray-900 bg-[#fef5d4] flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 ${isRTL ? 'sm:text-right sm:flex-row-reverse' : 'sm:text-left'}`}>
+              <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5`}>
+                <span className="text-[17px] sm:text-xl font-bold text-gray-900 whitespace-nowrap">
+                  {t('total_labor_cost')}.
+                </span>
+                <span className="text-[15px] sm:text-xl text-gray-800 text-center sm:text-start">
+                  {language === 'he' ? 'כולל תוספות והפרשות.' : 'Incl. bonuses & overhead.'}
+                </span>
+              </div>
+              <span className="text-[17px] sm:text-2xl font-bold text-gray-900">{formatCurrency(totalCostWithEmployer)}</span>
+            </div>
+
+            {/* Labor Percentage Row - Blue */}
+            <div className={`p-3 sm:p-4 bg-[#dbebf9] flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 ${isRTL ? 'sm:text-right sm:flex-row-reverse' : 'sm:text-left'}`}>
+              <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5`}>
+                <span className="text-[17px] sm:text-xl font-bold text-gray-900 whitespace-nowrap">
+                  {language === 'he' ? 'אחוז עבודה.' : 'Labor %.'}
+                </span>
                 {laborPercentage > 30 && (
-                  <p className="text-[10px] text-rose-500 font-medium mt-1">{language === 'he' ? 'חריגה מהיעד' : 'Over target'}</p>
+                  <span className="text-[15px] sm:text-xl text-gray-800 text-center sm:text-start">
+                    {language === 'he' ? 'חריגה מהיעד.' : 'Over target.'}
+                  </span>
                 )}
               </div>
+              <span className={`text-[17px] sm:text-2xl font-bold ${laborPercentage > 30 ? 'text-red-600' : 'text-gray-900'}`}>{laborPercentage.toFixed(1)}%</span>
             </div>
+            
           </div>
 
           <div className="bg-white border rounded-lg p-3">
