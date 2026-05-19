@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle } from "lucide-react";
+import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, ChefHat, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, ChevronRight, ChevronLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import UserSwitcher from "./components/UserSwitcher";
 import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
@@ -14,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const AppLayout = ({ children, currentPageName }) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [user, setUser] = React.useState(null);
   const [authLoading, setAuthLoading] = React.useState(true);
   const [showWorkerInvite, setShowWorkerInvite] = React.useState(false);
@@ -180,24 +180,43 @@ const AppLayout = ({ children, currentPageName }) => {
       </header>
 
       <div className="flex">
-        <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 w-64 bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full' : '-translate-x-full')}`}>
-          <div className="p-4 border-b border-gray-200 hidden md:block">
-            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+        <aside className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} z-50 ${isCollapsed ? 'w-20' : 'w-64'} bg-white border-${isRTL ? 'l' : 'r'} border-gray-200 flex flex-col transform transition-all duration-300 md:sticky md:top-0 md:h-screen md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : (isRTL ? 'translate-x-full' : '-translate-x-full')}`}>
+          <div className="p-4 border-b border-gray-200 hidden md:flex items-center justify-center relative min-h-[97px]">
+            {!isCollapsed && (
+              <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'} overflow-hidden w-full`}>
+                <img 
+                  src="https://smartplate.org/logo.png" 
+                  alt="Smart Plate"
+                  className="h-16 object-contain flex-shrink-0"
+                />
+                <div className="flex flex-col truncate">
+                  <p className="text-lg font-bold text-gray-900 truncate">Smart Plate</p>
+                  <p className="text-xs text-gray-600 font-medium truncate">
+                    {language === 'he' ? 'עלות מזון ועבודה' : 'Food Cost & Labor Cost'}
+                  </p>
+                </div>
+              </div>
+            )}
+            {isCollapsed && (
               <img 
                 src="https://smartplate.org/logo.png" 
                 alt="Smart Plate"
-                className="h-16 object-contain flex-shrink-0"
+                className="h-10 w-10 object-contain flex-shrink-0"
               />
-              <div className="flex flex-col">
-                <p className="text-lg font-bold text-gray-900">Smart Plate</p>
-                <p className="text-xs text-gray-600 font-medium">
-                  {language === 'he' ? 'עלות מזון ועבודה בצורה נכונה' : 'Food Cost & Labor Cost Done Right'}
-                </p>
-              </div>
-            </div>
+            )}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className={`absolute ${isRTL ? 'left-[-14px]' : 'right-[-14px]'} top-1/2 -translate-y-1/2 bg-white border border-orange-200/80 shadow-md rounded-xl p-1 hover:bg-orange-50 z-50 transition-colors hidden md:flex`}
+            >
+              {isRTL ? (
+                isCollapsed ? <ChevronLeft className="w-5 h-5 text-gray-800" /> : <ChevronRight className="w-5 h-5 text-gray-800" />
+              ) : (
+                isCollapsed ? <ChevronRight className="w-5 h-5 text-gray-800" /> : <ChevronLeft className="w-5 h-5 text-gray-800" />
+              )}
+            </button>
           </div>
           
-          <div className="p-4 border-b border-gray-200">
+          <div className={`border-b border-gray-200 transition-all duration-300 overflow-hidden ${isCollapsed ? 'h-0 p-0 border-transparent opacity-0' : 'p-4 opacity-100'}`}>
             {user && (
               <div className="w-full space-y-2">
                 <UserSwitcher user={user} onUserChange={setUser} />
@@ -237,23 +256,24 @@ const AppLayout = ({ children, currentPageName }) => {
             )}
           </div>
           
-          <div className="p-4 border-b border-gray-200">
+          <div className={`border-b border-gray-200 transition-all duration-300 overflow-hidden ${isCollapsed ? 'h-0 p-0 border-transparent opacity-0' : 'p-4 opacity-100'}`}>
             <LanguageSwitcher />
           </div>
 
-          <nav className="p-4 flex-grow overflow-y-auto">
+          <nav className={`flex-grow overflow-y-auto ${isCollapsed ? 'p-2' : 'p-4'}`}>
             <ul className="space-y-2">
               {visibleNavigationItems.map((item) => (
                 <li key={item.title}>
                   <Link 
                     to={item.url} 
                     onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isRTL ? 'flex-row-reverse text-right' : ''} ${
+                    className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2'} rounded-lg transition-colors ${!isCollapsed && isRTL ? 'flex-row-reverse text-right' : ''} ${
                       location.pathname === item.url ? 'bg-gray-900 text-white font-bold' : 'text-gray-700 hover:bg-gray-100'
                     }`}
+                    title={isCollapsed ? item.title : undefined}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.title}</span>
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="truncate">{item.title}</span>}
                   </Link>
                 </li>
               ))}
