@@ -25,10 +25,11 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
   });
 
   // Helper function to calculate total cost
-  const calculateTotalCost = (baseAmount, percentage) => {
+  const calculateTotalCost = (baseAmount, percentage, managementBonus = 0) => {
     const numericBaseAmount = parseFloat(baseAmount) || 0;
     const numericPercentage = parseFloat(percentage) || 0;
-    return numericBaseAmount * (1 + numericPercentage / 100);
+    const numericBonus = parseFloat(managementBonus) || 0;
+    return (numericBaseAmount + numericBonus) * (1 + numericPercentage / 100);
   };
 
   const initialFormData = {
@@ -45,6 +46,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
     section: "",
     payment_type: "monthly",
     payment_amount: 0,
+    management_bonus: 0,
     employer_cost_percentage: 25,
     total_cost_with_employer: 0,
     bank_name: "",
@@ -67,8 +69,9 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
 
   const handleStartEdit = (worker) => {
     const workerPaymentAmount = parseFloat(worker.payment_amount) || 0;
+    const workerManagementBonus = parseFloat(worker.management_bonus) || 0;
     const workerEmployerCostPercentage = parseFloat(worker.employer_cost_percentage) || 25;
-    const calculatedTotalCost = calculateTotalCost(workerPaymentAmount, workerEmployerCostPercentage);
+    const calculatedTotalCost = calculateTotalCost(workerPaymentAmount, workerEmployerCostPercentage, workerManagementBonus);
 
     setFormData({
       full_name: worker.full_name || "",
@@ -84,6 +87,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       section: worker.section || "",
       payment_type: worker.payment_type || "monthly",
       payment_amount: workerPaymentAmount,
+      management_bonus: workerManagementBonus,
       employer_cost_percentage: workerEmployerCostPercentage,
       total_cost_with_employer: parseFloat(worker.total_cost_with_employer) || calculatedTotalCost,
       bank_name: worker.bank_name || "",
@@ -121,7 +125,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       });
     } else {
       const newPaymentAmount = parseFloat(position?.default_payment_amount) || 0;
-      const totalCost = calculateTotalCost(newPaymentAmount, formData.employer_cost_percentage);
+      const totalCost = calculateTotalCost(newPaymentAmount, formData.employer_cost_percentage, formData.management_bonus);
 
       setFormData(prev => {
         const existing = (prev.position_rates || []).slice();
@@ -176,7 +180,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
 
   const handlePaymentAmountChange = (value) => {
     const amount = parseFloat(value) || 0;
-    const totalCost = calculateTotalCost(amount, formData.employer_cost_percentage);
+    const totalCost = calculateTotalCost(amount, formData.employer_cost_percentage, formData.management_bonus);
 
     setFormData({
       ...formData,
@@ -184,10 +188,21 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       total_cost_with_employer: totalCost
     });
   };
+  
+  const handleManagementBonusChange = (value) => {
+    const bonus = parseFloat(value) || 0;
+    const totalCost = calculateTotalCost(formData.payment_amount, formData.employer_cost_percentage, bonus);
+
+    setFormData({
+      ...formData,
+      management_bonus: bonus,
+      total_cost_with_employer: totalCost
+    });
+  };
 
   const handleEmployerCostChange = (value) => {
     const percentage = parseFloat(value) || 0;
-    const totalCost = calculateTotalCost(formData.payment_amount, percentage);
+    const totalCost = calculateTotalCost(formData.payment_amount, percentage, formData.management_bonus);
 
     setFormData({
       ...formData,
@@ -221,11 +236,12 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
     const baseType = positions.find(p => p.id === formData.job_position_id)?.default_payment_type || formData.payment_type;
 
     // Ensure total_cost_with_employer is up-to-date before saving
-    const finalTotalCost = calculateTotalCost(baseAmount, formData.employer_cost_percentage);
+    const finalTotalCost = calculateTotalCost(baseAmount, formData.employer_cost_percentage, formData.management_bonus);
 
     const dataToSave = {
       ...formData,
       payment_amount: baseAmount,
+      management_bonus: formData.management_bonus || 0,
       payment_type: baseType,
       position_rates: comp,
       total_cost_with_employer: finalTotalCost
@@ -455,6 +471,22 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                 </p>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="managementBonus">{language === 'he' ? 'תוספת ניהול (חודשית)' : 'Management Bonus (Monthly)'}</Label>
+                <Input
+                  id="managementBonus"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.management_bonus}
+                  onChange={(e) => handleManagementBonusChange(e.target.value)}
+                  placeholder="0.00"
+                />
+                <p className="text-xs text-gray-500">
+                  {language === 'he' ? 'תוספת קבועה לשכר הנצבר בכל חודש' : 'Fixed bonus added to accumulated salary each month'}
+                </p>
+              </div>
+
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="employerCostPercentage">
                   {language === 'he' ? 'אחוז עלויות מעסיק' : 'Employer Cost %'}
@@ -547,7 +579,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                               if (isPrimary) {
                                 next.payment_amount = amt;
                                 next.payment_type = p.default_payment_type || prev.payment_type;
-                                next.total_cost_with_employer = calculateTotalCost(amt, prev.employer_cost_percentage);
+                                next.total_cost_with_employer = calculateTotalCost(amt, prev.employer_cost_percentage, prev.management_bonus);
                               }
                               return next;
                             });
@@ -561,7 +593,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                             const next = { ...prev, position_rates: existing };
                             if (isPrimary) {
                               next.payment_amount = defAmt;
-                              next.total_cost_with_employer = calculateTotalCost(defAmt, prev.employer_cost_percentage);
+                              next.total_cost_with_employer = calculateTotalCost(defAmt, prev.employer_cost_percentage, prev.management_bonus);
                             }
                             return next;
                           });
@@ -576,9 +608,9 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
 
             </div>
 
-            {formData.payment_amount > 0 && (
+            {(formData.payment_amount > 0 || formData.management_bonus > 0) && (
               <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-lg p-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <p className="text-xs text-gray-600 mb-1">
                       {language === 'he' ? 'שכר בסיס' : 'Base Salary'}
@@ -590,13 +622,22 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 mb-1">
+                      {language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}
+                    </p>
+                    <p className="text-xl font-bold text-blue-700">
+                      {(formData.management_bonus || 0).toLocaleString()} {t('currency')}
+                    </p>
+                    <p className="text-xs text-gray-500">{language === 'he' ? 'חודשי' : 'Monthly'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">
                       {language === 'he' ? 'עלות כוללת למעסיק' : 'Total Employer Cost'}
                     </p>
                     <p className="text-xl font-bold text-green-700">
                       {formData.total_cost_with_employer.toLocaleString()} {t('currency')}
                     </p>
                     <p className="text-xs text-green-600">
-                      +{formData.employer_cost_percentage}% ({(formData.total_cost_with_employer - formData.payment_amount).toLocaleString()} {t('currency')})
+                      +{formData.employer_cost_percentage}%
                     </p>
                   </div>
                 </div>
@@ -746,9 +787,15 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                         {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')}{paymentTypeSuffixes[worker.payment_type]}
                       </button>
                     </div>
+                    {(worker.management_bonus > 0) && (
+                      <div className="flex items-center gap-2 text-blue-700 mb-1">
+                        <span className="font-semibold text-xs ml-6">{language === 'he' ? 'תוספת ניהול:' : 'Mgmt Bonus:'}</span>
+                        <span className="text-xs">{(parseFloat(worker.management_bonus) || 0).toLocaleString()} {t('currency')} ({language === 'he' ? 'חודשי' : 'Monthly'})</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-green-700 font-bold">
                       <span className="text-xs">{language === 'he' ? 'עלות כוללת:' : 'Total Cost:'}</span>
-                      <span>{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25)).toLocaleString()} {t('currency')}</span>
+                      <span>{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25, worker.management_bonus || 0)).toLocaleString()} {t('currency')}</span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">+{parseFloat(worker.employer_cost_percentage) || 25}% {language === 'he' ? 'עלויות מעסיק' : 'employer costs'}</p>
                   </div>
@@ -797,6 +844,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                     {worker.email && <span>{worker.email}</span>}
                     <span>
                       {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')} · +{parseFloat(worker.employer_cost_percentage) || 25}%
+                      {worker.management_bonus > 0 ? ` · ${language === 'he' ? 'תוספת ניהול: ' : 'Mgmt Bonus: '}${(parseFloat(worker.management_bonus) || 0).toLocaleString()} ${t('currency')}` : ''}
                     </span>
                   </div>
                 </div>
