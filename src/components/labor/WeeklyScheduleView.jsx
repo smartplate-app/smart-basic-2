@@ -174,12 +174,29 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const totalBaseCost = shifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
     
     // Calculate total cost including employer costs for each shift
-    const totalCostWithEmployer = shifts.reduce((sum, s) => {
+    let totalCostWithEmployer = shifts.reduce((sum, s) => {
       const worker = workers.find(w => w.id === s.worker_id);
       const employerCostPercent = worker?.employer_cost_percentage || 25;
       const shiftPayment = s.payment_for_shift || 0;
       return sum + (shiftPayment * (1 + employerCostPercent / 100));
     }, 0);
+
+    // Calculate relative management bonus for workers in the schedule
+    const daysInMonth = moment(weekStartDate).daysInMonth() || 30;
+    const uniqueWorkerIds = [...new Set(shifts.map(s => s.worker_id))];
+    let totalManagementBonusWithEmployer = 0;
+    
+    uniqueWorkerIds.forEach(workerId => {
+      const worker = workers.find(w => w.id === workerId);
+      if (worker && parseFloat(worker.management_bonus) > 0) {
+        const bonus = parseFloat(worker.management_bonus);
+        const relativeBonus = (bonus / daysInMonth) * 7;
+        const employerCostPercent = worker.employer_cost_percentage || 25;
+        totalManagementBonusWithEmployer += relativeBonus * (1 + employerCostPercent / 100);
+      }
+    });
+
+    totalCostWithEmployer += totalManagementBonusWithEmployer;
     
     // Calculate weekly predicted sales from monthly (divide by 4.2 weeks)
     const weeklyPredictedSalesWithVAT = monthlyPredictedSales > 0 ? monthlyPredictedSales / 4.2 : 0;
@@ -1294,7 +1311,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 {formatCurrency(totalCostWithEmployer)}
               </div>
               <p className={`text-xs text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {language === 'he' ? `שכר בסיס: ${formatCurrency(totalBaseCost)} + עלויות מעסיק` : `Base: ${formatCurrency(totalBaseCost)} + employer costs`}
+                {language === 'he' ? `כולל תוספות ניהול יחסיות לשבוע זה` : `Includes proportional management bonuses for this week`}
               </p>
             </div>
 

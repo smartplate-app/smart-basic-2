@@ -86,11 +86,31 @@ export default function MonthlySalaryReport({ selectedMonth, user, language }) {
 
         const paymentType = worker.payment_type;
         const paymentAmount = worker.payment_amount || 0;
+        const managementBonus = parseFloat(worker.management_bonus) || 0;
         const employerCostPercent = worker.employer_cost_percentage || 25;
 
         let totalSalary = 0;
         let totalHours = 0;
         const breakdown = [];
+
+        // Add proportional management bonus for ALL payment types
+        if (managementBonus > 0) {
+          const dailyBonus = managementBonus / daysInMonth;
+          const baseBonus = dailyBonus * daysPassed;
+          const bonusWithEmployerCosts = baseBonus * (1 + employerCostPercent / 100);
+          
+          totalSalary += bonusWithEmployerCosts;
+          breakdown.push({
+            type: language === 'he' ? 'תוספת ניהול (יחסית)' : 'Management Bonus (Pro-rata)',
+            days: daysPassed,
+            daysInMonth: daysInMonth,
+            baseSalary: baseBonus,
+            salary: bonusWithEmployerCosts,
+            details: language === 'he' 
+              ? `תוספת ניהול: ${daysPassed} ימים מתוך ${daysInMonth} (${((daysPassed/daysInMonth)*100).toFixed(0)}%)`
+              : `Management Bonus: ${daysPassed} days out of ${daysInMonth} (${((daysPassed/daysInMonth)*100).toFixed(0)}%)`
+          });
+        }
 
         if (paymentType === 'monthly') {
           // Monthly salary: pro-rata based on days passed
