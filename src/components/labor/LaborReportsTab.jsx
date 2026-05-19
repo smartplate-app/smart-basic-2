@@ -469,14 +469,14 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <CardTitle className={`text-xl font-bold flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+            <CardTitle className={`text-lg sm:text-xl font-bold flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <FileText className="w-5 h-5 text-purple-600 shrink-0" />
-              {language === 'he' ? 'דוחות שכר ונוכחות' : 'Labor & Attendance Reports'}
+              <span className="truncate">{language === 'he' ? 'דוחות שכר ונוכחות' : 'Labor & Attendance Reports'}</span>
             </CardTitle>
             <button 
               onClick={handleExportCSV}
-              className={`flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm font-medium ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`flex items-center justify-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm font-medium w-full sm:w-auto shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
             >
               <Download className="w-4 h-4" />
               {language === 'he' ? 'ייצא נתונים' : 'Export'}

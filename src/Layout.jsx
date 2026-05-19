@@ -861,19 +861,19 @@ const AppLayout = ({ children, currentPageName }) => {
         <div className="min-h-screen bg-gray-50 dark:bg-[#050a1a]">
           {/* Admin Control Banner */}
           {isAdminControllingUser && (
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-40">
-              <div className={'flex items-center gap-2 ' + (isRTL ? 'flex-row-reverse' : '')}>
-                <span className="text-lg">🎮</span>
-                <span className="font-bold">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-2 flex flex-col sm:flex-row items-center justify-between gap-2 sticky top-0 z-40 text-center sm:text-left">
+              <div className={'flex flex-wrap items-center justify-center sm:justify-start gap-1 ' + (isRTL ? 'sm:flex-row-reverse' : '')}>
+                <span className="text-base sm:text-lg">🎮</span>
+                <span className="font-bold text-sm sm:text-base">
                   {language === 'he' ? 'שולט כעת ב:' : 'Controlling:'} {user.acting_as_user_name}
                 </span>
-                <span className="text-purple-200 text-sm">({user.acting_as_user_email})</span>
+                <span className="text-purple-200 text-xs sm:text-sm break-all">({user.acting_as_user_email})</span>
               </div>
               <button
                 onClick={exitAdminControl}
-                className="bg-white text-purple-700 px-4 py-1 rounded-lg font-bold hover:bg-purple-100 transition-colors"
+                className="bg-white text-purple-700 px-3 py-1 rounded-lg font-bold text-sm hover:bg-purple-100 transition-colors whitespace-nowrap shrink-0"
               >
-                {language === 'he' ? '🔙 חזור לאדמין' : '🔙 Back to Admin'}
+                {language === 'he' ? '🔙 חזור' : '🔙 Back'}
               </button>
             </div>
           )}
