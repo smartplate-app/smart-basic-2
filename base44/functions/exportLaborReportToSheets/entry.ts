@@ -16,6 +16,13 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Invalid rows data' }, { status: 400 });
         }
 
+        // Add branding header to the top
+        rows.unshift(
+            ['SMART PLATE BASIC'],
+            ['The ultimate food & labor program'],
+            []
+        );
+
         const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlesheets');
         
         if (!accessToken) {
@@ -38,7 +45,7 @@ Deno.serve(async (req) => {
                         properties: {
                             sheetId: 0,
                             gridProperties: {
-                                frozenRowCount: 1
+                                frozenRowCount: 4
                             }
                         }
                     }
@@ -94,13 +101,104 @@ Deno.serve(async (req) => {
 
                 const requests = [];
 
-                // Format Header Row
+                // Merge Logo Cells
+                requests.push({
+                    mergeCells: {
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: 0,
+                            endRowIndex: 1,
+                            startColumnIndex: 0,
+                            endColumnIndex: numCols
+                        },
+                        mergeType: 'MERGE_ALL'
+                    }
+                });
+
+                // Merge Tagline Cells
+                requests.push({
+                    mergeCells: {
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: 1,
+                            endRowIndex: 2,
+                            startColumnIndex: 0,
+                            endColumnIndex: numCols
+                        },
+                        mergeType: 'MERGE_ALL'
+                    }
+                });
+
+                // Format Logo Row
                 requests.push({
                     repeatCell: {
                         range: {
                             sheetId: sheetId,
                             startRowIndex: 0,
                             endRowIndex: 1,
+                            startColumnIndex: 0,
+                            endColumnIndex: numCols
+                        },
+                        cell: {
+                            userEnteredFormat: {
+                                backgroundColor: { red: 0.1, green: 0.1, blue: 0.2 }, // Darker Blue/Gray
+                                textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true, fontSize: 18 },
+                                horizontalAlignment: 'CENTER',
+                                verticalAlignment: 'MIDDLE'
+                            }
+                        },
+                        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
+                    }
+                });
+
+                // Format Tagline Row
+                requests.push({
+                    repeatCell: {
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: 1,
+                            endRowIndex: 2,
+                            startColumnIndex: 0,
+                            endColumnIndex: numCols
+                        },
+                        cell: {
+                            userEnteredFormat: {
+                                backgroundColor: { red: 0.1, green: 0.1, blue: 0.2 },
+                                textFormat: { foregroundColor: { red: 0.8, green: 0.8, blue: 0.8 }, italic: true, fontSize: 11 },
+                                horizontalAlignment: 'CENTER',
+                                verticalAlignment: 'MIDDLE'
+                            }
+                        },
+                        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
+                    }
+                });
+
+                // Format Empty Spacer Row
+                requests.push({
+                    repeatCell: {
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: 2,
+                            endRowIndex: 3,
+                            startColumnIndex: 0,
+                            endColumnIndex: numCols
+                        },
+                        cell: {
+                            userEnteredFormat: {
+                                backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }
+                            }
+                        },
+                        fields: 'userEnteredFormat(backgroundColor)'
+                    }
+                });
+
+                // Format Header Row (now at index 3)
+                requests.push({
+                    repeatCell: {
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: 3,
+                            endRowIndex: 4,
                             startColumnIndex: 0,
                             endColumnIndex: numCols
                         },
