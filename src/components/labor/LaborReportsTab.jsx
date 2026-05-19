@@ -485,113 +485,113 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Filters */}
-          <div className="bg-gray-50 p-4 rounded-lg border flex flex-col md:flex-row gap-4 items-end">
+          <div className="bg-gray-50 p-3 rounded-lg border flex flex-col md:flex-row gap-3 items-end">
             <div className="w-full md:w-1/4">
-              <label className={`block text-sm text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <label className={`block text-xs text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'סוג דוח' : 'Report Type'}
               </label>
               <Select value={reportType} onValueChange={setReportType}>
-                <SelectTrigger className={isRTL ? 'text-right flex-row-reverse' : 'text-left'}>
+                <SelectTrigger className={`h-8 text-sm ${isRTL ? 'text-right flex-row-reverse' : 'text-left'}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent dir={isRTL ? 'rtl' : 'ltr'}>
-                  <SelectItem value="summary">{language === 'he' ? 'סיכום לפי עובד' : 'Summary by Worker'}</SelectItem>
-                  <SelectItem value="summary_position">{language === 'he' ? 'סיכום לפי תפקיד/מחלקה' : 'Summary by Position'}</SelectItem>
-                  <SelectItem value="daily">{language === 'he' ? 'סיכום יומי מפורט' : 'Daily Summary'}</SelectItem>
-                  <SelectItem value="detailed">{language === 'he' ? 'פירוט משמרות מלא' : 'Detailed Shifts'}</SelectItem>
+                  <SelectItem value="summary" className="text-sm">{language === 'he' ? 'סיכום לפי עובד' : 'Summary by Worker'}</SelectItem>
+                  <SelectItem value="summary_position" className="text-sm">{language === 'he' ? 'סיכום לפי תפקיד/מחלקה' : 'Summary by Position'}</SelectItem>
+                  <SelectItem value="daily" className="text-sm">{language === 'he' ? 'סיכום יומי מפורט' : 'Daily Summary'}</SelectItem>
+                  <SelectItem value="detailed" className="text-sm">{language === 'he' ? 'פירוט משמרות מלא' : 'Detailed Shifts'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="w-full md:w-1/4">
-              <label className={`block text-sm text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <label className={`block text-xs text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'תקופה' : 'Period'}
               </label>
               <Select value={periodType} onValueChange={handlePeriodChange}>
-                <SelectTrigger className={isRTL ? 'text-right flex-row-reverse' : 'text-left'}>
+                <SelectTrigger className={`h-8 text-sm ${isRTL ? 'text-right flex-row-reverse' : 'text-left'}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent dir={isRTL ? 'rtl' : 'ltr'}>
-                  <SelectItem value="current_week">{language === 'he' ? 'שבוע נוכחי' : 'Current Week'}</SelectItem>
-                  <SelectItem value="current_month">{language === 'he' ? 'חודש נוכחי' : 'Current Month'}</SelectItem>
-                  <SelectItem value="last_month">{language === 'he' ? 'חודש שעבר' : 'Last Month'}</SelectItem>
-                  <SelectItem value="custom">{language === 'he' ? 'טווח מותאם אישית' : 'Custom Range'}</SelectItem>
+                  <SelectItem value="current_week" className="text-sm">{language === 'he' ? 'שבוע נוכחי' : 'Current Week'}</SelectItem>
+                  <SelectItem value="current_month" className="text-sm">{language === 'he' ? 'חודש נוכחי' : 'Current Month'}</SelectItem>
+                  <SelectItem value="last_month" className="text-sm">{language === 'he' ? 'חודש שעבר' : 'Last Month'}</SelectItem>
+                  <SelectItem value="custom" className="text-sm">{language === 'he' ? 'טווח מותאם אישית' : 'Custom Range'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="w-full md:w-1/4">
-              <label className={`block text-sm text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <label className={`block text-xs text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'מתאריך' : 'Start Date'}
               </label>
               <Input 
                 type="date" 
                 value={startDate} 
                 onChange={(e) => { setStartDate(e.target.value); setPeriodType('custom'); }} 
-                className={isRTL ? 'text-right' : 'text-left'}
+                className={`h-8 text-sm ${isRTL ? 'text-right' : 'text-left'}`}
                 dir="ltr"
               />
             </div>
             <div className="w-full md:w-1/4">
-              <label className={`block text-sm text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <label className={`block text-xs text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'עד תאריך' : 'End Date'}
               </label>
               <Input 
                 type="date" 
                 value={endDate} 
                 onChange={(e) => { setEndDate(e.target.value); setPeriodType('custom'); }} 
-                className={isRTL ? 'text-right' : 'text-left'}
+                className={`h-8 text-sm ${isRTL ? 'text-right' : 'text-left'}`}
                 dir="ltr"
               />
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-              <div className={`text-sm text-purple-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 flex flex-col justify-center">
+              <div className={`text-xs text-purple-800 font-medium leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'סה״כ עובדים' : 'Total Workers'}
               </div>
-              <div className={`text-2xl font-bold text-purple-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`text-lg md:text-xl font-bold text-purple-900 mt-1 ${isRTL ? 'text-right' : 'text-left'} break-words`}>
                 {summaryData.length}
               </div>
             </div>
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <div className={`text-sm text-blue-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex flex-col justify-center">
+              <div className={`text-xs text-blue-800 font-medium leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'סה״כ שעות' : 'Total Hours'}
               </div>
-              <div className={`text-2xl font-bold text-blue-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`text-lg md:text-xl font-bold text-blue-900 mt-1 ${isRTL ? 'text-right' : 'text-left'} break-words`}>
                 {grandTotals.hours.toFixed(1)}
               </div>
             </div>
-            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
-              <div className={`text-sm text-emerald-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 flex flex-col justify-center">
+              <div className={`text-xs text-emerald-800 font-medium leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'סה״כ טיפים' : 'Total Tips'}
               </div>
-              <div className={`text-2xl font-bold text-emerald-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`text-lg md:text-xl font-bold text-emerald-900 mt-1 ${isRTL ? 'text-right' : 'text-left'} break-words`}>
                 {formatCurrency(grandTotals.tips)}
               </div>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-              <div className={`text-sm text-green-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className="bg-green-50 p-3 rounded-lg border border-green-100 flex flex-col justify-center">
+              <div className={`text-xs text-green-800 font-medium leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'שכר (ללא טיפים)' : 'Wages (excl. tips)'}
               </div>
-              <div className={`text-2xl font-bold text-green-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`text-lg md:text-xl font-bold text-green-900 mt-1 ${isRTL ? 'text-right' : 'text-left'} break-words`}>
                 {formatCurrency(grandTotals.payment)}
               </div>
             </div>
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
-              <div className={`text-sm text-orange-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
-                {language === 'he' ? 'השלמה (המעסיק משלם)' : 'Employer Alema (Completion)'}
+            <div className="bg-orange-50 p-3 rounded-lg border border-orange-100 flex flex-col justify-center">
+              <div className={`text-xs text-orange-800 font-medium leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+                {language === 'he' ? 'השלמה (המעסיק משלם)' : 'Employer Alema'}
               </div>
-              <div className={`text-2xl font-bold text-orange-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`text-lg md:text-xl font-bold text-orange-900 mt-1 ${isRTL ? 'text-right' : 'text-left'} break-words`}>
                 {formatCurrency(grandTotals.alema)}
               </div>
             </div>
-            <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
-              <div className={`text-sm text-amber-800 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className="bg-amber-50 p-3 rounded-lg border border-amber-100 flex flex-col justify-center">
+              <div className={`text-xs text-amber-800 font-medium leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'עלות כוללת למעסיק' : 'Total Employer Cost'}
               </div>
-              <div className={`text-2xl font-bold text-amber-900 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`text-lg md:text-xl font-bold text-amber-900 mt-1 ${isRTL ? 'text-right' : 'text-left'} break-words`}>
                 {formatCurrency(grandTotals.cost)}
               </div>
             </div>
