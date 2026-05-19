@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Plus, Edit, Trash2, X, Save, User, Phone, Mail, DollarSign, Wallet, FileText, Send, History, LayoutGrid, List } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import WorkerBankTransfer from "./WorkerBankTransfer";
@@ -16,6 +17,13 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
   const [editingId, setEditingId] = useState(null);
   const [viewMode, setViewMode] = useState('list');
   const { t, language } = useLanguage();
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
 
   const [showBankTransfer, setShowBankTransfer] = useState(null);
   const [showRateHistory, setShowRateHistory] = useState(null);
@@ -771,130 +779,129 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
           <p className="text-sm">{t('add_first_worker')}</p>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {workers.map((worker) => (
-            <Card key={worker.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <User className="w-5 h-5 text-blue-600" />
-                      <h4 className="font-bold text-lg">{worker.full_name}</h4>
+            <div key={worker.id} className="bg-white rounded-xl border border-slate-200 hover:shadow-md hover:border-slate-300 transition-all overflow-hidden flex flex-col">
+              <div className="p-5 flex-1">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="h-12 w-12 border bg-slate-50 text-slate-600 flex-shrink-0">
+                      <AvatarFallback className="font-semibold">{getInitials(worker.full_name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-lg text-slate-800 truncate">{worker.full_name}</h4>
+                      <div className="flex items-center gap-2 text-sm text-slate-500 mt-0.5">
+                        {worker.phone && <span className="truncate">{worker.phone}</span>}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <Badge className="bg-purple-100 text-purple-800">{worker.job_position_name}</Badge>
-                      {worker.secondary_job_position_name && (
-                        <Badge className="bg-blue-100 text-blue-800">{worker.secondary_job_position_name}</Badge>
-                      )}
-                      {(worker.job_position_names || []).map((posName, idx) => (
-                        <Badge key={idx} className="bg-green-100 text-green-800">{posName}</Badge>
-                      ))}
-                    </div>
-                    {worker.id_number && (
-                      <p className="text-xs text-gray-500 mt-1">{t('id_number')}: {worker.id_number}</p>
-                    )}
-                    {worker.accounting_employee_id && (
-                      <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'מספר עובד בהנח"ש:' : 'Accounting ID:'} {worker.accounting_employee_id}</p>
-                    )}
                   </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => handleStartEdit(worker)} title={t('edit')}>
-                      <Edit className="w-4 h-4 text-blue-600" />
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-700" onClick={() => handleStartEdit(worker)} title={t('edit')}>
+                      <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
-                      <Trash2 className="w-4 h-4 text-red-600" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-700" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-sm">
-                  {worker.phone && (
-                    <div className="flex items-center gap-2 text-gray-600"><Phone className="w-4 h-4" /><span>{worker.phone}</span></div>
-                  )}
-                  {worker.email && (
-                    <div className="flex items-center gap-2 text-gray-600"><Mail className="w-4 h-4" /><span>{worker.email}</span></div>
-                  )}
+                <div className="flex flex-wrap gap-1.5 mb-5">
+                  {worker.job_position_name && <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-none hover:bg-blue-100">{worker.job_position_name}</Badge>}
+                  {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal">{worker.secondary_job_position_name}</Badge>}
+                  {(worker.job_position_names || []).map((posName, idx) => (
+                    <Badge key={idx} variant="outline" className="text-slate-600 font-normal">{posName}</Badge>
+                  ))}
+                </div>
 
-                  <div className="bg-gray-50 rounded-lg p-3 mt-3">
-                    <div className="flex items-center gap-2 text-gray-700 mb-1">
-                      <DollarSign className="w-4 h-4" />
-                      <span className="font-semibold">{language === 'he' ? 'שכר בסיס:' : 'Base:'}</span>
-                      <button type="button" onClick={() => setShowRateHistory(worker.id)} className="underline decoration-dotted hover:text-blue-700" title={language === 'he' ? 'צפה בהיסטוריית תעריפים' : 'View rate history'}>
-                        {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')}{paymentTypeSuffixes[worker.payment_type]}
-                      </button>
-                    </div>
-                    {(worker.management_bonus > 0) && (
-                      <div className="flex items-center gap-2 text-blue-700 mb-1">
-                        <span className="font-semibold text-xs ml-6">{language === 'he' ? 'תוספת ניהול:' : 'Mgmt Bonus:'}</span>
-                        <span className="text-xs">{(parseFloat(worker.management_bonus) || 0).toLocaleString()} {t('currency')} ({language === 'he' ? 'חודשי' : 'Monthly'})</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-green-700 font-bold">
-                      <span className="text-xs">{language === 'he' ? 'עלות כוללת:' : 'Total Cost:'}</span>
-                      <span>{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25, worker.management_bonus || 0)).toLocaleString()} {t('currency')}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">+{parseFloat(worker.employer_cost_percentage) || 25}% {language === 'he' ? 'עלויות מעסיק' : 'employer costs'}</p>
+                <div className="bg-slate-50 rounded-lg p-3 space-y-2 mb-4 border border-slate-100">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">{language === 'he' ? 'שכר בסיס:' : 'Base:'}</span>
+                    <span className="font-medium text-slate-700">{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')}{paymentTypeSuffixes[worker.payment_type]}</span>
                   </div>
-
-                  {(worker.bank_name || worker.bank_account) && (
-                    <div className="bg-blue-50 rounded-lg p-3 mt-2 border border-blue-200">
-                      <div className="flex items-center gap-2 mb-2"><Wallet className="w-4 h-4 text-blue-600" /><span className="font-semibold text-blue-900 text-xs">{t('bank_details')}</span></div>
-                      <div className="space-y-1 text-xs text-gray-700">
-                        {worker.bank_name && (<div className="flex justify-between"><span className="text-gray-600">{t('bank_name')}:</span><span className="font-medium">{worker.bank_name}</span></div>)}
-                        {worker.bank_branch && (<div className="flex justify-between"><span className="text-gray-600">{t('bank_branch')}:</span><span className="font-medium">{worker.bank_branch}</span></div>)}
-                        {worker.bank_account && (<div className="flex justify-between"><span className="text-gray-600">{t('bank_account')}:</span><span className="font-medium">{worker.bank_account}</span></div>)}
-                      </div>
+                  {(worker.management_bonus > 0) && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">{language === 'he' ? 'תוספת ניהול:' : 'Mgmt Bonus:'}</span>
+                      <span className="font-medium text-slate-700">{(parseFloat(worker.management_bonus) || 0).toLocaleString()} {t('currency')}</span>
                     </div>
                   )}
+                  <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-200">
+                    <span className="text-slate-700 font-semibold">{language === 'he' ? 'עלות כוללת מעסיק:' : 'Total Cost:'}</span>
+                    <div className="text-right">
+                      <span className="font-bold text-slate-800">{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25, worker.management_bonus || 0)).toLocaleString()} {t('currency')}</span>
+                      <div className="text-[10px] text-emerald-600 leading-none">+{parseFloat(worker.employer_cost_percentage) || 25}%</div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex gap-2 mt-4 flex-wrap">
-                  <Button size="sm" variant="outline" onClick={() => setShowBankTransfer({ worker, month: selectedMonth })} className="text-green-700 hover:bg-green-50" disabled={!worker.bank_account}>
-                    <Send className="w-4 h-4 mr-1" />{language === 'he' ? 'העבר' : 'Transfer'}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => setShowRateHistory(worker.id)} className="text-purple-700 hover:bg-purple-50">
-                    <History className="w-4 h-4 mr-1" />{language === 'he' ? 'תעריפים' : 'Rates'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                {worker.accounting_employee_id && (
+                  <div className="text-xs text-slate-500 flex items-center gap-1.5 mb-2">
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>{language === 'he' ? 'מס\' עובד (שכר):' : 'Accounting ID:'} {worker.accounting_employee_id}</span>
+                  </div>
+                )}
+                {worker.email && (
+                  <div className="text-xs text-slate-500 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5" />
+                    <span className="truncate">{worker.email}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="bg-slate-50 p-3 flex gap-2 border-t border-slate-100">
+                <Button size="sm" variant="outline" onClick={() => setShowBankTransfer({ worker, month: selectedMonth })} className="flex-1 bg-white hover:bg-slate-100 text-slate-700" disabled={!worker.bank_account}>
+                  <Send className="w-4 h-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />{language === 'he' ? 'העברה' : 'Transfer'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowRateHistory(worker.id)} className="flex-1 bg-white hover:bg-slate-100 text-slate-700">
+                  <History className="w-4 h-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />{language === 'he' ? 'תעריפים' : 'Rates'}
+                </Button>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border divide-y">
+        <div className="flex flex-col gap-3">
           {workers.map((worker) => (
-            <div key={worker.id} className="p-3 flex items-center justify-between gap-3 hover:bg-gray-50">
-              <div className="flex items-center gap-3 min-w-0">
-                <User className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <div key={worker.id} className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md hover:border-slate-300 transition-all">
+              <div className="flex items-center gap-4 min-w-0">
+                <Avatar className="h-12 w-12 border bg-slate-50 text-slate-600">
+                  <AvatarFallback className="font-semibold">{getInitials(worker.full_name)}</AvatarFallback>
+                </Avatar>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold truncate max-w-[240px] md:max-w-[360px]">{worker.full_name}</span>
-                    {worker.job_position_name && <Badge className="bg-purple-100 text-purple-800">{worker.job_position_name}</Badge>}
-                    {worker.secondary_job_position_name && <Badge className="bg-blue-100 text-blue-800">{worker.secondary_job_position_name}</Badge>}
-                    {(worker.job_position_names || []).map((posName, idx) => (
-                      <Badge key={idx} className="bg-green-100 text-green-800">{posName}</Badge>
-                    ))}
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bold text-slate-800 text-lg truncate max-w-[200px] md:max-w-[300px]">{worker.full_name}</span>
+                    <div className="hidden md:flex items-center gap-1.5 overflow-hidden">
+                      {worker.job_position_name && <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-none font-medium">{worker.job_position_name}</Badge>}
+                      {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal">{worker.secondary_job_position_name}</Badge>}
+                      {(worker.job_position_names || []).map((posName, idx) => (
+                        <Badge key={idx} variant="outline" className="text-slate-600 font-normal">{posName}</Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-3">
-                    {worker.phone && <span>{worker.phone}</span>}
-                    {worker.email && <span>{worker.email}</span>}
-                    {worker.accounting_employee_id && <span>{language === 'he' ? 'מס\' שכר:' : 'Acc. ID:'} {worker.accounting_employee_id}</span>}
-                    <span>
-                      {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')} · +{parseFloat(worker.employer_cost_percentage) || 25}%
-                      {worker.management_bonus > 0 ? ` · ${language === 'he' ? 'תוספת ניהול: ' : 'Mgmt Bonus: '}${(parseFloat(worker.management_bonus) || 0).toLocaleString()} ${t('currency')}` : ''}
-                    </span>
+                  <div className="text-sm text-slate-500 flex flex-wrap items-center gap-x-4 gap-y-1">
+                    {worker.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 opacity-70" />{worker.phone}</span>}
+                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 opacity-70" />{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')} · +{parseFloat(worker.employer_cost_percentage) || 25}%</span>
+                    {worker.accounting_employee_id && <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5 opacity-70" />{worker.accounting_employee_id}</span>}
+                  </div>
+                  <div className="flex md:hidden items-center gap-1.5 mt-2 flex-wrap">
+                      {worker.job_position_name && <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-none font-medium">{worker.job_position_name}</Badge>}
+                      {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal">{worker.secondary_job_position_name}</Badge>}
+                      {(worker.job_position_names || []).map((posName, idx) => (
+                        <Badge key={idx} variant="outline" className="text-slate-600 font-normal">{posName}</Badge>
+                      ))}
                   </div>
                 </div>
               </div>
-              <div className="flex gap-1 flex-shrink-0">
-                <Button variant="ghost" size="icon" onClick={() => setShowRateHistory(worker.id)} title={language === 'he' ? 'תעריפים' : 'Rates'}>
-                  <History className="w-4 h-4 text-purple-700" />
+              <div className="flex items-center justify-end gap-1 md:gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                <Button variant="ghost" size="sm" className="h-8 text-slate-500 hover:text-purple-700 hover:bg-purple-50" onClick={() => setShowRateHistory(worker.id)} title={language === 'he' ? 'תעריפים' : 'Rates'}>
+                  <History className="w-4 h-4 md:mr-1.5 rtl:md:mr-0 rtl:md:ml-1.5" />
+                  <span className="hidden md:inline">{language === 'he' ? 'תעריפים' : 'Rates'}</span>
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleStartEdit(worker)} title={t('edit')}>
-                  <Edit className="w-4 h-4 text-blue-600" />
+                <Button variant="ghost" size="sm" className="h-8 text-slate-500 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleStartEdit(worker)} title={t('edit')}>
+                  <Edit className="w-4 h-4 md:mr-1.5 rtl:md:mr-0 rtl:md:ml-1.5" />
+                  <span className="hidden md:inline">{t('edit')}</span>
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
-                  <Trash2 className="w-4 h-4 text-red-600" />
+                <Button variant="ghost" size="sm" className="h-8 text-slate-500 hover:text-red-700 hover:bg-red-50" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
