@@ -611,50 +611,94 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     }, { hours: 0, regular_hours: 0, ot_125: 0, ot_150: 0, ot_200: 0, shifts: 0, payment: 0, cost: 0, tips: 0, cash: 0, credit: 0, alema: 0, regular_pay: 0, management_bonus: 0, travel_expenses: 0, bonus_manual: 0, advance_manual: 0 });
   }, [summaryData, positionSummaryData, dailySummaryData, reportType]);
 
-  const handleExportCSV = () => {
-    let csvContent = "\uFEFF"; // BOM for UTF-8
+  const getReportRows = () => {
+    let rows = [];
 
     if (reportType === "summary_worker") {
-      csvContent += language === 'he' ? "עובד,סה״כ ימי עבודה,תעריף,שעות רגילות,125%,150%,מיוחד 200%,סה״כ שעות,תוספת ניהול,סה״כ עלות (לפני טיפים ובונוסים),בונוס,מקדמה,טיפ מזומן,טיפ אשראי,סה״כ טיפים,השלמה,עלות מעסיק לטיפ,נסיעות,עלות כוללת,עלויות מעסיק,עלות כח אדם מינוס סה״כ טיפ\n" 
-                                      : "Worker,Work Days,Rate,Regular Hours,125%,150%,Special 200%,Total Hours,Mgmt Bonus,Total Cost,Bonus,Advance,Cash Tip,Credit Tip,Total Tips,Alema,Employer Cost on Tip,Travel,Total Overall Cost,Employer Taxes,Labor Minus Tip\n";
+      rows.push(
+        language === 'he'
+          ? ["עובד","סה״כ ימי עבודה","תעריף","שעות רגילות","125%","150%","מיוחד 200%","סה״כ שעות","תוספת ניהול","סה״כ עלות (לפני טיפים ובונוסים)","בונוס","מקדמה","טיפ מזומן","טיפ אשראי","סה״כ טיפים","השלמה","עלות מעסיק לטיפ","נסיעות","עלות כוללת","עלויות מעסיק","עלות כח אדם מינוס סה״כ טיפ"]
+          : ["Worker","Work Days","Rate","Regular Hours","125%","150%","Special 200%","Total Hours","Mgmt Bonus","Total Cost","Bonus","Advance","Cash Tip","Credit Tip","Total Tips","Alema","Employer Cost on Tip","Travel","Total Overall Cost","Employer Taxes","Labor Minus Tip"]
+      );
       
       summaryData.forEach(w => {
-        csvContent += `"${w.worker_name}",${w.work_days},${(w.rate || 0).toFixed(2)},${(w.regular_hours || 0).toFixed(2)},${(w.ot_125 || 0).toFixed(2)},${(w.ot_150 || 0).toFixed(2)},${(w.ot_200 || 0).toFixed(2)},${(w.total_hours || 0).toFixed(2)},${(w.management_bonus || 0).toFixed(2)},${(w.total_cost || 0).toFixed(2)},${(w.bonus_manual || 0).toFixed(2)},${(w.advance_manual || 0).toFixed(2)},${(w.cash_tips || 0).toFixed(2)},${(w.credit_tips || 0).toFixed(2)},${(w.total_tips || 0).toFixed(2)},${(w.alema || 0).toFixed(2)},${(w.employer_cost_on_tips || 0).toFixed(2)},${(w.travel_expenses || 0).toFixed(2)},${(w.total_cost || 0).toFixed(2)},${(w.employer_taxes || 0).toFixed(2)},${(w.labor_minus_tips || 0).toFixed(2)}\n`;
+        rows.push([
+          w.worker_name, w.work_days, (w.rate || 0).toFixed(2), (w.regular_hours || 0).toFixed(2), (w.ot_125 || 0).toFixed(2), (w.ot_150 || 0).toFixed(2), (w.ot_200 || 0).toFixed(2), (w.total_hours || 0).toFixed(2), (w.management_bonus || 0).toFixed(2), (w.total_cost || 0).toFixed(2), (w.bonus_manual || 0).toFixed(2), (w.advance_manual || 0).toFixed(2), (w.cash_tips || 0).toFixed(2), (w.credit_tips || 0).toFixed(2), (w.total_tips || 0).toFixed(2), (w.alema || 0).toFixed(2), (w.employer_cost_on_tips || 0).toFixed(2), (w.travel_expenses || 0).toFixed(2), (w.total_cost || 0).toFixed(2), (w.employer_taxes || 0).toFixed(2), (w.labor_minus_tips || 0).toFixed(2)
+        ]);
       });
     } else if (reportType === "summary") {
-      csvContent += language === 'he' ? "עובד,תפקיד,משמרות,שעות,מזומן,אשראי,סה״כ טיפים,השלמה,שכר רגיל,תוספת ניהול,שכר ברוטו,עלות למעסיק\n" : "Worker,Position,Shifts,Hours,Cash,Credit,Total Tips,Alema,Regular Pay,Mgmt Bonus,Gross Pay,Employer Cost\n";
+      rows.push(
+        language === 'he'
+          ? ["עובד","תפקיד","משמרות","שעות","מזומן","אשראי","סה״כ טיפים","השלמה","שכר רגיל","תוספת ניהול","שכר ברוטו","עלות למעסיק"]
+          : ["Worker","Position","Shifts","Hours","Cash","Credit","Total Tips","Alema","Regular Pay","Mgmt Bonus","Gross Pay","Employer Cost"]
+      );
       summaryData.forEach(w => {
         w.positions.forEach((pos, pIdx) => {
           const workerName = pIdx === 0 ? w.worker_name : "";
-          csvContent += `"${workerName}","${pos.position}",${pos.shifts},${(pos.hours || 0).toFixed(2)},${(pos.cash_tips || 0).toFixed(2)},${(pos.credit_tips || 0).toFixed(2)},${(pos.tips || 0).toFixed(2)},${(pos.alema || 0).toFixed(2)},${(pos.regular_pay || 0).toFixed(2)},0,${(pos.gross_pay || 0).toFixed(2)},${(pos.employer_cost || 0).toFixed(2)}\n`;
+          rows.push([workerName, pos.position, pos.shifts, (pos.hours || 0).toFixed(2), (pos.cash_tips || 0).toFixed(2), (pos.credit_tips || 0).toFixed(2), (pos.tips || 0).toFixed(2), (pos.alema || 0).toFixed(2), (pos.regular_pay || 0).toFixed(2), 0, (pos.gross_pay || 0).toFixed(2), (pos.employer_cost || 0).toFixed(2)]);
         });
-        csvContent += `"${language === 'he' ? 'סה״כ ' : 'Total '}${w.worker_name}","",${w.total_shifts},${(w.total_hours || 0).toFixed(2)},${(w.cash_tips || 0).toFixed(2)},${(w.credit_tips || 0).toFixed(2)},${(w.total_tips || 0).toFixed(2)},${(w.alema || 0).toFixed(2)},${(w.regular_pay || 0).toFixed(2)},${(w.management_bonus || 0).toFixed(2)},${(w.total_gross || 0).toFixed(2)},${(w.total_cost || 0).toFixed(2)}\n`;
+        rows.push([
+          `${language === 'he' ? 'סה״כ ' : 'Total '}${w.worker_name}`, "", w.total_shifts, (w.total_hours || 0).toFixed(2), (w.cash_tips || 0).toFixed(2), (w.credit_tips || 0).toFixed(2), (w.total_tips || 0).toFixed(2), (w.alema || 0).toFixed(2), (w.regular_pay || 0).toFixed(2), (w.management_bonus || 0).toFixed(2), (w.total_gross || 0).toFixed(2), (w.total_cost || 0).toFixed(2)
+        ]);
       });
-      csvContent += language === 'he' ? `"סה״כ כללי","",${grandTotals.shifts},${(grandTotals.hours || 0).toFixed(2)},${(grandTotals.cash || 0).toFixed(2)},${(grandTotals.credit || 0).toFixed(2)},${(grandTotals.tips || 0).toFixed(2)},${(grandTotals.alema || 0).toFixed(2)},${(grandTotals.regular_pay || 0).toFixed(2)},${(grandTotals.management_bonus || 0).toFixed(2)},${(grandTotals.payment || 0).toFixed(2)},${(grandTotals.cost || 0).toFixed(2)}\n` : `"Grand Total","",${grandTotals.shifts},${(grandTotals.hours || 0).toFixed(2)},${(grandTotals.cash || 0).toFixed(2)},${(grandTotals.credit || 0).toFixed(2)},${(grandTotals.tips || 0).toFixed(2)},${(grandTotals.alema || 0).toFixed(2)},${(grandTotals.regular_pay || 0).toFixed(2)},${(grandTotals.management_bonus || 0).toFixed(2)},${(grandTotals.payment || 0).toFixed(2)},${(grandTotals.cost || 0).toFixed(2)}\n`;
-      csvContent += "\n";
-      csvContent += language === 'he' ? `"סיכום לפי מחלקות / תפקידים"\n` : `"Summary by Departments / Positions"\n`;
+      rows.push([
+        language === 'he' ? "סה״כ כללי" : "Grand Total", "", grandTotals.shifts, (grandTotals.hours || 0).toFixed(2), (grandTotals.cash || 0).toFixed(2), (grandTotals.credit || 0).toFixed(2), (grandTotals.tips || 0).toFixed(2), (grandTotals.alema || 0).toFixed(2), (grandTotals.regular_pay || 0).toFixed(2), (grandTotals.management_bonus || 0).toFixed(2), (grandTotals.payment || 0).toFixed(2), (grandTotals.cost || 0).toFixed(2)
+      ]);
+      rows.push([]);
+      rows.push([language === 'he' ? "סיכום לפי מחלקות / תפקידים" : "Summary by Departments / Positions"]);
       positionSummaryData.forEach(row => {
-        csvContent += `"${language === 'he' ? 'סה״כ למחלקה:' : 'Dept Total:'}","${row.position} (${row.workers_count} ${language === 'he' ? 'עובדים' : 'workers'})",${row.total_shifts},${(row.total_hours || 0).toFixed(2)},${(row.total_tips || 0).toFixed(2)},${(row.alema || 0).toFixed(2)},${(row.regular_pay || 0).toFixed(2)},0,${(row.total_gross || 0).toFixed(2)},${(row.total_cost || 0).toFixed(2)}\n`;
+        rows.push([
+          `${language === 'he' ? 'סה״כ למחלקה:' : 'Dept Total:'}`, `${row.position} (${row.workers_count} ${language === 'he' ? 'עובדים' : 'workers'})`, row.total_shifts, (row.total_hours || 0).toFixed(2), (row.cash_tips || 0).toFixed(2), (row.credit_tips || 0).toFixed(2), (row.total_tips || 0).toFixed(2), (row.alema || 0).toFixed(2), (row.regular_pay || 0).toFixed(2), 0, (row.total_gross || 0).toFixed(2), (row.total_cost || 0).toFixed(2)
+        ]);
       });
-      } else if (reportType === "summary_position") {
-      csvContent += language === 'he' ? (groupByDept ? "מחלקה,מספר עובדים,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n" : "תפקיד,מספר עובדים,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n") : (groupByDept ? "Department,Workers,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n" : "Position,Workers,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n");
+    } else if (reportType === "summary_position") {
+      rows.push(
+        language === 'he'
+          ? (groupByDept ? ["מחלקה","מספר עובדים","משמרות","שעות","טיפים","השלמה","שכר בסיס","עלות למעסיק"] : ["תפקיד","מספר עובדים","משמרות","שעות","טיפים","השלמה","שכר בסיס","עלות למעסיק"])
+          : (groupByDept ? ["Department","Workers","Shifts","Hours","Tips","Alema","Regular Pay","Employer Cost"] : ["Position","Workers","Shifts","Hours","Tips","Alema","Regular Pay","Employer Cost"])
+      );
       positionSummaryData.forEach(row => {
-        csvContent += `"${row.position}",${row.workers_count},${row.total_shifts},${(row.total_hours || 0).toFixed(2)},${(row.total_tips || 0).toFixed(2)},${(row.alema || 0).toFixed(2)},${(row.regular_pay || 0).toFixed(2)},${(row.total_cost || 0).toFixed(2)}\n`;
+        rows.push([
+          row.position, row.workers_count, row.total_shifts, (row.total_hours || 0).toFixed(2), (row.total_tips || 0).toFixed(2), (row.alema || 0).toFixed(2), (row.regular_pay || 0).toFixed(2), (row.total_cost || 0).toFixed(2)
+        ]);
       });
-      csvContent += language === 'he' ? `"סה״כ","",${grandTotals.shifts},${(grandTotals.hours || 0).toFixed(2)},${(grandTotals.tips || 0).toFixed(2)},${(grandTotals.alema || 0).toFixed(2)},${(grandTotals.regular_pay || 0).toFixed(2)},${((grandTotals.cost || 0) - (grandTotals.management_bonus || 0)).toFixed(2)}\n` : `"Total","",${grandTotals.shifts},${(grandTotals.hours || 0).toFixed(2)},${(grandTotals.tips || 0).toFixed(2)},${(grandTotals.alema || 0).toFixed(2)},${(grandTotals.regular_pay || 0).toFixed(2)},${((grandTotals.cost || 0) - (grandTotals.management_bonus || 0)).toFixed(2)}\n`;
+      rows.push([
+        language === 'he' ? "סה״כ" : "Total", "", grandTotals.shifts, (grandTotals.hours || 0).toFixed(2), (grandTotals.tips || 0).toFixed(2), (grandTotals.alema || 0).toFixed(2), (grandTotals.regular_pay || 0).toFixed(2), ((grandTotals.cost || 0) - (grandTotals.management_bonus || 0)).toFixed(2)
+      ]);
     } else {
-      csvContent += language === 'he' ? "עובד,תאריך,תפקיד,התחלה,סיום,שעות,תעריף,טיפ מזומן,טיפ אשראי,סה״כ טיפים,השלמה,שכר רגיל,ברוטו,עלות כוללת\n" : "Worker,Date,Position,Start,End,Hours,Rate,Cash Tips,CC Tips,Total Tips,Alema,Regular Pay,Gross Pay,Employer Cost\n";
+      rows.push(
+        language === 'he'
+          ? ["עובד","תאריך","תפקיד","התחלה","סיום","שעות","תעריף","טיפ מזומן","טיפ אשראי","סה״כ טיפים","השלמה","שכר רגיל","ברוטו","עלות כוללת"]
+          : ["Worker","Date","Position","Start","End","Hours","Rate","Cash Tips","CC Tips","Total Tips","Alema","Regular Pay","Gross Pay","Employer Cost"]
+      );
       detailedDataByWorker.forEach(w => {
         w.rows.forEach(r => {
-          csvContent += `"${w.worker_name}","${moment(r.date).format('DD/MM/YYYY')}","${r.role || ''}","${r.start || ''}","${r.end || ''}",${(r.hours || 0).toFixed(2)},${(r.rate || 0).toFixed(2)},${(r.cash_tips || 0).toFixed(2)},${(r.cc_tips || 0).toFixed(2)},${(r.total_tips || 0).toFixed(2)},${(r.alema || 0).toFixed(2)},${(r.regular_pay || 0).toFixed(2)},${(r.pay || 0).toFixed(2)},${(r.employer_cost || 0).toFixed(2)}\n`;
+          rows.push([
+            w.worker_name, moment(r.date).format('DD/MM/YYYY'), r.role || '', r.start || '', r.end || '', (r.hours || 0).toFixed(2), (r.rate || 0).toFixed(2), (r.cash_tips || 0).toFixed(2), (r.cc_tips || 0).toFixed(2), (r.total_tips || 0).toFixed(2), (r.alema || 0).toFixed(2), (r.regular_pay || 0).toFixed(2), (r.pay || 0).toFixed(2), (r.employer_cost || 0).toFixed(2)
+          ]);
         });
         if (w.totals?.management_bonus > 0) {
-          csvContent += `"${w.worker_name} תוספת ניהול","",,,,0,,0,0,0,0,0,${(w.totals?.management_bonus || 0).toFixed(2)},${((w.totals?.management_bonus || 0) * 1.25).toFixed(2)}\n`;
+          rows.push([
+            `${w.worker_name} ${language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}`, "", "", "", "", 0, "", 0, 0, 0, 0, 0, (w.totals?.management_bonus || 0).toFixed(2), ((w.totals?.management_bonus || 0) * 1.25).toFixed(2)
+          ]);
         }
-        // Worker subtotal
-        csvContent += `"${w.worker_name} סה״כ","",,,,${(w.totals?.hours || 0).toFixed(2)},,${(w.totals?.cash || 0).toFixed(2)},${(w.totals?.credit || 0).toFixed(2)},${(w.totals?.tips || 0).toFixed(2)},${(w.totals?.alema || 0).toFixed(2)},${(w.totals?.pay || 0).toFixed(2)},${(w.totals?.cost || 0).toFixed(2)}\n`;
+        rows.push([
+          `${w.worker_name} ${language === 'he' ? 'סה״כ' : 'Total'}`, "", "", "", "", (w.totals?.hours || 0).toFixed(2), "", (w.totals?.cash || 0).toFixed(2), (w.totals?.credit || 0).toFixed(2), (w.totals?.tips || 0).toFixed(2), (w.totals?.alema || 0).toFixed(2), (w.totals?.regular_pay || 0).toFixed(2), (w.totals?.pay || 0).toFixed(2), (w.totals?.cost || 0).toFixed(2)
+        ]);
       });
     }
+
+    return rows;
+  };
+
+  const handleExportCSV = () => {
+    const rows = getReportRows();
+    let csvContent = "\uFEFF" + rows.map(r => r.map(c => {
+      const cell = String(c || '');
+      return cell.includes(',') || cell.includes('"') || cell.includes('\n') 
+        ? `"${cell.replace(/"/g, '""')}"` 
+        : cell;
+    }).join(',')).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -664,6 +708,32 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const [exportingToSheets, setExportingToSheets] = useState(false);
+
+  const handleExportSheets = async () => {
+    try {
+      setExportingToSheets(true);
+      const rows = getReportRows();
+      const title = `Labor Report - ${reportType} - ${moment().format('YYYY-MM-DD')}`;
+      
+      const res = await base44.functions.invoke("exportLaborReportToSheets", {
+        rows,
+        title
+      });
+      
+      if (res.data?.success) {
+        window.open(res.data.url, '_blank');
+      } else {
+        alert(language === 'he' ? 'שגיאה בייצוא לגוגל שיטס.' : 'Error exporting to Google Sheets.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert(language === 'he' ? 'שגיאה בייצוא לגוגל שיטס.' : 'Error exporting to Google Sheets.');
+    } finally {
+      setExportingToSheets(false);
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -697,7 +767,19 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 className={`flex items-center justify-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm font-medium shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
               >
                 <Download className="w-4 h-4" />
-                {language === 'he' ? 'ייצא נתונים' : 'Export'}
+                {language === 'he' ? 'ייצוא ל-CSV' : 'Export CSV'}
+              </button>
+              <button 
+                onClick={handleExportSheets}
+                disabled={exportingToSheets}
+                className={`flex items-center justify-center gap-2 px-3 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors text-sm font-medium shrink-0 disabled:opacity-50 ${isRTL ? 'flex-row-reverse' : ''}`}
+              >
+                {exportingToSheets ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
+                {language === 'he' ? 'ייצוא לגוגל שיטס' : 'Export to Sheets'}
               </button>
             </div>
           </div>

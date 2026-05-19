@@ -138,7 +138,6 @@ export default function MonthlySalaryReport({ selectedMonth, user, language }) {
             breakdown.push(null);
           }
         }
-        }
 
         if (paymentType === 'monthly') {
           // Monthly salary: pro-rata based on days passed
