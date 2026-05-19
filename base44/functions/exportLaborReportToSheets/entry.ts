@@ -16,10 +16,13 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Invalid rows data' }, { status: 400 });
         }
 
+        const reportTitle = title ? title.replace('Labor Report - ', '') : 'Custom Range';
+        
         // Add branding header to the top
         rows.unshift(
             ['SMART PLATE BASIC'],
             ['The ultimate food & labor program'],
+            [`Report Name: Labor Report | Dates Period: ${reportTitle}`],
             []
         );
 
@@ -45,7 +48,7 @@ Deno.serve(async (req) => {
                         properties: {
                             sheetId: 0,
                             gridProperties: {
-                                frozenRowCount: 4
+                                frozenRowCount: 5
                             }
                         }
                     }
@@ -129,6 +132,20 @@ Deno.serve(async (req) => {
                     }
                 });
 
+                // Merge Report Info Cells
+                requests.push({
+                    mergeCells: {
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: 2,
+                            endRowIndex: 3,
+                            startColumnIndex: 0,
+                            endColumnIndex: numCols
+                        },
+                        mergeType: 'MERGE_ALL'
+                    }
+                });
+
                 // Format Logo Row
                 requests.push({
                     repeatCell: {
@@ -141,8 +158,8 @@ Deno.serve(async (req) => {
                         },
                         cell: {
                             userEnteredFormat: {
-                                backgroundColor: { red: 0.1, green: 0.1, blue: 0.2 }, // Darker Blue/Gray
-                                textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true, fontSize: 18 },
+                                backgroundColor: { red: 0.05, green: 0.45, blue: 0.8 }, // Vibrant Blue
+                                textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true, fontSize: 20 },
                                 horizontalAlignment: 'CENTER',
                                 verticalAlignment: 'MIDDLE'
                             }
@@ -163,8 +180,30 @@ Deno.serve(async (req) => {
                         },
                         cell: {
                             userEnteredFormat: {
-                                backgroundColor: { red: 0.1, green: 0.1, blue: 0.2 },
-                                textFormat: { foregroundColor: { red: 0.8, green: 0.8, blue: 0.8 }, italic: true, fontSize: 11 },
+                                backgroundColor: { red: 0.05, green: 0.45, blue: 0.8 },
+                                textFormat: { foregroundColor: { red: 0.9, green: 0.9, blue: 0.9 }, italic: true, fontSize: 12 },
+                                horizontalAlignment: 'CENTER',
+                                verticalAlignment: 'MIDDLE'
+                            }
+                        },
+                        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
+                    }
+                });
+
+                // Format Report Info Row
+                requests.push({
+                    repeatCell: {
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: 2,
+                            endRowIndex: 3,
+                            startColumnIndex: 0,
+                            endColumnIndex: numCols
+                        },
+                        cell: {
+                            userEnteredFormat: {
+                                backgroundColor: { red: 0.2, green: 0.6, blue: 0.9 }, // Lighter Blue
+                                textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true, fontSize: 12 },
                                 horizontalAlignment: 'CENTER',
                                 verticalAlignment: 'MIDDLE'
                             }
@@ -178,8 +217,8 @@ Deno.serve(async (req) => {
                     repeatCell: {
                         range: {
                             sheetId: sheetId,
-                            startRowIndex: 2,
-                            endRowIndex: 3,
+                            startRowIndex: 3,
+                            endRowIndex: 4,
                             startColumnIndex: 0,
                             endColumnIndex: numCols
                         },
@@ -192,13 +231,13 @@ Deno.serve(async (req) => {
                     }
                 });
 
-                // Format Header Row (now at index 3)
+                // Format Header Row (now at index 4)
                 requests.push({
                     repeatCell: {
                         range: {
                             sheetId: sheetId,
-                            startRowIndex: 3,
-                            endRowIndex: 4,
+                            startRowIndex: 4,
+                            endRowIndex: 5,
                             startColumnIndex: 0,
                             endColumnIndex: numCols
                         },
