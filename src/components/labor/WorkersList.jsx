@@ -828,132 +828,144 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {workers.map((worker) => (
-            <div key={worker.id} className="bg-white rounded-xl border border-slate-200 hover:shadow-md hover:border-slate-300 transition-all overflow-hidden flex flex-col">
-              <div className="p-5 flex-1">
-                <div className="flex justify-between items-start mb-4">
+          {workers.map((worker) => {
+            const allPositions = [worker.job_position_name, worker.secondary_job_position_name, ...(worker.job_position_names || [])].filter(Boolean);
+            const uniquePositions = [...new Set(allPositions)];
+            const primaryPosition = uniquePositions[0];
+            const extraPositionsCount = uniquePositions.length - 1;
+
+            return (
+            <div key={worker.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="h-12 w-12 border bg-slate-50 text-slate-600 flex-shrink-0">
-                      <AvatarFallback className="font-semibold">{getInitials(worker.full_name)}</AvatarFallback>
+                    <Avatar className="h-12 w-12 bg-orange-50 text-orange-700 flex-shrink-0 border-0">
+                      <AvatarFallback className="font-semibold text-lg">{getInitials(worker.full_name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <h4 className="font-bold text-lg text-slate-800 truncate">{worker.full_name}</h4>
-                      <div className="flex items-center gap-2 text-sm text-slate-500 mt-0.5">
-                        {worker.phone && <span className="truncate">{worker.phone}</span>}
+                      <h4 className="font-bold text-[17px] text-gray-800 truncate">{worker.full_name}</h4>
+                      <div className="flex items-center gap-1.5 text-[13px] text-gray-500 mt-0.5">
+                        {worker.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{worker.phone}</span>}
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-700" onClick={() => handleStartEdit(worker)} title={t('edit')}>
+                  <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" onClick={() => handleStartEdit(worker)} title={t('edit')}>
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-700" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 mb-5">
-                  {worker.job_position_name && <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-none hover:bg-blue-100">{worker.job_position_name}</Badge>}
-                  {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal">{worker.secondary_job_position_name}</Badge>}
-                  {(worker.job_position_names || []).map((posName, idx) => (
-                    <Badge key={idx} variant="outline" className="text-slate-600 font-normal">{posName}</Badge>
-                  ))}
+                <div className="flex items-center gap-1.5 mb-4">
+                  {primaryPosition ? (
+                    <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none font-medium text-xs px-2 py-0.5 rounded-md">
+                      {primaryPosition}
+                    </Badge>
+                  ) : null}
+                  {extraPositionsCount > 0 && (
+                    <Badge variant="outline" className="text-gray-500 font-normal border-gray-200 text-[11px] px-1.5 py-0.5 rounded-md bg-white">
+                      +{extraPositionsCount} {language === 'he' ? 'נוספים' : 'more'}
+                    </Badge>
+                  )}
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-3 space-y-2 mb-4 border border-slate-100">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">{language === 'he' ? 'שכר בסיס:' : 'Base:'}</span>
-                    <span className="font-medium text-slate-700">{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}{paymentTypeSuffixes[worker.payment_type]}</span>
+                <div className="bg-gray-50/50 rounded-xl p-3.5 space-y-2.5 mt-auto border border-gray-100/50">
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="text-gray-500">{language === 'he' ? 'שכר בסיס:' : 'Base:'}</span>
+                    <span className="font-semibold text-gray-700">{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'} <span className="text-gray-400 font-normal text-xs">{paymentTypeSuffixes[worker.payment_type]}</span></span>
                   </div>
                   {(worker.management_bonus > 0) && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-500">{language === 'he' ? 'תוספת ניהול:' : 'Mgmt Bonus:'}</span>
-                      <span className="font-medium text-slate-700">{(parseFloat(worker.management_bonus) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}</span>
+                    <div className="flex items-center justify-between text-[13px]">
+                      <span className="text-gray-500">{language === 'he' ? 'תוספת ניהול:' : 'Mgmt Bonus:'}</span>
+                      <span className="font-semibold text-gray-700">{(parseFloat(worker.management_bonus) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}</span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-200">
-                    <span className="text-slate-700 font-semibold">{language === 'he' ? 'עלות כוללת מעסיק:' : 'Total Cost:'}</span>
+                  <div className="flex items-center justify-between text-[13px] pt-2 border-t border-gray-100">
+                    <span className="text-gray-700 font-semibold">{language === 'he' ? 'עלות מעסיק:' : 'Total Cost:'}</span>
                     <div className="text-right">
-                      <span className="font-bold text-slate-800">{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25, worker.management_bonus || 0)).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}</span>
-                      <div className="text-[10px] text-emerald-600 leading-none">+{parseFloat(worker.employer_cost_percentage) || 25}%</div>
+                      <span className="font-bold text-gray-900">{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25, worker.management_bonus || 0)).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}</span>
+                      <span className="text-[11px] text-green-600 font-medium ml-1.5 rtl:mr-1.5 rtl:ml-0">+{parseFloat(worker.employer_cost_percentage) || 25}%</span>
                     </div>
                   </div>
                 </div>
 
-                {worker.accounting_employee_id && (
-                  <div className="text-xs text-slate-500 flex items-center gap-1.5 mb-2">
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>{language === 'he' ? 'מס\' עובד (שכר):' : 'Accounting ID:'} {worker.accounting_employee_id}</span>
-                  </div>
-                )}
-                {worker.email && (
-                  <div className="text-xs text-slate-500 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5" />
-                    <span className="truncate">{worker.email}</span>
-                  </div>
-                )}
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {worker.accounting_employee_id && (
+                    <div className="text-[11px] text-gray-400 flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      <span>{worker.accounting_employee_id}</span>
+                    </div>
+                  )}
+                  {worker.email && (
+                    <div className="text-[11px] text-gray-400 flex items-center gap-1 truncate">
+                      <Mail className="w-3 h-3" />
+                      <span className="truncate">{worker.email}</span>
+                    </div>
+                  )}
+                </div>
               </div>
               
-              <div className="bg-slate-50 p-3 flex gap-2 border-t border-slate-100">
-                <Button size="sm" variant="outline" onClick={() => setShowBankTransfer({ worker, month: selectedMonth })} className="flex-1 bg-white hover:bg-slate-100 text-slate-700" disabled={!worker.bank_account}>
-                  <Send className="w-4 h-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />{language === 'he' ? 'העברה' : 'Transfer'}
+              <div className="bg-gray-50/50 p-2 flex gap-1 border-t border-gray-100">
+                <Button size="sm" variant="ghost" onClick={() => setShowBankTransfer({ worker, month: selectedMonth })} className="flex-1 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg h-9 text-[13px]" disabled={!worker.bank_account}>
+                  <Send className="w-3.5 h-3.5 mr-1.5 rtl:ml-1.5 rtl:mr-0" />{language === 'he' ? 'העברה' : 'Transfer'}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setShowRateHistory(worker.id)} className="flex-1 bg-white hover:bg-slate-100 text-slate-700">
-                  <History className="w-4 h-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />{language === 'he' ? 'תעריפים' : 'Rates'}
+                <Button size="sm" variant="ghost" onClick={() => setShowRateHistory(worker.id)} className="flex-1 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg h-9 text-[13px]">
+                  <History className="w-3.5 h-3.5 mr-1.5 rtl:ml-1.5 rtl:mr-0" />{language === 'he' ? 'תעריפים' : 'Rates'}
                 </Button>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {workers.map((worker) => (
-            <div key={worker.id} className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md hover:border-slate-300 transition-all">
-              <div className="flex items-center gap-4 min-w-0 flex-1">
-                <Avatar className="h-12 w-12 border bg-slate-50 text-slate-600 shrink-0">
-                  <AvatarFallback className="font-semibold">{getInitials(worker.full_name)}</AvatarFallback>
+        <div className="flex flex-col gap-2.5">
+          {workers.map((worker) => {
+            const allPositions = [worker.job_position_name, worker.secondary_job_position_name, ...(worker.job_position_names || [])].filter(Boolean);
+            const uniquePositions = [...new Set(allPositions)];
+            const primaryPosition = uniquePositions[0];
+            const extraPositionsCount = uniquePositions.length - 1;
+
+            return (
+            <div key={worker.id} className="bg-white rounded-xl border border-gray-100 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md hover:border-gray-200 transition-all group">
+              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                <Avatar className="h-10 w-10 bg-orange-50 text-orange-700 shrink-0 border-0">
+                  <AvatarFallback className="font-semibold text-sm">{getInitials(worker.full_name)}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-col md:flex-row md:items-center gap-2 mb-1">
-                    <span className="font-bold text-slate-800 text-lg truncate shrink-0 max-w-[200px] lg:max-w-xs">{worker.full_name}</span>
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 mb-0.5">
+                    <span className="font-bold text-gray-800 text-[15px] truncate shrink-0 max-w-[200px] lg:max-w-xs">{worker.full_name}</span>
                     <div className="hidden md:flex items-center gap-1.5 flex-wrap">
-                      {worker.job_position_name && <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-none font-medium">{worker.job_position_name}</Badge>}
-                      {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal bg-white">{worker.secondary_job_position_name}</Badge>}
-                      {(worker.job_position_names || []).map((posName, idx) => (
-                        <Badge key={idx} variant="outline" className="text-slate-600 font-normal bg-white">{posName}</Badge>
-                      ))}
+                      {primaryPosition && <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none font-medium px-2 py-0 rounded-md text-[11px] h-5">{primaryPosition}</Badge>}
+                      {extraPositionsCount > 0 && <Badge variant="outline" className="text-gray-500 font-normal bg-white border-gray-200 px-1.5 py-0 rounded-md text-[10px] h-5">+{extraPositionsCount} {language === 'he' ? 'נוספים' : 'more'}</Badge>}
                     </div>
                   </div>
-                  <div className="text-sm text-slate-500 flex flex-wrap items-center gap-x-4 gap-y-1">
-                    {worker.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 opacity-70" />{worker.phone}</span>}
-                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 opacity-70" />{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'} · +{parseFloat(worker.employer_cost_percentage) || 25}%</span>
-                    {worker.accounting_employee_id && <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5 opacity-70" />{worker.accounting_employee_id}</span>}
+                  <div className="text-[12px] text-gray-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {worker.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3 opacity-60" />{worker.phone}</span>}
+                    <span className="flex items-center gap-1"><Wallet className="w-3 h-3 opacity-60" />{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'} <span className="text-gray-400">· +{parseFloat(worker.employer_cost_percentage) || 25}%</span></span>
+                    {worker.accounting_employee_id && <span className="flex items-center gap-1"><FileText className="w-3 h-3 opacity-60" />{worker.accounting_employee_id}</span>}
                   </div>
                   <div className="flex md:hidden items-center gap-1.5 mt-2 flex-wrap">
-                      {worker.job_position_name && <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-none font-medium">{worker.job_position_name}</Badge>}
-                      {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal bg-white">{worker.secondary_job_position_name}</Badge>}
-                      {(worker.job_position_names || []).map((posName, idx) => (
-                        <Badge key={idx} variant="outline" className="text-slate-600 font-normal bg-white">{posName}</Badge>
-                      ))}
+                      {primaryPosition && <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-none font-medium px-2 py-0 rounded-md text-[11px] h-5">{primaryPosition}</Badge>}
+                      {extraPositionsCount > 0 && <Badge variant="outline" className="text-gray-500 font-normal bg-white border-gray-200 px-1.5 py-0 rounded-md text-[10px] h-5">+{extraPositionsCount} {language === 'he' ? 'נוספים' : 'more'}</Badge>}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-end gap-1 md:gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
-                <Button variant="ghost" size="sm" className="h-8 text-slate-500 hover:text-purple-700 hover:bg-purple-50" onClick={() => setShowRateHistory(worker.id)} title={language === 'he' ? 'תעריפים' : 'Rates'}>
-                  <History className="w-4 h-4 md:mr-1.5 rtl:md:mr-0 rtl:md:ml-1.5" />
-                  <span className="hidden md:inline">{language === 'he' ? 'תעריפים' : 'Rates'}</span>
+              <div className="flex items-center justify-end gap-1 pt-3 md:pt-0 border-t md:border-t-0 border-gray-100 shrink-0 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="sm" className="h-8 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg px-2.5" onClick={() => setShowRateHistory(worker.id)} title={language === 'he' ? 'תעריפים' : 'Rates'}>
+                  <History className="w-3.5 h-3.5 md:mr-1.5 rtl:md:mr-0 rtl:md:ml-1.5" />
+                  <span className="hidden md:inline text-xs">{language === 'he' ? 'תעריפים' : 'Rates'}</span>
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 text-slate-500 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleStartEdit(worker)} title={t('edit')}>
-                  <Edit className="w-4 h-4 md:mr-1.5 rtl:md:mr-0 rtl:md:ml-1.5" />
-                  <span className="hidden md:inline">{t('edit')}</span>
+                <Button variant="ghost" size="sm" className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full p-0" onClick={() => handleStartEdit(worker)} title={t('edit')}>
+                  <Edit className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="h-8 text-slate-500 hover:text-red-700 hover:bg-red-50" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full p-0" onClick={() => { if (window.confirm(t('confirm_delete_worker', { workerName: worker.full_name }))) { onDelete(worker.id); } }} title={t('delete')}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 
