@@ -233,6 +233,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
        const workerRows = [];
        let w_hours = 0, w_cash = 0, w_credit = 0, w_tips = 0, w_alema = 0, w_pay = 0, w_cost = 0;
        const empCostPct = worker.employer_cost_percentage || 25;
+       let w_regular_pay = 0;
 
        dates.forEach(date => {
           const shifts = shiftsByWorkerDate.get(`${worker.id}_${date}`) || [];
@@ -275,18 +276,19 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 });
 
                 w_hours += hrs; w_cash += t_cash; w_credit += t_credit; w_tips += t_total;
-                w_alema += alema; w_pay += pay; w_cost += empCost;
+                w_alema += alema; w_pay += pay; w_cost += empCost; w_regular_pay += regular_pay;
              });
           }
        });
 
-       if (w_hours > 0 || w_tips > 0) {
+       const mgmtBonusRaw = parseFloat(worker.management_bonus) || 0;
+       const daysInMonth = moment(startDate).daysInMonth();
+       const daysInPeriod = moment(endDate).diff(moment(startDate), 'days') + 1;
+       const ratio = Math.min(1, Math.max(0, daysInPeriod / daysInMonth));
+       const mgmtBonusProRata = mgmtBonusRaw * ratio;
+
+       if (w_hours > 0 || w_tips > 0 || mgmtBonusProRata > 0) {
          // Calculate management bonus for detailed view total
-         const mgmtBonusRaw = parseFloat(worker.management_bonus) || 0;
-         const daysInMonth = moment(startDate).daysInMonth();
-         const daysInPeriod = moment(endDate).diff(moment(startDate), 'days') + 1;
-         const ratio = Math.min(1, Math.max(0, daysInPeriod / daysInMonth));
-         const mgmtBonusProRata = mgmtBonusRaw * ratio;
          const employerTaxesOnBonus = mgmtBonusProRata * (empCostPct / 100);
          
          const finalCost = w_cost + mgmtBonusProRata + employerTaxesOnBonus;
@@ -295,7 +297,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
          result.push({
             worker_name: worker.full_name,
             rows: workerRows,
-            totals: { hours: w_hours, cash: w_cash, credit: w_credit, tips: w_tips, alema: w_alema, pay: finalGross, cost: finalCost, management_bonus: mgmtBonusProRata }
+            totals: { hours: w_hours, cash: w_cash, credit: w_credit, tips: w_tips, alema: w_alema, regular_pay: w_regular_pay, pay: finalGross, cost: finalCost, management_bonus: mgmtBonusProRata }
          });
        }
     });
@@ -374,118 +376,50 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
 
   // Aggregate data for summary report
   const summaryData = useMemo(() => {
-    const workerMap = new Map();
-    
-    // Check all workers for management bonus even if they have no shifts
-    const daysInMonth = moment(startDate).daysInMonth();
-    const daysInPeriod = moment(endDate).diff(moment(startDate), 'days') + 1;
-    const ratio = Math.min(1, Math.max(0, daysInPeriod / daysInMonth));
-    
-    workers.forEach(worker => {
-      const mgmtBonusRaw = parseFloat(worker.management_bonus) || 0;
-      if (mgmtBonusRaw > 0) {
-        const mgmtBonusProRata = mgmtBonusRaw * ratio;
-        workerMap.set(worker.id, {
-          worker_id: worker.id,
-          worker_name: worker.full_name,
-          total_hours: 0,
-          total_shifts: 0,
-          payment_tipped: 0,
-          payment_regular: 0,
-          management_bonus: mgmtBonusProRata,
-          employer_cost: 0,
-          total_tips: 0,
-          positions: new Set()
-        });
-      }
-    });
-
-    filteredShifts.forEach(shift => {
-      if (!workerMap.has(shift.worker_id)) {
-        const worker = workers.find(w => w.id === shift.worker_id);
-        workerMap.set(shift.worker_id, {
-          worker_id: shift.worker_id,
-          worker_name: shift.worker_name || worker?.full_name || 'לא ידוע',
-          total_hours: 0,
-          total_shifts: 0,
-          payment_tipped: 0,
-          payment_regular: 0,
-          management_bonus: 0,
-          employer_cost: 0,
-          total_tips: 0,
-          positions: new Set()
-        });
-      }
+    return detailedDataByWorker.map(w => {
+      const positionsMap = new Map();
+      let total_shifts = 0;
       
-      const record = workerMap.get(shift.worker_id);
-      const worker = workers.find(w => w.id === shift.worker_id);
-      const employerCostPercent = worker?.employer_cost_percentage || 25;
-      
-      record.total_hours += (shift.hours_worked || 0);
-      record.total_shifts += 1;
-      
-      const shiftPayment = shift.payment_for_shift || 0;
-      if (isPositionTipped(shift.job_position)) {
-        record.payment_tipped += shiftPayment;
-      } else {
-        record.payment_regular += shiftPayment;
-      }
-      
-      const employerCost = shiftPayment * (employerCostPercent / 100);
-      record.employer_cost += employerCost;
-      
-      if (shift.job_position) record.positions.add(shift.job_position);
-    });
-
-    // Add tips data from TipEntries
-    tipEntries.forEach(entry => {
-      if (!entry.workers) return;
-      entry.workers.forEach(w => {
-        if (!workerMap.has(w.worker_id)) {
-          const worker = workers.find(wk => w.worker_id === wk.id);
-          workerMap.set(w.worker_id, {
-            worker_id: w.worker_id,
-            worker_name: w.worker_name || worker?.full_name || 'לא ידוע',
-            total_hours: 0,
-            total_shifts: 0,
-            payment_tipped: 0,
-            payment_regular: 0,
-            management_bonus: 0,
-            employer_cost: 0,
-            total_tips: 0,
-            positions: new Set()
+      w.rows.forEach(r => {
+        if (r.isEmpty && r.total_tips === 0 && r.hours === 0 && r.pay === 0) return; 
+        const role = r.role || (r.total_tips > 0 ? 'כללי / טיפים' : 'כללי / ללא משמרת');
+        if (!positionsMap.has(role)) {
+          positionsMap.set(role, {
+            position: role,
+            hours: 0,
+            shifts: 0,
+            tips: 0,
+            alema: 0,
+            regular_pay: 0,
+            gross_pay: 0,
+            employer_cost: 0
           });
         }
-        
-        const record = workerMap.get(w.worker_id);
-        record.total_tips += (w.tip_amount || 0);
+        const p = positionsMap.get(role);
+        p.hours += r.hours;
+        if (r.hours > 0) { p.shifts += 1; total_shifts += 1; }
+        p.tips += r.total_tips;
+        p.alema += r.alema;
+        p.regular_pay += r.regular_pay || 0;
+        p.gross_pay += r.pay;
+        p.employer_cost += r.employer_cost;
       });
-    });
-    
-    return Array.from(workerMap.values())
-      .filter(r => selectedWorkers.size === 0 || selectedWorkers.has(r.worker_id))
-      .map(r => {
-      const worker = workers.find(w => w.id === r.worker_id);
-      const empCostPct = worker?.employer_cost_percentage || 25;
-      
-      const alema = Math.max(0, r.payment_tipped - r.total_tips);
-      const regular_pay = r.payment_regular;
-      const mgmtBonus = r.management_bonus || 0;
-      
-      const employerTaxesOnBonus = mgmtBonus * (empCostPct / 100);
-      const total_gross = r.payment_tipped + regular_pay + mgmtBonus;
-      const total_taxes = r.employer_cost + employerTaxesOnBonus;
       
       return {
-        ...r,
-        alema,
-        regular_pay,
-        total_gross,
-        total_cost: alema + regular_pay + mgmtBonus + total_taxes,
-        positions_list: Array.from(r.positions).join(', ')
+        worker_id: w.worker_name,
+        worker_name: w.worker_name,
+        management_bonus: w.totals.management_bonus,
+        total_hours: w.totals.hours,
+        total_shifts: total_shifts,
+        total_tips: w.totals.tips,
+        alema: w.totals.alema,
+        regular_pay: w.totals.regular_pay,
+        total_gross: w.totals.pay,
+        total_cost: w.totals.cost,
+        positions: Array.from(positionsMap.values()).sort((a, b) => b.hours - a.hours)
       };
     }).sort((a, b) => b.total_cost - a.total_cost);
-  }, [filteredShifts, tipEntries, workers, positions, startDate, endDate, selectedWorkers]);
+  }, [detailedDataByWorker]);
 
   // Calculate grand totals
   const grandTotals = useMemo(() => {
@@ -511,11 +445,15 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     let csvContent = "\uFEFF"; // BOM for UTF-8
 
     if (reportType === "summary") {
-      csvContent += language === 'he' ? "עובד,תפקידים,משמרות,שעות,טיפים,השלמה,שכר בסיס,תוספת ניהול,שכר ברוטו,עלות למעסיק\n" : "Worker,Positions,Shifts,Hours,Tips,Alema,Regular Pay,Mgmt Bonus,Gross Pay,Employer Cost\n";
-      summaryData.forEach(row => {
-        csvContent += `"${row.worker_name}","${row.positions_list}",${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},${row.management_bonus.toFixed(2)},${row.total_gross.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
+      csvContent += language === 'he' ? "עובד,תפקיד,משמרות,שעות,טיפים,השלמה,שכר רגיל,תוספת ניהול,שכר ברוטו,עלות למעסיק\n" : "Worker,Position,Shifts,Hours,Tips,Alema,Regular Pay,Mgmt Bonus,Gross Pay,Employer Cost\n";
+      summaryData.forEach(w => {
+        w.positions.forEach((pos, pIdx) => {
+          const workerName = pIdx === 0 ? w.worker_name : "";
+          csvContent += `"${workerName}","${pos.position}",${pos.shifts},${pos.hours.toFixed(2)},${pos.tips.toFixed(2)},${pos.alema.toFixed(2)},${pos.regular_pay.toFixed(2)},0,${pos.gross_pay.toFixed(2)},${pos.employer_cost.toFixed(2)}\n`;
+        });
+        csvContent += `"${language === 'he' ? 'סה״כ ' : 'Total '}${w.worker_name}","",${w.total_shifts},${w.total_hours.toFixed(2)},${w.total_tips.toFixed(2)},${w.alema.toFixed(2)},${w.regular_pay.toFixed(2)},${w.management_bonus.toFixed(2)},${w.total_gross.toFixed(2)},${w.total_cost.toFixed(2)}\n`;
       });
-      csvContent += language === 'he' ? `"סה״כ","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Total","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
+      csvContent += language === 'he' ? `"סה״כ כללי","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Grand Total","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
     } else if (reportType === "summary_position") {
       csvContent += language === 'he' ? "תפקיד,מספר עובדים,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n" : "Position,Workers,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n";
       positionSummaryData.forEach(row => {
@@ -783,33 +721,54 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                     <thead className="bg-gray-100">
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Position'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'משמרות' : 'Shifts'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר עבודה' : 'Regular Pay'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר רגיל' : 'Regular Pay'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-purple-700`}>{language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-green-700`}>{language === 'he' ? 'ברוטו כולל' : 'Total Gross'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות למעסיק' : 'Total Cost'}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {summaryData.map((row, idx) => (
-                        <tr key={row.worker_id} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                          <td className="p-3 font-medium">
-                            <div>{row.worker_name}</div>
-                            <div className="text-xs text-gray-400 truncate max-w-[150px]" title={row.positions_list}>{row.positions_list}</div>
-                          </td>
-                          <td className="p-3">{row.total_hours.toFixed(1)}</td>
-                          <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
-                          <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
-                          <td className="p-3 text-blue-700 font-medium">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
-                          <td className="p-3 text-purple-700 font-medium">{row.management_bonus > 0 ? formatCurrency(row.management_bonus) : '-'}</td>
-                          <td className="p-3 text-green-700 font-medium">{formatCurrency(row.total_gross)}</td>
-                          <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
-                        </tr>
+                      {summaryData.map((workerBlock, idx) => (
+                        <React.Fragment key={workerBlock.worker_name}>
+                          {workerBlock.positions.map((pos, pIdx) => (
+                            <tr key={`${workerBlock.worker_name}-${pos.position}`} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'} hover:bg-gray-100`}>
+                              <td className="p-3">
+                                {pIdx === 0 && <div className="font-medium text-gray-900">{workerBlock.worker_name}</div>}
+                              </td>
+                              <td className="p-3 text-gray-600 text-sm">{pos.position}</td>
+                              <td className="p-3">{pos.shifts}</td>
+                              <td className="p-3">{pos.hours.toFixed(1)}</td>
+                              <td className="p-3 text-emerald-600 font-medium">{pos.tips > 0 ? formatCurrency(pos.tips) : '-'}</td>
+                              <td className="p-3 text-orange-600 font-medium">{pos.alema > 0 ? formatCurrency(pos.alema) : '-'}</td>
+                              <td className="p-3 text-blue-700 font-medium">{pos.regular_pay > 0 ? formatCurrency(pos.regular_pay) : '-'}</td>
+                              <td className="p-3 text-purple-700 font-medium">-</td>
+                              <td className="p-3 text-green-700 font-medium">{pos.gross_pay > 0 ? formatCurrency(pos.gross_pay) : '-'}</td>
+                              <td className="p-3 text-amber-700">{pos.employer_cost > 0 ? formatCurrency(pos.employer_cost) : '-'}</td>
+                            </tr>
+                          ))}
+                          <tr className="bg-purple-50/40 font-semibold border-b-2 border-gray-200">
+                            <td className="p-3 text-purple-900">{language === 'he' ? 'סה״כ ' : 'Total '}{workerBlock.worker_name}</td>
+                            <td className="p-3"></td>
+                            <td className="p-3 text-purple-900">{workerBlock.total_shifts}</td>
+                            <td className="p-3 text-purple-900">{workerBlock.total_hours.toFixed(1)}</td>
+                            <td className="p-3 text-emerald-700">{formatCurrency(workerBlock.total_tips)}</td>
+                            <td className="p-3 text-orange-700">{formatCurrency(workerBlock.alema)}</td>
+                            <td className="p-3 text-blue-800">{formatCurrency(workerBlock.regular_pay)}</td>
+                            <td className="p-3 text-purple-800">{workerBlock.management_bonus > 0 ? formatCurrency(workerBlock.management_bonus) : '-'}</td>
+                            <td className="p-3 text-green-800">{formatCurrency(workerBlock.total_gross)}</td>
+                            <td className="p-3 text-amber-800 bg-amber-50/50">{formatCurrency(workerBlock.total_cost)}</td>
+                          </tr>
+                        </React.Fragment>
                       ))}
-                      <tr className="bg-gray-100 font-bold border-t-2 border-gray-300">
-                        <td className="p-3">{language === 'he' ? 'סה״כ' : 'Total'}</td>
+                      <tr className="bg-gray-100 font-bold border-t-4 border-gray-400">
+                        <td className="p-3">{language === 'he' ? 'סה״כ כללי' : 'Grand Total'}</td>
+                        <td className="p-3"></td>
+                        <td className="p-3">{grandTotals.shifts}</td>
                         <td className="p-3">{grandTotals.hours.toFixed(1)}</td>
                         <td className="p-3 text-emerald-600">{formatCurrency(grandTotals.tips)}</td>
                         <td className="p-3 text-orange-600">{formatCurrency(grandTotals.alema)}</td>
