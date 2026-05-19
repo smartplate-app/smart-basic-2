@@ -141,7 +141,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
   const positionSummaryData = useMemo(() => {
     const posMap = new Map();
     filteredShifts.forEach(shift => {
-      const posName = shift.job_position || 'לא הוגדר';
+      const worker = workers.find(w => w.id === shift.worker_id);
+      const posName = groupByDept ? (worker?.section || 'לא הוגדר') : (shift.job_position || 'לא הוגדר');
       if (!posMap.has(posName)) {
         posMap.set(posName, {
           position: posName,
@@ -156,7 +157,6 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         });
       }
       const record = posMap.get(posName);
-      const worker = workers.find(w => w.id === shift.worker_id);
       const employerCostPercent = worker?.employer_cost_percentage || 25;
       
       record.total_hours += (shift.hours_worked || 0);
@@ -165,7 +165,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       const shiftPayment = shift.payment_for_shift || 0;
       record.payment_for_shift += shiftPayment;
       
-      if (isPositionTipped(posName)) {
+      if (isPositionTipped(shift.job_position || 'לא הוגדר')) {
         record.payment_tipped += shiftPayment;
       } else {
         record.payment_regular += shiftPayment;
@@ -211,7 +211,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         total_cost: alema + regular_pay + (r.employer_taxes || 0)
       };
     }).sort((a, b) => b.total_cost - a.total_cost);
-  }, [filteredShifts, tipEntries, workers, positions]);
+  }, [filteredShifts, tipEntries, workers, positions, groupByDept]);
 
   const detailedDataByWorker = useMemo(() => {
     if (!workers || !schedules) return [];
@@ -573,7 +573,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         csvContent += `"${language === 'he' ? 'סה״כ למחלקה:' : 'Dept Total:'}","${row.position} (${row.workers_count} ${language === 'he' ? 'עובדים' : 'workers'})",${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},0,${row.total_gross.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
       });
       } else if (reportType === "summary_position") {
-      csvContent += language === 'he' ? "תפקיד,מספר עובדים,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n" : "Position,Workers,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n";
+      csvContent += language === 'he' ? (groupByDept ? "מחלקה,מספר עובדים,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n" : "תפקיד,מספר עובדים,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n") : (groupByDept ? "Department,Workers,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n" : "Position,Workers,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n");
       positionSummaryData.forEach(row => {
         csvContent += `"${row.position}",${row.workers_count},${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
       });
@@ -1051,7 +1051,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                   <>
                     <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
                       <tr>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Position'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? (groupByDept ? 'מחלקה' : 'תפקיד') : (groupByDept ? 'Department' : 'Position')}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>

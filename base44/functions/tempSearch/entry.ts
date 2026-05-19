@@ -11,16 +11,13 @@ Deno.serve(async (req) => {
                 if (dirEntry.isDirectory) {
                     results.push(...await searchDir(entryPath));
                 } else if (dirEntry.isFile && (entryPath.endsWith('.js') || entryPath.endsWith('.jsx'))) {
-                    const text = await Deno.readTextFile(entryPath);
-                    if (text.includes('לפי מחלקות') || text.includes('הקלד שם עובד')) {
-                        results.push(entryPath);
-                    }
+                    results.push(entryPath);
                 }
             }
             return results;
         }
 
-        const files = await searchDir('./');
+        const files = await searchDir('./src/components/labor');
         return Response.json({ files });
     } catch (error) {
         return Response.json({ error: error.message }, { status: 500 });
