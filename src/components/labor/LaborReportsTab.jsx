@@ -101,6 +101,12 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     });
   }, [schedules, startDate, endDate]);
 
+  const isPositionTipped = (posName) => {
+    if (!positions) return true;
+    const p = positions.find(pos => pos.name === posName);
+    return p ? p.tips_method !== 'excluded' : true;
+  };
+
   // Aggregate data by position
   const positionSummaryData = useMemo(() => {
     const posMap = new Map();
@@ -112,6 +118,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           total_hours: 0,
           total_shifts: 0,
           payment_for_shift: 0,
+          payment_tipped: 0,
+          payment_regular: 0,
           total_cost: 0,
           total_tips: 0,
           workers: new Set()
@@ -126,9 +134,15 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       
       const shiftPayment = shift.payment_for_shift || 0;
       record.payment_for_shift += shiftPayment;
+      
+      if (isPositionTipped(posName)) {
+        record.payment_tipped += shiftPayment;
+      } else {
+        record.payment_regular += shiftPayment;
+      }
+
       const employerCost = shiftPayment * (employerCostPercent / 100);
       record.employer_taxes = (record.employer_taxes || 0) + employerCost;
-      record.total_cost += (shiftPayment + employerCost); // Will adjust later with tips
       record.workers.add(shift.worker_name);
     });
     
@@ -144,6 +158,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
               total_hours: 0,
               total_shifts: 0,
               payment_for_shift: 0,
+              payment_tipped: 0,
+              payment_regular: 0,
               total_cost: 0,
               total_tips: 0,
               employer_taxes: 0,
@@ -155,15 +171,17 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     });
 
     return Array.from(posMap.values()).map(r => {
-      const alema = Math.max(0, r.payment_for_shift - r.total_tips);
+      const alema = Math.max(0, r.payment_tipped - r.total_tips);
+      const regular_pay = r.payment_regular;
       return {
         ...r,
         workers_count: r.workers.size,
         alema: alema,
-        total_cost: alema + (r.employer_taxes || 0)
+        regular_pay: regular_pay,
+        total_cost: alema + regular_pay + (r.employer_taxes || 0)
       };
     }).sort((a, b) => b.total_cost - a.total_cost);
-  }, [filteredShifts, tipEntries, workers]);
+  }, [filteredShifts, tipEntries, workers, positions]);
 
   const detailedDataByWorker = useMemo(() => {
     if (!workers || !schedules) return [];
@@ -234,19 +252,22 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 const pay = s.payment_for_shift || 0;
                 const rate = hrs > 0 ? pay / hrs : 0;
                 
-                // Alema (השלמה): The gap the employer needs to pay if tips don't cover the base pay
-                const alema = Math.max(0, pay - t_total);
+                const isTipped = isPositionTipped(s.job_position);
+                
+                // Alema (השלמה): The gap the employer needs to pay if tips don't cover the base pay (only for tipped positions)
+                const alema = isTipped ? Math.max(0, pay - t_total) : 0;
+                const regular_pay = isTipped ? 0 : pay;
                 
                 // Employer taxes/social benefits are usually calculated on the full gross pay (base pay)
                 const employerTaxes = pay * (empCostPct / 100);
                 
-                // Total cost to employer = The gap paid out of pocket (Alema) + Employer taxes on full gross
-                const empCost = alema + employerTaxes;
+                // Total cost to employer = The gap paid out of pocket (Alema) + Regular Pay + Employer taxes on full gross
+                const empCost = alema + regular_pay + employerTaxes;
 
                 workerRows.push({
                    date, role: s.job_position || '', start: s.start_time || '', end: s.end_time || '',
                    hours: hrs, rate: rate, cash_tips: t_cash, cc_tips: t_credit, total_tips: t_total,
-                   alema: alema, pay: pay, employer_cost: empCost, isEmpty: false
+                   alema: alema, regular_pay: regular_pay, pay: pay, employer_cost: empCost, isEmpty: false
                 });
 
                 w_hours += hrs; w_cash += t_cash; w_credit += t_credit; w_tips += t_total;
@@ -256,15 +277,26 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
        });
 
        if (w_hours > 0 || w_tips > 0) {
+         // Calculate management bonus for detailed view total
+         const mgmtBonusRaw = parseFloat(worker.management_bonus) || 0;
+         const daysInMonth = moment(startDate).daysInMonth();
+         const daysInPeriod = moment(endDate).diff(moment(startDate), 'days') + 1;
+         const ratio = Math.min(1, Math.max(0, daysInPeriod / daysInMonth));
+         const mgmtBonusProRata = mgmtBonusRaw * ratio;
+         const employerTaxesOnBonus = mgmtBonusProRata * (empCostPct / 100);
+         
+         const finalCost = w_cost + mgmtBonusProRata + employerTaxesOnBonus;
+         const finalGross = w_pay + mgmtBonusProRata;
+
          result.push({
             worker_name: worker.full_name,
             rows: workerRows,
-            totals: { hours: w_hours, cash: w_cash, credit: w_credit, tips: w_tips, alema: w_alema, pay: w_pay, cost: w_cost }
+            totals: { hours: w_hours, cash: w_cash, credit: w_credit, tips: w_tips, alema: w_alema, pay: finalGross, cost: finalCost, management_bonus: mgmtBonusProRata }
          });
        }
     });
     return result;
-  }, [startDate, endDate, workers, schedules, filteredShifts, tipEntries]);
+  }, [startDate, endDate, workers, schedules, filteredShifts, tipEntries, positions]);
 
   // Aggregate data by day
   const dailySummaryData = useMemo(() => {
@@ -277,6 +309,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           total_hours: 0,
           total_shifts: 0,
           payment_for_shift: 0,
+          payment_tipped: 0,
+          payment_regular: 0,
           total_cost: 0,
           total_tips: 0
         });
@@ -289,9 +323,15 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       record.total_shifts += 1;
       const shiftPayment = shift.payment_for_shift || 0;
       record.payment_for_shift += shiftPayment;
+      
+      if (isPositionTipped(shift.job_position)) {
+        record.payment_tipped += shiftPayment;
+      } else {
+        record.payment_regular += shiftPayment;
+      }
+
       const employerCost = shiftPayment * (employerCostPercent / 100);
       record.employer_taxes = (record.employer_taxes || 0) + employerCost;
-      record.total_cost += (shiftPayment + employerCost); // Will adjust later with tips
     });
 
     tipEntries.forEach(entry => {
@@ -303,6 +343,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
              total_hours: 0,
              total_shifts: 0,
              payment_for_shift: 0,
+             payment_tipped: 0,
+             payment_regular: 0,
              total_cost: 0,
              total_tips: 0
            });
@@ -315,20 +357,45 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     });
 
     return Array.from(dayMap.values()).map(r => {
-      const alema = Math.max(0, r.payment_for_shift - r.total_tips);
+      const alema = Math.max(0, (r.payment_tipped || 0) - r.total_tips);
+      const regular_pay = r.payment_regular || 0;
       return {
         ...r,
         alema: alema,
-        total_cost: alema + (r.employer_taxes || 0)
+        regular_pay: regular_pay,
+        total_cost: alema + regular_pay + (r.employer_taxes || 0)
       };
     }).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredShifts, tipEntries, workers]);
+  }, [filteredShifts, tipEntries, workers, positions]);
 
   // Aggregate data for summary report
   const summaryData = useMemo(() => {
     const workerMap = new Map();
     
-    // Initialize with all workers (even those without shifts if requested, but for now just those with shifts)
+    // Check all workers for management bonus even if they have no shifts
+    const daysInMonth = moment(startDate).daysInMonth();
+    const daysInPeriod = moment(endDate).diff(moment(startDate), 'days') + 1;
+    const ratio = Math.min(1, Math.max(0, daysInPeriod / daysInMonth));
+    
+    workers.forEach(worker => {
+      const mgmtBonusRaw = parseFloat(worker.management_bonus) || 0;
+      if (mgmtBonusRaw > 0) {
+        const mgmtBonusProRata = mgmtBonusRaw * ratio;
+        workerMap.set(worker.id, {
+          worker_id: worker.id,
+          worker_name: worker.full_name,
+          total_hours: 0,
+          total_shifts: 0,
+          payment_tipped: 0,
+          payment_regular: 0,
+          management_bonus: mgmtBonusProRata,
+          employer_cost: 0,
+          total_tips: 0,
+          positions: new Set()
+        });
+      }
+    });
+
     filteredShifts.forEach(shift => {
       if (!workerMap.has(shift.worker_id)) {
         const worker = workers.find(w => w.id === shift.worker_id);
@@ -337,10 +404,10 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           worker_name: shift.worker_name || worker?.full_name || 'לא ידוע',
           total_hours: 0,
           total_shifts: 0,
-          base_payment: 0,
-          payment_for_shift: 0, // This is basically base + overtime
+          payment_tipped: 0,
+          payment_regular: 0,
+          management_bonus: 0,
           employer_cost: 0,
-          total_cost: 0,
           total_tips: 0,
           positions: new Set()
         });
@@ -352,14 +419,16 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       
       record.total_hours += (shift.hours_worked || 0);
       record.total_shifts += 1;
-      record.base_payment += (shift.base_payment || 0);
       
       const shiftPayment = shift.payment_for_shift || 0;
-      record.payment_for_shift += shiftPayment;
+      if (isPositionTipped(shift.job_position)) {
+        record.payment_tipped += shiftPayment;
+      } else {
+        record.payment_regular += shiftPayment;
+      }
       
       const employerCost = shiftPayment * (employerCostPercent / 100);
       record.employer_cost += employerCost;
-      record.total_cost += (shiftPayment + employerCost); // Will adjust later with tips
       
       if (shift.job_position) record.positions.add(shift.job_position);
     });
@@ -369,17 +438,16 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       if (!entry.workers) return;
       entry.workers.forEach(w => {
         if (!workerMap.has(w.worker_id)) {
-          // If worker received tips but has no shifts in this schedule range, add them
           const worker = workers.find(wk => w.worker_id === wk.id);
           workerMap.set(w.worker_id, {
             worker_id: w.worker_id,
             worker_name: w.worker_name || worker?.full_name || 'לא ידוע',
             total_hours: 0,
             total_shifts: 0,
-            base_payment: 0,
-            payment_for_shift: 0,
+            payment_tipped: 0,
+            payment_regular: 0,
+            management_bonus: 0,
             employer_cost: 0,
-            total_cost: 0,
             total_tips: 0,
             positions: new Set()
           });
@@ -391,56 +459,73 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     });
     
     return Array.from(workerMap.values()).map(r => {
-      const alema = Math.max(0, r.payment_for_shift - r.total_tips);
+      const worker = workers.find(w => w.id === r.worker_id);
+      const empCostPct = worker?.employer_cost_percentage || 25;
+      
+      const alema = Math.max(0, r.payment_tipped - r.total_tips);
+      const regular_pay = r.payment_regular;
+      const mgmtBonus = r.management_bonus || 0;
+      
+      const employerTaxesOnBonus = mgmtBonus * (empCostPct / 100);
+      const total_gross = r.payment_tipped + regular_pay + mgmtBonus;
+      const total_taxes = r.employer_cost + employerTaxesOnBonus;
+      
       return {
         ...r,
-        alema: alema,
-        total_cost: alema + (r.employer_cost || 0),
+        alema,
+        regular_pay,
+        total_gross,
+        total_cost: alema + regular_pay + mgmtBonus + total_taxes,
         positions_list: Array.from(r.positions).join(', ')
       };
-    }).sort((a, b) => b.total_cost - a.total_cost); // Sort by highest cost first
-  }, [filteredShifts, tipEntries, workers]);
+    }).sort((a, b) => b.total_cost - a.total_cost);
+  }, [filteredShifts, tipEntries, workers, positions, startDate, endDate]);
 
   // Calculate grand totals
   const grandTotals = useMemo(() => {
     return summaryData.reduce((acc, curr) => {
       acc.hours += curr.total_hours;
       acc.shifts += curr.total_shifts;
-      acc.payment += curr.payment_for_shift;
+      acc.payment += curr.total_gross;
       acc.cost += curr.total_cost;
       acc.tips += curr.total_tips;
       acc.alema += curr.alema;
+      acc.regular_pay += curr.regular_pay;
+      acc.management_bonus += curr.management_bonus;
       return acc;
-    }, { hours: 0, shifts: 0, payment: 0, cost: 0, tips: 0, alema: 0 });
+    }, { hours: 0, shifts: 0, payment: 0, cost: 0, tips: 0, alema: 0, regular_pay: 0, management_bonus: 0 });
   }, [summaryData]);
 
   const handleExportCSV = () => {
     let csvContent = "\uFEFF"; // BOM for UTF-8
 
     if (reportType === "summary") {
-      csvContent += language === 'he' ? "עובד,תפקידים,משמרות,שעות,טיפים,שכר ברוטו,עלות למעסיק\n" : "Worker,Positions,Shifts,Hours,Tips,Gross Pay,Employer Cost\n";
+      csvContent += language === 'he' ? "עובד,תפקידים,משמרות,שעות,טיפים,השלמה,שכר בסיס,תוספת ניהול,שכר ברוטו,עלות למעסיק\n" : "Worker,Positions,Shifts,Hours,Tips,Alema,Regular Pay,Mgmt Bonus,Gross Pay,Employer Cost\n";
       summaryData.forEach(row => {
-        csvContent += `"${row.worker_name}","${row.positions_list}",${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.payment_for_shift.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
+        csvContent += `"${row.worker_name}","${row.positions_list}",${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},${row.management_bonus.toFixed(2)},${row.total_gross.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
       });
-      csvContent += language === 'he' ? `"סה״כ","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Total","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
+      csvContent += language === 'he' ? `"סה״כ","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Total","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
     } else if (reportType === "summary_position") {
-      csvContent += language === 'he' ? "תפקיד,מספר עובדים,משמרות,שעות,טיפים,שכר ברוטו,עלות למעסיק\n" : "Position,Workers,Shifts,Hours,Tips,Gross Pay,Employer Cost\n";
+      csvContent += language === 'he' ? "תפקיד,מספר עובדים,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n" : "Position,Workers,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n";
       positionSummaryData.forEach(row => {
-        csvContent += `"${row.position}",${row.workers_count},${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.payment_for_shift.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
+        csvContent += `"${row.position}",${row.workers_count},${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
       });
-      csvContent += language === 'he' ? `"סה״כ","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Total","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
+      csvContent += language === 'he' ? `"סה״כ","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${(grandTotals.cost - grandTotals.management_bonus).toFixed(2)}\n` : `"Total","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${(grandTotals.cost - grandTotals.management_bonus).toFixed(2)}\n`;
     } else if (reportType === "daily") {
-      csvContent += language === 'he' ? "תאריך,משמרות,שעות,טיפים,שכר ברוטו,עלות למעסיק\n" : "Date,Shifts,Hours,Tips,Gross Pay,Employer Cost\n";
+      csvContent += language === 'he' ? "תאריך,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n" : "Date,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n";
       dailySummaryData.forEach(row => {
-        csvContent += `"${moment(row.date).format('DD/MM/YYYY')}",${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.payment_for_shift.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
+        csvContent += `"${moment(row.date).format('DD/MM/YYYY')}",${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
       });
-      csvContent += language === 'he' ? `"סה״כ",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Total",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
+      csvContent += language === 'he' ? `"סה״כ",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${(grandTotals.cost - grandTotals.management_bonus).toFixed(2)}\n` : `"Total",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${(grandTotals.cost - grandTotals.management_bonus).toFixed(2)}\n`;
     } else {
-      csvContent += language === 'he' ? "עובד,תאריך,תפקיד,התחלה,סיום,שעות,תעריף,טיפ מזומן,טיפ אשראי,סה״כ טיפים,השלמה (עלות למעסיק),ברוטו,עלות כוללת\n" : "Worker,Date,Position,Start,End,Hours,Rate,Cash Tips,CC Tips,Total Tips,Completion,Gross Pay,Employer Cost\n";
+      csvContent += language === 'he' ? "עובד,תאריך,תפקיד,התחלה,סיום,שעות,תעריף,טיפ מזומן,טיפ אשראי,סה״כ טיפים,השלמה,שכר רגיל,ברוטו,עלות כוללת\n" : "Worker,Date,Position,Start,End,Hours,Rate,Cash Tips,CC Tips,Total Tips,Alema,Regular Pay,Gross Pay,Employer Cost\n";
       detailedDataByWorker.forEach(w => {
         w.rows.forEach(r => {
-          csvContent += `"${w.worker_name}","${moment(r.date).format('DD/MM/YYYY')}","${r.role}","${r.start}","${r.end}",${r.hours.toFixed(2)},${r.rate.toFixed(2)},${r.cash_tips.toFixed(2)},${r.cc_tips.toFixed(2)},${r.total_tips.toFixed(2)},${r.alema.toFixed(2)},${r.pay.toFixed(2)},${r.employer_cost.toFixed(2)}\n`;
+          csvContent += `"${w.worker_name}","${moment(r.date).format('DD/MM/YYYY')}","${r.role}","${r.start}","${r.end}",${r.hours.toFixed(2)},${r.rate.toFixed(2)},${r.cash_tips.toFixed(2)},${r.cc_tips.toFixed(2)},${r.total_tips.toFixed(2)},${r.alema.toFixed(2)},${(r.regular_pay || 0).toFixed(2)},${r.pay.toFixed(2)},${r.employer_cost.toFixed(2)}\n`;
         });
+        if (w.totals.management_bonus > 0) {
+          csvContent += `"${w.worker_name} תוספת ניהול","",,,,0,,0,0,0,0,0,${w.totals.management_bonus.toFixed(2)},${(w.totals.management_bonus * 1.25).toFixed(2)}\n`;
+        }
         // Worker subtotal
         csvContent += `"${w.worker_name} סה״כ","",,,,${w.totals.hours.toFixed(2)},,${w.totals.cash.toFixed(2)},${w.totals.credit.toFixed(2)},${w.totals.tips.toFixed(2)},${w.totals.alema.toFixed(2)},${w.totals.pay.toFixed(2)},${w.totals.cost.toFixed(2)}\n`;
       });
@@ -610,34 +695,38 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                     <thead className="bg-gray-100">
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקידים' : 'Positions'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'משמרות' : 'Shifts'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'השלמה (המעסיק משלם)' : 'Alema'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שכר ברוטו' : 'Gross Pay'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר עבודה' : 'Regular Pay'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-purple-700`}>{language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-green-700`}>{language === 'he' ? 'ברוטו כולל' : 'Total Gross'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {summaryData.map((row, idx) => (
                         <tr key={row.worker_id} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                          <td className="p-3 font-medium">{row.worker_name}</td>
-                          <td className="p-3 text-gray-600 truncate max-w-[200px]" title={row.positions_list}>{row.positions_list}</td>
-                          <td className="p-3 text-gray-600">{row.total_shifts}</td>
-                          <td className="p-3 font-medium">{row.total_hours.toFixed(2)}</td>
-                          <td className="p-3 text-emerald-600 font-medium">{formatCurrency(row.total_tips)}</td>
-                          <td className="p-3 text-orange-600 font-medium">{formatCurrency(row.alema)}</td>
-                          <td className="p-3 text-green-700 font-medium">{formatCurrency(row.payment_for_shift)}</td>
+                          <td className="p-3 font-medium">
+                            <div>{row.worker_name}</div>
+                            <div className="text-xs text-gray-400 truncate max-w-[150px]" title={row.positions_list}>{row.positions_list}</div>
+                          </td>
+                          <td className="p-3">{row.total_hours.toFixed(1)}</td>
+                          <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                          <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                          <td className="p-3 text-blue-700 font-medium">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
+                          <td className="p-3 text-purple-700 font-medium">{row.management_bonus > 0 ? formatCurrency(row.management_bonus) : '-'}</td>
+                          <td className="p-3 text-green-700 font-medium">{formatCurrency(row.total_gross)}</td>
                           <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
                         </tr>
                       ))}
                       <tr className="bg-gray-100 font-bold border-t-2 border-gray-300">
-                        <td className="p-3" colSpan={2}>{language === 'he' ? 'סה״כ' : 'Total'}</td>
-                        <td className="p-3">{grandTotals.shifts}</td>
-                        <td className="p-3">{grandTotals.hours.toFixed(2)}</td>
+                        <td className="p-3">{language === 'he' ? 'סה״כ' : 'Total'}</td>
+                        <td className="p-3">{grandTotals.hours.toFixed(1)}</td>
                         <td className="p-3 text-emerald-600">{formatCurrency(grandTotals.tips)}</td>
                         <td className="p-3 text-orange-600">{formatCurrency(grandTotals.alema)}</td>
+                        <td className="p-3 text-blue-700">{formatCurrency(grandTotals.regular_pay)}</td>
+                        <td className="p-3 text-purple-700">{formatCurrency(grandTotals.management_bonus)}</td>
                         <td className="p-3 text-green-700">{formatCurrency(grandTotals.payment)}</td>
                         <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost)}</td>
                       </tr>
@@ -649,36 +738,34 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                     <thead className="bg-gray-100">
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Position'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובדים' : 'Workers'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'משמרות' : 'Shifts'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'השלמה (המעסיק משלם)' : 'Alema'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שכר ברוטו' : 'Gross Pay'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר עבודה' : 'Regular Pay'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {positionSummaryData.map((row, idx) => (
                         <tr key={row.position} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                          <td className="p-3 font-medium">{row.position}</td>
-                          <td className="p-3 text-gray-600">{row.workers_count}</td>
-                          <td className="p-3 text-gray-600">{row.total_shifts}</td>
-                          <td className="p-3 font-medium">{row.total_hours.toFixed(2)}</td>
-                          <td className="p-3 text-emerald-600 font-medium">{formatCurrency(row.total_tips)}</td>
-                          <td className="p-3 text-orange-600 font-medium">{formatCurrency(row.alema)}</td>
-                          <td className="p-3 text-green-700 font-medium">{formatCurrency(row.payment_for_shift)}</td>
+                          <td className="p-3 font-medium">
+                            <div>{row.position}</div>
+                            <div className="text-xs text-gray-400">{row.workers_count} {language === 'he' ? 'עובדים' : 'workers'}</div>
+                          </td>
+                          <td className="p-3">{row.total_hours.toFixed(1)}</td>
+                          <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                          <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                          <td className="p-3 text-blue-700 font-medium">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
                           <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
                         </tr>
                       ))}
                       <tr className="bg-gray-100 font-bold border-t-2 border-gray-300">
-                        <td className="p-3" colSpan={2}>{language === 'he' ? 'סה״כ' : 'Total'}</td>
-                        <td className="p-3">{grandTotals.shifts}</td>
-                        <td className="p-3">{grandTotals.hours.toFixed(2)}</td>
+                        <td className="p-3">{language === 'he' ? 'סה״כ' : 'Total'}</td>
+                        <td className="p-3">{grandTotals.hours.toFixed(1)}</td>
                         <td className="p-3 text-emerald-600">{formatCurrency(grandTotals.tips)}</td>
                         <td className="p-3 text-orange-600">{formatCurrency(grandTotals.alema)}</td>
-                        <td className="p-3 text-green-700">{formatCurrency(grandTotals.payment)}</td>
-                        <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost)}</td>
+                        <td className="p-3 text-blue-700">{formatCurrency(grandTotals.regular_pay)}</td>
+                        <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost - grandTotals.management_bonus)}</td>
                       </tr>
                     </tbody>
                   </>
@@ -688,12 +775,11 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                     <thead className="bg-gray-100">
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תאריך' : 'Date'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'משמרות' : 'Shifts'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'השלמה (המעסיק משלם)' : 'Alema'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שכר ברוטו' : 'Gross Pay'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר עבודה' : 'Regular Pay'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -705,22 +791,21 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                               <span className="font-medium text-gray-900">{moment(row.date).format('DD/MM/YYYY')}</span>
                               <span className="text-xs ml-2 rtl:mr-2 rtl:ml-0">{dayName}</span>
                             </td>
-                            <td className="p-3 text-gray-600">{row.total_shifts}</td>
-                            <td className="p-3 font-medium">{row.total_hours.toFixed(2)}</td>
-                            <td className="p-3 text-emerald-600 font-medium">{formatCurrency(row.total_tips)}</td>
-                            <td className="p-3 text-green-700 font-medium">{formatCurrency(row.payment_for_shift)}</td>
+                            <td className="p-3">{row.total_hours.toFixed(1)}</td>
+                            <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                            <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                            <td className="p-3 text-blue-700 font-medium">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
                             <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
                           </tr>
                         );
                       })}
                       <tr className="bg-gray-100 font-bold border-t-2 border-gray-300">
                         <td className="p-3">{language === 'he' ? 'סה״כ' : 'Total'}</td>
-                        <td className="p-3">{grandTotals.shifts}</td>
-                        <td className="p-3">{grandTotals.hours.toFixed(2)}</td>
+                        <td className="p-3">{grandTotals.hours.toFixed(1)}</td>
                         <td className="p-3 text-emerald-600">{formatCurrency(grandTotals.tips)}</td>
                         <td className="p-3 text-orange-600">{formatCurrency(grandTotals.alema)}</td>
-                        <td className="p-3 text-green-700">{formatCurrency(grandTotals.payment)}</td>
-                        <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost)}</td>
+                        <td className="p-3 text-blue-700">{formatCurrency(grandTotals.regular_pay)}</td>
+                        <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost - grandTotals.management_bonus)}</td>
                       </tr>
                     </tbody>
                   </>
@@ -731,44 +816,46 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                       <tr>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תאריך' : 'Date'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Role'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'התחלה/סיום' : 'Start/End'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תעריף לשעה' : 'Pay/Hour'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפ מזומן' : 'Cash'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפ אשראי' : 'Credit'}</th>
                         <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סה״כ טיפים' : 'Total Tips'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'השלמה (המעסיק משלם)' : 'Alema'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'ברוטו לתשלום' : 'Gross Pay'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50`}>{language === 'he' ? 'עלות כוללת' : 'Employer Cost'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר עבודה' : 'Regular Pay'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-green-700`}>{language === 'he' ? 'ברוטו' : 'Gross'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות כוללת' : 'Employer Cost'}</th>
                       </tr>
                     </thead>
                     {detailedDataByWorker.map((workerBlock) => (
                       <tbody key={workerBlock.worker_name} className="border-b-4 border-gray-300">
                         {/* Worker Header */}
                         <tr className="bg-purple-100/50">
-                          <td colSpan={11} className="p-3 font-bold text-lg text-purple-900">
+                          <td colSpan={10} className="p-3 font-bold text-base text-purple-900">
                             {workerBlock.worker_name}
+                            {workerBlock.totals.management_bonus > 0 && (
+                              <span className="mr-3 rtl:ml-3 rtl:mr-0 text-purple-600 text-sm font-normal">
+                                + {language === 'he' ? 'תוספת ניהול' : 'Mgmt bonus'}: {formatCurrency(workerBlock.totals.management_bonus)}
+                              </span>
+                            )}
                           </td>
                         </tr>
                         {/* Days */}
                         {workerBlock.rows.map((row, rIdx) => {
-                          const dayName = moment(row.date).locale(language === 'he' ? 'he' : 'en').format('dddd');
+                          const dayName = moment(row.date).locale(language === 'he' ? 'he' : 'en').format('ddd');
+                          const isTipped = isPositionTipped(row.role);
                           return (
                             <tr key={`${row.date}-${rIdx}`} className={`border-b ${row.isEmpty ? 'opacity-40 bg-gray-50' : (rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30')} hover:opacity-100 hover:bg-gray-100 transition-colors`}>
-                              <td className="p-3 text-gray-600">
+                              <td className="p-3 text-gray-600 whitespace-nowrap">
                                 <span className="font-medium text-gray-900">{moment(row.date).format('DD/MM')}</span>
-                                <span className="text-xs ml-2 rtl:mr-2 rtl:ml-0">{dayName}</span>
+                                <span className="text-xs ml-1 rtl:mr-1 rtl:ml-0 text-gray-400">{dayName}</span>
                               </td>
-                              <td className="p-3 text-gray-600">{row.role || '-'}</td>
-                              <td className="p-3 text-gray-600 text-xs">
-                                {row.start ? `${row.start} - ${row.end}` : '-'}
-                              </td>
+                              <td className="p-3 text-gray-600 text-xs">{row.role || '-'}</td>
                               <td className="p-3 font-medium">{row.hours > 0 ? row.hours.toFixed(2) : '-'}</td>
-                              <td className="p-3 text-gray-600 text-xs">{row.rate > 0 ? formatCurrency(row.rate) : '-'}</td>
                               <td className="p-3 text-gray-600">{row.cash_tips > 0 ? formatCurrency(row.cash_tips) : '-'}</td>
                               <td className="p-3 text-gray-600">{row.cc_tips > 0 ? formatCurrency(row.cc_tips) : '-'}</td>
                               <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
-                              <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                              <td className="p-3 text-orange-600 font-medium">{isTipped && row.alema > 0 ? formatCurrency(row.alema) : (isTipped ? '-' : <span className="text-gray-300 text-xs">N/A</span>)}</td>
+                              <td className="p-3 text-blue-700 font-medium">{!isTipped && row.regular_pay > 0 ? formatCurrency(row.regular_pay) : (isTipped ? '-' : <span className="text-gray-300 text-xs">N/A</span>)}</td>
                               <td className="p-3 text-green-700 font-medium">{row.pay > 0 ? formatCurrency(row.pay) : '-'}</td>
                               <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{row.employer_cost > 0 ? formatCurrency(row.employer_cost) : '-'}</td>
                             </tr>
@@ -776,15 +863,15 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                         })}
                         {/* Worker Totals */}
                         <tr className="bg-purple-50 font-bold border-t border-purple-200">
-                          <td colSpan={3} className={`p-3 ${isRTL ? 'text-left' : 'text-right'} text-purple-900`}>
-                            {language === 'he' ? 'סיכום' : 'Total'} {workerBlock.worker_name}:
+                          <td colSpan={2} className="p-3 text-purple-900 text-sm">
+                            {language === 'he' ? 'סיכום' : 'Subtotal'}:
                           </td>
                           <td className="p-3 text-purple-900">{workerBlock.totals.hours.toFixed(2)}</td>
-                          <td className="p-3 text-purple-900">-</td>
                           <td className="p-3 text-purple-900">{formatCurrency(workerBlock.totals.cash)}</td>
                           <td className="p-3 text-purple-900">{formatCurrency(workerBlock.totals.credit)}</td>
                           <td className="p-3 text-emerald-700">{formatCurrency(workerBlock.totals.tips)}</td>
                           <td className="p-3 text-orange-700">{formatCurrency(workerBlock.totals.alema)}</td>
+                          <td className="p-3 text-blue-700">-</td>
                           <td className="p-3 text-green-800">{formatCurrency(workerBlock.totals.pay)}</td>
                           <td className="p-3 text-amber-800 bg-amber-50/50">{formatCurrency(workerBlock.totals.cost)}</td>
                         </tr>
