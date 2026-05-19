@@ -17,6 +17,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
   const [endDate, setEndDate] = useState(moment().endOf('month').format('YYYY-MM-DD'));
   const [tipEntries, setTipEntries] = useState([]);
   const [loadingTips, setLoadingTips] = useState(false);
+  const [workerSearchTerm, setWorkerSearchTerm] = useState("");
+  const [selectedWorkers, setSelectedWorkers] = useState(new Set());
 
   // Fetch tip entries for the selected date range
   useEffect(() => {
@@ -221,7 +223,9 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
        shiftsByWorkerDate.get(key).push(shift);
     });
 
-    const sortedWorkers = [...workers].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+    const sortedWorkers = [...workers]
+      .filter(w => selectedWorkers.size === 0 || selectedWorkers.has(w.id))
+      .sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
     
     const result = [];
     
@@ -296,7 +300,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
        }
     });
     return result;
-  }, [startDate, endDate, workers, schedules, filteredShifts, tipEntries, positions]);
+  }, [startDate, endDate, workers, schedules, filteredShifts, tipEntries, positions, selectedWorkers]);
 
   // Aggregate data by day
   const dailySummaryData = useMemo(() => {
@@ -458,7 +462,9 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       });
     });
     
-    return Array.from(workerMap.values()).map(r => {
+    return Array.from(workerMap.values())
+      .filter(r => selectedWorkers.size === 0 || selectedWorkers.has(r.worker_id))
+      .map(r => {
       const worker = workers.find(w => w.id === r.worker_id);
       const empCostPct = worker?.employer_cost_percentage || 25;
       
@@ -479,22 +485,27 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         positions_list: Array.from(r.positions).join(', ')
       };
     }).sort((a, b) => b.total_cost - a.total_cost);
-  }, [filteredShifts, tipEntries, workers, positions, startDate, endDate]);
+  }, [filteredShifts, tipEntries, workers, positions, startDate, endDate, selectedWorkers]);
 
   // Calculate grand totals
   const grandTotals = useMemo(() => {
-    return summaryData.reduce((acc, curr) => {
-      acc.hours += curr.total_hours;
-      acc.shifts += curr.total_shifts;
-      acc.payment += curr.total_gross;
-      acc.cost += curr.total_cost;
-      acc.tips += curr.total_tips;
-      acc.alema += curr.alema;
-      acc.regular_pay += curr.regular_pay;
-      acc.management_bonus += curr.management_bonus;
+    const dataToSum = reportType === "summary" ? summaryData 
+      : reportType === "summary_position" ? positionSummaryData 
+      : reportType === "daily" ? dailySummaryData 
+      : summaryData; // fallback
+      
+    return dataToSum.reduce((acc, curr) => {
+      acc.hours += curr.total_hours || 0;
+      acc.shifts += curr.total_shifts || 0;
+      acc.payment += curr.total_gross || (curr.payment_tipped || 0) + (curr.regular_pay || 0) || 0;
+      acc.cost += curr.total_cost || 0;
+      acc.tips += curr.total_tips || 0;
+      acc.alema += curr.alema || 0;
+      acc.regular_pay += curr.regular_pay || 0;
+      acc.management_bonus += curr.management_bonus || 0;
       return acc;
     }, { hours: 0, shifts: 0, payment: 0, cost: 0, tips: 0, alema: 0, regular_pay: 0, management_bonus: 0 });
-  }, [summaryData]);
+  }, [summaryData, positionSummaryData, dailySummaryData, reportType]);
 
   const handleExportCSV = () => {
     let csvContent = "\uFEFF"; // BOM for UTF-8
@@ -629,6 +640,83 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
               />
             </div>
           </div>
+          
+          {(reportType === "summary" || reportType === "detailed") && (
+            <div className="bg-gray-50 p-3 rounded-lg border">
+              <label className={`block text-xs text-gray-600 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {language === 'he' ? 'חיפוש וסינון עובדים' : 'Search and filter workers'}
+              </label>
+              <div className="flex flex-col gap-2">
+                <Input
+                  type="text"
+                  placeholder={language === 'he' ? 'הקלד שם עובד...' : 'Type worker name...'}
+                  value={workerSearchTerm}
+                  onChange={(e) => setWorkerSearchTerm(e.target.value)}
+                  className={`h-8 text-sm ${isRTL ? 'text-right' : 'text-left'} bg-white`}
+                />
+                
+                {workerSearchTerm.length > 0 && (
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto mt-2">
+                    {workers
+                      .filter(w => w.full_name?.toLowerCase().includes(workerSearchTerm.toLowerCase()))
+                      .map(w => (
+                        <button
+                          key={w.id}
+                          onClick={() => {
+                            const newSet = new Set(selectedWorkers);
+                            if (newSet.has(w.id)) {
+                              newSet.delete(w.id);
+                            } else {
+                              newSet.add(w.id);
+                            }
+                            setSelectedWorkers(newSet);
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs transition-colors border ${
+                            selectedWorkers.has(w.id) 
+                              ? 'bg-purple-100 border-purple-300 text-purple-800 font-medium hover:bg-purple-200' 
+                              : 'bg-white hover:bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {w.full_name}
+                        </button>
+                      ))}
+                  </div>
+                )}
+
+                {selectedWorkers.size > 0 && (
+                  <div className="flex flex-wrap gap-2 items-center mt-2 pt-2 border-t border-gray-200">
+                    <span className="text-xs font-medium text-gray-500">
+                      {language === 'he' ? 'נבחרו:' : 'Selected:'}
+                    </span>
+                    {Array.from(selectedWorkers).map(id => {
+                      const w = workers.find(worker => worker.id === id);
+                      return w ? (
+                        <span key={id} className="inline-flex items-center gap-1 bg-purple-600 text-white px-2 py-1 rounded-full text-xs">
+                          {w.full_name}
+                          <button
+                            onClick={() => {
+                              const newSet = new Set(selectedWorkers);
+                              newSet.delete(id);
+                              setSelectedWorkers(newSet);
+                            }}
+                            className="hover:text-purple-200 focus:outline-none"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                    <button
+                      onClick={() => setSelectedWorkers(new Set())}
+                      className="text-xs text-red-500 hover:text-red-700 underline"
+                    >
+                      {language === 'he' ? 'נקה הכל' : 'Clear all'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
