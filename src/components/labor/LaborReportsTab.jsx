@@ -182,6 +182,13 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     // Add tips to position summary
     tipEntries.forEach(entry => {
       if (!entry.workers) return;
+      
+      const rootCash = entry.cash_tips || 0;
+      const rootCredit = entry.credit_tips || 0;
+      const rootTotal = rootCash + rootCredit || entry.total_tips || 1;
+      const cashRatio = rootCash / rootTotal;
+      const creditRatio = rootCredit / rootTotal;
+
       entry.workers.forEach(w => {
         const worker = workers.find(wk => w.worker_id === wk.id);
         const posName = groupByDept ? (worker?.section || 'לא הוגדר') : (worker?.job_position_name || 'לא הוגדר');
@@ -195,11 +202,24 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
               payment_regular: 0,
               total_cost: 0,
               total_tips: 0,
+              cash_tips: 0,
+              credit_tips: 0,
               employer_taxes: 0,
               workers: new Set([w.worker_name || worker?.full_name || 'לא ידוע'])
             });
         }
-        posMap.get(posName).total_tips += (w.tip_amount || 0);
+        
+        let workerCash = w.cash_tips || 0;
+        let workerCredit = w.credit_tips || 0;
+        if (workerCash === 0 && workerCredit === 0 && w.tip_amount > 0) {
+          workerCash = w.tip_amount * cashRatio;
+          workerCredit = w.tip_amount * creditRatio;
+        }
+
+        const posObj = posMap.get(posName);
+        posObj.total_tips += (w.tip_amount || 0);
+        posObj.cash_tips = (posObj.cash_tips || 0) + workerCash;
+        posObj.credit_tips = (posObj.credit_tips || 0) + workerCredit;
       });
     });
 
@@ -233,14 +253,28 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     tipEntries.forEach(entry => {
       const d = entry.date || entry.period_start;
       if (d && entry.workers) {
+        const rootCash = entry.cash_tips || 0;
+        const rootCredit = entry.credit_tips || 0;
+        const rootTotal = rootCash + rootCredit || entry.total_tips || 1;
+        const cashRatio = rootCash / rootTotal;
+        const creditRatio = rootCredit / rootTotal;
+
         entry.workers.forEach(w => {
           const key = `${w.worker_id}_${d}`;
           if (!tipsByWorkerDate.has(key)) {
             tipsByWorkerDate.set(key, { cash: 0, credit: 0, total: 0 });
           }
           const t = tipsByWorkerDate.get(key);
-          t.cash += (w.cash_tips || 0);
-          t.credit += (w.credit_tips || 0);
+          
+          let workerCash = w.cash_tips || 0;
+          let workerCredit = w.credit_tips || 0;
+          if (workerCash === 0 && workerCredit === 0 && w.tip_amount > 0) {
+            workerCash = w.tip_amount * cashRatio;
+            workerCredit = w.tip_amount * creditRatio;
+          }
+
+          t.cash += workerCash;
+          t.credit += workerCredit;
           t.total += (w.tip_amount || 0);
         });
       }
@@ -488,12 +522,30 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
              payment_tipped: 0,
              payment_regular: 0,
              total_cost: 0,
-             total_tips: 0
+             total_tips: 0,
+             cash_tips: 0,
+             credit_tips: 0
            });
          }
          const record = dayMap.get(date);
+         
+         const rootCash = entry.cash_tips || 0;
+         const rootCredit = entry.credit_tips || 0;
+         const rootTotal = rootCash + rootCredit || entry.total_tips || 1;
+         const cashRatio = rootCash / rootTotal;
+         const creditRatio = rootCredit / rootTotal;
+
          entry.workers?.forEach(w => {
+           let workerCash = w.cash_tips || 0;
+           let workerCredit = w.credit_tips || 0;
+           if (workerCash === 0 && workerCredit === 0 && w.tip_amount > 0) {
+             workerCash = w.tip_amount * cashRatio;
+             workerCredit = w.tip_amount * creditRatio;
+           }
+
            record.total_tips += (w.tip_amount || 0);
+           record.cash_tips = (record.cash_tips || 0) + workerCash;
+           record.credit_tips = (record.credit_tips || 0) + workerCredit;
          });
        }
     });
@@ -503,6 +555,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       const regular_pay = r.payment_regular || 0;
       return {
         ...r,
+        cash_tips: r.cash_tips || 0,
+        credit_tips: r.credit_tips || 0,
         alema: alema,
         regular_pay: regular_pay,
         total_cost: alema + regular_pay + (r.employer_taxes || 0)
