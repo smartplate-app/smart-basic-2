@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, Download, Plus, MoreHorizontal, Clock } from "lucide-react";
+import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, Download, Plus, MoreHorizontal, Clock, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "../LanguageProvider";
 import { toast } from "sonner";
@@ -1363,47 +1363,52 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       </Card>
 
       <Dialog open={showShiftDialog} onOpenChange={setShowShiftDialog}>
-        <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader>
-            <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
+        <DialogContent className={`sm:max-w-[425px] overflow-hidden ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-[#d4a373]" />
+          <DialogHeader className="pt-4 pb-2">
+            <DialogTitle className={`text-xl font-bold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
               {editingShift?.id ? t('edit_shift') : t('add_shift')}
             </DialogTitle>
           </DialogHeader>
           
           {editingShift && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="worker_id" className={isRTL ? 'text-right block' : 'text-left block'}>
-                  {t('worker')} *
+            <div className="space-y-5 px-1 py-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="worker_id" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {t('worker')} <span className="text-red-500">*</span>
                 </Label>
                 <Select value={editingShift.worker_id} onValueChange={handleWorkerChange}>
-                  <SelectTrigger id="worker_id" className={isRTL ? 'text-right' : 'text-left'}>
+                  <SelectTrigger id="worker_id" className={`h-11 border-gray-300 focus:ring-[#d4a373] ${isRTL ? 'text-right' : 'text-left'}`}>
                     <SelectValue placeholder={t('select_worker')} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60">
                     {workers
                       .filter(w => w.job_position_id === editingShift.job_position_id || w.secondary_job_position_id === editingShift.job_position_id || (w.job_position_ids || []).includes(editingShift.job_position_id))
                       .map(worker => (
-                        <SelectItem key={worker.id} value={worker.id}>
-                          {worker.full_name}
-                          <span className="text-xs text-gray-500 ml-2">
-                            ({t(worker.payment_type)}: {worker.payment_amount} {t('currency_ILS')})
-                          </span>
+                        <SelectItem key={worker.id} value={worker.id} className="py-2 cursor-pointer transition-colors hover:bg-gray-50 focus:bg-gray-50">
+                          <div className={`flex items-center justify-between w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <span className="font-medium">{worker.full_name}</span>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                              {t(worker.payment_type)}: {worker.payment_amount} {t('currency_ILS')}
+                            </span>
+                          </div>
                         </SelectItem>
                     ))}
                     {workers.filter(w => w.job_position_id !== editingShift.job_position_id && w.secondary_job_position_id !== editingShift.job_position_id && !(w.job_position_ids || []).includes(editingShift.job_position_id)).length > 0 && (
-                      <div className="px-2 py-1 text-xs text-gray-400 border-t mt-1 pt-1">
-                        {language === 'he' ? '── עובדים אחרים ──' : '── Other Workers ──'}
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 bg-gray-50 border-y my-1">
+                        {language === 'he' ? 'עובדים מתפקידים אחרים' : 'Other Workers'}
                       </div>
                     )}
                     {workers
                       .filter(w => w.job_position_id !== editingShift.job_position_id && w.secondary_job_position_id !== editingShift.job_position_id && !(w.job_position_ids || []).includes(editingShift.job_position_id))
                       .map(worker => (
-                        <SelectItem key={worker.id} value={worker.id} className="text-gray-500">
-                          {worker.full_name}
-                          <span className="text-xs text-gray-400 ml-2">
-                            ({worker.job_position_name})
-                          </span>
+                        <SelectItem key={worker.id} value={worker.id} className="py-2 text-gray-500 cursor-pointer transition-colors hover:bg-gray-50 focus:bg-gray-50">
+                          <div className={`flex items-center justify-between w-full opacity-80 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <span>{worker.full_name}</span>
+                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                              {worker.job_position_name}
+                            </span>
+                          </div>
                         </SelectItem>
                     ))}
                   </SelectContent>
@@ -1411,50 +1416,72 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_time" className={isRTL ? 'text-right block' : 'text-left block'}>{t('start')} *</Label>
-                  <Input id="start_time" type="time" value={editingShift.start_time} onChange={(e) => handleTimeChange('start_time', e.target.value)} className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} />
+                <div className="space-y-1.5">
+                  <Label htmlFor="start_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('start')} <span className="text-red-500">*</span></Label>
+                  <div className="relative">
+                    <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
+                    <Input id="start_time" type="time" value={editingShift.start_time} onChange={(e) => handleTimeChange('start_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="end_time" className={isRTL ? 'text-right block' : 'text-left block'}>{t('end')} *</Label>
-                  <Input id="end_time" type="time" value={editingShift.end_time} onChange={(e) => handleTimeChange('end_time', e.target.value)} className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} />
-                </div>
-              </div>
-
-              <div className={`bg-blue-50 p-3 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                <div className="text-sm space-y-1">
-                  <div><strong>{t('hours')}:</strong> {editingShift.hours_worked?.toFixed(1)}</div>
-                  {editingShift.base_payment > 0 && (
-                    <>
-                      <div><strong>{t('base_payment')}:</strong> {editingShift.base_payment.toFixed(2)} {t('currency_ILS')}</div>
-                      <div className="text-xs text-gray-600">
-                        {editingShift.overtime_rate === '150' ? (t('overtime_150_note') || '150% allowed only Friday 18:00+ and Saturday') : null}
-                      </div>
-                      <div className="text-lg font-bold text-blue-700">
-                        <strong>{t('total')}:</strong> {(editingShift.payment_for_shift || 0).toFixed(2)} {t('currency_ILS')}
-                      </div>
-                    </>
-                  )}
+                <div className="space-y-1.5">
+                  <Label htmlFor="end_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('end')} <span className="text-red-500">*</span></Label>
+                  <div className="relative">
+                    <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
+                    <Input id="end_time" type="time" value={editingShift.end_time} onChange={(e) => handleTimeChange('end_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="notes" className={isRTL ? 'text-right block' : 'text-left block'}>{t('notes')}</Label>
-                <Input id="notes" value={editingShift.notes || ''} onChange={(e) => setEditingShift({...editingShift, notes: e.target.value})} placeholder={t('notes')} className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} />
+              <div className={`bg-gradient-to-br from-[#d4a373]/10 to-[#b88c60]/10 border border-[#d4a373]/20 p-4 rounded-xl shadow-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-600 font-medium">{t('hours')}</span>
+                  <span className="text-lg font-bold text-gray-800">{editingShift.hours_worked?.toFixed(1)}</span>
+                </div>
+                
+                {editingShift.base_payment > 0 && (
+                  <>
+                    <div className="flex justify-between items-center mb-1 pb-2 border-b border-[#d4a373]/20">
+                      <span className="text-sm text-gray-600 font-medium">{t('base_payment')}</span>
+                      <span className="text-sm text-gray-700">{editingShift.base_payment.toFixed(2)} {t('currency_ILS')}</span>
+                    </div>
+                    {editingShift.overtime_rate === '150' && (
+                      <div className="text-xs text-orange-600 bg-orange-50 p-1.5 rounded mb-2 flex items-start gap-1">
+                        <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                        <span>{t('overtime_150_note') || '150% allowed only Friday 18:00+ and Saturday'}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center mt-2 pt-1">
+                      <span className="text-base text-gray-800 font-bold">{t('total')}</span>
+                      <span className="text-xl font-black text-[#d4a373]">
+                        {(editingShift.payment_for_shift || 0).toFixed(2)} {t('currency_ILS')}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="notes" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('notes')}</Label>
+                <div className="relative">
+                  <FileText className={`absolute top-3.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400 pointer-events-none`} />
+                  <Input id="notes" value={editingShift.notes || ''} onChange={(e) => setEditingShift({...editingShift, notes: e.target.value})} placeholder={t('notes')} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-9 text-right' : 'pl-9 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                </div>
               </div>
             </div>
           )}
           
-          <DialogFooter className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 justify-end mt-4`}>
-            <Button type="button" variant="outline" onClick={() => { setShowShiftDialog(false); setEditingShift(null); setSelectedCell(null); }}>{t('cancel')}</Button>
-            {editingShift && (
-              <Button type="button" variant="destructive" onClick={handleShiftDelete} className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <DialogFooter className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-3 justify-end mt-6 pt-4 border-t border-gray-100`}>
+            {editingShift && editingShift.id && (
+              <Button type="button" variant="outline" onClick={handleShiftDelete} className={`flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Trash2 className="w-4 h-4" />{t('delete')}
               </Button>
             )}
-            <Button type="submit" onClick={handleShiftSave} className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Save className="w-4 h-4" />{t('save')}
-            </Button>
+            <div className={`flex gap-3 flex-1 ${isRTL ? 'justify-end flex-row-reverse' : 'justify-end'}`}>
+              <Button type="button" variant="ghost" onClick={() => { setShowShiftDialog(false); setEditingShift(null); setSelectedCell(null); }} className="hover:bg-gray-100 text-gray-600">{t('cancel')}</Button>
+              <Button type="submit" onClick={handleShiftSave} className={`flex items-center gap-2 bg-[#d4a373] hover:bg-[#b88c60] text-white shadow-md hover:shadow-lg transition-all px-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Save className="w-4 h-4" />{t('save')}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
