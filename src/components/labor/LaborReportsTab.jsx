@@ -688,6 +688,27 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       });
     }
 
+    // Append Summary Boxes Data
+    rows.push([]);
+    rows.push([]);
+    rows.push([language === 'he' ? 'סיכום נתונים (כפי שמופיע בקופסאות)' : 'Summary Data (As seen in boxes)']);
+    rows.push([
+      language === 'he' ? 'סה״כ עובדים' : 'Total Workers',
+      language === 'he' ? 'סה״כ שעות' : 'Total Hours',
+      language === 'he' ? 'סה״כ טיפים' : 'Total Tips',
+      language === 'he' ? 'שכר (ללא טיפים)' : 'Wages (excl. tips)',
+      language === 'he' ? 'השלמה (המעסיק משלם)' : 'Employer Alema',
+      language === 'he' ? 'עלות כוללת למעסיק' : 'Total Employer Cost'
+    ]);
+    rows.push([
+      summaryData.length,
+      (grandTotals.hours || 0).toFixed(1),
+      (grandTotals.tips || 0).toFixed(2),
+      (grandTotals.payment || 0).toFixed(2),
+      (grandTotals.alema || 0).toFixed(2),
+      (grandTotals.cost || 0).toFixed(2)
+    ]);
+
     return rows;
   };
 

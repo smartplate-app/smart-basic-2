@@ -32,7 +32,17 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
                 properties: {
                     title: title || 'Labor Report'
-                }
+                },
+                sheets: [
+                    {
+                        properties: {
+                            sheetId: 0,
+                            gridProperties: {
+                                frozenRowCount: 1
+                            }
+                        }
+                    }
+                ]
             })
         });
 
