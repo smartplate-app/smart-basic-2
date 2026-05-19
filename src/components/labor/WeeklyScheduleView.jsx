@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,26 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, GripVertical, Download, Plus, MoreHorizontal, Clock } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, Download, Plus, MoreHorizontal, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "../LanguageProvider";
 import { toast } from "sonner";
 import moment from "moment";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import html2canvas from "html2canvas";
-import { useRef } from "react";
 import RowTimeDialog from "./RowTimeDialog";
 import { offlineQueue } from "../offline/offlineQueue";
 import { notifyOS } from "../notifications/notify";
+import WeeklyScheduleTable from "./WeeklyScheduleTable";
 
 // Set week to start on Sunday (Israel standard)
 moment.updateLocale('en', {
@@ -72,6 +62,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [laborGoals, setLaborGoals] = useState({ shiftWorkersGoal: 0, managementSalary: 0, laborGoalPercent: 25 });
   const [positionOrder, setPositionOrder] = useState([]);
   const scheduleTableRef = useRef(null);
+  const lastSavedDataRef = useRef(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [showWorkerSidebar, setShowWorkerSidebar] = useState(true);
   const [showRowTimeDialog, setShowRowTimeDialog] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
@@ -156,18 +148,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             return { basePayment: basePaymentAmount, totalPayment: paymentForShift, totalWithEmployerCost };
           };
 
-          // 150% eligibility: Friday from 18:00 and all Saturday
-          const is150Eligible = (dayKey, startTime) => {
-            if (dayKey === 'saturday') return true;
-            if (dayKey === 'friday') {
-              if (!startTime) return false;
-              const [h, m] = String(startTime).split(':').map(Number);
-              const minutes = (h || 0) * 60 + (m || 0);
-              return minutes >= 18 * 60; // 18:00
-            }
-            return false;
-          };
-
   const calculateTotals = () => {
     const shifts = schedule?.shifts || [];
     const totalHours = shifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
@@ -206,6 +186,74 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const laborPercentage = weeklyPredictedSalesWithoutVAT > 0 ? (totalCostWithEmployer / weeklyPredictedSalesWithoutVAT) * 100 : 0;
 
     return { totalHours, totalBaseCost, totalCostWithEmployer, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT };
+  };
+
+  // Auto-save effect
+  useEffect(() => {
+    if (loading || !schedule) return;
+    
+    const currentDataStr = JSON.stringify({
+      shifts: schedule.shifts || [],
+      position_rows: schedule.position_rows || [],
+      position_order: positionOrder || [],
+      monthlyPredictedSales: monthlyPredictedSales || 0
+    });
+
+    if (lastSavedDataRef.current === null) {
+      lastSavedDataRef.current = currentDataStr;
+      return;
+    }
+
+    if (currentDataStr !== lastSavedDataRef.current) {
+      const timer = setTimeout(() => {
+        performAutoSave(currentDataStr);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [schedule, positionOrder, monthlyPredictedSales, loading]);
+
+  const performAutoSave = async (currentDataStr) => {
+    setIsAutoSaving(true);
+    try {
+      const weekNumber = moment(weekStartDate).week();
+      const year = moment(weekStartDate).year();
+      const { totalHours, totalCostWithEmployer, laborPercentage } = calculateTotals();
+      
+      const scheduleData = {
+        week_start_date: moment(weekStartDate).format('YYYY-MM-DD'),
+        week_number: String(weekNumber),
+        year: String(year),
+        predicted_weekly_sales: monthlyPredictedSales / 4.2,
+        shifts: schedule?.shifts || [],
+        position_rows: schedule?.position_rows || [],
+        total_hours: totalHours,
+        total_cost: totalCostWithEmployer,
+        labor_cost_percentage: laborPercentage,
+        position_order: positionOrder,
+        status: schedule?.status || 'draft'
+      };
+
+      if (!navigator.onLine) {
+        setIsAutoSaving(false);
+        return;
+      }
+
+      const user = currentUser || await base44.auth.me();
+
+      if (schedule && schedule.id) {
+        await base44.entities.WeeklySchedule.update(schedule.id, scheduleData);
+      } else {
+        scheduleData.created_by = user.email;
+        const saved = await base44.entities.WeeklySchedule.create(scheduleData);
+        setSchedule(prev => ({ ...prev, id: saved.id }));
+      }
+      
+      lastSavedDataRef.current = currentDataStr;
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    } finally {
+      setIsAutoSaving(false);
+    }
   };
 
   // OS notification if weekly labor % exceeds goal (moved before early return)
@@ -304,6 +352,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         console.error("Error loading schedule or user:", error);
         toast.error(t("error_loading_schedule"));
       } finally {
+        lastSavedDataRef.current = null;
         setLoading(false);
       }
     };
@@ -390,9 +439,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     setSchedule({
       ...schedule,
       shifts: loadedShifts,
-      total_hours: calculateTotals().totalHours, // These will be recalculated on save
-      total_cost: calculateTotals().totalCost,   // These will be recalculated on save
-      labor_cost_percentage: calculateTotals().laborPercentage // These will be recalculated on save
+      total_hours: calculateTotals().totalHours,
+      total_cost: calculateTotals().totalCost,
+      labor_cost_percentage: calculateTotals().laborPercentage
     });
     toast.success(t('template_loaded_successfully'));
   };
@@ -442,8 +491,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               return;
             }
 
-            const desiredRate = editingShift.overtime_rate;
-            // The effective rate takes into account the eligibility for 150% overtime
             const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
             
             const { basePayment, totalPayment } = calculatePayment(worker, editingShift.hours_worked, effectiveRate, editingShift.job_position_id);
@@ -464,8 +511,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             const hours = calculateHours(newStartTime, newEndTime);
 
             const worker = workers.find(w => w.id === editingShift.worker_id);
-            const desiredRate = editingShift.overtime_rate;
-            // The effective rate takes into account the eligibility for 150% overtime
             const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
             
             const { basePayment, totalPayment } = calculatePayment(worker, hours, effectiveRate, editingShift.job_position_id);
@@ -479,8 +524,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               payment_for_shift: totalPayment
             });
           };
-
-  // handleOvertimeChange function removed as it is no longer triggered by UI
 
   const checkForDoubleShift = (workerId, dayKey, currentShiftId) => {
     // Check if this worker already has a shift on the same day (in any position)
@@ -561,7 +604,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     setSelectedCell(null);
     setPendingShiftSave(null);
     setShowDoubleShiftWarning(false);
-    toast.success(t("shift_saved_successfully"));
   };
 
   const handleConfirmDoubleShift = () => {
@@ -609,38 +651,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     setShowShiftDialog(false);
     setEditingShift(null);
     setSelectedCell(null);
-    toast.success(t("shift_deleted_successfully"));
   };
 
-  const handleQuickDelete = (shift, e) => {
-    e.stopPropagation();
-    
-    const confirmMessage = language === 'he' 
-      ? `האם למחוק את המשמרת של ${shift.worker_name}?`
-      : `Delete ${shift.worker_name}'s shift?`;
-
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
-    let updatedShifts;
-    if (shift.id) {
-      updatedShifts = (schedule?.shifts || []).filter(s => s.id !== shift.id);
-    } else {
-      updatedShifts = (schedule?.shifts || []).filter(s => 
-        !(s.day === shift.day && 
-          s.date === shift.date && 
-          s.worker_id === shift.worker_id &&
-          s.job_position_id === shift.job_position_id &&
-          s.start_time === shift.start_time &&
-          s.end_time === shift.end_time)
-      );
-    }
-    setSchedule({ ...schedule, shifts: updatedShifts });
-    toast.success(t("shift_deleted_successfully"));
-  };
-
-  const handleSaveSchedule = async () => {
+  const handlePublishSchedule = async () => {
     setSaving(true);
     try {
       const weekNumber = moment(weekStartDate).week();
@@ -661,32 +674,41 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         status: 'published'
       };
 
-      console.log("Saving schedule:", scheduleData);
+      console.log("Publishing schedule:", scheduleData);
 
       if (!navigator.onLine) {
         offlineQueue.enqueue('schedules', { action: schedule && schedule.id ? 'update_schedule' : 'create_schedule', payload: { id: schedule?.id, data: scheduleData } });
         setSchedule({ ...(schedule || {}), ...scheduleData, id: schedule?.id, __offline: true });
-        toast.success(language === 'he' ? 'נשמר ללא אינטרנט - יסתנכרן אוטומטית' : 'Saved offline — will sync automatically');
+        toast.success(language === 'he' ? 'נשמר ללא אינטרנט - יפורסם אוטומטית' : 'Saved offline — will be published automatically');
         setSaving(false);
         return { ...schedule, ...scheduleData };
       }
 
+      const user = currentUser || await base44.auth.me();
       let savedSchedule;
       if (schedule && schedule.id) {
         savedSchedule = await base44.entities.WeeklySchedule.update(schedule.id, scheduleData);
-        toast.success(t("schedule_updated_successfully"));
+        toast.success(language === 'he' ? 'הסידור פורסם בהצלחה' : 'Schedule published successfully');
       } else {
+        scheduleData.created_by = user.email;
         savedSchedule = await base44.entities.WeeklySchedule.create(scheduleData);
-        toast.success(t("schedule_created_successfully"));
+        toast.success(language === 'he' ? 'הסידור פורסם בהצלחה' : 'Schedule published successfully');
       }
       
-      console.log("Schedule saved:", savedSchedule);
+      lastSavedDataRef.current = JSON.stringify({
+        shifts: savedSchedule.shifts || [],
+        position_rows: savedSchedule.position_rows || [],
+        position_order: savedSchedule.position_order || [],
+        monthlyPredictedSales: (savedSchedule.predicted_weekly_sales || 0) * 4.2
+      });
+
+      console.log("Schedule published:", savedSchedule);
       setSchedule(savedSchedule); 
       onScheduleSaved(); 
       return savedSchedule;
     } catch (error) {
-      console.error('Error saving schedule:', error);
-      toast.error(t("error_saving_schedule") + ": " + (error.message || "Unknown error"));
+      console.error('Error publishing schedule:', error);
+      toast.error((language === 'he' ? 'שגיאה בפרסום' : 'Error publishing') + ": " + (error.message || "Unknown error"));
       throw error;
     } finally {
       setSaving(false);
@@ -767,80 +789,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       toast.error(`${t('error_copying_schedule')}: ${error.message}`);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleSendWhatsApp = async () => {
-    setSending(true);
-    try {
-      if (!schedule || !schedule.shifts || schedule.shifts.length === 0) {
-        toast.info(t('no_shifts_scheduled'));
-        setSending(false);
-        return;
-      }
-
-      const workersWithPhone = workers.filter(w => 
-        w.phone && 
-        schedule.shifts.some(s => s.worker_id === w.id)
-      );
-
-      if (workersWithPhone.length === 0) {
-        toast.info(t('no_workers_with_phone'));
-        setSending(false);
-        return;
-      }
-
-      const weekStartDisplay = moment(weekStartDate).format('DD/MM');
-      const weekEndDisplay = moment(weekStartDate).add(6, 'days').format('DD/MM');
-
-      const dayNames = {
-        monday: t('monday'), tuesday: t('tuesday'), wednesday: t('wednesday'),
-        thursday: t('thursday'), friday: t('friday'), saturday: t('saturday'), sunday: t('sunday')
-      };
-
-      for (const worker of workersWithPhone) {
-        const workerShifts = schedule.shifts.filter(s => s.worker_id === worker.id);
-        
-        if (workerShifts.length === 0) continue;
-
-        let shiftDetails = workerShifts.map(shift => {
-          const dayName = dayNames[shift.day] || shift.day;
-          const date = moment(shift.date).format('DD/MM');
-          const positionLabel = shift.job_position ? ` (${shift.job_position})` : '';
-          const overtimeLabel = shift.overtime_rate && shift.overtime_rate !== 'regular' ? ` (${shift.overtime_rate}%)` : '';
-          return `📅 ${dayName} ${date}: ${shift.start_time}-${shift.end_time}${positionLabel}${overtimeLabel} (${shift.hours_worked?.toFixed(1)}h)`;
-        }).join('\n');
-
-        const totalHours = workerShifts.reduce((sum, s) => sum + (s.hours_worked || 0), 0);
-        const totalPay = workerShifts.reduce((sum, s) => sum + (s.payment_for_shift || 0), 0);
-
-        const message = `🍽️ *${t('weekly_schedule')}*\n\n` +
-                       `${t('hello')} ${worker.full_name}! 👋\n\n` +
-                       `${t('your_shifts_for_the_week')}:\n` +
-                       `${weekStartDisplay} - ${weekEndDisplay}\n\n` +
-                       `${shiftDetails}\n\n` +
-                       `📊 ${t('total')}: ${totalHours.toFixed(1)} ${t('hrs')}\n` +
-                       `💰 ${t('expected_payment')}: ${formatCurrency(totalPay)}\n\n` +
-                       `${t('good_luck')}! 🙌`;
-
-        const phone = worker.phone.replace(/\D/g, '');
-        const formattedPhone = phone.startsWith('0') ? '972' + phone.substring(1) : 
-                              phone.startsWith('972') ? phone : '972' + phone;
-
-        const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-        
-        window.open(whatsappUrl, '_blank');
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      toast.success(t('schedule_sent_successfully'));
-
-    } catch (error) {
-      console.error('Error sending schedule:', error);
-      toast.error(`${t('error_sending_schedule')}: ${error.message}`);
-    } finally {
-      setSending(false);
     }
   };
 
@@ -953,10 +901,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       const weekNumber = moment(weekStartDate).week();
       const year = moment(weekStartDate).year();
 
-      console.log('[WeeklyScheduleView] Clearing schedule for week', weekNumber, year);
-      console.log('[WeeklyScheduleView] Week start date:', weekStartDate);
-
-      // Fetch the schedule for THIS specific week
       const user = currentUser || await base44.auth.me();
       setCurrentUser(user);
       const effectiveEmail = user.acting_as_user_email || user.acting_as_store_email || user.email;
@@ -969,9 +913,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
       if (schedulesRes && schedulesRes.length > 0) {
         const scheduleToDelete = schedulesRes[0];
-        console.log('[WeeklyScheduleView] Found schedule to clear:', scheduleToDelete.id);
         
-        // Update the schedule with empty shifts
         await base44.entities.WeeklySchedule.update(scheduleToDelete.id, {
           shifts: [],
           total_hours: 0,
@@ -980,23 +922,19 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           predicted_weekly_sales: 0 // Reset predicted sales on clear
         });
         
-        console.log('[WeeklyScheduleView] Schedule cleared in database');
-        
         toast.success(language === 'he' ? 'לוח המשמרות נוקה בהצלחה' : 'Schedule cleared successfully');
       } else {
-        console.log('[WeeklyScheduleView] No schedule found for this week');
         toast.info(language === 'he' ? 'אין משמרות לשבוע זה' : 'No schedule exists for this week');
       }
       
       // Clear local state
-              setSchedule(null);
-              setMonthlyPredictedSales(0);
+      setSchedule(null);
+      setMonthlyPredictedSales(0);
       
-      console.log('[WeeklyScheduleView] Calling onScheduleSaved to refresh');
       onScheduleSaved();
       
     } catch (error) {
-      console.error('[WeeklyScheduleView] Error clearing schedule:', error);
+      console.error('Error clearing schedule:', error);
       toast.error(language === 'he' ? 'שגיאה בניקוי לוח המשמרות' : 'Error clearing schedule');
     }
   };
@@ -1010,7 +948,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       return;
     }
 
-    // Get all shifts from the source day
     const sourceDayShifts = (schedule?.shifts || []).filter(s => s.day === sourceDayKey);
 
     if (sourceDayShifts.length === 0) {
@@ -1018,24 +955,21 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       return;
     }
 
-    // Create new shifts for all days
     const newShifts = [];
     
     days.forEach(day => {
       const dayDate = moment(weekStartDate).day(days.indexOf(day)).format('YYYY-MM-DD');
       
-      // For each shift in source day, create a copy for this day
       sourceDayShifts.forEach(sourceShift => {
         newShifts.push({
           ...sourceShift,
           day: day.key,
           date: dayDate,
-          id: undefined // Remove ID so it's treated as a new shift
+          id: undefined
         });
       });
     });
 
-    // Update schedule with new shifts
     setSchedule({
       ...schedule,
       shifts: newShifts
@@ -1099,7 +1033,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       const [moved] = newOrder.splice(source.index, 1);
       newOrder.splice(destination.index, 0, moved);
       setPositionOrder(newOrder);
-      toast.success(language === 'he' ? 'סדר התפקידים עודכן' : 'Position order updated');
       return;
     }
 
@@ -1125,10 +1058,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const newShifts = [...list];
     const movedOriginal = newShifts[from];
     if (!movedOriginal) return;
-    // Remove first to calculate destination indices on the updated array
     newShifts.splice(from, 1);
 
-    // Create an immutable copy and update if destination cell differs
     let updated = { ...movedOriginal };
     if (src.day !== dst.day || src.positionId !== dst.positionId || src.rowId !== dst.rowId) {
       const destDateStr = moment(weekStartDate).day(days.findIndex(d => d.key === dst.day)).format('YYYY-MM-DD');
@@ -1168,7 +1099,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     newShifts.splice(to, 0, updated);
 
     setSchedule({ ...schedule, shifts: newShifts });
-    toast.success(language === 'he' ? 'המשמרת הועברה בהצלחה' : 'Shift moved successfully');
   };
 
   const handleDownloadJPG = async () => {
@@ -1177,8 +1107,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
     try {
       toast.info(language === 'he' ? 'מכין תמונה...' : 'Preparing image...');
-      
-      // Hide all cost elements before capture
       const costElements = element.querySelectorAll('.shift-cost');
       costElements.forEach(el => el.style.display = 'none');
       
@@ -1189,7 +1117,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         windowHeight: 1080
       });
       
-      // Show cost elements again after capture
       costElements.forEach(el => el.style.display = '');
       
       const image = canvas.toDataURL('image/jpeg', 0.95);
@@ -1200,10 +1127,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       
       toast.success(language === 'he' ? 'הלוח הורד בהצלחה' : 'Schedule downloaded successfully');
     } catch (error) {
-      console.error('Error downloading JPG:', error);
       toast.error(language === 'he' ? 'שגיאה בהורדת התמונה' : 'Error downloading image');
-      
-      // Make sure to show cost elements again even if error occurs
       const costElements = element.querySelectorAll('.shift-cost');
       costElements.forEach(el => el.style.display = '');
     }
@@ -1219,9 +1143,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
   const { totalHours, totalBaseCost, totalCostWithEmployer, laborPercentage, weeklyPredictedSalesWithVAT, weeklyPredictedSalesWithoutVAT } = calculateTotals();
 
-
-
-  // Calculate worker shift counts
   const workerShiftCounts = workers.map(worker => {
     const shiftCount = (schedule?.shifts || []).filter(s => s.worker_id === worker.id).length;
     return {
@@ -1233,7 +1154,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
   return (
     <div className="space-y-6">
-      {/* Main Schedule Content */}
       <div className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader>
@@ -1241,13 +1161,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             <CardTitle className={`text-xl md:text-2xl font-bold flex items-center flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Calendar className="w-5 h-5 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
               <span>{t('weekly_schedule')} - {moment(weekStartDate).format('DD/MM/YYYY')}</span>
+              {schedule?.status === 'draft' && (
+                <Badge variant="secondary" className="bg-gray-200 text-gray-700 hover:bg-gray-200 ml-2 rtl:mr-2 rtl:ml-0">
+                  {language === 'he' ? 'טיוטה' : 'Draft'}
+                </Badge>
+              )}
             </CardTitle>
-            
-
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Monthly Predicted Sales Input */}
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
@@ -1291,9 +1213,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
           </div>
 
-          {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
-
             <div className="space-y-1">
               <Label className={`text-sm text-gray-600 ${isRTL ? 'text-right block' : 'text-left block'}`}>
                 {t('total_hours')}
@@ -1328,64 +1248,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
           </div>
 
-          {/* Goal Comparison */}
-          {false && (
-            <div className={`p-4 rounded-lg border-2 ${
-              totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly 
-                ? 'bg-green-50 border-green-300' 
-                : 'bg-red-50 border-red-300'
-            }`}>
-              <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                <div>
-                  <div className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {language === 'he' ? 'יעד שבועי לעובדי משמרות:' : 'Weekly Shift Workers Goal:'}
-                  </div>
-                  <div className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {formatCurrency(laborGoals.shiftWorkersGoalWeekly)}
-                  </div>
-                </div>
-                <div className={`text-center px-6 py-3 rounded-lg ${
-                  totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly 
-                    ? 'bg-green-100' 
-                    : 'bg-red-100'
-                }`}>
-                  {totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly ? (
-                    <>
-                      <div className="text-green-700 font-bold text-lg">
-                        ✓ {language === 'he' ? 'בתוך היעד!' : 'Within Goal!'}
-                      </div>
-                      <div className="text-green-600 text-sm">
-                        {language === 'he' ? 'חסכון:' : 'Savings:'} {formatCurrency(laborGoals.shiftWorkersGoalWeekly - totalCostWithEmployer)}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-red-700 font-bold text-lg">
-                        ⚠️ {language === 'he' ? 'מעל היעד!' : 'Over Goal!'}
-                      </div>
-                      <div className="text-red-600 text-sm">
-                        {language === 'he' ? 'חריגה:' : 'Overage:'} {formatCurrency(totalCostWithEmployer - laborGoals.shiftWorkersGoalWeekly)}
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className={isRTL ? 'text-left' : 'text-right'}>
-                  <div className="text-gray-600 text-sm">
-                    {language === 'he' ? 'עלות בפועל:' : 'Actual Cost:'}
-                  </div>
-                  <div className={`text-2xl font-bold ${
-                    totalCostWithEmployer <= laborGoals.shiftWorkersGoalWeekly 
-                      ? 'text-green-700' 
-                      : 'text-red-700'
-                  }`}>
-                    {formatCurrency(totalCostWithEmployer)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Compact worker shifts summary */}
           <div className="bg-white border rounded-lg p-3">
             <div className={`text-[12px] font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
               {language === 'he' ? 'מספר משמרות לכל עובד' : 'Shifts per worker'}
@@ -1393,10 +1255,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
               {workerShiftCounts.length > 0 ? (
                 workerShiftCounts.map(w => (
-                  <div
-                    key={w.id}
-                    className="min-w-[120px] bg-gray-50 border border-gray-200 rounded-md p-2"
-                  >
+                  <div key={w.id} className="min-w-[120px] bg-gray-50 border border-gray-200 rounded-md p-2">
                     <div className="font-semibold text-[11px] truncate">{w.name}</div>
                     <div className="text-[11px] text-gray-600">
                       {language === 'he' ? `${w.count} משמרות` : `${w.count} shifts`}
@@ -1411,18 +1270,12 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className={`flex gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Button onClick={() => setShowTemplateDialog(true)} variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <FileText className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {t('manage_templates')}
             </Button>
-            <Button 
-              onClick={handleDownloadJPG} 
-              variant="outline" 
-              size="sm" 
-              className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-            >
+            <Button onClick={handleDownloadJPG} variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
             </Button>
@@ -1430,227 +1283,43 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               <Copy className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {t('copy_to_next_week')}
             </Button>
-            <Button 
-              onClick={handleClearSchedule} 
-              variant="outline" 
-              size="sm" 
-              className={`flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 ${isRTL ? 'flex-row-reverse' : ''}`}
-              disabled={!schedule?.shifts?.length && !schedule?.id}
-            >
+            <Button onClick={handleClearSchedule} variant="outline" size="sm" className={`flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!schedule?.shifts?.length && !schedule?.id}>
               <X className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'נקה לוח משמרות' : 'Clear Schedule'}
             </Button>
-            <Button
-              onClick={handleSaveSchedule}
-              className={`bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-              disabled={saving}
-            >
-              {saving ? (
+            <Button onClick={handlePublishSchedule} className={`bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || isAutoSaving}>
+              {saving || isAutoSaving ? (
                 <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" />
               ) : (
-                <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                <Send className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               )}
-              {t('save_schedule')}
+              {language === 'he' 
+                ? (schedule?.status === 'published' ? 'עדכן סידור מפורסם' : 'פרסם סידור עבודה') 
+                : (schedule?.status === 'published' ? 'Update Published' : 'Publish Schedule')}
             </Button>
-            {/* These three Download buttons were duplicates, keeping one as per the initial code. */}
+            {isAutoSaving && (
+              <span className={`text-xs text-gray-400 flex items-center ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                {language === 'he' ? 'שומר שינויים...' : 'Saving changes...'}
+              </span>
+            )}
           </div>
 
           <div className={`text-sm text-gray-600 bg-blue-50 p-3 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
             <strong>{t('tip')}:</strong> {t('shift_duplicate_tip')}
           </div>
 
-          {/* Schedule Table with Drag & Drop */}
-          <DragDropContext onDragStart={() => setIsDraggingShift(true)} onDragEnd={(result) => { setIsDraggingShift(false); handleDragEnd(result); }}>
-            <div ref={scheduleTableRef} className="overflow-x-auto bg-white p-4 rounded-lg -mx-4 md:mx-0" dir={isRTL ? 'rtl' : 'ltr'}>
-              <table className="w-full border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className={`border p-2 text-sm font-semibold ${isRTL ? 'text-right' : 'text-left'} min-w-[100px]`}>
-                      {t('position')}
-                    </th>
-                    {days.map(day => {
-                        const dayDate = moment(weekStartDate).day(days.indexOf(day));
-                        const dayShiftsCount = (schedule?.shifts || []).filter(s => s.day === day.key).length;
-                        
-                        return (
-                          <th key={day.key} className="border p-2 text-sm font-semibold min-w-[120px]">
-                            <div className="flex flex-col gap-1">
-                              <div>{day.label}</div>
-                              <div className="text-xs text-gray-500 font-normal">
-                                {dayDate.format('DD/MM')}
-                              </div>
-                              {false && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs h-6 px-2 bg-blue-50 hover:bg-blue-100 border-blue-300"
-                                  onClick={() => handleCopyDayToWeek(day.key)}
-                                  title={language === 'he' ? 'העתק יום זה לכל השבוע' : 'Copy this day to all week'}
-                                >
-                                  <Copy className="w-3 h-3 mr-1" />
-                                  {language === 'he' ? 'העתק לשבוע' : 'Copy to week'}
-                                </Button>
-                              )}
-                            </div>
-                          </th>
-                        );
-                      })}
-                  </tr>
-                </thead>
-                <Droppable droppableId="positions-list" type="POSITION">
-                  {(provided) => (
-                    <tbody ref={provided.innerRef} {...provided.droppableProps}>
-                      {(positionOrder.length > 0 ? positionOrder : positions.map(p => p.id))
-                        .map((positionId, posIndex) => {
-                          const position = positions.find(p => p.id === positionId);
-                          if (!position) return null;
-                          return (
-                            <Draggable key={position.id} draggableId={`position-${position.id}`} index={posIndex}>
-                              {(provided, snapshot) => (
-                                <tr 
-                                  ref={provided.innerRef} 
-                                  {...provided.draggableProps}
-                                  className={snapshot.isDragging ? 'bg-purple-50' : ''}
-                                >
-                                  <td className={`border p-2 font-medium ${isRTL ? 'text-right' : 'text-left'}`} style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.25) }}>
-                                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                      <div 
-                                        {...provided.dragHandleProps}
-                                        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
-                                      >
-                                        <GripVertical className="h-4 w-4" />
-                                      </div>
-                                      <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: position.color || '#1E88E5' }} />
-<span className={`text-[20px] font-extrabold ${['text-blue-800','text-gray-800'][posIndex % 2]}`}>{position.name}</span>
-                                      <Button size="icon" variant="ghost" className="h-7 w-7" title={language === 'he' ? 'הוסף שורת תפקיד' : 'Add position row'} onClick={() => addPositionRow(position.id)}>
-                                        <Plus className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </td>
-                      {days.map(day => {
-                        const dateStr = moment(weekStartDate).day(days.indexOf(day)).format('YYYY-MM-DD');
-                        const positionRows = (schedule?.position_rows || []).filter(r => r.position_id === position.id);
-
-                        return (
-                          <td
-                            key={`${day.key}-${position.id}`}
-                            className={`border p-1 ${isRTL ? 'text-right' : 'text-left'}`}
-                          >
-                            {[null, ...positionRows].map((row, rIdx) => {
-                              const rowId = row?.row_id;
-                              const droppableId = `${day.key}|${position.id}|${rowId || 'default'}`;
-                              const shiftsForCell = (schedule?.shifts || []).filter(s => s.day === day.key && s.job_position_id === position.id && ((rowId && s.position_row_id === rowId) || (!rowId && !s.position_row_id)));
-                              return (
-                                <div key={rIdx} className="mb-1">
-                                  {row && (
-                                    <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                      <div className="text-[11px] font-semibold text-gray-600">
-                                        {row.label}
-                                      </div>
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button size="icon" variant="ghost" className="h-6 w-6" title={language === 'he' ? 'עוד פעולות' : 'More actions'}>
-                                            <MoreHorizontal className="h-4 w-4" />
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align={isRTL ? 'start' : 'end'} dir={isRTL ? 'rtl' : 'ltr'}>
-                                          <DropdownMenuItem onClick={() => openRowTimeDialog(row)}>
-                                            {language === 'he' ? 'קבע שעות לשורה' : 'Set row hours'}
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => {
-                                            const name = prompt(language === 'he' ? 'שם לשורה' : 'Row name', row.label || '');
-                                            if (name !== null) {
-                                              const updated = (schedule?.position_rows || []).map(rr => rr.row_id === row.row_id ? { ...rr, label: name } : rr);
-                                              setSchedule({ ...(schedule || {}), position_rows: updated });
-                                            }
-                                          }}>
-                                            {language === 'he' ? 'שנה שם שורה' : 'Rename row'}
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)}>
-                                            {language === 'he' ? 'הוסף משמרת' : 'Add shift'}
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => removePositionRow(rowId)} className="text-red-600">
-                                            {language === 'he' ? 'מחק שורה' : 'Delete row'}
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
-                                  )}
-                                  <Droppable droppableId={droppableId} type="SHIFT">
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={`space-y-1 rounded transition-colors min-h-[40px] group`}
-                                        style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), snapshot.isDraggingOver ? 0.25 : 0.08) }}
-                                      >
-                                        {shiftsForCell.length === 0 ? (
-                                          <div className={`text-xs text-gray-400 py-2 ${isRTL ? 'text-right' : 'text-center'}`}>
-                                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700" onClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)}>
-                                              {t('add')} +
-                                            </Button>
-                                          </div>
-                                        ) : (
-                                          shiftsForCell.map((shift, idx) => (
-                                            <Draggable key={getShiftDraggableId(shift)} draggableId={getShiftDraggableId(shift)} index={idx}>
-                                              {(provided, snapshot) => (
-                                                <div
-                                                  ref={provided.innerRef}
-                                                  {...provided.draggableProps}
-                                                  className={`p-2 rounded border text-xs cursor-pointer group relative select-none touch-none ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'} ${snapshot.isDragging ? 'will-change-transform' : ''}`}
-                                                  style={{
-                                                    ...provided.draggableProps.style,
-                                                    backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2),
-                                                    borderColor: hexToRgba((position.color || '#E6F4FF'), 0.5),
-                                                    zIndex: snapshot.isDragging ? 1000 : 'auto'
-                                                  }}
-                                                  onClick={() => { if (isDraggingShift) return; setEditingShift({ ...shift, __originalKey: getShiftDraggableId(shift) }); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
-                                                  data-drag-id={getShiftDraggableId(shift)}
-                                                >
-                                                  <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-100 transition-opacity h-6 w-6 flex items-center justify-center`} {...provided.dragHandleProps} onMouseDown={(e) => e.preventDefault()} aria-label={t('drag')}>
-                                                    <GripVertical className="h-4 w-4" />
-                                                  </div>
-                                                  <div className={`font-extrabold text-[16px] ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
-                                                  <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse pr-5' : 'pl-5'}`}>
-                                                    <span className="text-[11px]">{shift.start_time}-{shift.end_time}</span>
-                                                    <span className="shift-cost">{formatCurrency(shift.payment_for_shift || 0)}</span>
-                                                  </div>
-                                                  {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
-                                                    <Badge variant="secondary" className={`mt-1 ${isRTL ? 'mr-5' : 'ml-5'}`}>{shift.overtime_rate === '125' ? '125%' : (shift.overtime_rate === '150' ? '150%' : '')}</Badge>
-                                                  )}
-
-                                                </div>
-                                              )}
-                                            </Draggable>
-                                          ))
-                                        )}
-                                        {provided.placeholder}
-                                      </div>
-                                    )}
-                                  </Droppable>
-                                </div>
-                              );
-                            })}
-                          </td>
-                        );
-                      })}
-                                </tr>
-                              )}
-                            </Draggable>
-                          );
-                        })}
-                      {provided.placeholder}
-                    </tbody>
-                  )}
-                </Droppable>
-              </table>
-            </div>
-          </DragDropContext>
-
+          <WeeklyScheduleTable
+            schedule={schedule} setSchedule={setSchedule} positions={positions} positionOrder={positionOrder}
+            days={days} weekStartDate={weekStartDate} isDraggingShift={isDraggingShift} setIsDraggingShift={setIsDraggingShift}
+            handleDragEnd={handleDragEnd} hexToRgba={hexToRgba} t={t} language={language} isRTL={isRTL}
+            addPositionRow={addPositionRow} openRowTimeDialog={openRowTimeDialog} removePositionRow={removePositionRow}
+            handleCellDoubleClick={handleCellDoubleClick} getShiftDraggableId={getShiftDraggableId} setEditingShift={setEditingShift}
+            setSelectedCell={setSelectedCell} setShowShiftDialog={setShowShiftDialog} formatCurrency={formatCurrency}
+            scheduleTableRef={scheduleTableRef}
+          />
         </CardContent>
       </Card>
 
-      {/* Shift Dialog */}
       <Dialog open={showShiftDialog} onOpenChange={setShowShiftDialog}>
         <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
@@ -1665,21 +1334,13 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 <Label htmlFor="worker_id" className={isRTL ? 'text-right block' : 'text-left block'}>
                   {t('worker')} *
                 </Label>
-                <Select
-                  value={editingShift.worker_id}
-                  onValueChange={handleWorkerChange}
-                >
+                <Select value={editingShift.worker_id} onValueChange={handleWorkerChange}>
                   <SelectTrigger id="worker_id" className={isRTL ? 'text-right' : 'text-left'}>
                     <SelectValue placeholder={t('select_worker')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* Show workers assigned to this position first */}
                     {workers
-                      .filter(w => 
-                        w.job_position_id === editingShift.job_position_id || 
-                        w.secondary_job_position_id === editingShift.job_position_id ||
-                        (w.job_position_ids || []).includes(editingShift.job_position_id)
-                      )
+                      .filter(w => w.job_position_id === editingShift.job_position_id || w.secondary_job_position_id === editingShift.job_position_id || (w.job_position_ids || []).includes(editingShift.job_position_id))
                       .map(worker => (
                         <SelectItem key={worker.id} value={worker.id}>
                           {worker.full_name}
@@ -1688,23 +1349,13 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                           </span>
                         </SelectItem>
                     ))}
-                    {/* Separator if there are other workers */}
-                    {workers.filter(w => 
-                      w.job_position_id !== editingShift.job_position_id && 
-                      w.secondary_job_position_id !== editingShift.job_position_id &&
-                      !(w.job_position_ids || []).includes(editingShift.job_position_id)
-                    ).length > 0 && (
+                    {workers.filter(w => w.job_position_id !== editingShift.job_position_id && w.secondary_job_position_id !== editingShift.job_position_id && !(w.job_position_ids || []).includes(editingShift.job_position_id)).length > 0 && (
                       <div className="px-2 py-1 text-xs text-gray-400 border-t mt-1 pt-1">
                         {language === 'he' ? '── עובדים אחרים ──' : '── Other Workers ──'}
                       </div>
                     )}
-                    {/* Show other workers */}
                     {workers
-                      .filter(w => 
-                        w.job_position_id !== editingShift.job_position_id && 
-                        w.secondary_job_position_id !== editingShift.job_position_id &&
-                        !(w.job_position_ids || []).includes(editingShift.job_position_id)
-                      )
+                      .filter(w => w.job_position_id !== editingShift.job_position_id && w.secondary_job_position_id !== editingShift.job_position_id && !(w.job_position_ids || []).includes(editingShift.job_position_id))
                       .map(worker => (
                         <SelectItem key={worker.id} value={worker.id} className="text-gray-500">
                           {worker.full_name}
@@ -1719,30 +1370,12 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="start_time" className={isRTL ? 'text-right block' : 'text-left block'}>
-                    {t('start')} *
-                  </Label>
-                  <Input
-                    id="start_time"
-                    type="time"
-                    value={editingShift.start_time}
-                    onChange={(e) => handleTimeChange('start_time', e.target.value)}
-                    className={isRTL ? 'text-right' : 'text-left'}
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                  />
+                  <Label htmlFor="start_time" className={isRTL ? 'text-right block' : 'text-left block'}>{t('start')} *</Label>
+                  <Input id="start_time" type="time" value={editingShift.start_time} onChange={(e) => handleTimeChange('start_time', e.target.value)} className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} />
                 </div>
                 <div>
-                  <Label htmlFor="end_time" className={isRTL ? 'text-right block' : 'text-left block'}>
-                    {t('end')} *
-                  </Label>
-                  <Input
-                    id="end_time"
-                    type="time"
-                    value={editingShift.end_time}
-                    onChange={(e) => handleTimeChange('end_time', e.target.value)}
-                    className={isRTL ? 'text-right' : 'text-left'}
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                  />
+                  <Label htmlFor="end_time" className={isRTL ? 'text-right block' : 'text-left block'}>{t('end')} *</Label>
+                  <Input id="end_time" type="time" value={editingShift.end_time} onChange={(e) => handleTimeChange('end_time', e.target.value)} className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} />
                 </div>
               </div>
 
@@ -1764,191 +1397,66 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               </div>
 
               <div>
-                <Label htmlFor="notes" className={isRTL ? 'text-right block' : 'text-left block'}>
-                  {t('notes')}
-                </Label>
-                <Input
-                  id="notes"
-                  value={editingShift.notes || ''}
-                  onChange={(e) => setEditingShift({...editingShift, notes: e.target.value})}
-                  placeholder={t('notes')}
-                  className={isRTL ? 'text-right' : 'text-left'}
-                  dir={isRTL ? 'rtl' : 'ltr'}
-                />
+                <Label htmlFor="notes" className={isRTL ? 'text-right block' : 'text-left block'}>{t('notes')}</Label>
+                <Input id="notes" value={editingShift.notes || ''} onChange={(e) => setEditingShift({...editingShift, notes: e.target.value})} placeholder={t('notes')} className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} />
               </div>
             </div>
           )}
           
           <DialogFooter className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 justify-end mt-4`}>
-            <Button type="button" variant="outline" onClick={() => {
-              setShowShiftDialog(false);
-              setEditingShift(null);
-              setSelectedCell(null);
-            }}>
-              {t('cancel')}
-            </Button>
+            <Button type="button" variant="outline" onClick={() => { setShowShiftDialog(false); setEditingShift(null); setSelectedCell(null); }}>{t('cancel')}</Button>
             {editingShift && (
-              <Button 
-                type="button" 
-                variant="destructive" 
-                onClick={handleShiftDelete} 
-                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-              >
-                <Trash2 className="w-4 h-4" />
-                {t('delete')}
+              <Button type="button" variant="destructive" onClick={handleShiftDelete} className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Trash2 className="w-4 h-4" />{t('delete')}
               </Button>
             )}
             <Button type="submit" onClick={handleShiftSave} className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Save className="w-4 h-4" />
-              {t('save')}
+              <Save className="w-4 h-4" />{t('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Double Shift Warning Dialog */}
       <Dialog open={showDoubleShiftWarning} onOpenChange={setShowDoubleShiftWarning}>
         <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
             <DialogTitle className={`flex items-center gap-2 text-orange-600 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
-              <AlertTriangle className="w-5 h-5" />
-              {language === 'he' ? 'אזהרת משמרת כפולה' : 'Double Shift Warning'}
+              <AlertTriangle className="w-5 h-5" />{language === 'he' ? 'אזהרת משמרת כפולה' : 'Double Shift Warning'}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className={`bg-orange-50 border border-orange-200 rounded-lg p-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-              <p className="text-orange-800 font-medium mb-2">
-                {language === 'he' 
-                  ? `לעובד ${pendingShiftSave?.worker?.full_name} כבר יש משמרת ביום זה:`
-                  : `${pendingShiftSave?.worker?.full_name} already has a shift on this day:`}
-              </p>
+              <p className="text-orange-800 font-medium mb-2">{language === 'he' ? `לעובד ${pendingShiftSave?.worker?.full_name} כבר יש משמרת ביום זה:` : `${pendingShiftSave?.worker?.full_name} already has a shift on this day:`}</p>
               <div className="space-y-2">
                 {pendingShiftSave?.existingShifts?.map((shift, idx) => (
                   <div key={idx} className="bg-white rounded p-2 border border-orange-100">
-                    <span className="font-medium">{shift.job_position}</span>
-                    <span className="text-gray-600 mx-2">|</span>
-                    <span>{shift.start_time} - {shift.end_time}</span>
+                    <span className="font-medium">{shift.job_position}</span><span className="text-gray-600 mx-2">|</span><span>{shift.start_time} - {shift.end_time}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-orange-700 mt-3">
-                {language === 'he' 
-                  ? `האם ברצונך להוסיף משמרת נוספת בתפקיד ${pendingShiftSave?.position?.name}?`
-                  : `Do you want to add another shift as ${pendingShiftSave?.position?.name}?`}
-              </p>
+              <p className="text-orange-700 mt-3">{language === 'he' ? `האם ברצונך להוסיף משמרת נוספת בתפקיד ${pendingShiftSave?.position?.name}?` : `Do you want to add another shift as ${pendingShiftSave?.position?.name}?`}</p>
             </div>
           </div>
           
           <DialogFooter className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 justify-end mt-4`}>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleCancelDoubleShift}
-            >
-              {t('cancel')}
-            </Button>
-            <Button 
-              type="button" 
-              onClick={handleConfirmDoubleShift}
-              className="bg-orange-600 hover:bg-orange-700"
-            >
-              {language === 'he' ? 'כן, הוסף משמרת' : 'Yes, Add Shift'}
-            </Button>
+            <Button type="button" variant="outline" onClick={handleCancelDoubleShift}>{t('cancel')}</Button>
+            <Button type="button" onClick={handleConfirmDoubleShift} className="bg-orange-600 hover:bg-orange-700">{language === 'he' ? 'כן, הוסף משמרת' : 'Yes, Add Shift'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <RowTimeDialog
-        open={showRowTimeDialog}
-        onClose={() => setShowRowTimeDialog(false)}
-        initial={rowTime}
-        onApply={(cfg) => { setShowRowTimeDialog(false); applyRowTimes(cfg); }}
-        isRTL={isRTL}
-        language={language}
-      />
+      <RowTimeDialog open={showRowTimeDialog} onClose={() => setShowRowTimeDialog(false)} initial={rowTime} onApply={(cfg) => { setShowRowTimeDialog(false); applyRowTimes(cfg); }} isRTL={isRTL} language={language} />
 
-      {/* Template Dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
         <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
-          <DialogHeader>
-            <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>{t('manage_templates')}</DialogTitle>
-          </DialogHeader>
-          
+          <DialogHeader><DialogTitle className={isRTL ? 'text-right' : 'text-left'}>{t('manage_templates')}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <h3 className="font-semibold">{t('save_current_as_template')}</h3>
-            <div className="space-y-2">
-              <Label htmlFor="template_name_input" className={isRTL ? 'text-right block' : 'text-left block'}>{t('template_name')}</Label>
-              <Input
-                id="template_name_input"
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder={t('template_name')}
-                className={isRTL ? 'text-right' : 'text-left'}
-                dir={isRTL ? 'rtl' : 'ltr'}
-              />
-            </div>
-            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Button
-                onClick={() => handleSaveAsTemplate(false)}
-                className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-                disabled={saving || !schedule?.shifts?.length}
-              >
-                {saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
-                {t('save')}
-              </Button>
-              <Button
-                onClick={() => handleSaveAsTemplate(true)}
-                variant="outline"
-                className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-                disabled={saving || !schedule?.shifts?.length}
-              >
-                <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                {t('set_as_default')}
-              </Button>
-            </div>
-
+            <div className="space-y-2"><Label htmlFor="template_name_input" className={isRTL ? 'text-right block' : 'text-left block'}>{t('template_name')}</Label><Input id="template_name_input" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder={t('template_name')} className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} /></div>
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={() => handleSaveAsTemplate(false)} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || !schedule?.shifts?.length}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}{t('save')}</Button><Button onClick={() => handleSaveAsTemplate(true)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || !schedule?.shifts?.length}><Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('set_as_default')}</Button></div>
             <h3 className="font-semibold pt-4 border-t mt-4">{t('load_existing_template')}</h3>
-            {templates.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">
-                <p>{t('no_templates_saved')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Select
-                  value={selectedTemplate}
-                  onValueChange={setSelectedTemplate}
-                >
-                  <SelectTrigger className={isRTL ? 'text-right' : 'text-left'}>
-                    <SelectValue placeholder={t('select_template_to_load')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templates.map(template => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.template_name} {template.is_default && `(${t('default')})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    {saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}
-                    {t('load_template')}
-                  </Button>
-                  {selectedTemplate && (
-                    <Button
-                      onClick={() => handleDeleteTemplate(selectedTemplate)}
-                      variant="destructive"
-                      className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
-                      disabled={saving}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                      {t('delete_template')}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
+            {templates.length === 0 ? <div className="text-center py-4 text-gray-500"><p>{t('no_templates_saved')}</p></div> : (<div className="space-y-2"><Select value={selectedTemplate} onValueChange={setSelectedTemplate}><SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue placeholder={t('select_template_to_load')} /></SelectTrigger><SelectContent>{templates.map(template => (<SelectItem key={template.id} value={template.id}>{template.template_name} {template.is_default && `(${t('default')})`}</SelectItem>))}</SelectContent></Select><div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}{t('load_template')}</Button>{selectedTemplate && <Button onClick={() => handleDeleteTemplate(selectedTemplate)} variant="destructive" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}><Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('delete_template')}</Button>}</div></div>)}
           </div>
         </DialogContent>
       </Dialog>
