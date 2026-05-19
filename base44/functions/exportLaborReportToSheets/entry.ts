@@ -48,7 +48,8 @@ Deno.serve(async (req) => {
                         properties: {
                             sheetId: 0,
                             gridProperties: {
-                                frozenRowCount: 5
+                                frozenRowCount: 5,
+                                frozenColumnCount: 1
                             }
                         }
                     }
