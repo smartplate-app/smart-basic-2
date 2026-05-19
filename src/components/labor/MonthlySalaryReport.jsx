@@ -26,11 +26,23 @@ export default function MonthlySalaryReport({ selectedMonth, user, language }) {
       const daysPassed = endDate.diff(monthStart, 'days') + 1;
       const daysInMonth = moment(selectedMonth).daysInMonth();
 
-      // Fetch all schedules and workers
-      const [allSchedules, allWorkers] = await Promise.all([
+      // Fetch all schedules, workers, and tips
+      const [allSchedules, allWorkers, tipEntries] = await Promise.all([
         base44.entities.WeeklySchedule.filter({ created_by: workingEmail }),
-        base44.entities.Worker.filter({ created_by: workingEmail, is_active: true })
+        base44.entities.Worker.filter({ created_by: workingEmail, is_active: true }),
+        base44.entities.TipEntry.filter({ created_by: workingEmail })
       ]);
+
+      const monthTipsByWorker = {};
+      (tipEntries || []).forEach(entry => {
+        const entryDate = moment(entry.date || entry.period_start);
+        if (entryDate.isSameOrAfter(monthStart) && entryDate.isSameOrBefore(endDate)) {
+          (entry.workers || []).forEach(w => {
+            if (!monthTipsByWorker[w.worker_id]) monthTipsByWorker[w.worker_id] = 0;
+            monthTipsByWorker[w.worker_id] += (w.tip_amount || 0);
+          });
+        }
+      });
 
       // Filter schedules that overlap with selected month
       const monthSchedules = allSchedules.filter(schedule => {
@@ -87,29 +99,45 @@ export default function MonthlySalaryReport({ selectedMonth, user, language }) {
         const paymentType = worker.payment_type;
         const paymentAmount = worker.payment_amount || 0;
         const managementBonus = parseFloat(worker.management_bonus) || 0;
+        const targetMonthlySalary = parseFloat(worker.target_monthly_salary) || 0;
         const employerCostPercent = worker.employer_cost_percentage || 25;
 
         let totalSalary = 0;
         let totalHours = 0;
         const breakdown = [];
 
+        // Note: For target_monthly_salary, we first need to calculate the actual shift pay, so we calculate management bonus LATER.
+        // We will push a placeholder for it and compute it after all shifts.
+        let dynamicBonusPlaceholderIndex = -1;
+        let fixedBonusAmount = 0;
+        let fixedBonusWithEmployerCosts = 0;
+
         // Add proportional management bonus for ALL payment types
-        if (managementBonus > 0) {
-          const dailyBonus = managementBonus / daysInMonth;
-          const baseBonus = dailyBonus * daysPassed;
-          const bonusWithEmployerCosts = baseBonus * (1 + employerCostPercent / 100);
-          
-          totalSalary += bonusWithEmployerCosts;
-          breakdown.push({
-            type: language === 'he' ? 'תוספת ניהול (יחסית)' : 'Management Bonus (Pro-rata)',
-            days: daysPassed,
-            daysInMonth: daysInMonth,
-            baseSalary: baseBonus,
-            salary: bonusWithEmployerCosts,
-            details: language === 'he' 
-              ? `תוספת ניהול: ${daysPassed} ימים מתוך ${daysInMonth} (${((daysPassed/daysInMonth)*100).toFixed(0)}%)`
-              : `Management Bonus: ${daysPassed} days out of ${daysInMonth} (${((daysPassed/daysInMonth)*100).toFixed(0)}%)`
-          });
+        if (managementBonus > 0 || targetMonthlySalary > 0) {
+          if (managementBonus > 0) {
+            const dailyBonus = managementBonus / daysInMonth;
+            fixedBonusAmount = dailyBonus * daysPassed;
+            fixedBonusWithEmployerCosts = fixedBonusAmount * (1 + employerCostPercent / 100);
+            
+            totalSalary += fixedBonusWithEmployerCosts;
+            breakdown.push({
+              type: language === 'he' ? 'תוספת ניהול (יחסית)' : 'Management Bonus (Pro-rata)',
+              days: daysPassed,
+              daysInMonth: daysInMonth,
+              baseSalary: fixedBonusAmount,
+              salary: fixedBonusWithEmployerCosts,
+              details: language === 'he' 
+                ? `תוספת ניהול: ${daysPassed} ימים מתוך ${daysInMonth} (${((daysPassed/daysInMonth)*100).toFixed(0)}%)`
+                : `Management Bonus: ${daysPassed} days out of ${daysInMonth} (${((daysPassed/daysInMonth)*100).toFixed(0)}%)`
+            });
+          }
+
+          if (targetMonthlySalary > 0) {
+            // We need to calculate it at the end. Keep its index.
+            dynamicBonusPlaceholderIndex = breakdown.length;
+            breakdown.push(null);
+          }
+        }
         }
 
         if (paymentType === 'monthly') {
@@ -222,12 +250,50 @@ export default function MonthlySalaryReport({ selectedMonth, user, language }) {
           });
         }
 
+        // Now calculate dynamic bonus if target_monthly_salary > 0
+        if (targetMonthlySalary > 0 && dynamicBonusPlaceholderIndex !== -1) {
+          const ratio = Math.min(1, Math.max(0, daysPassed / daysInMonth));
+          const targetProRata = targetMonthlySalary * ratio;
+          
+          // The base earnings without employer costs:
+          const shiftBaseEarnings = breakdown.reduce((sum, item) => {
+            if (!item) return sum;
+            if (item.type.includes('Management Bonus')) return sum;
+            return sum + (item.baseSalary || 0);
+          }, 0);
+          
+          const workerTips = monthTipsByWorker[workerData.worker_id] || 0;
+          // Simple approximation for Monthly Report (LaborReportsTab has the exact Alema logic)
+          // We assume managers with target_monthly_salary either don't work tipped shifts,
+          // or their base pay + tips is their total earnings.
+          const totalBaseEarnings = shiftBaseEarnings + workerTips;
+
+          const dynamicBonusAmount = Math.max(0, targetProRata - totalBaseEarnings);
+          const dynamicBonusWithEmployerCosts = dynamicBonusAmount * (1 + employerCostPercent / 100);
+
+          totalSalary += dynamicBonusWithEmployerCosts;
+
+          breakdown[dynamicBonusPlaceholderIndex] = {
+            type: language === 'he' ? 'השלמה לשכר יעד (יחסית)' : 'Target Salary Bonus (Pro-rata)',
+            days: daysPassed,
+            daysInMonth: daysInMonth,
+            baseSalary: dynamicBonusAmount,
+            salary: dynamicBonusWithEmployerCosts,
+            details: language === 'he'
+              ? `יעד: ${targetProRata.toFixed(0)}₪ (השלמה משכר בסיס של ${totalBaseEarnings.toFixed(0)}₪)`
+              : `Target: ${targetProRata.toFixed(0)} ILS (Completed from base ${totalBaseEarnings.toFixed(0)} ILS)`
+          };
+        }
+
+        // Clean up any potential nulls if logic bypassed
+        const finalBreakdown = breakdown.filter(Boolean);
+
         return {
           ...workerData,
           worker,
           totalSalary,
           totalHours,
-          breakdown,
+          breakdown: finalBreakdown,
           positions: Array.from(workerData.positions).join(', '),
           paymentType,
           paymentAmount,
