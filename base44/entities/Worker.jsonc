@@ -19,6 +19,10 @@
       "type": "string",
       "description": "Israeli ID number (Teudat Zehut)"
     },
+    "accounting_employee_id": {
+      "type": "string",
+      "description": "Employee ID in accounting system"
+    },
     "job_position_id": {
       "type": "string",
       "description": "ID of the primary job position"

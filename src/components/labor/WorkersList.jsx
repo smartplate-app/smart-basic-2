@@ -37,6 +37,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
     phone: "",
     email: "",
     id_number: "",
+    accounting_employee_id: "",
     job_position_id: "",
     job_position_name: "",
     secondary_job_position_id: "",
@@ -78,6 +79,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       phone: worker.phone || "",
       email: worker.email || "",
       id_number: worker.id_number || "",
+      accounting_employee_id: worker.accounting_employee_id || "",
       job_position_id: worker.job_position_id || "",
       job_position_name: worker.job_position_name || "",
       secondary_job_position_id: worker.secondary_job_position_id || "",
@@ -347,6 +349,17 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                   type="text" // Keep as text to allow leading zeros and specific formats if needed, but ensure numeric input only in mobile keyboards
                   inputMode="numeric"
                   pattern="[0-9]*" // Suggest numeric keyboard on devices that support it
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="accountingEmployeeId">{language === 'he' ? 'מספר עובד בהנח"ש' : 'Accounting ID'}</Label>
+                <Input
+                  id="accountingEmployeeId"
+                  value={formData.accounting_employee_id}
+                  onChange={(e) => setFormData({ ...formData, accounting_employee_id: e.target.value })}
+                  placeholder={language === 'he' ? 'מספר עובד במערכת שכר...' : 'Employee ID for payroll...'}
+                  type="text"
                 />
               </div>
 
@@ -780,6 +793,9 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                     {worker.id_number && (
                       <p className="text-xs text-gray-500 mt-1">{t('id_number')}: {worker.id_number}</p>
                     )}
+                    {worker.accounting_employee_id && (
+                      <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'מספר עובד בהנח"ש:' : 'Accounting ID:'} {worker.accounting_employee_id}</p>
+                    )}
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" onClick={() => handleStartEdit(worker)} title={t('edit')}>
@@ -862,6 +878,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                   <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-3">
                     {worker.phone && <span>{worker.phone}</span>}
                     {worker.email && <span>{worker.email}</span>}
+                    {worker.accounting_employee_id && <span>{language === 'he' ? 'מס\' שכר:' : 'Acc. ID:'} {worker.accounting_employee_id}</span>}
                     <span>
                       {(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')} · +{parseFloat(worker.employer_cost_percentage) || 25}%
                       {worker.management_bonus > 0 ? ` · ${language === 'he' ? 'תוספת ניהול: ' : 'Mgmt Bonus: '}${(parseFloat(worker.management_bonus) || 0).toLocaleString()} ${t('currency')}` : ''}
