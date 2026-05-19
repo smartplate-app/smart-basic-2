@@ -211,10 +211,10 @@ Deno.serve(async (req) => {
                             userEnteredFormat: {
                                 backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Very light gray
                                 textFormat: { foregroundColor: { red: 0.2, green: 0.2, blue: 0.2 }, bold: true, fontSize: 11 },
-                                horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE'
+                                horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE', wrapStrategy: 'WRAP'
                             }
                         },
-                        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
+                        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment,wrapStrategy)'
                     }
                 });
 
