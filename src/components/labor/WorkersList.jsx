@@ -413,7 +413,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                         {position.name}
                         {position.default_payment_amount > 0 && (
                           <span className="text-xs text-gray-500 ml-2">
-                            ({position.default_payment_amount} {t('currency')})
+                            ({position.default_payment_amount} {language === 'he' ? '₪' : 'ILS'})
                           </span>
                         )}
                       </SelectItem>
@@ -675,7 +675,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                           }}
                           className="max-w-[140px]"
                         />
-                        <span className="text-xs text-gray-500">{language === 'he' ? 'ברירת מחדל:' : 'Default:'} {defAmt.toLocaleString()} {t('currency')}</span>
+                        <span className="text-xs text-gray-500">{language === 'he' ? 'ברירת מחדל:' : 'Default:'} {defAmt.toLocaleString()} {language === 'he' ? '₪' : 'ILS'}</span>
                         <Button variant="ghost" size="sm" onClick={() => {
                           setFormData(prev => {
                             const existing = (prev.position_rates || []).filter(r => r.position_id !== pid);
@@ -705,7 +705,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                       {language === 'he' ? 'שכר בסיס' : 'Base Salary'}
                     </p>
                     <p className="text-xl font-bold text-gray-800">
-                      {formData.payment_amount.toLocaleString()} {t('currency')}
+                      {formData.payment_amount.toLocaleString()} {language === 'he' ? '₪' : 'ILS'}
                     </p>
                     <p className="text-xs text-gray-500">{paymentTypeSuffixes[formData.payment_type]}</p>
                   </div>
@@ -714,7 +714,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                       {language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}
                     </p>
                     <p className="text-xl font-bold text-blue-700">
-                      {(formData.management_bonus || 0).toLocaleString()} {t('currency')}
+                      {(formData.management_bonus || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}
                     </p>
                     <p className="text-xs text-gray-500">{language === 'he' ? 'חודשי' : 'Monthly'}</p>
                   </div>
@@ -723,7 +723,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                       {language === 'he' ? 'עלות כוללת למעסיק' : 'Total Employer Cost'}
                     </p>
                     <p className="text-xl font-bold text-green-700">
-                      {formData.total_cost_with_employer.toLocaleString()} {t('currency')}
+                      {formData.total_cost_with_employer.toLocaleString()} {language === 'he' ? '₪' : 'ILS'}
                     </p>
                     <p className="text-xs text-green-600">
                       +{formData.employer_cost_percentage}%
@@ -864,18 +864,18 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                 <div className="bg-slate-50 rounded-lg p-3 space-y-2 mb-4 border border-slate-100">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-500">{language === 'he' ? 'שכר בסיס:' : 'Base:'}</span>
-                    <span className="font-medium text-slate-700">{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')}{paymentTypeSuffixes[worker.payment_type]}</span>
+                    <span className="font-medium text-slate-700">{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}{paymentTypeSuffixes[worker.payment_type]}</span>
                   </div>
                   {(worker.management_bonus > 0) && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-500">{language === 'he' ? 'תוספת ניהול:' : 'Mgmt Bonus:'}</span>
-                      <span className="font-medium text-slate-700">{(parseFloat(worker.management_bonus) || 0).toLocaleString()} {t('currency')}</span>
+                      <span className="font-medium text-slate-700">{(parseFloat(worker.management_bonus) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-200">
                     <span className="text-slate-700 font-semibold">{language === 'he' ? 'עלות כוללת מעסיק:' : 'Total Cost:'}</span>
                     <div className="text-right">
-                      <span className="font-bold text-slate-800">{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25, worker.management_bonus || 0)).toLocaleString()} {t('currency')}</span>
+                      <span className="font-bold text-slate-800">{(parseFloat(worker.total_cost_with_employer) || calculateTotalCost(worker.payment_amount, worker.employer_cost_percentage || 25, worker.management_bonus || 0)).toLocaleString()} {language === 'he' ? '₪' : 'ILS'}</span>
                       <div className="text-[10px] text-emerald-600 leading-none">+{parseFloat(worker.employer_cost_percentage) || 25}%</div>
                     </div>
                   </div>
@@ -910,36 +910,36 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
         <div className="flex flex-col gap-3">
           {workers.map((worker) => (
             <div key={worker.id} className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md hover:border-slate-300 transition-all">
-              <div className="flex items-center gap-4 min-w-0">
-                <Avatar className="h-12 w-12 border bg-slate-50 text-slate-600">
+              <div className="flex items-center gap-4 min-w-0 flex-1">
+                <Avatar className="h-12 w-12 border bg-slate-50 text-slate-600 shrink-0">
                   <AvatarFallback className="font-semibold">{getInitials(worker.full_name)}</AvatarFallback>
                 </Avatar>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-slate-800 text-lg truncate max-w-[200px] md:max-w-[300px]">{worker.full_name}</span>
-                    <div className="hidden md:flex items-center gap-1.5 overflow-hidden">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+                    <span className="font-bold text-slate-800 text-lg truncate shrink-0 max-w-[200px] lg:max-w-xs">{worker.full_name}</span>
+                    <div className="hidden md:flex items-center gap-1.5 flex-wrap">
                       {worker.job_position_name && <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-none font-medium">{worker.job_position_name}</Badge>}
-                      {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal">{worker.secondary_job_position_name}</Badge>}
+                      {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal bg-white">{worker.secondary_job_position_name}</Badge>}
                       {(worker.job_position_names || []).map((posName, idx) => (
-                        <Badge key={idx} variant="outline" className="text-slate-600 font-normal">{posName}</Badge>
+                        <Badge key={idx} variant="outline" className="text-slate-600 font-normal bg-white">{posName}</Badge>
                       ))}
                     </div>
                   </div>
                   <div className="text-sm text-slate-500 flex flex-wrap items-center gap-x-4 gap-y-1">
                     {worker.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 opacity-70" />{worker.phone}</span>}
-                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 opacity-70" />{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {t('currency')} · +{parseFloat(worker.employer_cost_percentage) || 25}%</span>
+                    <span className="flex items-center gap-1"><DollarSign className="w-3.5 h-3.5 opacity-70" />{(parseFloat(worker.payment_amount) || 0).toLocaleString()} {language === 'he' ? '₪' : 'ILS'} · +{parseFloat(worker.employer_cost_percentage) || 25}%</span>
                     {worker.accounting_employee_id && <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5 opacity-70" />{worker.accounting_employee_id}</span>}
                   </div>
                   <div className="flex md:hidden items-center gap-1.5 mt-2 flex-wrap">
                       {worker.job_position_name && <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-none font-medium">{worker.job_position_name}</Badge>}
-                      {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal">{worker.secondary_job_position_name}</Badge>}
+                      {worker.secondary_job_position_name && <Badge variant="outline" className="text-slate-600 font-normal bg-white">{worker.secondary_job_position_name}</Badge>}
                       {(worker.job_position_names || []).map((posName, idx) => (
-                        <Badge key={idx} variant="outline" className="text-slate-600 font-normal">{posName}</Badge>
+                        <Badge key={idx} variant="outline" className="text-slate-600 font-normal bg-white">{posName}</Badge>
                       ))}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-end gap-1 md:gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+              <div className="flex items-center justify-end gap-1 md:gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
                 <Button variant="ghost" size="sm" className="h-8 text-slate-500 hover:text-purple-700 hover:bg-purple-50" onClick={() => setShowRateHistory(worker.id)} title={language === 'he' ? 'תעריפים' : 'Rates'}>
                   <History className="w-4 h-4 md:mr-1.5 rtl:md:mr-0 rtl:md:ml-1.5" />
                   <span className="hidden md:inline">{language === 'he' ? 'תעריפים' : 'Rates'}</span>
