@@ -321,6 +321,18 @@ Deno.serve(async (req) => {
                     }
                 });
 
+                // Auto-resize the first column (Worker Name)
+                requests.push({
+                    autoResizeDimensions: {
+                        dimensions: {
+                            sheetId: sheetId,
+                            dimension: 'COLUMNS',
+                            startIndex: 0,
+                            endIndex: 1
+                        }
+                    }
+                });
+
                 if (requests.length > 0) {
                     await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
                         method: 'POST',
