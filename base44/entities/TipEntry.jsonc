@@ -17,6 +17,16 @@
       "default": "evening",
       "description": "Shift type: morning, evening, or night"
     },
+    "cash_tips": {
+      "type": "number",
+      "default": 0,
+      "description": "Cash tips collected"
+    },
+    "credit_tips": {
+      "type": "number",
+      "default": 0,
+      "description": "Credit tips collected"
+    },
     "total_tips": {
       "type": "number",
       "default": 0,
@@ -37,6 +47,12 @@
           "tip_amount": {
             "type": "number"
           },
+          "cash_tips": {
+            "type": "number"
+          },
+          "credit_tips": {
+            "type": "number"
+          },
           "tip_percentage": {
             "type": "number"
           }
@@ -51,67 +67,5 @@
   "required": [
     "date",
     "total_tips"
-  ],
-  "rls": {
-    "create": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.store_owner_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.store_owner_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.store_owner_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.store_owner_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    }
-  }
+  ]
 }

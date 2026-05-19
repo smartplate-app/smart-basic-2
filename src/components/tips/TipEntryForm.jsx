@@ -16,6 +16,8 @@ export default function TipEntryForm({ selectedDate, onSave }) {
   const [loading, setLoading] = useState(false);
   const [workers, setWorkers] = useState([]);
   const [shiftType, setShiftType] = useState("evening");
+  const [cashTips, setCashTips] = useState(0);
+  const [creditTips, setCreditTips] = useState(0);
   const [totalTips, setTotalTips] = useState(0);
   const [selectedWorkers, setSelectedWorkers] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -41,14 +43,16 @@ export default function TipEntryForm({ selectedDate, onSave }) {
       worker_id: "", 
       worker_name: "", 
       tip_percentage: 0,
-      tip_amount: 0 
+      tip_amount: 0,
+      cash_tips: 0,
+      credit_tips: 0
     }]);
   };
 
   const handleRemoveWorker = (index) => {
     const updated = selectedWorkers.filter((_, i) => i !== index);
     setSelectedWorkers(updated);
-    recalculateTips(totalTips, updated);
+    recalculateTips(cashTips, creditTips, updated);
   };
 
   const handleWorkerChange = (index, workerId) => {
@@ -66,22 +70,35 @@ export default function TipEntryForm({ selectedDate, onSave }) {
     const updated = [...selectedWorkers];
     updated[index].tip_percentage = parseFloat(percentage) || 0;
     setSelectedWorkers(updated);
-    recalculateTips(totalTips, updated);
+    recalculateTips(cashTips, creditTips, updated);
   };
 
-  const recalculateTips = (total, workersList) => {
-    const tips = parseFloat(total) || 0;
+  const recalculateTips = (cash, credit, workersList) => {
+    const cashTotal = parseFloat(cash) || 0;
+    const creditTotal = parseFloat(credit) || 0;
+    const total = cashTotal + creditTotal;
+    
     const updated = workersList.map(w => ({
       ...w,
-      tip_amount: (tips * (w.tip_percentage / 100))
+      cash_tips: cashTotal * (w.tip_percentage / 100),
+      credit_tips: creditTotal * (w.tip_percentage / 100),
+      tip_amount: total * (w.tip_percentage / 100)
     }));
     setSelectedWorkers(updated);
   };
 
-  const handleTotalTipsChange = (value) => {
-    const tips = parseFloat(value) || 0;
-    setTotalTips(tips);
-    recalculateTips(tips, selectedWorkers);
+  const handleCashTipsChange = (value) => {
+    const cash = parseFloat(value) || 0;
+    setCashTips(cash);
+    setTotalTips(cash + creditTips);
+    recalculateTips(cash, creditTips, selectedWorkers);
+  };
+
+  const handleCreditTipsChange = (value) => {
+    const credit = parseFloat(value) || 0;
+    setCreditTips(credit);
+    setTotalTips(cashTips + credit);
+    recalculateTips(cashTips, credit, selectedWorkers);
   };
 
   const handleSave = async () => {
@@ -102,11 +119,15 @@ export default function TipEntryForm({ selectedDate, onSave }) {
       await base44.entities.TipEntry.create({
         date: moment(selectedDate).format('YYYY-MM-DD'),
         shift_type: shiftType,
+        cash_tips: cashTips,
+        credit_tips: creditTips,
         total_tips: totalTips,
         workers: selectedWorkers.filter(w => w.worker_id)
       });
 
       // Reset form
+      setCashTips(0);
+      setCreditTips(0);
       setTotalTips(0);
       setSelectedWorkers([]);
       setShiftType("evening");
@@ -132,7 +153,7 @@ export default function TipEntryForm({ selectedDate, onSave }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'תאריך' : 'Date'}</Label>
             <Input 
@@ -157,17 +178,32 @@ export default function TipEntryForm({ selectedDate, onSave }) {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
-            <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'סה"כ טיפים' : 'Total Tips'}</Label>
+            <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'טיפים במזומן' : 'Cash Tips'}</Label>
             <Input 
               type="number" 
-              value={totalTips}
-              onChange={(e) => handleTotalTipsChange(e.target.value)}
+              value={cashTips}
+              onChange={(e) => handleCashTipsChange(e.target.value)}
               placeholder="0"
-              className={`text-lg font-bold ${isRTL ? 'text-right' : ''}`}
+              className={`text-lg font-bold text-green-600 ${isRTL ? 'text-right' : ''}`}
             />
           </div>
+          
+          <div>
+            <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'טיפים באשראי' : 'Credit Tips'}</Label>
+            <Input 
+              type="number" 
+              value={creditTips}
+              onChange={(e) => handleCreditTipsChange(e.target.value)}
+              placeholder="0"
+              className={`text-lg font-bold text-blue-600 ${isRTL ? 'text-right' : ''}`}
+            />
+          </div>
+        </div>
+        
+        <div className={`text-lg font-bold ${isRTL ? 'text-right' : ''}`}>
+          {language === 'he' ? 'סה"כ טיפים:' : 'Total Tips:'} ₪{totalTips.toFixed(2)}
         </div>
 
         <div className="border-t pt-4">
@@ -199,6 +235,23 @@ export default function TipEntryForm({ selectedDate, onSave }) {
                 onChange={(e) => handlePercentageChange(index, e.target.value)}
                 className={isRTL ? 'text-right' : ''}
               />
+
+              <div className="flex gap-2 w-full">
+                <Input 
+                  type="number"
+                  value={worker.cash_tips ? worker.cash_tips.toFixed(2) : 0}
+                  disabled
+                  title={language === 'he' ? 'מזומן' : 'Cash'}
+                  className={`bg-gray-50 text-emerald-700 w-1/2 ${isRTL ? 'text-right' : ''}`}
+                />
+                <Input 
+                  type="number"
+                  value={worker.credit_tips ? worker.credit_tips.toFixed(2) : 0}
+                  disabled
+                  title={language === 'he' ? 'אשראי' : 'Credit'}
+                  className={`bg-gray-50 text-blue-700 w-1/2 ${isRTL ? 'text-right' : ''}`}
+                />
+              </div>
 
               <Input 
                 type="number"
