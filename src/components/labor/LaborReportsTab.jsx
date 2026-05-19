@@ -21,6 +21,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
   const [workerSearchTerm, setWorkerSearchTerm] = useState("");
   const [selectedWorkers, setSelectedWorkers] = useState(new Set());
   const [showWorkersByDept, setShowWorkersByDept] = useState(false);
+  const [groupByDept, setGroupByDept] = useState(false);
 
   const workersByPosition = useMemo(() => {
     const grouped = {};
@@ -168,7 +169,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       if (!entry.workers) return;
       entry.workers.forEach(w => {
         const worker = workers.find(wk => w.worker_id === wk.id);
-        const posName = worker?.job_position_name || 'לא הוגדר';
+        const posName = groupByDept ? (worker?.section || 'לא הוגדר') : (worker?.job_position_name || 'לא הוגדר');
         if (!posMap.has(posName)) {
             posMap.set(posName, {
               position: posName,
@@ -438,9 +439,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
 
   // Calculate grand totals
   const grandTotals = useMemo(() => {
-    const dataToSum = reportType === "summary" ? summaryData 
+    const dataToSum = (reportType === "summary" || reportType === "summary_worker") ? summaryData 
       : reportType === "summary_position" ? positionSummaryData 
-      : reportType === "daily" ? dailySummaryData 
       : summaryData; // fallback
       
     return dataToSum.reduce((acc, curr) => {
@@ -459,7 +459,13 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
   const handleExportCSV = () => {
     let csvContent = "\uFEFF"; // BOM for UTF-8
 
-    if (reportType === "summary") {
+    if (reportType === "summary_worker") {
+      csvContent += language === 'he' ? "עובד,שעות,טיפים,השלמה,שכר רגיל,תוספת ניהול,שכר ברוטו,עלות למעסיק\n" : "Worker,Hours,Tips,Alema,Regular Pay,Mgmt Bonus,Gross Pay,Employer Cost\n";
+      summaryData.forEach(w => {
+        csvContent += `"${w.worker_name}",${w.total_hours.toFixed(2)},${w.total_tips.toFixed(2)},${w.alema.toFixed(2)},${w.regular_pay.toFixed(2)},${w.management_bonus.toFixed(2)},${w.total_gross.toFixed(2)},${w.total_cost.toFixed(2)}\n`;
+      });
+      csvContent += language === 'he' ? `"סה״כ כללי",${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Grand Total",${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
+    } else if (reportType === "summary") {
       csvContent += language === 'he' ? "עובד,תפקיד,משמרות,שעות,טיפים,השלמה,שכר רגיל,תוספת ניהול,שכר ברוטו,עלות למעסיק\n" : "Worker,Position,Shifts,Hours,Tips,Alema,Regular Pay,Mgmt Bonus,Gross Pay,Employer Cost\n";
       summaryData.forEach(w => {
         w.positions.forEach((pos, pIdx) => {
@@ -480,12 +486,6 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         csvContent += `"${row.position}",${row.workers_count},${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
       });
       csvContent += language === 'he' ? `"סה״כ","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${(grandTotals.cost - grandTotals.management_bonus).toFixed(2)}\n` : `"Total","",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${(grandTotals.cost - grandTotals.management_bonus).toFixed(2)}\n`;
-    } else if (reportType === "daily") {
-      csvContent += language === 'he' ? "תאריך,משמרות,שעות,טיפים,השלמה,שכר בסיס,עלות למעסיק\n" : "Date,Shifts,Hours,Tips,Alema,Regular Pay,Employer Cost\n";
-      dailySummaryData.forEach(row => {
-        csvContent += `"${moment(row.date).format('DD/MM/YYYY')}",${row.total_shifts},${row.total_hours.toFixed(2)},${row.total_tips.toFixed(2)},${row.alema.toFixed(2)},${row.regular_pay.toFixed(2)},${row.total_cost.toFixed(2)}\n`;
-      });
-      csvContent += language === 'he' ? `"סה״כ",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${(grandTotals.cost - grandTotals.management_bonus).toFixed(2)}\n` : `"Total",${grandTotals.shifts},${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${(grandTotals.cost - grandTotals.management_bonus).toFixed(2)}\n`;
     } else {
       csvContent += language === 'he' ? "עובד,תאריך,תפקיד,התחלה,סיום,שעות,תעריף,טיפ מזומן,טיפ אשראי,סה״כ טיפים,השלמה,שכר רגיל,ברוטו,עלות כוללת\n" : "Worker,Date,Position,Start,End,Hours,Rate,Cash Tips,CC Tips,Total Tips,Alema,Regular Pay,Gross Pay,Employer Cost\n";
       detailedDataByWorker.forEach(w => {
@@ -549,13 +549,31 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent dir={isRTL ? 'rtl' : 'ltr'}>
-                  <SelectItem value="summary" className="text-sm">{language === 'he' ? 'סיכום לפי עובד' : 'Summary by Worker'}</SelectItem>
-                  <SelectItem value="summary_position" className="text-sm">{language === 'he' ? 'סיכום לפי תפקיד/מחלקה' : 'Summary by Position'}</SelectItem>
-                  <SelectItem value="daily" className="text-sm">{language === 'he' ? 'סיכום יומי מפורט' : 'Daily Summary'}</SelectItem>
+                  <SelectItem value="summary_worker" className="text-sm">{language === 'he' ? 'סיכום לפי עובד' : 'Summary by Worker'}</SelectItem>
+                  <SelectItem value="summary_position" className="text-sm">{language === 'he' ? 'סיכום לפי מחלקה/תפקיד' : 'Summary by Dept/Role'}</SelectItem>
+                  <SelectItem value="summary" className="text-sm">{language === 'he' ? 'דוח מסכם' : 'Unified Report'}</SelectItem>
                   <SelectItem value="detailed" className="text-sm">{language === 'he' ? 'פירוט משמרות מלא' : 'Detailed Shifts'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {reportType === "summary_position" && (
+              <div className="w-full md:w-1/4">
+                <label className={`block text-xs text-gray-600 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {language === 'he' ? 'קבוץ לפי' : 'Group By'}
+                </label>
+                <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <label className={`flex items-center gap-2 cursor-pointer text-sm font-medium ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <input type="radio" checked={!groupByDept} onChange={() => setGroupByDept(false)} className="w-4 h-4 text-purple-600" />
+                    <span>{language === 'he' ? 'תפקיד' : 'Position'}</span>
+                  </label>
+                  <label className={`flex items-center gap-2 cursor-pointer text-sm font-medium ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <input type="radio" checked={groupByDept} onChange={() => setGroupByDept(true)} className="w-4 h-4 text-purple-600" />
+                    <span>{language === 'he' ? 'מחלקה' : 'Department'}</span>
+                  </label>
+                </div>
+              </div>
+            )}
+            
             <div className="w-full md:w-1/4">
               <label className={`block text-xs text-gray-600 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {language === 'he' ? 'תקופה' : 'Period'}
@@ -599,7 +617,7 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
             </div>
           </div>
           
-          {(reportType === "summary" || reportType === "detailed") && (
+          {(reportType === "summary" || reportType === "detailed" || reportType === "summary_worker") && (
             <div className="bg-gray-50 p-3 rounded-lg border">
               <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <label className={`block text-xs text-gray-600 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -788,6 +806,46 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
               </div>
             ) : (
               <table className="w-full text-sm" dir={isRTL ? 'rtl' : 'ltr'}>
+                {reportType === "summary_worker" && (
+                  <>
+                    <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
+                      <tr>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר רגיל' : 'Regular Pay'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-purple-700`}>{language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-green-700`}>{language === 'he' ? 'ברוטו' : 'Gross'}</th>
+                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summaryData.map((row, idx) => (
+                        <tr key={`worker-sum-${row.worker_id}`} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
+                          <td className="p-3 font-bold text-gray-800">{row.worker_name}</td>
+                          <td className="p-3 font-medium">{row.total_hours.toFixed(1)}</td>
+                          <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                          <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                          <td className="p-3 text-blue-700 font-medium">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
+                          <td className="p-3 text-purple-700 font-medium">{row.management_bonus > 0 ? formatCurrency(row.management_bonus) : '-'}</td>
+                          <td className="p-3 text-green-700 font-medium">{formatCurrency(row.total_gross)}</td>
+                          <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-gray-100 font-bold border-t-2 border-gray-300">
+                        <td className="p-3">{language === 'he' ? 'סה״כ' : 'Total'}</td>
+                        <td className="p-3">{grandTotals.hours.toFixed(1)}</td>
+                        <td className="p-3 text-emerald-600">{formatCurrency(grandTotals.tips)}</td>
+                        <td className="p-3 text-orange-600">{formatCurrency(grandTotals.alema)}</td>
+                        <td className="p-3 text-blue-700">{formatCurrency(grandTotals.regular_pay)}</td>
+                        <td className="p-3 text-purple-700">{formatCurrency(grandTotals.management_bonus)}</td>
+                        <td className="p-3 text-green-700">{formatCurrency(grandTotals.payment)}</td>
+                        <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost)}</td>
+                      </tr>
+                    </tbody>
+                  </>
+                )}
                 {reportType === "summary" && (
                   <>
                     <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
