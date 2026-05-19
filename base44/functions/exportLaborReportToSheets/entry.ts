@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
         const sheetData = await createRes.json();
         const spreadsheetId = sheetData.spreadsheetId;
         const spreadsheetUrl = sheetData.spreadsheetUrl;
+        const sheetId = sheetData.sheets[0].properties.sheetId;
 
         // 2. Update values
         if (rows.length > 0) {
@@ -74,6 +75,137 @@ Deno.serve(async (req) => {
                 // Even if update fails, we created the sheet, so we could still return it, 
                 // but better to throw so the user knows it's incomplete.
                 throw new Error(`Failed to write data to spreadsheet: ${errBody}`);
+            }
+            
+            // 3. Format header and summary rows
+            const numRows = rows.length;
+            const numCols = rows[0] ? rows[0].length : 0;
+            
+            if (numCols > 0) {
+                // Find where the summary section starts
+                let summaryStartIndex = -1;
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i] && rows[i].length > 0 && 
+                        (String(rows[i][0]).includes('סיכום נתונים') || String(rows[i][0]).includes('Summary Data'))) {
+                        summaryStartIndex = i;
+                        break;
+                    }
+                }
+
+                const requests = [];
+
+                // Format Header Row
+                requests.push({
+                    repeatCell: {
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: 0,
+                            endRowIndex: 1,
+                            startColumnIndex: 0,
+                            endColumnIndex: numCols
+                        },
+                        cell: {
+                            userEnteredFormat: {
+                                backgroundColor: { red: 0.2, green: 0.2, blue: 0.2 }, // Dark Gray
+                                textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true }, // White Bold Text
+                                horizontalAlignment: 'CENTER'
+                            }
+                        },
+                        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+                    }
+                });
+
+                // Format Summary Section if found
+                if (summaryStartIndex !== -1) {
+                    // Summary Title
+                    requests.push({
+                        repeatCell: {
+                            range: {
+                                sheetId: sheetId,
+                                startRowIndex: summaryStartIndex,
+                                endRowIndex: summaryStartIndex + 1,
+                                startColumnIndex: 0,
+                                endColumnIndex: numCols
+                            },
+                            cell: {
+                                userEnteredFormat: {
+                                    backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 }, // Light Gray
+                                    textFormat: { bold: true }
+                                }
+                            },
+                            fields: 'userEnteredFormat(backgroundColor,textFormat)'
+                        }
+                    });
+
+                    // Summary Headers
+                    if (summaryStartIndex + 1 < numRows) {
+                        requests.push({
+                            repeatCell: {
+                                range: {
+                                    sheetId: sheetId,
+                                    startRowIndex: summaryStartIndex + 1,
+                                    endRowIndex: summaryStartIndex + 2,
+                                    startColumnIndex: 0,
+                                    endColumnIndex: 6 // based on the 6 columns we generate
+                                },
+                                cell: {
+                                    userEnteredFormat: {
+                                        backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 }, // Light Gray
+                                        textFormat: { bold: true },
+                                        horizontalAlignment: 'CENTER'
+                                    }
+                                },
+                                fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+                            }
+                        });
+                    }
+                    
+                    // Summary Values (bolding specific columns)
+                    if (summaryStartIndex + 2 < numRows) {
+                        requests.push({
+                            repeatCell: {
+                                range: {
+                                    sheetId: sheetId,
+                                    startRowIndex: summaryStartIndex + 2,
+                                    endRowIndex: summaryStartIndex + 3,
+                                    startColumnIndex: 0,
+                                    endColumnIndex: 6
+                                },
+                                cell: {
+                                    userEnteredFormat: {
+                                        textFormat: { bold: true },
+                                        horizontalAlignment: 'CENTER'
+                                    }
+                                },
+                                fields: 'userEnteredFormat(textFormat,horizontalAlignment)'
+                            }
+                        });
+                    }
+                }
+                
+                // Set RTL direction
+                requests.push({
+                    updateSheetProperties: {
+                        properties: {
+                            sheetId: sheetId,
+                            rightToLeft: true
+                        },
+                        fields: 'rightToLeft'
+                    }
+                });
+
+                if (requests.length > 0) {
+                    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            requests: requests
+                        })
+                    });
+                }
             }
         }
 
