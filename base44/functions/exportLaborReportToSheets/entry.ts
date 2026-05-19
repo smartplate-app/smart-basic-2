@@ -20,8 +20,10 @@ Deno.serve(async (req) => {
         
         // Add branding header to the top
         rows.unshift(
-            ['SMART PLATE BASIC'],
-            ['The ultimate food & labor program'],
+            ['SMART'],
+            ['PLATE'],
+            ['BASIC'],
+            ['food cost app'],
             [`Report Name: Labor Report | Dates Period: ${reportTitle}`],
             []
         );
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
                         properties: {
                             sheetId: 0,
                             gridProperties: {
-                                frozenRowCount: 5,
+                                frozenRowCount: 7,
                                 frozenColumnCount: 1
                             }
                         }
@@ -105,86 +107,96 @@ Deno.serve(async (req) => {
 
                 const requests = [];
 
-                // Merge Logo Cells
+                // Merge SMART Cells
                 requests.push({
                     mergeCells: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 0,
-                            endRowIndex: 1,
-                            startColumnIndex: 0,
-                            endColumnIndex: numCols
-                        },
+                        range: { sheetId: sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: numCols },
                         mergeType: 'MERGE_ALL'
                     }
                 });
-
-                // Merge Tagline Cells
+                // Merge PLATE Cells
                 requests.push({
                     mergeCells: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 1,
-                            endRowIndex: 2,
-                            startColumnIndex: 0,
-                            endColumnIndex: numCols
-                        },
+                        range: { sheetId: sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: numCols },
                         mergeType: 'MERGE_ALL'
                     }
                 });
-
+                // Merge BASIC Cells
+                requests.push({
+                    mergeCells: {
+                        range: { sheetId: sheetId, startRowIndex: 2, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: numCols },
+                        mergeType: 'MERGE_ALL'
+                    }
+                });
+                // Merge food cost app Cells
+                requests.push({
+                    mergeCells: {
+                        range: { sheetId: sheetId, startRowIndex: 3, endRowIndex: 4, startColumnIndex: 0, endColumnIndex: numCols },
+                        mergeType: 'MERGE_ALL'
+                    }
+                });
                 // Merge Report Info Cells
                 requests.push({
                     mergeCells: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 2,
-                            endRowIndex: 3,
-                            startColumnIndex: 0,
-                            endColumnIndex: numCols
-                        },
+                        range: { sheetId: sheetId, startRowIndex: 4, endRowIndex: 5, startColumnIndex: 0, endColumnIndex: numCols },
                         mergeType: 'MERGE_ALL'
                     }
                 });
 
-                // Format Logo Row
+                // Format SMART Row
                 requests.push({
                     repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 0,
-                            endRowIndex: 1,
-                            startColumnIndex: 0,
-                            endColumnIndex: numCols
-                        },
+                        range: { sheetId: sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: numCols },
                         cell: {
                             userEnteredFormat: {
-                                backgroundColor: { red: 0.05, green: 0.45, blue: 0.8 }, // Vibrant Blue
-                                textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true, fontSize: 20 },
-                                horizontalAlignment: 'CENTER',
-                                verticalAlignment: 'MIDDLE'
+                                backgroundColor: { red: 0, green: 0, blue: 0 }, // Black
+                                textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, fontSize: 14 }, // White text
+                                horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE'
                             }
                         },
                         fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
                     }
                 });
 
-                // Format Tagline Row
+                // Format PLATE Row
                 requests.push({
                     repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 1,
-                            endRowIndex: 2,
-                            startColumnIndex: 0,
-                            endColumnIndex: numCols
-                        },
+                        range: { sheetId: sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: numCols },
                         cell: {
                             userEnteredFormat: {
-                                backgroundColor: { red: 0.05, green: 0.45, blue: 0.8 },
-                                textFormat: { foregroundColor: { red: 0.9, green: 0.9, blue: 0.9 }, italic: true, fontSize: 12 },
-                                horizontalAlignment: 'CENTER',
-                                verticalAlignment: 'MIDDLE'
+                                backgroundColor: { red: 1, green: 1, blue: 1 }, // White
+                                textFormat: { foregroundColor: { red: 0, green: 0, blue: 0 }, bold: true, fontSize: 16 }, // Black text
+                                horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE'
+                            }
+                        },
+                        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
+                    }
+                });
+
+                // Format BASIC Row
+                requests.push({
+                    repeatCell: {
+                        range: { sheetId: sheetId, startRowIndex: 2, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: numCols },
+                        cell: {
+                            userEnteredFormat: {
+                                backgroundColor: { red: 1, green: 1, blue: 1 }, // White
+                                textFormat: { foregroundColor: { red: 0, green: 0, blue: 0 }, bold: true, fontSize: 20 }, // Black text
+                                horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE'
+                            }
+                        },
+                        fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
+                    }
+                });
+
+                // Format food cost app Row
+                requests.push({
+                    repeatCell: {
+                        range: { sheetId: sheetId, startRowIndex: 3, endRowIndex: 4, startColumnIndex: 0, endColumnIndex: numCols },
+                        cell: {
+                            userEnteredFormat: {
+                                backgroundColor: { red: 1, green: 1, blue: 1 }, // White
+                                textFormat: { foregroundColor: { red: 0.4, green: 0.4, blue: 0.4 }, fontSize: 11 }, // Gray text
+                                horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE'
                             }
                         },
                         fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
@@ -194,19 +206,12 @@ Deno.serve(async (req) => {
                 // Format Report Info Row
                 requests.push({
                     repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 2,
-                            endRowIndex: 3,
-                            startColumnIndex: 0,
-                            endColumnIndex: numCols
-                        },
+                        range: { sheetId: sheetId, startRowIndex: 4, endRowIndex: 5, startColumnIndex: 0, endColumnIndex: numCols },
                         cell: {
                             userEnteredFormat: {
-                                backgroundColor: { red: 0.2, green: 0.6, blue: 0.9 }, // Lighter Blue
-                                textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true, fontSize: 12 },
-                                horizontalAlignment: 'CENTER',
-                                verticalAlignment: 'MIDDLE'
+                                backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Very light gray
+                                textFormat: { foregroundColor: { red: 0.2, green: 0.2, blue: 0.2 }, bold: true, fontSize: 11 },
+                                horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE'
                             }
                         },
                         fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)'
@@ -216,32 +221,16 @@ Deno.serve(async (req) => {
                 // Format Empty Spacer Row
                 requests.push({
                     repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 3,
-                            endRowIndex: 4,
-                            startColumnIndex: 0,
-                            endColumnIndex: numCols
-                        },
-                        cell: {
-                            userEnteredFormat: {
-                                backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }
-                            }
-                        },
+                        range: { sheetId: sheetId, startRowIndex: 5, endRowIndex: 6, startColumnIndex: 0, endColumnIndex: numCols },
+                        cell: { userEnteredFormat: { backgroundColor: { red: 1, green: 1, blue: 1 } } },
                         fields: 'userEnteredFormat(backgroundColor)'
                     }
                 });
 
-                // Format Header Row (now at index 4)
+                // Format Header Row (now at index 6)
                 requests.push({
                     repeatCell: {
-                        range: {
-                            sheetId: sheetId,
-                            startRowIndex: 4,
-                            endRowIndex: 5,
-                            startColumnIndex: 0,
-                            endColumnIndex: numCols
-                        },
+                        range: { sheetId: sheetId, startRowIndex: 6, endRowIndex: 7, startColumnIndex: 0, endColumnIndex: numCols },
                         cell: {
                             userEnteredFormat: {
                                 backgroundColor: { red: 0.2, green: 0.2, blue: 0.2 }, // Dark Gray
