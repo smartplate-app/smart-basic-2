@@ -6,6 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../LanguageProvider";
 import moment from "moment";
 import { FileText, Users, Clock, Calculator, Download } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function LaborReportsTab({ schedules, workers, positions }) {
   const { t, language } = useLanguage();
@@ -19,6 +20,20 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
   const [loadingTips, setLoadingTips] = useState(false);
   const [workerSearchTerm, setWorkerSearchTerm] = useState("");
   const [selectedWorkers, setSelectedWorkers] = useState(new Set());
+  const [showWorkersByDept, setShowWorkersByDept] = useState(false);
+
+  const workersByPosition = useMemo(() => {
+    const grouped = {};
+    (workers || []).forEach(w => {
+      const pos = w.job_position_name || 'לא הוגדר';
+      if (!grouped[pos]) grouped[pos] = [];
+      grouped[pos].push(w);
+    });
+    Object.keys(grouped).forEach(k => {
+      grouped[k].sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+    });
+    return grouped;
+  }, [workers]);
 
   // Fetch tip entries for the selected date range
   useEffect(() => {
@@ -581,19 +596,36 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           
           {(reportType === "summary" || reportType === "detailed") && (
             <div className="bg-gray-50 p-3 rounded-lg border">
-              <label className={`block text-xs text-gray-600 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {language === 'he' ? 'חיפוש וסינון עובדים' : 'Search and filter workers'}
-              </label>
+              <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <label className={`block text-xs text-gray-600 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {language === 'he' ? 'חיפוש וסינון עובדים' : 'Search and filter workers'}
+                </label>
+                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <label htmlFor="showByDept" className="text-xs text-gray-600 cursor-pointer select-none">
+                    {language === 'he' ? 'הצג רשימה לפי מחלקות' : 'Show list by departments'}
+                  </label>
+                  <Checkbox 
+                    id="showByDept"
+                    checked={showWorkersByDept}
+                    onCheckedChange={setShowWorkersByDept}
+                  />
+                </div>
+              </div>
               <div className="flex flex-col gap-2">
                 <Input
                   type="text"
                   placeholder={language === 'he' ? 'הקלד שם עובד...' : 'Type worker name...'}
                   value={workerSearchTerm}
-                  onChange={(e) => setWorkerSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setWorkerSearchTerm(e.target.value);
+                    if (e.target.value.length > 0 && showWorkersByDept) {
+                      setShowWorkersByDept(false);
+                    }
+                  }}
                   className={`h-8 text-sm ${isRTL ? 'text-right' : 'text-left'} bg-white`}
                 />
                 
-                {workerSearchTerm.length > 0 && (
+                {!showWorkersByDept && workerSearchTerm.length > 0 && (
                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto mt-2">
                     {workers
                       .filter(w => w.full_name?.toLowerCase().includes(workerSearchTerm.toLowerCase()))
@@ -618,6 +650,41 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                           {w.full_name}
                         </button>
                       ))}
+                  </div>
+                )}
+
+                {showWorkersByDept && (
+                  <div className="mt-2 bg-white border rounded-lg p-3 max-h-64 overflow-y-auto">
+                    {Object.entries(workersByPosition).map(([dept, deptWorkers]) => (
+                      <div key={dept} className="mb-4 last:mb-0">
+                        <div className={`text-xs font-bold text-gray-500 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {dept}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {deptWorkers.map(w => (
+                            <button
+                              key={w.id}
+                              onClick={() => {
+                                const newSet = new Set(selectedWorkers);
+                                if (newSet.has(w.id)) {
+                                  newSet.delete(w.id);
+                                } else {
+                                  newSet.add(w.id);
+                                }
+                                setSelectedWorkers(newSet);
+                              }}
+                              className={`px-3 py-1 rounded-full text-xs transition-colors border ${
+                                selectedWorkers.has(w.id) 
+                                  ? 'bg-purple-100 border-purple-300 text-purple-800 font-medium hover:bg-purple-200' 
+                                  : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {w.full_name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
