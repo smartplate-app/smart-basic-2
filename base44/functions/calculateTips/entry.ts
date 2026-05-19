@@ -84,7 +84,8 @@ Deno.serve(async (req) => {
     const allocations = Array.isArray(policy?.percentage_allocations) ? policy.percentage_allocations : [];
 
     // Normalize workers input and enrich with data
-    const normalizedWorkers = workersInput.map(w => {
+    const normalizedWorkersMap = new Map();
+    workersInput.forEach(w => {
       const rec = workersById.get(w.worker_id) || {};
       const explicitPosId = w.job_position_id || rec.job_position_id || null;
       const pos = explicitPosId ? positionsById.get(explicitPosId) : null;
@@ -92,29 +93,38 @@ Deno.serve(async (req) => {
       const positionRate = Number(pos?.tip_hourly_rate || 0);
       const hourlyRate = overrideRate > 0 ? overrideRate : positionRate;
       const tipsMethod = pos?.tips_method || 'general_pool';
-      return {
-        worker_id: w.worker_id,
-        worker_name: rec.full_name || '',
-        job_position_id: explicitPosId,
-        job_position_name: rec.job_position_name || pos?.name || '',
-        tips_method: tipsMethod,
-        hours: Number(w.hours || 0),
-        hourly_rate: Number(hourlyRate || 0)
-      };
+      
+      const key = `${w.worker_id}_${explicitPosId}`;
+      if (normalizedWorkersMap.has(key)) {
+        normalizedWorkersMap.get(key).hours += Number(w.hours || 0);
+      } else {
+        normalizedWorkersMap.set(key, {
+          worker_id: w.worker_id,
+          worker_name: rec.full_name || '',
+          job_position_id: explicitPosId,
+          job_position_name: rec.job_position_name || pos?.name || '',
+          tips_method: tipsMethod,
+          hours: Number(w.hours || 0),
+          hourly_rate: Number(hourlyRate || 0)
+        });
+      }
     });
+    const normalizedWorkers = Array.from(normalizedWorkersMap.values());
 
     // Pools
     let cashPool = cashTips;
     let creditPool = creditTips;
 
     const perWorker = new Map();
-    const ensure = (wid) => {
-      if (!perWorker.has(wid)) {
-        perWorker.set(wid, {
+    const ensure = (wid, posId) => {
+      const key = `${wid}_${posId}`;
+      if (!perWorker.has(key)) {
+        const sourceWorker = normalizedWorkers.find(x => x.worker_id === wid && x.job_position_id === posId);
+        perWorker.set(key, {
           worker_id: wid,
-          worker_name: normalizedWorkers.find(x => x.worker_id === wid)?.worker_name || '',
-          job_position_id: normalizedWorkers.find(x => x.worker_id === wid)?.job_position_id || null,
-          job_position_name: normalizedWorkers.find(x => x.worker_id === wid)?.job_position_name || '',
+          worker_name: sourceWorker?.worker_name || '',
+          job_position_id: sourceWorker?.job_position_id || null,
+          job_position_name: sourceWorker?.job_position_name || '',
           breakdown: {
             hourly_fixed: 0,
             hourly_fixed_cash: 0,
@@ -128,7 +138,7 @@ Deno.serve(async (req) => {
           }
         });
       }
-      return perWorker.get(wid);
+      return perWorker.get(key);
     };
 
     // 1) Pay fixed tip-per-hour first
@@ -142,7 +152,7 @@ Deno.serve(async (req) => {
       creditPool -= fromCredit;
       const paid = fromCash + fromCredit; // if pools insufficient, we cap
 
-      const row = ensure(w.worker_id);
+      const row = ensure(w.worker_id, w.job_position_id);
       row.breakdown.hourly_fixed += paid;
       row.breakdown.hourly_fixed_cash += fromCash;
       row.breakdown.hourly_fixed_credit += fromCredit;
@@ -194,7 +204,7 @@ Deno.serve(async (req) => {
         const share = used * (w.hours / totalHours);
         const cashShare = used > 0 ? share * (useCash / used) : 0;
         const creditShare = share - cashShare;
-        const row = ensure(w.worker_id);
+        const row = ensure(w.worker_id, w.job_position_id);
         row.breakdown.percent_share += share;
         row.breakdown.percent_cash += cashShare;
         row.breakdown.percent_credit += creditShare;
@@ -212,7 +222,7 @@ Deno.serve(async (req) => {
         const share = residualTotal * (w.hours / residualHours);
         const cashShare = residualTotal > 0 ? share * (cashPool / residualTotal) : 0;
         const creditShare = share - cashShare;
-        const row = ensure(w.worker_id);
+        const row = ensure(w.worker_id, w.job_position_id);
         row.breakdown.residual_share += share;
         row.breakdown.residual_cash += cashShare;
         row.breakdown.residual_credit += creditShare;
@@ -224,7 +234,7 @@ Deno.serve(async (req) => {
 
     // Finalize output
     const results = normalizedWorkers.map(w => {
-      const r = ensure(w.worker_id);
+      const r = ensure(w.worker_id, w.job_position_id);
       const total = r.breakdown.hourly_fixed + r.breakdown.percent_share + r.breakdown.residual_share;
       return {
         ...r,

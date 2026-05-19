@@ -251,7 +251,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
                 </thead>
                 <tbody>
                   {result.results?.map((r) => (
-                    <tr key={r.worker_id} className="border-b hover:bg-gray-50 transition-colors">
+                    <tr key={`${r.worker_id}_${r.job_position_id}`} className="border-b hover:bg-gray-50 transition-colors">
                       <td className="p-2 font-medium">{r.worker_name}</td>
                       <td className="p-2 text-gray-600">{r.job_position_name || activePositions.find(p => p.id === r.job_position_id)?.name || ''}</td>
                       <td className="p-2 text-gray-600">{r.hours?.toFixed(2) || 0}</td>
