@@ -88,6 +88,16 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="nickname">{language === 'he' ? 'כינוי (בשפה שלך, יופיע לך בלבד)' : 'Nickname (in your language)'}</Label>
+            <Input
+              id="nickname"
+              value={formData.nickname || ''}
+              onChange={(e) => handleChange('nickname', e.target.value)}
+              placeholder={language === 'he' ? 'למשל: עגבניה (כשהשם הוא Tomato)' : 'e.g. Tomato'}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="catalog_number">{t('catalog_number')}</Label>
             <Input
               id="catalog_number"
