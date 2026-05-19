@@ -480,6 +480,10 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           positionsMap.set(role, {
             position: role,
             hours: 0,
+            regular_hours: 0,
+            ot_125: 0,
+            ot_150: 0,
+            ot_200: 0,
             shifts: 0,
             tips: 0,
             alema: 0,
@@ -490,6 +494,10 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         }
         const p = positionsMap.get(role);
         p.hours += r.hours;
+        p.regular_hours += (r.regular_hours || 0);
+        p.ot_125 += (r.ot_125 || 0);
+        p.ot_150 += (r.ot_150 || 0);
+        p.ot_200 += (r.ot_200 || 0);
         if (r.hours > 0) { p.shifts += 1; total_shifts += 1; }
         p.tips += r.total_tips;
         p.alema += r.alema;
@@ -536,6 +544,10 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       
     return dataToSum.reduce((acc, curr) => {
       acc.hours += curr.total_hours || 0;
+      acc.regular_hours += curr.regular_hours || 0;
+      acc.ot_125 += curr.ot_125 || 0;
+      acc.ot_150 += curr.ot_150 || 0;
+      acc.ot_200 += curr.ot_200 || 0;
       acc.shifts += curr.total_shifts || 0;
       acc.payment += curr.total_gross || (curr.payment_tipped || 0) + (curr.regular_pay || 0) || 0;
       acc.cost += curr.total_cost || 0;
@@ -543,8 +555,11 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       acc.alema += curr.alema || 0;
       acc.regular_pay += curr.regular_pay || 0;
       acc.management_bonus += curr.management_bonus || 0;
+      acc.travel_expenses += curr.travel_expenses || 0;
+      acc.bonus_manual += curr.bonus_manual || 0;
+      acc.advance_manual += curr.advance_manual || 0;
       return acc;
-    }, { hours: 0, shifts: 0, payment: 0, cost: 0, tips: 0, alema: 0, regular_pay: 0, management_bonus: 0 });
+    }, { hours: 0, regular_hours: 0, ot_125: 0, ot_150: 0, ot_200: 0, shifts: 0, payment: 0, cost: 0, tips: 0, alema: 0, regular_pay: 0, management_bonus: 0, travel_expenses: 0, bonus_manual: 0, advance_manual: 0 });
   }, [summaryData, positionSummaryData, dailySummaryData, reportType]);
 
   const handleExportCSV = () => {
@@ -910,138 +925,177 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 {reportType === "summary_worker" && (
                   <>
                     <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
-                      <tr className="text-[11px] whitespace-nowrap">
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'ימי עבודה' : 'Days'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תעריף' : 'Rate'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות רגילות' : 'Reg. Hrs'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>125%</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>150%</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>200%</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סה״כ שעות' : 'Total Hrs'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סה״כ עלות' : 'Total Cost'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'בונוס (ידני)' : 'Bonus'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מקדמה (ידנית)' : 'Advance'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מזומן' : 'Cash'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'אשראי' : 'Credit'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-emerald-700`}>{language === 'he' ? 'סה״כ טיפים' : 'Total Tips'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות לטיפ' : 'Cost on Tip'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'נסיעות' : 'Travel'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-amber-800`}>{language === 'he' ? 'עלות כוללת' : 'Total Overall'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלויות מעסיק' : 'Emp. Taxes'}</th>
-                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות מינוס טיפ' : 'Cost - Tip'}</th>
+                      <tr className="text-xs whitespace-nowrap">
+                        <th className={`p-2.5 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
+                        <th className={`p-2.5 font-semibold text-center`}>{language === 'he' ? 'ימי עבודה' : 'Days'}</th>
+                        <th className={`p-2.5 font-semibold text-center`}>{language === 'he' ? 'שעות רגילות' : 'Reg. Hrs'}</th>
+                        <th className={`p-2.5 font-semibold text-center`}>125%</th>
+                        <th className={`p-2.5 font-semibold text-center`}>150%</th>
+                        <th className={`p-2.5 font-semibold text-center`}>200%</th>
+                        <th className={`p-2.5 font-semibold text-center bg-gray-200/50`}>{language === 'he' ? 'סה״כ שעות' : 'Total Hrs'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-emerald-700`}>{language === 'he' ? 'סה״כ טיפים' : 'Total Tips'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-blue-700`}>{language === 'he' ? 'שכר רגיל' : 'Base Pay'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-purple-700`}>{language === 'he' ? 'ת. ניהול' : 'Mgmt Bonus'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-indigo-700`}>{language === 'he' ? 'נסיעות' : 'Travel'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-teal-700`}>{language === 'he' ? 'בונוס ידני' : 'Manual Bonus'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-rose-700`}>{language === 'he' ? 'מקדמה' : 'Advance'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-green-700 bg-green-50/50`}>{language === 'he' ? 'שכר ברוטו' : 'Total Gross'}</th>
+                        <th className={`p-2.5 font-semibold text-center bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</th>
                       </tr>
                     </thead>
-                    <tbody className="text-[11px] whitespace-nowrap">
+                    <tbody className="text-xs whitespace-nowrap">
                       {summaryData.map((row, idx) => (
-                        <tr key={`worker-sum-${row.worker_id}`} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                          <td className="p-2 font-bold text-gray-800">{row.worker_name}</td>
-                          <td className="p-2">{row.work_days}</td>
-                          <td className="p-2">{row.rate}</td>
-                          <td className="p-2">{row.regular_hours.toFixed(1)}</td>
-                          <td className="p-2">{row.ot_125.toFixed(1)}</td>
-                          <td className="p-2">{row.ot_150.toFixed(1)}</td>
-                          <td className="p-2">{row.ot_200.toFixed(1)}</td>
-                          <td className="p-2 font-medium">{row.total_hours.toFixed(1)}</td>
-                          <td className="p-2">{row.management_bonus > 0 ? formatCurrency(row.management_bonus) : '-'}</td>
-                          <td className="p-2">{formatCurrency(row.total_cost)}</td>
-                          <td className="p-2 text-blue-600">{row.bonus_manual > 0 ? formatCurrency(row.bonus_manual) : '-'}</td>
-                          <td className="p-2 text-red-600">{row.advance_manual > 0 ? formatCurrency(row.advance_manual) : '-'}</td>
-                          <td className="p-2">{row.cash_tips > 0 ? formatCurrency(row.cash_tips) : '-'}</td>
-                          <td className="p-2">{row.credit_tips > 0 ? formatCurrency(row.credit_tips) : '-'}</td>
-                          <td className="p-2 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
-                          <td className="p-2 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
-                          <td className="p-2">{row.employer_cost_on_tips > 0 ? formatCurrency(row.employer_cost_on_tips) : '-'}</td>
-                          <td className="p-2">{row.travel_expenses > 0 ? formatCurrency(row.travel_expenses) : '-'}</td>
-                          <td className="p-2 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
-                          <td className="p-2">{formatCurrency(row.employer_taxes)}</td>
-                          <td className="p-2 font-medium">{formatCurrency(row.labor_minus_tips)}</td>
+                        <tr key={`worker-sum-${row.worker_id}`} className={`border-b border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'} hover:bg-gray-100 transition-colors`}>
+                          <td className="p-2.5 font-bold text-gray-800">{row.worker_name}</td>
+                          <td className="p-2.5 text-center font-medium">{row.work_days}</td>
+                          <td className="p-2.5 text-center">{row.regular_hours > 0 ? row.regular_hours.toFixed(2) : '-'}</td>
+                          <td className="p-2.5 text-center">{row.ot_125 > 0 ? row.ot_125.toFixed(2) : '-'}</td>
+                          <td className="p-2.5 text-center">{row.ot_150 > 0 ? row.ot_150.toFixed(2) : '-'}</td>
+                          <td className="p-2.5 text-center">{row.ot_200 > 0 ? row.ot_200.toFixed(2) : '-'}</td>
+                          <td className="p-2.5 text-center font-bold bg-gray-50">{row.total_hours > 0 ? row.total_hours.toFixed(2) : '-'}</td>
+                          
+                          <td className="p-2.5 text-center text-emerald-600 font-semibold bg-emerald-50/30">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                          <td className="p-2.5 text-center text-orange-600 font-semibold bg-orange-50/30">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                          <td className="p-2.5 text-center text-blue-700 font-semibold bg-blue-50/30">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
+                          
+                          <td className="p-2.5 text-center text-purple-700 bg-purple-50/30">{row.management_bonus > 0 ? formatCurrency(row.management_bonus) : '-'}</td>
+                          <td className="p-2.5 text-center text-indigo-700 bg-indigo-50/30">{row.travel_expenses > 0 ? formatCurrency(row.travel_expenses) : '-'}</td>
+                          <td className="p-2.5 text-center text-teal-700 bg-teal-50/30">{row.bonus_manual > 0 ? formatCurrency(row.bonus_manual) : '-'}</td>
+                          <td className="p-2.5 text-center text-rose-700 bg-rose-50/30">{row.advance_manual > 0 ? formatCurrency(row.advance_manual) : '-'}</td>
+                          
+                          <td className="p-2.5 text-center text-green-700 font-bold bg-green-50/50">{row.total_gross > 0 ? formatCurrency(row.total_gross) : '-'}</td>
+                          <td className="p-2.5 text-center text-amber-800 font-bold bg-amber-100/40">{row.total_cost > 0 ? formatCurrency(row.total_cost) : '-'}</td>
                         </tr>
                       ))}
+                      <tr className="bg-gray-100 font-bold border-t-2 border-gray-300 text-xs">
+                        <td className="p-2.5 text-gray-900">{language === 'he' ? 'סה״כ' : 'Total'}</td>
+                        <td className="p-2.5 text-center">-</td>
+                        <td className="p-2.5 text-center text-gray-900">{grandTotals.regular_hours > 0 ? grandTotals.regular_hours.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-gray-900">{grandTotals.ot_125 > 0 ? grandTotals.ot_125.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-gray-900">{grandTotals.ot_150 > 0 ? grandTotals.ot_150.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-gray-900">{grandTotals.ot_200 > 0 ? grandTotals.ot_200.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-gray-900 bg-gray-200/50">{grandTotals.hours > 0 ? grandTotals.hours.toFixed(2) : '-'}</td>
+                        
+                        <td className="p-2.5 text-center text-emerald-700 bg-emerald-100/30">{grandTotals.tips > 0 ? formatCurrency(grandTotals.tips) : '-'}</td>
+                        <td className="p-2.5 text-center text-orange-700 bg-orange-100/30">{grandTotals.alema > 0 ? formatCurrency(grandTotals.alema) : '-'}</td>
+                        <td className="p-2.5 text-center text-blue-700 bg-blue-100/30">{grandTotals.regular_pay > 0 ? formatCurrency(grandTotals.regular_pay) : '-'}</td>
+                        
+                        <td className="p-2.5 text-center text-purple-700 bg-purple-100/30">{grandTotals.management_bonus > 0 ? formatCurrency(grandTotals.management_bonus) : '-'}</td>
+                        <td className="p-2.5 text-center text-indigo-700 bg-indigo-100/30">{grandTotals.travel_expenses > 0 ? formatCurrency(grandTotals.travel_expenses) : '-'}</td>
+                        <td className="p-2.5 text-center text-teal-700 bg-teal-100/30">{grandTotals.bonus_manual > 0 ? formatCurrency(grandTotals.bonus_manual) : '-'}</td>
+                        <td className="p-2.5 text-center text-rose-700 bg-rose-100/30">{grandTotals.advance_manual > 0 ? formatCurrency(grandTotals.advance_manual) : '-'}</td>
+                        
+                        <td className="p-2.5 text-center text-green-800 bg-green-200/40">{grandTotals.payment > 0 ? formatCurrency(grandTotals.payment) : '-'}</td>
+                        <td className="p-2.5 text-center text-amber-900 bg-amber-200/50">{grandTotals.cost > 0 ? formatCurrency(grandTotals.cost) : '-'}</td>
+                      </tr>
                     </tbody>
                   </>
                 )}
                 {reportType === "summary" && (
                   <>
                     <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
-                      <tr>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Position'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'משמרות' : 'Shifts'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר רגיל' : 'Regular Pay'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-purple-700`}>{language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-green-700`}>{language === 'he' ? 'ברוטו כולל' : 'Total Gross'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות למעסיק' : 'Total Cost'}</th>
+                      <tr className="text-[11px] whitespace-nowrap">
+                        <th className={`p-2.5 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
+                        <th className={`p-2.5 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Position'}</th>
+                        <th className={`p-2.5 font-semibold text-center`}>{language === 'he' ? 'שעות רגילות' : 'Reg Hrs'}</th>
+                        <th className={`p-2.5 font-semibold text-center`}>125%</th>
+                        <th className={`p-2.5 font-semibold text-center`}>150%</th>
+                        <th className={`p-2.5 font-semibold text-center`}>200%</th>
+                        <th className={`p-2.5 font-semibold text-center bg-gray-200/50`}>{language === 'he' ? 'סה״כ שעות' : 'Total Hrs'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-emerald-700`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-blue-700`}>{language === 'he' ? 'שכר רגיל' : 'Base Pay'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-purple-700`}>{language === 'he' ? 'ת. ניהול' : 'Mgmt Bonus'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-indigo-700`}>{language === 'he' ? 'נסיעות' : 'Travel'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-teal-700`}>{language === 'he' ? 'בונוס ידני' : 'Bonus'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-rose-700`}>{language === 'he' ? 'מקדמה' : 'Advance'}</th>
+                        <th className={`p-2.5 font-semibold text-center text-green-700 bg-green-50/50`}>{language === 'he' ? 'ברוטו' : 'Gross'}</th>
+                        <th className={`p-2.5 font-semibold text-center bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="text-xs whitespace-nowrap">
                       {summaryData.map((workerBlock, idx) => (
                         <React.Fragment key={workerBlock.worker_name}>
                           {workerBlock.positions.map((pos, pIdx) => (
-                            <tr key={`${workerBlock.worker_name}-${pos.position}`} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'} hover:bg-gray-100 text-gray-500`}>
-                              <td className="p-3">
-                                {pIdx === 0 && <div className="text-gray-600">{workerBlock.worker_name}</div>}
+                            <tr key={`${workerBlock.worker_name}-${pos.position}`} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'} hover:bg-gray-100 text-gray-600`}>
+                              <td className="p-2.5">
+                                {pIdx === 0 && <div className="font-semibold text-gray-800">{workerBlock.worker_name}</div>}
                               </td>
-                              <td className="p-3 text-gray-400 text-sm">{pos.position}</td>
-                              <td className="p-3 opacity-70">{pos.shifts}</td>
-                              <td className="p-3 opacity-70">{pos.hours.toFixed(1)}</td>
-                              <td className="p-3 text-emerald-600/60">{pos.tips > 0 ? formatCurrency(pos.tips) : '-'}</td>
-                              <td className="p-3 text-orange-600/60">{pos.alema > 0 ? formatCurrency(pos.alema) : '-'}</td>
-                              <td className="p-3 text-blue-700/60">{pos.regular_pay > 0 ? formatCurrency(pos.regular_pay) : '-'}</td>
-                              <td className="p-3 text-purple-700/60">-</td>
-                              <td className="p-3 text-green-700/60">{pos.gross_pay > 0 ? formatCurrency(pos.gross_pay) : '-'}</td>
-                              <td className="p-3 text-amber-700/60">{pos.employer_cost > 0 ? formatCurrency(pos.employer_cost) : '-'}</td>
+                              <td className="p-2.5 font-medium">{pos.position}</td>
+                              <td className="p-2.5 text-center">{pos.regular_hours > 0 ? pos.regular_hours.toFixed(2) : '-'}</td>
+                              <td className="p-2.5 text-center">{pos.ot_125 > 0 ? pos.ot_125.toFixed(2) : '-'}</td>
+                              <td className="p-2.5 text-center">{pos.ot_150 > 0 ? pos.ot_150.toFixed(2) : '-'}</td>
+                              <td className="p-2.5 text-center">{pos.ot_200 > 0 ? pos.ot_200.toFixed(2) : '-'}</td>
+                              <td className="p-2.5 text-center font-bold bg-gray-50/50">{pos.hours > 0 ? pos.hours.toFixed(2) : '-'}</td>
+                              <td className="p-2.5 text-center text-emerald-600/70">{pos.tips > 0 ? formatCurrency(pos.tips) : '-'}</td>
+                              <td className="p-2.5 text-center text-orange-600/70">{pos.alema > 0 ? formatCurrency(pos.alema) : '-'}</td>
+                              <td className="p-2.5 text-center text-blue-700/70">{pos.regular_pay > 0 ? formatCurrency(pos.regular_pay) : '-'}</td>
+                              <td className="p-2.5 text-center text-purple-700/70">-</td>
+                              <td className="p-2.5 text-center text-indigo-700/70">-</td>
+                              <td className="p-2.5 text-center text-teal-700/70">-</td>
+                              <td className="p-2.5 text-center text-rose-700/70">-</td>
+                              <td className="p-2.5 text-center text-green-700/70">{pos.gross_pay > 0 ? formatCurrency(pos.gross_pay) : '-'}</td>
+                              <td className="p-2.5 text-center text-amber-700/70">{pos.employer_cost > 0 ? formatCurrency(pos.employer_cost) : '-'}</td>
                             </tr>
                           ))}
-                          <tr className="bg-purple-100 font-bold border-b-2 border-purple-300 text-base shadow-sm">
-                            <td className="p-3 text-purple-950">{language === 'he' ? 'סה״כ ' : 'Total '}{workerBlock.worker_name}</td>
-                            <td className="p-3"></td>
-                            <td className="p-3 text-purple-950">{workerBlock.total_shifts}</td>
-                            <td className="p-3 text-purple-950">{workerBlock.total_hours.toFixed(1)}</td>
-                            <td className="p-3 text-emerald-700">{formatCurrency(workerBlock.total_tips)}</td>
-                            <td className="p-3 text-orange-700">{formatCurrency(workerBlock.alema)}</td>
-                            <td className="p-3 text-blue-800">{formatCurrency(workerBlock.regular_pay)}</td>
-                            <td className="p-3 text-purple-800">{workerBlock.management_bonus > 0 ? formatCurrency(workerBlock.management_bonus) : '-'}</td>
-                            <td className="p-3 text-green-800">{formatCurrency(workerBlock.total_gross)}</td>
-                            <td className="p-3 text-amber-900 bg-amber-100/50">{formatCurrency(workerBlock.total_cost)}</td>
+                          <tr className="bg-purple-50/80 font-bold border-t-2 border-b-4 border-purple-200 text-xs shadow-sm">
+                            <td className="p-2.5 text-purple-950">{language === 'he' ? 'סה״כ עובד' : 'Subtotal'}</td>
+                            <td className="p-2.5"></td>
+                            <td className="p-2.5 text-center text-purple-950">{workerBlock.regular_hours > 0 ? workerBlock.regular_hours.toFixed(2) : '-'}</td>
+                            <td className="p-2.5 text-center text-purple-950">{workerBlock.ot_125 > 0 ? workerBlock.ot_125.toFixed(2) : '-'}</td>
+                            <td className="p-2.5 text-center text-purple-950">{workerBlock.ot_150 > 0 ? workerBlock.ot_150.toFixed(2) : '-'}</td>
+                            <td className="p-2.5 text-center text-purple-950">{workerBlock.ot_200 > 0 ? workerBlock.ot_200.toFixed(2) : '-'}</td>
+                            <td className="p-2.5 text-center text-purple-950 bg-purple-100/50">{workerBlock.total_hours > 0 ? workerBlock.total_hours.toFixed(2) : '-'}</td>
+                            <td className="p-2.5 text-center text-emerald-700 bg-emerald-100/30">{workerBlock.total_tips > 0 ? formatCurrency(workerBlock.total_tips) : '-'}</td>
+                            <td className="p-2.5 text-center text-orange-700 bg-orange-100/30">{workerBlock.alema > 0 ? formatCurrency(workerBlock.alema) : '-'}</td>
+                            <td className="p-2.5 text-center text-blue-800 bg-blue-100/30">{workerBlock.regular_pay > 0 ? formatCurrency(workerBlock.regular_pay) : '-'}</td>
+                            <td className="p-2.5 text-center text-purple-800 bg-purple-100/30">{workerBlock.management_bonus > 0 ? formatCurrency(workerBlock.management_bonus) : '-'}</td>
+                            <td className="p-2.5 text-center text-indigo-800 bg-indigo-100/30">{workerBlock.travel_expenses > 0 ? formatCurrency(workerBlock.travel_expenses) : '-'}</td>
+                            <td className="p-2.5 text-center text-teal-800 bg-teal-100/30">{workerBlock.bonus_manual > 0 ? formatCurrency(workerBlock.bonus_manual) : '-'}</td>
+                            <td className="p-2.5 text-center text-rose-800 bg-rose-100/30">{workerBlock.advance_manual > 0 ? formatCurrency(workerBlock.advance_manual) : '-'}</td>
+                            <td className="p-2.5 text-center text-green-800 bg-green-100/40">{workerBlock.total_gross > 0 ? formatCurrency(workerBlock.total_gross) : '-'}</td>
+                            <td className="p-2.5 text-center text-amber-900 bg-amber-200/50">{workerBlock.total_cost > 0 ? formatCurrency(workerBlock.total_cost) : '-'}</td>
                           </tr>
                         </React.Fragment>
                       ))}
-                      <tr className="bg-gray-100 font-bold border-t-4 border-gray-400">
-                        <td className="p-3">{language === 'he' ? 'סה״כ כללי' : 'Grand Total'}</td>
-                        <td className="p-3"></td>
-                        <td className="p-3">{grandTotals.shifts}</td>
-                        <td className="p-3">{grandTotals.hours.toFixed(1)}</td>
-                        <td className="p-3 text-emerald-600">{formatCurrency(grandTotals.tips)}</td>
-                        <td className="p-3 text-orange-600">{formatCurrency(grandTotals.alema)}</td>
-                        <td className="p-3 text-blue-700">{formatCurrency(grandTotals.regular_pay)}</td>
-                        <td className="p-3 text-purple-700">{formatCurrency(grandTotals.management_bonus)}</td>
-                        <td className="p-3 text-green-700">{formatCurrency(grandTotals.payment)}</td>
-                        <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost)}</td>
+                      <tr className="bg-gray-100 font-bold border-t-[6px] border-gray-300">
+                        <td className="p-2.5 text-gray-900">{language === 'he' ? 'סה״כ כללי' : 'Grand Total'}</td>
+                        <td className="p-2.5"></td>
+                        <td className="p-2.5 text-center text-gray-900">{grandTotals.regular_hours > 0 ? grandTotals.regular_hours.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-gray-900">{grandTotals.ot_125 > 0 ? grandTotals.ot_125.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-gray-900">{grandTotals.ot_150 > 0 ? grandTotals.ot_150.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-gray-900">{grandTotals.ot_200 > 0 ? grandTotals.ot_200.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-gray-900 bg-gray-200/50">{grandTotals.hours > 0 ? grandTotals.hours.toFixed(2) : '-'}</td>
+                        <td className="p-2.5 text-center text-emerald-700 bg-emerald-100/30">{grandTotals.tips > 0 ? formatCurrency(grandTotals.tips) : '-'}</td>
+                        <td className="p-2.5 text-center text-orange-700 bg-orange-100/30">{grandTotals.alema > 0 ? formatCurrency(grandTotals.alema) : '-'}</td>
+                        <td className="p-2.5 text-center text-blue-800 bg-blue-100/30">{grandTotals.regular_pay > 0 ? formatCurrency(grandTotals.regular_pay) : '-'}</td>
+                        <td className="p-2.5 text-center text-purple-800 bg-purple-100/30">{grandTotals.management_bonus > 0 ? formatCurrency(grandTotals.management_bonus) : '-'}</td>
+                        <td className="p-2.5 text-center text-indigo-800 bg-indigo-100/30">{grandTotals.travel_expenses > 0 ? formatCurrency(grandTotals.travel_expenses) : '-'}</td>
+                        <td className="p-2.5 text-center text-teal-800 bg-teal-100/30">{grandTotals.bonus_manual > 0 ? formatCurrency(grandTotals.bonus_manual) : '-'}</td>
+                        <td className="p-2.5 text-center text-rose-800 bg-rose-100/30">{grandTotals.advance_manual > 0 ? formatCurrency(grandTotals.advance_manual) : '-'}</td>
+                        <td className="p-2.5 text-center text-green-800 bg-green-200/40">{grandTotals.payment > 0 ? formatCurrency(grandTotals.payment) : '-'}</td>
+                        <td className="p-2.5 text-center text-amber-900 bg-amber-200/50">{grandTotals.cost > 0 ? formatCurrency(grandTotals.cost) : '-'}</td>
                       </tr>
                       
                       <tr className="bg-gray-200 font-bold border-t-4 border-gray-400">
-                        <td colSpan="10" className={`p-4 text-lg text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        <td colSpan="16" className={`p-4 text-base text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
                           {language === 'he' ? 'סיכום לפי מחלקות / תפקידים' : 'Summary by Departments / Positions'}
                         </td>
                       </tr>
                       {positionSummaryData.map((row, idx) => (
-                        <tr key={`pos-sum-${row.position}`} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                          <td className="p-3 font-medium text-gray-500">{language === 'he' ? 'סה״כ למחלקה:' : 'Dept Total:'}</td>
-                          <td className="p-3 font-bold text-gray-800">{row.position} <span className="text-xs font-normal text-gray-400">({row.workers_count} {language === 'he' ? 'עובדים' : 'workers'})</span></td>
-                          <td className="p-3 font-medium">{row.total_shifts}</td>
-                          <td className="p-3 font-medium">{row.total_hours.toFixed(1)}</td>
-                          <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
-                          <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
-                          <td className="p-3 text-blue-700 font-medium">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
-                          <td className="p-3 text-purple-700 font-medium">-</td>
-                          <td className="p-3 text-green-700 font-medium">{formatCurrency(row.total_gross)}</td>
-                          <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
+                        <tr key={`pos-sum-${row.position}`} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'} text-xs`}>
+                          <td colSpan={2} className="p-2.5 font-bold text-gray-800">
+                            {row.position} <span className="text-[10px] font-normal text-gray-500">({row.workers_count} {language === 'he' ? 'עובדים' : 'workers'})</span>
+                          </td>
+                          <td className="p-2.5 text-center font-medium">{row.total_hours.toFixed(2)} {language === 'he' ? 'סה״כ שעות' : 'Total Hrs'}</td>
+                          <td colSpan={4} className="p-2.5 text-center bg-gray-50"></td>
+                          <td className="p-2.5 text-center text-emerald-600 font-medium bg-emerald-50/30">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                          <td className="p-2.5 text-center text-orange-600 font-medium bg-orange-50/30">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                          <td className="p-2.5 text-center text-blue-700 font-medium bg-blue-50/30">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
+                          <td colSpan={4} className="p-2.5 text-center">-</td>
+                          <td className="p-2.5 text-center text-green-700 font-bold bg-green-50/50">{formatCurrency(row.total_gross)}</td>
+                          <td className="p-2.5 text-center text-amber-700 font-bold bg-amber-100/40">{formatCurrency(row.total_cost)}</td>
                         </tr>
                       ))}
                     </tbody>
