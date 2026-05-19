@@ -1098,7 +1098,9 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                     </thead>
                     <tbody>
                       {dailySummaryData.map((row, idx) => {
-                        const dayName = moment(row.date).locale(language === 'he' ? 'he' : 'en').format('dddd');
+                        const hebrewDaysFull = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+                        const englishDaysFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        const dayName = language === 'he' ? hebrewDaysFull[moment(row.date).day()] : englishDaysFull[moment(row.date).day()];
                         return (
                           <tr key={row.date} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
                             <td className="p-3 text-gray-600">
@@ -1127,67 +1129,69 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 {reportType === "detailed" && (
                   <>
                     <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
-                      <tr>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תאריך' : 'Date'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Role'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפ מזומן' : 'Cash'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפ אשראי' : 'Credit'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סה״כ טיפים' : 'Total Tips'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר עבודה' : 'Regular Pay'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-green-700`}>{language === 'he' ? 'ברוטו' : 'Gross'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות כוללת' : 'Employer Cost'}</th>
+                      <tr className="text-xs">
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תאריך' : 'Date'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תפקיד' : 'Role'}</th>
+                        <th className={`p-2 font-semibold text-center`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
+                        <th className={`p-2 font-semibold text-center`}>{language === 'he' ? 'מזומן' : 'Cash'}</th>
+                        <th className={`p-2 font-semibold text-center`}>{language === 'he' ? 'אשראי' : 'Credit'}</th>
+                        <th className={`p-2 font-semibold text-center`}>{language === 'he' ? 'סה״כ טיפים' : 'Total Tips'}</th>
+                        <th className={`p-2 font-semibold text-center text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-2 font-semibold text-center text-blue-700`}>{language === 'he' ? 'שכר בסיס' : 'Base Pay'}</th>
+                        <th className={`p-2 font-semibold text-center text-green-700`}>{language === 'he' ? 'ברוטו' : 'Gross'}</th>
+                        <th className={`p-2 font-semibold text-center bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות כוללת' : 'Employer Cost'}</th>
                       </tr>
                     </thead>
                     {detailedDataByWorker.map((workerBlock) => (
-                      <tbody key={workerBlock.worker_name} className="border-b-4 border-gray-300">
+                      <tbody key={workerBlock.worker_name} className="border-b-[6px] border-gray-200">
                         {/* Worker Header */}
-                        <tr className="bg-purple-100/50">
-                          <td colSpan={10} className="p-3 font-bold text-base text-purple-900">
+                        <tr className="bg-purple-100/70 border-b border-purple-200">
+                          <td colSpan={10} className="p-2.5 font-bold text-sm text-purple-900">
                             {workerBlock.worker_name}
                             {workerBlock.totals.management_bonus > 0 && (
-                              <span className="mr-3 rtl:ml-3 rtl:mr-0 text-purple-600 text-sm font-normal">
-                                + {language === 'he' ? 'תוספת ניהול' : 'Mgmt bonus'}: {formatCurrency(workerBlock.totals.management_bonus)}
+                              <span className="mr-2 rtl:ml-2 rtl:mr-0 text-purple-700 text-xs font-normal">
+                                (+ {language === 'he' ? 'תוספת ניהול' : 'Mgmt bonus'}: {formatCurrency(workerBlock.totals.management_bonus)})
                               </span>
                             )}
                           </td>
                         </tr>
                         {/* Days */}
                         {workerBlock.rows.map((row, rIdx) => {
-                          const dayName = moment(row.date).locale(language === 'he' ? 'he' : 'en').format('ddd');
+                          const hebrewDays = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'שבת'];
+                          const englishDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                          const dayName = language === 'he' ? hebrewDays[moment(row.date).day()] : englishDays[moment(row.date).day()];
                           const isTipped = isPositionTipped(row.role);
                           return (
-                            <tr key={`${row.date}-${rIdx}`} className={`border-b ${row.isEmpty ? 'opacity-40 bg-gray-50' : (rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30')} hover:opacity-100 hover:bg-gray-100 transition-colors`}>
-                              <td className="p-3 text-gray-600 whitespace-nowrap">
-                                <span className="font-medium text-gray-900">{moment(row.date).format('DD/MM')}</span>
-                                <span className="text-xs ml-1 rtl:mr-1 rtl:ml-0 text-gray-400">{dayName}</span>
+                            <tr key={`${row.date}-${rIdx}`} className={`border-b border-gray-100 ${row.isEmpty ? 'opacity-50 bg-gray-50/50' : (rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40')} hover:opacity-100 hover:bg-gray-100 transition-colors text-xs`}>
+                              <td className="p-2 text-gray-600 whitespace-nowrap">
+                                <span className="font-semibold text-gray-800">{moment(row.date).format('DD/MM')}</span>
+                                <span className="ml-1.5 rtl:mr-1.5 rtl:ml-0 text-gray-500 text-[11px]">{dayName}</span>
                               </td>
-                              <td className="p-3 text-gray-600 text-xs">{row.role || '-'}</td>
-                              <td className="p-3 font-medium">{row.hours > 0 ? row.hours.toFixed(2) : '-'}</td>
-                              <td className="p-3 text-gray-600">{row.cash_tips > 0 ? formatCurrency(row.cash_tips) : '-'}</td>
-                              <td className="p-3 text-gray-600">{row.cc_tips > 0 ? formatCurrency(row.cc_tips) : '-'}</td>
-                              <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
-                              <td className="p-3 text-orange-600 font-medium">{isTipped && row.alema > 0 ? formatCurrency(row.alema) : (isTipped ? '-' : <span className="text-gray-300 text-xs">N/A</span>)}</td>
-                              <td className="p-3 text-blue-700 font-medium">{!isTipped && row.regular_pay > 0 ? formatCurrency(row.regular_pay) : (isTipped ? '-' : <span className="text-gray-300 text-xs">N/A</span>)}</td>
-                              <td className="p-3 text-green-700 font-medium">{row.pay > 0 ? formatCurrency(row.pay) : '-'}</td>
-                              <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{row.employer_cost > 0 ? formatCurrency(row.employer_cost) : '-'}</td>
+                              <td className="p-2 text-gray-700 font-medium whitespace-nowrap">{row.role || '-'}</td>
+                              <td className="p-2 font-semibold text-center">{row.hours > 0 ? row.hours.toFixed(2) : '-'}</td>
+                              <td className="p-2 text-gray-600 text-center">{row.cash_tips > 0 ? formatCurrency(row.cash_tips) : '-'}</td>
+                              <td className="p-2 text-gray-600 text-center">{row.cc_tips > 0 ? formatCurrency(row.cc_tips) : '-'}</td>
+                              <td className="p-2 text-emerald-600 font-semibold text-center bg-emerald-50/30">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                              <td className="p-2 text-orange-600 font-semibold text-center bg-orange-50/30">{isTipped && row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                              <td className="p-2 text-blue-700 font-semibold text-center bg-blue-50/30">{!isTipped && row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
+                              <td className="p-2 text-green-700 font-bold text-center bg-green-50/30">{row.pay > 0 ? formatCurrency(row.pay) : '-'}</td>
+                              <td className="p-2 text-amber-800 font-bold text-center bg-amber-100/40">{row.employer_cost > 0 ? formatCurrency(row.employer_cost) : '-'}</td>
                             </tr>
                           );
                         })}
                         {/* Worker Totals */}
-                        <tr className="bg-purple-50 font-bold border-t border-purple-200">
-                          <td colSpan={2} className="p-3 text-purple-900 text-sm">
-                            {language === 'he' ? 'סיכום' : 'Subtotal'}:
+                        <tr className="bg-purple-50/80 font-bold border-t border-purple-200 text-xs">
+                          <td colSpan={2} className="p-2 text-purple-900">
+                            {language === 'he' ? 'סיכום עובד' : 'Subtotal'}:
                           </td>
-                          <td className="p-3 text-purple-900">{workerBlock.totals.hours.toFixed(2)}</td>
-                          <td className="p-3 text-purple-900">{formatCurrency(workerBlock.totals.cash)}</td>
-                          <td className="p-3 text-purple-900">{formatCurrency(workerBlock.totals.credit)}</td>
-                          <td className="p-3 text-emerald-700">{formatCurrency(workerBlock.totals.tips)}</td>
-                          <td className="p-3 text-orange-700">{formatCurrency(workerBlock.totals.alema)}</td>
-                          <td className="p-3 text-blue-700">-</td>
-                          <td className="p-3 text-green-800">{formatCurrency(workerBlock.totals.pay)}</td>
-                          <td className="p-3 text-amber-800 bg-amber-50/50">{formatCurrency(workerBlock.totals.cost)}</td>
+                          <td className="p-2 text-purple-900 text-center">{workerBlock.totals.hours.toFixed(2)}</td>
+                          <td className="p-2 text-purple-900 text-center">{workerBlock.totals.cash > 0 ? formatCurrency(workerBlock.totals.cash) : '-'}</td>
+                          <td className="p-2 text-purple-900 text-center">{workerBlock.totals.credit > 0 ? formatCurrency(workerBlock.totals.credit) : '-'}</td>
+                          <td className="p-2 text-emerald-700 text-center bg-emerald-100/30">{workerBlock.totals.tips > 0 ? formatCurrency(workerBlock.totals.tips) : '-'}</td>
+                          <td className="p-2 text-orange-700 text-center bg-orange-100/30">{workerBlock.totals.alema > 0 ? formatCurrency(workerBlock.totals.alema) : '-'}</td>
+                          <td className="p-2 text-blue-700 text-center bg-blue-100/30">{workerBlock.totals.regular_pay > 0 ? formatCurrency(workerBlock.totals.regular_pay) : '-'}</td>
+                          <td className="p-2 text-green-800 text-center bg-green-100/30">{workerBlock.totals.pay > 0 ? formatCurrency(workerBlock.totals.pay) : '-'}</td>
+                          <td className="p-2 text-amber-900 bg-amber-200/40 text-center">{workerBlock.totals.cost > 0 ? formatCurrency(workerBlock.totals.cost) : '-'}</td>
                         </tr>
                       </tbody>
                     ))}
