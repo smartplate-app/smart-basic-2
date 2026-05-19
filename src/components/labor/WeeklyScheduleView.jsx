@@ -1389,7 +1389,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                           <div className={`flex items-center justify-between w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <span className="font-medium">{worker.full_name}</span>
                             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                              {t(worker.payment_type)}: {worker.payment_amount} {t('currency_ILS')}
+                              {language === 'he' ? (worker.payment_type === 'hourly' ? 'שעתי' : worker.payment_type === 'daily' ? 'יומי' : 'חודשי') : worker.payment_type}: {worker.payment_amount} {language === 'he' ? '₪' : 'ILS'}
                             </span>
                           </div>
                         </SelectItem>
@@ -1434,15 +1434,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
               <div className={`bg-gradient-to-br from-[#d4a373]/10 to-[#b88c60]/10 border border-[#d4a373]/20 p-4 rounded-xl shadow-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600 font-medium">{t('hours')}</span>
+                  <span className="text-sm text-gray-600 font-medium">{language === 'he' ? 'שעות' : 'Hours'}</span>
                   <span className="text-lg font-bold text-gray-800">{editingShift.hours_worked?.toFixed(1)}</span>
                 </div>
                 
                 {editingShift.base_payment > 0 && (
                   <>
                     <div className="flex justify-between items-center mb-1 pb-2 border-b border-[#d4a373]/20">
-                      <span className="text-sm text-gray-600 font-medium">{t('base_payment')}</span>
-                      <span className="text-sm text-gray-700">{editingShift.base_payment.toFixed(2)} {t('currency_ILS')}</span>
+                      <span className="text-sm text-gray-600 font-medium">{language === 'he' ? 'שכר בסיס' : 'Base payment'}</span>
+                      <span className="text-sm text-gray-700">{editingShift.base_payment.toFixed(2)} {language === 'he' ? '₪' : 'ILS'}</span>
                     </div>
                     {editingShift.overtime_rate === '150' && (
                       <div className="text-xs text-orange-600 bg-orange-50 p-1.5 rounded mb-2 flex items-start gap-1">
@@ -1451,9 +1451,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                       </div>
                     )}
                     <div className="flex justify-between items-center mt-2 pt-1">
-                      <span className="text-base text-gray-800 font-bold">{t('total')}</span>
+                      <span className="text-base text-gray-800 font-bold">{language === 'he' ? 'סה״כ' : 'Total'}</span>
                       <span className="text-xl font-black text-[#d4a373]">
-                        {(editingShift.payment_for_shift || 0).toFixed(2)} {t('currency_ILS')}
+                        {(editingShift.payment_for_shift || 0).toFixed(2)} {language === 'he' ? '₪' : 'ILS'}
                       </span>
                     </div>
                   </>
