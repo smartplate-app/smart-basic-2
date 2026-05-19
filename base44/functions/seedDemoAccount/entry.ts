@@ -54,12 +54,12 @@ Deno.serve(async (req) => {
 
         // 2. Items
         const items = [
-            { name: "Tomatoes (עגבניות / Ντομάτες)", supplier_id: createdSuppliers[0].id, supplier_name: createdSuppliers[0].name, unit: "kg", price: 5.5, units_per_package: 1, content_per_unit: 1 },
-            { name: "Cucumbers (מלפפונים / Αγγούρια)", supplier_id: createdSuppliers[0].id, supplier_name: createdSuppliers[0].name, unit: "kg", price: 4.2, units_per_package: 1, content_per_unit: 1 },
-            { name: "Feta Cheese (גבינת פטה / Τυρί Φέτα)", supplier_id: createdSuppliers[1].id, supplier_name: createdSuppliers[1].name, unit: "kg", price: 45.0, units_per_package: 1, content_per_unit: 1 },
-            { name: "Olive Oil (שמן זית / Ελαιόλαδο)", supplier_id: createdSuppliers[2].id, supplier_name: createdSuppliers[2].name, unit: "liter", price: 35.0, units_per_package: 1, content_per_unit: 1 },
-            { name: "Ground Beef (בשר טחון / Κιμάς)", supplier_id: createdSuppliers[1].id, supplier_name: createdSuppliers[1].name, unit: "kg", price: 55.0, units_per_package: 1, content_per_unit: 1 },
-            { name: "Pasta (פסטה / Ζυμαρικά)", supplier_id: createdSuppliers[2].id, supplier_name: createdSuppliers[2].name, unit: "kg", price: 8.0, units_per_package: 1, content_per_unit: 1 }
+            { name: "Tomatoes", nickname: "עגבניות", supplier_id: createdSuppliers[0].id, supplier_name: createdSuppliers[0].name, unit: "kg", price: 5.5, units_per_package: 1, content_per_unit: 1 },
+            { name: "Cucumbers", nickname: "מלפפונים", supplier_id: createdSuppliers[0].id, supplier_name: createdSuppliers[0].name, unit: "kg", price: 4.2, units_per_package: 1, content_per_unit: 1 },
+            { name: "Feta Cheese", nickname: "גבינת פטה", supplier_id: createdSuppliers[1].id, supplier_name: createdSuppliers[1].name, unit: "kg", price: 45.0, units_per_package: 1, content_per_unit: 1 },
+            { name: "Olive Oil", nickname: "שמן זית", supplier_id: createdSuppliers[2].id, supplier_name: createdSuppliers[2].name, unit: "liter", price: 35.0, units_per_package: 1, content_per_unit: 1 },
+            { name: "Ground Beef", nickname: "בשר טחון", supplier_id: createdSuppliers[1].id, supplier_name: createdSuppliers[1].name, unit: "kg", price: 55.0, units_per_package: 1, content_per_unit: 1 },
+            { name: "Pasta", nickname: "פסטה", supplier_id: createdSuppliers[2].id, supplier_name: createdSuppliers[2].name, unit: "kg", price: 8.0, units_per_package: 1, content_per_unit: 1 }
         ];
 
         const createdItems = [];
