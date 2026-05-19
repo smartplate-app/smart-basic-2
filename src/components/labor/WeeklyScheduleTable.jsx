@@ -33,17 +33,17 @@ export default function WeeklyScheduleTable({
 }) {
   return (
     <DragDropContext onDragStart={() => setIsDraggingShift(true)} onDragEnd={(result) => { setIsDraggingShift(false); handleDragEnd(result); }}>
-      <div ref={scheduleTableRef} className="overflow-x-auto bg-white p-4 rounded-lg -mx-4 md:mx-0" dir={isRTL ? 'rtl' : 'ltr'}>
-        <table className="w-full border-collapse min-w-[800px]">
+      <div ref={scheduleTableRef} className="overflow-x-auto bg-white p-2 rounded-lg -mx-4 md:mx-0" dir={isRTL ? 'rtl' : 'ltr'}>
+        <table className="w-full border-collapse min-w-[600px]">
           <thead>
             <tr className="bg-gray-50">
-              <th className={`border p-2 text-sm font-semibold ${isRTL ? 'text-right' : 'text-left'} min-w-[100px]`}>
+              <th className={`border p-1 text-xs font-semibold ${isRTL ? 'text-right' : 'text-left'} min-w-[80px]`}>
                 {t('position')}
               </th>
               {days.map(day => {
                 const dayDate = moment(weekStartDate).day(days.indexOf(day));
                 return (
-                  <th key={day.key} className="border p-2 text-sm font-semibold min-w-[120px]">
+                  <th key={day.key} className="border p-1 text-xs font-semibold min-w-[90px]">
                     <div className="flex flex-col gap-1">
                       <div>{day.label}</div>
                       <div className="text-xs text-gray-500 font-normal">
@@ -70,18 +70,18 @@ export default function WeeklyScheduleTable({
                             {...provided.draggableProps}
                             className={snapshot.isDragging ? 'bg-purple-50' : ''}
                           >
-                            <td className={`border p-2 font-medium ${isRTL ? 'text-right' : 'text-left'}`} style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.25) }}>
-                              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <td className={`border p-1 font-medium ${isRTL ? 'text-right' : 'text-left'}`} style={{ backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.25) }}>
+                              <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                 <div 
                                   {...provided.dragHandleProps}
                                   className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
                                 >
-                                  <GripVertical className="h-4 w-4" />
+                                  <GripVertical className="h-3 w-3" />
                                 </div>
-                                <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: position.color || '#1E88E5' }} />
-                                <span className={`text-[20px] font-extrabold ${['text-blue-800','text-gray-800'][posIndex % 2]}`}>{position.name}</span>
-                                <Button size="icon" variant="ghost" className="h-7 w-7" title={language === 'he' ? 'הוסף שורת תפקיד' : 'Add position row'} onClick={() => addPositionRow(position.id)}>
-                                  <Plus className="h-4 w-4" />
+                                <div className="h-2 w-2 rounded-sm" style={{ backgroundColor: position.color || '#1E88E5' }} />
+                                <span className={`text-[13px] leading-tight font-extrabold ${['text-blue-800','text-gray-800'][posIndex % 2]}`}>{position.name}</span>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto rtl:mr-auto rtl:ml-0" title={language === 'he' ? 'הוסף שורת תפקיד' : 'Add position row'} onClick={() => addPositionRow(position.id)}>
+                                  <Plus className="h-3 w-3" />
                                 </Button>
                               </div>
                             </td>
@@ -102,13 +102,13 @@ export default function WeeklyScheduleTable({
                                       <div key={rIdx} className="mb-1">
                                         {row && (
                                           <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                            <div className="text-[11px] font-semibold text-gray-600">
+                                            <div className="text-[10px] font-semibold text-gray-600">
                                               {row.label}
                                             </div>
                                             <DropdownMenu>
                                               <DropdownMenuTrigger asChild>
-                                                <Button size="icon" variant="ghost" className="h-6 w-6" title={language === 'he' ? 'עוד פעולות' : 'More actions'}>
-                                                  <MoreHorizontal className="h-4 w-4" />
+                                                <Button size="icon" variant="ghost" className="h-5 w-5" title={language === 'he' ? 'עוד פעולות' : 'More actions'}>
+                                                  <MoreHorizontal className="h-3 w-3" />
                                                 </Button>
                                               </DropdownMenuTrigger>
                                               <DropdownMenuContent align={isRTL ? 'start' : 'end'} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -155,7 +155,7 @@ export default function WeeklyScheduleTable({
                                                       <div
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
-                                                        className={`p-2 rounded border text-xs cursor-pointer group relative select-none touch-none ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'} ${snapshot.isDragging ? 'will-change-transform' : ''}`}
+                                                        className={`p-1.5 rounded border text-xs cursor-pointer group relative select-none touch-none ${snapshot.isDragging ? 'shadow-lg' : ''} ${isRTL ? 'text-right' : 'text-left'} ${snapshot.isDragging ? 'will-change-transform' : ''}`}
                                                         style={{
                                                           ...provided.draggableProps.style,
                                                           backgroundColor: hexToRgba((position.color || '#E6F4FF'), 0.2),
@@ -165,16 +165,16 @@ export default function WeeklyScheduleTable({
                                                         onClick={() => { if (isDraggingShift) return; setEditingShift({ ...shift, __originalKey: getShiftDraggableId(shift) }); setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId }); setShowShiftDialog(true); }}
                                                         data-drag-id={getShiftDraggableId(shift)}
                                                       >
-                                                        <div className={`absolute top-1 ${isRTL ? 'right-1' : 'left-1'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-100 transition-opacity h-6 w-6 flex items-center justify-center`} {...provided.dragHandleProps} onMouseDown={(e) => e.preventDefault()} aria-label={t('drag')}>
-                                                          <GripVertical className="h-4 w-4" />
+                                                        <div className={`absolute top-0.5 ${isRTL ? 'right-0' : 'left-0'} cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-100 transition-opacity h-5 w-5 flex items-center justify-center`} {...provided.dragHandleProps} onMouseDown={(e) => e.preventDefault()} aria-label={t('drag')}>
+                                                          <GripVertical className="h-3 w-3" />
                                                         </div>
-                                                        <div className={`font-extrabold text-[16px] ${isRTL ? 'text-right pr-5' : 'text-left pl-5'}`}>{shift.worker_name}</div>
-                                                        <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse pr-5' : 'pl-5'}`}>
-                                                          <span className="text-[11px]">{shift.start_time}-{shift.end_time}</span>
-                                                          <span className="shift-cost">{formatCurrency(shift.payment_for_shift || 0)}</span>
+                                                        <div className={`font-bold text-[11px] leading-tight mb-0.5 ${isRTL ? 'text-right pr-4' : 'text-left pl-4'}`}>{shift.worker_name}</div>
+                                                        <div className={`flex items-center justify-between text-[10px] ${isRTL ? 'flex-row-reverse pr-4' : 'pl-4'}`}>
+                                                          <span>{shift.start_time}-{shift.end_time}</span>
+                                                          <span className="shift-cost text-[9px] opacity-80">{formatCurrency(shift.payment_for_shift || 0)}</span>
                                                         </div>
                                                         {shift.overtime_rate && shift.overtime_rate !== 'regular' && (
-                                                          <Badge variant="secondary" className={`mt-1 ${isRTL ? 'mr-5' : 'ml-5'}`}>{shift.overtime_rate === '125' ? '125%' : (shift.overtime_rate === '150' ? '150%' : '')}</Badge>
+                                                          <Badge variant="secondary" className={`mt-0.5 text-[9px] px-1 py-0 h-4 ${isRTL ? 'mr-4' : 'ml-4'}`}>{shift.overtime_rate === '125' ? '125%' : (shift.overtime_rate === '150' ? '150%' : '')}</Badge>
                                                         )}
                                                       </div>
                                                     )}
