@@ -487,6 +487,26 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                 </p>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="travelExpenseType">{language === 'he' ? 'החזר נסיעות' : 'Travel Expenses'}</Label>
+                <Select
+                  value={formData.travel_expense_type || 'none'}
+                  onValueChange={(value) => setFormData({ ...formData, travel_expense_type: value })}
+                >
+                  <SelectTrigger id="travelExpenseType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{language === 'he' ? 'ללא (מגולם בשכר/לא זכאי)' : 'None'}</SelectItem>
+                    <SelectItem value="daily">{language === 'he' ? 'יומי (22.60₪ ליום)' : 'Daily (22.60 ILS)'}</SelectItem>
+                    <SelectItem value="monthly">{language === 'he' ? 'חודשי (226.00₪)' : 'Monthly (226 ILS)'}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {language === 'he' ? 'לפי חוק נסיעות' : 'By travel expense law'}
+                </p>
+              </div>
+
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="employerCostPercentage">
                   {language === 'he' ? 'אחוז עלויות מעסיק' : 'Employer Cost %'}

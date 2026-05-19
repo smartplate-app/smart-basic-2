@@ -5,8 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../LanguageProvider";
 import moment from "moment";
-import { FileText, Users, Clock, Calculator, Download } from "lucide-react";
+import { FileText, Users, Clock, Calculator, Download, Plus } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import WorkerAdjustmentModal from "./WorkerAdjustmentModal";
 
 export default function LaborReportsTab({ schedules, workers, positions }) {
   const { t, language } = useLanguage();
@@ -18,6 +19,8 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
   const [endDate, setEndDate] = useState(moment().endOf('month').format('YYYY-MM-DD'));
   const [tipEntries, setTipEntries] = useState([]);
   const [loadingTips, setLoadingTips] = useState(false);
+  const [adjustments, setAdjustments] = useState([]);
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [workerSearchTerm, setWorkerSearchTerm] = useState("");
   const [selectedWorkers, setSelectedWorkers] = useState(new Set());
   const [showWorkersByDept, setShowWorkersByDept] = useState(false);
@@ -60,8 +63,17 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                  entryDate.isSameOrBefore(moment(endDate).endOf('day'));
         });
         setTipEntries(filtered);
+        
+        // Fetch adjustments
+        const adjRes = await base44.entities.WorkerAdjustment.filter({ created_by: workingEmail });
+        const filteredAdj = (adjRes || []).filter(entry => {
+          const entryDate = moment(entry.date);
+          return entryDate.isSameOrAfter(moment(startDate).startOf('day')) && 
+                 entryDate.isSameOrBefore(moment(endDate).endOf('day'));
+        });
+        setAdjustments(filteredAdj);
       } catch (err) {
-        console.error("Failed to load tip entries:", err);
+        console.error("Failed to load tip entries and adjustments:", err);
       } finally {
         setLoadingTips(false);
       }
@@ -231,6 +243,16 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       }
     });
 
+    const adjByWorker = new Map();
+    adjustments.forEach(adj => {
+      if (!adjByWorker.has(adj.worker_id)) {
+        adjByWorker.set(adj.worker_id, { bonus: 0, advance: 0 });
+      }
+      const wAdj = adjByWorker.get(adj.worker_id);
+      if (adj.type === 'bonus') wAdj.bonus += (adj.amount || 0);
+      else if (adj.type === 'advance') wAdj.advance += (adj.amount || 0);
+    });
+
     // Map shifts
     const shiftsByWorkerDate = new Map();
     filteredShifts.forEach(shift => {
@@ -250,6 +272,12 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
        let w_hours = 0, w_cash = 0, w_credit = 0, w_tips = 0, w_alema = 0, w_pay = 0, w_cost = 0;
        const empCostPct = worker.employer_cost_percentage || 25;
        let w_regular_pay = 0;
+       let w_regular_hours = 0, w_125_hours = 0, w_150_hours = 0, w_200_hours = 0;
+       let w_work_days = 0;
+
+       // Basic travel expenses calculation
+       let travel_amount = 0;
+       let travel_type = worker.travel_expense_type || 'none';
 
        dates.forEach(date => {
           const shifts = shiftsByWorkerDate.get(`${worker.id}_${date}`) || [];
@@ -272,7 +300,18 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 const hrs = s.hours_worked || 0;
                 const pay = s.payment_for_shift || 0;
                 const rate = hrs > 0 ? pay / hrs : 0;
-                
+
+                // Israeli overtime logic
+                let regularHours = 0, ot125 = 0, ot150 = 0, ot200 = 0;
+                const isSaturday = moment(date).day() === 6;
+                if (isSaturday) {
+                  ot150 = hrs;
+                } else {
+                  regularHours = Math.min(hrs, 8);
+                  ot125 = Math.min(Math.max(hrs - 8, 0), 2);
+                  ot150 = Math.max(hrs - 10, 0);
+                }
+
                 const isTipped = isPositionTipped(s.job_position);
                 
                 // Alema (השלמה): The gap the employer needs to pay if tips don't cover the base pay (only for tipped positions)
@@ -288,12 +327,20 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 workerRows.push({
                    date, role: s.job_position || '', start: s.start_time || '', end: s.end_time || '',
                    hours: hrs, rate: rate, cash_tips: t_cash, cc_tips: t_credit, total_tips: t_total,
+                   regular_hours: regularHours, ot_125: ot125, ot_150: ot150, ot_200: ot200,
                    alema: alema, regular_pay: regular_pay, pay: pay, employer_cost: empCost, isEmpty: false
                 });
 
                 w_hours += hrs; w_cash += t_cash; w_credit += t_credit; w_tips += t_total;
                 w_alema += alema; w_pay += pay; w_cost += empCost; w_regular_pay += regular_pay;
+                w_regular_hours += regularHours; w_125_hours += ot125; w_150_hours += ot150; w_200_hours += ot200;
              });
+          }
+          if (shifts.length > 0) {
+             w_work_days += 1;
+             if (travel_type === 'daily') {
+               travel_amount += 22.60;
+             }
           }
        });
 
@@ -303,17 +350,47 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
        const ratio = Math.min(1, Math.max(0, daysInPeriod / daysInMonth));
        const mgmtBonusProRata = mgmtBonusRaw * ratio;
 
-       if (w_hours > 0 || w_tips > 0 || mgmtBonusProRata > 0) {
+       if (travel_type === 'monthly') {
+         travel_amount = 226 * ratio;
+       }
+       
+       const wAdj = adjByWorker.get(worker.id) || { bonus: 0, advance: 0 };
+
+       if (w_hours > 0 || w_tips > 0 || mgmtBonusProRata > 0 || wAdj.bonus > 0 || wAdj.advance > 0) {
          // Calculate management bonus for detailed view total
          const employerTaxesOnBonus = mgmtBonusProRata * (empCostPct / 100);
+         const travelEmployerTaxes = travel_amount * (empCostPct / 100);
+         const bonusEmployerTaxes = wAdj.bonus * (empCostPct / 100);
          
-         const finalCost = w_cost + mgmtBonusProRata + employerTaxesOnBonus;
-         const finalGross = w_pay + mgmtBonusProRata;
+         const finalCost = w_cost + mgmtBonusProRata + employerTaxesOnBonus + travel_amount + travelEmployerTaxes + wAdj.bonus + bonusEmployerTaxes;
+         const finalGross = w_pay + mgmtBonusProRata + travel_amount + wAdj.bonus;
 
          result.push({
+            worker_id: worker.id,
             worker_name: worker.full_name,
+            rate: worker.payment_amount || 0,
             rows: workerRows,
-            totals: { hours: w_hours, cash: w_cash, credit: w_credit, tips: w_tips, alema: w_alema, regular_pay: w_regular_pay, pay: finalGross, cost: finalCost, management_bonus: mgmtBonusProRata }
+            totals: { 
+               hours: w_hours, 
+               work_days: w_work_days,
+               regular_hours: w_regular_hours, 
+               ot_125: w_125_hours, 
+               ot_150: w_150_hours, 
+               ot_200: w_200_hours,
+               cash: w_cash, 
+               credit: w_credit, 
+               tips: w_tips, 
+               alema: w_alema, 
+               employer_cost_on_tips: w_alema * (empCostPct / 100),
+               regular_pay: w_regular_pay, 
+               pay: finalGross, 
+               cost: finalCost, 
+               employer_cost: finalCost - finalGross, // the total employer taxes
+               management_bonus: mgmtBonusProRata,
+               travel_expenses: travel_amount,
+               bonus_manual: wAdj.bonus,
+               advance_manual: wAdj.advance
+            }
          });
        }
     });
@@ -422,16 +499,30 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
       });
       
       return {
-        worker_id: w.worker_name,
+        worker_id: w.worker_id,
         worker_name: w.worker_name,
+        rate: w.rate,
         management_bonus: w.totals.management_bonus,
+        work_days: w.totals.work_days,
+        regular_hours: w.totals.regular_hours,
+        ot_125: w.totals.ot_125,
+        ot_150: w.totals.ot_150,
+        ot_200: w.totals.ot_200,
         total_hours: w.totals.hours,
         total_shifts: total_shifts,
+        cash_tips: w.totals.cash,
+        credit_tips: w.totals.credit,
         total_tips: w.totals.tips,
         alema: w.totals.alema,
+        employer_cost_on_tips: w.totals.employer_cost_on_tips,
+        travel_expenses: w.totals.travel_expenses,
+        bonus_manual: w.totals.bonus_manual,
+        advance_manual: w.totals.advance_manual,
+        employer_taxes: w.totals.employer_cost,
         regular_pay: w.totals.regular_pay,
         total_gross: w.totals.pay,
         total_cost: w.totals.cost,
+        labor_minus_tips: w.totals.cost - w.totals.tips,
         positions: Array.from(positionsMap.values()).sort((a, b) => b.hours - a.hours)
       };
     }).sort((a, b) => b.total_cost - a.total_cost);
@@ -460,11 +551,12 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     let csvContent = "\uFEFF"; // BOM for UTF-8
 
     if (reportType === "summary_worker") {
-      csvContent += language === 'he' ? "עובד,שעות,טיפים,השלמה,שכר רגיל,תוספת ניהול,שכר ברוטו,עלות למעסיק\n" : "Worker,Hours,Tips,Alema,Regular Pay,Mgmt Bonus,Gross Pay,Employer Cost\n";
+      csvContent += language === 'he' ? "עובד,סה״כ ימי עבודה,תעריף,שעות רגילות,125%,150%,מיוחד 200%,סה״כ שעות,תוספת ניהול,סה״כ עלות (לפני טיפים ובונוסים),בונוס,מקדמה,טיפ מזומן,טיפ אשראי,סה״כ טיפים,השלמה,עלות מעסיק לטיפ,נסיעות,עלות כוללת,עלויות מעסיק,עלות כח אדם מינוס סה״כ טיפ\n" 
+                                      : "Worker,Work Days,Rate,Regular Hours,125%,150%,Special 200%,Total Hours,Mgmt Bonus,Total Cost,Bonus,Advance,Cash Tip,Credit Tip,Total Tips,Alema,Employer Cost on Tip,Travel,Total Overall Cost,Employer Taxes,Labor Minus Tip\n";
+      
       summaryData.forEach(w => {
-        csvContent += `"${w.worker_name}",${w.total_hours.toFixed(2)},${w.total_tips.toFixed(2)},${w.alema.toFixed(2)},${w.regular_pay.toFixed(2)},${w.management_bonus.toFixed(2)},${w.total_gross.toFixed(2)},${w.total_cost.toFixed(2)}\n`;
+        csvContent += `"${w.worker_name}",${w.work_days},${w.rate},${w.regular_hours.toFixed(2)},${w.ot_125.toFixed(2)},${w.ot_150.toFixed(2)},${w.ot_200.toFixed(2)},${w.total_hours.toFixed(2)},${w.management_bonus.toFixed(2)},${w.total_cost.toFixed(2)},${w.bonus_manual.toFixed(2)},${w.advance_manual.toFixed(2)},${w.cash_tips.toFixed(2)},${w.credit_tips.toFixed(2)},${w.total_tips.toFixed(2)},${w.alema.toFixed(2)},${w.employer_cost_on_tips.toFixed(2)},${w.travel_expenses.toFixed(2)},${w.total_cost.toFixed(2)},${w.employer_taxes.toFixed(2)},${w.labor_minus_tips.toFixed(2)}\n`;
       });
-      csvContent += language === 'he' ? `"סה״כ כללי",${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n` : `"Grand Total",${grandTotals.hours.toFixed(2)},${grandTotals.tips.toFixed(2)},${grandTotals.alema.toFixed(2)},${grandTotals.regular_pay.toFixed(2)},${grandTotals.management_bonus.toFixed(2)},${grandTotals.payment.toFixed(2)},${grandTotals.cost.toFixed(2)}\n`;
     } else if (reportType === "summary") {
       csvContent += language === 'he' ? "עובד,תפקיד,משמרות,שעות,טיפים,השלמה,שכר רגיל,תוספת ניהול,שכר ברוטו,עלות למעסיק\n" : "Worker,Position,Shifts,Hours,Tips,Alema,Regular Pay,Mgmt Bonus,Gross Pay,Employer Cost\n";
       summaryData.forEach(w => {
@@ -528,13 +620,22 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
               <FileText className="w-5 h-5 text-purple-600 shrink-0" />
               <span className="truncate">{language === 'he' ? 'דוחות שכר ונוכחות' : 'Labor & Attendance Reports'}</span>
             </CardTitle>
-            <button 
-              onClick={handleExportCSV}
-              className={`flex items-center justify-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm font-medium w-full sm:w-auto shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
-            >
-              <Download className="w-4 h-4" />
-              {language === 'he' ? 'ייצא נתונים' : 'Export'}
-            </button>
+            <div className={`flex flex-col sm:flex-row gap-2 w-full sm:w-auto ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+              <button 
+                onClick={() => setShowAdjustmentModal(true)}
+                className={`flex items-center justify-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
+              >
+                <Plus className="w-4 h-4" />
+                {language === 'he' ? 'בונוס/מקדמה' : 'Add Bonus/Advance'}
+              </button>
+              <button 
+                onClick={handleExportCSV}
+                className={`flex items-center justify-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm font-medium shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
+              >
+                <Download className="w-4 h-4" />
+                {language === 'he' ? 'ייצא נתונים' : 'Export'}
+              </button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -809,40 +910,56 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 {reportType === "summary_worker" && (
                   <>
                     <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm outline outline-1 outline-gray-200">
-                      <tr>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות' : 'Hours'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'טיפים' : 'Tips'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-blue-700`}>{language === 'he' ? 'שכר רגיל' : 'Regular Pay'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-purple-700`}>{language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-green-700`}>{language === 'he' ? 'ברוטו' : 'Gross'}</th>
-                        <th className={`p-3 font-semibold ${isRTL ? 'text-right' : 'text-left'} bg-amber-50/50 text-amber-800`}>{language === 'he' ? 'עלות למעסיק' : 'Employer Cost'}</th>
+                      <tr className="text-[11px] whitespace-nowrap">
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עובד' : 'Worker'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'ימי עבודה' : 'Days'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תעריף' : 'Rate'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שעות רגילות' : 'Reg. Hrs'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>125%</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>150%</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>200%</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סה״כ שעות' : 'Total Hrs'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תוספת ניהול' : 'Mgmt Bonus'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סה״כ עלות' : 'Total Cost'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'בונוס (ידני)' : 'Bonus'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מקדמה (ידנית)' : 'Advance'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מזומן' : 'Cash'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'אשראי' : 'Credit'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-emerald-700`}>{language === 'he' ? 'סה״כ טיפים' : 'Total Tips'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-orange-700`}>{language === 'he' ? 'השלמה' : 'Alema'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות לטיפ' : 'Cost on Tip'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'נסיעות' : 'Travel'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'} text-amber-800`}>{language === 'he' ? 'עלות כוללת' : 'Total Overall'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלויות מעסיק' : 'Emp. Taxes'}</th>
+                        <th className={`p-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות מינוס טיפ' : 'Cost - Tip'}</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="text-[11px] whitespace-nowrap">
                       {summaryData.map((row, idx) => (
                         <tr key={`worker-sum-${row.worker_id}`} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                          <td className="p-3 font-bold text-gray-800">{row.worker_name}</td>
-                          <td className="p-3 font-medium">{row.total_hours.toFixed(1)}</td>
-                          <td className="p-3 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
-                          <td className="p-3 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
-                          <td className="p-3 text-blue-700 font-medium">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
-                          <td className="p-3 text-purple-700 font-medium">{row.management_bonus > 0 ? formatCurrency(row.management_bonus) : '-'}</td>
-                          <td className="p-3 text-green-700 font-medium">{formatCurrency(row.total_gross)}</td>
-                          <td className="p-3 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
+                          <td className="p-2 font-bold text-gray-800">{row.worker_name}</td>
+                          <td className="p-2">{row.work_days}</td>
+                          <td className="p-2">{row.rate}</td>
+                          <td className="p-2">{row.regular_hours.toFixed(1)}</td>
+                          <td className="p-2">{row.ot_125.toFixed(1)}</td>
+                          <td className="p-2">{row.ot_150.toFixed(1)}</td>
+                          <td className="p-2">{row.ot_200.toFixed(1)}</td>
+                          <td className="p-2 font-medium">{row.total_hours.toFixed(1)}</td>
+                          <td className="p-2">{row.management_bonus > 0 ? formatCurrency(row.management_bonus) : '-'}</td>
+                          <td className="p-2">{formatCurrency(row.total_cost)}</td>
+                          <td className="p-2 text-blue-600">{row.bonus_manual > 0 ? formatCurrency(row.bonus_manual) : '-'}</td>
+                          <td className="p-2 text-red-600">{row.advance_manual > 0 ? formatCurrency(row.advance_manual) : '-'}</td>
+                          <td className="p-2">{row.cash_tips > 0 ? formatCurrency(row.cash_tips) : '-'}</td>
+                          <td className="p-2">{row.credit_tips > 0 ? formatCurrency(row.credit_tips) : '-'}</td>
+                          <td className="p-2 text-emerald-600 font-medium">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                          <td className="p-2 text-orange-600 font-medium">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
+                          <td className="p-2">{row.employer_cost_on_tips > 0 ? formatCurrency(row.employer_cost_on_tips) : '-'}</td>
+                          <td className="p-2">{row.travel_expenses > 0 ? formatCurrency(row.travel_expenses) : '-'}</td>
+                          <td className="p-2 text-amber-700 font-bold bg-amber-50/30">{formatCurrency(row.total_cost)}</td>
+                          <td className="p-2">{formatCurrency(row.employer_taxes)}</td>
+                          <td className="p-2 font-medium">{formatCurrency(row.labor_minus_tips)}</td>
                         </tr>
                       ))}
-                      <tr className="bg-gray-100 font-bold border-t-2 border-gray-300">
-                        <td className="p-3">{language === 'he' ? 'סה״כ' : 'Total'}</td>
-                        <td className="p-3">{grandTotals.hours.toFixed(1)}</td>
-                        <td className="p-3 text-emerald-600">{formatCurrency(grandTotals.tips)}</td>
-                        <td className="p-3 text-orange-600">{formatCurrency(grandTotals.alema)}</td>
-                        <td className="p-3 text-blue-700">{formatCurrency(grandTotals.regular_pay)}</td>
-                        <td className="p-3 text-purple-700">{formatCurrency(grandTotals.management_bonus)}</td>
-                        <td className="p-3 text-green-700">{formatCurrency(grandTotals.payment)}</td>
-                        <td className="p-3 text-amber-700">{formatCurrency(grandTotals.cost)}</td>
-                      </tr>
                     </tbody>
                   </>
                 )}
@@ -1081,6 +1198,22 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           </div>
         </CardContent>
       </Card>
+
+      {showAdjustmentModal && (
+        <WorkerAdjustmentModal
+          isOpen={showAdjustmentModal}
+          onClose={() => setShowAdjustmentModal(false)}
+          workers={workers}
+          onSaved={() => {
+            // Trigger a re-render/refetch by updating a small dummy state if needed,
+            // or just rely on parent component reloading. 
+            // For now, toggle period to force re-fetch:
+            const cur = startDate;
+            setStartDate("");
+            setTimeout(() => setStartDate(cur), 10);
+          }}
+        />
+      )}
     </div>
   );
 }

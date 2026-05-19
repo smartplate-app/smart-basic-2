@@ -119,6 +119,16 @@
       "default": 0,
       "description": "Worker-specific override for tip-per-hour; if > 0, overrides position rate"
     },
+    "travel_expense_type": {
+      "type": "string",
+      "enum": [
+        "none",
+        "daily",
+        "monthly"
+      ],
+      "default": "none",
+      "description": "Travel expenses calculation (none, daily rate, or monthly rate)"
+    },
     "position_rates": {
       "type": "array",
       "description": "Per-position compensation for this worker (override or default)",
