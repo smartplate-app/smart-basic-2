@@ -16,6 +16,7 @@ import RowTimeDialog from "./RowTimeDialog";
 import { offlineQueue } from "../offline/offlineQueue";
 import { notifyOS } from "../notifications/notify";
 import WeeklyScheduleTable from "./WeeklyScheduleTable";
+import WorkerSelector from "./WorkerSelector";
 
 // Set week to start on Sunday (Israel standard)
 moment.updateLocale('en', {
@@ -1385,42 +1386,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 <Label htmlFor="worker_id" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>
                   {t('worker')} <span className="text-red-500">*</span>
                 </Label>
-                <Select value={editingShift.worker_id} onValueChange={handleWorkerChange}>
-                  <SelectTrigger id="worker_id" className={`h-11 border-gray-300 focus:ring-[#d4a373] ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <SelectValue placeholder={t('select_worker')} />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {workers
-                      .filter(w => w.job_position_id === editingShift.job_position_id || w.secondary_job_position_id === editingShift.job_position_id || (w.job_position_ids || []).includes(editingShift.job_position_id))
-                      .map(worker => (
-                        <SelectItem key={worker.id} value={worker.id} className="py-2 cursor-pointer transition-colors hover:bg-gray-50 focus:bg-gray-50">
-                          <div className={`flex items-center justify-between w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <span className="font-medium">{worker.full_name}</span>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                              {language === 'he' ? (worker.payment_type === 'hourly' ? 'שעתי' : worker.payment_type === 'daily' ? 'יומי' : 'חודשי') : worker.payment_type}: {worker.payment_amount} {language === 'he' ? '₪' : 'ILS'}
-                            </span>
-                          </div>
-                        </SelectItem>
-                    ))}
-                    {workers.filter(w => w.job_position_id !== editingShift.job_position_id && w.secondary_job_position_id !== editingShift.job_position_id && !(w.job_position_ids || []).includes(editingShift.job_position_id)).length > 0 && (
-                      <div className="px-3 py-2 text-xs font-semibold text-gray-400 bg-gray-50 border-y my-1">
-                        {language === 'he' ? 'עובדים מתפקידים אחרים' : 'Other Workers'}
-                      </div>
-                    )}
-                    {workers
-                      .filter(w => w.job_position_id !== editingShift.job_position_id && w.secondary_job_position_id !== editingShift.job_position_id && !(w.job_position_ids || []).includes(editingShift.job_position_id))
-                      .map(worker => (
-                        <SelectItem key={worker.id} value={worker.id} className="py-2 text-gray-500 cursor-pointer transition-colors hover:bg-gray-50 focus:bg-gray-50">
-                          <div className={`flex items-center justify-between w-full opacity-80 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <span>{worker.full_name}</span>
-                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-                              {worker.job_position_name}
-                            </span>
-                          </div>
-                        </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <WorkerSelector 
+                  workers={workers}
+                  positions={positions}
+                  selectedWorkerId={editingShift.worker_id}
+                  onSelectWorker={handleWorkerChange}
+                  targetPositionId={editingShift.job_position_id}
+                  isRTL={isRTL}
+                  language={language}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
