@@ -23,6 +23,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
 
   const [currentItem, setCurrentItem] = React.useState(item || {
     name: "",
+    nickname: "",
     supplier_id: (defaultSupplierId) ? defaultSupplierId : (suppliers && suppliers.length === 1 ? suppliers[0].id : ""),
     supplier_name: (defaultSupplierId ? (suppliers.find(s => s.id === defaultSupplierId)?.name || "") : (suppliers && suppliers.length === 1 ? suppliers[0].name : "")),
     catalog_number: "",
@@ -227,6 +228,16 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               onChange={(e) => handleChange("name", e.target.value)}
               placeholder={t('item_name')}
               required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="nickname">{language === 'he' ? 'כינוי (בשפה שלך, יופיע לך בלבד)' : 'Nickname (in your language)'}</Label>
+            <Input
+              id="nickname"
+              value={currentItem.nickname || ""}
+              onChange={(e) => handleChange("nickname", e.target.value)}
+              placeholder={language === 'he' ? 'למשל: עגבניה (כשהשם הוא Tomato)' : 'e.g. Tomato'}
             />
           </div>
           

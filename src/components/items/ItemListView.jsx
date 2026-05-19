@@ -40,7 +40,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
   const getSortValue = (item, key) => {
     switch (key) {
       case 'name':
-        return (item.name || '').toString().toLowerCase();
+        return (item.nickname || item.name || '').toString().toLowerCase();
       case 'supplier_name':
         return (item.supplier_name || '').toString().toLowerCase();
       case 'catalog_number':
@@ -157,7 +157,8 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                     className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer inline-block"
                     title={language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item'}
                   >
-                    {item.name}
+                    {item.nickname || item.name}
+                    {item.nickname && <span className="text-xs text-gray-500 font-normal ml-1 rtl:mr-1 rtl:ml-0">({item.name})</span>}
                   </div>
                   {item.description && (
                     <div className="text-xs text-gray-500 truncate max-w-xs mt-0.5">{item.description}</div>

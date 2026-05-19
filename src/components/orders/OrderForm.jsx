@@ -422,7 +422,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-gray-900">{item.name}</span>
+                            <span className="font-semibold text-gray-900">{item.nickname || item.name} {item.nickname && <span className="text-xs text-gray-500 font-normal">({item.name})</span>}</span>
                             {hasMinStock && (
                               <Badge variant="outline" className="text-xs">
                                 <Package className="w-3 h-3 mr-1" />

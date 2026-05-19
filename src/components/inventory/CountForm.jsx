@@ -518,7 +518,10 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                                 setIsSearchFocused(false);
                               }}
                             >
-                              <span className="text-gray-900">{item.name}</span>
+                              <span className="text-gray-900">
+                                {item.nickname || item.name}
+                                {item.nickname && <span className="text-xs text-gray-500 ml-1 rtl:mr-1 rtl:ml-0">({item.name})</span>}
+                              </span>
                               <span className="text-gray-500 text-sm mx-2">({item.unit})</span>
                               {item.price > 0 && <span className="text-gray-400 text-sm ml-auto rtl:mr-auto rtl:ml-0">- ₪{item.price}</span>}
                             </div>
@@ -625,9 +628,14 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {formData.items.map((item, index) => (
+                          {formData.items.map((item, index) => {
+                            const originalItem = items.find(i => i.id === item.item_id);
+                            return (
                             <TableRow key={index}>
-                              <TableCell className="font-medium">{item.item_name}</TableCell>
+                              <TableCell className="font-medium">
+                                {originalItem?.nickname || item.item_name}
+                                {originalItem?.nickname && <span className="text-xs text-gray-500 block font-normal">{item.item_name}</span>}
+                              </TableCell>
                               <TableCell>
                                 <Input
                                   type="number"
@@ -671,7 +679,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                                 </Button>
                               </TableCell>
                             </TableRow>
-                          ))}
+                          );
+                          })}
                         </TableBody>
                       </Table>
                     </div>
