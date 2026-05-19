@@ -574,7 +574,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     });
 
     if (overlapping) {
-      toast.error(language === 'he' ? 'העובד כבר משובץ בשעות אלה' : 'Worker is already scheduled during these hours');
+      alert(language === 'he' ? 'שגיאה: העובד כבר משובץ בשעות אלה. אנא בחר שעות אחרות או עובד אחר.' : 'Error: Worker is already scheduled during these hours. Please choose different hours or another worker.');
       return;
     }
 
@@ -1127,7 +1127,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       });
 
       if (overlapping) {
-        toast.error(language === 'he' ? 'העובד כבר משובץ בשעות אלה ביום זה' : 'Worker is already scheduled during these hours on this day');
+        alert(language === 'he' ? 'שגיאה: העובד כבר משובץ בשעות אלה ביום זה.' : 'Error: Worker is already scheduled during these hours on this day.');
         return; // cancel the drag operation
       }
     }
