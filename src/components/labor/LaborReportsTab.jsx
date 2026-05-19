@@ -13,6 +13,9 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he';
   
+  const [user, setUser] = useState(null);
+  useEffect(() => { base44.auth.me().then(setUser); }, []);
+
   const [reportType, setReportType] = useState("summary"); // summary | detailed
   const [periodType, setPeriodType] = useState("current_month"); // current_week | current_month | last_month | custom
   const [startDate, setStartDate] = useState(moment().startOf('month').format('YYYY-MM-DD'));
@@ -298,27 +301,49 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                 const t_total = isFirst ? tips.total : 0;
 
                 const hrs = s.hours_worked || 0;
-                const pay = s.payment_for_shift || 0;
-                const rate = hrs > 0 ? pay / hrs : 0;
 
-                // Israeli overtime logic
+                // Get worker rate from position override or base payment
+                let baseRate = parseFloat(worker.payment_amount) || 0;
+                if (worker.position_rates && worker.position_rates.length > 0) {
+                  const override = worker.position_rates.find(pr => pr.position_id === s.job_position_id);
+                  if (override) baseRate = parseFloat(override.amount) || baseRate;
+                }
+                const rate = baseRate;
+
+                // Overtime logic
                 let regularHours = 0, ot125 = 0, ot150 = 0, ot200 = 0;
                 const isSaturday = moment(date).day() === 6;
+                const regularThreshold = parseFloat(user?.regular_hours_per_day) || 8;
+
                 if (isSaturday) {
                   ot150 = hrs;
                 } else {
-                  regularHours = Math.min(hrs, 8);
-                  ot125 = Math.min(Math.max(hrs - 8, 0), 2);
-                  ot150 = Math.max(hrs - 10, 0);
+                  regularHours = Math.min(hrs, regularThreshold);
+                  ot125 = Math.min(Math.max(hrs - regularThreshold, 0), 2);
+                  ot150 = Math.max(hrs - (regularThreshold + 2), 0);
+                }
+
+                // Calculate Pay
+                let pay = 0;
+                if (worker.salary_includes_overtime) {
+                  pay = hrs * rate;
+                } else {
+                  pay = (regularHours * rate) + (ot125 * rate * 1.25) + (ot150 * rate * 1.5) + (ot200 * rate * 2.0);
+                }
+
+                // If worker salary type is not hourly, we fall back to the pre-calculated shift pay
+                const paymentType = worker.payment_type || 'hourly';
+                if (paymentType !== 'hourly') {
+                  pay = s.payment_for_shift || 0;
                 }
 
                 const isTipped = isPositionTipped(s.job_position);
-                
-                // Alema (השלמה): The gap the employer needs to pay if tips don't cover the base pay (only for tipped positions)
+
+                // Alema (השלמה): The gap the employer needs to pay if tips don't cover the base pay
                 const alema = isTipped ? Math.max(0, pay - t_total) : 0;
                 const regular_pay = isTipped ? 0 : pay;
-                
-                // Employer taxes/social benefits are usually calculated on the full gross pay (base pay)
+
+                // Employer taxes/social benefits are calculated on the full gross pay (base pay)
                 const employerTaxes = pay * (empCostPct / 100);
                 
                 // Total cost to employer = The gap paid out of pocket (Alema) + Regular Pay + Employer taxes on full gross
@@ -362,8 +387,11 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
          const travelEmployerTaxes = travel_amount * (empCostPct / 100);
          const bonusEmployerTaxes = wAdj.bonus * (empCostPct / 100);
          
-         const finalCost = w_cost + mgmtBonusProRata + employerTaxesOnBonus + travel_amount + travelEmployerTaxes + wAdj.bonus + bonusEmployerTaxes;
-         const finalGross = w_pay + mgmtBonusProRata + travel_amount + wAdj.bonus;
+         const effectiveTravelAmount = worker.salary_includes_travel ? 0 : travel_amount;
+         const effectiveTravelEmployerTaxes = worker.salary_includes_travel ? 0 : travelEmployerTaxes;
+         
+         const finalCost = w_cost + mgmtBonusProRata + employerTaxesOnBonus + effectiveTravelAmount + effectiveTravelEmployerTaxes + wAdj.bonus + bonusEmployerTaxes;
+         const finalGross = w_pay + mgmtBonusProRata + effectiveTravelAmount + wAdj.bonus;
 
          result.push({
             worker_id: worker.id,

@@ -27,7 +27,8 @@ export default function UserProfilePage() {
     supply_receiving_phone: "",
     email_sender_name: "",
     reply_to_email: "",
-    restaurant_logo: ""
+    restaurant_logo: "",
+    regular_hours_per_day: 8
   });
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [reminderLoading, setReminderLoading] = useState(false);
@@ -70,7 +71,8 @@ export default function UserProfilePage() {
         supply_receiving_phone: currentUser.supply_receiving_phone || "",
         email_sender_name: currentUser.email_sender_name || "",
         reply_to_email: currentUser.reply_to_email || "",
-        restaurant_logo: currentUser.restaurant_logo || ""
+        restaurant_logo: currentUser.restaurant_logo || "",
+        regular_hours_per_day: currentUser.regular_hours_per_day || 8
       });
       setDriveEmail(currentUser.drive_share_email || currentUser.email || "");
     } catch (error) {
@@ -95,7 +97,8 @@ export default function UserProfilePage() {
         supply_receiving_phone: formData.supply_receiving_phone,
         email_sender_name: formData.email_sender_name,
         reply_to_email: formData.reply_to_email,
-        restaurant_logo: formData.restaurant_logo
+        restaurant_logo: formData.restaurant_logo,
+        regular_hours_per_day: parseFloat(formData.regular_hours_per_day) || 8
       });
 
       toast({ title: language === 'he' ? 'העדכון נשמר' : 'Settings saved successfully!' });
@@ -346,6 +349,32 @@ export default function UserProfilePage() {
                     onChange={(e) => setFormData({...formData, business_address: e.target.value})}
                     placeholder={t('business_address')}
                   />
+                </div>
+
+                <div className="md:col-span-2 border-t pt-6 mt-6">
+                  <h3 className="text-lg font-semibold mb-4">
+                    {language === 'he' ? 'הגדרות שכר וסידור עבודה' : 'Labor & Schedule Settings'}
+                  </h3>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="regular_hours_per_day">
+                    {language === 'he' ? 'מספר שעות עבודה רגילות ביום (לפני 125%)' : 'Regular Hours per Day (Before 125%)'}
+                  </Label>
+                  <Input
+                    id="regular_hours_per_day"
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    max="12"
+                    value={formData.regular_hours_per_day || 8}
+                    onChange={(e) => setFormData({...formData, regular_hours_per_day: e.target.value})}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {language === 'he'
+                      ? 'למשל: 8 או 8.6 שעות. לאחר שעות אלה יחושבו שעות נוספות (125%).'
+                      : 'E.g., 8 or 8.6 hours. Overtime (125%) will be calculated after these hours.'}
+                  </p>
                 </div>
 
                 <div className="md:col-span-2 border-t pt-6 mt-6">

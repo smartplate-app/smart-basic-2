@@ -87,6 +87,16 @@
       "default": 0,
       "description": "Total cost including employer costs"
     },
+    "salary_includes_overtime": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, overtime is recorded but not paid extra"
+    },
+    "salary_includes_travel": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, travel is not added to the cost"
+    },
     "bank_name": {
       "type": "string",
       "description": "Bank name"

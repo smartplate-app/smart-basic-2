@@ -58,6 +58,8 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
     management_bonus: 0,
     employer_cost_percentage: 25,
     total_cost_with_employer: 0,
+    salary_includes_overtime: false,
+    salary_includes_travel: false,
     bank_name: "",
     bank_branch: "",
     bank_account: "",
@@ -100,6 +102,8 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       management_bonus: workerManagementBonus,
       employer_cost_percentage: workerEmployerCostPercentage,
       total_cost_with_employer: parseFloat(worker.total_cost_with_employer) || calculatedTotalCost,
+      salary_includes_overtime: !!worker.salary_includes_overtime,
+      salary_includes_travel: !!worker.salary_includes_travel,
       bank_name: worker.bank_name || "",
       bank_branch: worker.bank_branch || "",
       bank_account: worker.bank_account || "",
@@ -526,6 +530,50 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                 <p className="text-xs text-gray-500">
                   {language === 'he' ? 'לפי חוק נסיעות' : 'By travel expense law'}
                 </p>
+              </div>
+
+              <div className="space-y-4 md:col-span-2 bg-gray-50 border rounded-lg p-4">
+                <h4 className="font-semibold text-gray-800">{language === 'he' ? 'הגדרות שכר מיוחדות' : 'Special Salary Settings'}</h4>
+                
+                <div className={`flex items-center gap-3 ${language === 'he' ? 'flex-row-reverse' : ''}`}>
+                  <input
+                    type="checkbox"
+                    id="salary_includes_overtime"
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={formData.salary_includes_overtime}
+                    onChange={(e) => setFormData({ ...formData, salary_includes_overtime: e.target.checked })}
+                  />
+                  <div className={language === 'he' ? 'text-right' : 'text-left'}>
+                    <Label htmlFor="salary_includes_overtime" className="cursor-pointer font-medium block">
+                      {language === 'he' ? 'השכר השעתי כולל שעות נוספות' : 'Hourly rate includes overtime'}
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {language === 'he' 
+                        ? 'במידה ומסומן, יוצגו השעות הנוספות בדוחות לצורך מעקב, אך הן יחושבו לפי 100% ולא 125% או 150% (רלוונטי למנהלים, עובדים גלובליים או עובדי טיפים שמקבלים שכר קבוע).' 
+                        : 'If checked, overtime hours will be displayed for tracking but will be calculated at 100% (relevant for global/tipped workers).'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`flex items-center gap-3 mt-4 ${language === 'he' ? 'flex-row-reverse' : ''}`}>
+                  <input
+                    type="checkbox"
+                    id="salary_includes_travel"
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={formData.salary_includes_travel}
+                    onChange={(e) => setFormData({ ...formData, salary_includes_travel: e.target.checked })}
+                  />
+                  <div className={language === 'he' ? 'text-right' : 'text-left'}>
+                    <Label htmlFor="salary_includes_travel" className="cursor-pointer font-medium block">
+                      {language === 'he' ? 'השכר השעתי כולל נסיעות' : 'Hourly rate includes travel'}
+                    </Label>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {language === 'he' 
+                        ? 'במידה ומסומן, לא יתווסף תשלום נסיעות נוסף מעבר לשכר, וההשלמה תחשב ככוללת את עלות הנסיעות.' 
+                        : 'If checked, travel expenses will not be added to the final payout, and the Alema includes travel.'}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2 md:col-span-2">

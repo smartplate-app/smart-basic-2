@@ -115,7 +115,12 @@ export default function MonthlySalaryReport({ selectedMonth, user, language }) {
         if (paymentType === 'monthly') {
           // Monthly salary: pro-rata based on days passed
           const dailyRate = paymentAmount / daysInMonth;
-          const baseSalary = dailyRate * daysPassed;
+          let baseSalary = dailyRate * daysPassed;
+          
+          if (!worker.salary_includes_travel && worker.travel_expense_type === 'monthly') {
+            baseSalary += (226 * (daysPassed / daysInMonth));
+          }
+          
           const withEmployerCosts = baseSalary * (1 + employerCostPercent / 100);
           
           totalSalary = withEmployerCosts;
@@ -141,12 +146,11 @@ export default function MonthlySalaryReport({ selectedMonth, user, language }) {
               const hourlyRate = paymentAmount;
               
               // Israeli labor law: calculate overtime
-              // Regular hours (up to 8 per day): 100%
-              // Overtime 1-2 hours (hours 9-10): 125%
-              // Beyond 10 hours: 150%
-              let regularHours = Math.min(hoursWorked, 8);
-              let overtime125 = Math.min(Math.max(hoursWorked - 8, 0), 2);
-              let overtime150 = Math.max(hoursWorked - 10, 0);
+              // Get custom regular hours threshold (default 8)
+              const regularHoursThreshold = parseFloat(user.regular_hours_per_day) || 8;
+              let regularHours = Math.min(hoursWorked, regularHoursThreshold);
+              let overtime125 = Math.min(Math.max(hoursWorked - regularHoursThreshold, 0), 2);
+              let overtime150 = Math.max(hoursWorked - (regularHoursThreshold + 2), 0);
 
               // Check if weekend (Saturday) - all hours are 150%
               const shiftDate = moment(shift.date);
@@ -157,11 +161,21 @@ export default function MonthlySalaryReport({ selectedMonth, user, language }) {
                 regularHours = 0;
                 overtime125 = 0;
               }
-
+              
               const regularPay = regularHours * hourlyRate;
               const overtime125Pay = overtime125 * hourlyRate * 1.25;
               const overtime150Pay = overtime150 * hourlyRate * 1.5;
-              const baseSalary = regularPay + overtime125Pay + overtime150Pay;
+              
+              // If worker salary includes overtime, treat all hours as 100%
+              let baseSalary = regularPay + overtime125Pay + overtime150Pay;
+              if (worker.salary_includes_overtime) {
+                baseSalary = hoursWorked * hourlyRate;
+              }
+              
+              if (!worker.salary_includes_travel && worker.travel_expense_type === 'daily') {
+                baseSalary += 22.60;
+              }
+              
               const withEmployerCosts = baseSalary * (1 + employerCostPercent / 100);
 
               totalSalary += withEmployerCosts;
