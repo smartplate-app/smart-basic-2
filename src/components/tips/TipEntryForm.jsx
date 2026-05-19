@@ -115,9 +115,27 @@ export default function TipEntryForm({ selectedDate, onSave }) {
 
     try {
       setSaving(true);
+
+      const targetDate = moment(selectedDate).format('YYYY-MM-DD');
+      const existing = await base44.entities.TipEntry.filter({
+        date: targetDate,
+        shift_type: shiftType
+      });
+
+      if (existing && existing.length > 0) {
+        const confirmSave = window.confirm(
+          language === 'he' 
+            ? 'כבר הוזנו טיפים למשמרת זו בתאריך הנבחר. האם תרצה לשמור רשומה נוספת בכל זאת?' 
+            : 'Tips have already been entered for this shift on the selected date. Do you want to save another record anyway?'
+        );
+        if (!confirmSave) {
+          setSaving(false);
+          return;
+        }
+      }
       
       await base44.entities.TipEntry.create({
-        date: moment(selectedDate).format('YYYY-MM-DD'),
+        date: targetDate,
         shift_type: shiftType,
         cash_tips: cashTips,
         credit_tips: creditTips,

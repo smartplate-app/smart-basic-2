@@ -25,6 +25,24 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
     if (!result) return;
     setSaving(true);
     try {
+      const isWeek = result.inputs.period_type !== 'day';
+      const targetDate = result.inputs.period_date || date;
+
+      const existing = await base44.entities.TipEntry.filter({
+        date: targetDate,
+        shift_type: "evening" // Simulator currently saves all as evening
+      });
+
+      if (existing && existing.length > 0) {
+        const msg = isWeek 
+          ? "כבר חושבו טיפים לשבוע זה (לפי תאריך תחילת שבוע). האם ברצונך להוסיף רשומה נוספת בכל זאת?"
+          : "כבר חושבו טיפים למשמרת זו בתאריך הנבחר. האם ברצונך להוסיף רשומה נוספת בכל זאת?";
+        if (!window.confirm(msg)) {
+          setSaving(false);
+          return;
+        }
+      }
+
       const total_tips = (result.inputs.cash_tips || 0) + (result.inputs.credit_tips || 0);
       const workersData = result.results.map(r => ({
         worker_id: r.worker_id,
@@ -35,11 +53,12 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         tip_percentage: total_tips > 0 ? (r.total / total_tips) * 100 : 0
       }));
 
-      const isWeek = result.inputs.period_type !== 'day';
       await base44.entities.TipEntry.create({
-        date: result.inputs.period_date || date,
+        date: targetDate,
         shift_type: "evening",
         total_tips: total_tips,
+        cash_tips: result.inputs.cash_tips || 0,
+        credit_tips: result.inputs.credit_tips || 0,
         workers: workersData,
         notes: `מדיניות: ${result.inputs.policy_name || 'ללא'} | ${isWeek ? 'חישוב שבועי' : 'חישוב יומי'}`
       });
