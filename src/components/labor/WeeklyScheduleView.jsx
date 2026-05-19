@@ -553,11 +553,29 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         return;
     }
 
-    // Check for double shift on the same day
+    // Check for overlapping shifts
+    const newStart = moment(editingShift.start_time, 'HH:mm');
+    const newEnd = moment(editingShift.end_time, 'HH:mm');
+    
+    // Check if worker already has a shift on the same day
     const existingShifts = checkForDoubleShift(editingShift.worker_id, selectedCell.day, editingShift.id);
     
+    const overlapping = existingShifts.some(shift => {
+      const existingStart = moment(shift.start_time, 'HH:mm');
+      const existingEnd = moment(shift.end_time, 'HH:mm');
+      
+      // Check for overlap (start < end of other AND end > start of other)
+      // Note: this simple logic assumes shifts don't cross midnight on the same day key.
+      return newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart);
+    });
+
+    if (overlapping) {
+      toast.error(language === 'he' ? 'העובד כבר משובץ בשעות אלה' : 'Worker is already scheduled during these hours');
+      return;
+    }
+
     if (existingShifts.length > 0 && !pendingShiftSave) {
-      // Worker already has a shift on this day - show warning
+      // Worker already has a shift on this day (but not overlapping) - show warning
       setPendingShiftSave({
         worker,
         position,
@@ -1088,6 +1106,26 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         base_payment: newBasePayment,
         payment_for_shift: newPaymentForShift
       };
+    }
+
+    // Check for overlap if moving to a new day or modifying shift
+    if (updated.worker_id) {
+      const newStart = moment(updated.start_time, 'HH:mm');
+      const newEnd = moment(updated.end_time, 'HH:mm');
+      // If the shift doesn't have an ID yet, we just check against the other shifts in `newShifts`
+      // `newShifts` already had `movedOriginal` (which is `updated`) removed earlier via `splice(from, 1)`
+      const existingShifts = newShifts.filter(s => s.worker_id === updated.worker_id && s.day === updated.day);
+      
+      const overlapping = existingShifts.some(shift => {
+        const existingStart = moment(shift.start_time, 'HH:mm');
+        const existingEnd = moment(shift.end_time, 'HH:mm');
+        return newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart);
+      });
+
+      if (overlapping) {
+        toast.error(language === 'he' ? 'העובד כבר משובץ בשעות אלה ביום זה' : 'Worker is already scheduled during these hours on this day');
+        return; // cancel the drag operation
+      }
     }
 
     const destIndices = newShifts.map((s, i) => ({ s, i })).filter(({ s }) => matchCell(s, dst)).map(({ i }) => i);
