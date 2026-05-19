@@ -13,6 +13,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
   const [cash, setCash] = useState(0);
   const [credit, setCredit] = useState(0);
   const [periodType, setPeriodType] = useState('day');
+  const [shiftFilter, setShiftFilter] = useState('all');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -27,10 +28,16 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
     try {
       const isWeek = result.inputs.period_type !== 'day';
       const targetDate = result.inputs.period_date || date;
+      const shiftFilterVal = result.inputs.shift_filter || 'all';
+      
+      let dbShiftType = "evening";
+      if (!isWeek && shiftFilterVal === "morning") dbShiftType = "morning";
+      if (!isWeek && shiftFilterVal === "afternoon") dbShiftType = "morning"; // Afternoon falls back to morning enum or evening. Let's use morning. Actually evening is default.
+      if (!isWeek && shiftFilterVal === "night") dbShiftType = "night";
 
       const existing = await base44.entities.TipEntry.filter({
         date: targetDate,
-        shift_type: "evening" // Simulator currently saves all as evening
+        shift_type: dbShiftType
       });
 
       if (existing && existing.length > 0) {
@@ -53,14 +60,16 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         tip_percentage: total_tips > 0 ? (r.total / total_tips) * 100 : 0
       }));
 
+      const shiftFilterNameHeb = shiftFilterVal === 'morning' ? 'בוקר' : shiftFilterVal === 'afternoon' ? 'צהריים' : shiftFilterVal === 'evening' ? 'ערב' : 'לילה';
+
       await base44.entities.TipEntry.create({
         date: targetDate,
-        shift_type: "evening",
+        shift_type: dbShiftType,
         total_tips: total_tips,
         cash_tips: result.inputs.cash_tips || 0,
         credit_tips: result.inputs.credit_tips || 0,
         workers: workersData,
-        notes: `מדיניות: ${result.inputs.policy_name || 'ללא'} | ${isWeek ? 'חישוב שבועי' : 'חישוב יומי'}`
+        notes: `מדיניות: ${result.inputs.policy_name || 'ללא'} | ${isWeek ? 'חישוב שבועי' : `חישוב יומי - ${shiftFilterVal === 'all' ? 'כל היום' : shiftFilterNameHeb}`}`
       });
       alert("הנתונים נשמרו בהצלחה!");
     } catch(err) {
@@ -139,8 +148,19 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         shifts = target?.shifts || [];
       }
 
+      if (periodType === 'day' && shiftFilter !== 'all') {
+        shifts = shifts.filter(sh => {
+          if (!sh.start_time) return false;
+          const hr = parseInt(sh.start_time.split(':')[0], 10);
+          if (shiftFilter === 'morning') return hr >= 4 && hr < 12;
+          if (shiftFilter === 'afternoon') return hr >= 12 && hr < 17;
+          if (shiftFilter === 'evening') return hr >= 17 || hr < 4;
+          return true;
+        });
+      }
+
       if (shifts.length === 0) {
-        alert("לא נמצאו משמרות בסידור העבודה לתקופה שנבחרה");
+        alert("לא נמצאו משמרות בסידור העבודה לתקופה/משמרת שנבחרה");
         setLoading(false);
         return;
       }
@@ -178,6 +198,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
       
       // Store period metadata for save context
       data.inputs.period_type = periodType;
+      data.inputs.shift_filter = shiftFilter;
       data.inputs.period_date = periodType === 'day' ? date : (periodType === 'current_week' ? moment().startOf('week').format('YYYY-MM-DD') : moment().subtract(1, 'week').startOf('week').format('YYYY-MM-DD'));
       
       setResult(data);
@@ -223,16 +244,29 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
               </select>
             </div>
             {periodType === 'day' && (
-              <div>
-                <label className="text-sm text-gray-600">תאריך</label>
-                <Input type="date" value={date} dir="ltr" className="w-full text-left" onChange={(e) => setDate(e.target.value)} />
-              </div>
+              <>
+                <div>
+                  <label className="text-sm text-gray-600">תאריך</label>
+                  <Input type="date" value={date} dir="ltr" className="w-full text-left" onChange={(e) => setDate(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600">סינון משמרת</label>
+                  <select className="w-full border rounded-md h-10 px-2" value={shiftFilter} onChange={(e) => setShiftFilter(e.target.value)}>
+                    <option value="all">כל היום</option>
+                    <option value="morning">משמרת בוקר</option>
+                    <option value="afternoon">משמרת צהריים</option>
+                    <option value="evening">משמרת ערב/לילה</option>
+                  </select>
+                </div>
+              </>
             )}
           </div>
 
           <p className="text-sm text-gray-500">
             {periodType === 'day' 
-              ? 'השעות ייאספו אוטומטית מסידור העבודה ליום הנבחר לפי התפקידים המוגדרים.' 
+              ? (shiftFilter === 'all' 
+                 ? 'השעות ייאספו אוטומטית מכלל משמרות היום בסידור העבודה לתאריך הנבחר.' 
+                 : `השעות ייאספו אך ורק מהמשמרות המוגדרות כ${shiftFilter === 'morning' ? 'בוקר' : shiftFilter === 'afternoon' ? 'צהריים' : 'ערב'} באותו תאריך בסידור העבודה.`)
               : 'השעות ייאספו ויסוכמו מכל סידור העבודה של השבוע הנבחר עבור כל עובד.'}
           </p>
 
@@ -246,7 +280,14 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>תוצאות מפורטות</CardTitle>
+              <CardTitle>
+                תוצאות מפורטות 
+                {result.inputs.period_type === 'day' && result.inputs.shift_filter !== 'all' && (
+                  <span className="mr-2 text-purple-600">
+                    ({result.inputs.shift_filter === 'morning' ? 'משמרת בוקר' : result.inputs.shift_filter === 'afternoon' ? 'משמרת צהריים' : 'משמרת ערב'})
+                  </span>
+                )}
+              </CardTitle>
               <div className="text-sm text-gray-500 mt-1">סה"כ שחולק: ₪{(result?.summary?.distributed_total || 0).toLocaleString()}</div>
             </div>
             <Button onClick={saveTips} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white gap-2">

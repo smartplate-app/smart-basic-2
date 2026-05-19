@@ -190,7 +190,7 @@ export default function TipEntryForm({ selectedDate, onSave }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="morning">{language === 'he' ? 'בוקר' : 'Morning'}</SelectItem>
+                <SelectItem value="morning">{language === 'he' ? 'בוקר/צהריים' : 'Morning/Afternoon'}</SelectItem>
                 <SelectItem value="evening">{language === 'he' ? 'ערב' : 'Evening'}</SelectItem>
                 <SelectItem value="night">{language === 'he' ? 'לילה' : 'Night'}</SelectItem>
               </SelectContent>
