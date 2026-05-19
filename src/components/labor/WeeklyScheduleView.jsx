@@ -525,13 +525,17 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             });
           };
 
-  const checkForDoubleShift = (workerId, dayKey, currentShiftId) => {
+  const checkForDoubleShift = (workerId, dayKey, currentShiftId, originalKey) => {
     // Check if this worker already has a shift on the same day (in any position)
-    const existingShiftsForWorkerOnDay = (schedule?.shifts || []).filter(s => 
-      s.worker_id === workerId && 
-      s.day === dayKey &&
-      s.id !== currentShiftId // Exclude the current shift being edited
-    );
+    const existingShiftsForWorkerOnDay = (schedule?.shifts || []).filter(s => {
+      if (s.worker_id !== workerId) return false;
+      if (s.day !== dayKey) return false;
+      
+      if (currentShiftId && s.id === currentShiftId) return false;
+      if (!currentShiftId && originalKey && getShiftDraggableId(s) === originalKey) return false;
+      
+      return true;
+    });
     return existingShiftsForWorkerOnDay;
   };
 
@@ -558,7 +562,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const newEnd = moment(editingShift.end_time, 'HH:mm');
     
     // Check if worker already has a shift on the same day
-    const existingShifts = checkForDoubleShift(editingShift.worker_id, selectedCell.day, editingShift.id);
+    const existingShifts = checkForDoubleShift(editingShift.worker_id, selectedCell.day, editingShift.id, editingShift.__originalKey);
     
     const overlapping = existingShifts.some(shift => {
       const existingStart = moment(shift.start_time, 'HH:mm');
