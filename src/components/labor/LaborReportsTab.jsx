@@ -866,32 +866,32 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                       {summaryData.map((workerBlock, idx) => (
                         <React.Fragment key={workerBlock.worker_name}>
                           {workerBlock.positions.map((pos, pIdx) => (
-                            <tr key={`${workerBlock.worker_name}-${pos.position}`} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'} hover:bg-gray-100`}>
+                            <tr key={`${workerBlock.worker_name}-${pos.position}`} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'} hover:bg-gray-100 text-gray-500`}>
                               <td className="p-3">
-                                {pIdx === 0 && <div className="font-medium text-gray-900">{workerBlock.worker_name}</div>}
+                                {pIdx === 0 && <div className="text-gray-600">{workerBlock.worker_name}</div>}
                               </td>
-                              <td className="p-3 text-gray-600 text-sm">{pos.position}</td>
-                              <td className="p-3">{pos.shifts}</td>
-                              <td className="p-3">{pos.hours.toFixed(1)}</td>
-                              <td className="p-3 text-emerald-600 font-medium">{pos.tips > 0 ? formatCurrency(pos.tips) : '-'}</td>
-                              <td className="p-3 text-orange-600 font-medium">{pos.alema > 0 ? formatCurrency(pos.alema) : '-'}</td>
-                              <td className="p-3 text-blue-700 font-medium">{pos.regular_pay > 0 ? formatCurrency(pos.regular_pay) : '-'}</td>
-                              <td className="p-3 text-purple-700 font-medium">-</td>
-                              <td className="p-3 text-green-700 font-medium">{pos.gross_pay > 0 ? formatCurrency(pos.gross_pay) : '-'}</td>
-                              <td className="p-3 text-amber-700">{pos.employer_cost > 0 ? formatCurrency(pos.employer_cost) : '-'}</td>
+                              <td className="p-3 text-gray-400 text-sm">{pos.position}</td>
+                              <td className="p-3 opacity-70">{pos.shifts}</td>
+                              <td className="p-3 opacity-70">{pos.hours.toFixed(1)}</td>
+                              <td className="p-3 text-emerald-600/60">{pos.tips > 0 ? formatCurrency(pos.tips) : '-'}</td>
+                              <td className="p-3 text-orange-600/60">{pos.alema > 0 ? formatCurrency(pos.alema) : '-'}</td>
+                              <td className="p-3 text-blue-700/60">{pos.regular_pay > 0 ? formatCurrency(pos.regular_pay) : '-'}</td>
+                              <td className="p-3 text-purple-700/60">-</td>
+                              <td className="p-3 text-green-700/60">{pos.gross_pay > 0 ? formatCurrency(pos.gross_pay) : '-'}</td>
+                              <td className="p-3 text-amber-700/60">{pos.employer_cost > 0 ? formatCurrency(pos.employer_cost) : '-'}</td>
                             </tr>
                           ))}
-                          <tr className="bg-purple-50/40 font-semibold border-b-2 border-gray-200">
-                            <td className="p-3 text-purple-900">{language === 'he' ? 'סה״כ ' : 'Total '}{workerBlock.worker_name}</td>
+                          <tr className="bg-purple-100 font-bold border-b-2 border-purple-300 text-base shadow-sm">
+                            <td className="p-3 text-purple-950">{language === 'he' ? 'סה״כ ' : 'Total '}{workerBlock.worker_name}</td>
                             <td className="p-3"></td>
-                            <td className="p-3 text-purple-900">{workerBlock.total_shifts}</td>
-                            <td className="p-3 text-purple-900">{workerBlock.total_hours.toFixed(1)}</td>
+                            <td className="p-3 text-purple-950">{workerBlock.total_shifts}</td>
+                            <td className="p-3 text-purple-950">{workerBlock.total_hours.toFixed(1)}</td>
                             <td className="p-3 text-emerald-700">{formatCurrency(workerBlock.total_tips)}</td>
                             <td className="p-3 text-orange-700">{formatCurrency(workerBlock.alema)}</td>
                             <td className="p-3 text-blue-800">{formatCurrency(workerBlock.regular_pay)}</td>
                             <td className="p-3 text-purple-800">{workerBlock.management_bonus > 0 ? formatCurrency(workerBlock.management_bonus) : '-'}</td>
                             <td className="p-3 text-green-800">{formatCurrency(workerBlock.total_gross)}</td>
-                            <td className="p-3 text-amber-800 bg-amber-50/50">{formatCurrency(workerBlock.total_cost)}</td>
+                            <td className="p-3 text-amber-900 bg-amber-100/50">{formatCurrency(workerBlock.total_cost)}</td>
                           </tr>
                         </React.Fragment>
                       ))}
