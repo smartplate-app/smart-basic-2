@@ -932,7 +932,7 @@ const AppLayout = ({ children, currentPageName }) => {
                       </header>
 
       <div className="flex">
-        <aside data-viewer={isViewer ? '1' : '0'} className={'z-50 bg-gray-100 dark:bg-[#0b1530] ' + (isRTL ? 'border-l' : 'border-r') + ' border-gray-200 dark:border-[#1e2a55] h-screen w-52 sm:w-56 md:w-64 lg:w-72 transition-transform duration-300 ' + (sidebarOpen ? (isRTL ? 'fixed top-0 right-0 translate-x-0 flex flex-col' : 'fixed top-0 left-0 translate-x-0 flex flex-col') : 'hidden') + ' md:sticky md:top-0 md:flex md:flex-col'}>
+        <aside data-viewer={isViewer ? '1' : '0'} className={'z-50 bg-gray-100 dark:bg-[#0b1530] ' + (isRTL ? 'border-l' : 'border-r') + ' border-gray-200 dark:border-[#1e2a55] h-screen w-52 sm:w-56 md:w-64 lg:w-72 transition-transform duration-300 ' + (sidebarOpen ? (isRTL ? 'fixed top-0 right-0 translate-x-0 flex flex-col' : 'fixed top-0 left-0 translate-x-0 flex flex-col') : 'hidden') + ' md:sticky md:top-0 ' + (showDesktopSidebar ? 'md:flex md:flex-col' : 'md:hidden')}>
           <div className="p-4 border-b border-gray-200 hidden md:flex md:flex-row md:items-center md:justify-between">
                             <Button
                               variant="ghost"
