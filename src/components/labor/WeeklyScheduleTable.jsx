@@ -174,8 +174,8 @@ export default function WeeklyScheduleTable({
                                                           <span className="shift-cost text-[9px] opacity-80">{formatCurrency(shift.payment_for_shift || 0)}</span>
                                                         </div>
                                                         {shift.notes && (
-                                                          <div className={`flex items-center gap-1 mt-1 text-[10px] text-gray-600 opacity-90 ${isRTL ? 'flex-row-reverse pr-4' : 'pl-4'}`}>
-                                                            <MessageCircle className="h-3 w-3 shrink-0" />
+                                                          <div className={`flex items-center gap-1 mt-1 text-[10px] text-gray-700 font-medium ${isRTL ? 'flex-row-reverse pr-4' : 'pl-4'}`}>
+                                                            <MessageCircle className="h-3 w-3 shrink-0 text-gray-500" />
                                                             <span className="truncate">{shift.notes}</span>
                                                           </div>
                                                         )}
