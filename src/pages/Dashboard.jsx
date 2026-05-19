@@ -1223,24 +1223,7 @@ export default function DashboardPage() {
                     );
                   })}
                 </select>
-                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Input 
-                    type="url" 
-                    placeholder={language === 'he' ? 'הדבק קישור (למשל Rosa)...' : 'Paste external link...'} 
-                    value={externalLink}
-                    onChange={(e) => setExternalLink(e.target.value)}
-                    className="w-48 h-8 text-sm"
-                  />
-                  <Button 
-                    onClick={handleSyncFromLink}
-                    disabled={syncingExternal || !externalLink}
-                    size="sm"
-                    className={`flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm rounded-full px-4 transition-all hover:shadow-md ${isRTL ? 'flex-row-reverse' : ''}`}
-                  >
-                    {syncingExternal ? <Loader className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                    {language === 'he' ? 'סנכרן מקישור' : 'Sync from Link'}
-                  </Button>
-                </div>
+
                 <Button 
                   onClick={handleImportFromSheet}
                   disabled={importingData}
