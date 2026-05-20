@@ -155,7 +155,7 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <LanguageProvider>
-          <Router>
+          <Router basename="/smart-basic-2">
             <NavigationTracker />
             <AuthenticatedApp />
           </Router>
