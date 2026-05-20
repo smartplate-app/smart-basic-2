@@ -183,11 +183,17 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     tipEntries.forEach(entry => {
       if (!entry.workers) return;
       
-      const rootCash = entry.cash_tips || 0;
-      const rootCredit = entry.credit_tips || 0;
-      const rootTotal = rootCash + rootCredit || entry.total_tips || 1;
-      const cashRatio = rootCash / rootTotal;
-      const creditRatio = rootCredit / rootTotal;
+      const rootCash = Number(entry.cash_tips) || 0;
+      const rootCredit = Number(entry.credit_tips) || 0;
+      const rootTotal = rootCash + rootCredit || Number(entry.total_tips) || 1;
+      
+      let cashRatio = rootCash / rootTotal;
+      let creditRatio = rootCredit / rootTotal;
+      
+      if (rootCash === 0 && rootCredit === 0) {
+        cashRatio = 1;
+        creditRatio = 0;
+      }
 
       entry.workers.forEach(w => {
         const worker = workers.find(wk => w.worker_id === wk.id);
@@ -209,15 +215,17 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
             });
         }
         
-        let workerCash = w.cash_tips || 0;
-        let workerCredit = w.credit_tips || 0;
-        if (workerCash === 0 && workerCredit === 0 && w.tip_amount > 0) {
-          workerCash = w.tip_amount * cashRatio;
-          workerCredit = w.tip_amount * creditRatio;
+        let workerCash = Number(w.cash_tips) || 0;
+        let workerCredit = Number(w.credit_tips) || 0;
+        let workerTipAmount = Number(w.tip_amount) || 0;
+
+        if (workerCash === 0 && workerCredit === 0 && workerTipAmount > 0) {
+          workerCash = workerTipAmount * cashRatio;
+          workerCredit = workerTipAmount * creditRatio;
         }
 
         const posObj = posMap.get(posName);
-        posObj.total_tips += (w.tip_amount || 0);
+        posObj.total_tips += workerTipAmount;
         posObj.cash_tips = (posObj.cash_tips || 0) + workerCash;
         posObj.credit_tips = (posObj.credit_tips || 0) + workerCredit;
       });
@@ -253,15 +261,14 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
     tipEntries.forEach(entry => {
       const d = entry.date || entry.period_start;
       if (d && entry.workers) {
-        const rootCash = entry.cash_tips || 0;
-        const rootCredit = entry.credit_tips || 0;
-        const rootTotal = rootCash + rootCredit || entry.total_tips || 1;
+        const rootCash = Number(entry.cash_tips) || 0;
+        const rootCredit = Number(entry.credit_tips) || 0;
+        const rootTotal = rootCash + rootCredit || Number(entry.total_tips) || 1;
         
         let cashRatio = rootCash / rootTotal;
         let creditRatio = rootCredit / rootTotal;
         
-        // If older record has no cash/credit split at root, default to 100% cash
-        if (rootCash === 0 && rootCredit === 0 && entry.total_tips > 0) {
+        if (rootCash === 0 && rootCredit === 0) {
           cashRatio = 1;
           creditRatio = 0;
         }
@@ -273,16 +280,18 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
           }
           const t = tipsByWorkerDate.get(key);
           
-          let workerCash = w.cash_tips || 0;
-          let workerCredit = w.credit_tips || 0;
-          if (workerCash === 0 && workerCredit === 0 && w.tip_amount > 0) {
-            workerCash = w.tip_amount * cashRatio;
-            workerCredit = w.tip_amount * creditRatio;
+          let workerCash = Number(w.cash_tips) || 0;
+          let workerCredit = Number(w.credit_tips) || 0;
+          let workerTipAmount = Number(w.tip_amount) || 0;
+
+          if (workerCash === 0 && workerCredit === 0 && workerTipAmount > 0) {
+            workerCash = workerTipAmount * cashRatio;
+            workerCredit = workerTipAmount * creditRatio;
           }
 
           t.cash += workerCash;
           t.credit += workerCredit;
-          t.total += (w.tip_amount || 0);
+          t.total += workerTipAmount;
         });
       }
     });
@@ -536,28 +545,29 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
          }
          const record = dayMap.get(date);
          
-         const rootCash = entry.cash_tips || 0;
-         const rootCredit = entry.credit_tips || 0;
-         const rootTotal = rootCash + rootCredit || entry.total_tips || 1;
+         const rootCash = Number(entry.cash_tips) || 0;
+         const rootCredit = Number(entry.credit_tips) || 0;
+         const rootTotal = rootCash + rootCredit || Number(entry.total_tips) || 1;
          
          let cashRatio = rootCash / rootTotal;
          let creditRatio = rootCredit / rootTotal;
          
-         // If older record has no cash/credit split at root, default to 100% cash
-         if (rootCash === 0 && rootCredit === 0 && entry.total_tips > 0) {
+         if (rootCash === 0 && rootCredit === 0) {
            cashRatio = 1;
            creditRatio = 0;
          }
 
          entry.workers?.forEach(w => {
-           let workerCash = w.cash_tips || 0;
-           let workerCredit = w.credit_tips || 0;
-           if (workerCash === 0 && workerCredit === 0 && w.tip_amount > 0) {
-             workerCash = w.tip_amount * cashRatio;
-             workerCredit = w.tip_amount * creditRatio;
+           let workerCash = Number(w.cash_tips) || 0;
+           let workerCredit = Number(w.credit_tips) || 0;
+           let workerTipAmount = Number(w.tip_amount) || 0;
+
+           if (workerCash === 0 && workerCredit === 0 && workerTipAmount > 0) {
+             workerCash = workerTipAmount * cashRatio;
+             workerCredit = workerTipAmount * creditRatio;
            }
 
-           record.total_tips += (w.tip_amount || 0);
+           record.total_tips += workerTipAmount;
            record.cash_tips = (record.cash_tips || 0) + workerCash;
            record.credit_tips = (record.credit_tips || 0) + workerCredit;
          });
@@ -1322,11 +1332,11 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
                           <td colSpan={2} className="p-2.5 font-bold text-gray-800">
                             {row.position} <span className="text-[10px] font-normal text-gray-500">({row.workers_count} {language === 'he' ? 'עובדים' : 'workers'})</span>
                           </td>
-                          <td className="p-2.5 text-center font-medium">{row.total_hours.toFixed(2)} {language === 'he' ? 'סה״כ שעות' : 'Total Hrs'}</td>
                           <td colSpan={4} className="p-2.5 text-center bg-gray-50"></td>
-                          <td className="p-2.5 text-center text-emerald-600 font-medium bg-emerald-50/30">-</td>
-                          <td className="p-2.5 text-center text-emerald-600 font-medium bg-emerald-50/30">-</td>
-                          <td className="p-2.5 text-center text-emerald-600 font-medium bg-emerald-50/30">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
+                          <td className="p-2.5 text-center font-bold bg-gray-200/50">{row.total_hours.toFixed(2)}</td>
+                          <td className="p-2.5 text-center text-emerald-600 font-medium bg-emerald-50/30">{row.cash_tips > 0 ? formatCurrency(row.cash_tips) : '-'}</td>
+                          <td className="p-2.5 text-center text-emerald-600 font-medium bg-emerald-50/30">{row.credit_tips > 0 ? formatCurrency(row.credit_tips) : '-'}</td>
+                          <td className="p-2.5 text-center text-emerald-700 font-semibold bg-emerald-100/30">{row.total_tips > 0 ? formatCurrency(row.total_tips) : '-'}</td>
                           <td className="p-2.5 text-center text-orange-600 font-medium bg-orange-50/30">{row.alema > 0 ? formatCurrency(row.alema) : '-'}</td>
                           <td className="p-2.5 text-center text-blue-700 font-medium bg-blue-50/30">{row.regular_pay > 0 ? formatCurrency(row.regular_pay) : '-'}</td>
                           <td colSpan={4} className="p-2.5 text-center">-</td>
