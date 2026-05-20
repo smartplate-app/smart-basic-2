@@ -256,8 +256,15 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
         const rootCash = entry.cash_tips || 0;
         const rootCredit = entry.credit_tips || 0;
         const rootTotal = rootCash + rootCredit || entry.total_tips || 1;
-        const cashRatio = rootCash / rootTotal;
-        const creditRatio = rootCredit / rootTotal;
+        
+        let cashRatio = rootCash / rootTotal;
+        let creditRatio = rootCredit / rootTotal;
+        
+        // If older record has no cash/credit split at root, default to 100% cash
+        if (rootCash === 0 && rootCredit === 0 && entry.total_tips > 0) {
+          cashRatio = 1;
+          creditRatio = 0;
+        }
 
         entry.workers.forEach(w => {
           const key = `${w.worker_id}_${d}`;
@@ -532,8 +539,15 @@ export default function LaborReportsTab({ schedules, workers, positions }) {
          const rootCash = entry.cash_tips || 0;
          const rootCredit = entry.credit_tips || 0;
          const rootTotal = rootCash + rootCredit || entry.total_tips || 1;
-         const cashRatio = rootCash / rootTotal;
-         const creditRatio = rootCredit / rootTotal;
+         
+         let cashRatio = rootCash / rootTotal;
+         let creditRatio = rootCredit / rootTotal;
+         
+         // If older record has no cash/credit split at root, default to 100% cash
+         if (rootCash === 0 && rootCredit === 0 && entry.total_tips > 0) {
+           cashRatio = 1;
+           creditRatio = 0;
+         }
 
          entry.workers?.forEach(w => {
            let workerCash = w.cash_tips || 0;
