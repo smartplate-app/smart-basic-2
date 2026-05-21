@@ -358,7 +358,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                   <DropdownMenuItem onClick={() => setItemSearch('')} className="font-medium text-gray-500">
                     {language === 'he' ? 'נקה חיפוש' : 'Clear search'}
                   </DropdownMenuItem>
-                  {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                  {Array.from(new Set(receipts.map(r => r.supplier_name || supplierById[r.supplier_id]?.name).filter(Boolean)))
                     .sort((a,b) => a.localeCompare(b))
                     .map(name => (
                       <DropdownMenuItem key={name} onClick={() => setItemSearch(name)}>
@@ -368,7 +368,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 </DropdownMenuContent>
               </DropdownMenu>
               <datalist id="suppliers-datalist">
-                {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                {Array.from(new Set(receipts.map(r => r.supplier_name || supplierById[r.supplier_id]?.name).filter(Boolean)))
                   .sort((a,b) => a.localeCompare(b))
                   .map(name => (
                     <option key={name} value={name} />
