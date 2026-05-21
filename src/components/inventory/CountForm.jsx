@@ -163,12 +163,11 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     const term = (availableSearch || '').trim().toLowerCase();
     const newFilteredItems = items.filter(item => {
       const isNotInCount = !formData.items.some(countItem => countItem.item_id === item.id);
-      const belongsToScope = !formData.warehouse_id ? true : (!item.warehouse_id || item.warehouse_id === formData.warehouse_id);
       const matches = !term || (item.name || '').toLowerCase().includes(term);
-      return isNotInCount && belongsToScope && matches;
+      return isNotInCount && matches;
     });
     setFilteredAvailableItems(newFilteredItems);
-  }, [items, formData.items, formData.warehouse_id, availableSearch]);
+  }, [items, formData.items, availableSearch]);
 
   // Effect to auto-populate items from warehouse catalog on initial load for new counts
   useEffect(() => {
