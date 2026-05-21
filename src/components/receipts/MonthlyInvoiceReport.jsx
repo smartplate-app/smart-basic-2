@@ -336,14 +336,44 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               </Button>
             </div>
 
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                value={itemSearch}
-                onChange={(e) => setItemSearch(e.target.value)}
-                placeholder={language === 'he' ? 'חפש פריט או ספק...' : 'Search item or supplier...'}
-                className="h-11 pr-9 rounded-xl bg-gray-50/50 border-gray-200 focus-visible:bg-white transition-colors"
-              />
+            <div className="relative flex-1 min-w-[200px] max-w-sm flex items-center bg-gray-50/50 border border-gray-200 rounded-xl focus-within:bg-white transition-colors">
+              <div className="relative flex-1">
+                <Search className={`absolute top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 ${isRTL ? 'left-3' : 'right-3'}`} />
+                <Input
+                  list="suppliers-datalist"
+                  value={itemSearch}
+                  onChange={(e) => setItemSearch(e.target.value)}
+                  placeholder={language === 'he' ? 'חפש פריט או ספק...' : 'Search item or supplier...'}
+                  className={`h-11 border-none shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 ${isRTL ? 'pl-9 pr-3' : 'pr-9 pl-3'}`}
+                  autoComplete="off"
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 text-gray-400 hover:text-gray-600 mr-1 rtl:ml-1 rtl:mr-0">
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={isRTL ? "start" : "end"} className="max-h-[300px] overflow-y-auto w-[220px]">
+                  <DropdownMenuItem onClick={() => setItemSearch('')} className="font-medium text-gray-500">
+                    {language === 'he' ? 'נקה חיפוש' : 'Clear search'}
+                  </DropdownMenuItem>
+                  {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                    .sort((a,b) => a.localeCompare(b))
+                    .map(name => (
+                      <DropdownMenuItem key={name} onClick={() => setItemSearch(name)}>
+                        {name}
+                      </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <datalist id="suppliers-datalist">
+                {Array.from(new Set(suppliers.map(s => s.name).filter(Boolean)))
+                  .sort((a,b) => a.localeCompare(b))
+                  .map(name => (
+                    <option key={name} value={name} />
+                  ))}
+              </datalist>
             </div>
           </div>
         </div>
