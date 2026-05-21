@@ -281,7 +281,7 @@ export default function MonthlyCountPage() {
         clearTimeout(initTimeout);
       }
     };
-  }, [t]);
+  }, []); // Removed 't' dependency to prevent infinite fetch loops causing rate limits
 
   const handleCountSubmit = async (countData) => {
     const isExistingCount = editingCount && editingCount.id;
