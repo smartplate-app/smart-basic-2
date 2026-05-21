@@ -155,7 +155,7 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <LanguageProvider>
-          <Router basename="/smart-basic-2">
+          <Router basename={window.location.hostname.includes('github.io') ? '/smart-basic-2' : ''}>
             <NavigationTracker />
             <AuthenticatedApp />
           </Router>
