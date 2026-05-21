@@ -81,7 +81,9 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
     const term = normalizeText(itemSearch || '');
     const filtered = term ? inRange.filter(r => {
       const items = Array.isArray(r.verified_items) ? r.verified_items : [];
-      return items.some(it => normalizeText(String(it.item_name || it.name || '')).includes(term));
+      const matchesItem = items.some(it => normalizeText(String(it.item_name || it.name || '')).includes(term));
+      const matchesSupplier = normalizeText(String(r.supplier_name || supplierById[r.supplier_id]?.name || '')).includes(term);
+      return matchesItem || matchesSupplier;
     }) : inRange;
     return filtered.sort((a, b) => (a.invoice_date || a.received_date || '').localeCompare(b.invoice_date || b.received_date || ''));
   }, [receipts, monthStart, monthEnd, itemSearch]);
@@ -339,7 +341,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               <Input
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
-                placeholder={language === 'he' ? 'חפש פריט לפי שם...' : 'Search item name...'}
+                placeholder={language === 'he' ? 'חפש פריט או ספק...' : 'Search item or supplier...'}
                 className="h-11 pr-9 rounded-xl bg-gray-50/50 border-gray-200 focus-visible:bg-white transition-colors"
               />
             </div>
