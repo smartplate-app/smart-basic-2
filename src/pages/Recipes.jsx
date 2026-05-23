@@ -317,8 +317,7 @@ export default function RecipesPage() {
           isOpen={showImportModal}
           onClose={() => setShowImportModal(false)}
           onSuccess={() => {
-            // The import adds ingredients (Items), not Recipes directly.
-            // But we can reload recipes if needed, or just show success.
+            loadRecipes();
           }}
         />
 

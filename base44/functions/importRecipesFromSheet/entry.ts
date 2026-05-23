@@ -47,21 +47,20 @@ Deno.serve(async (req) => {
       const metaData = await metaRes.json();
       const sheetNames = metaData.sheets.map(s => s.properties.title);
 
-      let allRowsData = "";
-
-      for (const sheetName of sheetNames) {
+      const sheetFetchPromises = sheetNames.map(async (sheetName) => {
         const range = `'${sheetName}'!A1:Z1000`;
         const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`, {
           headers: { 'Authorization': `Bearer ${accessToken}` }
         });
-        if (!getRes.ok) continue;
-        
+        if (!getRes.ok) return "";
         const data = await getRes.json();
         const rows = data.values || [];
-        if (rows.length < 2) continue;
+        if (rows.length < 2) return "";
+        return `\n\n--- גיליון: ${sheetName} ---\n` + JSON.stringify(rows.slice(0, 1000));
+      });
 
-        allRowsData += `\n\n--- גיליון: ${sheetName} ---\n` + JSON.stringify(rows.slice(0, 1000));
-      }
+      const sheetDataResults = await Promise.all(sheetFetchPromises);
+      const allRowsData = sheetDataResults.join("");
 
       if (!allRowsData) {
         return Response.json({ error: 'No data found in spreadsheet' }, { status: 400 });
@@ -305,6 +304,7 @@ ${allRowsData}
     let createdItemsCount = 0;
     let updatedItemsCount = 0;
     const itemsToCreate = [];
+    const itemUpdatePromises = [];
 
     for (const itemData of validItems) {
       const existing = itemMap.get(itemData.name.trim().toLowerCase());
@@ -315,13 +315,20 @@ ${allRowsData}
                            existing.supplier_id !== itemData.supplier_id ||
                            existing.catalog_number !== itemData.catalog_number;
         if (hasChanges) {
-          await base44.entities.Item.update(existing.id, itemData);
+          itemUpdatePromises.push(
+            base44.entities.Item.update(existing.id, itemData).then(() => {
+              itemMap.set(itemData.name.trim().toLowerCase(), { ...existing, ...itemData });
+            })
+          );
           updatedItemsCount++;
-          itemMap.set(itemData.name.trim().toLowerCase(), { ...existing, ...itemData });
         }
       } else {
         itemsToCreate.push(itemData);
       }
+    }
+    
+    if (itemUpdatePromises.length > 0) {
+      await Promise.all(itemUpdatePromises);
     }
 
     if (itemsToCreate.length > 0) {
@@ -488,6 +495,7 @@ ${allRowsData}
     let createdRecipesCount = 0;
     let updatedRecipesCount = 0;
     const recipesToCreate = [];
+    const recipeUpdatePromises = [];
 
     for (const recipeData of validRecipes) {
       const existing = recipeMap.get(recipeData.name.trim().toLowerCase());
@@ -498,12 +506,16 @@ ${allRowsData}
                            existing.yield_unit !== recipeData.yield_unit ||
                            JSON.stringify(existing.ingredients) !== JSON.stringify(recipeData.ingredients);
         if (hasChanges) {
-          await base44.entities.Recipe.update(existing.id, recipeData);
+          recipeUpdatePromises.push(base44.entities.Recipe.update(existing.id, recipeData));
           updatedRecipesCount++;
         }
       } else {
         recipesToCreate.push(recipeData);
       }
+    }
+    
+    if (recipeUpdatePromises.length > 0) {
+      await Promise.all(recipeUpdatePromises);
     }
 
     if (recipesToCreate.length > 0) {

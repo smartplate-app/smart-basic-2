@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
 import { Loader2, FileSpreadsheet } from "lucide-react";
@@ -19,6 +20,23 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
   const [providedPrices, setProvidedPrices] = useState({});
   const [existingItems, setExistingItems] = useState([]);
   const [mappedItems, setMappedItems] = useState({});
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    let interval;
+    if (loading) {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 95) return prev;
+          return prev + Math.random() * 5;
+        });
+      }, 500);
+    } else {
+      setProgress(100);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleGenerateTemplate = async () => {
     setGenerating(true);
@@ -156,6 +174,17 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
                 {error}
               </div>
             )}
+            
+            {loading && (
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>{language === 'he' ? 'מעבד נתונים בעזרת AI...' : 'Processing data with AI...'}</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
+            )}
+
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => { setMissingItems([]); setParsedData(null); }} disabled={loading}>
                 {language === 'he' ? 'חזור' : 'Back'}
@@ -195,6 +224,16 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
               {error && (
                 <div className="p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
                   {error}
+                </div>
+              )}
+
+              {loading && (
+                <div className="mt-4 space-y-2">
+                  <div className="flex justify-between text-sm text-gray-500">
+                    <span>{language === 'he' ? 'מעבד נתונים בעזרת AI...' : 'Processing data with AI...'}</span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-2" />
                 </div>
               )}
 
