@@ -748,9 +748,17 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       {ing.quantity || 0} × {Number(ing.unit_price || 0).toFixed(2)} = {Number(ing.cost || 0).toFixed(2)}
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-[#d4a373] hover:text-[#b88c60] hover:bg-orange-50 shrink-0" onClick={() => { setSwappingIndex(idx); setSwapSearchTerm(ing.item_name ? ing.item_name.split(' ')[0] : ""); }} title={language === 'he' ? 'החלף פריט' : 'Replace item'}>
-                      <ArrowLeftRight className="w-4 h-4" />
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-[#d4a373] hover:text-[#b88c60] hover:bg-orange-50 shrink-0 flex items-center gap-1.5 px-2 h-8" 
+                      onClick={() => { setSwappingIndex(idx); setSwapSearchTerm(ing.item_name ? ing.item_name.split(' ')[0] : ""); }} 
+                      title={language === 'he' ? 'החלף פריט' : 'Replace item'}
+                    >
+                      <ArrowLeftRight className="w-5 h-5" />
+                      <span className="text-xs">{language === 'he' ? 'החלף פריט' : 'Change item'}</span>
                     </Button>
                     <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 shrink-0" onClick={() => handleRemoveIngredient(idx)}>
                       <Trash2 className="w-4 h-4" />
