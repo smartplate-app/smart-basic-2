@@ -18,6 +18,17 @@ function normalizeUnit(u) {
   return 'unit';
 }
 
+// Helper to process arrays in chunks to avoid rate limits
+const processInChunks = async (items, fn, chunkSize) => {
+  const results = [];
+  for (let i = 0; i < items.length; i += chunkSize) {
+    const chunk = items.slice(i, i + chunkSize);
+    const chunkResults = await Promise.all(chunk.map(fn));
+    results.push(...chunkResults);
+  }
+  return results;
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -67,8 +78,8 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'No data found in spreadsheet' }, { status: 400 });
       }
 
-      // Run AI processing on each sheet in parallel to avoid context length limits
-      const parsePromises = validSheets.map(async (sheetData) => {
+      // Run AI processing on each sheet in chunks to avoid context length limits & rate limits
+      const parsedResults = await processInChunks(validSheets, async (sheetData) => {
         const prompt = `You are parsing a restaurant Google Sheets file into structured JSON.
 
 The file has multiple tabs.
@@ -148,9 +159,7 @@ ${sheetData}
           console.error("Failed to parse sheet chunk", e);
           return null;
         }
-      });
-
-      const parsedResults = await Promise.all(parsePromises);
+      }, 3);
       for (const response of parsedResults) {
         if (!response) continue;
         if (response.items) allItems.push(...response.items);
@@ -314,7 +323,7 @@ ${sheetData}
     let createdItemsCount = 0;
     let updatedItemsCount = 0;
     const itemsToCreate = [];
-    const itemUpdatePromises = [];
+    const itemUpdateFns = [];
 
     for (const itemData of validItems) {
       const existing = itemMap.get(itemData.name.trim().toLowerCase());
@@ -325,7 +334,7 @@ ${sheetData}
                            existing.supplier_id !== itemData.supplier_id ||
                            existing.catalog_number !== itemData.catalog_number;
         if (hasChanges) {
-          itemUpdatePromises.push(
+          itemUpdateFns.push(() => 
             base44.entities.Item.update(existing.id, itemData).then(() => {
               itemMap.set(itemData.name.trim().toLowerCase(), { ...existing, ...itemData });
             })
@@ -337,8 +346,8 @@ ${sheetData}
       }
     }
     
-    if (itemUpdatePromises.length > 0) {
-      await Promise.all(itemUpdatePromises);
+    if (itemUpdateFns.length > 0) {
+      await processInChunks(itemUpdateFns, fn => fn(), 10);
     }
 
     if (itemsToCreate.length > 0) {
@@ -505,7 +514,7 @@ ${sheetData}
     let createdRecipesCount = 0;
     let updatedRecipesCount = 0;
     const recipesToCreate = [];
-    const recipeUpdatePromises = [];
+    const recipeUpdateFns = [];
 
     for (const recipeData of validRecipes) {
       const existing = recipeMap.get(recipeData.name.trim().toLowerCase());
@@ -516,7 +525,7 @@ ${sheetData}
                            existing.yield_unit !== recipeData.yield_unit ||
                            JSON.stringify(existing.ingredients) !== JSON.stringify(recipeData.ingredients);
         if (hasChanges) {
-          recipeUpdatePromises.push(base44.entities.Recipe.update(existing.id, recipeData));
+          recipeUpdateFns.push(() => base44.entities.Recipe.update(existing.id, recipeData));
           updatedRecipesCount++;
         }
       } else {
@@ -524,8 +533,8 @@ ${sheetData}
       }
     }
     
-    if (recipeUpdatePromises.length > 0) {
-      await Promise.all(recipeUpdatePromises);
+    if (recipeUpdateFns.length > 0) {
+      await processInChunks(recipeUpdateFns, fn => fn(), 10);
     }
 
     if (recipesToCreate.length > 0) {
