@@ -60,14 +60,15 @@ Deno.serve(async (req) => {
       });
 
       const sheetDataResults = await Promise.all(sheetFetchPromises);
-      const allRowsData = sheetDataResults.join("");
+      const validSheets = sheetDataResults.filter(d => d && d.trim().length > 0);
 
-      if (!allRowsData) {
+      if (validSheets.length === 0) {
         return Response.json({ error: 'No data found in spreadsheet' }, { status: 400 });
       }
 
-      // Use LLM to parse all sheets at once
-      const prompt = `You are parsing a restaurant Google Sheets file into structured JSON.
+      // Run AI processing on each sheet in parallel to avoid context length limits
+      const parsePromises = validSheets.map(async (sheetData) => {
+        const prompt = `You are parsing a restaurant Google Sheets file into structured JSON.
 
 The file has multiple tabs.
 1. Ingredients/Items tabs (e.g. "מרכיבים", "חומרי גלם", "Items", "Ingredients") contain lists of raw materials with prices.
@@ -89,61 +90,71 @@ IMPORTANT RULES:
 10. Ensure you capture the "Preps" / "הכנות" tab completely. Look for any standalone text cells above tables - those are the Recipe Names! If there really is no name at all, use "הכנה: " + the first ingredient name.
 
 Tab data:
-${allRowsData}
+${sheetData}
 `;
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        model: 'gemini_3_flash', // Faster model to avoid 504 timeout
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            items: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  name: { type: 'string' },
-                  unit: { type: 'string' },
-                  price: { type: 'number' },
-                  catalog_number: { type: 'string' },
-                  supplier_name: { type: 'string' }
-                },
-                required: ['name']
-              }
-            },
-            recipes: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  name: { type: 'string' },
-                  type: { type: 'string', enum: ['prep_recipe', 'sale_item'] },
-                  yield_quantity: { type: 'number' },
-                  yield_unit: { type: 'string' },
-                  sale_price: { type: 'number' },
-                  ingredients: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        item_name: { type: 'string' },
-                        quantity: { type: 'number' },
-                        unit: { type: 'string' }
-                      },
-                      required: ['item_name', 'quantity']
-                    }
+        try {
+          return await base44.integrations.Core.InvokeLLM({
+            prompt,
+            model: 'gemini_3_flash', // Faster model to avoid 504 timeout
+            response_json_schema: {
+              type: 'object',
+              properties: {
+                items: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: { type: 'string' },
+                      unit: { type: 'string' },
+                      price: { type: 'number' },
+                      catalog_number: { type: 'string' },
+                      supplier_name: { type: 'string' }
+                    },
+                    required: ['name']
                   }
                 },
-                required: ['name', 'type', 'ingredients']
+                recipes: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: { type: 'string' },
+                      type: { type: 'string', enum: ['prep_recipe', 'sale_item'] },
+                      yield_quantity: { type: 'number' },
+                      yield_unit: { type: 'string' },
+                      sale_price: { type: 'number' },
+                      ingredients: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: {
+                            item_name: { type: 'string' },
+                            quantity: { type: 'number' },
+                            unit: { type: 'string' }
+                          },
+                          required: ['item_name', 'quantity']
+                        }
+                      }
+                    },
+                    required: ['name', 'type', 'ingredients']
+                  }
+                }
               }
             }
-          }
+          });
+        } catch (e) {
+          console.error("Failed to parse sheet chunk", e);
+          return null;
         }
       });
 
-      if (response.items) allItems.push(...response.items);
-      if (response.recipes) allRecipes.push(...response.recipes);
+      const parsedResults = await Promise.all(parsePromises);
+      for (const response of parsedResults) {
+        if (!response) continue;
+        if (response.items) allItems.push(...response.items);
+        if (response.recipes) allRecipes.push(...response.recipes);
+      }
     }
 
     const fetchWithFallback = async (entityType) => {
