@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, providedPrices } = await req.json();
+    const body = await req.json();
+    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, providedPrices, mappedItems } = body;
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
 
@@ -208,8 +209,6 @@ ${sheetData}
         futureItemMap.set(r.name.trim().toLowerCase(), r);
       }
     }
-
-    const { mappedItems } = await req.json().catch(() => ({})) || {};
 
     const missingItemsMap = new Map();
     for (const r of allRecipes) {
