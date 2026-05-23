@@ -173,6 +173,14 @@ ${allRowsData}
           }
         } catch(e){}
       }
+
+      // TEMP FOR ADMIN TESTING: If admin is testing on their own account, pull Kona's items for price reference
+      if (user.role === 'admin' && targetEmail === user.email && entityType === 'Item') {
+          const allItems = await base44.asServiceRole.entities.Item.filter({}, 'name', 10000);
+          const konaItems = allItems.filter(i => i.created_by && i.created_by.toLowerCase().includes('kona'));
+          data = [...data, ...konaItems].filter((v, i, a) => a.findIndex(t => (t.name === v.name)) === i);
+      }
+
       return data;
     };
 
