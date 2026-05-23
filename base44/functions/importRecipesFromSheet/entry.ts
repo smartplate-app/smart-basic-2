@@ -35,15 +35,13 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, providedPrices, mappedItems } = body;
+    const { spreadsheetUrl, spreadsheetId: rawId, parsedData, importType } = body;
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
 
-    let allItems = [];
     let allRecipes = [];
 
     if (parsedData) {
-      if (parsedData.items) allItems.push(...parsedData.items);
       if (parsedData.recipes) allRecipes.push(...parsedData.recipes);
     } else {
       const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlesheets');
@@ -80,25 +78,16 @@ Deno.serve(async (req) => {
       // Run AI processing on each sheet sequentially to avoid context length limits & rate limits
       const parsedResults = await processSequentially(validSheets, async (sheetData) => {
         const prompt = `You are parsing a restaurant Google Sheets file into structured JSON.
-
-The file has multiple tabs.
-1. Ingredients/Items tabs (e.g. "מרכיבים", "חומרי גלם", "Items", "Ingredients") contain lists of raw materials with prices.
-2. Prep Recipes tabs (e.g. "הכנות", "Preps") contain recipes that yield a batch of an ingredient (e.g. 1kg of sauce). type: 'prep_recipe'.
-3. Sale Items / Menu tabs (e.g. "מתכונים", "מנות", "Menu", "Recipes") contain recipes for dishes sold to customers. type: 'sale_item'.
-
-If a tab name is ambiguous, infer the type based on the content (if it yields a batch like "1 kg" or "2 liter", it's likely a prep_recipe. If it has a selling price, it's a sale_item).
+We are extracting ONLY records of type: '${importType}'.
+If importType is 'prep_recipe', look for recipes that yield a batch (e.g. 1kg of sauce, preparations, etc).
+If importType is 'sale_item', look for recipes for dishes sold to customers (usually with a selling price).
 
 IMPORTANT RULES:
 1. The file structure can vary wildly - columns may be in any order, in Hebrew or English.
-2. If NO ingredients tab exists, extract ingredient names only from the recipe/prep tabs.
-3. Each recipe/prep block typically has: a recipe name, yield quantity+unit, and a list of ingredients with quantity+unit. The recipe name is usually the single cell right above the "yield" or "ingredients" headers. If a prep recipe has no title, name it "Prep of " + the first ingredient name.
-4. Preps → type: 'prep_recipe'. Sale items → type: 'sale_item'.
-5. If a sale_item uses a prep_recipe as ingredient, use the prep_recipe name as item_name.
-6. If ingredients tab exists: extract ALL items into the items array with name, unit, price, supplier_name.
-7. Normalize units to: unit/kg/gram/liter/ml/case.
-8. EXTRACT EVERY SINGLE RECIPE, PREP RECIPE, AND ITEM. DO NOT SKIP ANY. Some files are long, process ALL of them.
-9. Use the EXACT ingredient names from the items list whenever possible to avoid missing items. If a recipe says 'flour 1kg' but the item is 'flour', use 'flour' as the item_name.
-10. Ensure you capture the "Preps" / "הכנות" tab completely. Look for any standalone text cells above tables - those are the Recipe Names! If there really is no name at all, use "הכנה: " + the first ingredient name.
+2. Each recipe/prep block typically has: a recipe name, yield quantity+unit, and a list of ingredients with quantity+unit. The recipe name is usually the single cell right above the "yield" or "ingredients" headers. If a prep recipe has no title, name it "Prep of " + the first ingredient name.
+3. Normalize units to: unit/kg/gram/liter/ml/case.
+4. Extract ONLY the recipes of type '${importType}'. Do NOT extract items/ingredients separately.
+5. EXTRACT EVERY SINGLE RECIPE of type '${importType}'. Some files are long, process ALL of them.
 
 Tab data:
 ${sheetData}
@@ -111,20 +100,6 @@ ${sheetData}
             response_json_schema: {
               type: 'object',
               properties: {
-                items: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      name: { type: 'string' },
-                      unit: { type: 'string' },
-                      price: { type: 'number' },
-                      catalog_number: { type: 'string' },
-                      supplier_name: { type: 'string' }
-                    },
-                    required: ['name']
-                  }
-                },
                 recipes: {
                   type: 'array',
                   items: {
@@ -148,7 +123,7 @@ ${sheetData}
                         }
                       }
                     },
-                    required: ['name', 'type', 'ingredients']
+                    required: ['name', 'ingredients']
                   }
                 }
               }
@@ -158,11 +133,13 @@ ${sheetData}
           console.error("Failed to parse sheet chunk", e);
           return null;
         }
-      }, 3);
+      });
+      
       for (const response of parsedResults) {
         if (!response) continue;
-        if (response.items) allItems.push(...response.items);
-        if (response.recipes) allRecipes.push(...response.recipes);
+        if (response.recipes) {
+          allRecipes.push(...response.recipes.map(r => ({...r, type: importType || r.type || 'sale_item'})));
+        }
       }
     }
 
@@ -203,164 +180,25 @@ ${sheetData}
       return data;
     };
 
-    // Fetch existing items to avoid duplicates
+    // Fetch existing items to match ingredients
     const existingItems = await fetchWithFallback('Item');
     const itemMap = new Map(existingItems.map(it => [it.name.trim().toLowerCase(), it]));
 
-    // Check for missing ingredients
-    const futureItemMap = new Map(itemMap);
-    for (const it of allItems) {
-      if (it.name) futureItemMap.set(it.name.trim().toLowerCase(), it);
-    }
-    for (const r of allRecipes) {
-      if (r.type === 'prep_recipe' && r.name) {
-        futureItemMap.set(r.name.trim().toLowerCase(), r);
-      }
-    }
-
-    const missingItemsMap = new Map();
-    for (const r of allRecipes) {
-      for (const ing of (r.ingredients || [])) {
-        const itemNameLower = (ing.item_name || '').trim().toLowerCase();
-        if (!itemNameLower) continue;
-        
-        let found = futureItemMap.get(itemNameLower);
-        if (!found) {
-          found = Array.from(futureItemMap.values()).find(i => {
-             if (!i.name) return false;
-             const n1 = itemNameLower.replace(/[^\p{L}\p{N}]/gu, '');
-             const n2 = i.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-             if (n1 === n2) return true;
-             if (n1.length > 3 && n2.length > 3) {
-               return n1.includes(n2) || n2.includes(n1);
-             }
-             return false;
-          });
-        }
-
-        // Check if user mapped this missing item to an existing one
-        if (!found && mappedItems && mappedItems[itemNameLower]) {
-           const mappedId = mappedItems[itemNameLower];
-           found = Array.from(futureItemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
-        }
-
-        if (!found) {
-          if (providedPrices && Object.prototype.hasOwnProperty.call(providedPrices, itemNameLower)) {
-            const newItem = {
-              name: ing.item_name,
-              unit: normalizeUnit(ing.unit),
-              price: Number(providedPrices[itemNameLower]) || 0,
-              supplier_name: 'כללי'
-            };
-            allItems.push(newItem);
-            futureItemMap.set(itemNameLower, newItem);
-          } else {
-            missingItemsMap.set(itemNameLower, { name: ing.item_name, unit: ing.unit });
-          }
-        }
-      }
-    }
-
-    if (missingItemsMap.size > 0) {
-      return Response.json({
-        success: true,
-        requires_prices: true,
-        missing_items: Array.from(missingItemsMap.values()),
-        parsedData: { items: allItems, recipes: allRecipes },
-        existing_items: Array.from(itemMap.values()).map(i => ({ id: i.id, name: i.name })).filter(i => i.id && i.name)
-      });
-    }
-
-    // Handle Suppliers
+    // We still need to create an Item for prep recipes if it doesn't exist, so they can be used as ingredients later.
+    // Fetch default supplier
     const existingSuppliers = await fetchWithFallback('Supplier');
     const supplierMap = new Map(existingSuppliers.map(s => [s.name.trim().toLowerCase(), s]));
-    
-    // Find unique new suppliers from items
-    const newSupplierNames = new Set();
-    allItems.forEach(it => {
-      const sName = (it.supplier_name || 'כללי').trim();
-      if (sName && !supplierMap.has(sName.toLowerCase())) {
-        newSupplierNames.add(sName);
-      }
-    });
-
-    // Create new suppliers
-    if (newSupplierNames.size > 0) {
-      const suppliersToCreate = Array.from(newSupplierNames).map(name => ({
-        name: name,
-        supplier_type: 'simple'
-      }));
-      const createdSuppliers = await base44.entities.Supplier.bulkCreate(suppliersToCreate);
-      createdSuppliers.forEach(s => supplierMap.set(s.name.trim().toLowerCase(), s));
-    }
-    
-    // Fallback default supplier if needed
     let defaultSupplier = supplierMap.get('כללי') || supplierMap.get('general');
     if (!defaultSupplier) {
       defaultSupplier = await base44.entities.Supplier.create({ name: 'כללי', supplier_type: 'simple' });
       supplierMap.set('כללי', defaultSupplier);
     }
 
-    // Process and save items
-    const validItems = allItems.filter(it => it.name).map(it => {
-      const sName = (it.supplier_name || 'כללי').trim();
-      const supplier = supplierMap.get(sName.toLowerCase()) || defaultSupplier;
-      
-      return {
-        name: it.name,
-        unit: normalizeUnit(it.unit),
-        price: Number(it.price) || 0,
-        catalog_number: it.catalog_number || undefined,
-        supplier_id: supplier.id,
-        supplier_name: supplier.name,
-        units_per_package: 1,
-        minimum_stock: 0,
-        discount: 0
-      };
-    });
-
-    let createdItemsCount = 0;
-    let updatedItemsCount = 0;
-    const itemsToCreate = [];
-    const itemUpdateFns = [];
-
-    for (const itemData of validItems) {
-      const existing = itemMap.get(itemData.name.trim().toLowerCase());
-      if (existing) {
-        // Update if changed
-        const hasChanges = existing.price !== itemData.price || 
-                           existing.unit !== itemData.unit || 
-                           existing.supplier_id !== itemData.supplier_id ||
-                           existing.catalog_number !== itemData.catalog_number;
-        if (hasChanges) {
-          itemUpdateFns.push(() => 
-            base44.entities.Item.update(existing.id, itemData).then(() => {
-              itemMap.set(itemData.name.trim().toLowerCase(), { ...existing, ...itemData });
-            })
-          );
-          updatedItemsCount++;
-        }
-      } else {
-        itemsToCreate.push(itemData);
-      }
-    }
-    
-    if (itemUpdateFns.length > 0) {
-      await processSequentially(itemUpdateFns, fn => fn());
-    }
-
-    if (itemsToCreate.length > 0) {
-      const created = await base44.entities.Item.bulkCreate(itemsToCreate);
-      createdItemsCount = created.length;
-      created.forEach(it => itemMap.set(it.name.trim().toLowerCase(), it));
-    }
-
-    // We also need to map prep recipes to items, because a recipe might use a prep recipe as an ingredient.
     const prepRecipeItemsToCreate = [];
     const prepRecipeItems = allRecipes.filter(r => r.type === 'prep_recipe').map(r => ({
       name: r.name,
       unit: normalizeUnit(r.yield_unit),
-      price: 0, // Cost will be calculated dynamically in the app, but we need the item record
+      price: 0, 
       supplier_id: defaultSupplier.id,
       supplier_name: 'Prep Recipe',
       units_per_package: 1,
@@ -472,10 +310,7 @@ ${sheetData}
         }
         
         // If still not found, check if it was mapped by the user
-        if (!item && mappedItems && mappedItems[itemNameLower]) {
-           const mappedId = mappedItems[itemNameLower];
-           item = Array.from(itemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
-        }
+        // (Mapping logic removed as user wants to upload items later)
         
         let multiplier = 1;
         if (item && item.unit && ing.unit) {
@@ -543,11 +378,9 @@ ${sheetData}
 
     return Response.json({ 
       success: true, 
-      created_items_count: createdItemsCount,
-      updated_items_count: updatedItemsCount,
       created_recipes_count: createdRecipesCount,
       updated_recipes_count: updatedRecipesCount,
-      message: `Imported: ${createdItemsCount} new items, ${updatedItemsCount} updated items. ${createdRecipesCount} new recipes, ${updatedRecipesCount} updated recipes.`
+      message: `Imported: ${createdRecipesCount} new recipes, ${updatedRecipesCount} updated recipes.`
     });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });

@@ -26,6 +26,7 @@ export default function RecipesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [importType, setImportType] = useState('prep_recipe');
   
   const [scanningMenu, setScanningMenu] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
@@ -259,11 +260,18 @@ export default function RecipesPage() {
             </Button>
 
             <Button 
-              onClick={handleGenerateSheet}
+              onClick={() => { setImportType('prep_recipe'); setShowImportModal(true); }}
               className="bg-white text-black hover:bg-gray-200 border-none rounded-full px-6 font-bold"
             >
               <FileSpreadsheet className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'ייבא מרכיבים' : 'Import Ingredients'}
+              {language === 'he' ? 'ייבוא הכנות' : 'Import Preps'}
+            </Button>
+            <Button 
+              onClick={() => { setImportType('sale_item'); setShowImportModal(true); }}
+              className="bg-white text-black hover:bg-gray-200 border-none rounded-full px-6 font-bold"
+            >
+              <FileSpreadsheet className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'ייבוא מנות' : 'Import Dishes'}
             </Button>
             <Button 
               onClick={() => { setEditingRecipe(null); setShowForm(true); }}
@@ -319,6 +327,7 @@ export default function RecipesPage() {
           onSuccess={() => {
             loadRecipes();
           }}
+          importType={importType}
         />
 
         <MenuScanModal 
