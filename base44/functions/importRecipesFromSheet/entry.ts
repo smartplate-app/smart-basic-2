@@ -250,10 +250,7 @@ ${sheetData}
                           return false;
                        });
                    }
-                   if (!item && mappedItems && mappedItems[itemNameLower]) {
-                      const mappedId = mappedItems[itemNameLower];
-                      item = Array.from(itemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
-                   }
+
                    let multiplier = 1;
                    if (item && item.unit && ing.unit) {
                        const itemU = normalizeUnit(item.unit);
