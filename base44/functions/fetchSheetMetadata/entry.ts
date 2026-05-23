@@ -21,8 +21,14 @@ Deno.serve(async (req) => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Google Sheets API error: ${errorData.error?.message || response.statusText}`);
+            let errorMsg = response.statusText;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error?.message || response.statusText;
+            } catch (e) {
+                // Not JSON
+            }
+            return Response.json({ success: false, error: `Google Sheets API error: ${errorMsg}` }, { status: 200 });
         }
 
         const data = await response.json();

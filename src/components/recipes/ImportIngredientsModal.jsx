@@ -66,7 +66,13 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess, imp
         // 1. Get Spreadsheet ID
         let spreadsheetId = url;
         const m = String(url).match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-        if (m) spreadsheetId = m[1];
+        if (m) {
+          spreadsheetId = m[1];
+        } else {
+          // If the user just pasted the ID with /edit
+          const m2 = String(url).match(/^([a-zA-Z0-9-_]+)(\/edit|\?|$)/);
+          if (m2) spreadsheetId = m2[1];
+        }
         
         const metaRes = await base44.functions.invoke('fetchSheetMetadata', { spreadsheetId });
         if (!metaRes.data || !metaRes.data.success) {
@@ -116,7 +122,8 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess, imp
       }
     } catch (err) {
       console.error("Import error:", err);
-      setError(err.message || (language === 'he' ? 'שגיאה בייבוא הנתונים' : 'Error importing data'));
+      const backendError = err.response?.data?.error;
+      setError(backendError || err.message || (language === 'he' ? 'שגיאה בייבוא הנתונים' : 'Error importing data'));
     } finally {
       setLoading(false);
     }

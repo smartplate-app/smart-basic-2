@@ -3,7 +3,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.26';
 function parseSpreadsheetId(input) {
   if (!input) return null;
   const m = String(input).match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  return m ? m[1] : (input.length > 30 ? input : null);
+  if (m) return m[1];
+  const m2 = String(input).match(/^([a-zA-Z0-9-_]+)(\/edit|\?|$)/);
+  if (m2) return m2[1];
+  return input.length > 30 ? input : null;
 }
 
 Deno.serve(async (req) => {

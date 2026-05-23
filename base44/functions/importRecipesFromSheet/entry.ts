@@ -3,7 +3,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.26';
 function parseSpreadsheetId(input) {
   if (!input) return null;
   const m = String(input).match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  return m ? m[1] : (input.length > 30 ? input : null);
+  if (m) return m[1];
+  // If it's just the ID with some trailing stuff like /edit
+  const m2 = String(input).match(/^([a-zA-Z0-9-_]+)(\/edit|$)/);
+  if (m2) return m2[1];
+  return input.length > 30 ? input : null;
 }
 
 function normalizeUnit(u) {
@@ -182,12 +186,12 @@ ${sheetData}
 
     // Fetch existing items to match ingredients
     const existingItems = await fetchWithFallback('Item');
-    const itemMap = new Map(existingItems.map(it => [it.name.trim().toLowerCase(), it]));
+    const itemMap = new Map(existingItems.map(it => [(it.name || '').trim().toLowerCase(), it]));
 
     // We still need to create an Item for prep recipes if it doesn't exist, so they can be used as ingredients later.
     // Fetch default supplier
     const existingSuppliers = await fetchWithFallback('Supplier');
-    const supplierMap = new Map(existingSuppliers.map(s => [s.name.trim().toLowerCase(), s]));
+    const supplierMap = new Map(existingSuppliers.map(s => [(s.name || '').trim().toLowerCase(), s]));
     let defaultSupplier = supplierMap.get('כללי') || supplierMap.get('general');
     if (!defaultSupplier) {
       defaultSupplier = await base44.entities.Supplier.create({ name: 'כללי', supplier_type: 'simple' });
@@ -195,7 +199,7 @@ ${sheetData}
     }
 
     const prepRecipeItemsToCreate = [];
-    const prepRecipeItems = allRecipes.filter(r => r.type === 'prep_recipe').map(r => ({
+    const prepRecipeItems = allRecipes.filter(r => r.type === 'prep_recipe' && r.name).map(r => ({
       name: r.name,
       unit: normalizeUnit(r.yield_unit),
       price: 0, 
@@ -222,7 +226,7 @@ ${sheetData}
 
     // Fetch existing recipes to avoid duplicates
     const existingRecipes = await fetchWithFallback('Recipe');
-    const recipeMap = new Map(existingRecipes.map(r => [r.name.trim().toLowerCase(), r]));
+    const recipeMap = new Map(existingRecipes.map(r => [(r.name || '').trim().toLowerCase(), r]));
 
     // Calculate costs iteratively for prep recipes before inserting
     let costChanged = true;
@@ -266,7 +270,8 @@ ${sheetData}
                }
                const unitPrice = (Number(r.yield_quantity) || 1) > 0 ? (totalCost / Number(r.yield_quantity)) : totalCost;
                
-               const pName = r.name.trim().toLowerCase();
+               const pName = (r.name || '').trim().toLowerCase();
+               if (!pName) continue;
                let pItem = itemMap.get(pName);
                if (pItem && Math.abs((pItem.price || 0) - unitPrice) > 0.001) {
                    pItem.price = unitPrice;
@@ -279,7 +284,7 @@ ${sheetData}
 
     // Update the prep recipes items in the DB with the newly calculated prices
     for (const r of allRecipes) {
-       if (r.type === 'prep_recipe') {
+       if (r.type === 'prep_recipe' && r.name) {
            const pName = r.name.trim().toLowerCase();
            const pItem = itemMap.get(pName);
            if (pItem && pItem.id && pItem.price > 0) {
