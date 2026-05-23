@@ -16,8 +16,6 @@ import { getCache, setCache, isStale } from "../components/utils/cache";
 export default function RecipesPage() {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passcode, setPasscode] = useState("");
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,21 +30,6 @@ export default function RecipesPage() {
   const [showScanModal, setShowScanModal] = useState(false);
   const [showImageUploadModal, setShowImageUploadModal] = useState(false);
   const [missingRecipes, setMissingRecipes] = useState([]);
-
-  const handleAuth = (e) => {
-    e.preventDefault();
-    if (passcode === "2233") {
-      setIsAuthenticated(true);
-      // Check cache first before fetching
-      const c = getCache('recipes_v1');
-      if (c?.data) {
-        setRecipes(c.data.recipes || []);
-      }
-      loadRecipes();
-    } else {
-      alert(language === 'he' ? 'קוד שגוי' : 'Invalid code');
-    }
-  };
 
   const loadRecipes = async () => {
     setLoading(true);
@@ -115,10 +98,12 @@ export default function RecipesPage() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadRecipes();
+    const c = getCache('recipes_v1');
+    if (c?.data) {
+      setRecipes(c.data.recipes || []);
     }
-  }, [isAuthenticated]);
+    loadRecipes();
+  }, []);
 
   const handleDelete = async (id) => {
     if (window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך למחוק מתכון זה?' : 'Are you sure you want to delete this recipe?')) {
@@ -186,39 +171,6 @@ export default function RecipesPage() {
       throw e; // rethrow to be caught by the modal
     }
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="max-w-md w-full shadow-xl">
-          <CardContent className="pt-6 space-y-4 text-center">
-            <div className="mx-auto w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-4">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {language === 'he' ? 'אזור מוגן' : 'Protected Area'}
-            </h2>
-            <p className="text-gray-500">
-              {language === 'he' ? 'הזן קוד גישה כדי לצפות במתכונים' : 'Enter access code to view recipes'}
-            </p>
-            <form onSubmit={handleAuth} className="space-y-4 mt-4">
-              <Input
-                type="password"
-                placeholder={language === 'he' ? 'קוד גישה' : 'Access code'}
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                className="text-center text-lg tracking-widest"
-                autoFocus
-              />
-              <Button type="submit" className="w-full bg-[#d4a373] hover:bg-[#b88c60]">
-                {language === 'he' ? 'כניסה' : 'Enter'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const filteredRecipes = recipes.filter(r => {
     const matchesSearch = (r.name || '').toLowerCase().includes(searchTerm.toLowerCase());
