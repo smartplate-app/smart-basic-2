@@ -356,17 +356,23 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
 
   const handleItemSave = async (updatedItem) => {
     try {
-      await base44.entities.Item.update(updatedItem.id, updatedItem);
+      let isNew = !updatedItem.id;
+      if (!isNew) {
+        await base44.entities.Item.update(updatedItem.id, updatedItem);
+      } else {
+        const newItem = await base44.entities.Item.create(updatedItem);
+        updatedItem = newItem;
+      }
       
       // Update local items state
       setItems(prev => {
-        const newItems = prev.map(i => i.id === updatedItem.id ? updatedItem : i);
+        const newItems = isNew ? [...prev, updatedItem] : prev.map(i => i.id === updatedItem.id ? updatedItem : i);
         if (cachedFormEntities) cachedFormEntities.items = newItems;
         return newItems;
       });
       
       // Recalculate cost for the ingredient in the recipe form
-      const newIngredients = formData.ingredients.map(ing => {
+      let newIngredients = formData.ingredients.map(ing => {
         if (ing.item_id === updatedItem.id) {
           return {
             ...ing,
@@ -377,6 +383,22 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
         }
         return ing;
       });
+
+      if (isNew) {
+        const defaultRecipeUnit = updatedItem.unit === 'case' ? 'unit' : (updatedItem.unit || 'unit');
+        const initialQuantity = 1;
+        const initialCost = getIngredientCost(updatedItem, initialQuantity, defaultRecipeUnit);
+        
+        newIngredients.push({
+          item_id: updatedItem.id,
+          item_name: updatedItem.name,
+          quantity: initialQuantity,
+          unit: defaultRecipeUnit,
+          cost: initialCost,
+          unit_price: initialCost,
+          original_item: updatedItem
+        });
+      }
       
       setFormData({
         ...formData,
@@ -385,6 +407,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       });
       
       setEditingItem(null);
+      setSearchTerm("");
     } catch (error) {
       console.error('Failed to update item:', error);
       alert(language === 'he' ? 'שגיאה בשמירת הפריט' : 'Error saving item');
@@ -573,7 +596,13 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                   onMouseLeave={() => setIsDropdownOpen(false)}
                 >
                   {filteredItems.length === 0 && filteredPrepRecipes.length === 0 ? (
-                    <div className="p-2 text-gray-500 text-center">{language === 'he' ? 'לא נמצאו פריטים' : 'No items found'}</div>
+                    <div className="p-2 text-gray-500 text-center flex flex-col items-center gap-2">
+                      <span>{language === 'he' ? 'לא נמצאו פריטים' : 'No items found'}</span>
+                      <Button type="button" size="sm" onClick={() => { setEditingItem({ name: searchTerm, unit: 'kg' }); setIsDropdownOpen(false); }}>
+                        <Plus className="w-4 h-4 mr-1" />
+                        {language === 'he' ? 'צור פריט חדש' : 'Create New Item'}
+                      </Button>
+                    </div>
                   ) : (
                     <>
                       {filteredPrepRecipes.map(prep => (
@@ -614,6 +643,12 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                           <span className="text-sm text-gray-500">₪{Number(item.price_after_discount || item.price || 0).toFixed(2)} / {language === 'he' ? 'אריזה' : 'pkg'}</span>
                         </div>
                       ))}
+                      <div className="p-2 border-t mt-1">
+                        <Button type="button" variant="ghost" className="w-full text-sm justify-start text-[#d4a373]" onClick={() => { setEditingItem({ name: searchTerm, unit: 'kg' }); setIsDropdownOpen(false); }}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          {language === 'he' ? 'צור פריט חדש' : 'Create New Item'}
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>
