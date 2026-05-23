@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trash2, Plus, Search } from "lucide-react";
+import { Trash2, Plus, Search, ArrowLeftRight } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,6 +31,8 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [swappingIndex, setSwappingIndex] = useState(null);
+  const [swapSearchTerm, setSwapSearchTerm] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -746,9 +748,14 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       {ing.quantity || 0} × {Number(ing.unit_price || 0).toFixed(2)} = {Number(ing.cost || 0).toFixed(2)}
                     </div>
                   </div>
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 shrink-0" onClick={() => handleRemoveIngredient(idx)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center">
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-[#d4a373] hover:text-[#b88c60] hover:bg-orange-50 shrink-0" onClick={() => setSwappingIndex(idx)} title={language === 'he' ? 'החלף פריט' : 'Replace item'}>
+                      <ArrowLeftRight className="w-4 h-4" />
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 shrink-0" onClick={() => handleRemoveIngredient(idx)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
               {formData.ingredients.length === 0 && (
@@ -777,6 +784,108 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
           onClose={() => setEditingItem(null)}
           onSave={handleItemSave}
         />
+      )}
+      
+      {swappingIndex !== null && (
+        <Dialog open={true} onOpenChange={() => { setSwappingIndex(null); setSwapSearchTerm(""); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{language === 'he' ? 'החלף פריט' : 'Replace Item'}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} text-gray-400 w-4 h-4`} />
+                <Input
+                  placeholder={language === 'he' ? 'חפש פריט להחלפה...' : 'Search item to replace...'}
+                  value={swapSearchTerm}
+                  onChange={(e) => setSwapSearchTerm(e.target.value)}
+                  className={isRTL ? 'pr-9' : 'pl-9'}
+                />
+              </div>
+              <div className="max-h-60 overflow-y-auto border rounded-md bg-white">
+                {prepRecipes.filter(r => r.name.toLowerCase().includes(swapSearchTerm.toLowerCase()) && (!recipe || r.id !== recipe.id)).map(prep => (
+                  <div
+                    key={`swap-prep-${prep.id}`}
+                    className="p-2 hover:bg-purple-50 cursor-pointer flex justify-between items-center border-b last:border-0"
+                    onClick={() => {
+                      const newIngredients = [...formData.ingredients];
+                      const ing = newIngredients[swappingIndex];
+                      
+                      const costPerUnit = prep.yield_quantity > 0 ? (prep.total_cost || 0) / prep.yield_quantity : (prep.total_cost || 0);
+                      
+                      newIngredients[swappingIndex] = {
+                        ...ing,
+                        item_id: prep.id,
+                        item_name: prep.name,
+                        unit: prep.yield_unit || 'unit',
+                        cost: costPerUnit * (ing.quantity || 1),
+                        unit_price: costPerUnit,
+                        is_prep_recipe: true,
+                        original_item: undefined
+                      };
+                      
+                      setFormData({
+                        ...formData,
+                        ingredients: newIngredients,
+                        total_cost: calculateTotalCost(newIngredients)
+                      });
+                      setSwappingIndex(null);
+                      setSwapSearchTerm("");
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                        {language === 'he' ? 'הכנה' : 'PREP'}
+                      </span>
+                      <span>{prep.name}</span>
+                    </div>
+                  </div>
+                ))}
+                {items.filter(item => item.name.toLowerCase().includes(swapSearchTerm.toLowerCase())).map(item => (
+                  <div
+                    key={`swap-item-${item.id}`}
+                    className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center border-b last:border-0"
+                    onClick={() => {
+                      const newIngredients = [...formData.ingredients];
+                      const ing = newIngredients[swappingIndex];
+                      
+                      const defaultRecipeUnit = item.unit === 'case' ? 'unit' : (item.unit || 'unit');
+                      const newCost = getIngredientCost(item, ing.quantity || 1, defaultRecipeUnit);
+                      
+                      newIngredients[swappingIndex] = {
+                        ...ing,
+                        item_id: item.id,
+                        item_name: item.name,
+                        unit: defaultRecipeUnit,
+                        cost: newCost,
+                        unit_price: newCost / (ing.quantity || 1),
+                        original_item: item,
+                        is_prep_recipe: false
+                      };
+                      
+                      setFormData({
+                        ...formData,
+                        ingredients: newIngredients,
+                        total_cost: calculateTotalCost(newIngredients)
+                      });
+                      setSwappingIndex(null);
+                      setSwapSearchTerm("");
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {item.supplier_name && (
+                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded shrink-0">
+                          {item.supplier_name}
+                        </span>
+                      )}
+                      <span>{item.name}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </Dialog>
   );
