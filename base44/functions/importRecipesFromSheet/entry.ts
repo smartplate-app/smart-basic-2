@@ -383,11 +383,14 @@ ${allRowsData}
                    if (item && item.unit && ing.unit) {
                        const itemU = normalizeUnit(item.unit);
                        const ingU = normalizeUnit(ing.unit);
+                       // We want to calculate the cost. 
+                       // If the item in system is in KG, and recipe uses GRAMS, 1 gram = 1/1000 of the KG price.
                        if (itemU === 'kg' && ingU === 'gram') multiplier = 1/1000;
                        else if (itemU === 'gram' && ingU === 'kg') multiplier = 1000;
                        else if (itemU === 'liter' && ingU === 'ml') multiplier = 1/1000;
                        else if (itemU === 'ml' && ingU === 'liter') multiplier = 1000;
                    }
+                   // If the user wrote 0.06 KG in the recipe, and the item is in KG, multiplier is 1. 0.06 * price * 1 works perfectly.
                    totalCost += (item ? Number(item.price_after_discount || item.price || 0) : 0) * (Number(ing.quantity) || 0) * multiplier;
                }
                const unitPrice = (Number(r.yield_quantity) || 1) > 0 ? (totalCost / Number(r.yield_quantity)) : totalCost;
@@ -459,7 +462,7 @@ ${allRowsData}
           quantity: Number(ing.quantity) || 0,
           unit: normalizeUnit(ing.unit),
           cost: cost,
-          unit_price: item ? Number(item.price_after_discount || item.price || 0) : 0
+          unit_price: item ? (Number(item.price_after_discount || item.price || 0) * multiplier) : 0
         };
       });
 
