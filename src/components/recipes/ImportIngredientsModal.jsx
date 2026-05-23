@@ -20,6 +20,10 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess, imp
   const [progressStatus, setProgressStatus] = useState("");
 
   useEffect(() => {
+    setParsedData(null);
+  }, [url, importType]);
+
+  useEffect(() => {
     let interval;
     if (loading && progressStatus === "Updating Database...") {
       interval = setInterval(() => {

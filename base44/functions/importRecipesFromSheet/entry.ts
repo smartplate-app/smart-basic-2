@@ -27,7 +27,7 @@ const processSequentially = async (items, fn) => {
   const results = [];
   for (let i = 0; i < items.length; i++) {
     results.push(await fn(items[i]));
-    await new Promise(resolve => setTimeout(resolve, 30)); // 30ms delay between calls
+    await new Promise(resolve => setTimeout(resolve, 250)); // 250ms delay between calls
   }
   return results;
 };
@@ -280,15 +280,18 @@ ${sheetData}
     }
 
     // Update the prep recipes items in the DB with the newly calculated prices
+    const itemUpdates = [];
     for (const r of allRecipes) {
        if (r.type === 'prep_recipe' && r.name) {
            const pName = r.name.trim().toLowerCase();
            const pItem = itemMap.get(pName);
            if (pItem && pItem.id && pItem.price > 0) {
-               // Fire and forget updating the prep item price in DB
-               base44.entities.Item.update(pItem.id, { price: pItem.price, price_after_discount: pItem.price }).catch(() => {});
+               itemUpdates.push(() => base44.entities.Item.update(pItem.id, { price: pItem.price, price_after_discount: pItem.price }));
            }
        }
+    }
+    if (itemUpdates.length > 0) {
+       await processSequentially(itemUpdates, fn => fn().catch(() => {}));
     }
 
     // Process and save recipes
