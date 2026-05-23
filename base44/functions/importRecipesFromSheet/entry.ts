@@ -18,13 +18,12 @@ function normalizeUnit(u) {
   return 'unit';
 }
 
-// Helper to process arrays in chunks to avoid rate limits
-const processInChunks = async (items, fn, chunkSize) => {
+// Helper to process sequentially with a small delay to avoid 429 rate limits
+const processSequentially = async (items, fn) => {
   const results = [];
-  for (let i = 0; i < items.length; i += chunkSize) {
-    const chunk = items.slice(i, i + chunkSize);
-    const chunkResults = await Promise.all(chunk.map(fn));
-    results.push(...chunkResults);
+  for (let i = 0; i < items.length; i++) {
+    results.push(await fn(items[i]));
+    await new Promise(resolve => setTimeout(resolve, 30)); // 30ms delay between calls
   }
   return results;
 };
@@ -78,8 +77,8 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'No data found in spreadsheet' }, { status: 400 });
       }
 
-      // Run AI processing on each sheet in chunks to avoid context length limits & rate limits
-      const parsedResults = await processInChunks(validSheets, async (sheetData) => {
+      // Run AI processing on each sheet sequentially to avoid context length limits & rate limits
+      const parsedResults = await processSequentially(validSheets, async (sheetData) => {
         const prompt = `You are parsing a restaurant Google Sheets file into structured JSON.
 
 The file has multiple tabs.
@@ -347,7 +346,7 @@ ${sheetData}
     }
     
     if (itemUpdateFns.length > 0) {
-      await processInChunks(itemUpdateFns, fn => fn(), 10);
+      await processSequentially(itemUpdateFns, fn => fn());
     }
 
     if (itemsToCreate.length > 0) {
@@ -534,7 +533,7 @@ ${sheetData}
     }
     
     if (recipeUpdateFns.length > 0) {
-      await processInChunks(recipeUpdateFns, fn => fn(), 10);
+      await processSequentially(recipeUpdateFns, fn => fn());
     }
 
     if (recipesToCreate.length > 0) {

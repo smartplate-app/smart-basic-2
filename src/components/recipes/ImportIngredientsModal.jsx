@@ -21,22 +21,20 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
   const [existingItems, setExistingItems] = useState([]);
   const [mappedItems, setMappedItems] = useState({});
   const [progress, setProgress] = useState(0);
+  const [progressStatus, setProgressStatus] = useState("");
 
   useEffect(() => {
     let interval;
-    if (loading) {
-      setProgress(0);
+    if (loading && progressStatus === "Updating Database...") {
       interval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 95) return prev;
           return prev + Math.random() * 5;
         });
       }, 500);
-    } else {
-      setProgress(100);
     }
     return () => clearInterval(interval);
-  }, [loading]);
+  }, [loading, progressStatus]);
 
   const handleGenerateTemplate = async () => {
     setGenerating(true);
@@ -63,9 +61,56 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
     setError("");
 
     try {
+      let payloadParsedData = parsedData;
+      
+      if (!retryWithPrices) {
+        setProgress(5);
+        setProgressStatus(language === 'he' ? "מזהה גיליונות..." : "Fetching sheet metadata...");
+        
+        // 1. Get Spreadsheet ID
+        let spreadsheetId = url;
+        const m = String(url).match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (m) spreadsheetId = m[1];
+        
+        const metaRes = await base44.functions.invoke('fetchSheetMetadata', { spreadsheetId });
+        if (!metaRes.data || !metaRes.data.success) {
+           throw new Error(metaRes.data?.error || "Failed to fetch sheets metadata");
+        }
+        
+        const sheets = metaRes.data.sheets;
+        if (!sheets || sheets.length === 0) throw new Error("No sheets found");
+        
+        let allItems = [];
+        let allRecipes = [];
+        
+        // 2. Process each sheet sequentially
+        for (let i = 0; i < sheets.length; i++) {
+          const sheetName = sheets[i].title;
+          setProgressStatus(language === 'he' ? `מנתח גיליון ${i+1}/${sheets.length}...` : `Parsing sheet ${i+1}/${sheets.length}...`);
+          setProgress(10 + Math.floor((i / sheets.length) * 70));
+          
+          try {
+            const aiRes = await base44.functions.invoke('parseRecipesSheetLLM', { spreadsheetUrl: url, sheetName });
+            if (aiRes.data && aiRes.data.success) {
+               if (aiRes.data.items) allItems.push(...aiRes.data.items);
+               if (aiRes.data.recipes) allRecipes.push(...aiRes.data.recipes);
+            }
+          } catch(err) {
+             console.error(`Failed to parse sheet ${sheetName}`, err);
+          }
+        }
+        
+        payloadParsedData = { items: allItems, recipes: allRecipes };
+        setParsedData(payloadParsedData);
+      }
+
+      setProgressStatus(language === 'he' ? "מעדכן מסד נתונים..." : "Updating Database...");
+      setProgress(85);
+
       const payload = { spreadsheetUrl: url };
+      payload.parsedData = payloadParsedData;
+      
       if (retryWithPrices) {
-        payload.parsedData = parsedData;
         payload.providedPrices = providedPrices;
         payload.mappedItems = mappedItems;
       }
@@ -178,7 +223,7 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
             {loading && (
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm text-gray-500">
-                  <span>{language === 'he' ? 'מעבד נתונים בעזרת AI...' : 'Processing data with AI...'}</span>
+                  <span>{progressStatus}</span>
                   <span>{Math.round(progress)}%</span>
                 </div>
                 <Progress value={progress} className="h-2" />
@@ -230,7 +275,7 @@ export default function ImportIngredientsModal({ isOpen, onClose, onSuccess }) {
               {loading && (
                 <div className="mt-4 space-y-2">
                   <div className="flex justify-between text-sm text-gray-500">
-                    <span>{language === 'he' ? 'מעבד נתונים בעזרת AI...' : 'Processing data with AI...'}</span>
+                    <span>{progressStatus}</span>
                     <span>{Math.round(progress)}%</span>
                   </div>
                   <Progress value={progress} className="h-2" />
