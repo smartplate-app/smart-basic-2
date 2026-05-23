@@ -23,7 +23,7 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
         </TableHeader>
         <TableBody>
           {recipes.map((recipe) => (
-            <TableRow key={recipe.id} className="hover:bg-gray-50">
+            <TableRow key={recipe.id} className="hover:bg-gray-50 cursor-pointer" onDoubleClick={() => onEdit(recipe)}>
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
                   <ChefHat className="w-4 h-4 text-orange-500" />
