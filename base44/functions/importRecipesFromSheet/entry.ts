@@ -95,7 +95,7 @@ ${allRowsData}
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
-        model: 'gemini_3_1_pro', // Use a more capable model for accurate large-scale extraction
+        model: 'gemini_3_flash', // Faster model to avoid 504 timeout
         response_json_schema: {
           type: 'object',
           properties: {
@@ -379,7 +379,16 @@ ${allRowsData}
                       const mappedId = mappedItems[itemNameLower];
                       item = Array.from(itemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
                    }
-                   totalCost += (item ? Number(item.price_after_discount || item.price || 0) : 0) * (Number(ing.quantity) || 0);
+                   let multiplier = 1;
+                   if (item && item.unit && ing.unit) {
+                       const itemU = normalizeUnit(item.unit);
+                       const ingU = normalizeUnit(ing.unit);
+                       if (itemU === 'kg' && ingU === 'gram') multiplier = 1/1000;
+                       else if (itemU === 'gram' && ingU === 'kg') multiplier = 1000;
+                       else if (itemU === 'liter' && ingU === 'ml') multiplier = 1/1000;
+                       else if (itemU === 'ml' && ingU === 'liter') multiplier = 1000;
+                   }
+                   totalCost += (item ? Number(item.price_after_discount || item.price || 0) : 0) * (Number(ing.quantity) || 0) * multiplier;
                }
                const unitPrice = (Number(r.yield_quantity) || 1) > 0 ? (totalCost / Number(r.yield_quantity)) : totalCost;
                
@@ -432,7 +441,17 @@ ${allRowsData}
            item = Array.from(itemMap.values()).find(i => i.id === mappedId || (i.name && i.name.toLowerCase() === mappedId.toLowerCase()));
         }
         
-        const cost = item ? (Number(item.price_after_discount || item.price || 0) * Number(ing.quantity)) : 0;
+        let multiplier = 1;
+        if (item && item.unit && ing.unit) {
+            const itemU = normalizeUnit(item.unit);
+            const ingU = normalizeUnit(ing.unit);
+            if (itemU === 'kg' && ingU === 'gram') multiplier = 1/1000;
+            else if (itemU === 'gram' && ingU === 'kg') multiplier = 1000;
+            else if (itemU === 'liter' && ingU === 'ml') multiplier = 1/1000;
+            else if (itemU === 'ml' && ingU === 'liter') multiplier = 1000;
+        }
+
+        const cost = item ? (Number(item.price_after_discount || item.price || 0) * Number(ing.quantity) * multiplier) : 0;
         totalCost += cost;
         return {
           item_id: item ? item.id : null,
