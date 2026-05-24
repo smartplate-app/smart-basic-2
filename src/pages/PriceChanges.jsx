@@ -25,8 +25,16 @@ export default function PriceChangesPage() {
             if (!user) return;
             
             let data = [];
-            const isAdminControlling = !!(user?.admin_original_email && user?.acting_as_user_email);
-            const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.email;
+            let targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+
+            if (!user.acting_as_store_email && !user.acting_as_user_email && !user.store_user_owner_email) {
+                try {
+                    const recs = await base44.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+                    if (recs.length > 0) targetEmail = recs[0].owner_email;
+                } catch(e){}
+            }
+
+            const isAdminControlling = user?.role === 'admin' && targetEmail !== user.email;
 
             if (isAdminControlling) {
                 try {
@@ -36,8 +44,36 @@ export default function PriceChangesPage() {
                     }
                 } catch(e) {}
             } else {
-                data = await base44.entities.PriceChangeLog.filter({ created_by: targetEmail }, "-created_date", 1000);
+                let data1 = await base44.entities.PriceChangeLog.filter({ created_by: targetEmail }, "-created_date", 1000);
+                let data2 = await base44.entities.PriceChangeLog.filter({ store_owner_email: targetEmail }, "-created_date", 1000);
+                data = [...data1, ...data2];
+
+                if (targetEmail !== user.email) {
+                    const myData1 = await base44.entities.PriceChangeLog.filter({ created_by: user.email }, "-created_date", 1000);
+                    const myData2 = await base44.entities.PriceChangeLog.filter({ store_owner_email: user.email }, "-created_date", 1000);
+                    const myData = [...myData1, ...myData2];
+                    data = [...data, ...myData];
+                }
+
+                if (user.chain_id && !user.is_chain_head) {
+                    try {
+                        const chain = await base44.entities.Chain.filter({ id: user.chain_id });
+                        if (chain.length > 0) {
+                            const headEmail = chain[0].head_store_user_email;
+                            const headData1 = await base44.entities.PriceChangeLog.filter({ created_by: headEmail }, "-created_date", 1000);
+                            const headData2 = await base44.entities.PriceChangeLog.filter({ store_owner_email: headEmail }, "-created_date", 1000);
+                            const headData = [...headData1, ...headData2];
+                            data = [...headData, ...data];
+                        }
+                    } catch(e){}
+                }
+
+                // Deduplicate by ID
+                data = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
             }
+            
+            // Sort data by date descending
+            data.sort((a, b) => new Date(b.effective_date || b.created_date) - new Date(a.effective_date || a.created_date));
             
             setLogs(data || []);
         } catch (e) {
