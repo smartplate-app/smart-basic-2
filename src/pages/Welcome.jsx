@@ -8,6 +8,7 @@ import { useLanguage } from "../components/LanguageProvider";
 export default function Welcome() {
   const { language } = useLanguage();
   const [openRequest, setOpenRequest] = React.useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
   const handleSignIn = async () => {
     // If already authenticated, go straight in
     try {
@@ -40,15 +41,25 @@ export default function Welcome() {
             const me = await base44.auth.me();
             if (me?.role === 'admin') {
               // Admin preview allowed, do not redirect
+              setIsCheckingAuth(false);
               return;
             }
           }
           // Non-admins (or admin without preview) get redirected
           window.location.replace(createPageUrl("Orders"));
+        } else {
+          window.location.replace("https://smartplate-app.github.io/foodcostapp-landing/");
         }
-      } catch {}
+      } catch {
+        window.location.replace("https://smartplate-app.github.io/foodcostapp-landing/");
+      }
     })();
   }, []);
+
+  if (isCheckingAuth) {
+    return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6"></div>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border p-8 text-center">
