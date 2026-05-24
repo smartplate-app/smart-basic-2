@@ -121,6 +121,14 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    // Force clear local cache to ensure fresh data after seed
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('dashboard_cache_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch(e) {}
     loadData();
   }, [selectedMonth]);
 

@@ -47,6 +47,10 @@ Deno.serve(async (req) => {
         for (const pcl of existingPriceChanges) {
             await base44.asServiceRole.entities.PriceChangeLog.delete(pcl.id);
         }
+        const existingWeeklySales = await base44.asServiceRole.entities.WeeklySalesRecord.filter({ store_owner_email: demoEmail });
+        for (const wsr of existingWeeklySales) {
+            await base44.asServiceRole.entities.WeeklySalesRecord.delete(wsr.id);
+        }
         
         // 1. Suppliers
         const suppliers = [
