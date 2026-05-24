@@ -485,7 +485,8 @@ export default function MonthlyCountPage() {
   /* handleSendPdf removed per request */
 
   const filteredCounts = counts.filter(count => {
-        const matchesSearch = count.warehouse_name.toLowerCase().includes(searchTerm.toLowerCase());
+        const searchTarget = (count.warehouse_name || count.name || "").toLowerCase();
+        const matchesSearch = searchTarget.includes(searchTerm.toLowerCase());
         const matchesWarehouse = warehouseFilter === "all" || count.warehouse_id === warehouseFilter;
         return matchesSearch && matchesWarehouse;
       });

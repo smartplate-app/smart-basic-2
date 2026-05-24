@@ -42,7 +42,13 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [tableSearchTerm, setTableSearchTerm] = useState("");
   const isSavingRef = React.useRef(false);
+  const isSubmittedRef = React.useRef(false);
+  const formDataRef = React.useRef(formData);
   const [dbSavedAt, setDbSavedAt] = useState(null);
+
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
 
   const handleExportToSheets = async () => {
     try {
@@ -145,10 +151,66 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     setFormData(prev => ({ ...prev, total_inventory_value: total }));
   }, [formData.items]);
 
+  // Create initial draft immediately on mount if it's a new count
+  useEffect(() => {
+    let isMounted = true;
+    if (!formDataRef.current.id && !isOffline && navigator.onLine) {
+      const createInitialDraft = async () => {
+        try {
+          if (isSavingRef.current) return;
+          isSavingRef.current = true;
+          
+          const currentData = formDataRef.current;
+          const cleanedData = {
+            ...currentData,
+            warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
+            items: currentData.items.map(item => ({
+              ...item,
+              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+              total_cost: Number(item.total_cost) || 0
+            }))
+          };
+          
+          const newCount = await base44.entities.InventoryCount.create({ ...cleanedData, status: 'in_progress' });
+          if (isMounted) {
+            setFormData(prev => ({ ...prev, id: newCount.id }));
+            setDbSavedAt(new Date());
+          }
+        } catch (error) {
+          console.error("Initial draft creation failed:", error);
+        } finally {
+          isSavingRef.current = false;
+        }
+      };
+      createInitialDraft();
+    }
+    return () => { isMounted = false; };
+  }, [isOffline, language]);
+
+  // Handle unmount explicit save (e.g. switching tabs or clicking X)
+  useEffect(() => {
+    return () => {
+      if (!isOffline && navigator.onLine && formDataRef.current?.id && !isSubmittedRef.current) {
+        const currentData = formDataRef.current;
+        const cleanedData = {
+          ...currentData,
+          warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
+          items: currentData.items.map(item => ({
+            ...item,
+            counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+            price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+            total_cost: Number(item.total_cost) || 0
+          }))
+        };
+        // Fire and forget
+        base44.entities.InventoryCount.update(currentData.id, cleanedData).catch(console.error);
+      }
+    };
+  }, [isOffline, language]);
+
   // Auto-save draft to local storage and Database
   useEffect(() => {
-    if (!formData.warehouse_id && formData.items.length === 0 && !formData.name) return;
-    
     const timer = setTimeout(async () => {
       // 1. Save locally for offline backup
       const dataToSave = {
@@ -158,14 +220,15 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
       setHasDraft(true);
 
-      // 2. Auto-save to Database if online
-      if (!isOffline && navigator.onLine) {
+      // 2. Auto-save to Database if online and we have an ID
+      if (!isOffline && navigator.onLine && formData.id) {
         try {
           if (isSavingRef.current) return;
           isSavingRef.current = true;
           
           const cleanedData = {
             ...formData,
+            warehouse_name: formData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
             items: formData.items.map(item => ({
               ...item,
               counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
@@ -174,14 +237,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
             }))
           };
 
-          if (formData.id) {
-            await base44.entities.InventoryCount.update(formData.id, cleanedData);
-            setDbSavedAt(new Date());
-          } else {
-            const newCount = await base44.entities.InventoryCount.create({ ...cleanedData, status: formData.status || 'in_progress' });
-            setFormData(prev => ({ ...prev, id: newCount.id }));
-            setDbSavedAt(new Date());
-          }
+          await base44.entities.InventoryCount.update(formData.id, cleanedData);
+          setDbSavedAt(new Date());
         } catch (error) {
           console.error("DB Auto-save failed:", error);
         } finally {
@@ -191,7 +248,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [formData, isOffline]);
+  }, [formData, isOffline, language]);
 
   // Effect to populate filteredAvailableItems for the "Add Item" dropdown
   useEffect(() => {
@@ -345,6 +402,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    isSubmittedRef.current = true;
     // Clear local storage after successful submit
     clearLocalStorage();
     
