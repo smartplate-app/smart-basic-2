@@ -212,6 +212,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   // Auto-save draft to local storage and Database
   useEffect(() => {
     const timer = setTimeout(async () => {
+      if (!formData.warehouse_id && formData.items.length === 0 && !formData.name) return;
+
       // 1. Save locally for offline backup
       const dataToSave = {
         ...formData,
@@ -220,8 +222,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
       setHasDraft(true);
 
-      // 2. Auto-save to Database if online and we have an ID
-      if (!isOffline && navigator.onLine && formData.id) {
+      // 2. Auto-save to Database if online
+      if (!isOffline && navigator.onLine) {
         try {
           if (isSavingRef.current) return;
           isSavingRef.current = true;
@@ -237,15 +239,21 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
             }))
           };
 
-          await base44.entities.InventoryCount.update(formData.id, cleanedData);
-          setDbSavedAt(new Date());
+          if (formData.id) {
+            await base44.entities.InventoryCount.update(formData.id, cleanedData);
+            setDbSavedAt(new Date());
+          } else {
+            const newCount = await base44.entities.InventoryCount.create({ ...cleanedData, status: formData.status || 'in_progress' });
+            setFormData(prev => ({ ...prev, id: newCount.id }));
+            setDbSavedAt(new Date());
+          }
         } catch (error) {
           console.error("DB Auto-save failed:", error);
         } finally {
           isSavingRef.current = false;
         }
       }
-    }, 1500);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [formData, isOffline, language]);

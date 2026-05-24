@@ -224,7 +224,11 @@ export default function MonthlyCountPage() {
           
           const c = getCache('monthly_count_v1');
           const stale = isStale(c, 180000);
-          if (stale) {
+          
+          // Always fetch in background to ensure we see newly auto-saved drafts
+          if (c?.data) {
+            loadData(workingEmail).catch(console.error);
+          } else {
             await loadData(workingEmail);
           }
         }
