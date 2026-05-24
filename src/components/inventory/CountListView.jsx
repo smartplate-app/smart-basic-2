@@ -81,7 +81,7 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
                 <TableCell className="px-4 py-3 text-right">
                   <div className="text-sm font-medium text-gray-900">{count.warehouse_name}</div>
                 </TableCell>
-                <TableCell className="px-4 py-3 text-right text-sm text-gray-900">
+                <TableCell className="px-4 py-3 text-right text-sm text-gray-900 font-medium hover:text-indigo-600 hover:underline" onClick={(e) => { e.stopPropagation(); onEdit(count); }}>
                   {count.name || '-'}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
