@@ -1281,164 +1281,99 @@ export default function DashboardPage() {
               </div>
               
               <div className="bg-white border border-gray-200 border-t-0 rounded-b-xl p-4 md:p-6 shadow-md">
-                {/* Sales Summary Cards */}
-                <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
-                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מכירות וולט' : 'Delivery Sales'}</div>
+                {/* Unified Cube Grid for Sales & Costs */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  
+                  {/* Sales Cubes */}
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מכירות וולט' : 'Delivery Sales'}</div>
                     {!editMode ? (
-                      <div className="text-3xl font-bold text-gray-900">{formatCurrency(deliverySales)}</div>
+                      <div className="text-2xl font-bold text-gray-900">{formatCurrency(deliverySales)}</div>
                     ) : (
-                      <Input
-                        type="number"
-                        value={deliverySales}
-                        onChange={(e) => setDeliverySales(parseFloat(e.target.value) || 0)}
-                        className="w-32 mx-auto text-center font-bold"
-                      />
+                      <Input type="number" value={deliverySales} onChange={(e) => setDeliverySales(parseFloat(e.target.value) || 0)} className="w-full text-center font-bold text-sm h-8" />
                     )}
-                    {actualSales > 0 && !editMode && (
-                      <div className="text-sm text-gray-400 mt-1">
-                        {((deliverySales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}
-                      </div>
-                    )}
+                    {actualSales > 0 && !editMode && <div className="text-[11px] text-gray-400 mt-1 font-medium">{((deliverySales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}</div>}
                   </div>
-                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
-                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מכירות מסעדה' : 'Dine-in Sales'}</div>
+
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מכירות מסעדה' : 'Dine-in Sales'}</div>
                     {!editMode ? (
-                      <div className="text-3xl font-bold text-gray-900">{formatCurrency(restaurantSales)}</div>
+                      <div className="text-2xl font-bold text-gray-900">{formatCurrency(restaurantSales)}</div>
                     ) : (
-                      <Input
-                        type="number"
-                        value={restaurantSales}
-                        onChange={(e) => setRestaurantSales(parseFloat(e.target.value) || 0)}
-                        className="w-32 mx-auto text-center font-bold"
-                      />
+                      <Input type="number" value={restaurantSales} onChange={(e) => setRestaurantSales(parseFloat(e.target.value) || 0)} className="w-full text-center font-bold text-sm h-8" />
                     )}
-                    {actualSales > 0 && !editMode && (
-                      <div className="text-sm text-gray-400 mt-1">
-                        {((restaurantSales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}
-                      </div>
-                    )}
-                  </div>
-                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-6 text-center shadow-sm">
-                    <div className="text-sm text-gray-500 mb-2">{language === 'he' ? 'מחזור כולל מע"מ' : 'Total Sales (incl. VAT)'}</div>
-                    <div className="text-3xl font-bold text-gray-900">{formatCurrency(actualSales)}</div>
-                    <div className="text-sm text-gray-400 mt-1">
-                      {language === 'he' ? 'מחזור נטו: ' : 'Net: '}{formatCurrency(actualSalesExVAT)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cost Breakdown Rows */}
-                <div className="space-y-4">
-                  {/* Food Cost Row */}
-                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-5 shadow-sm transition-all hover:shadow-md">
-                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                      <div className={`text-3xl font-bold ${actualFoodPercent > foodGoalPercent ? 'text-red-500' : 'text-[#22c55e]'}`}>
-                        {actualFoodPercent.toFixed(1)}%
-                      </div>
-                      <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                        <span className="text-lg text-gray-400 font-medium">{formatCurrency(effectiveFoodCost)}</span>
-                        <span className="text-xl font-semibold text-gray-700">{language === 'he' ? 'קניינות (עלות מזון)' : 'Food Cost'} 🥩</span>
-                      </div>
-                    </div>
-                    <div className={`mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <div className="flex items-center gap-2">
-                        <Switch checked={useManualFood} onCheckedChange={(val) => { setUseManualFood(val); if(val) setEditMode(true); }} />
-                        <span className="text-sm text-gray-600">{language === 'he' ? 'הזנה ידנית' : 'Manual entry'}</span>
-                      </div>
-                      {useManualFood && (
-                        <Input
-                          type="number"
-                          value={manualFoodCost}
-                          onChange={(e) => { const v = parseFloat(e.target.value) || 0; setManualFoodCost(v); }}
-                          placeholder="0"
-                          className="w-32 bg-white"
-                        />
-                      )}
-                    </div>
+                    {actualSales > 0 && !editMode && <div className="text-[11px] text-gray-400 mt-1 font-medium">{((restaurantSales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}</div>}
                   </div>
 
-                  {/* Labor Cost Row */}
-                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-5 shadow-sm transition-all hover:shadow-md">
-                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                      <div className={`text-3xl font-bold ${actualLaborPercent > laborGoalPercent ? 'text-red-500' : 'text-[#22c55e]'}`}>
-                        {actualLaborPercent.toFixed(1)}%
-                      </div>
-                      <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                        <span className="text-lg text-gray-400 font-medium">{formatCurrency(effectiveLaborCost)}</span>
-                        <span className="text-xl font-semibold text-gray-700">{language === 'he' ? 'עלות כוח אדם כולל מעסיק' : 'Labor Cost'} 👷‍♂️</span>
-                      </div>
-                    </div>
-                    <div className={`mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <div className="flex items-center gap-2">
-                        <Switch checked={useManualLabor} onCheckedChange={(val) => { 
-                          setUseManualLabor(val); 
-                          autoSaveManualLabor(manualLaborCost, val); 
-                        }} />
-                        <span className="text-sm text-gray-600">{language === 'he' ? 'הזנה ידנית' : 'Manual entry'}</span>
-                      </div>
-                      {useManualLabor && (
-                        <Input
-                          type="number"
-                          value={manualLaborCost}
-                          onChange={(e) => { 
-                            const v = parseFloat(e.target.value) || 0; 
-                            setManualLaborCost(v); 
-                            autoSaveManualLabor(v, true); 
-                          }}
-                          placeholder="0"
-                          className="w-32 bg-white"
-                        />
-                      )}
-                    </div>
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מחזור כולל מע"מ' : 'Total Sales (incl. VAT)'}</div>
+                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(actualSales)}</div>
+                    <div className="text-[11px] text-gray-400 mt-1 font-medium">{language === 'he' ? 'נטו: ' : 'Net: '}{formatCurrency(actualSalesExVAT)}</div>
                   </div>
 
-                  {/* Wolt Row */}
-                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-5 shadow-sm transition-all hover:shadow-md">
-                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                      <div className={`text-3xl font-bold ${woltPercentOfSales > 10 ? 'text-red-500' : 'text-[#22c55e]'}`}>
-                        {woltPercentOfSales.toFixed(1)}%
-                      </div>
-                      <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                        <span className="text-lg text-gray-400 font-medium">{formatCurrency(woltCommissionAmount)}</span>
-                        <span className="text-xl font-semibold text-gray-700">{language === 'he' ? 'עמלת וולט (24%)' : 'Wolt Commission (24%)'} 🚴</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Rent Row */}
-                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-5 shadow-sm transition-all hover:shadow-md">
-                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                      <div className={`text-3xl font-bold ${isRentAbove7 ? 'text-red-500' : 'text-[#22c55e]'}`}>
-                        {rentPercentOfSales.toFixed(1)}%
-                      </div>
-                      <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                        <span className="text-lg text-gray-400 font-medium">{formatCurrency(monthlyRent)}</span>
-                        <span className="text-xl font-semibold text-gray-700">{language === 'he' ? 'שכר דירה' : 'Rent'} 🏢</span>
-                      </div>
-                    </div>
-                    {editMode && (
-                      <div className={`mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-sm text-gray-600">{language === 'he' ? 'סכום שכר דירה' : 'Rent Amount'}</span>
-                        <Input
-                          type="number"
-                          value={monthlyRent}
-                          onChange={(e) => setMonthlyRent(parseFloat(e.target.value) || 0)}
-                          placeholder="0"
-                          className="w-32 bg-white"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Total Costs Row */}
-                  <div className={`bg-white border-2 rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between shadow-md transition-all ${isOverGoal ? 'border-red-500' : 'border-[#22c55e]'}`}>
+                  {/* Total Costs Cube (Moved to top row to balance 4x2 grid) */}
+                  <div className={`bg-white border-2 rounded-xl p-4 shadow-sm flex flex-col justify-center items-center text-center min-h-[140px] ${isOverGoal ? 'border-red-500' : 'border-[#22c55e]'}`}>
+                    <div className="text-sm font-bold text-gray-800 mb-1">{language === 'he' ? 'סה"כ עלויות' : 'Total Costs'} 📊</div>
                     <div className={`text-4xl font-extrabold ${isOverGoal ? 'text-red-500' : 'text-[#22c55e]'}`}>
                       {actualCombinedPercent.toFixed(1)}%
                     </div>
-                    <div className={`flex items-center gap-3 w-full md:w-auto ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                      <span className="text-2xl font-bold text-gray-800">{language === 'he' ? 'סה"כ עלויות' : 'Total Costs'} 📊</span>
+                  </div>
+
+                  {/* Food Cost Cube */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center items-center text-center min-h-[140px]">
+                    <div className="text-xs font-semibold text-gray-700 mb-1">{language === 'he' ? 'עלות מזון' : 'Food Cost'} 🥩</div>
+                    <div className={`text-3xl font-bold ${actualFoodPercent > foodGoalPercent ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                      {actualFoodPercent.toFixed(1)}%
                     </div>
+                    <div className="text-[13px] text-gray-400 font-bold mt-1">{formatCurrency(effectiveFoodCost)}</div>
+                    {editMode && (
+                      <div className="mt-2 w-full flex flex-col items-center gap-1">
+                        <div className="flex items-center gap-1 text-[10px]">
+                          <Switch checked={useManualFood} onCheckedChange={setUseManualFood} className="scale-75" />
+                          <span>{language === 'he' ? 'ידני' : 'Manual'}</span>
+                        </div>
+                        {useManualFood && <Input type="number" value={manualFoodCost} onChange={(e) => setManualFoodCost(parseFloat(e.target.value) || 0)} className="w-16 h-6 text-xs px-1 text-center" />}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Labor Cost Cube */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center items-center text-center min-h-[140px]">
+                    <div className="text-xs font-semibold text-gray-700 mb-1">{language === 'he' ? 'כוח אדם' : 'Labor Cost'} 👷‍♂️</div>
+                    <div className={`text-3xl font-bold ${actualLaborPercent > laborGoalPercent ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                      {actualLaborPercent.toFixed(1)}%
+                    </div>
+                    <div className="text-[13px] text-gray-400 font-bold mt-1">{formatCurrency(effectiveLaborCost)}</div>
+                    {editMode && (
+                      <div className="mt-2 w-full flex flex-col items-center gap-1">
+                        <div className="flex items-center gap-1 text-[10px]">
+                          <Switch checked={useManualLabor} onCheckedChange={(val) => { setUseManualLabor(val); autoSaveManualLabor(manualLaborCost, val); }} className="scale-75" />
+                          <span>{language === 'he' ? 'ידני' : 'Manual'}</span>
+                        </div>
+                        {useManualLabor && <Input type="number" value={manualLaborCost} onChange={(e) => { const v = parseFloat(e.target.value)||0; setManualLaborCost(v); autoSaveManualLabor(v, true); }} className="w-16 h-6 text-xs px-1 text-center" />}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Wolt Cube */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center items-center text-center min-h-[140px]">
+                    <div className="text-xs font-semibold text-gray-700 mb-1">{language === 'he' ? 'עמלת וולט' : 'Wolt Comm.'} 🚴</div>
+                    <div className={`text-3xl font-bold ${woltPercentOfSales > 10 ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                      {woltPercentOfSales.toFixed(1)}%
+                    </div>
+                    <div className="text-[13px] text-gray-400 font-bold mt-1">{formatCurrency(woltCommissionAmount)}</div>
+                  </div>
+
+                  {/* Rent Cube */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col justify-center items-center text-center min-h-[140px]">
+                    <div className="text-xs font-semibold text-gray-700 mb-1">{language === 'he' ? 'שכירות' : 'Rent'} 🏢</div>
+                    <div className={`text-3xl font-bold ${isRentAbove7 ? 'text-red-500' : 'text-[#22c55e]'}`}>
+                      {rentPercentOfSales.toFixed(1)}%
+                    </div>
+                    <div className="text-[13px] text-gray-400 font-bold mt-1">{formatCurrency(monthlyRent)}</div>
+                    {editMode && (
+                      <Input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(parseFloat(e.target.value) || 0)} className="w-16 h-6 text-xs px-1 mt-2 text-center" />
+                    )}
                   </div>
 
                 </div>
