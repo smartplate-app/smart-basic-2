@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Trash2, Save, WifiOff, Upload, FileSpreadsheet, Loader, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { X, Plus, Trash2, Save, WifiOff, Upload, FileSpreadsheet, Loader, ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
 import { Item } from "@/entities/Item";
@@ -40,6 +40,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [exportingSheets, setExportingSheets] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [tableSearchTerm, setTableSearchTerm] = useState("");
 
   const handleExportToSheets = async () => {
     try {
@@ -601,6 +602,30 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                       </div>
                     )}
 
+                    <div className="flex justify-between items-center mb-2 mt-4">
+                      <div className="relative w-full md:w-1/3">
+                        <Input
+                          type="text"
+                          placeholder={language === 'he' ? 'חפש פריט במחסן...' : 'Search item in warehouse...'}
+                          value={tableSearchTerm}
+                          onChange={(e) => setTableSearchTerm(e.target.value)}
+                          className={language === 'he' || language === 'ar' ? 'pr-9' : 'pl-9'}
+                        />
+                        <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 ${language === 'he' || language === 'ar' ? 'right-3' : 'left-3'}`} />
+                        {tableSearchTerm && (
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            size="icon" 
+                            className={`absolute top-1/2 -translate-y-1/2 h-6 w-6 ${language === 'he' || language === 'ar' ? 'left-2' : 'right-2'}`}
+                            onClick={() => setTableSearchTerm('')}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="border rounded-lg overflow-x-auto overflow-y-auto max-h-[60vh]">
                       <Table>
                         <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
@@ -629,6 +654,12 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                         <TableBody>
                           {formData.items.map((item, index) => {
                             const originalItem = items.find(i => i.id === item.item_id);
+                            const searchMatch = !tableSearchTerm || 
+                              (item.item_name || '').toLowerCase().includes(tableSearchTerm.toLowerCase()) || 
+                              (originalItem?.nickname || '').toLowerCase().includes(tableSearchTerm.toLowerCase());
+                              
+                            if (!searchMatch) return null;
+
                             return (
                             <TableRow key={index}>
                               <TableCell className="font-medium">
