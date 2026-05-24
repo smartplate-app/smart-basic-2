@@ -119,6 +119,13 @@ export default function StoreLoginPage() {
           </form>
         </CardContent>
       </Card>
+      
+      <div className="mt-8 text-center">
+        <p className="text-gray-400 text-sm mb-2">בעל עסק / מנהל מערכת?</p>
+        <a href="/#/pages/SignIn" className="text-blue-400 hover:text-blue-300 text-sm underline underline-offset-4 transition-colors">
+          התחבר כאן (Admin Login)
+        </a>
+      </div>
     </div>
   );
 }
