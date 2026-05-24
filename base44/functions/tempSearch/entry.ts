@@ -2,23 +2,29 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
     try {
-        const base44 = createClientFromRequest(req);
+        const fs = await import('node:fs');
+        const path = await import('node:path');
+        const __dirname = path.resolve('.');
         
-        async function searchDir(path) {
-            const results = [];
-            for await (const dirEntry of Deno.readDir(path)) {
-                const entryPath = `${path}/${dirEntry.name}`;
-                if (dirEntry.isDirectory) {
-                    results.push(...await searchDir(entryPath));
-                } else if (dirEntry.isFile && (entryPath.endsWith('.js') || entryPath.endsWith('.jsx'))) {
-                    results.push(entryPath);
+        let files = [];
+        try {
+            const readDirRecursive = (dir) => {
+                const entries = fs.readdirSync(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                    const fullPath = path.join(dir, entry.name);
+                    if (entry.isDirectory()) {
+                        if (!['node_modules', '.git', 'dist'].includes(entry.name)) {
+                            readDirRecursive(fullPath);
+                        }
+                    } else {
+                        files.push(fullPath.replace(__dirname + '/', ''));
+                    }
                 }
-            }
-            return results;
-        }
+            };
+            readDirRecursive(__dirname);
+        } catch (e) {}
 
-        const files = await searchDir('./src/components/labor');
-        return Response.json({ files });
+        return Response.json({ dir: __dirname, files });
     } catch (error) {
         return Response.json({ error: error.message }, { status: 500 });
     }
