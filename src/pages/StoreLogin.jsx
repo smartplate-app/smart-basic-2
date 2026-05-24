@@ -11,7 +11,10 @@ export default function StoreLoginPage() {
     const params = new URLSearchParams(window.location.search);
     return params.get("email") || "";
   });
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("email") === 'demo@foodcostapp.com' ? '123456' : '';
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -81,7 +84,6 @@ export default function StoreLoginPage() {
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
-                  defaultValue={email === 'demo@foodcostapp.com' ? '123456' : ''}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••"
