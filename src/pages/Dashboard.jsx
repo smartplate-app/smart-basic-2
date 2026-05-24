@@ -69,13 +69,39 @@ export default function DashboardPage() {
   const [selectedStartCountId, setSelectedStartCountId] = useState("");
   const [selectedEndCountId, setSelectedEndCountId] = useState("");
 
+  // Load saved selection from local storage when month changes
+  useEffect(() => {
+    const savedStart = localStorage.getItem(`afc_start_count_${selectedMonth}`);
+    const savedEnd = localStorage.getItem(`afc_end_count_${selectedMonth}`);
+    
+    if (savedStart) setSelectedStartCountId(savedStart);
+    else setSelectedStartCountId("");
+    
+    if (savedEnd) setSelectedEndCountId(savedEnd);
+    else setSelectedEndCountId("");
+  }, [selectedMonth]);
+
   // Auto-select latest two counts for AFC if not selected
   useEffect(() => {
     if (inventoryCounts.length >= 2 && !selectedStartCountId && !selectedEndCountId) {
-      setSelectedStartCountId(inventoryCounts[1].id); // Older
-      setSelectedEndCountId(inventoryCounts[0].id);   // Newer
+      const savedStart = localStorage.getItem(`afc_start_count_${selectedMonth}`);
+      const savedEnd = localStorage.getItem(`afc_end_count_${selectedMonth}`);
+      if (!savedStart && !savedEnd) {
+        setSelectedStartCountId(inventoryCounts[1].id); // Older
+        setSelectedEndCountId(inventoryCounts[0].id);   // Newer
+      }
     }
-  }, [inventoryCounts, selectedStartCountId, selectedEndCountId]);
+  }, [inventoryCounts, selectedStartCountId, selectedEndCountId, selectedMonth]);
+
+  const handleStartCountChange = (val) => {
+    setSelectedStartCountId(val);
+    if (val) localStorage.setItem(`afc_start_count_${selectedMonth}`, val);
+  };
+
+  const handleEndCountChange = (val) => {
+    setSelectedEndCountId(val);
+    if (val) localStorage.setItem(`afc_end_count_${selectedMonth}`, val);
+  };
   const [lastAfcSheetId, setLastAfcSheetId] = useState(null);
   const [lastAfcSheetUrl, setLastAfcSheetUrl] = useState(null);
 
@@ -1505,7 +1531,7 @@ export default function DashboardPage() {
                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>
                       {language === 'he' ? 'ספירת פתיחה' : 'Start Count'}
                     </Label>
-                    <Select value={selectedStartCountId} onValueChange={setSelectedStartCountId}>
+                    <Select value={selectedStartCountId} onValueChange={handleStartCountChange}>
                       <SelectTrigger>
                         <SelectValue placeholder={language === 'he' ? 'בחר ספירת פתיחה' : 'Choose start count'} />
                       </SelectTrigger>
@@ -1523,7 +1549,7 @@ export default function DashboardPage() {
                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>
                       {language === 'he' ? 'ספירת סיום' : 'End Count'}
                     </Label>
-                    <Select value={selectedEndCountId} onValueChange={setSelectedEndCountId}>
+                    <Select value={selectedEndCountId} onValueChange={handleEndCountChange}>
                       <SelectTrigger>
                         <SelectValue placeholder={language === 'he' ? 'בחר ספירת סיום' : 'Choose end count'} />
                       </SelectTrigger>
