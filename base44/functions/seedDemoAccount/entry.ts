@@ -237,11 +237,11 @@ Deno.serve(async (req) => {
             supplier_id: createdSuppliers[1].id,
             supplier_name: createdSuppliers[1].name,
             received_date: new Date().toISOString().substring(0, 10),
-            invoice_total: 42500.0,
+            invoice_total: 60000.0,
             status: "verified",
             notes: "Monthly bulk meat and poultry order",
             verified_items: [
-                { item_id: createdItems[4].id, item_name: createdItems[4].name, received_quantity: 500, unit: "kg", actual_price: 55.0 }
+                { item_id: createdItems[4].id, item_name: createdItems[4].name, received_quantity: 1000, unit: "kg", actual_price: 55.0 }
             ],
             created_by: demoEmail,
             store_owner_email: demoEmail
@@ -262,14 +262,14 @@ Deno.serve(async (req) => {
             count_date: new Date(new Date().getFullYear(), new Date().getMonth(), 28).toISOString().substring(0, 10),
             count_type: "monthly",
             status: "completed",
-            total_inventory_value: (200 * 5.5) + (150 * 4.2) + (150 * 45.0) + (200 * 35.0) + (700 * 55.0) + (2500 * 8.0),
+            total_inventory_value: (500 * 5.5) + (400 * 4.2) + (300 * 45.0) + (500 * 35.0) + (1000 * 55.0) + (4306 * 8.0),
             items: [
-                { item_id: createdItems[0].id, item_name: createdItems[0].name, counted_quantity: 200, unit: "kg", price_per_unit: 5.5, total_cost: 200 * 5.5 },
-                { item_id: createdItems[1].id, item_name: createdItems[1].name, counted_quantity: 150, unit: "kg", price_per_unit: 4.2, total_cost: 150 * 4.2 },
-                { item_id: createdItems[2].id, item_name: createdItems[2].name, counted_quantity: 150, unit: "kg", price_per_unit: 45.0, total_cost: 150 * 45.0 },
-                { item_id: createdItems[3].id, item_name: createdItems[3].name, counted_quantity: 200, unit: "liter", price_per_unit: 35.0, total_cost: 200 * 35.0 },
-                { item_id: createdItems[4].id, item_name: createdItems[4].name, counted_quantity: 700, unit: "kg", price_per_unit: 55.0, total_cost: 700 * 55.0 },
-                { item_id: createdItems[5].id, item_name: createdItems[5].name, counted_quantity: 2500, unit: "kg", price_per_unit: 8.0, total_cost: 2500 * 8.0 }
+                { item_id: createdItems[0].id, item_name: createdItems[0].name, counted_quantity: 500, unit: "kg", price_per_unit: 5.5, total_cost: 500 * 5.5 },
+                { item_id: createdItems[1].id, item_name: createdItems[1].name, counted_quantity: 400, unit: "kg", price_per_unit: 4.2, total_cost: 400 * 4.2 },
+                { item_id: createdItems[2].id, item_name: createdItems[2].name, counted_quantity: 300, unit: "kg", price_per_unit: 45.0, total_cost: 300 * 45.0 },
+                { item_id: createdItems[3].id, item_name: createdItems[3].name, counted_quantity: 500, unit: "liter", price_per_unit: 35.0, total_cost: 500 * 35.0 },
+                { item_id: createdItems[4].id, item_name: createdItems[4].name, counted_quantity: 1000, unit: "kg", price_per_unit: 55.0, total_cost: 1000 * 55.0 },
+                { item_id: createdItems[5].id, item_name: createdItems[5].name, counted_quantity: 4306, unit: "kg", price_per_unit: 8.0, total_cost: 4306 * 8.0 }
             ],
             created_by: demoEmail,
             store_owner_email: demoEmail
