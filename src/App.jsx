@@ -12,7 +12,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import WelcomePublic from './pages/WelcomePublic';
 import RecipesPage from './pages/Recipes';
 import CogsReportsPage from './pages/CogsReports';
 import MenuEngineeringPage from './pages/MenuEngineering';
@@ -29,13 +28,13 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AppLayoutRoute = () => {
-  const location = useLocation();
-  let pathToUse = location.pathname;
-  if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
-    pathToUse = location.hash.substring(1);
-  }
-  const pathParts = pathToUse.split('/').filter(Boolean);
-  let currentPageName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'WelcomePublic';
+const location = useLocation();
+let pathToUse = location.pathname;
+if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
+  pathToUse = location.hash.substring(1);
+}
+const pathParts = pathToUse.split('/').filter(Boolean);
+let currentPageName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'StoreLogin';
   
   return (
     <LayoutWrapper currentPageName={currentPageName}>
@@ -62,10 +61,7 @@ const AuthenticatedApp = () => {
   const publicRoutes = [
     '/',
     '/index.html',
-    '/WelcomePublic',
-    '/pages/WelcomePublic',
-    '/Welcome',
-    '/pages/Welcome',
+
     '/GoogleCampaign',
     '/pages/GoogleCampaign',
     '/OAuthCallback',
@@ -97,7 +93,6 @@ const AuthenticatedApp = () => {
   const isPublicRoute = publicRoutes.some(route => 
     location.pathname.toLowerCase() === route.toLowerCase() || 
     location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/') ||
-    location.pathname.toLowerCase().includes('welcomepublic') ||
     location.pathname.toLowerCase().includes('welcomeincognito')
   );
 
@@ -130,9 +125,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<AppLayoutRoute />}>
-        <Route path="/" element={<WelcomePublic />} />
-        <Route path="/WelcomePublic" element={<WelcomePublic />} />
-        <Route path="/pages/WelcomePublic" element={<WelcomePublic />} />
+        <Route path="/" element={<Pages.StoreLogin />} />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route key={path} path={`/${path}`} element={<Page />} />
         ))}

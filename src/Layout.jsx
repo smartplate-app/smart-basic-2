@@ -19,24 +19,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { RefreshCw, WifiOff, Copy, ExternalLink } from "lucide-react";
 
 const AppLayout = ({ children, currentPageName }) => {
-  const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showDesktopSidebar, setShowDesktopSidebar] = useState(true);
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(() => {
-    const isPublic = (
-      currentPageName === 'OrderDetails' ||
-      currentPageName === 'WorkerPortal' ||
-      currentPageName === 'Register' ||
-      currentPageName === 'RestaurantInvite' ||
-      currentPageName === 'Welcome' ||
-      currentPageName === 'WelcomePublic' ||
-      currentPageName === 'PublicOrder' ||
-      currentPageName === 'OAuthCallback' ||
-      currentPageName === 'Diagnostics' ||
-      currentPageName === 'LoginHelper' ||
-      currentPageName === 'AuthKick'
-    );
+const location = useLocation();
+const [sidebarOpen, setSidebarOpen] = useState(false);
+const [showDesktopSidebar, setShowDesktopSidebar] = useState(true);
+const [user, setUser] = useState(null);
+const [authLoading, setAuthLoading] = useState(() => {
+  const isPublic = (
+    currentPageName === 'OrderDetails' ||
+    currentPageName === 'WorkerPortal' ||
+    currentPageName === 'Register' ||
+    currentPageName === 'RestaurantInvite' ||
+    currentPageName === 'StoreLogin' ||
+    currentPageName === 'PublicOrder' ||
+    currentPageName === 'OAuthCallback' ||
+    currentPageName === 'Diagnostics' ||
+    currentPageName === 'LoginHelper' ||
+    currentPageName === 'AuthKick'
+  );
     let hasCache = false;
     try { hasCache = !!localStorage.getItem('b44_user_cache') && !sessionStorage.getItem('b44_logout_in_progress'); } catch {}
     return !isPublic || hasCache;
@@ -147,18 +146,7 @@ const AppLayout = ({ children, currentPageName }) => {
     })();
   }, []);
 
-  // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
-  useEffect(() => {
-    const path = location.pathname.toLowerCase();
-    if (window.location.hash && window.location.hash.startsWith('#/pages/Welcome')) return;
-    if (path === '/welcome') {
-      const target = '/#/pages/Welcome';
-      if (window.location.href.indexOf(target) === -1) {
-        window.location.replace(target);
-      }
-      return; // prevent further redirects on this vanity route
-    }
-  }, [location.pathname]);
+
 
 
 
@@ -171,7 +159,7 @@ const AppLayout = ({ children, currentPageName }) => {
   try {
     if (authLoading && !user) {
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
-      window.location.replace('/WelcomePublic' + (window.location.search || ''));
+      window.location.replace('/#/pages/StoreLogin' + (window.location.search || ''));
     }
   } catch {}
   }, 8000);
@@ -221,8 +209,7 @@ const AppLayout = ({ children, currentPageName }) => {
       currentPageName !== 'WorkerPortal' &&
       currentPageName !== 'Register' &&
       currentPageName !== 'RestaurantInvite' &&
-      currentPageName !== 'Welcome' &&
-      currentPageName !== 'WelcomePublic' &&
+      currentPageName !== 'StoreLogin' &&
       currentPageName !== 'PublicOrder' &&
       currentPageName !== 'OAuthCallback' &&
       currentPageName !== 'LoginHelper' &&
@@ -364,7 +351,7 @@ const AppLayout = ({ children, currentPageName }) => {
                   
                   // if user was successfully fetched, stop loading screen (unless on Welcome page)
                   const currentPathCheck = location.pathname;
-                  const isWelcomeCheck = currentPathCheck === '/' || currentPathCheck === '/pages' || currentPathCheck === '' || currentPathCheck === '/pages/' || currentPathCheck.toLowerCase().includes('welcomepublic') || (window.location.hash && (window.location.hash.startsWith('#/pages/Welcome') || window.location.hash.startsWith('#/pages/WelcomePublic')));
+                  const isWelcomeCheck = currentPathCheck === '/' || currentPathCheck === '/pages' || currentPathCheck === '' || currentPathCheck === '/pages/' || currentPathCheck.toLowerCase().includes('storelogin') || (window.location.hash && (window.location.hash.startsWith('#/pages/StoreLogin')));
                   
                   if (!isWelcomeCheck) {
                     setAuthLoading(false);
@@ -531,14 +518,14 @@ const AppLayout = ({ children, currentPageName }) => {
         return;
       }
       
-      // Redirect unauthenticated users to WelcomePublic (avoid 403 loop when app is private)
+      // Redirect unauthenticated users to StoreLogin (avoid 403 loop when app is private)
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403;
       if (unauthorized) {
               // If user explicitly triggered logout, don't retry; fail open immediately
               if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
                 setAuthLoading(false);
                 try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
-                window.location.replace('/WelcomePublic' + (window.location.search || ''));
+                window.location.replace('/#/pages/StoreLogin' + (window.location.search || ''));
                 return;
               }
         // Stop spinner immediately in APK/WebView so user isn't stuck
@@ -558,7 +545,7 @@ const AppLayout = ({ children, currentPageName }) => {
           base44.auth.redirectToLogin(window.location.pathname + window.location.search);
           return;
         }
-        window.location.replace('/WelcomePublic' + (window.location.search || ''));
+        window.location.replace('/#/pages/StoreLogin' + (window.location.search || ''));
         return;
       }
       
@@ -714,8 +701,7 @@ const AppLayout = ({ children, currentPageName }) => {
     currentPageName === 'OrderDetails' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
-    currentPageName === 'Welcome' ||
-    currentPageName === 'WelcomePublic' ||
+    currentPageName === 'StoreLogin' ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
@@ -794,8 +780,8 @@ const AppLayout = ({ children, currentPageName }) => {
                     sessionStorage.removeItem('b44_oauth_finalized');
                     sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
                   } catch {}
-                  try { await base44.auth.logout('/WelcomePublic'); } catch {}
-                  setTimeout(() => { window.location.replace('/WelcomePublic'); }, 300);
+                  try { await base44.auth.logout('/#/pages/StoreLogin'); } catch {}
+                  setTimeout(() => { window.location.replace('/#/pages/StoreLogin'); }, 300);
                 }} 
                 className="w-full bg-[#d4a373] hover:bg-[#b88c60]"
               >
