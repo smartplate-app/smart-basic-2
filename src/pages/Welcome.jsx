@@ -30,21 +30,6 @@ export default function Welcome() {
     await base44.auth.redirectToLogin(nextUrl);
   };
 
-  React.useEffect(() => {
-    if (!isLoadingAuth && !currentUser) {
-      const params = new URLSearchParams(window.location.search);
-      const isPreview = params.get('preview') === '1';
-      
-      if (!isPreview) {
-        window.location.href = "https://smartplate-app.github.io/foodcostapp-landing/";
-      }
-    }
-  }, [currentUser, isLoadingAuth]);
-
-  if (isLoadingAuth || !currentUser) {
-    return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6"></div>;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border p-8 text-center">

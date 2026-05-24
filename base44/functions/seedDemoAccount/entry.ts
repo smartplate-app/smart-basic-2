@@ -43,6 +43,10 @@ Deno.serve(async (req) => {
         for (const w of existingWarehouses) {
             await base44.asServiceRole.entities.Warehouse.delete(w.id);
         }
+        const existingPriceChanges = await base44.asServiceRole.entities.PriceChangeLog.filter({ store_owner_email: demoEmail });
+        for (const pcl of existingPriceChanges) {
+            await base44.asServiceRole.entities.PriceChangeLog.delete(pcl.id);
+        }
         
         // 1. Suppliers
         const suppliers = [
@@ -271,7 +275,44 @@ Deno.serve(async (req) => {
             store_owner_email: demoEmail
         });
 
-        // 9. COGS Reports
+        // 9. Price Changes
+        await base44.asServiceRole.entities.PriceChangeLog.create({
+            item_type: "item",
+            item_id: createdItems[0].id,
+            item_name: createdItems[0].name,
+            change_type: "cost",
+            old_price: 4.8,
+            new_price: 5.5,
+            effective_date: new Date().toISOString(),
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        await base44.asServiceRole.entities.PriceChangeLog.create({
+            item_type: "recipe",
+            item_id: saleRecipe1.id,
+            item_name: saleRecipe1.name,
+            change_type: "sale_price",
+            old_price: 48.0,
+            new_price: 52.0,
+            effective_date: new Date().toISOString(),
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        await base44.asServiceRole.entities.PriceChangeLog.create({
+            item_type: "item",
+            item_id: createdItems[2].id,
+            item_name: createdItems[2].name,
+            change_type: "cost",
+            old_price: 50.0,
+            new_price: 45.0,
+            effective_date: new Date().toISOString(),
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        // 10. COGS Reports
         await base44.asServiceRole.entities.CogsReport.create({
             name: "מאי 2026 MTD — (7 ימים)",
             report_date: new Date().toISOString().substring(0, 10),

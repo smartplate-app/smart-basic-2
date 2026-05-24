@@ -82,7 +82,8 @@ Deno.serve(async (req) => {
                 recipes,
                 warehouses,
                 cogsReports,
-                wasteReports
+                wasteReports,
+                priceChanges
             ] = await Promise.all([
                 base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
@@ -96,7 +97,8 @@ Deno.serve(async (req) => {
                 base44.asServiceRole.entities.Recipe.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.Warehouse.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.CogsReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.WasteReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000)
+                base44.asServiceRole.entities.WasteReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
+                base44.asServiceRole.entities.PriceChangeLog.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000)
             ]);
 
             return Response.json({
@@ -114,7 +116,8 @@ Deno.serve(async (req) => {
                     recipes,
                     warehouses,
                     cogsReports,
-                    wasteReports
+                    wasteReports,
+                    priceChanges
                 }
             });
         }
