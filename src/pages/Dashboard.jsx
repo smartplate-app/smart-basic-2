@@ -1020,6 +1020,7 @@ export default function DashboardPage() {
   const suppliesAccepted = effectiveFoodCost; // Already excl. VAT and adjusted for transfers
   const afcUsage = Math.max(0, startVal + suppliesAccepted - endVal);
   const afcPercent = actualSalesExVAT > 0 ? (afcUsage / actualSalesExVAT) * 100 : 0;
+  const purchasesPercent = actualSalesExVAT > 0 ? (suppliesAccepted / actualSalesExVAT) * 100 : 0;
 
   // Build per-item usage rows (only items with both begin and end counts)
   const itemUsageRows = (() => {
@@ -1191,14 +1192,18 @@ export default function DashboardPage() {
         </Dialog>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-3 max-w-3xl">
             <TabsTrigger value="actual" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              {language === 'he' ? 'ביצוע בפועל' : 'Actual Performance'}
+              {language === 'he' ? 'ביצוע בפועל' : 'Actual'}
             </TabsTrigger>
             <TabsTrigger value="afc" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              {language === 'he' ? 'דוח AFC' : 'AFC Report'}
+              {language === 'he' ? 'דוח AFC' : 'AFC'}
+            </TabsTrigger>
+            <TabsTrigger value="purchases_vs_usage" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              {language === 'he' ? 'קניינות לעומת שימוש' : 'Purchases vs Usage'}
             </TabsTrigger>
           </TabsList>
 
@@ -1612,6 +1617,82 @@ export default function DashboardPage() {
                 </Card>
                 </TabsContent>
 
+          {/* Purchases vs Usage Tab */}
+          <TabsContent value="purchases_vs_usage" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <Card className={`border-2 ${purchasesPercent > foodGoalPercent ? 'border-orange-500' : 'border-blue-500'}`}>
+                <CardHeader className="bg-gray-50 border-b pb-4 rounded-t-xl">
+                  <CardTitle className={`text-center flex flex-col gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <span className="text-gray-500 text-sm">{language === 'he' ? 'קניינות (Purchases)' : 'Purchases (Supplies)'}</span>
+                    <span className="text-3xl font-bold text-gray-900">{purchasesPercent.toFixed(1)}%</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 text-center space-y-2">
+                  <div className="text-xl font-semibold text-gray-700">{formatCurrency(suppliesAccepted)}</div>
+                  <p className="text-sm text-gray-500">
+                    {language === 'he' 
+                      ? 'כמה סחורה הוכנסה לעסק החודש באחוזים מתוך המחזור (משפיע על תזרים המזומנים).'
+                      : 'How much supplies entered the business this month as a % of sales (impacts cash flow).'}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className={`border-2 ${afcPercent > foodGoalPercent ? 'border-red-500' : 'border-green-500'}`}>
+                <CardHeader className="bg-gray-50 border-b pb-4 rounded-t-xl">
+                  <CardTitle className={`text-center flex flex-col gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <span className="text-gray-500 text-sm">{language === 'he' ? 'שימוש בפועל (AFC)' : 'Actual Usage (AFC)'}</span>
+                    <span className="text-3xl font-bold text-gray-900">{afcPercent.toFixed(1)}%</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 text-center space-y-2">
+                  <div className="text-xl font-semibold text-gray-700">{formatCurrency(afcUsage)}</div>
+                  <p className="text-sm text-gray-500">
+                    {language === 'he' 
+                      ? 'כמה סחורה נשרפה/נמכרה בפועל החודש באחוזים מתוך המחזור.'
+                      : 'How much supplies were actually used/sold this month as a % of sales.'}
+                  </p>
+                </CardContent>
+              </Card>
+
+            </div>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className={`flex flex-col md:flex-row items-center justify-between gap-6 ${isRTL ? 'md:flex-row-reverse text-right' : 'text-left'}`}>
+                  <div className="flex-1 space-y-2">
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {language === 'he' ? 'מה זה אומר?' : 'What does this mean?'}
+                    </h3>
+                    <p className="text-gray-600">
+                      {purchasesPercent > afcPercent ? (
+                        language === 'he' 
+                        ? 'קניתם יותר סחורה ממה שהשתמשתם. המשמעות היא שהגדלתם את מלאי הסגירה (הכסף שלכם יושב במחסן).'
+                        : 'You bought more supplies than you used. This means you increased your closing inventory (your cash is sitting in the warehouse).'
+                      ) : purchasesPercent < afcPercent ? (
+                        language === 'he' 
+                        ? 'השתמשתם ביותר סחורה ממה שקניתם. המשמעות היא שצרכתם מלאי קיים שהיה לכם ממקודם.'
+                        : 'You used more supplies than you bought. This means you consumed existing inventory.'
+                      ) : (
+                        language === 'he' 
+                        ? 'הקניות והשימוש מאוזנים לחלוטין.'
+                        : 'Purchases and usage are perfectly balanced.'
+                      )}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl text-center min-w-[200px]">
+                    <div className="text-xs text-gray-500 mb-1">{language === 'he' ? 'הפרש' : 'Difference'}</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {Math.abs(purchasesPercent - afcPercent).toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {formatCurrency(Math.abs(suppliesAccepted - afcUsage))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           </Tabs>
       </div>
