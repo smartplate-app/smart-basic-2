@@ -36,19 +36,17 @@ export default function PriceChangesPage() {
 
             const isAdminControlling = user?.role === 'admin' && targetEmail !== user.email;
 
-            if (isAdminControlling) {
-                try {
-                    const res = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
-                    if (res.data?.success) {
-                        data = res.data.data.priceChanges || [];
-                    }
-                } catch(e) {}
-            } else {
+            try {
+                const res = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
+                if (res.data?.success) {
+                    data = res.data.data.priceChanges || [];
+                }
+            } catch (e) {
                 let data1 = await base44.entities.PriceChangeLog.filter({ created_by: targetEmail }, "-created_date", 1000);
                 let data2 = await base44.entities.PriceChangeLog.filter({ store_owner_email: targetEmail }, "-created_date", 1000);
                 data = [...data1, ...data2];
 
-                if (targetEmail !== user.email) {
+                if (targetEmail && targetEmail !== user.email) {
                     const myData1 = await base44.entities.PriceChangeLog.filter({ created_by: user.email }, "-created_date", 1000);
                     const myData2 = await base44.entities.PriceChangeLog.filter({ store_owner_email: user.email }, "-created_date", 1000);
                     const myData = [...myData1, ...myData2];
