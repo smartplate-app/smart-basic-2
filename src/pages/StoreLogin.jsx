@@ -1,49 +1,28 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function StoreLoginPage() {
-  const [email, setEmail] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("email") || "";
-  });
-  const [password, setPassword] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("email") === 'demo@foodcostapp.com' ? '123456' : '';
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const response = await base44.functions.invoke('loginRestaurantUser', {
-        email: email.trim(),
-        password: password
-      });
-
-      if (response.data.success) {
-        // Store user data in localStorage
-        localStorage.setItem('restaurant_user', JSON.stringify(response.data.user));
-        // Redirect to orders page
-        window.location.href = createPageUrl('Orders');
-      } else {
-        setError(response.data.error || 'התחברות נכשלה');
+  useEffect(() => {
+    (async () => {
+      const authed = await base44.auth.isAuthenticated();
+      if (authed) {
+        window.location.replace(createPageUrl("Orders"));
+        return;
       }
-    } catch (err) {
-      console.error("Login error:", err);
-      setError('שגיאה בהתחברות - נסה שוב');
-    } finally {
-      setLoading(false);
-    }
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next") || params.get("nextUrl") || createPageUrl("Orders");
+      await base44.auth.redirectToLogin(next);
+    })();
+  }, []);
+
+  const handleClick = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get("next") || params.get("nextUrl") || createPageUrl("Orders");
+    await base44.auth.redirectToLogin(next);
   };
 
   return (
@@ -55,77 +34,17 @@ export default function StoreLoginPage() {
             alt="Smart Plate"
             className="h-16 mx-auto mb-4"
           />
-          <CardTitle className="text-2xl">התחברות למערכת</CardTitle>
+          <CardTitle className="text-2xl text-gray-900">התחברות למערכת</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 text-red-800">
-                <AlertCircle className="w-5 h-5" />
-                <span className="text-sm">{error}</span>
-              </div>
-            )}
-            
-            <div>
-              <label className="block text-sm font-medium mb-2 text-right">אימייל</label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                required
-                className="text-right"
-                disabled={loading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-right">סיסמה</label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••"
-                  required
-                  className="text-right pr-10"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-gray-900 hover:bg-gray-800"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader className="w-4 h-4 ml-2 animate-spin" />
-                  מתחבר...
-                </>
-              ) : (
-                'התחבר'
-              )}
-            </Button>
-          </form>
+        <CardContent className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-gray-600 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">מעביר לעמוד ההתחברות...</h1>
+          <p className="text-sm text-gray-600 mb-6">אם לא הועברת אוטומטית, לחץ על הכפתור למטה.</p>
+          <Button onClick={handleClick} className="w-full bg-gray-900 hover:bg-gray-800">
+            המשך להתחברות
+          </Button>
         </CardContent>
       </Card>
-      
-      <div className="mt-8 text-center">
-        <p className="text-gray-400 text-sm mb-2">בעל עסק / מנהל מערכת?</p>
-        <a href="/#/pages/SignIn" className="text-blue-400 hover:text-blue-300 text-sm underline underline-offset-4 transition-colors">
-          התחבר כאן (Admin Login)
-        </a>
-      </div>
     </div>
   );
 }
