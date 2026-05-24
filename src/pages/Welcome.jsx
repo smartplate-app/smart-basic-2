@@ -4,11 +4,13 @@ import { createPageUrl } from "@/utils";
 import AccessRequestDialog from "../components/access/AccessRequestDialog";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "../components/LanguageProvider";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Welcome() {
   const { language } = useLanguage();
+  const { user: currentUser, isLoadingAuth } = useAuth();
   const [openRequest, setOpenRequest] = React.useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
+
   const handleSignIn = async () => {
     // If already authenticated, go straight in
     try {
@@ -28,35 +30,13 @@ export default function Welcome() {
     await base44.auth.redirectToLogin(nextUrl);
   };
 
-  // Auto-redirect authenticated users away from the access page
-  // Allow admins to view Welcome only when ?preview=1 is present
   React.useEffect(() => {
-    (async () => {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const preview = params.get('preview') === '1';
-        const isAuth = await base44.auth.isAuthenticated();
-        if (isAuth) {
-          if (preview) {
-            const me = await base44.auth.me();
-            if (me?.role === 'admin') {
-              // Admin preview allowed, do not redirect
-              setIsCheckingAuth(false);
-              return;
-            }
-          }
-          // Non-admins (or admin without preview) get redirected
-          window.location.replace(createPageUrl("Orders"));
-        } else {
-          window.location.replace("https://smartplate-app.github.io/foodcostapp-landing/");
-        }
-      } catch {
-        window.location.replace("https://smartplate-app.github.io/foodcostapp-landing/");
-      }
-    })();
-  }, []);
+    if (!isLoadingAuth && !currentUser) {
+      window.location.href = "https://smartplate-app.github.io/foodcostapp-landing/";
+    }
+  }, [currentUser, isLoadingAuth]);
 
-  if (isCheckingAuth) {
+  if (isLoadingAuth || !currentUser) {
     return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6"></div>;
   }
 

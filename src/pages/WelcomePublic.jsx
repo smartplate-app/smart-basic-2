@@ -6,6 +6,7 @@ import {
   Smartphone, ShoppingCart, Trash2, ArrowRight,
   ChevronDown, ChevronUp, Star
 } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
 const t = {
   en: {
@@ -139,25 +140,15 @@ const t = {
 const featureIcons = [BarChart3, ChefHat, Smartphone, ShoppingCart, Trash2, Globe];
 
 export default function WelcomePublic() {
+  const { user: currentUser, isLoadingAuth } = useAuth();
   const [lang, setLang] = useState('he');
   const [openFaq, setOpenFaq] = useState(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
-          window.location.replace("https://smartplate-app.github.io/foodcostapp-landing/");
-        } else {
-          setIsCheckingAuth(false);
-        }
-      } catch (err) {
-        window.location.replace("https://smartplate-app.github.io/foodcostapp-landing/");
-      }
-    };
-    checkAuth();
-  }, []);
+    if (!isLoadingAuth && !currentUser) {
+      window.location.href = "https://smartplate-app.github.io/foodcostapp-landing/";
+    }
+  }, [currentUser, isLoadingAuth]);
 
   useEffect(() => {
     document.title = lang === 'en' 
@@ -223,7 +214,7 @@ export default function WelcomePublic() {
   const d = t[lang];
   const isRtl = lang === 'he';
 
-  if (isCheckingAuth) {
+  if (isLoadingAuth || !currentUser) {
     return <div className="min-h-screen bg-slate-900 flex items-center justify-center"></div>;
   }
 
