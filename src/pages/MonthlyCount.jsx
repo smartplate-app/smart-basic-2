@@ -321,18 +321,30 @@ export default function MonthlyCountPage() {
 
   const handleNewDailyCount = () => {
     const today = new Date().toISOString().split('T')[0];
-    const dailyItems = items.map(item => ({
-      item_id: item.id,
-      item_name: item.name,
-      counted_quantity: 0,
-      unit: item.unit,
-      price_per_unit: item.price || 0,
-      total_cost: 0,
-      notes: ""
-    }));
+    const dailyItems = [];
+    
+    // For express count, put each item in the first warehouse that has it in its catalog,
+    // or 'unspecified' if none.
+    items.forEach(item => {
+      let wId = "unspecified";
+      const w = warehouses.find(wh => wh.catalog_items?.includes(item.id));
+      if (w) wId = w.id;
+      
+      dailyItems.push({
+        item_id: item.id,
+        item_name: item.name,
+        warehouse_id: wId,
+        counted_quantity: 0,
+        unit: item.unit,
+        price_per_unit: item.price || 0,
+        total_cost: 0,
+        notes: ""
+      });
+    });
+
     setEditingCount({
-      warehouse_id: "",
-      warehouse_name: "All Items",
+      warehouse_id: "multi",
+      warehouse_name: language === 'he' ? "ספירת אקספרס" : "Express Count",
       count_date: today,
       count_type: "daily",
       items: dailyItems,

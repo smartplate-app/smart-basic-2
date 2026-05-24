@@ -18,18 +18,33 @@ const LOCAL_STORAGE_KEY = 'offline_count_draft';
 
 export default function CountForm({ count, warehouses, items, onSubmit, onCancel, onWarehouseCatalogSaved }) {
   const { t, language } = useLanguage();
-  const [formData, setFormData] = useState(count || {
-    warehouse_id: "",
-    warehouse_name: "",
-    count_date: new Date().toISOString().split('T')[0],
-    count_type: "monthly",
-    items: [],
-    total_inventory_value: 0,
-    name: "",
-    notes: "",
-    status: "in_progress"
+  const [formData, setFormData] = useState(() => {
+    if (count) {
+      const migratedItems = count.items.map(item => ({
+        ...item,
+        warehouse_id: item.warehouse_id || count.warehouse_id || "unspecified"
+      }));
+      return { ...count, items: migratedItems };
+    }
+    return {
+      warehouse_id: "",
+      warehouse_name: "",
+      count_date: new Date().toISOString().split('T')[0],
+      count_type: "monthly",
+      items: [],
+      total_inventory_value: 0,
+      name: "",
+      notes: "",
+      status: "in_progress"
+    };
   });
 
+  const [currentWarehouseTab, setCurrentWarehouseTab] = useState(() => {
+    if (count?.items?.length > 0 && count.items[0].warehouse_id) {
+      return count.items[0].warehouse_id;
+    }
+    return count?.warehouse_id || (warehouses && warehouses.length > 0 ? warehouses[0].id : "all_summary");
+  });
 
   const [savingCatalog, setSavingCatalog] = useState(false);
   const [filteredAvailableItems, setFilteredAvailableItems] = useState([]);
@@ -262,59 +277,53 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   useEffect(() => {
     const term = (availableSearch || '').trim().toLowerCase();
     const newFilteredItems = items.filter(item => {
-      const isNotInCount = !formData.items.some(countItem => countItem.item_id === item.id);
+      const isNotInCount = !formData.items.some(countItem => countItem.item_id === item.id && countItem.warehouse_id === currentWarehouseTab);
       const matches = !term || (item.name || '').toLowerCase().includes(term);
       return isNotInCount && matches;
     });
     setFilteredAvailableItems(newFilteredItems);
-  }, [items, formData.items, availableSearch]);
+  }, [items, formData.items, availableSearch, currentWarehouseTab]);
 
-  // Effect to auto-populate items from warehouse catalog on initial load for new counts
+  // Auto-populate when current warehouse tab changes and has no items
   useEffect(() => {
-    // Only for new counts, and if a warehouse is selected, and items array is initially empty
-    if (!count && formData.warehouse_id && formData.items.length === 0) {
-      const warehouse = warehouseOptions.find(w => w.id === formData.warehouse_id);
-      if (warehouse && warehouse.catalog_items && warehouse.catalog_items.length > 0) {
-        const catalogItems = items.filter(item => warehouse.catalog_items.includes(item.id));
-        if (catalogItems.length > 0) {
-          const autoItems = catalogItems.map(item => ({
-            item_id: item.id,
-            item_name: item.name,
-            counted_quantity: "",
-            unit: item.unit,
-            price_per_unit: item.price || 0,
-            total_cost: 0,
-            notes: ""
-          }));
-          setFormData(prev => ({ ...prev, items: autoItems }));
-        }
+    if (currentWarehouseTab === "all_summary" || !currentWarehouseTab) return;
+    
+    const warehouse = warehouseOptions.find(w => w.id === currentWarehouseTab);
+    const existingItems = formData.items.filter(i => i.warehouse_id === currentWarehouseTab);
+    
+    if (existingItems.length === 0 && warehouse && warehouse.catalog_items && warehouse.catalog_items.length > 0) {
+      const catalogItems = items.filter(item => warehouse.catalog_items.includes(item.id));
+      if (catalogItems.length > 0) {
+        const newItems = catalogItems.map(item => ({
+          item_id: item.id,
+          item_name: item.name,
+          warehouse_id: currentWarehouseTab,
+          counted_quantity: "",
+          unit: item.unit,
+          price_per_unit: item.price || 0,
+          total_cost: 0,
+          notes: ""
+        }));
+        setFormData(prev => {
+          let newWarehouseName = prev.warehouse_name;
+          let newWarehouseId = prev.warehouse_id;
+          if (!prev.warehouse_id) {
+            newWarehouseId = "multi";
+            newWarehouseName = language === 'he' ? "ספירה מרובת מחסנים" : "Multi-Warehouse Count";
+          }
+          return {
+            ...prev,
+            warehouse_id: newWarehouseId,
+            warehouse_name: newWarehouseName,
+            items: [...prev.items, ...newItems]
+          };
+        });
       }
     }
-  }, [formData.warehouse_id, warehouseOptions, items, count, formData.items.length]);
+  }, [currentWarehouseTab, warehouseOptions, items, formData.items.length]);
 
   const handleWarehouseChange = (warehouseId) => {
-    const warehouse = warehouseOptions.find(w => w.id === warehouseId);
-    let newItems = [];
-
-    if (!count && warehouse && warehouse.catalog_items && warehouse.catalog_items.length > 0) {
-      const catalogItems = items.filter(item => warehouse.catalog_items.includes(item.id));
-      newItems = catalogItems.map(item => ({
-        item_id: item.id,
-        item_name: item.name,
-        counted_quantity: "",
-        unit: item.unit,
-        price_per_unit: item.price || 0,
-        total_cost: 0,
-        notes: ""
-      }));
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      warehouse_id: warehouseId || "",
-      warehouse_name: warehouse?.name || "",
-      items: count ? prev.items : newItems
-    }));
+    setCurrentWarehouseTab(warehouseId);
   };
 
   const handleCreateWarehouse = async () => {
@@ -325,7 +334,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     if (typeof onWarehouseCatalogSaved === 'function') {
       onWarehouseCatalogSaved();
     }
-    setFormData(prev => ({ ...prev, warehouse_id: created.id, warehouse_name: created.name }));
+    setCurrentWarehouseTab(created.id);
   };
 
    const handleSaveToWarehouseCatalog = async () => {
@@ -371,40 +380,52 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
 
 
 
-  const updateItemQuantity = (index, quantity) => {
-    const newItems = [...formData.items];
-    const qty = parseFloat(quantity) || 0;
-    const price = parseFloat(newItems[index].price_per_unit) || 0;
-    newItems[index] = { 
-      ...newItems[index], 
-      counted_quantity: quantity,
-      total_cost: qty * price
-    };
-    setFormData(prev => ({ ...prev, items: newItems }));
+  const updateItemQuantity = (itemId, warehouseId, quantity) => {
+    setFormData(prev => {
+      const newItems = [...prev.items];
+      const index = newItems.findIndex(i => i.item_id === itemId && i.warehouse_id === warehouseId);
+      if (index === -1) return prev;
+      const qty = parseFloat(quantity) || 0;
+      const price = parseFloat(newItems[index].price_per_unit) || 0;
+      newItems[index] = { 
+        ...newItems[index], 
+        counted_quantity: quantity,
+        total_cost: qty * price
+      };
+      return { ...prev, items: newItems };
+    });
   };
 
-  const updateItemPrice = (index, price) => {
-    const newItems = [...formData.items];
-    const priceValue = parseFloat(price) || 0;
-    const qty = parseFloat(newItems[index].counted_quantity) || 0;
-    newItems[index] = { 
-      ...newItems[index], 
-      price_per_unit: price,
-      total_cost: qty * priceValue
-    };
-    setFormData(prev => ({ ...prev, items: newItems }));
+  const updateItemPrice = (itemId, warehouseId, price) => {
+    setFormData(prev => {
+      const newItems = [...prev.items];
+      const index = newItems.findIndex(i => i.item_id === itemId && i.warehouse_id === warehouseId);
+      if (index === -1) return prev;
+      const priceValue = parseFloat(price) || 0;
+      const qty = parseFloat(newItems[index].counted_quantity) || 0;
+      newItems[index] = { 
+        ...newItems[index], 
+        price_per_unit: price,
+        total_cost: qty * priceValue
+      };
+      return { ...prev, items: newItems };
+    });
   };
 
-  const updateItemNotes = (index, notes) => {
-    const newItems = [...formData.items];
-    newItems[index] = { ...newItems[index], notes };
-    setFormData(prev => ({ ...prev, items: newItems }));
+  const updateItemNotes = (itemId, warehouseId, notes) => {
+    setFormData(prev => {
+      const newItems = [...prev.items];
+      const index = newItems.findIndex(i => i.item_id === itemId && i.warehouse_id === warehouseId);
+      if (index === -1) return prev;
+      newItems[index] = { ...newItems[index], notes };
+      return { ...prev, items: newItems };
+    });
   };
 
-  const removeItem = (index) => {
+  const removeItem = (itemId, warehouseId) => {
     setFormData(prev => ({
       ...prev,
-      items: prev.items.filter((_, i) => i !== index)
+      items: prev.items.filter(i => !(i.item_id === itemId && i.warehouse_id === warehouseId))
     }));
   };
 
@@ -460,15 +481,18 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="warehouse">{t('warehouse')} *</Label>
+                <Label htmlFor="warehouse" className="font-bold text-blue-800">{language === 'he' ? 'מחסן נוכחי לספירה' : 'Active Warehouse'}</Label>
                 <Select 
-                                   value={formData.warehouse_id} 
-                                   onValueChange={(val) => { if (val === "__create__") { handleCreateWarehouse(); return; } handleWarehouseChange(val); }}
-                                 >
-                  <SelectTrigger id="warehouse">
+                   value={currentWarehouseTab} 
+                   onValueChange={(val) => { if (val === "__create__") { handleCreateWarehouse(); return; } handleWarehouseChange(val); }}
+                 >
+                  <SelectTrigger id="warehouse" className="border-blue-300 bg-blue-50 focus:ring-blue-500">
                     <SelectValue placeholder={t('select_warehouse')} />
                   </SelectTrigger>
                   <SelectContent>
+                     <SelectItem value="all_summary" className="font-bold text-blue-600 bg-blue-50 mb-1 border-b border-blue-100">
+                       {language === 'he' ? '📋 סיכום ספירה (כל המחסנים)' : '📋 Full Summary (All Warehouses)'}
+                     </SelectItem>
                      <SelectItem value="__create__">+ {t('new_warehouse') || 'New Warehouse'}</SelectItem>
                      {warehouseOptions.map(warehouse => (
                        <SelectItem key={warehouse.id} value={warehouse.id}>
@@ -543,8 +567,9 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
               </div>
             </div>
 
-            {(formData.warehouse_id || formData.items.length > 0) && (
+            {(currentWarehouseTab || formData.items.length > 0) && (
               <div className="space-y-4">
+                {currentWarehouseTab !== "all_summary" && (
                 <div className="flex flex-col md:flex-row items-end gap-2">
                   <div className="flex-1 space-y-2 w-full">
                     <Label htmlFor="add_item_select" className="text-base font-bold text-gray-900 mb-2">{t('add_item')}</Label>
@@ -568,12 +593,13 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                               if (filteredAvailableItems.length > 0) {
                                 // Auto add the first result on enter
                                 const item = items.find(i => i.id === filteredAvailableItems[0].id);
-                                if (item && !formData.items.some(ci => ci.item_id === item.id)) {
+                                if (item && !formData.items.some(ci => ci.item_id === item.id && ci.warehouse_id === currentWarehouseTab)) {
                                    setFormData(prev => ({
                                     ...prev,
                                     items: [{
                                       item_id: item.id,
                                       item_name: item.name,
+                                      warehouse_id: currentWarehouseTab,
                                       counted_quantity: "",
                                       unit: item.unit,
                                       price_per_unit: item.price || 0,
@@ -600,12 +626,13 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                               key={item.id}
                               className={`flex items-center w-full justify-between p-3 cursor-pointer hover:bg-gray-100 rounded-md transition-colors`}
                               onClick={() => {
-                                if (!formData.items.some(ci => ci.item_id === item.id)) {
+                                if (!formData.items.some(ci => ci.item_id === item.id && ci.warehouse_id === currentWarehouseTab)) {
                                   setFormData(prev => ({
                                     ...prev,
                                     items: [{
                                       item_id: item.id,
                                       item_name: item.name,
+                                      warehouse_id: currentWarehouseTab,
                                       counted_quantity: "",
                                       unit: item.unit,
                                       price_per_unit: item.price || 0,
@@ -640,12 +667,13 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                     onClick={() => {
                       if (filteredAvailableItems.length > 0) {
                          const item = items.find(i => i.id === filteredAvailableItems[0].id);
-                         if (item && !formData.items.some(ci => ci.item_id === item.id)) {
+                         if (item && !formData.items.some(ci => ci.item_id === item.id && ci.warehouse_id === currentWarehouseTab)) {
                            setFormData(prev => ({
                             ...prev,
                             items: [{
                               item_id: item.id,
                               item_name: item.name,
+                              warehouse_id: currentWarehouseTab,
                               counted_quantity: "",
                               unit: item.unit,
                               price_per_unit: item.price || 0,
@@ -664,6 +692,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                     {t('add_item')}
                   </Button>
                 </div>
+                )}
 
                 {formData.items.length > 0 && (
                   <>
@@ -752,58 +781,97 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {formData.items.map((item, index) => {
-                            const originalItem = items.find(i => i.id === item.item_id);
-                            const searchMatch = !tableSearchTerm || 
-                              (item.item_name || '').toLowerCase().includes(tableSearchTerm.toLowerCase()) || 
-                              (originalItem?.nickname || '').toLowerCase().includes(tableSearchTerm.toLowerCase());
-                              
-                            if (!searchMatch) return null;
+                          {(() => {
+                            let displayedItems = [];
+                            if (currentWarehouseTab === "all_summary") {
+                              const grouped = {};
+                              formData.items.forEach(item => {
+                                if (!grouped[item.item_id]) {
+                                  grouped[item.item_id] = { ...item, counted_quantity: item.counted_quantity === "" ? 0 : Number(item.counted_quantity), total_cost: item.total_cost || 0 };
+                                } else {
+                                  grouped[item.item_id].counted_quantity += (item.counted_quantity === "" ? 0 : Number(item.counted_quantity));
+                                  grouped[item.item_id].total_cost += (item.total_cost || 0);
+                                  if (item.notes) {
+                                    grouped[item.item_id].notes = grouped[item.item_id].notes ? `${grouped[item.item_id].notes}, ${item.notes}` : item.notes;
+                                  }
+                                }
+                              });
+                              displayedItems = Object.values(grouped);
+                            } else {
+                              displayedItems = formData.items.filter(item => item.warehouse_id === currentWarehouseTab);
+                            }
+                            
+                            if (sortConfig.key === 'total_cost') {
+                              displayedItems.sort((a, b) => {
+                                const costA = Number(a.total_cost) || 0;
+                                const costB = Number(b.total_cost) || 0;
+                                return sortConfig.direction === 'asc' ? (costA - costB) : (costB - costA);
+                              });
+                            }
 
-                            return (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">
-                                {originalItem?.nickname || item.item_name}
-                                {originalItem?.nickname && <span className="text-xs text-gray-500 block font-normal">{item.item_name}</span>}
-                              </TableCell>
-                              <TableCell>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  step="any" 
-                                  value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
-                                  onChange={(e) => updateItemQuantity(index, e.target.value)}
-                                  className="w-24 hide-arrows"
-                                />
-                              </TableCell>
-                              <TableCell>{item.unit}</TableCell>
-                              <TableCell className="text-gray-700">
-                                ₪{Number(item.price_per_unit || 0).toFixed(2)}
-                              </TableCell>
-                              <TableCell className="font-bold text-green-600">
-                                {item.total_cost?.toFixed(2) || '0.00'}
-                              </TableCell>
-                              <TableCell>
-                                <Input
-                                  value={item.notes || ''}
-                                  onChange={(e) => updateItemNotes(index, e.target.value)}
-                                  placeholder={t('notes')}
-                                  className="w-full min-w-[150px]"
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeItem(index)}
-                                >
-                                  <Trash2 className="w-4 h-4 text-red-500" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                          })}
+                            return displayedItems.map((item, index) => {
+                              const originalItem = items.find(i => i.id === item.item_id);
+                              const searchMatch = !tableSearchTerm || 
+                                (item.item_name || '').toLowerCase().includes(tableSearchTerm.toLowerCase()) || 
+                                (originalItem?.nickname || '').toLowerCase().includes(tableSearchTerm.toLowerCase());
+                                
+                              if (!searchMatch) return null;
+
+                              return (
+                              <TableRow key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index}>
+                                <TableCell className="font-medium">
+                                  {originalItem?.nickname || item.item_name}
+                                  {originalItem?.nickname && <span className="text-xs text-gray-500 block font-normal">{item.item_name}</span>}
+                                </TableCell>
+                                <TableCell>
+                                  {currentWarehouseTab === "all_summary" ? (
+                                    <span className="font-bold text-lg">{item.counted_quantity}</span>
+                                  ) : (
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="any" 
+                                      value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
+                                      onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
+                                      className="w-24 hide-arrows"
+                                    />
+                                  )}
+                                </TableCell>
+                                <TableCell>{item.unit}</TableCell>
+                                <TableCell className="text-gray-700">
+                                  ₪{Number(item.price_per_unit || 0).toFixed(2)}
+                                </TableCell>
+                                <TableCell className="font-bold text-green-600">
+                                  {item.total_cost?.toFixed(2) || '0.00'}
+                                </TableCell>
+                                <TableCell>
+                                  {currentWarehouseTab === "all_summary" ? (
+                                    <span className="text-sm text-gray-500">{item.notes}</span>
+                                  ) : (
+                                    <Input
+                                      value={item.notes || ''}
+                                      onChange={(e) => updateItemNotes(item.item_id, item.warehouse_id, e.target.value)}
+                                      placeholder={t('notes')}
+                                      className="w-full min-w-[150px]"
+                                    />
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {currentWarehouseTab !== "all_summary" && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => removeItem(item.item_id, item.warehouse_id)}
+                                    >
+                                      <Trash2 className="w-4 h-4 text-red-500" />
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                            });
+                          })()}
                         </TableBody>
                       </Table>
                     </div>
