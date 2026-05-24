@@ -41,6 +41,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   const [exportingSheets, setExportingSheets] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [tableSearchTerm, setTableSearchTerm] = useState("");
+  const isSavingRef = React.useRef(false);
+  const [dbSavedAt, setDbSavedAt] = useState(null);
 
   const handleExportToSheets = async () => {
     try {
@@ -143,21 +145,53 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     setFormData(prev => ({ ...prev, total_inventory_value: total }));
   }, [formData.items]);
 
-  // Auto-save draft to local storage
+  // Auto-save draft to local storage and Database
   useEffect(() => {
-    if (!formData.warehouse_id && formData.items.length === 0) return;
+    if (!formData.warehouse_id && formData.items.length === 0 && !formData.name) return;
     
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
+      // 1. Save locally for offline backup
       const dataToSave = {
         ...formData,
         savedAt: new Date().toISOString()
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
       setHasDraft(true);
+
+      // 2. Auto-save to Database if online
+      if (!isOffline && navigator.onLine) {
+        try {
+          if (isSavingRef.current) return;
+          isSavingRef.current = true;
+          
+          const cleanedData = {
+            ...formData,
+            items: formData.items.map(item => ({
+              ...item,
+              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+              total_cost: Number(item.total_cost) || 0
+            }))
+          };
+
+          if (formData.id) {
+            await base44.entities.InventoryCount.update(formData.id, cleanedData);
+            setDbSavedAt(new Date());
+          } else {
+            const newCount = await base44.entities.InventoryCount.create({ ...cleanedData, status: formData.status || 'in_progress' });
+            setFormData(prev => ({ ...prev, id: newCount.id }));
+            setDbSavedAt(new Date());
+          }
+        } catch (error) {
+          console.error("DB Auto-save failed:", error);
+        } finally {
+          isSavingRef.current = false;
+        }
+      }
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [formData]);
+  }, [formData, isOffline]);
 
   // Effect to populate filteredAvailableItems for the "Add Item" dropdown
   useEffect(() => {
@@ -802,11 +836,15 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                       <Save className="w-4 h-4 mr-1" />
                       {language === 'he' ? 'שמור מקומית' : 'Save Locally'}
                     </Button>
-                    {hasDraft && (
-                      <div className="flex items-center text-xs text-gray-500 whitespace-nowrap self-center hidden md:flex">
-                        {language === 'he' ? '(נשמר אוטומטית)' : '(Auto-saved)'}
+                    {dbSavedAt ? (
+                      <div className="flex items-center text-xs text-green-600 whitespace-nowrap self-center font-medium">
+                        {language === 'he' ? `(נשמר לענן ${dbSavedAt.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'})})` : `(Saved to cloud ${dbSavedAt.toLocaleTimeString()})`}
                       </div>
-                    )}
+                    ) : hasDraft ? (
+                      <div className="flex items-center text-xs text-gray-500 whitespace-nowrap self-center hidden md:flex">
+                        {language === 'he' ? '(נשמר אוטומטית)' : '(Auto-saved locally)'}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>

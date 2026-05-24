@@ -681,6 +681,7 @@ export default function MonthlyCountPage() {
               onCancel={() => {
                 setShowCountForm(false);
                 setEditingCount(null);
+                loadData(user.email); // Reload to show any auto-saved drafts
               }}
               onWarehouseCatalogSaved={() => loadData(user.email)}
             />
