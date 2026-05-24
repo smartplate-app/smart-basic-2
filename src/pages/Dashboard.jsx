@@ -1518,78 +1518,49 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card className="bg-white">
-                    <CardHeader>
-                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'מלאי פתיחה' : 'Opening Inventory'}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{formatCurrency(startVal)}</div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-white">
-                    <CardHeader>
-                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'אספקה שהתקבלה (ללא מע"מ)' : 'Supplies Accepted (excl. VAT)'}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{formatCurrency(suppliesAccepted)}</div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-white">
-                    <CardHeader>
-                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'מלאי סגירה' : 'Closing Inventory'}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{formatCurrency(endVal)}</div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-white">
-                    <CardHeader>
-                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'מכירות (ללא מע"מ)' : 'Sales (excl. VAT)'}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{formatCurrency(actualSalesExVAT)}</div>
-                    </CardContent>
-                  </Card>
-                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Start Count Cube */}
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[120px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מלאי פתיחה' : 'Opening Inventory'}</div>
+                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(startVal)}</div>
+                  </div>
 
-                <Card className={`bg-gradient-to-br ${afcPercent > 35 ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} text-white`}>
-                  <CardContent className="py-8">
-                    <div className={`text-center`}>
-                      <div className="text-5xl font-extrabold tracking-tight">{afcPercent.toFixed(1)}%</div>
-                      <div className="mt-2 text-white/90 text-lg">שימוש סחורות בפועל - לא סתם קניינות</div>
-                      <div className="mt-4 text-sm text-white/80">
-                        {language === 'he' ? 'חישוב: מלאי פתיחה + אספקה - מלאי סגירה' : 'Formula: Opening + Supplies - Closing'}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  {/* Supplies Cube */}
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[120px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'אספקה שהתקבלה' : 'Supplies Accepted'}</div>
+                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(suppliesAccepted)}</div>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'שימוש בסחורה (₪)' : 'Goods Used (₪)'}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{formatCurrency(afcUsage)}</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'יחס לשוק' : 'Benchmark Note'}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm text-gray-700">{language === 'he' ? 'יעד מסעדות נפוץ: 28%–32% (משתנה לפי סוג העסק)' : 'Common target: 28%–32% (varies by concept)'}</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm text-gray-600">{language === 'he' ? 'בחירת חודש' : 'Selected Month'}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{selectedMonth}</div>
-                    </CardContent>
-                  </Card>
+                  {/* End Count Cube */}
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[120px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מלאי סגירה' : 'Closing Inventory'}</div>
+                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(endVal)}</div>
+                  </div>
+
+                  {/* Sales Cube */}
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[120px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מכירות נטו' : 'Net Sales'}</div>
+                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(actualSalesExVAT)}</div>
+                  </div>
+
+                  {/* AFC Percent Cube (Large) */}
+                  <div className={`col-span-2 bg-gradient-to-br ${afcPercent > 35 ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} rounded-xl p-4 text-center shadow-sm flex flex-col justify-center items-center min-h-[120px] text-white`}>
+                    <div className="text-sm font-medium mb-1 opacity-90">{language === 'he' ? 'AFC - אחוז שימוש בסחורות' : 'Actual Food Cost %'}</div>
+                    <div className="text-4xl font-extrabold tracking-tight">{afcPercent.toFixed(1)}%</div>
+                  </div>
+
+                  {/* Usage Cube */}
+                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[120px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'שימוש בסחורה' : 'Goods Used'}</div>
+                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(afcUsage)}</div>
+                  </div>
+
+                  {/* Benchmark Cube */}
+                  <div className="bg-[#fcfdfd] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[120px]">
+                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'יחס לשוק' : 'Benchmark'}</div>
+                    <div className="text-lg font-bold text-[#d4a373]">28% - 32%</div>
+                    <div className="text-[10px] text-gray-400 mt-1">{language === 'he' ? 'יעד נפוץ למסעדות' : 'Common target'}</div>
+                  </div>
                 </div>
                 </CardContent>
                 </Card>
