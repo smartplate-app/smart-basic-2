@@ -587,11 +587,11 @@ export default function MonthlyCountPage() {
               <DropdownMenuContent align={language === 'he' ? 'start' : 'end'} className="w-56">
                 <DropdownMenuItem onClick={handleGenerateCountSheet} disabled={generatingSheet}>
                   <FileSpreadsheet className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                  {generatingSheet ? (t('generating') || 'Generating...') : (t('generate_count_sheet') || 'Generate Count Sheet')}
+                  {generatingSheet ? (t('generating') || 'Generating...') : (language === 'he' ? 'יצירת גיליון ספירה' : 'Generate Count Sheet')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleImportCountFromSheet} disabled={importingSheet}>
                   <Upload className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                  {importingSheet ? (t('importing') || 'Importing...') : (t('import_from_sheet_url') || 'Import from Sheet URL')}
+                  {importingSheet ? (t('importing') || 'Importing...') : (language === 'he' ? 'ייבוא מגיליון (קישור)' : 'Import from Sheet URL')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowExportDialog(true)}>
                   <FileDown className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
