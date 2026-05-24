@@ -32,7 +32,12 @@ export default function Welcome() {
 
   React.useEffect(() => {
     if (!isLoadingAuth && !currentUser) {
-      window.location.href = "https://smartplate-app.github.io/foodcostapp-landing/";
+      const params = new URLSearchParams(window.location.search);
+      const isPreview = params.get('preview') === '1';
+      
+      if (!isPreview) {
+        window.location.href = "https://smartplate-app.github.io/foodcostapp-landing/";
+      }
     }
   }, [currentUser, isLoadingAuth]);
 
