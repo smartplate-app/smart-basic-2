@@ -216,9 +216,8 @@ export default function DashboardPage() {
         setHasScheduleData(Boolean(cached.hasScheduleData));
         setLoading(false);
         
-        if (!isStale(c, 180000)) {
-          return;
-        }
+        // We removed the early return so it always re-fetches in the background (stale-while-revalidate)
+        // This fixes missing data like inventoryCounts that aren't in the cache snapshot.
       } else {
         setLoading(true);
       }
