@@ -35,6 +35,14 @@ Deno.serve(async (req) => {
         for (const cr of existingCogsReports) {
             await base44.asServiceRole.entities.CogsReport.delete(cr.id);
         }
+        const existingInventoryCounts = await base44.asServiceRole.entities.InventoryCount.filter({ store_owner_email: demoEmail });
+        for (const ic of existingInventoryCounts) {
+            await base44.asServiceRole.entities.InventoryCount.delete(ic.id);
+        }
+        const existingWarehouses = await base44.asServiceRole.entities.Warehouse.filter({ store_owner_email: demoEmail });
+        for (const w of existingWarehouses) {
+            await base44.asServiceRole.entities.Warehouse.delete(w.id);
+        }
         
         // 1. Suppliers
         const suppliers = [
@@ -235,7 +243,35 @@ Deno.serve(async (req) => {
             store_owner_email: demoEmail
         });
 
-        // 8. COGS Reports
+        // 8. Warehouses & Inventory Counts
+        const mainWarehouse = await base44.asServiceRole.entities.Warehouse.create({
+            name: "Main Kitchen (מטבח ראשי)",
+            is_active: true,
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        await base44.asServiceRole.entities.InventoryCount.create({
+            name: "May 2026 Month-End Count",
+            warehouse_id: mainWarehouse.id,
+            warehouse_name: mainWarehouse.name,
+            count_date: new Date().toISOString().substring(0, 10),
+            count_type: "monthly",
+            status: "completed",
+            total_inventory_value: (25 * 5.5) + (15 * 4.2) + (10 * 45.0) + (12 * 35.0) + (8 * 55.0) + (30 * 8.0),
+            items: [
+                { item_id: createdItems[0].id, item_name: createdItems[0].name, counted_quantity: 25, unit: "kg", price_per_unit: 5.5, total_cost: 25 * 5.5 },
+                { item_id: createdItems[1].id, item_name: createdItems[1].name, counted_quantity: 15, unit: "kg", price_per_unit: 4.2, total_cost: 15 * 4.2 },
+                { item_id: createdItems[2].id, item_name: createdItems[2].name, counted_quantity: 10, unit: "kg", price_per_unit: 45.0, total_cost: 10 * 45.0 },
+                { item_id: createdItems[3].id, item_name: createdItems[3].name, counted_quantity: 12, unit: "liter", price_per_unit: 35.0, total_cost: 12 * 35.0 },
+                { item_id: createdItems[4].id, item_name: createdItems[4].name, counted_quantity: 8, unit: "kg", price_per_unit: 55.0, total_cost: 8 * 55.0 },
+                { item_id: createdItems[5].id, item_name: createdItems[5].name, counted_quantity: 30, unit: "kg", price_per_unit: 8.0, total_cost: 30 * 8.0 }
+            ],
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        // 9. COGS Reports
         await base44.asServiceRole.entities.CogsReport.create({
             name: "מאי 2026 MTD — (7 ימים)",
             report_date: new Date().toISOString().substring(0, 10),
