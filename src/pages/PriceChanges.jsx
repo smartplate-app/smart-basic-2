@@ -119,47 +119,49 @@ export default function PriceChangesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        {language === 'he' ? 'היסטוריית שינויי מחיר' : 'Price Changes History'}
-                    </h1>
-                    <p className="text-gray-500 mt-1">
-                        {language === 'he' ? 'מעקב אחר שינויי עלויות ומחירי מכירה' : 'Track cost and sale price changes'}
-                    </p>
+        <div className="min-h-screen bg-[#f3f2f1] p-4 md:p-8">
+            <div className="max-w-7xl mx-auto space-y-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-black p-6 rounded-xl text-white shadow-md">
+                    <div>
+                        <h1 className="text-3xl font-bold flex items-center gap-3">
+                            <TrendingUp className="w-8 h-8" />
+                            {language === 'he' ? 'היסטוריית שינויי מחיר' : 'Price Changes History'}
+                        </h1>
+                        <p className="mt-1 opacity-90">
+                            {language === 'he' ? 'מעקב אחר שינויי עלויות ומחירי מכירה' : 'Track cost and sale price changes'}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-end">
+                        <Button onClick={loadLogs} className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4">
+                            <RefreshCw className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                            {language === 'he' ? 'רענן' : 'Refresh'}
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    <div className="relative w-full md:w-48">
-                        <Search className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} w-4 h-4 text-gray-400`} />
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} text-gray-400 w-5 h-5`} />
                         <Input 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder={language === 'he' ? 'חיפוש פריט...' : 'Search item...'}
-                            className={`${isRTL ? 'pr-9' : 'pl-9'} h-10`}
+                            className={`bg-white rounded-full ${isRTL ? 'pr-10' : 'pl-10'} h-11 border-none shadow-sm`}
                         />
                     </div>
-                    <div className="w-full md:w-40">
-                        <Select value={typeFilter} onValueChange={setTypeFilter}>
-                            <SelectTrigger className="h-10">
-                                <Filter className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-                                <SelectValue placeholder={language === 'he' ? 'סוג פריט' : 'Item Type'} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{language === 'he' ? 'הכל' : 'All'}</SelectItem>
-                                <SelectItem value="item">{language === 'he' ? 'חומרי גלם (עלות)' : 'Raw Items (Cost)'}</SelectItem>
-                                <SelectItem value="recipe">{language === 'he' ? 'מנות קופה (מכירה)' : 'POS Items (Sale)'}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <Button onClick={loadLogs} variant="outline" size="icon" className="h-10 w-10 shrink-0">
-                        <RefreshCw className="w-4 h-4" />
-                    </Button>
+                    <select 
+                        value={typeFilter} 
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                        className="h-11 rounded-full border-none shadow-sm bg-white px-4 py-2 text-sm focus-visible:outline-none min-w-[200px]"
+                    >
+                        <option value="all">{language === 'he' ? 'הכל' : 'All'}</option>
+                        <option value="item">{language === 'he' ? 'חומרי גלם (עלות)' : 'Raw Items (Cost)'}</option>
+                        <option value="recipe">{language === 'he' ? 'מנות קופה (מכירה)' : 'POS Items (Sale)'}</option>
+                    </select>
                 </div>
-            </div>
 
-            {/* Chart Section */}
-            <Card className="mb-6">
+                {/* Chart Section */}
+                <Card className="shadow-sm border-0 rounded-xl overflow-hidden">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-lg">
                         {language === 'he' ? 'מגמות שינוי מחירים (%)' : 'Price Change Trends (%)'}
@@ -213,7 +215,7 @@ export default function PriceChangesPage() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-sm border-0 rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left rtl:text-right text-gray-500">
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">
@@ -333,6 +335,7 @@ export default function PriceChangesPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+            </div>
         </div>
     );
 }
