@@ -227,6 +227,13 @@ export default function AdminDashboard() {
         acting_as_store_name: user.business_name || user.full_name || user.email
       });
 
+      // Clear caches to prevent showing previous user's data
+      Object.keys(localStorage).forEach(key => {
+        if (key.endsWith('_v1') || key.endsWith('_v2')) {
+          localStorage.removeItem(key);
+        }
+      });
+
       // Force full page reload to Dashboard
       window.location.href = window.location.origin + '/pages/Dashboard';
       window.location.reload();

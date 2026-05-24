@@ -691,6 +691,14 @@ const AppLayout = ({ children, currentPageName }) => {
           acting_as_store_email: null,
           acting_as_store_name: null
         });
+        
+        // Clear caches to prevent showing impersonated user's data
+        Object.keys(localStorage).forEach(key => {
+          if (key.endsWith('_v1') || key.endsWith('_v2')) {
+            localStorage.removeItem(key);
+          }
+        });
+        
         window.location.href = createPageUrl('AdminDashboard');
       } catch (error) {
         console.error("Error exiting admin control:", error);
