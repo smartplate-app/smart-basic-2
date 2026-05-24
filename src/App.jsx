@@ -122,7 +122,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<AppLayoutRoute />}>
-        <Route path="/" element={<Pages.StoreLogin />} />
+        <Route path="/" element={<Pages.SignIn />} />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route key={path} path={`/${path}`} element={<Page />} />
         ))}

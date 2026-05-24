@@ -76,7 +76,7 @@ import RestaurantInvite from './pages/RestaurantInvite';
 import SalesPerHour from './pages/SalesPerHour';
 import SalesPrediction from './pages/SalesPrediction';
 import SignIn from './pages/SignIn';
-import StoreLogin from './pages/StoreLogin';
+
 import StoreUsers from './pages/StoreUsers';
 import Suppliers from './pages/Suppliers';
 import SupplyReceipts from './pages/SupplyReceipts';
@@ -123,7 +123,7 @@ export const PAGES = {
     "SalesPerHour": SalesPerHour,
     "SalesPrediction": SalesPrediction,
     "SignIn": SignIn,
-    "StoreLogin": StoreLogin,
+
     "StoreUsers": StoreUsers,
     "Suppliers": Suppliers,
     "SupplyReceipts": SupplyReceipts,

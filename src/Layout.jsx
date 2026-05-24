@@ -29,7 +29,7 @@ const [authLoading, setAuthLoading] = useState(() => {
     currentPageName === 'WorkerPortal' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
-    currentPageName === 'StoreLogin' ||
+    currentPageName === 'SignIn' ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
@@ -138,7 +138,7 @@ const [authLoading, setAuthLoading] = useState(() => {
   try {
     if (authLoading && !user) {
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
-      window.location.replace('/#/pages/StoreLogin' + (window.location.search || ''));
+      window.location.replace('/#/pages/SignIn' + (window.location.search || ''));
     }
   } catch {}
   }, 8000);
@@ -186,7 +186,7 @@ const [authLoading, setAuthLoading] = useState(() => {
       currentPageName !== 'WorkerPortal' &&
       currentPageName !== 'Register' &&
       currentPageName !== 'RestaurantInvite' &&
-      currentPageName !== 'StoreLogin' &&
+      currentPageName !== 'SignIn' &&
       currentPageName !== 'PublicOrder' &&
       currentPageName !== 'OAuthCallback' &&
       currentPageName !== 'LoginHelper' &&
@@ -316,7 +316,7 @@ const [authLoading, setAuthLoading] = useState(() => {
                   
                   // if user was successfully fetched, stop loading screen (unless on Welcome page)
                   const currentPathCheck = location.pathname;
-                  const isWelcomeCheck = currentPathCheck === '/' || currentPathCheck === '/pages' || currentPathCheck === '' || currentPathCheck === '/pages/' || currentPathCheck.toLowerCase().includes('storelogin') || (window.location.hash && (window.location.hash.startsWith('#/pages/StoreLogin')));
+                  const isWelcomeCheck = currentPathCheck === '/' || currentPathCheck === '/pages' || currentPathCheck === '' || currentPathCheck === '/pages/' || currentPathCheck.toLowerCase().includes('storelogin') || (window.location.hash && (window.location.hash.startsWith('#/pages/SignIn')));
                   
                   if (!isWelcomeCheck) {
                     setAuthLoading(false);
@@ -483,14 +483,14 @@ const [authLoading, setAuthLoading] = useState(() => {
         return;
       }
       
-      // Redirect unauthenticated users to StoreLogin (avoid 403 loop when app is private)
+      // Redirect unauthenticated users to SignIn (avoid 403 loop when app is private)
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403;
       if (unauthorized) {
               // If user explicitly triggered logout, don't retry; fail open immediately
               if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
                 setAuthLoading(false);
                 try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
-                window.location.replace('/#/pages/StoreLogin' + (window.location.search || ''));
+                window.location.replace('/#/pages/SignIn' + (window.location.search || ''));
                 return;
               }
         // Stop spinner immediately in APK/WebView so user isn't stuck
@@ -510,7 +510,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           base44.auth.redirectToLogin(window.location.pathname + window.location.search);
           return;
         }
-        window.location.replace('/#/pages/StoreLogin' + (window.location.search || ''));
+        window.location.replace('/#/pages/SignIn' + (window.location.search || ''));
         return;
       }
       
@@ -666,7 +666,7 @@ const [authLoading, setAuthLoading] = useState(() => {
     currentPageName === 'OrderDetails' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
-    currentPageName === 'StoreLogin' ||
+    currentPageName === 'SignIn' ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
@@ -745,8 +745,8 @@ const [authLoading, setAuthLoading] = useState(() => {
                     sessionStorage.removeItem('b44_oauth_finalized');
                     sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
                   } catch {}
-                  try { await base44.auth.logout('/#/pages/StoreLogin'); } catch {}
-                  setTimeout(() => { window.location.replace('/#/pages/StoreLogin'); }, 300);
+                  try { await base44.auth.logout('/#/pages/SignIn'); } catch {}
+                  setTimeout(() => { window.location.replace('/#/pages/SignIn'); }, 300);
                 }} 
                 className="w-full bg-[#d4a373] hover:bg-[#b88c60]"
               >
