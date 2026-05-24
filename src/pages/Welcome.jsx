@@ -11,6 +11,10 @@ export default function Welcome() {
   const { user: currentUser, isLoadingAuth } = useAuth();
   const [openRequest, setOpenRequest] = React.useState(false);
 
+  if (isLoadingAuth) {
+    return <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-6"></div>;
+  }
+
   const handleSignIn = async () => {
     // If already authenticated, go straight in
     try {

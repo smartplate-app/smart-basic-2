@@ -150,9 +150,9 @@ const AppLayout = ({ children, currentPageName }) => {
   // Vanity path: map /welcome -> hash-based public Welcome (no-auth)
   useEffect(() => {
     const path = location.pathname.toLowerCase();
-    if (window.location.hash && window.location.hash.startsWith('#/pages/WelcomePublic')) return;
+    if (window.location.hash && window.location.hash.startsWith('#/pages/Welcome')) return;
     if (path === '/welcome') {
-      const target = '/#/pages/WelcomePublic';
+      const target = '/#/pages/Welcome';
       if (window.location.href.indexOf(target) === -1) {
         window.location.replace(target);
       }
