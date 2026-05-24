@@ -14,7 +14,8 @@ const t = {
       h1: "Food Cost App for Restaurants",
       subtitle: "The ultimate restaurant food cost management and recipe costing software. Increase profitability and ditch the spreadsheets.",
       cta1: "Start for Free",
-      cta2: "See How It Works"
+      cta2: "See How It Works",
+      demo: "Live Demo"
     },
     features: {
       title: "Food Cost Management Features",
@@ -77,7 +78,8 @@ const t = {
       h1: "אפליקציה לניהול עלויות מזון",
       subtitle: "התוכנה המובילה לניהול עלויות מסעדה וחישוב עלות מזון. שפר את הרווחיות והיפטר מטבלאות אקסל מסורבלות.",
       cta1: "התחל בחינם",
-      cta2: "איך זה עובד"
+      cta2: "איך זה עובד",
+      demo: "דמו חי"
     },
     features: {
       title: "פיצ'רים לניהול עלויות מסעדה",
@@ -245,6 +247,9 @@ export default function WelcomePublic() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button className="w-full sm:w-auto h-14 px-8 text-lg bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/20" onClick={handleLogin}>
               {d.hero.cta1}
+            </Button>
+            <Button className="w-full sm:w-auto h-14 px-8 text-lg bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-900/20" onClick={() => window.location.href = '/StoreLogin?email=demo@foodcostapp.com'}>
+              {d.hero.demo}
             </Button>
             <Button variant="outline" className="w-full sm:w-auto h-14 px-8 text-lg border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white bg-transparent" onClick={() => document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})}>
               {d.hero.cta2}

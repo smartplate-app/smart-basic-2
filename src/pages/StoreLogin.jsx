@@ -7,7 +7,10 @@ import { Loader, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { createPageUrl } from "@/utils";
 
 export default function StoreLoginPage() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("email") || "";
+  });
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -78,6 +81,7 @@ export default function StoreLoginPage() {
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
+                  defaultValue={email === 'demo@foodcostapp.com' ? '123456' : ''}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••"
