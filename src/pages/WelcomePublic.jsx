@@ -6,7 +6,6 @@ import {
   Smartphone, ShoppingCart, Trash2, ArrowRight,
   ChevronDown, ChevronUp, Star
 } from 'lucide-react';
-import { useAuth } from '@/lib/AuthContext';
 
 const t = {
   en: {
@@ -140,15 +139,8 @@ const t = {
 const featureIcons = [BarChart3, ChefHat, Smartphone, ShoppingCart, Trash2, Globe];
 
 export default function WelcomePublic() {
-  const { user: currentUser, isLoadingAuth } = useAuth();
   const [lang, setLang] = useState('he');
   const [openFaq, setOpenFaq] = useState(null);
-
-  useEffect(() => {
-    if (!isLoadingAuth && !currentUser) {
-      window.location.href = "https://smartplate-app.github.io/foodcostapp-landing/";
-    }
-  }, [currentUser, isLoadingAuth]);
 
   useEffect(() => {
     document.title = lang === 'en' 
@@ -213,10 +205,6 @@ export default function WelcomePublic() {
 
   const d = t[lang];
   const isRtl = lang === 'he';
-
-  if (isLoadingAuth || !currentUser) {
-    return <div className="min-h-screen bg-slate-900 flex items-center justify-center"></div>;
-  }
 
   return (
     <div className={`min-h-screen font-sans ${isRtl ? 'rtl' : 'ltr'}`} dir={isRtl ? 'rtl' : 'ltr'}>
