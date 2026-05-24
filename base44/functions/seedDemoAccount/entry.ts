@@ -142,10 +142,10 @@ Deno.serve(async (req) => {
         
         await base44.asServiceRole.entities.MonthlyDashboardData.create({
             month: currentMonth,
-            predicted_sales: 160000,
-            total_sales: 158000,
-            restaurant_sales: 130000,
-            delivery_takeaway_sales: 28000,
+            predicted_sales: 310000,
+            total_sales: 310000,
+            restaurant_sales: 250000,
+            delivery_takeaway_sales: 60000,
             labor_goal_percent: 28,
             food_goal_percent: 30,
             monthly_rent_incl_vat: 11500,
