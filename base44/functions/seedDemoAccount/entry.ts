@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
             name: "May 2026 Month-End Count",
             warehouse_id: mainWarehouse.id,
             warehouse_name: mainWarehouse.name,
-            count_date: new Date().toISOString().substring(0, 10),
+            count_date: new Date(new Date().getFullYear(), new Date().getMonth(), 28).toISOString().substring(0, 10),
             count_type: "monthly",
             status: "completed",
             total_inventory_value: (25 * 5.5) + (15 * 4.2) + (10 * 45.0) + (12 * 35.0) + (8 * 55.0) + (30 * 8.0),
@@ -270,6 +270,46 @@ Deno.serve(async (req) => {
                 { item_id: createdItems[3].id, item_name: createdItems[3].name, counted_quantity: 12, unit: "liter", price_per_unit: 35.0, total_cost: 12 * 35.0 },
                 { item_id: createdItems[4].id, item_name: createdItems[4].name, counted_quantity: 8, unit: "kg", price_per_unit: 55.0, total_cost: 8 * 55.0 },
                 { item_id: createdItems[5].id, item_name: createdItems[5].name, counted_quantity: 30, unit: "kg", price_per_unit: 8.0, total_cost: 30 * 8.0 }
+            ],
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        await base44.asServiceRole.entities.InventoryCount.create({
+            name: "April 2026 Month-End Count",
+            warehouse_id: mainWarehouse.id,
+            warehouse_name: mainWarehouse.name,
+            count_date: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 28).toISOString().substring(0, 10),
+            count_type: "monthly",
+            status: "completed",
+            total_inventory_value: (30 * 5.5) + (20 * 4.2) + (12 * 45.0) + (15 * 35.0) + (10 * 55.0) + (35 * 8.0),
+            items: [
+                { item_id: createdItems[0].id, item_name: createdItems[0].name, counted_quantity: 30, unit: "kg", price_per_unit: 5.5, total_cost: 30 * 5.5 },
+                { item_id: createdItems[1].id, item_name: createdItems[1].name, counted_quantity: 20, unit: "kg", price_per_unit: 4.2, total_cost: 20 * 4.2 },
+                { item_id: createdItems[2].id, item_name: createdItems[2].name, counted_quantity: 12, unit: "kg", price_per_unit: 45.0, total_cost: 12 * 45.0 },
+                { item_id: createdItems[3].id, item_name: createdItems[3].name, counted_quantity: 15, unit: "liter", price_per_unit: 35.0, total_cost: 15 * 35.0 },
+                { item_id: createdItems[4].id, item_name: createdItems[4].name, counted_quantity: 10, unit: "kg", price_per_unit: 55.0, total_cost: 10 * 55.0 },
+                { item_id: createdItems[5].id, item_name: createdItems[5].name, counted_quantity: 35, unit: "kg", price_per_unit: 8.0, total_cost: 35 * 8.0 }
+            ],
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        await base44.asServiceRole.entities.InventoryCount.create({
+            name: "March 2026 Month-End Count",
+            warehouse_id: mainWarehouse.id,
+            warehouse_name: mainWarehouse.name,
+            count_date: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 28).toISOString().substring(0, 10),
+            count_type: "monthly",
+            status: "completed",
+            total_inventory_value: (20 * 5.5) + (18 * 4.2) + (8 * 45.0) + (10 * 35.0) + (12 * 55.0) + (25 * 8.0),
+            items: [
+                { item_id: createdItems[0].id, item_name: createdItems[0].name, counted_quantity: 20, unit: "kg", price_per_unit: 5.5, total_cost: 20 * 5.5 },
+                { item_id: createdItems[1].id, item_name: createdItems[1].name, counted_quantity: 18, unit: "kg", price_per_unit: 4.2, total_cost: 18 * 4.2 },
+                { item_id: createdItems[2].id, item_name: createdItems[2].name, counted_quantity: 8, unit: "kg", price_per_unit: 45.0, total_cost: 8 * 45.0 },
+                { item_id: createdItems[3].id, item_name: createdItems[3].name, counted_quantity: 10, unit: "liter", price_per_unit: 35.0, total_cost: 10 * 35.0 },
+                { item_id: createdItems[4].id, item_name: createdItems[4].name, counted_quantity: 12, unit: "kg", price_per_unit: 55.0, total_cost: 12 * 55.0 },
+                { item_id: createdItems[5].id, item_name: createdItems[5].name, counted_quantity: 25, unit: "kg", price_per_unit: 8.0, total_cost: 25 * 8.0 }
             ],
             created_by: demoEmail,
             store_owner_email: demoEmail
@@ -314,8 +354,8 @@ Deno.serve(async (req) => {
 
         // 10. COGS Reports
         await base44.asServiceRole.entities.CogsReport.create({
-            name: "מאי 2026 MTD — (7 ימים)",
-            report_date: new Date().toISOString().substring(0, 10),
+            name: "May 2026 MTD",
+            report_date: new Date(new Date().getFullYear(), new Date().getMonth(), 28).toISOString().substring(0, 10),
             report_type: "actual",
             total_sales: 145705,
             total_cogs: 34532,
@@ -324,6 +364,40 @@ Deno.serve(async (req) => {
             items: [
                 { item_name: "Greek Salad (סלט יווני)", quantity_sold: 450, cost_percentage: 23.7, total_sales: 23400, unit_cost: 13.0, unit_price: 52.0 },
                 { item_name: "Pasta Bolognese (פסטה בולונז)", quantity_sold: 320, cost_percentage: 32.5, total_sales: 21760, unit_cost: 22.1, unit_price: 68.0 }
+            ],
+            notes: "Demo account COGS report",
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        await base44.asServiceRole.entities.CogsReport.create({
+            name: "April 2026 Monthly Report",
+            report_date: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 28).toISOString().substring(0, 10),
+            report_type: "actual",
+            total_sales: 142000,
+            total_cogs: 35500,
+            gross_profit: 106500,
+            cogs_percentage: 25.0,
+            items: [
+                { item_name: "Greek Salad (סלט יווני)", quantity_sold: 420, cost_percentage: 24.5, total_sales: 21840, unit_cost: 12.74, unit_price: 52.0 },
+                { item_name: "Pasta Bolognese (פסטה בולונז)", quantity_sold: 300, cost_percentage: 33.0, total_sales: 20400, unit_cost: 22.44, unit_price: 68.0 }
+            ],
+            notes: "Demo account COGS report",
+            created_by: demoEmail,
+            store_owner_email: demoEmail
+        });
+
+        await base44.asServiceRole.entities.CogsReport.create({
+            name: "March 2026 Monthly Report",
+            report_date: new Date(new Date().getFullYear(), new Date().getMonth() - 2, 28).toISOString().substring(0, 10),
+            report_type: "actual",
+            total_sales: 135000,
+            total_cogs: 33750,
+            gross_profit: 101250,
+            cogs_percentage: 25.0,
+            items: [
+                { item_name: "Greek Salad (סלט יווני)", quantity_sold: 400, cost_percentage: 24.0, total_sales: 20800, unit_cost: 12.48, unit_price: 52.0 },
+                { item_name: "Pasta Bolognese (פסטה בולונז)", quantity_sold: 280, cost_percentage: 32.0, total_sales: 19040, unit_cost: 21.76, unit_price: 68.0 }
             ],
             notes: "Demo account COGS report",
             created_by: demoEmail,
