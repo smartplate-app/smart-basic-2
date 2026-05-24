@@ -85,16 +85,13 @@ const AuthenticatedApp = () => {
     '/LoginHelper',
     '/pages/LoginHelper',
     '/AuthKick',
-    '/pages/AuthKick',
-    '/WelcomeIncognito',
-    '/pages/WelcomeIncognito'
-  ];
-  
-  const isPublicRoute = publicRoutes.some(route => 
+    '/pages/AuthKick'
+    ];
+
+    const isPublicRoute = publicRoutes.some(route => 
     location.pathname.toLowerCase() === route.toLowerCase() || 
-    location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/') ||
-    location.pathname.toLowerCase().includes('welcomeincognito')
-  );
+    location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/')
+    );
 
   let hasUserCache = false;
   try { hasUserCache = !!localStorage.getItem('b44_user_cache') && !sessionStorage.getItem('b44_logout_in_progress'); } catch {}

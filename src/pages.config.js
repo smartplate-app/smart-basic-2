@@ -88,7 +88,6 @@ import UserProfile from './pages/UserProfile';
 import Users from './pages/Users';
 import Warehouses from './pages/Warehouses';
 import WasteReports from './pages/WasteReports';
-import WelcomeIncognito from './pages/WelcomeIncognito';
 import WorkerPortal from './pages/WorkerPortal';
 import WorkerSchedule from './pages/WorkerSchedule';
 import __Layout from './Layout.jsx';
@@ -136,7 +135,6 @@ export const PAGES = {
     "Users": Users,
     "Warehouses": Warehouses,
     "WasteReports": WasteReports,
-    "WelcomeIncognito": WelcomeIncognito,
     "WorkerPortal": WorkerPortal,
     "WorkerSchedule": WorkerSchedule,
 }

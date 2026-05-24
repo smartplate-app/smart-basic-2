@@ -123,28 +123,7 @@ const [authLoading, setAuthLoading] = useState(() => {
     try { await installPromptEvent.userChoice; } finally { setInstallPromptEvent(null); }
   };
 
-  // Force WelcomePublic on custom domain (apex or www) ONLY for unauthenticated users
-  useEffect(() => {
-    (async () => {
-      try {
-        const host = (window.location.hostname || '').toLowerCase();
-        const isCustom = host === 'smartplatebasic.com' || host === 'www.smartplatebasic.com' || host === 'foodcostapp.com' || host === 'www.foodcostapp.com' || host === 'foocostapp.com' || host === 'www.foocostapp.com';
-        const hasHashPage = window.location.hash && window.location.hash.startsWith('#/pages/');
-        const hasOauthParams = window.location.search.includes('code=') || window.location.search.includes('state=');
-        const previewParams = new URLSearchParams(window.location.search);
-        if (previewParams.get('preview') === '1') return;
-        
-        const path = window.location.pathname.toLowerCase();
-        if (path.includes('welcomepublic') || path === '/') return;
-        
-        if (!isCustom || hasHashPage || hasOauthParams) return;
-        const authed = await base44.auth.isAuthenticated();
-        if (!authed) {
-          window.location.replace('/WelcomePublic' + (window.location.search || ''));
-        }
-      } catch {}
-    })();
-  }, []);
+
 
 
 
@@ -195,9 +174,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard', url: createPageUrl("AdminDashboard"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true },
-          { title: language === 'he' ? 'תצוגת ברוך הבא (אינקוגניטו)' : 'Welcome Incognito', url: "/functions/welcomePublic", icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'בודק קישורים' : 'Link Checker', url: createPageUrl("LinkChecker"), icon: Shield, adminOnly: true, workerHidden: true },
-          { title: language === 'he' ? 'דף ברוך הבא (תצוגה)' : 'Welcome (Preview)', url: createPageUrl("Welcome"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'אסטרטגיית אינסטגרם' : 'IG Strategy', url: createPageUrl("InstagramBlueprint"), icon: Share, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'סטורי יוונית' : 'Greek Story', url: createPageUrl("InstagramStoryGreek"), icon: Share, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'קישורי פרומו VIP' : 'VIP Promo Links', url: createPageUrl("PromoLinks"), icon: Shield, adminOnly: true, workerHidden: true }
@@ -224,27 +201,15 @@ const [authLoading, setAuthLoading] = useState(() => {
     }
   }, [currentPageName]);
 
-  // OAuth return: from Welcome with ?code/state → hand off to lightweight finalizer page
-  useEffect(() => {
-    try {
-      if (currentPageName !== 'Welcome') return;
-      const params = new URLSearchParams(window.location.search);
-      const oauthBack = params.has('code') || params.has('state');
-      if (!oauthBack) return;
-      const forceHash = localStorage.getItem('b44_emulate_force_hash') === '1';
-      const target = forceHash ? ('/#/pages/OAuthCallback' + window.location.search) : (createPageUrl('OAuthCallback') + window.location.search);
-      window.location.replace(target);
-    } catch {}
-  }, [currentPageName, location.search]);
+
 
   // Consolidated OAuth return stabilizer (older Android/Chrome safe)
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const oauthBack = params.has('code') || params.has('state');
-      // Avoid double-handling: let the Welcome-specific effect handle it, or if we're already on OAuthCallback
+      // Avoid double-handling: or if we're already on OAuthCallback
       if (!oauthBack) return;
-      if (currentPageName === 'Welcome') return;
       if ((location.pathname || '').includes('OAuthCallback')) return;
       if (sessionStorage.getItem('b44_oauth_in_progress') === '1') return;
       if (sessionStorage.getItem('b44_oauth_finalized') === '1') return;
