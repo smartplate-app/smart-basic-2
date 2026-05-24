@@ -777,15 +777,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                                 />
                               </TableCell>
                               <TableCell>{item.unit}</TableCell>
-                              <TableCell>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  step="any"
-                                  value={item.price_per_unit}
-                                  onChange={(e) => updateItemPrice(index, e.target.value)}
-                                  className="w-24 hide-arrows"
-                                />
+                              <TableCell className="text-gray-700">
+                                ₪{Number(item.price_per_unit || 0).toFixed(2)}
                               </TableCell>
                               <TableCell className="font-bold text-green-600">
                                 {item.total_cost?.toFixed(2) || '0.00'}
