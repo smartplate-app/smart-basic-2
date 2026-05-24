@@ -150,11 +150,11 @@ Deno.serve(async (req) => {
             total_sales: 310000,
             restaurant_sales: 250000,
             delivery_takeaway_sales: 60000,
-            labor_goal_percent: 28,
-            food_goal_percent: 30,
+            labor_goal_percent: 41,
+            food_goal_percent: 27,
             monthly_rent_incl_vat: 11500,
             use_manual_labor: true,
-            manual_labor_cost: 41000,
+            manual_labor_cost: 108632,
             use_manual_food: false,
             created_by: demoEmail,
             store_owner_email: demoEmail
@@ -241,11 +241,11 @@ Deno.serve(async (req) => {
             supplier_id: createdSuppliers[1].id,
             supplier_name: createdSuppliers[1].name,
             received_date: new Date().toISOString().substring(0, 10),
-            invoice_total: 60000.0,
+            invoice_total: 83600.0,
             status: "verified",
             notes: "Monthly bulk meat and poultry order",
             verified_items: [
-                { item_id: createdItems[4].id, item_name: createdItems[4].name, received_quantity: 1000, unit: "kg", actual_price: 55.0 }
+                { item_id: createdItems[4].id, item_name: createdItems[4].name, received_quantity: 1520, unit: "kg", actual_price: 55.0 }
             ],
             created_by: demoEmail,
             store_owner_email: demoEmail
