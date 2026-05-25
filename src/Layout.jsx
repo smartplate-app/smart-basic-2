@@ -485,7 +485,7 @@ const [authLoading, setAuthLoading] = useState(() => {
       }
       
       // Redirect unauthenticated users to SignIn (avoid 403 loop when app is private)
-      const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403;
+      const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403 || String(err?.message || '').toLowerCase().includes('logged in');
       if (unauthorized) {
               // If user explicitly triggered logout, don't retry; fail open immediately
               if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
@@ -506,12 +506,8 @@ const [authLoading, setAuthLoading] = useState(() => {
           return;
         }
         
-        const hasUsedApp = !!localStorage.getItem('b44_user_cache') || !!localStorage.getItem('b44_installed');
-        if (hasUsedApp) {
-          base44.auth.redirectToLogin(window.location.pathname + window.location.search);
-          return;
-        }
-        window.location.replace('/#/pages/SignIn' + (window.location.search || ''));
+        // Force redirect to login directly to bypass any Welcome pages
+        base44.auth.redirectToLogin(window.location.pathname + window.location.search);
         return;
       }
       
