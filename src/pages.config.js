@@ -54,7 +54,6 @@ import ChainDashboard from './pages/ChainDashboard';
 import ChainManagement from './pages/ChainManagement';
 import Dashboard from './pages/Dashboard';
 import Diagnostics from './pages/Diagnostics';
-import Home from './pages/Home';
 import IOSBuildGuide from './pages/IOSBuildGuide';
 import InstagramBlueprint from './pages/InstagramBlueprint';
 import InventoryTransfers from './pages/InventoryTransfers';
@@ -100,7 +99,6 @@ export const PAGES = {
     "ChainManagement": ChainManagement,
     "Dashboard": Dashboard,
     "Diagnostics": Diagnostics,
-    "Home": Home,
     "IOSBuildGuide": IOSBuildGuide,
     "InstagramBlueprint": InstagramBlueprint,
     "InventoryTransfers": InventoryTransfers,
