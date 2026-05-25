@@ -313,8 +313,7 @@ export default function SupplyReceiptsPage() {
       const ok = window.confirm((t('confirm_delete_receipt') || 'Delete this receipt?') + '\n' + details);
       if (!ok) return;
       
-      const { data } = await base44.functions.invoke('deleteSupplyReceipt', { receiptId: receipt.id });
-      if (!data?.success) throw new Error(data?.error || 'Failed to delete receipt');
+      await base44.entities.SupplyReceipt.delete(receipt.id);
       
       setReceipts(prev => prev.filter(r => r.id !== receipt.id));
       alert(t('deleted_successfully') || 'Deleted successfully');
