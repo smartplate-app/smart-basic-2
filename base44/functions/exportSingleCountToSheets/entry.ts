@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     ]);
 
     // OAuth token for Google Sheets
-    const accessToken = await base44.asServiceRole.connectors.getAccessToken('googlesheets');
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlesheets');
 
     // Create spreadsheet
     const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {

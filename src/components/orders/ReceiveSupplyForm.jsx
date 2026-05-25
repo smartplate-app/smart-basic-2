@@ -569,18 +569,19 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         item_name: r.item_name || r.name_extracted || r.name || "",
         ordered_quantity: 0,
         certificate_quantity: 0,
-        received_quantity: Number(r.quantity || 0),
+        received_quantity: Number(r.quantity || r.received_quantity || 0),
         unit: r.unit || "unit",
-        catalog_price: 0,
-        catalog_discount: 0,
-        actual_price: Number(r.price || 0),
-        actual_discount: 0,
+        catalog_price: Number(r.catalog_price || 0),
+        catalog_discount: Number(r.catalog_discount || 0),
+        actual_price: Number(r.price || r.actual_price || 0),
+        actual_discount: Number(r.discount || r.actual_discount || 0),
         price_changed: false,
         discount_changed: false,
-        has_issue: !r.item_id || Number(r.match_confidence || 0) < 0.6,
-        issue_note: (!r.item_id || Number(r.match_confidence || 0) < 0.6) ? 'Low confidence match' : '',
+        has_issue: r.is_new_item || !r.item_id,
+        issue_note: (r.is_new_item || !r.item_id) ? (language === 'he' ? 'פריט חדש/לא מזוהה - תוכל להוסיף לקטלוג' : 'New/Unidentified item - you can add to catalog') : '',
         units_per_package: 1,
         price_after_discount: 0,
+        is_new_item: r.is_new_item || false,
       }));
 
       const finalIncl = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
@@ -742,6 +743,51 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         totals_match: totalsMatch
       };
     });
+  };
+
+  const handleAddItemToCatalog = async (item, index) => {
+    try {
+      if (!formData.supplier_id) {
+        alert(language === 'he' ? 'חובה לבחור ספק קודם.' : 'You must select a supplier first.');
+        return;
+      }
+      if (!item.item_name) {
+        alert(language === 'he' ? 'אנא הזן שם פריט קודם.' : 'Please enter an item name first.');
+        return;
+      }
+      
+      const itemData = {
+        name: item.item_name,
+        supplier_id: formData.supplier_id,
+        supplier_name: formData.supplier_name,
+        unit: item.unit || 'unit',
+        price: item.actual_price || 0,
+        discount: item.actual_discount || 0,
+        units_per_package: item.units_per_package || 1
+      };
+      
+      const newItem = await base44.entities.Item.create(itemData);
+      
+      // Update the verified item
+      setFormData(prev => {
+        const updated = [...prev.verified_items];
+        updated[index] = { 
+          ...updated[index], 
+          item_id: newItem.id, 
+          is_new_item: false,
+          has_issue: false,
+          issue_note: '',
+          catalog_price: item.actual_price || 0,
+          catalog_discount: item.actual_discount || 0
+        };
+        return { ...prev, verified_items: updated };
+      });
+      
+      alert(language === 'he' ? 'הפריט התווסף לקטלוג בהצלחה!' : 'Item added to catalog successfully!');
+    } catch (e) {
+      console.error('Error adding item:', e);
+      alert((language === 'he' ? 'שגיאה בהוספת פריט:' : 'Error adding item:') + ' ' + (e.message || e));
+    }
   };
 
   const addManualItem = () => {
@@ -1583,6 +1629,18 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                         value={item.issue_note}
                                         onChange={(e) => updateVerifiedItem(index, 'issue_note', e.target.value)}
                                       />
+                                    )}
+
+                                    {(!item.item_id || item.is_new_item) && (
+                                      <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => handleAddItemToCatalog(item, index)}
+                                        className="mt-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 w-full md:w-auto"
+                                      >
+                                        <Plus className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                                        {language === 'he' ? 'הוסף לקטלוג ספק זה' : 'Add to supplier catalog'}
+                                      </Button>
                                     )}
                                   </div>
                                 </CardContent>
