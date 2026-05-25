@@ -316,6 +316,13 @@ export default function SupplyReceiptsPage() {
       await base44.entities.SupplyReceipt.delete(receipt.id);
       
       setReceipts(prev => prev.filter(r => r.id !== receipt.id));
+      
+      // Also close the form if this receipt was being edited
+      if (editingReceipt && editingReceipt.id === receipt.id) {
+        setShowForm(false);
+        setEditingReceipt(null);
+      }
+      
       alert(t('deleted_successfully') || 'Deleted successfully');
     } catch (e) {
       alert((t('delete_failed') || 'Delete failed') + ': ' + (e?.message || e));
