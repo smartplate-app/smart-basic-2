@@ -75,7 +75,6 @@ import Register from './pages/Register';
 import RestaurantInvite from './pages/RestaurantInvite';
 import SalesPerHour from './pages/SalesPerHour';
 import SalesPrediction from './pages/SalesPrediction';
-import SignIn from './pages/SignIn';
 
 import StoreUsers from './pages/StoreUsers';
 import Suppliers from './pages/Suppliers';
@@ -122,7 +121,6 @@ export const PAGES = {
     "RestaurantInvite": RestaurantInvite,
     "SalesPerHour": SalesPerHour,
     "SalesPrediction": SalesPrediction,
-    "SignIn": SignIn,
 
     "StoreUsers": StoreUsers,
     "Suppliers": Suppliers,

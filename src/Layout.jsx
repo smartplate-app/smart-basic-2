@@ -29,7 +29,6 @@ const [authLoading, setAuthLoading] = useState(() => {
     currentPageName === 'WorkerPortal' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
-    currentPageName === 'SignIn' ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
@@ -138,7 +137,7 @@ const [authLoading, setAuthLoading] = useState(() => {
   try {
     if (authLoading && !user) {
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
-      window.location.replace('/#/pages/SignIn' + (window.location.search || ''));
+      base44.auth.redirectToLogin(window.location.pathname + window.location.search);
     }
   } catch {}
   }, 8000);
@@ -186,7 +185,6 @@ const [authLoading, setAuthLoading] = useState(() => {
       currentPageName !== 'WorkerPortal' &&
       currentPageName !== 'Register' &&
       currentPageName !== 'RestaurantInvite' &&
-      currentPageName !== 'SignIn' &&
       currentPageName !== 'PublicOrder' &&
       currentPageName !== 'OAuthCallback' &&
       currentPageName !== 'LoginHelper' &&
@@ -314,13 +312,7 @@ const [authLoading, setAuthLoading] = useState(() => {
                   setError(null);
                   setRetryCount(0);
                   
-                  // if user was successfully fetched, stop loading screen (unless on Welcome page)
-                  const currentPathCheck = location.pathname;
-                  const isWelcomeCheck = currentPathCheck === '/' || currentPathCheck === '/pages' || currentPathCheck === '' || currentPathCheck === '/pages/' || currentPathCheck.toLowerCase().includes('storelogin') || (window.location.hash && (window.location.hash.startsWith('#/pages/SignIn')));
-                  
-                  if (!isWelcomeCheck) {
-                    setAuthLoading(false);
-                  }
+                  setAuthLoading(false);
 
                   // Check if user is a store user (worker/manager) for someone else's store
                   // Always check StoreUser entity to verify they still have access
@@ -484,34 +476,36 @@ const [authLoading, setAuthLoading] = useState(() => {
         return;
       }
       
-      // Redirect unauthenticated users to SignIn (avoid 403 loop when app is private)
+      // Redirect unauthenticated users
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403 || String(err?.message || '').toLowerCase().includes('logged in');
       if (unauthorized) {
-              // If user explicitly triggered logout, don't retry; fail open immediately
               if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
                 setAuthLoading(false);
                 try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
-                window.location.replace('/#/pages/SignIn' + (window.location.search || ''));
+                base44.auth.redirectToLogin(window.location.pathname + window.location.search);
                 return;
               }
-        // Stop spinner immediately in APK/WebView so user isn't stuck
         if (!user) setAuthLoading(false);
         let cooldownUntil = 0;
         try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
         const inCooldown = cooldownUntil > Date.now();
         const params = new URLSearchParams(window.location.search);
         const oauthBack = params.has('code') || params.has('state');
-        if (attemptNumber < 3 || inCooldown || oauthBack || isPwaInstalled) {
+        if (attemptNumber < 2 || inCooldown || oauthBack) {
           setTimeout(() => loadAuth(attemptNumber + 1), 1200);
           return;
         }
         
-        // Force redirect to login directly to bypass any Welcome pages
         base44.auth.redirectToLogin(window.location.pathname + window.location.search);
         return;
       }
       
       console.error("[Layout] Max retries reached or non-network error");
+      // Just redirect to login on ANY error if they don't have a user instead of showing "Connection error"
+      if (!user && !localStorage.getItem('b44_user_cache')) {
+         base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+         return;
+      }
       setError(err.message || "Failed to load app");
       setAuthLoading(false);
     }
@@ -663,7 +657,6 @@ const [authLoading, setAuthLoading] = useState(() => {
     currentPageName === 'OrderDetails' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
-    currentPageName === 'SignIn' ||
     currentPageName === 'PublicOrder' ||
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
@@ -742,8 +735,8 @@ const [authLoading, setAuthLoading] = useState(() => {
                     sessionStorage.removeItem('b44_oauth_finalized');
                     sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
                   } catch {}
-                  try { await base44.auth.logout('/#/pages/SignIn'); } catch {}
-                  setTimeout(() => { window.location.replace('/#/pages/SignIn'); }, 300);
+                  try { await base44.auth.logout('/#/pages/Orders'); } catch {}
+                  setTimeout(() => { window.location.replace('/#/pages/Orders'); }, 300);
                 }} 
                 className="w-full bg-[#d4a373] hover:bg-[#b88c60]"
               >

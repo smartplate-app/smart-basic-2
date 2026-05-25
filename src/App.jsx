@@ -34,7 +34,7 @@ if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
   pathToUse = location.hash.substring(1);
 }
 const pathParts = pathToUse.split('/').filter(Boolean);
-let currentPageName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'SignIn';
+let currentPageName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : mainPageKey;
   
   return (
     <LayoutWrapper currentPageName={currentPageName}>
@@ -59,9 +59,6 @@ const AuthenticatedApp = () => {
   const location = useLocation();
 
   const publicRoutes = [
-    '/',
-    '/index.html',
-
     '/GoogleCampaign',
     '/pages/GoogleCampaign',
     '/OAuthCallback',
@@ -70,8 +67,6 @@ const AuthenticatedApp = () => {
     '/pages/PublicOrder',
     '/Register',
     '/pages/Register',
-    '/SignIn',
-    '/pages/SignIn',
     '/StoreLogin',
     '/pages/StoreLogin',
     '/WorkerPortal',
@@ -122,7 +117,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<AppLayoutRoute />}>
-        <Route path="/" element={<Pages.SignIn />} />
+        <Route path="/" element={<MainPage />} />
         {Object.entries(Pages).map(([path, Page]) => (
           <Route key={path} path={`/${path}`} element={<Page />} />
         ))}
