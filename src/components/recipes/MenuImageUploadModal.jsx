@@ -26,16 +26,16 @@ export default function MenuImageUploadModal({ isOpen, onClose, onUpload, scanni
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const imageFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-      setFiles(prev => [...prev, ...imageFiles]);
+      const allowedFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf');
+      setFiles(prev => [...prev, ...allowedFiles]);
     }
   };
 
   const handleChange = (e) => {
     e.preventDefault();
     if (e.target.files && e.target.files.length > 0) {
-      const imageFiles = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
-      setFiles(prev => [...prev, ...imageFiles]);
+      const allowedFiles = Array.from(e.target.files).filter(f => f.type.startsWith('image/') || f.type === 'application/pdf');
+      setFiles(prev => [...prev, ...allowedFiles]);
     }
   };
 
@@ -60,11 +60,11 @@ export default function MenuImageUploadModal({ isOpen, onClose, onUpload, scanni
     <Dialog open={isOpen} onOpenChange={(open) => !open && !scanningMenu && onClose()}>
       <DialogContent className={isRTL ? 'text-right' : 'text-left'}>
         <DialogHeader>
-          <DialogTitle>{language === 'he' ? 'סריקת תפריט (תמונות בלבד)' : 'Scan Menu (Images Only)'}</DialogTitle>
+          <DialogTitle>{language === 'he' ? 'סריקת תפריט (תמונות או PDF)' : 'Scan Menu (Images or PDF)'}</DialogTitle>
           <DialogDescription>
             {language === 'he' 
-              ? 'גרור ושחרר תמונות של התפריט שלך לכאן, או לחץ לבחירת קבצים.'
-              : 'Drag and drop images of your menu here, or click to select files.'}
+              ? 'גרור ושחרר קבצי תפריט לכאן, או לחץ לבחירת קבצים.'
+              : 'Drag and drop menu files here, or click to select files.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -80,16 +80,16 @@ export default function MenuImageUploadModal({ isOpen, onClose, onUpload, scanni
             ref={inputRef}
             type="file"
             multiple
-            accept="image/*"
+            accept="image/*,application/pdf"
             className="hidden"
             onChange={handleChange}
           />
           <UploadCloud className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">
-            {language === 'he' ? 'לחץ או גרור תמונות לכאן' : 'Click or drag images here'}
+            {language === 'he' ? 'לחץ או גרור קבצים לכאן' : 'Click or drag files here'}
           </p>
           <p className="text-sm text-gray-400 mt-2">
-            {language === 'he' ? 'תומך ב-PNG, JPG' : 'Supports PNG, JPG'}
+            {language === 'he' ? 'תומך ב-PNG, JPG, PDF' : 'Supports PNG, JPG, PDF'}
           </p>
         </div>
 
@@ -116,7 +116,7 @@ export default function MenuImageUploadModal({ isOpen, onClose, onUpload, scanni
             className="bg-[#107c41] hover:bg-[#0c5e31]"
           >
             {scanningMenu ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            {language === 'he' ? 'סרוק תמונות' : 'Scan Images'}
+            {language === 'he' ? 'סרוק קבצים' : 'Scan Files'}
           </Button>
         </div>
       </DialogContent>

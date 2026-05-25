@@ -208,7 +208,7 @@ export default function RecipesPage() {
               className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4"
             >
               {scanningMenu ? <Loader2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <FileText className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
-              {language === 'he' ? 'סרוק תפריט (תמונות)' : 'Scan Menu (Images)'}
+              {language === 'he' ? 'סרוק תפריט (תמונות או PDF)' : 'Scan Menu (Images or PDF)'}
             </Button>
 
             <Button 
