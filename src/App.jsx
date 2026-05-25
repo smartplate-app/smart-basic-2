@@ -34,7 +34,7 @@ if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
   pathToUse = location.hash.substring(1);
 }
 const pathParts = pathToUse.split('/').filter(Boolean);
-let currentPageName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'StoreLogin';
+let currentPageName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : 'SignIn';
   
   return (
     <LayoutWrapper currentPageName={currentPageName}>

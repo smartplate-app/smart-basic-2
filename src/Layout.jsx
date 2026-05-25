@@ -450,10 +450,11 @@ const [authLoading, setAuthLoading] = useState(() => {
                     console.log('[Layout] Could not attach chain context:', e?.message || e);
                   }
 
-                  if (isWelcomeCheck && currentUser && !isIncognito) {
-                    window.location.replace(createPageUrl('Orders'));
-                    return;
-                  }
+                  // Removed auto-redirect to Orders so the Welcome page is shown to everyone
+                  // if (isWelcomeCheck && currentUser && !isIncognito) {
+                  //   window.location.replace(createPageUrl('Orders'));
+                  //   return;
+                  // }
       
       setAuthLoading(false);
     } catch (err) {
