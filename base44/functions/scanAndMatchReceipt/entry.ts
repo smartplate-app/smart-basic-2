@@ -15,9 +15,9 @@ Deno.serve(async (req) => {
     }
 
     const currentYear = new Date().getFullYear();
-    // 1) Extract header fields from the document (Heb/Eng supported)
+    // 1) Extract header fields and items from the document (Heb/Eng supported)
     const llm = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: 'gpt_5_4',
+      model: 'gemini_3_1_pro',
       prompt: `You are an expert accountant extracting data from an Israeli supplier invoice/delivery note image. Read the Hebrew text carefully. DO NOT invent or hallucinate data.
 
 CRITICAL EXTRACTION RULES:
@@ -36,6 +36,9 @@ CRITICAL EXTRACTION RULES:
    - Look for "סכום מע"מ", "מע"מ 17%", "מע"מ".
 6. is_refund:
    - Set to true ONLY if the document says "חשבונית זיכוי", "זיכוי", "החזר", or if the total is explicitly negative.
+7. items:
+   - Extract the list of ALL items exactly as they appear in the invoice (the "תיאור" / Description column).
+   - Look for the item name, quantity ("כמות", "כמויות"), price per unit ("מחיר יחידה", "מחיר"), and total line price ("סה"כ", "סכום").
 
 Extract these values precisely. If a value is missing, return 0 for amounts or empty string for text.`,
       file_urls,
@@ -47,7 +50,19 @@ Extract these values precisely. If a value is missing, return 0 for amounts or e
           total_excl_vat: { type: 'number' },
           vat_amount: { type: 'number' },
           total_incl_vat: { type: 'number' },
-          is_refund: { type: 'boolean' }
+          is_refund: { type: 'boolean' },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                item_name: { type: 'string' },
+                quantity: { type: 'number' },
+                price: { type: 'number' },
+                total: { type: 'number' }
+              }
+            }
+          }
         },
         required: ['invoice_number', 'invoice_date', 'total_incl_vat']
       }
@@ -63,7 +78,7 @@ Extract these values precisely. If a value is missing, return 0 for amounts or e
         total_incl_vat: llm.total_incl_vat,
         is_refund: llm.is_refund
       },
-      items: [] 
+      items: llm.items || [] 
     });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
