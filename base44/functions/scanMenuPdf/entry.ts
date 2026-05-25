@@ -9,34 +9,43 @@ Deno.serve(async (req) => {
     const { fileUrls } = await req.json();
     if (!fileUrls || !Array.isArray(fileUrls) || fileUrls.length === 0) return Response.json({ error: 'Missing fileUrls' }, { status: 400 });
 
-    // Fetch existing recipes
-    const existingRecipes = await base44.entities.Recipe.filter({ created_by: user.email });
-    const existingNames = existingRecipes.map(r => r.name.trim().toLowerCase());
+    const targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
 
-    // Use LLM to extract menu items
-    const prompt = `קרא את כל קבצי התמונות המצורפים של התפריט וחלץ את כל שמות המנות.
+    // Fetch existing recipes
+    const existingRecipes1 = await base44.entities.Recipe.filter({ created_by: targetEmail });
+    const existingRecipes2 = await base44.entities.Recipe.filter({ store_owner_email: targetEmail });
+    const existingNames = [...existingRecipes1, ...existingRecipes2].map(r => r.name.trim().toLowerCase());
+
+    // Use Gemini LLM to extract menu items with full Hebrew support
+    const prompt = `קרא את כל קבצי התמונות והמסמכים המצורפים של התפריט וחלץ את כל שמות המנות והמחירים שלהן.
 המבנה בתפריט הוא לרוב: שורה ראשונה עם שם המנה והמחיר, ושורה שנייה עם תיאור.
 לדוגמה:
-"ניגורי מיול 58" -> שם המנה הוא "ניגורי מיול"
-"טמפורה טעימה 52" -> שם המנה הוא "טמפורה טעימה"
+"ניגורי מיול 58" -> שם המנה הוא "ניגורי מיול", מחיר: 58
+"טמפורה טעימה 52" -> שם המנה הוא "טמפורה טעימה", מחיר: 52
 
 המשימה שלך:
 1. עבור על כל התמונות המצורפות.
-2. חלץ את השם של כל מנה (הטקסט לפני המחיר בשורה הראשונה של כל פריט).
-3. התעלם מהמחירים ומהתיאורים.
-4. החזר אובייקט JSON עם מערך 'menu_items' המכיל את רשימת השמות המלאה מכל הקבצים.
-ודא שאתה כולל את כל המנות, כולל "טמפורה טעימה", "ניגורי מיול", "מרק מיסו", "מה פאו" וכו'.`;
+2. חלץ את השם והמחיר של כל מנה.
+3. החזר אובייקט JSON עם מערך 'menu_items' המכיל אובייקטים עם 'name' (שם המנה) ו-'price' (מחיר המנה).
+ודא שאתה קורא עברית בצורה תקינה וכולל את כל המנות.`;
 
     const response = await base44.integrations.Core.InvokeLLM({
       prompt,
       file_urls: fileUrls,
-      model: 'gpt_5',
+      model: 'gemini_3_1_pro', // Full Hebrew support & excellent vision/PDF capabilities
       response_json_schema: {
         type: 'object',
         properties: {
           menu_items: {
             type: 'array',
-            items: { type: 'string' }
+            items: { 
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                price: { type: 'number' }
+              },
+              required: ['name']
+            }
           }
         },
         required: ['menu_items']
@@ -45,19 +54,32 @@ Deno.serve(async (req) => {
 
     const menuItems = response.menu_items || [];
     
-    // Find missing recipes
+    // Add missing recipes automatically
     const missingRecipes = [];
+    const addedNames = new Set();
+    
     for (const item of menuItems) {
-      const itemLower = item.trim().toLowerCase();
-      // Strict matching: only exact match to avoid false positives
+      if (!item.name) continue;
+      const itemName = item.name.trim();
+      const itemLower = itemName.toLowerCase();
+      
       const exists = existingNames.some(existing => existing === itemLower);
       
-      if (!exists) {
-        missingRecipes.push(item.trim());
+      if (!exists && !addedNames.has(itemLower)) {
+        missingRecipes.push(itemName);
+        addedNames.add(itemLower);
+        
+        await base44.entities.Recipe.create({
+          name: itemName,
+          type: 'sale_item',
+          sale_price: item.price || 0,
+          created_by: user.email,
+          store_owner_email: targetEmail
+        });
       }
     }
 
-    return Response.json({ success: true, missingRecipes, totalFound: menuItems.length });
+    return Response.json({ success: true, missingRecipes, addedCount: missingRecipes.length, totalFound: menuItems.length });
   } catch (error) {
     return Response.json({ error: error.message || String(error) }, { status: 500 });
   }

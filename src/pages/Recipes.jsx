@@ -136,6 +136,7 @@ export default function RecipesPage() {
         setMissingRecipes(data.missingRecipes || []);
         setShowImageUploadModal(false);
         setShowScanModal(true);
+        loadRecipes(); // Reload the list to show the newly added POS items
       } else {
         throw new Error(data?.error || 'Failed to scan menu');
       }
