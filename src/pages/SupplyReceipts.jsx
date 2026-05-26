@@ -396,6 +396,12 @@ export default function SupplyReceiptsPage() {
     if (sortBy === 'date_desc') {
       return [...filteredReceipts].sort((a,b) => new Date(b.received_date) - new Date(a.received_date));
     }
+    if (sortBy === 'invoice_date_asc') {
+      return [...filteredReceipts].sort((a,b) => new Date(a.invoice_date || 0) - new Date(b.invoice_date || 0));
+    }
+    if (sortBy === 'invoice_date_desc') {
+      return [...filteredReceipts].sort((a,b) => new Date(b.invoice_date || 0) - new Date(a.invoice_date || 0));
+    }
     return filteredReceipts;
   }, [filteredReceipts, sortBy]);
 
@@ -831,6 +837,10 @@ export default function SupplyReceiptsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">{tt('no_sort','ללא מיון','No sort')}</SelectItem>
+                      <SelectItem value="date_desc">{tt('date_new_old','תאריך קבלה: חדש ← ישן','Received: New-Old')}</SelectItem>
+                      <SelectItem value="date_asc">{tt('date_old_new','תאריך קבלה: ישן ← חדש','Received: Old-New')}</SelectItem>
+                      <SelectItem value="invoice_date_desc">{tt('invoice_date_new_old','תאריך חשבונית: חדש ← ישן','Invoice Date: New-Old')}</SelectItem>
+                      <SelectItem value="invoice_date_asc">{tt('invoice_date_old_new','תאריך חשבונית: ישן ← חדש','Invoice Date: Old-New')}</SelectItem>
                       <SelectItem value="amount_asc">{tt('amount_low_to_high','סכום: נמוך ← גבוה','Amount: Low to High')}</SelectItem>
                       <SelectItem value="amount_desc">{tt('amount_high_to_low','סכום: גבוה ← נמוך','Amount: High to Low')}</SelectItem>
                       <SelectItem value="supplier_asc">{tt('supplier_az','ספק: א ← ת','Supplier: A-Z')}</SelectItem>

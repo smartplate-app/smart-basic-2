@@ -113,8 +113,21 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               >
                 <div className="flex items-center gap-1 justify-start h-5">
                   {safeT('received_date', 'תאריך קבלה', 'Date')}
-                  <span className={`text-[10px] ${sortBy?.startsWith('date') ? 'text-gray-900' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] ${sortBy === 'date_asc' || sortBy === 'date_desc' ? 'text-gray-900' : 'text-gray-400'}`}>
                     {sortBy === 'date_asc' ? '↑' : sortBy === 'date_desc' ? '↓' : '⇅'}
+                  </span>
+                </div>
+              </th>
+              <th 
+                className="px-4 pt-4 pb-3 text-start text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-top"
+                onClick={() => {
+                  if (onSortChange) onSortChange(sortBy === 'invoice_date_desc' ? 'invoice_date_asc' : 'invoice_date_desc');
+                }}
+              >
+                <div className="flex items-center gap-1 justify-start h-5">
+                  {safeT('invoice_date', 'תאריך בחשבונית', 'Invoice Date')}
+                  <span className={`text-[10px] ${sortBy === 'invoice_date_asc' || sortBy === 'invoice_date_desc' ? 'text-gray-900' : 'text-gray-400'}`}>
+                    {sortBy === 'invoice_date_asc' ? '↑' : sortBy === 'invoice_date_desc' ? '↓' : '⇅'}
                   </span>
                 </div>
               </th>
@@ -161,7 +174,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
           <tbody className="bg-white divide-y divide-gray-50">
             {loading ? (
               <tr>
-                <td colSpan="7" className="px-4 py-12 text-center">
+                <td colSpan="8" className="px-4 py-12 text-center">
                   <div className="flex justify-center mb-2">
                     <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
                   </div>
@@ -170,7 +183,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               </tr>
             ) : receipts.length === 0 ? (
               <tr>
-                <td colSpan="7" className="px-4 py-12 text-center text-gray-500">
+                <td colSpan="8" className="px-4 py-12 text-center text-gray-500">
                   {t('no_receipts_to_display') || 'אין קבלות להצגה'}
                 </td>
               </tr>
@@ -204,6 +217,9 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </td>
                   <td className="px-4 py-4 text-start text-sm text-gray-600 align-middle">
                     {fmtDate(r.received_date)}
+                  </td>
+                  <td className="px-4 py-4 text-start text-sm text-gray-600 align-middle">
+                    {fmtDate(r.invoice_date)}
                   </td>
                   <td className="px-4 py-4 text-end text-sm font-bold text-blue-700 align-middle">
                     {typeof r.invoice_total !== 'undefined' ? `₪${fmtCurrency(r.invoice_total)}` : '-'}
@@ -347,7 +363,12 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   <div className="text-lg font-bold text-blue-700">
                     {typeof r.invoice_total !== 'undefined' ? `₪${fmtCurrency(r.invoice_total)}` : '-'}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">{fmtDate(r.received_date)}</div>
+                  <div className="text-xs text-gray-400 mt-1" title={language === 'he' ? 'תאריך קבלה' : 'Received Date'}>
+                    {language === 'he' ? 'קבלה: ' : 'Rec: '}{fmtDate(r.received_date)}
+                  </div>
+                  <div className="text-xs text-gray-400" title={language === 'he' ? 'תאריך חשבונית' : 'Invoice Date'}>
+                    {language === 'he' ? 'חשבונית: ' : 'Inv: '}{fmtDate(r.invoice_date)}
+                  </div>
                 </div>
               </div>
               
