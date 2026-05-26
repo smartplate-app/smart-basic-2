@@ -75,12 +75,57 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       setExportingSheets(true);
       
       const title = formData.name || formData.warehouse_name || (language === 'he' ? 'ספירת מלאי' : 'Inventory Count');
-      const itemsToExport = formData.items.map(item => {
-        const wh = warehouseOptions.find(w => w.id === item.warehouse_id);
-        return {
-          ...item,
-          warehouse_name: wh ? wh.name : (item.warehouse_id === 'all_summary' ? 'Summary' : 'Other')
-        };
+      
+      // Export ALL warehouses and their catalog items, merged with actual counts
+      const itemsToExport = [];
+      const processedCountedIds = new Set();
+      
+      warehouseOptions.forEach(wh => {
+        const catalogItems = items.filter(item => 
+          (wh.catalog_items && wh.catalog_items.includes(item.id)) ||
+          item.warehouse_id === wh.id ||
+          (item.warehouse_ids && item.warehouse_ids.includes(wh.id))
+        );
+        
+        const countedItemsForWh = formData.items.filter(i => i.warehouse_id === wh.id);
+        const mergedItemsMap = new Map();
+        
+        // Add catalog items (empty counts)
+        catalogItems.forEach(item => {
+          mergedItemsMap.set(item.id, {
+            item_id: item.id,
+            item_name: item.name,
+            warehouse_id: wh.id,
+            warehouse_name: wh.name,
+            counted_quantity: "",
+            unit: item.unit,
+            price_per_unit: Number(item.price || 0) * (1 - (Number(item.discount || 0) / 100)),
+            total_cost: 0,
+            notes: ""
+          });
+        });
+        
+        // Override with actual counts
+        countedItemsForWh.forEach(countedItem => {
+          mergedItemsMap.set(countedItem.item_id, {
+            ...countedItem,
+            warehouse_name: wh.name
+          });
+          processedCountedIds.add(`${countedItem.item_id}_${wh.id}`);
+        });
+        
+        itemsToExport.push(...Array.from(mergedItemsMap.values()));
+      });
+      
+      // Add any counted items that didn't match a warehouse or weren't processed
+      formData.items.forEach(countedItem => {
+        if (!processedCountedIds.has(`${countedItem.item_id}_${countedItem.warehouse_id}`)) {
+          const wh = warehouseOptions.find(w => w.id === countedItem.warehouse_id);
+          itemsToExport.push({
+            ...countedItem,
+            warehouse_name: wh ? wh.name : (countedItem.warehouse_id === 'all_summary' ? 'Summary' : 'Other')
+          });
+        }
       });
       
       const { data } = await base44.functions.invoke('exportSingleCountToSheets', {
