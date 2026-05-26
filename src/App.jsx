@@ -134,7 +134,23 @@ const AuthenticatedApp = () => {
 };
 
 
+import { useEffect } from 'react';
+
 function App() {
+  useEffect(() => {
+    const applyTheme = () => {
+      const theme = localStorage.getItem('app_theme');
+      if (theme === 'marketman') {
+        document.documentElement.classList.add('theme-marketman');
+      } else {
+        document.documentElement.classList.remove('theme-marketman');
+      }
+    };
+    
+    applyTheme();
+    window.addEventListener('theme_change', applyTheme);
+    return () => window.removeEventListener('theme_change', applyTheme);
+  }, []);
 
   return (
     <AuthProvider>

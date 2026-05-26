@@ -110,6 +110,24 @@ button:focus-visible {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+  .theme-marketman {
+    --primary: 95 50% 51%; /* Marketman Green */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 208 51% 34%; /* Marketman Blue */
+    --secondary-foreground: 0 0% 100%;
+    --accent: 95 50% 95%;
+    --accent-foreground: 95 50% 30%;
+    --ring: 95 50% 51%;
+    --radius: 0.25rem;
+  }
+  .dark.theme-marketman, .theme-marketman.dark {
+    --primary: 95 50% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 208 51% 34%;
+    --secondary-foreground: 0 0% 100%;
+    --ring: 95 50% 51%;
+  }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;

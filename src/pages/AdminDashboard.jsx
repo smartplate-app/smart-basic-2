@@ -50,6 +50,13 @@ export default function AdminDashboard() {
   const [seoLoading, setSeoLoading] = useState(false);
   const [seoResult, setSeoResult] = useState(null);
   const [showTabitTester, setShowTabitTester] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState(localStorage.getItem('app_theme') || 'default');
+
+  const handleThemeChange = (theme) => {
+    localStorage.setItem('app_theme', theme);
+    setCurrentTheme(theme);
+    window.dispatchEvent(new Event('theme_change'));
+  };
 
   const handleCheckSeo = async () => {
     try {
@@ -577,6 +584,19 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-end md:justify-start">
+                  <div className="flex items-center gap-2 mr-4 border p-1 rounded-md bg-white">
+                    <span className="text-sm font-medium text-gray-600 px-2">Theme:</span>
+                    <Select value={currentTheme} onValueChange={handleThemeChange}>
+                      <SelectTrigger className="w-32 h-8">
+                        <SelectValue placeholder="Theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="default">Default</SelectItem>
+                        <SelectItem value="marketman">Marketman</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   {/* Marketing */}
                   <Button
                     onClick={() => setShowChainsView(!showChainsView)}
