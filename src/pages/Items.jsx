@@ -231,6 +231,11 @@ export default function ItemsPage() {
         warehousesData = [...warehouses1, ...warehouses2].filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
       }
 
+      // Deduplicate to prevent UI issues if the same entity was fetched multiple times
+      itemsData = itemsData.filter((item, index, self) => self.findIndex(t => t.id === item.id) === index);
+      suppliersData = suppliersData.filter((s, index, self) => self.findIndex(t => t.id === s.id) === index);
+      warehousesData = warehousesData.filter((w, index, self) => self.findIndex(t => t.id === w.id) === index);
+
       // Ensure a 'General' warehouse exists and includes all items
       const ensured = await ensureGeneralWarehouse(currentUser, itemsData, warehousesData);
       const finalWarehouses = ensured || warehousesData;
