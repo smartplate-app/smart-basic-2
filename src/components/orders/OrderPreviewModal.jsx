@@ -101,7 +101,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       tempContainer.style.position = 'fixed';
       tempContainer.style.left = '-9999px';
       tempContainer.style.top = '0';
-      tempContainer.style.width = '800px';
+      tempContainer.style.width = '430px'; // Mobile width ratio
       tempContainer.style.background = 'white';
       tempContainer.style.padding = '40px';
       tempContainer.style.fontFamily = 'system-ui, sans-serif';
@@ -269,7 +269,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             tempContainer.style.position = 'fixed';
             tempContainer.style.left = '-9999px';
             tempContainer.style.top = '0';
-            tempContainer.style.width = '800px';
+            tempContainer.style.width = '430px'; // Mobile width ratio
             tempContainer.style.background = 'white';
             tempContainer.style.padding = '40px';
             tempContainer.style.fontFamily = 'system-ui, sans-serif';
@@ -434,7 +434,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                   minHeight: '100%'
               }}>
                   <div style={{
-                      maxWidth: '800px',
+                      maxWidth: '430px', // Mobile width ratio
                       margin: '0 auto',
                       backgroundColor: 'white',
                       borderRadius: '16px',

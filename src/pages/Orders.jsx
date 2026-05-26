@@ -799,9 +799,9 @@ export default function OrdersPage() {
       temp.style.position = 'fixed';
       temp.style.left = '-9999px';
       temp.style.top = '0';
-      temp.style.width = '800px';
+      temp.style.width = '430px'; // Mobile width ratio
       temp.style.background = 'white';
-      temp.style.padding = '32px';
+      temp.style.padding = '24px';
       temp.style.fontFamily = 'system-ui, sans-serif';
       temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
       temp.innerHTML = `
