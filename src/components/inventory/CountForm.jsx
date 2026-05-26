@@ -60,6 +60,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [tableSearchTerm, setTableSearchTerm] = useState("");
   const [showCustomItemForm, setShowCustomItemForm] = useState(false);
   const [customItemData, setCustomItemData] = useState({ name: '', price: '' });
+  const [creatingCustom, setCreatingCustom] = useState(false);
   const isSavingRef = React.useRef(false);
   const isSubmittedRef = React.useRef(false);
   const formDataRef = React.useRef(formData);
@@ -767,13 +768,47 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                       <Button 
                                         type="button" 
                                         size="sm"
+                                        disabled={creatingCustom}
                                         className="flex-1 h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                                        onClick={() => {
+                                        onClick={async () => {
                                           if (!customItemData.name) return;
+                                          setCreatingCustom(true);
+                                          let newItemId = "custom_" + Date.now();
+                                          try {
+                                            const user = await base44.auth.me();
+                                            const cleanData = {
+                                              name: customItemData.name,
+                                              supplier_id: "pending",
+                                              supplier_name: language === 'he' ? "להשלמה" : "Pending",
+                                              unit: "unit",
+                                              price: parseFloat(customItemData.price) || 0,
+                                            };
+                                            const targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email;
+                                            if (targetEmail) {
+                                              const { data } = await base44.functions.invoke('createItemForStore', {
+                                                itemData: cleanData,
+                                                storeEmail: targetEmail
+                                              });
+                                              if (data?.success && data?.item?.id) {
+                                                newItemId = data.item.id;
+                                                setItems(prev => [...prev, data.item]);
+                                              }
+                                            } else {
+                                              const createdItem = await base44.entities.Item.create(cleanData);
+                                              if (createdItem?.id) {
+                                                newItemId = createdItem.id;
+                                                setItems(prev => [...prev, createdItem]);
+                                              }
+                                            }
+                                          } catch (e) {
+                                            console.error("Failed to create custom item in DB", e);
+                                          }
+                                          setCreatingCustom(false);
+
                                           setFormData(prev => ({
                                             ...prev,
                                             items: [...prev.items, {
-                                              item_id: "custom_" + Date.now(),
+                                              item_id: newItemId,
                                               item_name: customItemData.name,
                                               warehouse_id: currentWarehouseTab,
                                               counted_quantity: "",
@@ -789,7 +824,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                           setIsSearchFocused(false);
                                         }}
                                       >
-                                        {language === 'he' ? 'הוסף' : 'Add'}
+                                        {creatingCustom ? <Loader className="w-4 h-4 animate-spin mx-auto" /> : (language === 'he' ? 'הוסף' : 'Add')}
                                       </Button>
                                       <Button 
                                         type="button" 

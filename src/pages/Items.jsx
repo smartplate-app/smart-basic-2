@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp, Check, ChevronDown } from "lucide-react";
+import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp, Check, ChevronDown, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -804,6 +804,41 @@ const handleCleanOrphans = async (ownerEmail) => {
             )}
           </div>
         </div>
+
+        {(() => {
+          const incompleteItems = items.filter(item => item.supplier_id === 'pending' || item.supplier_name === 'להשלמה' || item.supplier_name === 'Pending');
+          if (incompleteItems.length === 0) return null;
+          
+          return (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900">
+                    {language === 'he' ? 'פריטים דורשי השלמה' : 'Items needing completion'}
+                  </h3>
+                  <p className="text-sm text-amber-800 mb-3">
+                    {language === 'he' 
+                      ? 'הפריטים הבאים נוספו במהלך ספירת מלאי ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):' 
+                      : 'The following items were added during inventory count and need to be completed (assigned to a supplier):'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {incompleteItems.map(item => (
+                      <div 
+                        key={item.id} 
+                        onClick={() => handleEdit(item)}
+                        className="bg-white border border-amber-300 shadow-sm rounded-md px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-2"
+                      >
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-gray-500 text-xs">₪{item.price || 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         <AnimatePresence>
           {!isViewer && showForm && (
