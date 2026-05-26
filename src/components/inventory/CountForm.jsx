@@ -74,8 +74,14 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     try {
       setExportingSheets(true);
       
-      const title = formData.name || formData.warehouse_name || 'Inventory Count';
-      const itemsToExport = formData.items;
+      const title = formData.name || formData.warehouse_name || (language === 'he' ? 'ספירת מלאי' : 'Inventory Count');
+      const itemsToExport = formData.items.map(item => {
+        const wh = warehouseOptions.find(w => w.id === item.warehouse_id);
+        return {
+          ...item,
+          warehouse_name: wh ? wh.name : (item.warehouse_id === 'all_summary' ? 'Summary' : 'Other')
+        };
+      });
       
       const { data } = await base44.functions.invoke('exportSingleCountToSheets', {
         title,
