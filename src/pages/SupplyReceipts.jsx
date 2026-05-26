@@ -355,16 +355,23 @@ export default function SupplyReceiptsPage() {
     if (dateFrom || dateTo) {
       const recDate = new Date(receipt.received_date);
       if (!isNaN(recDate)) {
-        if (dateFrom) {
-          const fromD = new Date(dateFrom);
-          fromD.setHours(0,0,0,0);
-          if (recDate < fromD) matchesDate = false;
+        let fD = dateFrom ? new Date(dateFrom) : null;
+        let tD = dateTo ? new Date(dateTo) : null;
+        if (fD && tD && fD > tD) {
+          const tmp = fD;
+          fD = tD;
+          tD = tmp;
         }
-        if (matchesDate && dateTo) {
-          const toD = new Date(dateTo);
-          toD.setHours(23,59,59,999);
-          if (recDate > toD) matchesDate = false;
+        if (fD) {
+          fD.setHours(0,0,0,0);
+          if (recDate < fD) matchesDate = false;
         }
+        if (matchesDate && tD) {
+          tD.setHours(23,59,59,999);
+          if (recDate > tD) matchesDate = false;
+        }
+      } else {
+        matchesDate = false;
       }
     }
 
