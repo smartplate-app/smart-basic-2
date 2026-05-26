@@ -612,13 +612,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 </div>
               </div>
 
-              <div className="flex gap-3 md:col-span-4">
+              <div className="md:col-span-2">
                 <Select
                   id="count_type"
                   value={formData.count_type}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, count_type: value }))}
                 >
-                  <SelectTrigger className="h-11 flex-1">
+                  <SelectTrigger className="h-11 w-full">
                     <SelectValue placeholder={t('count_type')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -629,18 +629,20 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     <SelectItem value="annual">{t('count_type')}: {t('annual')}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
 
+              <div className="md:col-span-2">
                 <Select
                   id="status"
                   value={formData.status}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                 >
-                  <SelectTrigger className="h-11 flex-1">
+                  <SelectTrigger className="h-11 w-full">
                     <SelectValue placeholder={t('status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="in_progress">{t('status')}: {t('status_in_progress')}</SelectItem>
-                    <SelectItem value="completed">{t('status')}: {t('status_completed')}</SelectItem>
+                    <SelectItem value="in_progress">{language === 'he' ? 'סטטוס:' : 'Status:'} {t('status_in_progress')}</SelectItem>
+                    <SelectItem value="completed">{language === 'he' ? 'סטטוס:' : 'Status:'} {t('status_completed')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
