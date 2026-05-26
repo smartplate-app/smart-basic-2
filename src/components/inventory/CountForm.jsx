@@ -1057,53 +1057,53 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
             {/* Offline save banner */}
             {(isOffline || hasDraft) && (
-              <div className={`${isOffline ? 'bg-orange-50 border-orange-300' : 'bg-green-50 border-green-300'} border-2 rounded-lg p-4 mb-4`}>
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+              <div className={`${isOffline ? 'bg-orange-50 border-orange-300' : 'bg-green-50 border-green-300'} border-2 rounded-lg p-3 md:p-4 mb-4`}>
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
                     {isOffline ? (
                       <>
-                        <WifiOff className="w-5 h-5 text-orange-600" />
+                        <WifiOff className="w-5 h-5 text-orange-600 shrink-0" />
                         <div>
-                          <p className="font-semibold text-orange-800">
+                          <p className="font-semibold text-orange-800 text-sm md:text-base">
                             {language === 'he' ? 'אין חיבור לאינטרנט' : 'No Internet Connection'}
                           </p>
-                          <p className="text-sm text-orange-700">
+                          <p className="text-xs md:text-sm text-orange-700 leading-tight mt-0.5">
                             {language === 'he' ? 'שמור את הספירה מקומית עד שהחיבור יחזור' : 'Save your count locally until connection is restored'}
                           </p>
                         </div>
                       </>
                     ) : hasDraft && (
                       <>
-                        <Save className="w-5 h-5 text-green-600" />
+                        <Save className="w-5 h-5 text-green-600 shrink-0" />
                         <div>
-                          <p className="font-semibold text-green-800">
+                          <p className="font-semibold text-green-800 text-sm md:text-base">
                             {language === 'he' ? 'יש טיוטה שמורה' : 'Draft Available'}
                           </p>
-                          <p className="text-sm text-green-700">
+                          <p className="text-xs md:text-sm text-green-700 leading-tight mt-0.5">
                             {language === 'he' ? 'ניתן לטעון את הטיוטה או למחוק אותה' : 'You can load the draft or delete it'}
                           </p>
                         </div>
                       </>
                     )}
                   </div>
-                  <div className="flex gap-2 w-full md:w-auto">
+                  <div className="grid grid-cols-2 md:flex gap-2 w-full">
                     {hasDraft && !isOffline && (
                       <>
                         <Button
                           type="button"
                           onClick={loadFromLocalStorage}
-                          className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none"
+                          className="bg-green-600 hover:bg-green-700 text-xs h-9 px-2"
                         >
-                          <Upload className="w-4 h-4 mr-1" />
+                          <Upload className="w-3 h-3 mr-1" />
                           {language === 'he' ? 'טען טיוטה' : 'Load Draft'}
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
                           onClick={clearLocalStorage}
-                          className="border-red-300 text-red-600 hover:bg-red-50 flex-1 md:flex-none"
+                          className="border-red-300 text-red-600 hover:bg-red-50 text-xs h-9 px-2"
                         >
-                          <Trash2 className="w-4 h-4 mr-1" />
+                          <Trash2 className="w-3 h-3 mr-1" />
                           {language === 'he' ? 'מחק' : 'Delete'}
                         </Button>
                       </>
@@ -1111,21 +1111,25 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     <Button
                       type="button"
                       onClick={saveToLocalStorage}
-                      className={`${isOffline ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600 hover:bg-gray-700'} flex-1 md:flex-none`}
+                      className={`${isOffline ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-600 hover:bg-gray-700'} text-xs h-9 px-2 ${(!hasDraft || isOffline) ? 'col-span-2' : 'col-span-2 mt-1 md:mt-0'}`}
                     >
-                      <Save className="w-4 h-4 mr-1" />
+                      <Save className="w-3 h-3 mr-1" />
                       {language === 'he' ? 'שמור מקומית' : 'Save Locally'}
                     </Button>
-                    {dbSavedAt ? (
-                      <div className="flex items-center text-xs text-green-600 whitespace-nowrap self-center font-medium">
-                        {language === 'he' ? `(נשמר לענן ${dbSavedAt.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'})})` : `(Saved to cloud ${dbSavedAt.toLocaleTimeString()})`}
-                      </div>
-                    ) : hasDraft ? (
-                      <div className="flex items-center text-xs text-gray-500 whitespace-nowrap self-center hidden md:flex">
-                        {language === 'he' ? '(נשמר אוטומטית)' : '(Auto-saved locally)'}
-                      </div>
-                    ) : null}
                   </div>
+                  {(dbSavedAt || hasDraft) && (
+                    <div className="text-[11px] text-center w-full mt-1 opacity-70">
+                      {dbSavedAt ? (
+                        <span className="text-green-700 font-medium">
+                          {language === 'he' ? `נשמר לענן ב-${dbSavedAt.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'})}` : `Saved to cloud at ${dbSavedAt.toLocaleTimeString()}`}
+                        </span>
+                      ) : hasDraft ? (
+                        <span className="text-gray-600">
+                          {language === 'he' ? 'נשמר אוטומטית מקומית' : 'Auto-saved locally'}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
