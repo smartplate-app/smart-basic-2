@@ -81,6 +81,13 @@ Deno.serve(async (req) => {
       })
     });
 
+    // Share with store managers and active users
+    try {
+      await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId });
+    } catch(e) {
+      console.error('Failed to share sheet with managers:', e);
+    }
+
     return Response.json({ 
       success: true, 
       spreadsheetId,
