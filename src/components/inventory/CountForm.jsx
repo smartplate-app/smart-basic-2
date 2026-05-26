@@ -338,7 +338,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           warehouse_id: currentWarehouseTab,
           counted_quantity: "",
           unit: item.unit,
-          price_per_unit: item.price_after_discount !== undefined && item.price_after_discount !== null ? item.price_after_discount : (item.price || 0),
+          price_per_unit: (item.price || 0) * (1 - ((item.discount || 0) / 100)),
           total_cost: 0,
           notes: ""
         }));
@@ -718,7 +718,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                             warehouse_id: currentWarehouseTab,
                                             counted_quantity: "",
                                             unit: item.unit,
-                                            price_per_unit: item.price_after_discount !== undefined && item.price_after_discount !== null ? item.price_after_discount : (item.price || 0),
+                                            price_per_unit: (item.price || 0) * (1 - ((item.discount || 0) / 100)),
                                             total_cost: 0,
                                             notes: ""
                                           }]
