@@ -181,7 +181,12 @@ export default function RecipesPage() {
     const searchStr = String(searchTerm || '').toLowerCase();
     const nameStr = String(r.name || '').toLowerCase();
     const matchesSearch = !searchStr || nameStr.includes(searchStr);
-    const matchesType = typeFilter === 'all' || r.type === typeFilter;
+    
+    let matchesType = false;
+    if (typeFilter === 'all') matchesType = true;
+    else if (typeFilter === 'last_scan') matchesType = r.is_from_last_scan === true;
+    else matchesType = r.type === typeFilter;
+    
     return matchesSearch && matchesType;
   });
 
@@ -260,6 +265,7 @@ export default function RecipesPage() {
             <option value="all">{language === 'he' ? 'כל הסוגים' : 'All Types'}</option>
             <option value="sale_item">{language === 'he' ? 'פריט למכירה' : 'Sale Item'}</option>
             <option value="prep_recipe">{language === 'he' ? 'מתכון הכנה' : 'Prep Recipe'}</option>
+            <option value="last_scan">{language === 'he' ? 'סריקת תפריט אחרונה' : 'Last Menu Scan'}</option>
           </select>
         </div>
 

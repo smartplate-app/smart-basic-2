@@ -56,6 +56,19 @@ VERY IMPORTANT: DO NOT TRANSLATE any dish names. Extract the exact text in its o
     const menuItems = response.menu_items || [];
     
     // Add missing recipes automatically
+    // Reset is_from_last_scan for previous items
+    const previousScannedItems1 = await base44.entities.Recipe.filter({ created_by: targetEmail, is_from_last_scan: true });
+    for (const item of previousScannedItems1) {
+      await base44.entities.Recipe.update(item.id, { is_from_last_scan: false });
+    }
+    
+    if (targetEmail !== user.email) {
+      const previousScannedItems2 = await base44.entities.Recipe.filter({ store_owner_email: targetEmail, is_from_last_scan: true });
+      for (const item of previousScannedItems2) {
+        await base44.entities.Recipe.update(item.id, { is_from_last_scan: false });
+      }
+    }
+
     const missingRecipes = [];
     const addedNames = new Set();
     
@@ -75,7 +88,8 @@ VERY IMPORTANT: DO NOT TRANSLATE any dish names. Extract the exact text in its o
           type: 'sale_item',
           sale_price: item.price || 0,
           created_by: user.email,
-          store_owner_email: targetEmail
+          store_owner_email: targetEmail,
+          is_from_last_scan: true
         });
       }
     }
