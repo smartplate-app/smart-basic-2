@@ -448,19 +448,19 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                           )}
                         </div>
                         
-                        <div className="flex flex-col gap-2 w-full sm:w-auto">
+                        <div className="flex flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                           {/* Current Stock + Order Quantity row */}
-                          <div className="flex items-center justify-end sm:justify-start gap-3">
+                          <div className="flex items-center justify-start sm:justify-end gap-3 flex-wrap">
                             {hasMinStock && (
                               <div className="flex flex-col items-center">
                                 <Label className="text-xs text-gray-500 mb-1 whitespace-nowrap">
-                                  {language === 'he' ? 'במלאי כרגע' : 'Current Stock'}
+                                  {language === 'he' ? 'במלאי' : 'Stock'}
                                 </Label>
                                 <Input
                                   type="number"
                                   value={stock || ''}
                                   onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
-                                  className={`w-20 sm:w-24 text-center ${isLowStock ? 'border-orange-400 bg-orange-50' : ''}`}
+                                  className={`w-16 sm:w-20 text-center ${isLowStock ? 'border-orange-400 bg-orange-50' : ''}`}
                                   placeholder="0"
                                   min="0"
                                   step="0.01"
@@ -470,13 +470,13 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             
                             <div className="flex flex-col items-center">
                               <Label className="text-xs text-gray-500 mb-1 whitespace-nowrap">
-                                {language === 'he' ? 'להזמנה' : 'Order Qty'}
+                                {language === 'he' ? 'להזמנה' : 'Order'}
                               </Label>
                               <Input
                                 type="number"
                                 value={quantity || ''}
                                 onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                                className="w-20 sm:w-24 text-center"
+                                className="w-16 sm:w-20 text-center"
                                 placeholder="0"
                                 min="0"
                                 step="0.01"
@@ -484,7 +484,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             </div>
                             
                             {quantity > 0 && item.price > 0 && (
-                              <div className="text-sm font-semibold text-purple-700 w-16 sm:w-20 text-center mt-5">
+                              <div className="text-sm font-semibold text-purple-700 text-center mt-5 min-w-[60px]">
                                 ₪{discountedTotal.toFixed(2)}
                               </div>
                             )}
