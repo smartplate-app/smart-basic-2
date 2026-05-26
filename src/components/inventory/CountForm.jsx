@@ -338,7 +338,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           warehouse_id: currentWarehouseTab,
           counted_quantity: "",
           unit: item.unit,
-          price_per_unit: (item.price || 0) * (1 - ((item.discount || 0) / 100)),
+          price_per_unit: Number(item.price || 0) * (1 - (Number(item.discount || 0) / 100)),
           total_cost: 0,
           notes: ""
         }));
@@ -718,12 +718,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                             warehouse_id: currentWarehouseTab,
                                             counted_quantity: "",
                                             unit: item.unit,
-                                            price_per_unit: (item.price || 0) * (1 - ((item.discount || 0) / 100)),
+                                            price_per_unit: Number(item.price || 0) * (1 - (Number(item.discount || 0) / 100)),
                                             total_cost: 0,
                                             notes: ""
                                           }]
                                         }));
                                         setAvailableSearch('');
+                                        setIsSearchFocused(false);
                                       }}
                                     >
                                       <div>
