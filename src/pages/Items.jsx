@@ -826,7 +826,10 @@ const handleCleanOrphans = async (ownerEmail) => {
                     {incompleteItems.map(item => (
                       <div 
                         key={item.id} 
-                        onClick={() => handleEdit(item)}
+                        onClick={() => {
+                          const fullItem = items.find(i => i.id === item.id) || item;
+                          handleEdit(fullItem);
+                        }}
                         className="bg-white border border-amber-300 shadow-sm rounded-md px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-2"
                       >
                         <span className="font-medium">{item.name}</span>
