@@ -493,6 +493,40 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     onSubmit(cleanedData);
   };
 
+  let displayedItems = [];
+  if (currentWarehouseTab === "all_summary") {
+    const grouped = {};
+    formData.items.forEach(item => {
+      if (!grouped[item.item_id]) {
+        grouped[item.item_id] = { ...item, counted_quantity: item.counted_quantity === "" ? 0 : Number(item.counted_quantity), total_cost: item.total_cost || 0 };
+      } else {
+        grouped[item.item_id].counted_quantity += (item.counted_quantity === "" ? 0 : Number(item.counted_quantity));
+        grouped[item.item_id].total_cost += (item.total_cost || 0);
+        if (item.notes) {
+          grouped[item.item_id].notes = grouped[item.item_id].notes ? `${grouped[item.item_id].notes}, ${item.notes}` : item.notes;
+        }
+      }
+    });
+    displayedItems = Object.values(grouped);
+  } else {
+    displayedItems = formData.items.filter(item => item.warehouse_id === currentWarehouseTab);
+  }
+  
+  if (sortConfig.key === 'total_cost') {
+    displayedItems.sort((a, b) => {
+      const costA = Number(a.total_cost) || 0;
+      const costB = Number(b.total_cost) || 0;
+      return sortConfig.direction === 'asc' ? (costA - costB) : (costB - costA);
+    });
+  }
+
+  const finalDisplayedItems = displayedItems.filter((item) => {
+    const originalItem = items.find(i => i.id === item.item_id);
+    return !tableSearchTerm || 
+      (item.item_name || '').toLowerCase().includes(tableSearchTerm.toLowerCase()) || 
+      (originalItem?.nickname || '').toLowerCase().includes(tableSearchTerm.toLowerCase());
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -845,7 +879,75 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       )}
                     </div>
 
-                    <div className="border rounded-lg overflow-x-auto overflow-y-auto max-h-[60vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    {/* Mobile View - Cards */}
+                    <div className="md:hidden space-y-3 max-h-[60vh] overflow-y-auto pr-1 pb-4">
+                      {finalDisplayedItems.map((item, index) => {
+                        const originalItem = items.find(i => i.id === item.item_id);
+                        return (
+                          <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative flex flex-col gap-3">
+                            <div className="flex justify-between items-start gap-2">
+                                <div className="pr-6 rtl:pr-0 rtl:pl-6">
+                                  <div className="font-bold text-sm text-gray-900 leading-tight">{originalItem?.nickname || item.item_name}</div>
+                                  {originalItem?.nickname && <div className="text-xs text-gray-500 mt-0.5">{item.item_name}</div>}
+                                  <div className="text-[11px] text-gray-600 mt-1.5 font-medium bg-gray-100 inline-flex items-center px-2 py-1 rounded-md">
+                                    {item.unit} <span className="mx-1.5 text-gray-400">|</span> ₪{Number(item.price_per_unit || 0).toFixed(2)}
+                                  </div>
+                                </div>
+                                {currentWarehouseTab !== "all_summary" && (
+                                  <Button 
+                                    type="button"
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 absolute top-2 rtl:left-2 ltr:right-2" 
+                                    onClick={() => removeItem(item.item_id, item.warehouse_id)}
+                                  >
+                                    <X className="w-4 h-4 text-gray-400" />
+                                  </Button>
+                                )}
+                            </div>
+                            
+                            <div className="flex items-end justify-between gap-3 mt-1">
+                                <div className="flex-1">
+                                  <Label className="text-[10px] text-gray-500 mb-1 block">{t('notes')}</Label>
+                                  {currentWarehouseTab === "all_summary" ? (
+                                    <span className="text-xs text-gray-600 block bg-gray-50 p-2 rounded-md border border-gray-100 min-h-[40px] flex items-center">{item.notes || '-'}</span>
+                                  ) : (
+                                    <Input 
+                                      value={item.notes || ''} 
+                                      onChange={(e) => updateItemNotes(item.item_id, item.warehouse_id, e.target.value)}
+                                      placeholder={language === 'he' ? 'הערות...' : 'Notes...'}
+                                      className="h-10 text-xs bg-gray-50 border-gray-200"
+                                    />
+                                  )}
+                                </div>
+                                <div className="flex flex-col items-center shrink-0 w-[110px]">
+                                  <Label className="text-[10px] text-gray-500 mb-1 block">{t('counted_quantity')}</Label>
+                                  {currentWarehouseTab === "all_summary" ? (
+                                    <div className="h-10 w-full bg-gray-50 border border-gray-100 rounded-md flex items-center justify-center font-bold text-lg">{item.counted_quantity}</div>
+                                  ) : (
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="any"
+                                      value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
+                                      onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
+                                      className="w-full h-10 text-center font-bold text-lg border-blue-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm hide-arrows bg-blue-50/40"
+                                      placeholder="0"
+                                    />
+                                  )}
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center border-t border-gray-100 pt-2 mt-1">
+                              <span className="text-xs text-gray-500">{t('total_cost')}</span>
+                              <span className="text-sm font-bold text-green-600">₪{item.total_cost?.toFixed(2) || '0.00'}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Desktop View - Table */}
+                    <div className="hidden md:block border rounded-lg overflow-x-auto overflow-y-auto max-h-[60vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       <Table>
                         <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                           <TableRow>
@@ -871,43 +973,10 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {(() => {
-                            let displayedItems = [];
-                            if (currentWarehouseTab === "all_summary") {
-                              const grouped = {};
-                              formData.items.forEach(item => {
-                                if (!grouped[item.item_id]) {
-                                  grouped[item.item_id] = { ...item, counted_quantity: item.counted_quantity === "" ? 0 : Number(item.counted_quantity), total_cost: item.total_cost || 0 };
-                                } else {
-                                  grouped[item.item_id].counted_quantity += (item.counted_quantity === "" ? 0 : Number(item.counted_quantity));
-                                  grouped[item.item_id].total_cost += (item.total_cost || 0);
-                                  if (item.notes) {
-                                    grouped[item.item_id].notes = grouped[item.item_id].notes ? `${grouped[item.item_id].notes}, ${item.notes}` : item.notes;
-                                  }
-                                }
-                              });
-                              displayedItems = Object.values(grouped);
-                            } else {
-                              displayedItems = formData.items.filter(item => item.warehouse_id === currentWarehouseTab);
-                            }
-                            
-                            if (sortConfig.key === 'total_cost') {
-                              displayedItems.sort((a, b) => {
-                                const costA = Number(a.total_cost) || 0;
-                                const costB = Number(b.total_cost) || 0;
-                                return sortConfig.direction === 'asc' ? (costA - costB) : (costB - costA);
-                              });
-                            }
+                          {finalDisplayedItems.map((item, index) => {
+                            const originalItem = items.find(i => i.id === item.item_id);
 
-                            return displayedItems.map((item, index) => {
-                              const originalItem = items.find(i => i.id === item.item_id);
-                              const searchMatch = !tableSearchTerm || 
-                                (item.item_name || '').toLowerCase().includes(tableSearchTerm.toLowerCase()) || 
-                                (originalItem?.nickname || '').toLowerCase().includes(tableSearchTerm.toLowerCase());
-                                
-                              if (!searchMatch) return null;
-
-                              return (
+                            return (
                               <TableRow key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index}>
                                 <TableCell className="font-medium px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm min-w-[120px] leading-snug">
                                   {originalItem?.nickname || item.item_name}
@@ -961,8 +1030,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                 </TableCell>
                               </TableRow>
                             );
-                            });
-                          })()}
+                          })}
                         </TableBody>
                       </Table>
                     </div>
