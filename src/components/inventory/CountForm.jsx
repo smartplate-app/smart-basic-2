@@ -880,69 +880,59 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       )}
                     </div>
 
-                    {/* Mobile View - Cards */}
-                    <div className="md:hidden space-y-3 max-h-[65vh] overflow-y-auto pb-4 px-1">
+                    {/* Mobile View - Simple Rows */}
+                    <div className="md:hidden flex flex-col border-t border-gray-200 max-h-[65vh] overflow-y-auto">
                       {finalDisplayedItems.map((item, index) => {
                         const originalItem = items.find(i => i.id === item.item_id);
                         return (
-                          <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex flex-col gap-2">
-                            <div className="flex justify-between items-start gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-semibold text-sm text-gray-900 leading-tight break-words">{originalItem?.nickname || item.item_name}</div>
-                                  {originalItem?.nickname && <div className="text-xs text-gray-500 mt-0.5">{item.item_name}</div>}
-                                  <div className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5 flex-wrap">
-                                    <span className="bg-gray-100 px-1.5 py-0.5 rounded font-medium">{item.unit}</span>
-                                    <span className="text-gray-300">|</span>
-                                    <span>₪{Number(item.price_per_unit || 0).toFixed(2)}</span>
-                                  </div>
-                                </div>
-                                {currentWarehouseTab !== "all_summary" && (
-                                  <Button 
-                                    type="button"
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-gray-400 hover:text-red-500 shrink-0 -mt-1 -mr-2 rtl:-ml-2 rtl:-mr-0" 
-                                    onClick={() => removeItem(item.item_id, item.warehouse_id)}
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </Button>
-                                )}
+                          <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="py-3 border-b border-gray-100 flex items-start gap-3 px-1">
+                            {currentWarehouseTab !== "all_summary" && (
+                              <button 
+                                type="button"
+                                className="mt-1 text-gray-300 hover:text-red-500 shrink-0 p-1"
+                                onClick={() => removeItem(item.item_id, item.warehouse_id)}
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                            
+                            <div className="flex-1 min-w-0 flex flex-col">
+                               <span className="font-medium text-sm text-gray-900 leading-tight">
+                                 {originalItem?.nickname || item.item_name}
+                               </span>
+                               <span className="text-[11px] text-gray-500 mt-0.5">
+                                 {item.unit} <span className="mx-1 text-gray-300">|</span> ₪{Number(item.price_per_unit || 0).toFixed(2)}
+                               </span>
+                               
+                               {currentWarehouseTab !== "all_summary" ? (
+                                 <Input 
+                                   value={item.notes || ''} 
+                                   onChange={(e) => updateItemNotes(item.item_id, item.warehouse_id, e.target.value)}
+                                   placeholder={language === 'he' ? 'הערות...' : 'Notes...'}
+                                   className="h-8 text-[11px] mt-2 bg-gray-50 border-gray-200 w-full"
+                                 />
+                               ) : item.notes ? (
+                                 <span className="text-[11px] text-gray-500 mt-1 truncate">{item.notes}</span>
+                               ) : null}
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-3 mt-1 items-end">
-                                <div className="space-y-1">
-                                  <Label className="text-[11px] text-gray-500">{t('counted_quantity')}</Label>
-                                  {currentWarehouseTab === "all_summary" ? (
-                                    <div className="h-10 w-full bg-gray-50 border border-gray-100 rounded-md flex items-center px-3 font-bold text-lg">{item.counted_quantity}</div>
-                                  ) : (
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      step="any"
-                                      value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
-                                      onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
-                                      className="w-full h-10 text-center font-bold text-lg border-blue-400 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/30"
-                                      placeholder="0"
-                                    />
-                                  )}
-                                </div>
-                                <div className="space-y-1">
-                                  <Label className="text-[11px] text-gray-500">{t('notes')}</Label>
-                                  {currentWarehouseTab === "all_summary" ? (
-                                    <div className="h-10 w-full bg-gray-50 border border-gray-100 rounded-md flex items-center px-2 text-xs text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap">{item.notes || '-'}</div>
-                                  ) : (
-                                    <Input 
-                                      value={item.notes || ''} 
-                                      onChange={(e) => updateItemNotes(item.item_id, item.warehouse_id, e.target.value)}
-                                      placeholder={language === 'he' ? 'הערות...' : 'Notes...'}
-                                      className="w-full h-10 text-xs bg-gray-50 border-gray-200"
-                                    />
-                                  )}
-                                </div>
-                            </div>
-                            <div className="flex justify-between items-center border-t border-gray-100 pt-2 mt-1">
-                              <span className="text-xs text-gray-500">{t('total_cost')}</span>
-                              <span className="text-sm font-bold text-green-600">₪{item.total_cost?.toFixed(2) || '0.00'}</span>
+                            <div className="flex flex-col items-end shrink-0 w-[80px]">
+                               {currentWarehouseTab === "all_summary" ? (
+                                  <div className="h-10 w-full bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center font-bold text-lg text-gray-900">{item.counted_quantity}</div>
+                               ) : (
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    step="any"
+                                    value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
+                                    onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
+                                    className="w-full h-10 text-center font-bold text-lg border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900"
+                                    placeholder="0"
+                                  />
+                               )}
+                               <span className="text-[10px] font-medium text-green-600 mt-1.5">
+                                 ₪{item.total_cost?.toFixed(2) || '0.00'}
+                               </span>
                             </div>
                           </div>
                         );
