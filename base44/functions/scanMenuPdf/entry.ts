@@ -16,15 +16,19 @@ Deno.serve(async (req) => {
     const existingRecipes2 = await base44.entities.Recipe.filter({ store_owner_email: targetEmail });
     const existingNames = [...existingRecipes1, ...existingRecipes2].map(r => r.name.trim().toLowerCase());
 
-    // Use Gemini LLM to extract menu items exactly as they appear (no translation)
-    const prompt = `Read all attached menu images/documents and extract all dish names and their prices.
-The structure is usually: dish name and price, sometimes followed by a description.
+    // Use Gemini LLM to extract menu items with full Hebrew support
+    const prompt = `קרא את כל קבצי התמונות והמסמכים המצורפים של התפריט וחלץ את כל שמות המנות והמחירים שלהן.
+המבנה בתפריט הוא לרוב: שורה ראשונה עם שם המנה והמחיר, ושורה שנייה עם תיאור.
+לדוגמה:
+"ניגורי מיול 58" -> שם המנה הוא "ניגורי מיול", מחיר: 58
+"טמפורה טעימה 52" -> שם המנה הוא "טמפורה טעימה", מחיר: 52
 
-YOUR TASK:
-1. Go over all attached images.
-2. Extract the exact name and price of each dish.
-3. Return a JSON object with a 'menu_items' array containing objects with 'name' (dish name) and 'price' (dish price as a number).
-CRITICAL: DO NOT translate the dish names! Extract them in the EXACT SAME LANGUAGE as they appear in the original menu image (e.g., if the menu is in Greek, output the Greek text; if English, output English; if Hebrew, output Hebrew). Output the exact original text of the dish name.`;
+המשימה שלך:
+1. עבור על כל התמונות המצורפות.
+2. חלץ את השם והמחיר של כל מנה.
+3. החזר אובייקט JSON עם מערך 'menu_items' המכיל אובייקטים עם 'name' (שם המנה) ו-'price' (מחיר המנה).
+ודא שאתה קורא עברית בצורה תקינה וכולל את כל המנות.
+VERY IMPORTANT: DO NOT TRANSLATE any dish names. Extract the exact text in its original language exactly as it appears in the menu. If the menu is in Hebrew, keep names in Hebrew. If in English, keep in English.`;
 
     const response = await base44.integrations.Core.InvokeLLM({
       prompt,

@@ -89,6 +89,10 @@ export default function RecipesPage() {
         }
       }
 
+      // Deduplicate to prevent UI issues if the same entity was fetched multiple times
+      if (data) {
+        data = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      }
       setRecipes(data || []);
       setCache('recipes_v1', { recipes: data || [] });
     } catch (e) {
