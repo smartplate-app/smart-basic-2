@@ -734,7 +734,7 @@ export default function MonthlyCountPage() {
 
             <div className="mb-4">
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
-                <span className="text-emerald-900 font-semibold">{t('total_inventory_value')}</span>
+                <span className="text-emerald-900 font-semibold">{language === 'he' ? 'ערך ספירת מלאי אחרונה' : 'Last Inventory Count Value'}</span>
                 <span className="text-emerald-700 font-bold">₪{grandTotal.toFixed(2)}</span>
               </div>
             </div>
