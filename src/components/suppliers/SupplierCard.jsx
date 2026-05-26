@@ -21,7 +21,7 @@ import InvoiceScanner from "./InvoiceScanner";
 import { base44 } from "@/api/base44Client";
 import ItemForm from "../items/ItemForm";
 
-export default function SupplierCard({ supplier, onEdit, onDelete, onImportComplete, viewMode = "grid" }) {
+export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete, onImportComplete, viewMode = "grid" }) {
   const { t, language } = useLanguage();
   const [showScanner, setShowScanner] = useState(false);
   const [showDeleteItemsDialog, setShowDeleteItemsDialog] = useState(false);
@@ -109,6 +109,13 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
           </td>
           <td className="p-3 align-middle text-sm">
             {supplier.email ? <a href={`mailto:${supplier.email}`} className="text-blue-600 hover:underline">{supplier.email}</a> : '-'}
+          </td>
+          <td className="p-3 align-middle text-sm text-gray-500 font-medium">
+            {itemCount > 0 ? (
+              <Badge variant="outline" className="bg-gray-50">{itemCount}</Badge>
+            ) : (
+              '-'
+            )}
           </td>
           <td className="p-3 align-middle text-sm text-gray-500">
             {new Date(supplier.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-CA')}
@@ -239,9 +246,12 @@ export default function SupplierCard({ supplier, onEdit, onDelete, onImportCompl
               </div>
             )}
 
-            <div className="pt-2">
+            <div className="pt-2 flex items-center justify-between">
               <Badge variant="outline" className="text-xs">
                 {t('created_at')}: {new Date(supplier.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-CA')}
+              </Badge>
+              <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
+                {language === 'he' ? 'פריטים' : 'Items'}: {itemCount}
               </Badge>
             </div>
           </CardContent>

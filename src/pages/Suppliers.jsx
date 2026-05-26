@@ -837,13 +837,14 @@ export default function SuppliersPage() {
                       <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'ספק' : 'Supplier'}</th>
                       <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'איש קשר וטלפון' : 'Contact'}</th>
                       <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'אימייל' : 'Email'}</th>
+                      <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'פריטים' : 'Items'}</th>
                       <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{t('created_at') || 'תאריך'}</th>
                       <th className={`p-3 font-semibold text-gray-600 text-left rtl:text-right`}></th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredSuppliers.map((supplier) => (
-                      <SupplierCard key={supplier.id} supplier={supplier} onEdit={handleEdit} onDelete={handleDelete} onImportComplete={() => loadData(user)} viewMode="list" />
+                      <SupplierCard key={supplier.id} supplier={supplier} itemCount={allItems.filter(i => i.supplier_id === supplier.id).length} onEdit={handleEdit} onDelete={handleDelete} onImportComplete={() => loadData(user)} viewMode="list" />
                     ))}
                   </tbody>
                 </table>
@@ -851,7 +852,7 @@ export default function SuppliersPage() {
             )}
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${viewMode === 'list' ? 'md:hidden' : ''}`}>
               {filteredSuppliers.map((supplier) => (
-                <SupplierCard key={supplier.id} supplier={supplier} onEdit={handleEdit} onDelete={handleDelete} onImportComplete={() => loadData(user)} viewMode="grid" />
+                <SupplierCard key={supplier.id} supplier={supplier} itemCount={allItems.filter(i => i.supplier_id === supplier.id).length} onEdit={handleEdit} onDelete={handleDelete} onImportComplete={() => loadData(user)} viewMode="grid" />
               ))}
             </div>
           </>
