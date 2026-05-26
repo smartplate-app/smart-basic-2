@@ -23,7 +23,7 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
         </TableHeader>
         <TableBody>
           {recipes.map((recipe) => (
-            <TableRow key={recipe.id} className="hover:bg-gray-50 cursor-pointer" onDoubleClick={() => onEdit(recipe)}>
+            <TableRow key={recipe.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => onEdit(recipe)}>
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
                   <ChefHat className="w-4 h-4 text-orange-500" />
@@ -48,10 +48,10 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
               </TableCell>
               <TableCell>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => onEdit(recipe)} className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50">
+                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onEdit(recipe); }} className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-50">
                     <Edit className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => onDelete(recipe.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
+                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(recipe.id); }} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
