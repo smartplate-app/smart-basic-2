@@ -58,6 +58,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [exportingSheets, setExportingSheets] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [tableSearchTerm, setTableSearchTerm] = useState("");
+  const [showCustomItemForm, setShowCustomItemForm] = useState(false);
+  const [customItemData, setCustomItemData] = useState({ name: '', price: '' });
   const isSavingRef = React.useRef(false);
   const isSubmittedRef = React.useRef(false);
   const formDataRef = React.useRef(formData);
@@ -730,6 +732,76 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                       <Plus className="w-4 h-4 text-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
                                   ))
+                                )}
+                              </div>
+                              <div className="border-t mt-2 pt-2">
+                                {!showCustomItemForm ? (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="w-full text-blue-600 justify-start"
+                                    onClick={() => {
+                                      setShowCustomItemForm(true);
+                                      setCustomItemData({ name: availableSearch, price: '' });
+                                    }}
+                                  >
+                                    <Plus className={`w-4 h-4 ${language === 'he' || language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                                    {language === 'he' ? 'הוסף פריט מותאם אישית' : 'Add custom item'}
+                                  </Button>
+                                ) : (
+                                  <div className="space-y-2 p-2 bg-gray-50 rounded-md border border-gray-100">
+                                    <Input 
+                                      placeholder={language === 'he' ? 'שם הפריט' : 'Item name'} 
+                                      value={customItemData.name}
+                                      onChange={(e) => setCustomItemData(prev => ({...prev, name: e.target.value}))}
+                                      className="h-8 text-sm"
+                                    />
+                                    <Input 
+                                      type="number"
+                                      placeholder={language === 'he' ? 'מחיר ליחידה' : 'Price per unit'} 
+                                      value={customItemData.price}
+                                      onChange={(e) => setCustomItemData(prev => ({...prev, price: e.target.value}))}
+                                      className="h-8 text-sm"
+                                    />
+                                    <div className="flex gap-2 pt-1">
+                                      <Button 
+                                        type="button" 
+                                        size="sm"
+                                        className="flex-1 h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                                        onClick={() => {
+                                          if (!customItemData.name) return;
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            items: [...prev.items, {
+                                              item_id: "custom_" + Date.now(),
+                                              item_name: customItemData.name,
+                                              warehouse_id: currentWarehouseTab,
+                                              counted_quantity: "",
+                                              unit: "unit",
+                                              price_per_unit: parseFloat(customItemData.price) || 0,
+                                              total_cost: 0,
+                                              notes: language === 'he' ? 'פריט מותאם אישית' : 'Custom item'
+                                            }]
+                                          }));
+                                          setAvailableSearch('');
+                                          setShowCustomItemForm(false);
+                                          setCustomItemData({ name: '', price: '' });
+                                          setIsSearchFocused(false);
+                                        }}
+                                      >
+                                        {language === 'he' ? 'הוסף' : 'Add'}
+                                      </Button>
+                                      <Button 
+                                        type="button" 
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 h-8 text-xs bg-white text-gray-700"
+                                        onClick={() => setShowCustomItemForm(false)}
+                                      >
+                                        {language === 'he' ? 'ביטול' : 'Cancel'}
+                                      </Button>
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             </PopoverContent>
