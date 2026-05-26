@@ -324,12 +324,15 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     
     const warehouse = warehouseOptions.find(w => w.id === currentWarehouseTab);
     
-    if (warehouse && warehouse.catalog_items && warehouse.catalog_items.length > 0) {
+    if (warehouse) {
       const existingItemIds = new Set(formData.items.filter(i => i.warehouse_id === currentWarehouseTab).map(i => i.item_id));
       
-      const missingCatalogItems = items.filter(item => 
-        warehouse.catalog_items.includes(item.id) && !existingItemIds.has(item.id)
-      );
+      const missingCatalogItems = items.filter(item => {
+        const inCatalog = warehouse.catalog_items && warehouse.catalog_items.includes(item.id);
+        const inPrimary = item.warehouse_id === currentWarehouseTab;
+        const inMulti = item.warehouse_ids && item.warehouse_ids.includes(currentWarehouseTab);
+        return (inCatalog || inPrimary || inMulti) && !existingItemIds.has(item.id);
+      });
       
       if (missingCatalogItems.length > 0) {
         const newItems = missingCatalogItems.map(item => ({
