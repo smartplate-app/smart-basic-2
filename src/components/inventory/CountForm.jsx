@@ -845,16 +845,16 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       )}
                     </div>
 
-                    <div className="border rounded-lg overflow-x-auto overflow-y-auto max-h-[60vh]">
+                    <div className="border rounded-lg overflow-x-auto overflow-y-auto max-h-[60vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       <Table>
                         <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                           <TableRow>
-                            <TableHead className="px-2 py-2 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap min-w-[100px]">{t('item_name')}</TableHead>
-                            <TableHead className="px-1 py-2 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('counted_quantity')}</TableHead>
-                            <TableHead className="px-1 py-2 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('unit')}</TableHead>
-                            <TableHead className="px-1 py-2 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('price_per_unit')}</TableHead>
+                            <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap min-w-[120px]">{t('item_name')}</TableHead>
+                            <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('counted_quantity')}</TableHead>
+                            <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('unit')}</TableHead>
+                            <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('price_per_unit')}</TableHead>
                             <TableHead 
-                              className="px-1 py-2 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap cursor-pointer hover:bg-gray-50 transition-colors select-none group" 
+                              className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap cursor-pointer hover:bg-gray-50 transition-colors select-none group" 
                               onClick={() => handleSort('total_cost')}
                             >
                               <div className="flex items-center gap-1">
@@ -866,8 +866,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                 )}
                               </div>
                             </TableHead>
-                            <TableHead className="px-1 py-2 md:px-4 md:py-4 text-xs md:text-sm">{t('notes')}</TableHead>
-                            <TableHead className="px-1 py-2 md:px-4 md:py-4"></TableHead>
+                            <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm min-w-[100px]">{t('notes')}</TableHead>
+                            <TableHead className="px-2 py-3 md:px-4 md:py-4"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -909,13 +909,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
                               return (
                               <TableRow key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index}>
-                                <TableCell className="font-medium px-2 py-2 md:px-4 md:py-4 text-xs md:text-sm min-w-[110px] leading-tight">
+                                <TableCell className="font-medium px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm min-w-[120px] leading-snug">
                                   {originalItem?.nickname || item.item_name}
-                                  {originalItem?.nickname && <span className="text-[10px] md:text-xs text-gray-500 block font-normal mt-0.5">{item.item_name}</span>}
+                                  {originalItem?.nickname && <span className="text-[11px] md:text-xs text-gray-500 block font-normal mt-0.5 leading-tight">{item.item_name}</span>}
                                 </TableCell>
-                                <TableCell className="px-1 py-2 md:px-4 md:py-4">
+                                <TableCell className="px-2 py-3 md:px-4 md:py-4">
                                   {currentWarehouseTab === "all_summary" ? (
-                                    <span className="font-bold text-base md:text-lg">{item.counted_quantity}</span>
+                                    <span className="font-bold text-sm md:text-lg">{item.counted_quantity}</span>
                                   ) : (
                                     <Input
                                       type="number"
@@ -923,18 +923,18 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                       step="any" 
                                       value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
                                       onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
-                                      className="w-16 md:w-24 h-8 md:h-10 px-1 md:px-3 text-center text-sm md:text-base hide-arrows"
+                                      className="w-20 md:w-24 h-9 md:h-10 px-2 md:px-3 text-center text-sm md:text-base hide-arrows"
                                     />
                                   )}
                                 </TableCell>
-                                <TableCell className="px-1 py-2 md:px-4 md:py-4 text-xs md:text-sm">{item.unit}</TableCell>
-                                <TableCell className="px-1 py-2 md:px-4 md:py-4 text-gray-700 text-xs md:text-sm">
+                                <TableCell className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{item.unit}</TableCell>
+                                <TableCell className="px-2 py-3 md:px-4 md:py-4 text-gray-700 text-xs md:text-sm whitespace-nowrap">
                                   ₪{Number(item.price_per_unit || 0).toFixed(2)}
                                 </TableCell>
-                                <TableCell className="px-1 py-2 md:px-4 md:py-4 font-bold text-green-600 text-xs md:text-sm">
+                                <TableCell className="px-2 py-3 md:px-4 md:py-4 font-bold text-green-600 text-xs md:text-sm whitespace-nowrap">
                                   {item.total_cost?.toFixed(2) || '0.00'}
                                 </TableCell>
-                                <TableCell className="px-1 py-2 md:px-4 md:py-4">
+                                <TableCell className="px-2 py-3 md:px-4 md:py-4">
                                   {currentWarehouseTab === "all_summary" ? (
                                     <span className="text-xs md:text-sm text-gray-500">{item.notes}</span>
                                   ) : (
@@ -942,11 +942,11 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                       value={item.notes || ''}
                                       onChange={(e) => updateItemNotes(item.item_id, item.warehouse_id, e.target.value)}
                                       placeholder={t('notes')}
-                                      className="w-full min-w-[100px] md:min-w-[150px] h-8 md:h-10 text-xs md:text-sm"
+                                      className="w-full min-w-[100px] md:min-w-[150px] h-9 md:h-10 text-xs md:text-sm"
                                     />
                                   )}
                                 </TableCell>
-                                <TableCell className="px-1 py-2 md:px-4 md:py-4">
+                                <TableCell className="px-2 py-3 md:px-4 md:py-4">
                                   {currentWarehouseTab !== "all_summary" && (
                                     <Button
                                       type="button"
