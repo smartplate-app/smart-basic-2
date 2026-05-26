@@ -602,11 +602,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
 
           <Button
-            onClick={async () => { 
+            onClick={() => { 
               if (onSend) {
-                setSending(true);
-                try { await onSend(order); } catch (e) {}
-                setSending(false);
+                // DO NOT await or set state before calling onSend, it breaks Web Share API!
+                onSend(order);
               }
             }}
             className="w-full sm:flex-1 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50"

@@ -758,6 +758,42 @@ export default function OrdersPage() {
     let file = pregeneratedShareFile;
     let pngBlob = pregeneratedPngBlob;
 
+    // Immediately try to share to preserve user gesture on iOS/Android
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    let shareSuccess = false;
+
+    if (navigator.share && isMobile) {
+      try {
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `You have received a new order from "${order.restaurant_name || ''}"`,
+            text: text
+          });
+          shareSuccess = true;
+        } else {
+          await navigator.share({
+            title: `You have received a new order from "${order.restaurant_name || ''}"`,
+            text: text
+          });
+          shareSuccess = true;
+        }
+      } catch (shareErr) {
+        console.warn('Native share failed', shareErr);
+      }
+    }
+
+    if (shareSuccess) {
+      setPreviewOrder(null);
+      if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+        setTimeout(() => {
+          alert(language === 'he' ? `ההזמנה שותפה, וגם נשלחה במקביל למייל של הספק: ${selectedSupplier.email}` : `Order shared, and also sent in parallel to supplier email: ${selectedSupplier.email}`);
+        }, 500);
+      }
+      return;
+    }
+
+    // Fallback for Desktop / if share failed
     if (!file) {
       const temp = document.createElement('div');
       temp.style.position = 'fixed';
@@ -807,35 +843,6 @@ export default function OrdersPage() {
     }
     
     if (file) {
-      // Try native share with the image file attached
-      if (navigator.share) {
-        try {
-          if (navigator.canShare && !navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: `You have received a new order from "${order.restaurant_name || ''}"`,
-              text: text
-            });
-          } else {
-            await navigator.share({
-              files: [file],
-              title: `You have received a new order from "${order.restaurant_name || ''}"`,
-              text: text
-            });
-          }
-          setPreviewOrder(null);
-          if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-            setTimeout(() => {
-              alert(language === 'he' ? `ההזמנה שותפה, וגם נשלחה במקביל למייל של הספק: ${selectedSupplier.email}` : `Order shared, and also sent in parallel to supplier email: ${selectedSupplier.email}`);
-            }, 500);
-          }
-          return;
-        } catch (shareErr) {
-          console.warn('Share failed', shareErr);
-          // Fallback to clipboard if share fails
-        }
-      }
-      
-      // Fallback for Desktop: Try to copy to clipboard first
       let copied = false;
       if (navigator.clipboard && window.ClipboardItem && pngBlob) {
         try {
@@ -847,12 +854,9 @@ export default function OrdersPage() {
           ]);
           copied = true;
         } catch (err) {
-          console.warn('Clipboard copy with text failed, trying image only', err);
           try {
             await navigator.clipboard.write([
-              new ClipboardItem({
-                'image/png': pngBlob
-              })
+              new ClipboardItem({ 'image/png': pngBlob })
             ]);
             copied = true;
           } catch (err2) {
@@ -876,7 +880,6 @@ export default function OrdersPage() {
         const waUrl = phone ? `https://wa.me/${phone}` : `https://wa.me/`;
         window.open(waUrl, '_blank');
       } else {
-        // If clipboard copy failed or isn't supported, fallback to download
         const url = window.URL.createObjectURL(file);
         const a = document.createElement('a');
         a.href = url;
@@ -889,28 +892,9 @@ export default function OrdersPage() {
             alert(language === 'he' ? 'ההזמנה ירדה למכשיר ונשלחה במייל לספק.' : 'Order downloaded and sent to supplier email.');
         }
       }
-      
-      setPreviewOrder(null);
-      return;
     }
-
-    // Fallback if image generation completely fails
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `You have received a new order from "${order.restaurant_name || ''}"`,
-          text: text
-        });
-        if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-          setTimeout(() => {
-            alert(language === 'he' ? `ההזמנה שותפה, וגם נשלחה במקביל למייל של הספק: ${selectedSupplier.email}` : `Order shared, and also sent in parallel to supplier email: ${selectedSupplier.email}`);
-          }, 500);
-        }
-      }
-      setPreviewOrder(null);
-    } catch (e) {
-      console.warn('Native share failed', e);
-    }
+    
+    setPreviewOrder(null);
   };
 
   // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
