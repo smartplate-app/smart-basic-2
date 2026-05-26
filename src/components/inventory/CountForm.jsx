@@ -557,15 +557,14 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="warehouse" className="font-bold text-blue-800">{language === 'he' ? 'מחסן נוכחי לספירה' : 'Active Warehouse'}</Label>
+            <div className="flex flex-col md:grid md:grid-cols-4 gap-3">
+              <div className="md:col-span-4">
                 <Select 
                    value={currentWarehouseTab} 
                    onValueChange={(val) => { if (val === "__create__") { handleCreateWarehouse(); return; } handleWarehouseChange(val); }}
                  >
-                  <SelectTrigger id="warehouse" className="border-blue-300 bg-blue-50 focus:ring-blue-500">
-                    <SelectValue placeholder={t('select_warehouse')} />
+                  <SelectTrigger id="warehouse" className="border-blue-300 bg-blue-50 focus:ring-blue-500 font-medium text-blue-900 h-11">
+                    <SelectValue placeholder={language === 'he' ? 'בחר מחסן...' : 'Select Warehouse...'} />
                   </SelectTrigger>
                   <SelectContent>
                      <SelectItem value="all_summary" className="font-bold text-blue-600 bg-blue-50 mb-1 border-b border-blue-100">
@@ -575,7 +574,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                      {warehouseOptions.map(warehouse => (
                        <SelectItem key={warehouse.id} value={warehouse.id}>
                         <div className="flex items-center">
-                          <span>{warehouse.name}</span>
+                          <span>{language === 'he' ? 'מחסן:' : 'Warehouse:'} {warehouse.name}</span>
                           {warehouse.catalog_items && warehouse.catalog_items.length > 0 && (
                             <Badge variant="outline" className="ml-2">
                               {warehouse.catalog_items.length} {t('items')}
@@ -588,60 +587,62 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="count_date">{t('count_date')}</Label>
+              <div className="md:col-span-2">
                 <Input
-                  id="count_date"
-                  type="date"
-                  value={formData.count_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, count_date: e.target.value }))}
+                  id="name"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder={language === 'he' ? 'שם ספירה (למשל: סוף חודש דצמבר)' : 'Count Name (e.g., December month-end)'}
+                  className="h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="count_type">{t('count_type')}</Label>
+              <div className="md:col-span-2">
+                <div className="relative">
+                  <div className="absolute top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none ltr:left-3 rtl:right-3 bg-white px-1">
+                    {language === 'he' ? 'תאריך:' : 'Date:'}
+                  </div>
+                  <Input
+                    id="count_date"
+                    type="date"
+                    value={formData.count_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, count_date: e.target.value }))}
+                    className="h-11 rtl:pr-12 ltr:pl-12"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 md:col-span-4">
                 <Select
                   id="count_type"
                   value={formData.count_type}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, count_type: value }))}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="h-11 flex-1">
+                    <SelectValue placeholder={t('count_type')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="daily">{t('daily')}</SelectItem>
-                    <SelectItem value="weekly">{t('weekly')}</SelectItem>
-                    <SelectItem value="monthly">{t('monthly')}</SelectItem>
-                    <SelectItem value="quarterly">{t('quarterly')}</SelectItem>
-                    <SelectItem value="annual">{t('annual')}</SelectItem>
+                    <SelectItem value="daily">{t('count_type')}: {t('daily')}</SelectItem>
+                    <SelectItem value="weekly">{t('count_type')}: {t('weekly')}</SelectItem>
+                    <SelectItem value="monthly">{t('count_type')}: {t('monthly')}</SelectItem>
+                    <SelectItem value="quarterly">{t('count_type')}: {t('quarterly')}</SelectItem>
+                    <SelectItem value="annual">{t('count_type')}: {t('annual')}</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status">{t('status')}</Label>
                 <Select
                   id="status"
                   value={formData.status}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="h-11 flex-1">
+                    <SelectValue placeholder={t('status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="in_progress">{t('status_in_progress')}</SelectItem>
-                    <SelectItem value="completed">{t('status_completed')}</SelectItem>
+                    <SelectItem value="in_progress">{t('status')}: {t('status_in_progress')}</SelectItem>
+                    <SelectItem value="completed">{t('status')}: {t('status_completed')}</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">{language === 'he' ? 'שם ספירה' : 'Count Name'}</Label>
-                <Input
-                  id="name"
-                  value={formData.name || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder={language === 'he' ? 'למשל: ספירת סוף חודש דצמבר' : 'e.g., December month-end'}
-                />
               </div>
             </div>
 
@@ -1052,13 +1053,12 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="notes">{language === 'he' ? 'תיאור' : 'Description'}</Label>
+            <div>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder={language === 'he' ? 'תיאור' : 'Description'}
+                placeholder={language === 'he' ? 'תיאור / הערות לספירה...' : 'Description / Notes...'}
                 className="h-20"
               />
             </div>
