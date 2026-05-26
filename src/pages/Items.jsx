@@ -667,9 +667,11 @@ const handleCleanOrphans = async (ownerEmail) => {
 
    const currentWarehouse = selectedWarehouseId !== 'all' ? warehouses.find(w => w.id === selectedWarehouseId) : null;
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (item.catalog_number && item.catalog_number.toLowerCase().includes(searchTerm.toLowerCase()));
+    const searchStr = String(searchTerm || '').toLowerCase();
+    const matchesSearch = !searchStr || 
+                         String(item.name || '').toLowerCase().includes(searchStr) ||
+                         String(item.description || '').toLowerCase().includes(searchStr) ||
+                         String(item.catalog_number || '').toLowerCase().includes(searchStr);
     const matchesSupplier = selectedSupplier === "all" || item.supplier_id === selectedSupplier;
     const matchesWarehouse = !currentWarehouse || 
       (Array.isArray(currentWarehouse.catalog_items) && currentWarehouse.catalog_items.includes(item.id)) ||

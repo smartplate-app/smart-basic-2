@@ -426,11 +426,13 @@ export default function SuppliersPage() {
     }
   };
 
-  const filteredSuppliers = suppliers.filter(supplier =>
-    supplier.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    supplier.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSuppliers = suppliers.filter(supplier => {
+    const searchStr = String(searchTerm || '').toLowerCase();
+    return !searchStr ||
+      String(supplier.name || '').toLowerCase().includes(searchStr) ||
+      String(supplier.phone || '').toLowerCase().includes(searchStr) ||
+      String(supplier.email || '').toLowerCase().includes(searchStr);
+  });
 
   const generateReport = async () => {
     try {

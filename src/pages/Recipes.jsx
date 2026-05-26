@@ -174,7 +174,9 @@ export default function RecipesPage() {
   };
 
   const filteredRecipes = recipes.filter(r => {
-    const matchesSearch = (r.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const searchStr = String(searchTerm || '').toLowerCase();
+    const nameStr = String(r.name || '').toLowerCase();
+    const matchesSearch = !searchStr || nameStr.includes(searchStr);
     const matchesType = typeFilter === 'all' || r.type === typeFilter;
     return matchesSearch && matchesType;
   });
