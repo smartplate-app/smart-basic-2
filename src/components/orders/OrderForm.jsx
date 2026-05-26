@@ -184,13 +184,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     const item = availableItems.find(i => i.id === itemId);
     if (item && item.minimum_stock > 0) {
       const needed = Math.max(0, item.minimum_stock - stockValue);
-      // Only auto-fill if user hasn't manually set a quantity
-      if (!itemQuantities[itemId] || itemQuantities[itemId] === 0) {
-        setItemQuantities(prev => ({
-          ...prev,
-          [itemId]: needed
-        }));
-      }
+      // Always update the order quantity when stock changes to reflect the new need
+      setItemQuantities(prev => ({
+        ...prev,
+        [itemId]: needed
+      }));
     }
   };
 
