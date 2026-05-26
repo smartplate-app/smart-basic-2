@@ -145,6 +145,7 @@ const [authLoading, setAuthLoading] = useState(() => {
   }, [authLoading, user]);
 
   const navigationItems = [
+          { title: language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard', url: createPageUrl("AdminDashboard"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'מתכונים' : 'Recipes', url: createPageUrl("Recipes"), icon: ChefHat, adminOnly: false, workerHidden: false },
           // Dashboard first
           { title: t('dashboard'), url: createPageUrl("Dashboard"), icon: BarChart2, adminOnly: false, workerHidden: true },
@@ -171,7 +172,6 @@ const [authLoading, setAuthLoading] = useState(() => {
           { title: language === 'he' ? 'מדיה לתמיכה' : 'KB Media', url: createPageUrl("KBMedia"), icon: Video, adminOnly: true, workerHidden: true },
           { title: (language === 'he' ? 'ניהול רשת' : 'Chain'), url: createPageUrl("ChainManagement"), icon: Warehouse, adminOnly: false, workerHidden: true },
           { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
-          { title: language === 'he' ? 'לוח בקרה אדמין' : 'Admin Dashboard', url: createPageUrl("AdminDashboard"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'בודק קישורים' : 'Link Checker', url: createPageUrl("LinkChecker"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'אסטרטגיית אינסטגרם' : 'IG Strategy', url: createPageUrl("InstagramBlueprint"), icon: Share, adminOnly: true, workerHidden: true },
