@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Warehouse } from "@/entities/Warehouse";
 import { User } from "@/entities/User";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, Edit, MapPin, Trash2 } from "lucide-react";
+import { Plus, Search, Loader, Edit, MapPin, Trash2, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -267,7 +267,13 @@ export default function WarehousesPage() {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-bold text-lg text-gray-900">{warehouse.name}</h3>
+                          <h3 className="font-bold text-lg text-gray-900 mb-1">{warehouse.name}</h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors border border-indigo-100 font-medium">
+                              <Package className="w-3 h-3 mr-1" />
+                              {warehouse.catalog_items?.length || 0} {t('items')}
+                            </Badge>
+                          </div>
                           {warehouse.location && (
                             <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                               <MapPin className="w-4 h-4" />
