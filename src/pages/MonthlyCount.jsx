@@ -501,13 +501,21 @@ export default function MonthlyCountPage() {
   /* handleSendPdf removed per request */
 
   const filteredCounts = counts.filter(count => {
-        const searchTarget = (count.warehouse_name || count.name || "").toLowerCase();
-        const matchesSearch = searchTarget.includes(searchTerm.toLowerCase());
-        const matchesWarehouse = warehouseFilter === "all" || count.warehouse_id === warehouseFilter;
-        return matchesSearch && matchesWarehouse;
-      });
+    const searchTarget = (count.warehouse_name || count.name || "").toLowerCase();
+    const matchesSearch = searchTarget.includes(searchTerm.toLowerCase());
+    const matchesWarehouse = warehouseFilter === "all" || count.warehouse_id === warehouseFilter;
+    return matchesSearch && matchesWarehouse;
+  });
 
-      const grandTotal = filteredCounts.reduce((sum, c) => sum + (c.total_inventory_value || 0), 0);
+  const completedCounts = filteredCounts.filter(c => c.status === 'completed');
+  let lastCountValue = 0;
+  if (completedCounts.length > 0) {
+    const latestDate = completedCounts.reduce((max, c) => (!max || c.count_date > max) ? c.count_date : max, "");
+    lastCountValue = completedCounts.filter(c => c.count_date === latestDate).reduce((sum, c) => sum + (c.total_inventory_value || 0), 0);
+  } else if (filteredCounts.length > 0) {
+    const latestDate = filteredCounts.reduce((max, c) => (!max || c.count_date > max) ? c.count_date : max, "");
+    lastCountValue = filteredCounts.filter(c => c.count_date === latestDate).reduce((sum, c) => sum + (c.total_inventory_value || 0), 0);
+  }
 
   if (authLoading) {
     return (
@@ -735,7 +743,7 @@ export default function MonthlyCountPage() {
             <div className="mb-4">
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center justify-between">
                 <span className="text-emerald-900 font-semibold">{language === 'he' ? 'ערך ספירת מלאי אחרונה' : 'Last Inventory Count Value'}</span>
-                <span className="text-emerald-700 font-bold">₪{grandTotal.toFixed(2)}</span>
+                <span className="text-emerald-700 font-bold">₪{lastCountValue.toFixed(2)}</span>
               </div>
             </div>
 
