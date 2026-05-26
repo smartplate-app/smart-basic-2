@@ -9,14 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Trash2, Save, WifiOff, Upload, FileSpreadsheet, Loader, ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { X, Plus, Trash2, Save, WifiOff, Upload, FileSpreadsheet, Loader, ArrowUpDown, ArrowUp, ArrowDown, Search, RefreshCw } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { base44 } from "@/api/base44Client";
 import { Item } from "@/entities/Item";
 
 const LOCAL_STORAGE_KEY = 'offline_count_draft';
 
-export default function CountForm({ count, warehouses, items, onSubmit, onCancel, onWarehouseCatalogSaved }) {
+export default function CountForm({ count, warehouses, items: initialItems, onSubmit, onCancel, onWarehouseCatalogSaved }) {
   const { t, language } = useLanguage();
   const [formData, setFormData] = useState(() => {
     if (count) {
@@ -46,6 +46,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     return count?.warehouse_id || (warehouses && warehouses.length > 0 ? warehouses[0].id : "all_summary");
   });
 
+  const [items, setItems] = useState(initialItems || []);
+  const [reloadingItems, setReloadingItems] = useState(false);
   const [savingCatalog, setSavingCatalog] = useState(false);
   const [filteredAvailableItems, setFilteredAvailableItems] = useState([]);
   const [hasDraft, setHasDraft] = useState(false);
@@ -134,6 +136,12 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
   useEffect(() => {
     setWarehouseOptions(warehouses || []);
   }, [warehouses]);
+
+  useEffect(() => {
+    if (initialItems && initialItems.length > items.length) {
+      setItems(initialItems);
+    }
+  }, [initialItems]);
 
   const saveToLocalStorage = () => {
     const dataToSave = {
@@ -284,17 +292,44 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
     setFilteredAvailableItems(newFilteredItems);
   }, [items, formData.items, availableSearch, currentWarehouseTab]);
 
-  // Auto-populate when current warehouse tab changes and has no items
+  const reloadItems = async () => {
+    try {
+      setReloadingItems(true);
+      const user = await base44.auth.me();
+      let workingEmail = user.email;
+      if (user.role === 'admin' && user.acting_as_user_email) {
+          const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: user.acting_as_user_email });
+          if (data?.success && data.data?.items) {
+             setItems(data.data.items);
+             return;
+          }
+      }
+      
+      workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+      const fetchedItems = await base44.entities.Item.filter({ created_by: workingEmail }, "name");
+      setItems(fetchedItems || []);
+    } catch (e) {
+      console.error("Failed to reload items", e);
+    } finally {
+      setReloadingItems(false);
+    }
+  };
+
+  // Auto-populate when current warehouse tab changes and has no items, OR when items are added to catalog but not in count yet
   useEffect(() => {
     if (currentWarehouseTab === "all_summary" || !currentWarehouseTab) return;
     
     const warehouse = warehouseOptions.find(w => w.id === currentWarehouseTab);
-    const existingItems = formData.items.filter(i => i.warehouse_id === currentWarehouseTab);
     
-    if (existingItems.length === 0 && warehouse && warehouse.catalog_items && warehouse.catalog_items.length > 0) {
-      const catalogItems = items.filter(item => warehouse.catalog_items.includes(item.id));
-      if (catalogItems.length > 0) {
-        const newItems = catalogItems.map(item => ({
+    if (warehouse && warehouse.catalog_items && warehouse.catalog_items.length > 0) {
+      const existingItemIds = new Set(formData.items.filter(i => i.warehouse_id === currentWarehouseTab).map(i => i.item_id));
+      
+      const missingCatalogItems = items.filter(item => 
+        warehouse.catalog_items.includes(item.id) && !existingItemIds.has(item.id)
+      );
+      
+      if (missingCatalogItems.length > 0) {
+        const newItems = missingCatalogItems.map(item => ({
           item_id: item.id,
           item_name: item.name,
           warehouse_id: currentWarehouseTab,
@@ -304,6 +339,7 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
           total_cost: 0,
           notes: ""
         }));
+        
         setFormData(prev => {
           let newWarehouseName = prev.warehouse_name;
           let newWarehouseId = prev.warehouse_id;
@@ -320,7 +356,9 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
         });
       }
     }
-  }, [currentWarehouseTab, warehouseOptions, items, formData.items.length]);
+  }, [currentWarehouseTab, warehouseOptions, items, formData.items.length, language]);
+
+  // Removed old auto-populate logic to prevent redundancy
 
   const handleWarehouseChange = (warehouseId) => {
     setCurrentWarehouseTab(warehouseId);
@@ -608,8 +646,8 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center mb-2 mt-4">
-                      <div className="relative w-full md:w-1/3">
+                    <div className="flex justify-between items-center mb-2 mt-4 flex-wrap gap-2">
+                      <div className="relative w-full md:w-1/3 flex-shrink-0">
                         <Input
                           type="text"
                           placeholder={language === 'he' ? 'חפש פריט במחסן...' : 'Search item in warehouse...'}
@@ -630,6 +668,74 @@ export default function CountForm({ count, warehouses, items, onSubmit, onCancel
                           </Button>
                         )}
                       </div>
+                      
+                      {currentWarehouseTab !== "all_summary" && (
+                        <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={reloadItems} 
+                            disabled={reloadingItems}
+                            className="bg-white"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${language === 'he' || language === 'ar' ? 'ml-2' : 'mr-2'} ${reloadingItems ? 'animate-spin' : ''}`} />
+                            {language === 'he' ? 'רענן רשימת פריטים מהמערכת' : 'Refresh Items List'}
+                          </Button>
+                          <Popover open={isSearchFocused} onOpenChange={setIsSearchFocused}>
+                            <PopoverTrigger asChild>
+                              <Button type="button" variant="outline" className="bg-white">
+                                <Plus className={`w-4 h-4 ${language === 'he' || language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                                {language === 'he' ? 'הוסף פריט לספירה' : 'Add Item'}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-2" align={language === 'he' || language === 'ar' ? 'end' : 'start'}>
+                              <Input
+                                type="text"
+                                placeholder={language === 'he' ? 'חפש פריט להוספה...' : 'Search items to add...'}
+                                value={availableSearch}
+                                onChange={(e) => setAvailableSearch(e.target.value)}
+                                className="mb-2"
+                              />
+                              <div className="max-h-48 overflow-y-auto space-y-1">
+                                {filteredAvailableItems.length === 0 ? (
+                                  <p className="text-sm text-gray-500 text-center py-4">
+                                    {language === 'he' ? 'לא נמצאו פריטים' : 'No items found'}
+                                  </p>
+                                ) : (
+                                  filteredAvailableItems.map(item => (
+                                    <div 
+                                      key={item.id}
+                                      className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer group"
+                                      onClick={() => {
+                                        setFormData(prev => ({
+                                          ...prev,
+                                          items: [...prev.items, {
+                                            item_id: item.id,
+                                            item_name: item.name,
+                                            warehouse_id: currentWarehouseTab,
+                                            counted_quantity: "",
+                                            unit: item.unit,
+                                            price_per_unit: item.price || 0,
+                                            total_cost: 0,
+                                            notes: ""
+                                          }]
+                                        }));
+                                        setAvailableSearch('');
+                                      }}
+                                    >
+                                      <div>
+                                        <div className="font-medium text-sm">{item.nickname || item.name}</div>
+                                        {item.nickname && <div className="text-xs text-gray-500">{item.name}</div>}
+                                      </div>
+                                      <Plus className="w-4 h-4 text-green-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      )}
                     </div>
 
                     <div className="border rounded-lg overflow-x-auto overflow-y-auto max-h-[60vh]">
