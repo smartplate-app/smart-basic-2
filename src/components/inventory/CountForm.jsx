@@ -674,21 +674,17 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       
                       {currentWarehouseTab !== "all_summary" && (
                         <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            onClick={reloadItems} 
-                            disabled={reloadingItems}
-                            className="bg-white"
-                          >
-                            <RefreshCw className={`w-4 h-4 ${language === 'he' || language === 'ar' ? 'ml-2' : 'mr-2'} ${reloadingItems ? 'animate-spin' : ''}`} />
-                            {language === 'he' ? 'רענן רשימת פריטים מהמערכת' : 'Refresh Items List'}
-                          </Button>
-                          <Popover open={isSearchFocused} onOpenChange={setIsSearchFocused}>
+                          <Popover open={isSearchFocused} onOpenChange={(open) => {
+                            setIsSearchFocused(open);
+                            if (open) {
+                              reloadItems();
+                            }
+                          }}>
                             <PopoverTrigger asChild>
                               <Button type="button" variant="outline" className="bg-white">
                                 <Plus className={`w-4 h-4 ${language === 'he' || language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                                 {language === 'he' ? 'הוסף פריט לספירה' : 'Add Item'}
+                                {reloadingItems && <Loader className={`w-3 h-3 animate-spin ${language === 'he' || language === 'ar' ? 'mr-2' : 'ml-2'}`} />}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[300px] p-2" align={language === 'he' || language === 'ar' ? 'end' : 'start'}>
