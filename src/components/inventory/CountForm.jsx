@@ -614,7 +614,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
                 {formData.items.length > 0 && (
                   <>
-                    {!count && (
+                    {!count && formData.warehouse_id !== "multi" && formData.warehouse_id !== "all_summary" && (
                       <div className="bg-cyan-50 border-2 border-cyan-200 rounded-lg p-4">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                           <div>

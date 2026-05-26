@@ -21,23 +21,48 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     { value: "case", label: t('unit_case') || "ארגז" }
   ];
 
-  const [currentItem, setCurrentItem] = React.useState(item || {
-    name: "",
-    nickname: "",
-    supplier_id: (defaultSupplierId) ? defaultSupplierId : (suppliers && suppliers.length === 1 ? suppliers[0].id : ""),
-    supplier_name: (defaultSupplierId ? (suppliers.find(s => s.id === defaultSupplierId)?.name || "") : (suppliers && suppliers.length === 1 ? suppliers[0].name : "")),
-    catalog_number: "",
-    warehouse_id: "",
-    warehouse_name: "",
-    warehouse_ids: [],
-    warehouse_names: [],
-    unit: "unit",
-    units_per_package: 1,
-    content_per_unit: 1,
-    content_unit: "unit",
-    price: 0,
-    discount: 0,
-    minimum_stock: 0
+  const [currentItem, setCurrentItem] = React.useState(() => {
+    if (item) {
+      const badIds = ["multi", "all_summary", ""];
+      const badNames = ["ספירה מרובת מחסנים", "Multi-Warehouse Count", ""];
+      let wIds = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
+      let wNames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
+      
+      const filteredIds = [];
+      const filteredNames = [];
+      wIds.forEach((id, idx) => {
+        const name = wNames[idx] || "";
+        if (!badIds.includes(id) && !badNames.includes(name)) {
+          filteredIds.push(id);
+          filteredNames.push(name);
+        }
+      });
+      return {
+        ...item,
+        warehouse_ids: filteredIds,
+        warehouse_names: filteredNames,
+        warehouse_id: filteredIds[0] || "",
+        warehouse_name: filteredNames[0] || ""
+      };
+    }
+    return {
+      name: "",
+      nickname: "",
+      supplier_id: (defaultSupplierId) ? defaultSupplierId : (suppliers && suppliers.length === 1 ? suppliers[0].id : ""),
+      supplier_name: (defaultSupplierId ? (suppliers.find(s => s.id === defaultSupplierId)?.name || "") : (suppliers && suppliers.length === 1 ? suppliers[0].name : "")),
+      catalog_number: "",
+      warehouse_id: "",
+      warehouse_name: "",
+      warehouse_ids: [],
+      warehouse_names: [],
+      unit: "unit",
+      units_per_package: 1,
+      content_per_unit: 1,
+      content_unit: "unit",
+      price: 0,
+      discount: 0,
+      minimum_stock: 0
+    };
   });
 
   const [showWarehouseForm, setShowWarehouseForm] = useState(false);
