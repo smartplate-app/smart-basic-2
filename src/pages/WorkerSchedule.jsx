@@ -115,6 +115,33 @@ export default function WorkerSchedulePage() {
           </CardHeader>
         </Card>
 
+        {/* Agent Assistant */}
+        <Card className="bg-purple-50 border-purple-200">
+          <CardContent className="pt-6 text-center space-y-4">
+            <p className="text-purple-800 font-medium">
+              {language === 'he' ? 'צריך עזרה עם הסידור? בקש שינויים, ימי חופש או החלפות משמרת דרך העוזר החכם שלנו!' : 'Need help with the schedule? Request changes, days off, or shift swaps via our smart assistant!'}
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <a 
+                href={base44.agents.getWhatsAppConnectURL('schedule_assistant')} 
+                target="_blank"
+                rel="noreferrer"
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold flex items-center gap-2 transition-colors shadow-sm"
+              >
+                💬 WhatsApp
+              </a>
+              <a 
+                href={base44.agents.getTelegramConnectURL('schedule_assistant')} 
+                target="_blank"
+                rel="noreferrer"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-full font-semibold flex items-center gap-2 transition-colors shadow-sm"
+              >
+                ✈️ Telegram
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Week Info */}
         <Card>
           <CardContent className="pt-6">
