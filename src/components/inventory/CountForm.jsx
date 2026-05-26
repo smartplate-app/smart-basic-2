@@ -485,8 +485,53 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       newItems[index] = { 
         ...newItems[index], 
         counted_quantity: quantity,
+        counted_cases: "",
+        counted_units: "",
         total_cost: qty * price
       };
+      return { ...prev, items: newItems };
+    });
+  };
+
+  const updateItemQuantitySplit = (itemId, warehouseId, field, value, upp) => {
+    setFormData(prev => {
+      const newItems = [...prev.items];
+      const index = newItems.findIndex(i => i.item_id === itemId && i.warehouse_id === warehouseId);
+      if (index === -1) return prev;
+      
+      const current = newItems[index];
+      
+      let currentCases = current.counted_cases;
+      let currentUnits = current.counted_units;
+      
+      if (currentCases == null || currentUnits == null) {
+        if (typeof current.counted_quantity === 'number' && current.counted_quantity > 0) {
+          currentCases = Math.floor(current.counted_quantity);
+          currentUnits = Math.round((current.counted_quantity - currentCases) * (upp || 1));
+        } else {
+          currentCases = "";
+          currentUnits = "";
+        }
+      }
+
+      const newValues = {
+        counted_cases: field === 'cases' ? value : currentCases,
+        counted_units: field === 'units' ? value : currentUnits
+      };
+      
+      const c = parseFloat(newValues.counted_cases) || 0;
+      const u = parseFloat(newValues.counted_units) || 0;
+      const totalQty = c + (u / (upp || 1));
+      
+      const price = parseFloat(current.price_per_unit) || 0;
+      
+      newItems[index] = { 
+        ...current,
+        ...newValues,
+        counted_quantity: (newValues.counted_cases === '' && newValues.counted_units === '') ? '' : totalQty,
+        total_cost: totalQty * price
+      };
+      
       return { ...prev, items: newItems };
     });
   };
@@ -969,19 +1014,46 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                ) : null}
                             </div>
                             
-                            <div className="flex flex-col items-end shrink-0 w-[80px]">
+                            <div className="flex flex-col items-end shrink-0 w-[95px] md:w-[120px]">
                                {currentWarehouseTab === "all_summary" ? (
-                                  <div className="h-10 w-full bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center font-bold text-lg text-gray-900">{item.counted_quantity}</div>
+                                  <div className="h-10 w-full bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center font-bold text-lg text-gray-900">
+                                    {typeof item.counted_quantity === 'number' ? Number(item.counted_quantity).toFixed(2).replace(/\.00$/, '') : item.counted_quantity}
+                                  </div>
                                ) : (
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    step="any"
-                                    value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
-                                    onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
-                                    className="w-full h-10 text-center font-bold text-lg border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900"
-                                    placeholder="0"
-                                  />
+                                  (item.unit === 'case' || originalItem?.unit === 'case') ? (
+                                    <div className="flex gap-1 w-full">
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        step="any"
+                                        value={item.counted_cases ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.floor(item.counted_quantity) : '')}
+                                        onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'cases', e.target.value, originalItem?.units_per_package)}
+                                        className="w-full h-10 text-center font-bold text-sm md:text-base border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900 px-0.5"
+                                        placeholder={language === 'he' ? 'ארגז' : 'Case'}
+                                        title={language === 'he' ? 'ארגזים' : 'Cases'}
+                                      />
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        step="any"
+                                        value={item.counted_units ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.round((item.counted_quantity - Math.floor(item.counted_quantity)) * (originalItem?.units_per_package || 1)) : '')}
+                                        onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'units', e.target.value, originalItem?.units_per_package)}
+                                        className="w-full h-10 text-center font-bold text-sm md:text-base border-emerald-300 focus:border-emerald-600 focus:ring-emerald-600 shadow-sm hide-arrows bg-emerald-50/40 text-emerald-900 px-0.5"
+                                        placeholder={language === 'he' ? 'יח\'' : 'Unit'}
+                                        title={language === 'he' ? 'יחידות' : 'Units'}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="any"
+                                      value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
+                                      onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
+                                      className="w-full h-10 text-center font-bold text-lg border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900"
+                                      placeholder="0"
+                                    />
+                                  )
                                )}
                                <span className="text-[10px] font-medium text-green-600 mt-1.5">
                                  ₪{item.total_cost?.toFixed(2) || '0.00'}
@@ -1030,16 +1102,44 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                 </TableCell>
                                 <TableCell className="px-2 py-3 md:px-4 md:py-4">
                                   {currentWarehouseTab === "all_summary" ? (
-                                    <span className="font-bold text-sm md:text-lg">{item.counted_quantity}</span>
+                                    <span className="font-bold text-sm md:text-lg">
+                                      {typeof item.counted_quantity === 'number' ? Number(item.counted_quantity).toFixed(2).replace(/\.00$/, '') : item.counted_quantity}
+                                    </span>
                                   ) : (
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      step="any" 
-                                      value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
-                                      onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
-                                      className="w-20 md:w-24 h-9 md:h-10 px-2 md:px-3 text-center text-sm md:text-base hide-arrows"
-                                    />
+                                    (item.unit === 'case' || originalItem?.unit === 'case') ? (
+                                      <div className="flex gap-1 items-center w-32 md:w-40">
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          step="any"
+                                          value={item.counted_cases ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.floor(item.counted_quantity) : '')}
+                                          onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'cases', e.target.value, originalItem?.units_per_package)}
+                                          className="w-full h-9 md:h-10 px-1 md:px-2 text-center text-sm md:text-base border-blue-300 focus:border-blue-600 bg-blue-50/40 text-blue-900 hide-arrows"
+                                          placeholder={language === 'he' ? 'ארגזים' : 'Cases'}
+                                          title={language === 'he' ? 'ארגזים' : 'Cases'}
+                                        />
+                                        <span className="text-gray-400 font-light">+</span>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          step="any"
+                                          value={item.counted_units ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.round((item.counted_quantity - Math.floor(item.counted_quantity)) * (originalItem?.units_per_package || 1)) : '')}
+                                          onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'units', e.target.value, originalItem?.units_per_package)}
+                                          className="w-full h-9 md:h-10 px-1 md:px-2 text-center text-sm md:text-base border-emerald-300 focus:border-emerald-600 bg-emerald-50/40 text-emerald-900 hide-arrows"
+                                          placeholder={language === 'he' ? 'יחידות' : 'Units'}
+                                          title={language === 'he' ? 'יחידות בודדות' : 'Loose units'}
+                                        />
+                                      </div>
+                                    ) : (
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        step="any" 
+                                        value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
+                                        onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
+                                        className="w-20 md:w-24 h-9 md:h-10 px-2 md:px-3 text-center text-sm md:text-base hide-arrows"
+                                      />
+                                    )
                                   )}
                                 </TableCell>
                                 <TableCell className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{item.unit}</TableCell>
