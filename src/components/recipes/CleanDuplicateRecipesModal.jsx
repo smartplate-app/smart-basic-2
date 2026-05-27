@@ -28,17 +28,20 @@ export default function CleanDuplicateRecipesModal({ isOpen, onClose, recipes, o
     if (isOpen && recipes.length > 0) {
       const normalize = (s) => (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
+      // Filter only POS items (sale_item) to prevent touching manual prep recipes
+      const posRecipes = recipes.filter(r => r.type === 'sale_item');
+
       // Union-Find to cluster similar recipes
-      const n = recipes.length;
-      const parent = recipes.map((_, i) => i);
+      const n = posRecipes.length;
+      const parent = posRecipes.map((_, i) => i);
       const find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
       const union = (a, b) => { parent[find(a)] = find(b); };
 
       for (let i = 0; i < n; i++) {
-        const nameI = normalize(recipes[i].name);
+        const nameI = normalize(posRecipes[i].name);
         if (!nameI) continue;
         for (let j = i + 1; j < n; j++) {
-          const nameJ = normalize(recipes[j].name);
+          const nameJ = normalize(posRecipes[j].name);
           if (!nameJ) continue;
           // Exact match OR one name contains the other (partial similarity)
           if (nameI === nameJ || nameI.includes(nameJ) || nameJ.includes(nameI)) {
@@ -49,7 +52,7 @@ export default function CleanDuplicateRecipesModal({ isOpen, onClose, recipes, o
 
       // Build groups from clusters
       const clusterMap = {};
-      recipes.forEach((recipe, i) => {
+      posRecipes.forEach((recipe, i) => {
         const root = find(i);
         if (!clusterMap[root]) clusterMap[root] = [];
         clusterMap[root].push(recipe);
