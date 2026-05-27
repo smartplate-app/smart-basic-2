@@ -12,44 +12,35 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_urls required' }, { status: 400 });
     }
 
-    let catalogItems = [];
-    if (supplier_id) {
-      // Fetch catalog items for the specific supplier to allow LLM matching
-      catalogItems = await base44.asServiceRole.entities.Item.filter({ supplier_id });
-    }
-    
-    // Create a compact list of catalog items to pass to the LLM
-    const catalogString = catalogItems.map(i => `ID: ${i.id} | Name: ${i.name} | CatNum: ${i.catalog_number || ''} | Unit: ${i.unit}`).join('\n');
-
     const currentYear = new Date().getFullYear();
-    const prompt = `You are an expert accountant extracting data from an Israeli supplier invoice/delivery note image. Read the Hebrew text carefully. DO NOT invent or hallucinate data.
+    // 1) Extract header fields and items from the document (Heb/Eng supported)
+    const llm = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      model: 'gemini_3_flash',
+      prompt: `You are an expert accountant extracting data from an Israeli supplier invoice/delivery note image. Read the Hebrew text carefully. DO NOT invent or hallucinate data.
 
-VERY IMPORTANT: DO NOT TRANSLATE any item names. Extract the exact text in its original language exactly as it appears in the document.
+VERY IMPORTANT: DO NOT TRANSLATE any item names. Extract the exact text in its original language exactly as it appears in the document. If the document is in Hebrew, keep names in Hebrew. If in English, keep in English.
 
 CRITICAL EXTRACTION RULES:
 1. invoice_number:
    - Look for "מספר חשבונית", "חשבונית מס'", "מס' חשבונית", "תעודת משלוח", "מספר מסמך", or "מזהה".
-   - Extract EXACTLY the invoice number (digits, sometimes with dashes or letters).
+   - Extract EXACTLY the invoice number (digits, sometimes with dashes or letters). Do NOT extract phone numbers or dates.
 2. invoice_date:
    - Look for "תאריך", "תאריך הפקה", "תאריך מסמך", "Date".
-   - Format strictly as YYYY-MM-DD. (The current year is ${currentYear}).
+   - Format strictly as YYYY-MM-DD. If the year is "24" -> 2024, "25" -> 2025. (The current year is ${currentYear}). Do not invent future dates.
 3. total_incl_vat:
    - Look for "סה"כ לתשלום", "סה"כ כולל מע"מ", "לתשלום ש"ח", "סה"כ".
-   - This is the final absolute bottom-line total you have to pay. Extract the exact numeric value.
-4. total_excl_vat: Look for "סה"כ לפני מע"מ", "סכום פטור", "ללא מע"מ".
-5. vat_amount: Look for "סכום מע"מ", "מע"מ 17%", "מע"מ".
-6. is_refund: Set to true ONLY if the document says "חשבונית זיכוי", "זיכוי", "החזר", or if the total is explicitly negative.
+   - This is the final absolute bottom-line total you have to pay. Extract the exact numeric value. 
+4. total_excl_vat:
+   - Look for "סה"כ לפני מע"מ", "סכום פטור", "סכום חייב", "ללא מע"מ".
+5. vat_amount:
+   - Look for "סכום מע"מ", "מע"מ 17%", "מע"מ".
+6. is_refund:
+   - Set to true ONLY if the document says "חשבונית זיכוי", "זיכוי", "החזר", or if the total is explicitly negative.
 7. items:
-   - Extract the list of ALL items exactly as they appear in the invoice.
-   - For EACH extracted item, try to MATCH it against the provided Supplier Catalog. 
-   - If you find a good match based on name or catalog number, set 'item_id' to the catalog ID, and 'match_confidence' to a number between 0.0 and 1.0 (e.g. 0.95 for exact match). If no good match, leave 'item_id' empty and 'match_confidence' 0.
+   - Extract the list of ALL items exactly as they appear in the invoice (the "תיאור" / Description column).
+   - Look for the item name, quantity ("כמות", "כמויות"), price per unit ("מחיר יחידה", "מחיר"), and total line price ("סה"כ", "סכום").
 
-Supplier Catalog:
-${catalogString ? catalogString : "No catalog provided."}`;
-
-    const llm = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      model: 'gemini_3_1_pro',
-      prompt,
+Extract these values precisely. If a value is missing, return 0 for amounts or empty string for text.`,
       file_urls,
       response_json_schema: {
         type: 'object',
@@ -65,13 +56,10 @@ ${catalogString ? catalogString : "No catalog provided."}`;
             items: {
               type: 'object',
               properties: {
-                item_id: { type: 'string' },
                 item_name: { type: 'string' },
                 quantity: { type: 'number' },
-                unit: { type: 'string' },
                 price: { type: 'number' },
-                total: { type: 'number' },
-                match_confidence: { type: 'number' }
+                total: { type: 'number' }
               }
             }
           }
