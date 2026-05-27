@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -194,6 +195,35 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [matching, setMatching] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [duplicateExists, setDuplicateExists] = useState(false);
+  const [anomalyCheck, setAnomalyCheck] = useState({ show: false, messages: [], onContinue: null });
+
+  const checkForAnomalies = () => {
+    const messages = [];
+    const overSupplied = formData.verified_items.filter(i => i.received_quantity > i.ordered_quantity && i.ordered_quantity > 0);
+    const notOrdered = formData.verified_items.filter(i => i.received_quantity > 0 && i.ordered_quantity === 0 && i.item_id);
+    const notRecognized = formData.verified_items.filter(i => !i.item_id && i.item_name);
+
+    if (!noOrderMode && (order || openOrders.length > 0)) {
+      if (overSupplied.length > 0) {
+        messages.push(language === 'he' 
+          ? `קיבלת כמות גדולה ממה שהוזמן עבור ${overSupplied.length} פריטים.` 
+          : `You received more than ordered for ${overSupplied.length} items.`);
+      }
+      if (notOrdered.length > 0) {
+        messages.push(language === 'he' 
+          ? `קיבלת ${notOrdered.length} פריטים שלא היו בהזמנה המקורית.` 
+          : `You received ${notOrdered.length} items that were not on the original order.`);
+      }
+    }
+
+    if (notRecognized.length > 0) {
+      messages.push(language === 'he' 
+        ? `ישנם ${notRecognized.length} פריטים שלא קיימים בקטלוג. הם יתווספו אוטומטית למערכת ותוכל לעדכן אותם מאוחר יותר.` 
+        : `There are ${notRecognized.length} items that don't exist in the catalog. They will be added automatically and you can edit them later.`);
+    }
+
+    return messages;
+  };
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
   const [previousReceipts, setPreviousReceipts] = useState([]);
   const [deliveryNotes, setDeliveryNotes] = useState([]);
@@ -778,7 +808,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (noOrderMode) {
+    const executeSubmit = async () => {
+      if (noOrderMode) {
       if (!formData.supplier_id) {
         alert(t('supplier_required'));
         return;
@@ -881,9 +912,18 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
     }
 
     onSubmit(finalData);
-  };
+    };
 
-  const removeImage = (index) => {
+    const anomalies = checkForAnomalies();
+    if (anomalies.length > 0) {
+    setAnomalyCheck({ show: true, messages: anomalies, onContinue: executeSubmit });
+    return;
+    }
+
+    executeSubmit();
+    };
+
+    const removeImage = (index) => {
     setFormData(prev => ({
       ...prev,
       receipt_images: prev.receipt_images.filter((_, i) => i !== index)
@@ -907,9 +947,10 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
   };
 
   return (
-    <Card className="mb-8 shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-xl font-bold">
+    <>
+      <Card className="mb-8 shadow-lg">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <CardTitle className="text-xl font-bold">
           {noOrderMode ? t('supply_without_order') : t('receive')}
         </CardTitle>
         <Button variant="ghost" size="icon" onClick={onCancel}>
@@ -1658,7 +1699,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 if (!confirmed) return;
                               }
 
-                              const baseData = {
+                              const executeMultiSubmit = async () => {
+                                const baseData = {
                                 supplier_id: formData.supplier_id,
                                 supplier_name: formData.supplier_name,
                                 supplier_email: formData.supplier_email,
@@ -1718,9 +1760,18 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               } catch (e) {
                                 alert((language === 'he' ? 'שמירה נכשלה' : 'Save failed') + ': ' + (e?.message || e));
                               }
-                            }}
-                          >
-                            <PackageCheck className="w-4 h-4 ml-2" />
+                              };
+
+                              const anomalies = checkForAnomalies();
+                              if (anomalies.length > 0) {
+                              setAnomalyCheck({ show: true, messages: anomalies, onContinue: executeMultiSubmit });
+                              return;
+                              }
+
+                              executeMultiSubmit();
+                              }}
+                              >
+                              <PackageCheck className="w-4 h-4 ml-2" />
                             {language === 'he' ? 'שמור הכל' : 'Save all'}
                           </Button>
                           <Button type="button" variant="outline" onClick={onCancel} className="flex-1 min-h-[44px] md:min-h-0">
@@ -1761,5 +1812,53 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         </form>
       </CardContent>
     </Card>
+
+      <Dialog open={anomalyCheck.show} onOpenChange={(val) => { if (!val) setAnomalyCheck({ show: false, messages: [], onContinue: null }); }}>
+        <DialogContent className="max-w-md" dir={language === 'he' ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
+              <Info className="w-5 h-5" />
+              {language === 'he' ? 'שים לב לנתוני הקבלה' : 'Please Note'}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Anomaly warnings for the receipt
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            {anomalyCheck.messages.map((msg, i) => (
+              <div key={i} className="flex items-start gap-2 text-sm bg-orange-50 p-3 rounded-lg border border-orange-100 text-orange-900">
+                <span className="mt-1 w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                <span>{msg}</span>
+              </div>
+            ))}
+            <p className="text-sm text-gray-600 mt-4 font-medium">
+              {language === 'he' 
+                ? 'האם תרצה לאשר את קבלת הסחורה כפי שהיא, או לחזור לערוך אותה (למשל לבקש זיכוי)?'
+                : 'Do you want to accept the supply as is, or go back to edit it (e.g., to ask for a refund)?'}
+            </p>
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-start">
+            <Button
+              type="button"
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                const action = anomalyCheck.onContinue;
+                setAnomalyCheck({ show: false, messages: [], onContinue: null });
+                if (action) action();
+              }}
+            >
+              {language === 'he' ? 'אשר והמשך' : 'Confirm and Accept'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAnomalyCheck({ show: false, messages: [], onContinue: null })}
+            >
+              {language === 'he' ? 'חזור לעריכה' : 'Go Back to Edit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
