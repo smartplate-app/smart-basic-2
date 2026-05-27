@@ -1190,8 +1190,7 @@ export default function OrdersPage() {
       return;
     }
     try {
-      const { data } = await base44.functions.invoke('deleteOrder', { orderId: order.id });
-      if (!data?.success) throw new Error(data?.error || 'Failed to delete order');
+      await base44.entities.Order.delete(order.id);
       await loadData(user);
     } catch (error) {
       console.error('Error deleting order:', error);
