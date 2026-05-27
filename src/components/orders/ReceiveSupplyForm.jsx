@@ -956,7 +956,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
           {order && (
             <div className="mb-4 flex">
-              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOrder(order)} className="text-blue-600 border-blue-200 hover:bg-blue-50 bg-white shadow-sm">
+              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOrder(order)} className="text-gray-800 border-gray-300 hover:bg-gray-50 bg-white shadow-sm font-semibold">
                 <Eye className="w-4 h-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
                 {language === 'he' ? 'צפה בהזמנה' : 'Preview Order'}
               </Button>
@@ -1033,7 +1033,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 className="rounded w-5 h-5 accent-[#d4a373] shrink-0 cursor-pointer"
                               />
                               <div className="flex flex-col min-w-0">
-                                <span className="font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 transition-colors truncate">
+                                <span className="font-bold text-gray-900 hover:text-black flex items-center gap-1.5 transition-colors truncate">
                                   <Eye className="w-4 h-4 shrink-0" /> <span className="truncate">{o.order_number}</span>
                                 </span>
                                 <span className="text-gray-500 text-xs mt-0.5">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
