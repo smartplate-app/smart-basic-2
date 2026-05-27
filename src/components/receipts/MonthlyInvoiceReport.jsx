@@ -431,7 +431,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 )}
 
                 {grouped.map(group => (
-                  <React.Fragment key={group.supplier_id}>
+                  <tbody key={group.supplier_id} className="contents">
                     <tr className="bg-green-50/50 border-t border-green-100">
                       <td className="px-4 py-3 font-semibold text-gray-900">{group.supplier_name}</td>
                       <td className="px-4 py-3 text-sm text-gray-500" colSpan={2}>{language === 'he' ? 'סה"כ' : (t('total') || 'Total')}</td>
@@ -462,7 +462,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                         <td className="px-4 py-3 text-sm font-semibold text-gray-900 align-middle">₪{Number(r.invoice_total || 0).toFixed(2)}</td>
                       </tr>
                     ))}
-                    </React.Fragment>
+                  </tbody>
                 ))}
 
                 {grouped.length > 0 && (

@@ -1630,7 +1630,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 </thead>
                                 <tbody>
                                   {formData.verified_items.map((item, index) => (
-                                    <React.Fragment key={index}>
+                                    <tbody key={index} className="contents">
                                       <tr className={`border-t border-[#f3f4f6] ${index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'} transition-colors`}>
                                         <td className="px-3 py-2 text-[#9ca3af] text-xs text-center align-top pt-4">{index + 1}</td>
                                         <td className="px-3 py-2 align-top pt-3">
@@ -1725,13 +1725,13 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                                 </label>
                                               )}
                                             </div>
-                                          </td>
-                                        </tr>
-                                      )}
-                                    </React.Fragment>
-                                  ))}
-                                </tbody>
-                              </table>
+                                            </td>
+                                            </tr>
+                                            )}
+                                            </tbody>
+                                            ))}
+                                            </tbody>
+                                            </table>
                             </div>
                           </div>
                         )}
