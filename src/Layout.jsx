@@ -478,7 +478,10 @@ const [authLoading, setAuthLoading] = useState(() => {
               if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
                 setAuthLoading(false);
                 try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
-                base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('code');
+                cleanUrl.searchParams.delete('state');
+                base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search);
                 return;
               }
         if (!user) setAuthLoading(false);
@@ -487,12 +490,15 @@ const [authLoading, setAuthLoading] = useState(() => {
         const inCooldown = cooldownUntil > Date.now();
         const params = new URLSearchParams(window.location.search);
         const oauthBack = params.has('code') || params.has('state');
-        if (attemptNumber < 2 || inCooldown || oauthBack) {
+        if (attemptNumber < 2 || (inCooldown && attemptNumber < 4) || (oauthBack && attemptNumber < 5)) {
           setTimeout(() => loadAuth(attemptNumber + 1), 1200);
           return;
         }
         
-        base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('code');
+        cleanUrl.searchParams.delete('state');
+        base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search);
         return;
       }
       

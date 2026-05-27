@@ -20,6 +20,8 @@ Deno.serve(async (req) => {
       model: 'gemini_3_1_pro',
       prompt: `You are an expert accountant extracting data from an Israeli supplier invoice/delivery note image. Read the Hebrew text carefully. DO NOT invent or hallucinate data.
 
+VERY IMPORTANT: DO NOT TRANSLATE any item names. Extract the exact text in its original language exactly as it appears in the document. If the document is in Hebrew, keep names in Hebrew. If in English, keep in English.
+
 CRITICAL EXTRACTION RULES:
 1. invoice_number:
    - Look for "מספר חשבונית", "חשבונית מס'", "מס' חשבונית", "תעודת משלוח", "מספר מסמך", or "מזהה".
