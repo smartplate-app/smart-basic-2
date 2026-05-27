@@ -404,8 +404,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       >
 
 
-        <div className="flex-1 bg-gray-100 p-2 sm:p-4 overflow-auto flex justify-center">
-          <div className={`order-preview-embed not-prose bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden ${viewMode === 'mobile' ? 'w-full max-w-sm' : 'w-full'}`}>
+        <div className="flex-1 min-h-0 bg-gray-100 p-2 sm:p-4 overflow-y-auto flex justify-center">
+          <div className={`order-preview-embed not-prose bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden ${viewMode === 'mobile' ? 'w-full max-w-sm h-fit' : 'w-full h-fit'}`}>
             <div className="w-full relative">
               <div style={{
                   background: '#f9fafb', // matching main app background
