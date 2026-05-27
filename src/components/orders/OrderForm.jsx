@@ -40,7 +40,8 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   const [itemSearch, setItemSearch] = React.useState("");
   const [supplierOpen, setSupplierOpen] = React.useState(false);
   const [cartPreviewOpen, setCartPreviewOpen] = React.useState(false);
-
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
+  const itemsContainerRef = React.useRef(null);
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -404,8 +405,13 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {t('no_available_items')}
               </div>
             ) : (
-              <div className="flex flex-col max-h-[70vh] overflow-y-auto -mx-3 px-3 sm:mx-0 sm:px-0 bg-white gap-2 p-2 bg-gray-50 border rounded-lg">
-                {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
+              <div className="relative">
+                <div 
+                  ref={itemsContainerRef}
+                  onScroll={(e) => setShowScrollTop(e.target.scrollTop > 200)}
+                  className="flex flex-col max-h-[70vh] overflow-y-auto -mx-3 px-3 sm:mx-0 sm:px-0 bg-white gap-2 p-2 bg-gray-50 border rounded-lg pb-14"
+                >
+                  {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
                   const stock = currentStock[item.id] || 0;
                   const itemTotal = quantity * (item.price || 0);
@@ -499,6 +505,18 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                     </div>
                   );
                 })}
+                </div>
+                {showScrollTop && (
+                  <button
+                    type="button"
+                    onClick={() => itemsContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="absolute bottom-4 bg-white/90 backdrop-blur shadow-md border border-gray-200 text-gray-700 p-2.5 rounded-full hover:bg-gray-100 transition-all z-10"
+                    style={{ [language === 'he' ? 'left' : 'right']: '16px' }}
+                    title={language === 'he' ? 'חזור למעלה' : 'Scroll to top'}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                  </button>
+                )}
               </div>
             )}
           </div>
