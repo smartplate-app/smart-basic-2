@@ -88,6 +88,14 @@
           },
           "issue_note": {
             "type": "string"
+          },
+          "request_credit_quantity": {
+            "type": "boolean",
+            "description": "Request credit for missing quantity"
+          },
+          "request_credit_price": {
+            "type": "boolean",
+            "description": "Request credit for price overcharge"
           }
         }
       }

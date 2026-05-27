@@ -185,7 +185,9 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
                discount_changed: false,
                has_issue: false,
                issue_note: "",
-               units_per_package: 1
+               units_per_package: 1,
+               request_credit_quantity: false,
+               request_credit_price: false
              });
           }
        });
@@ -784,8 +786,20 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
       const { calculatedTotal, totalsMatch } = recalculateTotals(updatedVerifiedItems, prev.invoice_total);
 
+      let needsReview = prev.needs_review;
+      let awaitingCredit = prev.awaiting_credit;
+      if (field === 'request_credit_quantity' || field === 'request_credit_price') {
+        const hasAnyCreditReq = updatedVerifiedItems.some(i => i.request_credit_quantity || i.request_credit_price);
+        if (hasAnyCreditReq) {
+          needsReview = true;
+          awaitingCredit = true;
+        }
+      }
+
       return {
         ...prev,
+        needs_review: needsReview,
+        awaiting_credit: awaitingCredit,
         verified_items: updatedVerifiedItems,
         price_changes_summary: priceChangesSummary,
         has_price_changes: hasPriceChanges,
@@ -813,7 +827,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         has_issue: false,
         issue_note: "",
         units_per_package: 1,
-        price_after_discount: 0
+        price_after_discount: 0,
+        request_credit_quantity: false,
+        request_credit_price: false
       }];
       const { calculatedTotal, totalsMatch } = recalculateTotals(newItems, prev.invoice_total);
       return { ...prev, verified_items: newItems, calculated_total: calculatedTotal, totals_match: totalsMatch };
@@ -1690,31 +1706,15 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                     </div>
 
                                     <div className="flex flex-col gap-1 mt-1">
-                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0 && (
-                                        <span className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded font-medium inline-block w-fit border border-orange-200">
-                                          {language === 'he' ? `הוזמן: ${item.ordered_quantity} | התקבל: ${item.received_quantity} (חריגה)` : `Ordered: ${item.ordered_quantity} | Received: ${item.received_quantity} (Mismatch)`}
-                                        </span>
-                                      )}
-                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id && (
-                                        <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded font-medium inline-block w-fit border border-purple-200">
-                                          {language === 'he' ? 'פריט זה לא הוזמן במקור' : 'Item was not originally ordered'}
-                                        </span>
-                                      )}
-                                      {!item.item_id && item.item_name && (
-                                        <span className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded font-medium inline-block w-fit border border-red-200">
-                                          {language === 'he' ? 'פריט לא מזוהה (יווצר אוטומטית)' : 'Unrecognized item (will be created)'}
-                                        </span>
-                                      )}
+                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0 && <span className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded font-medium inline-block w-fit border border-orange-200">{language === 'he' ? `הוזמן: ${item.ordered_quantity} | התקבל: ${item.received_quantity} (חריגה)` : `Ordered: ${item.ordered_quantity} | Received: ${item.received_quantity} (Mismatch)`}</span>}
+                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id && <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded font-medium inline-block w-fit border border-purple-200">{language === 'he' ? 'פריט זה לא הוזמן במקור' : 'Item was not originally ordered'}</span>}
+                                      {!item.item_id && item.item_name && <span className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded font-medium inline-block w-fit border border-red-200">{language === 'he' ? 'פריט לא מזוהה (יווצר אוטומטית)' : 'Unrecognized item (will be created)'}</span>}
                                     </div>
 
-                                    <div className="flex items-center gap-2">
-                                      <input
-                                        type="checkbox"
-                                        checked={item.has_issue}
-                                        onChange={(e) => updateVerifiedItem(index, 'has_issue', e.target.checked)}
-                                        className="rounded"
-                                      />
-                                      <Label className="text-sm">{t('issue')}</Label>
+                                    <div className="flex items-center gap-4 flex-wrap mt-2">
+                                      <div className="flex items-center gap-2"><input type="checkbox" checked={item.has_issue} onChange={(e) => updateVerifiedItem(index, 'has_issue', e.target.checked)} className="rounded" /><Label className="text-sm">{t('issue')}</Label></div>
+                                      <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100"><input type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600" /><Label className="text-sm text-red-800 font-semibold">{language === 'he' ? 'בקשה לזיקוי כמות' : 'Req. quantity credit'}</Label></div>
+                                      <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100"><input type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600" /><Label className="text-sm text-red-800 font-semibold">{language === 'he' ? 'בקשה לזיקוי מחיר' : 'Req. price credit'}</Label></div>
                                     </div>
 
                                     {item.has_issue && (
@@ -1722,6 +1722,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                         placeholder={t('issue_note')}
                                         value={item.issue_note}
                                         onChange={(e) => updateVerifiedItem(index, 'issue_note', e.target.value)}
+                                        className="mt-2"
                                       />
                                     )}
                                   </div>
@@ -1731,6 +1732,42 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           </div>
                         )}
                       </div>
+
+                      {formData.verified_items.some(i => i.request_credit_quantity || i.request_credit_price) && (
+                        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+                          <h4 className="font-bold text-red-800 mb-2">{language === 'he' ? 'פריטים דורשים זיכוי' : 'Items pending credit'}</h4>
+                          <p className="text-sm text-red-700 mb-4">
+                            {language === 'he' ? 'סימנת פריטים עם פערים המצריכים בקשת זיכוי מהספק.' : 'You marked items with discrepancies requiring a credit request from the supplier.'}
+                          </p>
+                          <Button 
+                            type="button" 
+                            className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto font-bold"
+                            onClick={() => {
+                              const supplier = availableSuppliers.find(s => s.id === formData.supplier_id);
+                              const phone = (supplier?.phone || "").replace(/\D/g, "");
+                              const creditItems = formData.verified_items.filter(i => i.request_credit_quantity || i.request_credit_price);
+                              let text = language === 'he' 
+                                ? `שלום, בהמשך לקבלת סחורה (חשבונית מס' ${formData.invoice_number || 'ללא מספר'}) מצאנו פערים שמצריכים זיכוי:\n\n`
+                                : `Hello, regarding receipt (Invoice #${formData.invoice_number || 'N/A'}), we found discrepancies needing credit:\n\n`;
+                              creditItems.forEach(i => {
+                                text += `- ${i.item_name}:\n`;
+                                if (i.request_credit_quantity) {
+                                  text += language === 'he' ? `  הוזמן: ${i.ordered_quantity}, התקבל בפועל: ${i.received_quantity} (פער של ${i.ordered_quantity - i.received_quantity})\n` : `  Ordered: ${i.ordered_quantity}, Received: ${i.received_quantity}\n`;
+                                }
+                                if (i.request_credit_price) {
+                                  text += language === 'he' ? `  מחיר שהוזמן: ₪${i.catalog_price}, מחיר בחשבונית: ₪${i.actual_price}\n` : `  Ordered Price: ${i.catalog_price}, Invoiced: ${i.actual_price}\n`;
+                                }
+                                text += "\n";
+                              });
+                              text += language === 'he' ? "אשמח לטיפולכם ולהפקת חשבונית זיכוי." : "Please process a credit invoice.";
+                              const whatsappUrl = phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+                              window.open(whatsappUrl, '_blank');
+                            }}
+                          >
+                            {language === 'he' ? 'שלח בקשת זיקוי לספק (WhatsApp)' : 'Send Credit Request (WhatsApp)'}
+                          </Button>
+                        </div>
+                      )}
                     </>
                   )}
 
