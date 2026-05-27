@@ -1339,7 +1339,7 @@ export default function OrdersPage() {
         {/* Mobile quick filters */}
         <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4">
           <div className="flex gap-2 pb-1 w-max after:content-[''] after:w-4 after:flex-shrink-0 before:content-[''] before:w-4 before:flex-shrink-0">
-            {['all','draft','sent','confirmed'].map((s) => (
+            {['all','draft','sent'].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
@@ -1347,9 +1347,7 @@ export default function OrdersPage() {
               >
                 {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
                  s==='draft' ? t('status_draft') :
-                 s==='sent' ? t('status_sent') :
-                 s==='confirmed' ? t('status_confirmed') :
-                 t('status_delivered')}
+                 t('status_sent')}
               </button>
             ))}
           </div>
@@ -1410,7 +1408,6 @@ export default function OrdersPage() {
                   <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
-                  <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
@@ -1631,7 +1628,6 @@ export default function OrdersPage() {
                   <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
-                  <SelectItem value="confirmed">{t('status_confirmed')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
