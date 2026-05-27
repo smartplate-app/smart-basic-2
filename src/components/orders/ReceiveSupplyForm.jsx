@@ -1078,7 +1078,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                   <div className="space-y-2 mt-4">
                     <Label>{t('receipt_images')} *</Label>
                     <div
-                      className={`relative border-2 border-dashed rounded-2xl p-6 transition-colors overflow-hidden ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50/50 hover:bg-gray-50'}`}
+                      className={`relative border-2 border-dashed rounded-2xl p-4 max-w-sm mx-auto transition-colors overflow-hidden ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50/50 hover:bg-gray-50'}`}
                       onDragOver={onDragOverUpload}
                       onDragLeave={onDragLeaveUpload}
                       onDrop={onDropUpload}
@@ -1093,28 +1093,28 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       />
                       <label
                         htmlFor="receipt-upload"
-                        className="flex flex-col items-center gap-3 cursor-pointer relative z-10"
+                        className="flex flex-col items-center gap-2 cursor-pointer relative z-10"
                       >
                         {uploading ? (
-                          <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
-                            <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
+                            <Loader className="w-6 h-6 text-blue-600 animate-spin" />
                           </div>
                         ) : (
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-500 to-orange-400 p-[2px] shadow-lg">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-500 to-orange-400 p-[2px] shadow-lg">
                             <div className="w-full h-full rounded-full bg-white flex items-center justify-center border-2 border-white hover:bg-gray-50 transition-colors">
-                              <Camera className="w-8 h-8 text-gray-800" strokeWidth={1.5} />
+                              <Camera className="w-6 h-6 text-gray-800" strokeWidth={1.5} />
                             </div>
                           </div>
                         )}
-                        <span className="text-base font-bold text-gray-800 text-center">
-                          {safeT('click_to_upload_images', 'צלם או העלה קבלה', 'Take photo or upload receipt')}
+                        <span className="text-sm font-bold text-gray-800 text-center">
+                          {safeT('click_to_upload_images', 'לחץ להעלאת תמונות', 'Take photo or upload receipt')}
                         </span>
-                        <span className="text-xs text-gray-500 max-w-xs text-center">
+                        <span className="text-[10px] text-gray-500 text-center">
                           {language === 'he' ? 'תמיכה בתמונות ומסמכי PDF. ניתן גם לגרור לכאן.' : 'Supports images/PDF. You can also drag & drop here.'}
                         </span>
                       </label>
-                      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-                      <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                      <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                      <div className="absolute -top-10 -left-10 w-32 h-32 bg-purple-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
                     </div>
 
                     {formData.receipt_images.length > 0 && (

@@ -559,24 +559,28 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
 
           <div className="space-y-2">
             <Label>{t('receipt_images')}</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 max-w-sm mx-auto">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 multiple
                 onChange={handleImageUpload}
                 className="hidden"
                 id="receipt-upload"
                 disabled={uploading}
               />
-              <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center gap-2">
+              <label htmlFor="receipt-upload" className="cursor-pointer flex flex-col items-center gap-1">
                 {uploading ? (
-                  <Loader className="w-8 h-8 text-gray-400 animate-spin" />
+                  <Loader className="w-6 h-6 text-gray-400 animate-spin" />
                 ) : (
-                  <Upload className="w-8 h-8 text-gray-400" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-500 to-orange-400 p-[2px] shadow-lg mb-1">
+                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center border-2 border-white hover:bg-gray-50 transition-colors">
+                      <Upload className="w-5 h-5 text-gray-800" strokeWidth={1.5} />
+                    </div>
+                  </div>
                 )}
-                <span className="text-sm text-gray-600">{t('click_to_upload_images')}</span>
-                <span className="text-xs text-gray-500">{t('supports_multiple_images')}</span>
+                <span className="text-sm font-bold text-gray-800 text-center">{language === 'he' ? 'לחץ להעלאת תמונות' : t('click_to_upload_images')}</span>
+                <span className="text-[10px] text-gray-500 text-center">{language === 'he' ? 'תמיכה בתמונות ומסמכי PDF. ניתן גם לגרור לכאן.' : 'Supports images and PDF documents. You can also drag here.'}</span>
               </label>
             </div>
 
