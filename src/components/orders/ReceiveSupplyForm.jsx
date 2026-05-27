@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info, Eye, Download } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info, Eye, Download, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -222,6 +225,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [dragActive, setDragActive] = useState(false);
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [anomalyCheck, setAnomalyCheck] = useState({ show: false, messages: [], onContinue: null });
+  const [supplierPopoverOpen, setSupplierPopoverOpen] = useState(false);
 
   const checkForAnomalies = () => {
     const messages = [];
@@ -1018,25 +1022,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
             <>
               <div className="space-y-2">
                 <Label>{t('select_supplier')} *</Label>
-                <Select onValueChange={(val) => { handleSupplierSelect(val); }} value={formData.supplier_id}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('select_supplier')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(!availableSuppliers || availableSuppliers.length === 0) ? (
-                      <SelectItem value="none" disabled>{t('no_suppliers')}</SelectItem>
-                    ) : (
-                    [...availableSuppliers]
-                      .slice()
-                      .sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }))
-                      .map(supplier => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <Popover open={supplierPopoverOpen} onOpenChange={setSupplierPopoverOpen}><PopoverTrigger asChild><Button variant="outline" role="combobox" aria-expanded={supplierPopoverOpen} className="w-full justify-between font-normal"><span className="truncate">{formData.supplier_id && availableSuppliers.length > 0 ? availableSuppliers.find((s) => s.id === formData.supplier_id)?.name || t('select_supplier') : t('select_supplier')}</span><ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /></Button></PopoverTrigger><PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start"><Command><CommandInput placeholder={language === 'he' ? 'חפש ספק...' : 'Search supplier...'} autoFocus /><CommandList><CommandEmpty>{t('no_suppliers') || 'לא נמצאו ספקים.'}</CommandEmpty><CommandGroup>
+                          {[...availableSuppliers].slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })).map((supplier) => (<CommandItem key={supplier.id} value={supplier.name} onSelect={() => { handleSupplierSelect(supplier.id); setSupplierPopoverOpen(false); }}><Check className={cn("mr-2 h-4 w-4 shrink-0", formData.supplier_id === supplier.id ? "opacity-100" : "opacity-0")} /><span className="truncate">{supplier.name}</span></CommandItem>))}
+                        </CommandGroup></CommandList></Command></PopoverContent></Popover>
               </div>
 
               {(formData.supplier_id || receipt) && (
