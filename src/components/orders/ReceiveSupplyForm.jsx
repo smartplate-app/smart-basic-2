@@ -1643,6 +1643,24 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                       </div>
                                     </div>
 
+                                    <div className="flex flex-col gap-1 mt-1">
+                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0 && (
+                                        <span className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded font-medium inline-block w-fit border border-orange-200">
+                                          {language === 'he' ? `הוזמן: ${item.ordered_quantity} | התקבל: ${item.received_quantity} (חריגה)` : `Ordered: ${item.ordered_quantity} | Received: ${item.received_quantity} (Mismatch)`}
+                                        </span>
+                                      )}
+                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id && (
+                                        <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded font-medium inline-block w-fit border border-purple-200">
+                                          {language === 'he' ? 'פריט זה לא הוזמן במקור' : 'Item was not originally ordered'}
+                                        </span>
+                                      )}
+                                      {!item.item_id && item.item_name && (
+                                        <span className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded font-medium inline-block w-fit border border-red-200">
+                                          {language === 'he' ? 'פריט לא מזוהה (יווצר אוטומטית)' : 'Unrecognized item (will be created)'}
+                                        </span>
+                                      )}
+                                    </div>
+
                                     <div className="flex items-center gap-2">
                                       <input
                                         type="checkbox"
