@@ -561,19 +561,25 @@ export default function SupplyReceiptsPage() {
                   return (
                     <div key={section}>
                       <h3 className="text-lg font-bold text-gray-800 mb-3">{sectionTitle} ({sectionOrders.length})</h3>
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      <div className="flex flex-col gap-3">
                         {sectionOrders.map(order => (
-                          <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                            <div className="flex justify-between items-start mb-2">
-                              <div className="font-bold text-gray-900">{order.supplier_name}</div>
-                              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-100">{order.order_number}</span>
+                          <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 flex-1">
+                              <div className="font-bold text-gray-900 text-lg sm:w-1/3 truncate" title={order.supplier_name}>{order.supplier_name}</div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-100 font-medium whitespace-nowrap">
+                                  {order.order_number}
+                                </span>
+                                <span className="text-sm text-gray-600 whitespace-nowrap">
+                                  {new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+                                </span>
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-600 mb-4">{new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>
                             <Button
                               onClick={() => { setSelectedOrder(order); setShowForm(true); }}
-                              className="w-full bg-green-600 hover:bg-green-700 text-white"
+                              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex-shrink-0 font-bold"
                             >
-                              <PackageCheck className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                              <PackageCheck className="w-4 h-4 rtl:ml-2 rtl:mr-0 ltr:mr-2" />
                               {tt('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
                             </Button>
                           </div>
