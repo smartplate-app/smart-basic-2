@@ -1005,19 +1005,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
             </div>
           )}
 
-          {formData.verified_items.some(item => item.has_issue) && (
-            <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-orange-800 font-bold mb-2">
-                <AlertTriangle className="w-5 h-5" />
-                <span>{language === 'he' ? 'פריטים דורשי השלמה' : 'Items needing completion'}</span>
-              </div>
-              <p className="text-sm text-orange-700 mb-3">
-                {language === 'he' 
-                  ? 'הפריטים הבאים נוספו במהלך קבלת הסחורה ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):'
-                  : 'The following items were added during supply receipt and need to be completed:'}
-              </p>
-            </div>
-          )}
+
           {(noOrderMode || order) ? (
             <>
               <div className="space-y-2">
@@ -1696,23 +1684,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                     <div className="flex flex-col gap-1 mt-1">
                                       {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0 && <span className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded font-medium inline-block w-fit border border-orange-200">{language === 'he' ? `הוזמן: ${item.ordered_quantity} | התקבל: ${item.received_quantity} (חריגה)` : `Ordered: ${item.ordered_quantity} | Received: ${item.received_quantity} (Mismatch)`}</span>}
                                       {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id && <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded font-medium inline-block w-fit border border-purple-200">{language === 'he' ? 'פריט זה לא הוזמן במקור' : 'Item was not originally ordered'}</span>}
-                                      {!item.item_id && item.item_name && <span className="text-xs text-red-700 bg-red-100 px-2 py-1 rounded font-medium inline-block w-fit border border-red-200">{language === 'he' ? 'פריט לא מזוהה (יווצר אוטומטית)' : 'Unrecognized item (will be created)'}</span>}
                                     </div>
 
                                     <div className="flex items-center gap-4 flex-wrap mt-2">
-                                      <div className="flex items-center gap-2"><input type="checkbox" checked={item.has_issue} onChange={(e) => updateVerifiedItem(index, 'has_issue', e.target.checked)} className="rounded" /><Label className="text-sm">{t('issue')}</Label></div>
                                       <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100"><input type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600" /><Label className="text-sm text-red-800 font-semibold">{language === 'he' ? 'בקשה לזיכוי כמות' : 'Req. quantity credit'}</Label></div>
                                       <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100"><input type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600" /><Label className="text-sm text-red-800 font-semibold">{language === 'he' ? 'בקשה לזיכוי מחיר' : 'Req. price credit'}</Label></div>
                                     </div>
-
-                                    {item.has_issue && (
-                                      <Input
-                                        placeholder={t('issue_note')}
-                                        value={item.issue_note}
-                                        onChange={(e) => updateVerifiedItem(index, 'issue_note', e.target.value)}
-                                        className="mt-2"
-                                      />
-                                    )}
                                   </div>
                                 </CardContent>
                               </Card>
