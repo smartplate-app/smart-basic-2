@@ -101,14 +101,17 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
   return (
     <>
       {viewMode === 'list' ? (
-        <tr className="hover:bg-blue-50 transition-colors border-b border-gray-100 group">
+        <tr 
+          className="hover:bg-blue-50 transition-colors border-b border-gray-100 group cursor-pointer"
+          onClick={() => onEdit(supplier)}
+        >
           <td className="p-3 align-middle font-medium text-gray-900">{supplier.name}</td>
           <td className="p-3 align-middle">
             {supplier.contact_person && <div className="text-sm font-medium">{supplier.contact_person}</div>}
-            <a href={`tel:${supplier.phone}`} className="text-xs text-green-600 hover:underline">{supplier.phone || '-'}</a>
+            <a href={`tel:${supplier.phone}`} onClick={(e) => e.stopPropagation()} className="text-xs text-green-600 hover:underline">{supplier.phone || '-'}</a>
           </td>
           <td className="p-3 align-middle text-sm">
-            {supplier.email ? <a href={`mailto:${supplier.email}`} className="text-blue-600 hover:underline">{supplier.email}</a> : '-'}
+            {supplier.email ? <a href={`mailto:${supplier.email}`} onClick={(e) => e.stopPropagation()} className="text-blue-600 hover:underline">{supplier.email}</a> : '-'}
           </td>
           <td className="p-3 align-middle text-sm text-gray-500 font-medium">
             {itemCount > 0 ? (
@@ -122,11 +125,11 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
           </td>
           <td className="p-3 align-middle">
             <div className="flex items-center justify-end gap-1 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="icon" onClick={() => setShowAddItemDialog(true)} className="h-8 w-8 text-gray-400 hover:text-blue-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={t('add_item') || 'הוסף פריט'}><Plus className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => setShowScanner(true)} className="h-8 w-8 text-gray-400 hover:text-green-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import items from image'}><Camera className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => setShowDeleteItemsDialog(true)} className="h-8 w-8 text-gray-400 hover:text-orange-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={t('delete_all_items') || 'מחק את כל הפריטים'}><PackageX className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => onEdit(supplier)} className="h-8 w-8 text-gray-400 hover:text-blue-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none"><Edit className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => onDelete(supplier.id)} className="h-8 w-8 text-gray-400 hover:text-red-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none"><Trash2 className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setShowAddItemDialog(true); }} className="h-8 w-8 text-gray-400 hover:text-blue-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={t('add_item') || 'הוסף פריט'}><Plus className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setShowScanner(true); }} className="h-8 w-8 text-gray-400 hover:text-green-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import items from image'}><Camera className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setShowDeleteItemsDialog(true); }} className="h-8 w-8 text-gray-400 hover:text-orange-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none" title={t('delete_all_items') || 'מחק את כל הפריטים'}><PackageX className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onEdit(supplier); }} className="h-8 w-8 text-gray-400 hover:text-blue-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none"><Edit className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(supplier.id); }} className="h-8 w-8 text-gray-400 hover:text-red-600 bg-white shadow-sm border md:border-none md:bg-transparent md:shadow-none"><Trash2 className="w-4 h-4" /></Button>
             </div>
           </td>
         </tr>
@@ -136,7 +139,10 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
       >
-        <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+        <Card 
+          className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md cursor-pointer"
+          onClick={() => onEdit(supplier)}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div>
@@ -152,7 +158,7 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => setShowAddItemDialog(true)}
+                  onClick={(e) => { e.stopPropagation(); setShowAddItemDialog(true); }}
                   className="text-gray-400 hover:text-blue-600"
                   title={t('add_item') || 'הוסף פריט'}
                 >
@@ -162,7 +168,7 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => setShowScanner(true)}
+                  onClick={(e) => { e.stopPropagation(); setShowScanner(true); }}
                   className="text-gray-400 hover:text-green-600"
                   title={language === 'he' ? 'ייבוא פריטים מתמונה' : 'Import items from image'}
                 >
@@ -171,7 +177,7 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => setShowDeleteItemsDialog(true)}
+                  onClick={(e) => { e.stopPropagation(); setShowDeleteItemsDialog(true); }}
                   className="text-gray-400 hover:text-orange-600"
                   title={t('delete_all_items') || 'מחק את כל הפריטים'}
                 >
@@ -180,7 +186,7 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => onEdit(supplier)}
+                  onClick={(e) => { e.stopPropagation(); onEdit(supplier); }}
                   className="text-gray-400 hover:text-blue-600"
                 >
                   <Edit className="w-4 h-4" />
@@ -188,7 +194,7 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => onDelete(supplier.id)}
+                  onClick={(e) => { e.stopPropagation(); onDelete(supplier.id); }}
                   className="text-gray-400 hover:text-red-600"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -201,6 +207,7 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
               <Phone className="w-4 h-4 text-green-600" />
               <a 
                 href={`tel:${supplier.phone}`} 
+                onClick={(e) => e.stopPropagation()}
                 className="text-green-600 hover:underline font-medium"
               >
                 {supplier.phone}
@@ -212,6 +219,7 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
                <Mail className="w-4 h-4 text-blue-600" />
                <a 
                  href={`mailto:${supplier.email}`} 
+                 onClick={(e) => e.stopPropagation()}
                  className="text-blue-600 hover:underline"
                  title={language === 'he' ? 'ישלחו הזמנות למייל זה בלחיצה על שלח בהזמנה' : 'Orders will be emailed here when you click Send in Orders'}
                >
@@ -237,6 +245,7 @@ export default function SupplierCard({ supplier, itemCount = 0, onEdit, onDelete
                       href={supplier.grant_document_url} 
                       target="_blank" 
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="text-blue-600 hover:underline text-xs mt-1 inline-block"
                     >
                       {language === 'he' ? '📎 צפה במסמך' : '📎 View Document'}
