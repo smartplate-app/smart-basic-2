@@ -845,6 +845,30 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       if (!confirmed) return;
     }
 
+    // Auto-create new items that are marked as having issues/unrecognized
+    try {
+      const newItemsToCreate = formData.verified_items.filter(item => item.has_issue && !item.item_id && item.item_name);
+      if (newItemsToCreate.length > 0) {
+        for (const item of newItemsToCreate) {
+          const itemPayload = {
+            name: item.item_name,
+            supplier_id: 'pending',
+            supplier_name: 'להשלמה',
+            price: item.actual_price || 0,
+            unit: item.unit || 'unit',
+            is_pending_completion: true,
+            status: 'pending_completion'
+          };
+          const createdItem = await base44.entities.Item.create(itemPayload);
+          // Update the receipt item with the new ID
+          item.item_id = createdItem.id;
+        }
+      }
+    } catch (e) {
+      console.error("Error auto-creating new items:", e);
+      // We don't block the receipt save if this fails, we just log it
+    }
+
     let finalData = { ...formData };
     if (selectedOpenOrderIds.length > 0) {
       const selectedOrdersObj = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
@@ -900,7 +924,21 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                 ? `סריקה להזמנה ${order.order_number || '—'} • ספק: ${order.supplier_name || ''}. הקבלה תקושר להזמנה זו.`
                 : `Scanning for order ${order.order_number || '—'} • Supplier: ${order.supplier_name || ''}. This receipt will attach to this order.`}
             </div>
-            )}
+          )}
+
+          {formData.verified_items.some(item => item.has_issue) && (
+            <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-orange-800 font-bold mb-2">
+                <AlertTriangle className="w-5 h-5" />
+                <span>{language === 'he' ? 'פריטים דורשי השלמה' : 'Items needing completion'}</span>
+              </div>
+              <p className="text-sm text-orange-700 mb-3">
+                {language === 'he' 
+                  ? 'הפריטים הבאים נוספו במהלך קבלת הסחורה ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):'
+                  : 'The following items were added during supply receipt and need to be completed:'}
+              </p>
+            </div>
+          )}
           {(noOrderMode || order) ? (
             <>
               <div className="space-y-2">
@@ -1632,6 +1670,25 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 needs_review: !!formData.needs_review,
                                 review_note: formData.review_note || ""
                               };
+                              // Create missing items from the first doc's items (since multiple docs just copy baseData)
+                              const itemsWithIssues = baseData.verified_items?.filter(item => item.has_issue && !item.item_id && item.item_name) || [];
+                              if (itemsWithIssues.length > 0) {
+                                for (const item of itemsWithIssues) {
+                                  try {
+                                    const createdItem = await base44.entities.Item.create({
+                                      name: item.item_name,
+                                      supplier_id: 'pending',
+                                      supplier_name: 'להשלמה',
+                                      price: item.actual_price || 0,
+                                      unit: item.unit || 'unit',
+                                      is_pending_completion: true,
+                                      status: 'pending_completion'
+                                    });
+                                    item.item_id = createdItem.id;
+                                  } catch(e) { console.error(e); }
+                                }
+                              }
+
                               const payloads = scannedDocs.map((d, i) => ({
                                 ...baseData,
                                 order_id: "",

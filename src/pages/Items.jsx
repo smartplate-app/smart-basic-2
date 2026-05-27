@@ -806,7 +806,7 @@ const handleCleanOrphans = async (ownerEmail) => {
         </div>
 
         {(() => {
-          const incompleteItems = items.filter(item => item.supplier_id === 'pending' || item.supplier_name === 'להשלמה' || item.supplier_name === 'Pending');
+          const incompleteItems = items.filter(item => item.supplier_id === 'pending' || item.supplier_name === 'להשלמה' || item.supplier_name === 'Pending' || item.is_pending_completion === true || item.status === 'pending_completion');
           if (incompleteItems.length === 0) return null;
           
           return (
@@ -819,8 +819,8 @@ const handleCleanOrphans = async (ownerEmail) => {
                   </h3>
                   <p className="text-sm text-amber-800 mb-3">
                     {language === 'he' 
-                      ? 'הפריטים הבאים נוספו במהלך ספירת מלאי ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):' 
-                      : 'The following items were added during inventory count and need to be completed (assigned to a supplier):'}
+                      ? 'הפריטים הבאים נוספו במהלך קבלת אספקה/ספירת מלאי ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):' 
+                      : 'The following items were added during supply receipt/inventory count and need to be completed:'}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {incompleteItems.map(item => (
