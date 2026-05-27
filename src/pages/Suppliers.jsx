@@ -832,9 +832,9 @@ export default function SuppliersPage() {
         ) : (
           <>
             {viewMode === 'list' && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto hidden md:block mb-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-visible hidden md:block mb-4">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-[0px] z-10">
                     <tr>
                       <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'ספק' : 'Supplier'}</th>
                       <th className={`p-3 font-semibold text-gray-600 ${language === 'he' ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'איש קשר וטלפון' : 'Contact'}</th>
