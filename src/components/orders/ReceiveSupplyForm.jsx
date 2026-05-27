@@ -199,15 +199,15 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
 
   const checkForAnomalies = () => {
     const messages = [];
-    const overSupplied = formData.verified_items.filter(i => i.received_quantity > i.ordered_quantity && i.ordered_quantity > 0);
+    const quantityMismatch = formData.verified_items.filter(i => i.received_quantity !== i.ordered_quantity && i.ordered_quantity > 0);
     const notOrdered = formData.verified_items.filter(i => i.received_quantity > 0 && i.ordered_quantity === 0 && i.item_id);
     const notRecognized = formData.verified_items.filter(i => !i.item_id && i.item_name);
 
     if (!noOrderMode && (order || openOrders.length > 0)) {
-      if (overSupplied.length > 0) {
+      if (quantityMismatch.length > 0) {
         messages.push(language === 'he' 
-          ? `קיבלת כמות גדולה ממה שהוזמן עבור ${overSupplied.length} פריטים.` 
-          : `You received more than ordered for ${overSupplied.length} items.`);
+          ? `הכמות שהתקבלה שונה מהכמות שהוזמנה עבור ${quantityMismatch.length} פריטים.` 
+          : `The received quantity differs from the ordered quantity for ${quantityMismatch.length} items.`);
       }
       if (notOrdered.length > 0) {
         messages.push(language === 'he' 
