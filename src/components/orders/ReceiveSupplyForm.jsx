@@ -847,7 +847,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
     // Auto-create new items that are marked as having issues/unrecognized
     try {
-      const newItemsToCreate = formData.verified_items.filter(item => item.has_issue && !item.item_id && item.item_name);
+      const newItemsToCreate = formData.verified_items.filter(item => !item.item_id && item.item_name);
       if (newItemsToCreate.length > 0) {
         for (const item of newItemsToCreate) {
           const itemPayload = {
@@ -1671,7 +1671,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 review_note: formData.review_note || ""
                               };
                               // Create missing items from the first doc's items (since multiple docs just copy baseData)
-                              const itemsWithIssues = baseData.verified_items?.filter(item => item.has_issue && !item.item_id && item.item_name) || [];
+                              const itemsWithIssues = baseData.verified_items?.filter(item => !item.item_id && item.item_name) || [];
                               if (itemsWithIssues.length > 0) {
                                 for (const item of itemsWithIssues) {
                                   try {
