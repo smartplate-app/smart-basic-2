@@ -39,6 +39,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   const [currentStock, setCurrentStock] = React.useState({}); // Track current stock per item
   const [itemSearch, setItemSearch] = React.useState("");
   const [supplierOpen, setSupplierOpen] = React.useState(false);
+  const [cartPreviewOpen, setCartPreviewOpen] = React.useState(false);
 
 
   React.useEffect(() => {
@@ -283,6 +284,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     onSubmit(orderData);
   };
 
+  // Filter to show only items with quantity > 0 in cart preview
+  const cartItems = React.useMemo(() => {
+    return availableItems.filter(item => (itemQuantities[item.id] || 0) > 0);
+  }, [availableItems, itemQuantities]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -398,7 +404,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {t('no_available_items')}
               </div>
             ) : (
-              <div className="flex flex-col max-h-[70vh] overflow-y-auto -mx-3 px-3 sm:mx-0 sm:px-0 bg-white">
+              <div className="flex flex-col max-h-[70vh] overflow-y-auto -mx-3 px-3 sm:mx-0 sm:px-0 bg-white gap-2 p-2 bg-gray-50 border rounded-lg">
                 {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
                   const stock = currentStock[item.id] || 0;
@@ -411,8 +417,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   return (
                     <div 
                       key={item.id} 
-                      className={`py-3 border-b border-gray-100 last:border-0 transition-colors ${
-                        quantity > 0 ? 'bg-[#f8fdfa]' : 'bg-white'
+                      className={`p-3 border rounded-xl transition-colors mb-2 ${
+                        quantity > 0 
+                          ? 'bg-white border-[#d8b4fe] shadow-sm' 
+                          : isLowStock 
+                            ? 'bg-orange-50 border-orange-200'
+                            : 'bg-white border-gray-200 hover:border-[#e9d5ff]'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3 px-1">
@@ -425,60 +435,47 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             {item.unit}
                             {item.price > 0 && (
                               <span className="mr-1">
-                                {' | '}₪{(item.price * (1 - (item.discount || 0) / 100)).toFixed(2)}
+                                {' • '}₪{item.price.toFixed(2)}
+                                {item.discount > 0 && <span className="text-green-600"> (-{item.discount}%)</span>}
                               </span>
                             )}
-                            {item.catalog_number && <span className="mr-1 text-[#00b074]"> • {item.catalog_number}</span>}
+                            {item.catalog_number && <span className="mr-1 text-gray-500 block">מספר קטלוגי: {item.catalog_number}</span>}
                           </div>
-                          {hasMinStock && (
-                            <div className="mt-1.5 flex items-center gap-2">
-                              <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                                {language === 'he' ? 'תקן' : 'Par'} {item.minimum_stock}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <span className="text-[10px] text-gray-400">{language === 'he' ? 'מלאי:' : 'Stock:'}</span>
+                        </div>
+                        
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <div className="flex items-center gap-2">
+                            {quantity > 0 && item.price > 0 && (
+                              <div className="text-sm font-bold text-[#8b5cf6] w-16 text-left mt-4">
+                                ₪{discountedTotal.toFixed(2)}
+                              </div>
+                            )}
+                            <div className="flex flex-col items-center">
+                              <Label className="text-[10px] text-gray-500 mb-0.5">{language === 'he' ? 'להזמנה' : 'Order'}</Label>
+                              <div className="flex items-center bg-white rounded-md border border-gray-200 h-8 w-16">
+                                <Input
+                                  type="number"
+                                  value={quantity || ''}
+                                  onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                                  className="flex-1 h-full text-center px-0 text-sm font-medium border-0 bg-transparent focus-visible:ring-0 rounded-none shadow-none"
+                                  placeholder="0"
+                                  min="0"
+                                  step="0.01"
+                                />
+                              </div>
+                            </div>
+                            {hasMinStock && (
+                              <div className="flex flex-col items-center">
+                                <Label className="text-[10px] text-gray-500 mb-0.5">{language === 'he' ? 'במלאי כרגע' : 'Stock'}</Label>
                                 <Input
                                   type="number"
                                   value={stock || ''}
                                   onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
-                                  className={`w-10 h-5 text-[10px] text-center px-0 bg-gray-50 border-gray-200 ${isLowStock ? 'text-orange-600 border-orange-300 bg-orange-50' : ''}`}
+                                  className={`w-14 h-8 text-sm text-center px-0 rounded-md border ${isLowStock ? 'border-orange-300 bg-orange-50 text-orange-700' : 'border-orange-200'}`}
                                   placeholder="0"
                                 />
                               </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-2 shrink-0">
-                          {quantity > 0 && item.price > 0 && (
-                            <div className="text-sm font-bold text-gray-900 mb-1">
-                              ₪{discountedTotal.toFixed(2)}
-                            </div>
-                          )}
-                          <div className="flex items-center bg-gray-50 rounded-full border border-gray-200 shadow-sm h-9">
-                            <button 
-                              type="button"
-                              onClick={() => handleQuantityChange(item.id, Math.max(0, quantity - 1))}
-                              className="w-9 h-full flex items-center justify-center text-gray-500 hover:text-[#00b074] transition-colors"
-                            >
-                              <span className="text-xl font-medium leading-none -mt-0.5">-</span>
-                            </button>
-                            <Input
-                              type="number"
-                              value={quantity || ''}
-                              onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                              className="w-10 h-full text-center px-0 text-sm font-bold border-0 bg-transparent focus-visible:ring-0 rounded-none shadow-none"
-                              placeholder="0"
-                              min="0"
-                              step="0.01"
-                            />
-                            <button 
-                              type="button"
-                              onClick={() => handleQuantityChange(item.id, quantity + 1)}
-                              className="w-9 h-full flex items-center justify-center text-[#00b074] hover:text-[#00905e] transition-colors"
-                            >
-                              <span className="text-xl font-medium leading-none -mt-0.5">+</span>
-                            </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -517,57 +514,120 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 py-3 pb-safe shadow-[0_-8px_15px_rgba(0,0,0,0.08)] md:sticky md:bottom-0 md:bg-transparent md:border-none md:p-0 md:shadow-none">
           <div className="flex flex-col gap-2 max-w-4xl mx-auto w-full">
-            {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
-              <div className="flex justify-between items-center w-full mb-1 px-1">
-                <span className="text-xl sm:text-2xl font-bold text-[#00b074]">
-                  ₪{calculateTotal().toFixed(2)}
-                </span>
-                <span className="text-sm font-semibold text-gray-700">{t('total_cost') || 'סך הכל'}</span>
+            {cartPreviewOpen ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-bold text-gray-800">{language === 'he' ? 'סיכום עגלה' : 'Cart Summary'}</span>
+                  <button 
+                    type="button"
+                    onClick={() => setCartPreviewOpen(false)}
+                    className="text-sm text-purple-600 hover:underline"
+                  >
+                    {language === 'he' ? 'חזור לעריכה' : 'Back to Edit'}
+                  </button>
+                </div>
+                <div className="max-h-[30vh] overflow-y-auto mb-2 border rounded-lg p-2 bg-gray-50 text-sm">
+                  {cartItems.length === 0 ? (
+                    <div className="text-center text-gray-500 py-4">{language === 'he' ? 'הסל ריק' : 'Cart is empty'}</div>
+                  ) : (
+                    cartItems.map(item => {
+                      const qty = itemQuantities[item.id];
+                      const itemTotal = qty * (item.price || 0);
+                      const discountedTotal = item.discount ? itemTotal * (1 - item.discount / 100) : itemTotal;
+                      return (
+                        <div key={item.id} className="flex justify-between items-center border-b border-gray-200 py-1.5 last:border-0">
+                          <div className="flex-1">
+                            <span className="font-semibold text-gray-800">{item.name}</span>
+                            <div className="text-xs text-gray-500">{qty} {item.unit} x ₪{(item.price * (1 - (item.discount || 0) / 100)).toFixed(2)}</div>
+                          </div>
+                          <span className="font-bold text-purple-700">₪{discountedTotal.toFixed(2)}</span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                
+                {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
+                  <div className="flex justify-between items-center w-full mb-1 px-1">
+                    <span className="text-xl sm:text-2xl font-bold text-purple-700">
+                      ₪{calculateTotal().toFixed(2)}
+                    </span>
+                    <span className="text-sm font-semibold text-gray-700">{t('total_cost') || 'סך הכל'}</span>
+                  </div>
+                )}
+                
+                <div className="flex gap-2 w-full">
+                  <Button type="button" variant="outline" onClick={onCancel} className="h-11 w-11 shrink-0 p-0 text-gray-500 border-gray-200 rounded-xl md:h-10 md:w-auto md:px-4">
+                    <span className="md:hidden"><X className="w-5 h-5" /></span>
+                    <span className="hidden md:inline">{safeT('cancel', 'ביטול', 'Cancel')}</span>
+                  </Button>
+                  <Button type="submit" className="h-11 flex-1 bg-[#9333ea] hover:bg-purple-700 text-white rounded-xl font-bold text-base md:h-10 md:rounded-md px-1 shadow-sm">
+                    {order ? t('update_order') : safeT('send_order', 'שלח הזמנה', 'Send Order')}
+                  </Button>
+                </div>
               </div>
+            ) : (
+              <>
+                {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
+                  <div className="flex justify-between items-center w-full mb-1 px-1">
+                    <span className="text-xl sm:text-2xl font-bold text-purple-700">
+                      ₪{calculateTotal().toFixed(2)}
+                    </span>
+                    <span className="text-sm font-semibold text-gray-700">{t('total_cost') || 'סך הכל'}</span>
+                  </div>
+                )}
+                <div className="flex gap-2 w-full">
+                  <Button type="button" variant="outline" onClick={onCancel} className="h-11 w-11 shrink-0 p-0 text-gray-500 border-gray-200 rounded-xl md:h-10 md:w-auto md:px-4">
+                    <span className="md:hidden"><X className="w-5 h-5" /></span>
+                    <span className="hidden md:inline">{safeT('cancel', 'ביטול', 'Cancel')}</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!currentOrder.supplier_id) { alert(t('supplier_and_item_required')); return; }
+                      const orderItems = [];
+                      Object.keys(itemQuantities).forEach(itemId => {
+                        const quantity = itemQuantities[itemId] || 0;
+                        if (quantity > 0) {
+                          const item = availableItems.find(i => i.id === itemId);
+                          if (item) {
+                            const itemTotal = quantity * (item.price || 0);
+                            const discountedTotal = item.discount ? itemTotal * (1 - item.discount / 100) : itemTotal;
+                            orderItems.push({
+                              item_id: item.id,
+                              item_name: item.name,
+                              catalog_number: item.catalog_number || "",
+                              quantity: quantity,
+                              unit: item.unit,
+                              price: item.price || 0,
+                              discount: item.discount || 0,
+                              total: discountedTotal
+                            });
+                          }
+                        }
+                      });
+                      if (orderItems.length === 0) { alert(t('supplier_and_item_required')); return; }
+                      const totalCost = calculateTotal();
+                      const orderData = { ...currentOrder, items: orderItems, total_cost: totalCost };
+                      if (onSaveDraft) onSaveDraft(orderData);
+                    }}
+                    className="h-11 flex-[0.8] bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium text-sm md:h-10 md:rounded-md px-1 shadow-sm"
+                  >
+                    {safeT('save_draft', 'טיוטה', 'Draft')}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    onClick={() => setCartPreviewOpen(true)}
+                    className="h-11 flex-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-xl font-medium text-sm md:h-10 md:rounded-md px-1"
+                  >
+                    {language === 'he' ? 'צפה בסל' : 'Cart'}
+                  </Button>
+                  <Button type="submit" className="h-11 flex-[1.4] bg-[#9333ea] hover:bg-purple-700 text-white rounded-xl font-bold text-base md:h-10 md:rounded-md px-1 shadow-sm">
+                    {order ? t('update_order') : safeT('send_order', 'שלח הזמנה', 'Send Order')}
+                  </Button>
+                </div>
+              </>
             )}
-            
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onCancel} className="h-12 w-20 text-gray-500 rounded-xl md:h-10 md:w-auto">
-                {safeT('cancel', 'ביטול', 'Cancel')}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  if (!currentOrder.supplier_id) { alert(t('supplier_and_item_required')); return; }
-                  const orderItems = [];
-                  Object.keys(itemQuantities).forEach(itemId => {
-                    const quantity = itemQuantities[itemId] || 0;
-                    if (quantity > 0) {
-                      const item = availableItems.find(i => i.id === itemId);
-                      if (item) {
-                        const itemTotal = quantity * (item.price || 0);
-                        const discountedTotal = item.discount ? itemTotal * (1 - item.discount / 100) : itemTotal;
-                        orderItems.push({
-                          item_id: item.id,
-                          item_name: item.name,
-                          catalog_number: item.catalog_number || "",
-                          quantity: quantity,
-                          unit: item.unit,
-                          price: item.price || 0,
-                          discount: item.discount || 0,
-                          total: discountedTotal
-                        });
-                      }
-                    }
-                  });
-                  if (orderItems.length === 0) { alert(t('supplier_and_item_required')); return; }
-                  const totalCost = calculateTotal();
-                  const orderData = { ...currentOrder, items: orderItems, total_cost: totalCost };
-                  if (onSaveDraft) onSaveDraft(orderData);
-                }}
-                className="h-12 flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium md:h-10 md:rounded-md"
-              >
-                {safeT('save_draft', 'שמור טיוטה', 'Save Draft')}
-              </Button>
-              <Button type="submit" className="h-12 flex-[2] bg-[#00b074] hover:bg-[#00905e] text-white rounded-xl font-bold text-base md:h-10 md:rounded-md">
-                {order ? t('update_order') : t('send_order')}
-              </Button>
-            </div>
           </div>
         </div>
       </form>
