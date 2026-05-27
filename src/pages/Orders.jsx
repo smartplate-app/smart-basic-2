@@ -1711,7 +1711,7 @@ export default function OrdersPage() {
             <table className="w-full relative">
               <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
                 <tr>
-                  <th className="px-4 py-4 text-start text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-4 py-4 text-left rtl:text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                     <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
                       {safeT('supplier','ספק','Supplier')}
                       <span className={`text-[10px] ${sortBy.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -1719,10 +1719,10 @@ export default function OrdersPage() {
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-start text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-4 py-4 text-left rtl:text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                     {safeT('delivery_date','תאריך אספקה','Delivery date')}
                   </th>
-                  <th className="px-4 py-4 text-start text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-4 py-4 text-left rtl:text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                     <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'cost_asc' ? 'cost_desc' : 'cost_asc')}>
                       {safeT('total_cost','עלות כוללת','Total cost')}
                       <span className={`text-[10px] ${sortBy.startsWith('cost') ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -1730,7 +1730,7 @@ export default function OrdersPage() {
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-start text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-4 py-4 text-left rtl:text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                     <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'status_asc' ? 'status_desc' : 'status_asc')}>
                       {safeT('status','סטטוס','Status')}
                       <span className={`text-[10px] ${sortBy.startsWith('status') ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -1738,7 +1738,7 @@ export default function OrdersPage() {
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-end text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-4 py-4 text-right rtl:text-left text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                   </th>
                 </tr>
               </thead>
@@ -1768,7 +1768,7 @@ export default function OrdersPage() {
                         className="hover:bg-blue-50 cursor-pointer transition-colors"
                         onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
                       >
-                        <td className="px-4 py-4 text-start align-middle">
+                        <td className="px-4 py-4 text-left rtl:text-right align-middle">
                           <div className="flex items-center gap-2">
                             <div className="text-sm font-semibold text-gray-900">{order.supplier_name}</div>
                             {!isViewer && (
@@ -1787,13 +1787,13 @@ export default function OrdersPage() {
                             <div className="text-xs text-gray-400 mt-0.5">{order.restaurant_name}</div>
                           )}
                         </td>
-                        <td className="px-4 py-4 text-start text-sm text-gray-600 align-middle">
+                        <td className="px-4 py-4 text-left rtl:text-right text-sm text-gray-600 align-middle">
                           {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
                         </td>
-                        <td className="px-4 py-4 text-start text-sm font-bold text-gray-900 align-middle">
+                        <td className="px-4 py-4 text-left rtl:text-right text-sm font-bold text-gray-900 align-middle">
                           ₪{(order.total_cost || 0).toFixed(2)}
                         </td>
-                        <td className="px-4 py-4 text-start align-middle">
+                        <td className="px-4 py-4 text-left rtl:text-right align-middle">
                           <div className="flex items-center gap-2">
                             <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border-none ${statusColors[order.status]}`}>
                               {statusLabels[order.status] || order.status}
@@ -1811,7 +1811,7 @@ export default function OrdersPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-end align-middle">
+                        <td className="px-4 py-4 text-right rtl:text-left align-middle">
                           <div className="flex items-center justify-end gap-2 pointer-events-auto">
                             {!isViewer && (
                                 <Button

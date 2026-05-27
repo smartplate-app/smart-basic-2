@@ -470,12 +470,12 @@ export default function SupplyReceiptsPage() {
             <Loader className={`w-5 h-5 text-green-600 ${refreshing ? 'animate-spin' : ''}`} style={{ transform: !refreshing ? `rotate(${pullDist * 2}deg)` : 'none' }} />
           </div>
         </div>
-        <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-          <div className={isRTL ? 'text-right w-full md:w-auto' : ''}>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div className="w-full md:w-auto">
             <h1 className="text-3xl font-bold text-gray-900">{t('receipts_title')}</h1>
             <p className="text-gray-600 mt-2">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
           </div>
-          <div className={`flex gap-3 flex-wrap items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="flex gap-3 flex-wrap items-center">
             <div className="flex bg-white rounded-lg shadow-sm border">
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
