@@ -517,15 +517,10 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
             {cartPreviewOpen ? (
               <div className="flex flex-col gap-2 h-full">
                 <div className="flex justify-between items-center mb-2 mt-3 md:mt-0">
-                  <span className="font-bold text-gray-900 text-xl md:text-base">{language === 'he' ? 'סיכום עגלה' : 'Cart Summary'}</span>
-                  <button 
-                    type="button"
-                    onClick={() => setCartPreviewOpen(false)}
-                    className="text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                    {language === 'he' ? 'חזור לעריכה' : 'Back to Edit'}
-                  </button>
+                  <span className="font-bold text-gray-900 text-xl md:text-base">
+                    {language === 'he' ? 'סיכום עגלה' : 'Cart Summary'}
+                    {currentOrder.supplier_name && ` - ${currentOrder.supplier_name}`}
+                  </span>
                 </div>
                 <div className="flex-1 overflow-y-auto mb-2 border rounded-lg p-3 bg-gray-50 text-sm md:max-h-[50vh]">
                   {cartItems.length === 0 ? (
@@ -558,9 +553,8 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 )}
                 
                 <div className="flex gap-2 w-full">
-                  <Button type="button" variant="outline" onClick={onCancel} className="h-10 w-10 shrink-0 p-0 text-gray-500 border-gray-200 rounded-lg md:w-auto md:px-4">
-                    <span className="md:hidden"><X className="w-4 h-4" /></span>
-                    <span className="hidden md:inline">{safeT('cancel', 'ביטול', 'Cancel')}</span>
+                  <Button type="button" variant="outline" onClick={() => setCartPreviewOpen(false)} className="h-10 shrink-0 px-4 text-gray-500 border-gray-200 rounded-lg md:w-auto font-medium text-sm">
+                    {language === 'he' ? 'חזור לעריכה' : 'Back to Edit'}
                   </Button>
                   <Button type="submit" className="h-10 flex-1 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium text-sm md:rounded-lg px-1 shadow-sm">
                     {order ? t('update_order') : safeT('send_order', 'שלח הזמנה', 'Send Order')}
