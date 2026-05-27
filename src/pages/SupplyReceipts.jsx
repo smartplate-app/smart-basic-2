@@ -623,8 +623,7 @@ export default function SupplyReceiptsPage() {
                 { id: 'invoices', label: language === 'he' ? 'חשבוניות' : 'Invoices' },
                 { id: 'delivery_notes', label: language === 'he' ? 'תעודות משלוח' : 'Delivery Notes' },
                 { id: 'refund_invoice', label: language === 'he' ? 'זיכויים' : 'Refunds' },
-                { id: 'awaiting_credit', label: language === 'he' ? 'ממתין לזיכוי' : 'Awaiting Credit' },
-                { id: 'needs_review', label: language === 'he' ? 'לבדיקה ואישור' : 'Needs Review' }
+                { id: 'awaiting_credit', label: language === 'he' ? 'ממתין לזיכוי' : 'Awaiting Credit' }
               ].map(status => (
                 <button
                   key={status.id}
@@ -791,18 +790,12 @@ export default function SupplyReceiptsPage() {
               </div>
 
               {/* Extra filters for refunds/review */}
-              {(statusFilter === 'refund_invoice' || statusFilter === 'needs_review') && (
+              {(statusFilter === 'refund_invoice') && (
                 <div className="flex gap-3 pt-2 border-t border-gray-100">
                   {statusFilter === 'refund_invoice' && (
                     <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                       <input type="checkbox" className="rounded accent-green-600 w-4 h-4" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
                       <span>{tt('credit_received','הצג רק זיכויים שהתקבלו','Show only received credits')}</span>
-                    </label>
-                  )}
-                  {statusFilter === 'needs_review' && (
-                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                      <input type="checkbox" className="rounded accent-green-600 w-4 h-4" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
-                      <span>{tt('reviewed','הצג רק חשבוניות שנסקרו','Show only reviewed')}</span>
                     </label>
                   )}
                 </div>
@@ -851,7 +844,6 @@ export default function SupplyReceiptsPage() {
                       <SelectItem value="delivery_notes">{language === 'he' ? 'תעודות משלוח' : 'Delivery notes'}</SelectItem>
                       <SelectItem value="refund_invoice">{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</SelectItem>
                       <SelectItem value="awaiting_credit">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</SelectItem>
-                      <SelectItem value="needs_review">{language === 'he' ? 'לבדיקה ואישור' : 'Needs review'}</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -942,18 +934,12 @@ export default function SupplyReceiptsPage() {
                   </div>
                   
                   {/* Extra filters for refunds/review */}
-                  {(statusFilter === 'refund_invoice' || statusFilter === 'needs_review') && (
+                  {(statusFilter === 'refund_invoice') && (
                     <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
                       {statusFilter === 'refund_invoice' && (
                         <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
                           <input type="checkbox" className="rounded accent-green-600 w-5 h-5" checked={refundReceivedOnly} onChange={(e) => setRefundReceivedOnly(e.target.checked)} />
                           <span>{tt('credit_received','הצג רק זיכויים שהתקבלו','Show only received credits')}</span>
-                        </label>
-                      )}
-                      {statusFilter === 'needs_review' && (
-                        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
-                          <input type="checkbox" className="rounded accent-green-600 w-5 h-5" checked={reviewedOnly} onChange={(e) => setReviewedOnly(e.target.checked)} />
-                          <span>{tt('reviewed','הצג רק חשבוניות שנסקרו','Show only reviewed')}</span>
                         </label>
                       )}
                     </div>

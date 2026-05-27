@@ -790,19 +790,17 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
       const { calculatedTotal, totalsMatch } = recalculateTotals(updatedVerifiedItems, prev.invoice_total);
 
-      let needsReview = prev.needs_review;
       let awaitingCredit = prev.awaiting_credit;
       if (field === 'request_credit_quantity' || field === 'request_credit_price') {
         const hasAnyCreditReq = updatedVerifiedItems.some(i => i.request_credit_quantity || i.request_credit_price);
         if (hasAnyCreditReq) {
-          needsReview = true;
           awaitingCredit = true;
         }
       }
 
       return {
         ...prev,
-        needs_review: needsReview,
+        needs_review: false,
         awaiting_credit: awaitingCredit,
         verified_items: updatedVerifiedItems,
         price_changes_summary: priceChangesSummary,
@@ -1482,24 +1480,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               {language === 'he' ? 'ללא מע״מ (0%)' : 'No VAT (0%)'}
                             </span>
                           </label>
-                          <label className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={!!formData.awaiting_credit}
-                              onChange={(e) => setFormData(prev => ({ ...prev, awaiting_credit: e.target.checked }))}
-                              className="rounded"
-                            />
-                            <span>{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</span>
-                          </label>
-                          <label className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={!!formData.needs_review}
-                              onChange={(e) => setFormData(prev => ({ ...prev, needs_review: e.target.checked }))}
-                              className="rounded"
-                            />
-                            <span>{language === 'he' ? 'לבדיקה ואישור' : 'Needs review'}</span>
-                          </label>
+
                           {formData.is_refund && (
                             <label className="flex items-center gap-2 text-sm">
                               <input
@@ -1511,17 +1492,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
                             </label>
                           )}
-                          {formData.needs_review && (
-                            <label className="flex items-center gap-2 text-sm">
-                              <input
-                                type="checkbox"
-                                checked={!!formData.reviewed}
-                                onChange={(e) => setFormData(prev => ({ ...prev, reviewed: e.target.checked }))}
-                                className="rounded"
-                              />
-                              <span>{language === 'he' ? 'נבדק' : 'Reviewed'}</span>
-                            </label>
-                          )}
+
                         </div>
                         {formData.document_type === 'summary_invoice' && (
                           <div className="mt-2 p-3 border rounded-md bg-amber-50">

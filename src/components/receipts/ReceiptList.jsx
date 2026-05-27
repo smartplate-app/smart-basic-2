@@ -153,7 +153,6 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                       <option value="delivery_notes">{language === 'he' ? 'תעודות' : 'Deliveries'}</option>
                       <option value="refund_invoice">{language === 'he' ? 'זיכויים' : 'Refunds'}</option>
                       <option value="awaiting_credit">{language === 'he' ? 'ממתין' : 'Awaiting'}</option>
-                      <option value="needs_review">{language === 'he' ? 'לבדיקה ואישור' : 'Review'}</option>
                     </select>
                   )}
                 </div>
@@ -230,9 +229,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                             {r.is_refund && (
                               <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
                             )}
-                            {r.needs_review && (
-                              <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'לבדיקה ואישור' : 'Review'}</Badge>
-                            )}
+
                             {r.awaiting_credit && (
                               <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
                             )}
@@ -276,28 +273,11 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                           </Button>
                         </a>
                       )}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-40">
-                          <DropdownMenuItem onClick={() => onEdit && onEdit(r)}>
-                            <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-                            {safeT('edit', 'עריכה', 'Edit')}
-                          </DropdownMenuItem>
-                          {onDelete && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => onDelete(r)} className="text-red-600 focus:text-red-600">
-                                <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                                {safeT('delete', 'מחיקה', 'Delete')}
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {onDelete && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-lg" onClick={(e) => { e.stopPropagation(); onDelete(r); }} title={safeT('delete', 'מחיקה', 'Delete')}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -360,9 +340,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                         {r.is_refund && (
                           <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
                         )}
-                        {r.needs_review && (
-                          <Badge className="bg-amber-50 text-amber-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'לבדיקה' : 'Review'}</Badge>
-                        )}
+
                         {r.awaiting_credit && (
                           <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
                         )}
@@ -392,65 +370,18 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                     </a>
                   )}
                   
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full bg-gray-50 hover:bg-gray-100 border border-transparent">
-                        <MoreHorizontal className="w-4 h-4" />
+                  {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
+                    <a href={r.receipt_images[0]} download target="_blank" rel="noopener noreferrer" className="inline-flex" onClick={(e) => e.stopPropagation()}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full bg-gray-50 hover:bg-gray-100 border border-transparent" title={safeT('download', 'הורד', 'Download')}>
+                        <Download className="w-4 h-4" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-48">
-                      <DropdownMenuItem onClick={() => onEdit && onEdit(r)}>
-                        <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-                        {safeT('edit', 'עריכה', 'Edit')}
-                      </DropdownMenuItem>
-                      {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
-                        <>
-                          <DropdownMenuItem onClick={() => window.open(r.receipt_images[0], '_blank')}>
-                            <Download className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-                            {safeT('download', 'הורד', 'Download')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => handleSendToDokka(e, r)} disabled={sendingToDokka === r.id}>
-                            <Send className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-blue-500" />
-                            {sendingToDokka === r.id 
-                                ? (language === 'he' ? 'שולח...' : 'Sending...') 
-                                : (language === 'he' ? 'שלח ל-Dokka' : 'Send to Dokka')}
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      {(r.is_refund || r.needs_review) && <DropdownMenuSeparator />}
-                      {r.is_refund && (
-                        <DropdownMenuItem onClick={(e) => {
-                          e.preventDefault();
-                          if (onQuickUpdate) onQuickUpdate(r.id, { refund_received: !r.refund_received });
-                        }}>
-                          <div className="flex items-center justify-between w-full">
-                            <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
-                            <input type="checkbox" checked={!!r.refund_received} readOnly className="pointer-events-none accent-purple-600 rounded" />
-                          </div>
-                        </DropdownMenuItem>
-                      )}
-                      {r.needs_review && (
-                        <DropdownMenuItem onClick={(e) => {
-                          e.preventDefault();
-                          if (onQuickUpdate) onQuickUpdate(r.id, { reviewed: !r.reviewed });
-                        }}>
-                          <div className="flex items-center justify-between w-full">
-                            <span>{language === 'he' ? 'נבדק' : 'Reviewed'}</span>
-                            <input type="checkbox" checked={!!r.reviewed} readOnly className="pointer-events-none accent-amber-600 rounded" />
-                          </div>
-                        </DropdownMenuItem>
-                      )}
-                      {onDelete && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onDelete(r)} className="text-red-600 focus:text-red-600">
-                            <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                            {safeT('delete', 'מחיקה', 'Delete')}
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </a>
+                  )}
+                  {onDelete && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-full bg-gray-50 hover:bg-gray-100 border border-transparent" onClick={(e) => { e.stopPropagation(); onDelete(r); }} title={safeT('delete', 'מחיקה', 'Delete')}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
