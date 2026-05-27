@@ -379,13 +379,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
 
         {currentOrder.supplier_id && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2 mt-1 sm:mt-2">
-              <Label className="text-sm sm:text-lg font-semibold whitespace-nowrap">{t('items')}</Label>
+            <div className="mt-1 sm:mt-2 w-full">
               <Input
                 placeholder={safeT('search_items', 'חפש פריטים...', 'Search items...')}
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
-                className="max-w-[180px] sm:max-w-xs h-8 sm:h-10 text-xs sm:text-sm"
+                className="w-full h-11 text-sm bg-gray-50 border-gray-200 rounded-xl"
               />
             </div>
 
@@ -399,7 +398,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {t('no_available_items')}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-2 max-h-[65vh] overflow-y-auto border rounded-lg p-2 sm:p-4 bg-gray-50">
+              <div className="flex flex-col max-h-[70vh] overflow-y-auto -mx-3 px-3 sm:mx-0 sm:px-0 bg-white">
                 {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
                   const stock = currentStock[item.id] || 0;
@@ -412,103 +411,91 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   return (
                     <div 
                       key={item.id} 
-                      className={`p-2 sm:p-3 rounded-lg border transition-all ${
-                        quantity > 0 
-                          ? 'bg-purple-50 border-purple-300 shadow-sm' 
-                          : isLowStock 
-                            ? 'bg-orange-50 border-orange-200'
-                            : 'bg-white border-gray-200 hover:border-gray-300'
+                      className={`py-3 border-b border-gray-100 last:border-0 transition-colors ${
+                        quantity > 0 ? 'bg-[#f8fdfa]' : 'bg-white'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-3 px-1">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-semibold text-sm leading-tight text-gray-900 truncate">
-                              {item.nickname || item.name} 
-                              {item.nickname && <span className="text-[10px] text-gray-500 font-normal ml-1">({item.name})</span>}
-                            </span>
-                          </div>
-                          <div className="text-[11px] sm:text-xs text-gray-500 leading-tight mt-0.5 truncate">
+                          <h4 className="font-bold text-sm text-gray-900 leading-tight">
+                            {item.nickname || item.name} 
+                            {item.nickname && <span className="text-[11px] text-gray-500 font-normal ml-1">({item.name})</span>}
+                          </h4>
+                          <div className="text-xs text-gray-500 mt-1">
                             {item.unit}
                             {item.price > 0 && (
                               <span className="mr-1">
-                                {' • '}₪{item.price.toFixed(2)}
-                                {item.discount > 0 && <span className="text-green-600"> (-{item.discount}%)</span>}
+                                {' | '}₪{(item.price * (1 - (item.discount || 0) / 100)).toFixed(2)}
                               </span>
                             )}
-                            {item.catalog_number && <span className="mr-1"> • {item.catalog_number}</span>}
+                            {item.catalog_number && <span className="mr-1 text-[#00b074]"> • {item.catalog_number}</span>}
                           </div>
                           {hasMinStock && (
-                            <div className="mt-1">
-                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
-                                {language === 'he' ? 'מינימום:' : 'Min:'} {item.minimum_stock}
-                              </Badge>
+                            <div className="mt-1.5 flex items-center gap-2">
+                              <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                {language === 'he' ? 'תקן' : 'Par'} {item.minimum_stock}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[10px] text-gray-400">{language === 'he' ? 'מלאי:' : 'Stock:'}</span>
+                                <Input
+                                  type="number"
+                                  value={stock || ''}
+                                  onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
+                                  className={`w-10 h-5 text-[10px] text-center px-0 bg-gray-50 border-gray-200 ${isLowStock ? 'text-orange-600 border-orange-300 bg-orange-50' : ''}`}
+                                  placeholder="0"
+                                />
+                              </div>
                             </div>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                          {hasMinStock && (
-                            <div className="flex flex-col items-center w-12 sm:w-16">
-                              <Label className="text-[10px] text-gray-400 mb-0.5 whitespace-nowrap">
-                                {language === 'he' ? 'במלאי' : 'Stock'}
-                              </Label>
-                              <Input
-                                type="number"
-                                value={stock || ''}
-                                onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
-                                className={`h-7 sm:h-8 text-center px-1 text-sm ${isLowStock ? 'border-orange-400 bg-orange-50' : ''}`}
-                                placeholder="0"
-                                min="0"
-                                step="0.01"
-                              />
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          {quantity > 0 && item.price > 0 && (
+                            <div className="text-sm font-bold text-gray-900 mb-1">
+                              ₪{discountedTotal.toFixed(2)}
                             </div>
                           )}
-                          
-                          <div className="flex flex-col items-center w-14 sm:w-16">
-                            <Label className="text-[10px] text-gray-400 mb-0.5 whitespace-nowrap">
-                              {language === 'he' ? 'להזמנה' : 'Order'}
-                            </Label>
+                          <div className="flex items-center bg-gray-50 rounded-full border border-gray-200 shadow-sm h-9">
+                            <button 
+                              type="button"
+                              onClick={() => handleQuantityChange(item.id, Math.max(0, quantity - 1))}
+                              className="w-9 h-full flex items-center justify-center text-gray-500 hover:text-[#00b074] transition-colors"
+                            >
+                              <span className="text-xl font-medium leading-none -mt-0.5">-</span>
+                            </button>
                             <Input
                               type="number"
                               value={quantity || ''}
                               onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                              className="h-7 sm:h-8 text-center px-1 text-sm font-medium"
+                              className="w-10 h-full text-center px-0 text-sm font-bold border-0 bg-transparent focus-visible:ring-0 rounded-none shadow-none"
                               placeholder="0"
                               min="0"
                               step="0.01"
                             />
+                            <button 
+                              type="button"
+                              onClick={() => handleQuantityChange(item.id, quantity + 1)}
+                              className="w-9 h-full flex items-center justify-center text-[#00b074] hover:text-[#00905e] transition-colors"
+                            >
+                              <span className="text-xl font-medium leading-none -mt-0.5">+</span>
+                            </button>
                           </div>
-                          
-                          {quantity > 0 && item.price > 0 && (
-                            <div className="text-[11px] sm:text-xs font-semibold text-purple-700 text-center w-12 sm:w-14">
-                              ₪{discountedTotal.toFixed(2)}
-                            </div>
-                          )}
                         </div>
                       </div>
                       
                       {/* Smart suggestion */}
-                      {(hasMinStock && stock > 0 && suggestedQty > 0 && quantity !== suggestedQty) || (hasMinStock && isLowStock && stock > 0) ? (
-                        <div className="flex items-center justify-end gap-2 mt-1.5">
-                          {hasMinStock && isLowStock && stock > 0 && (
-                            <div className="flex items-center gap-1 text-[10px] text-orange-600">
-                              <AlertCircle className="w-3 h-3" />
-                              {language === 'he' ? `חסרים ${suggestedQty}` : `Need ${suggestedQty}`}
-                            </div>
-                          )}
-                          {hasMinStock && stock > 0 && suggestedQty > 0 && quantity !== suggestedQty && (
-                            <button
-                              type="button"
-                              onClick={() => applySuggestedQuantity(item.id)}
-                              className="flex items-center gap-1 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded hover:bg-green-200 transition-colors"
-                            >
-                              <Check className="w-2.5 h-2.5" />
-                              {language === 'he' ? `הזמן ${suggestedQty}` : `Order ${suggestedQty}`}
-                            </button>
-                          )}
+                      {(hasMinStock && stock > 0 && suggestedQty > 0 && quantity !== suggestedQty) && (
+                        <div className="flex items-center justify-start mt-2 px-1">
+                          <button
+                            type="button"
+                            onClick={() => applySuggestedQuantity(item.id)}
+                            className="flex items-center gap-1 text-[11px] font-medium text-[#00b074] hover:underline"
+                          >
+                            <Check className="w-3 h-3" />
+                            {language === 'he' ? `השלם לתקן (${suggestedQty})` : `Order to par (${suggestedQty})`}
+                          </button>
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   );
                 })}
@@ -517,7 +504,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           </div>
         )}
 
-        <div className="space-y-1 sm:space-y-2 mt-2">
+        <div className="space-y-1 sm:space-y-2 mt-2 pb-32">
           <Label htmlFor="notes" className="text-xs sm:text-sm">{t('notes')}</Label>
           <Input
             id="notes"
@@ -528,56 +515,60 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           />
         </div>
         
-        <div className="sticky bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur py-3 border-t flex flex-wrap gap-2 justify-end -mx-3 sm:-mx-6 px-3 sm:px-6 mt-auto shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
-          {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
-            <div className="w-full flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 p-2 sm:p-3 rounded-lg border border-purple-200 mb-2">
-              <span className="text-sm sm:text-base font-semibold text-gray-700">{t('total_cost')}:</span>
-              <span className="text-lg sm:text-xl font-bold text-purple-700">
-                ₪{calculateTotal().toFixed(2)}
-              </span>
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 py-3 pb-safe shadow-[0_-8px_15px_rgba(0,0,0,0.08)] md:sticky md:bottom-0 md:bg-transparent md:border-none md:p-0 md:shadow-none">
+          <div className="flex flex-col gap-2 max-w-4xl mx-auto w-full">
+            {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
+              <div className="flex justify-between items-center w-full mb-1 px-1">
+                <span className="text-xl sm:text-2xl font-bold text-[#00b074]">
+                  ₪{calculateTotal().toFixed(2)}
+                </span>
+                <span className="text-sm font-semibold text-gray-700">{t('total_cost') || 'סך הכל'}</span>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onCancel} className="h-12 w-20 text-gray-500 rounded-xl md:h-10 md:w-auto">
+                {safeT('cancel', 'ביטול', 'Cancel')}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (!currentOrder.supplier_id) { alert(t('supplier_and_item_required')); return; }
+                  const orderItems = [];
+                  Object.keys(itemQuantities).forEach(itemId => {
+                    const quantity = itemQuantities[itemId] || 0;
+                    if (quantity > 0) {
+                      const item = availableItems.find(i => i.id === itemId);
+                      if (item) {
+                        const itemTotal = quantity * (item.price || 0);
+                        const discountedTotal = item.discount ? itemTotal * (1 - item.discount / 100) : itemTotal;
+                        orderItems.push({
+                          item_id: item.id,
+                          item_name: item.name,
+                          catalog_number: item.catalog_number || "",
+                          quantity: quantity,
+                          unit: item.unit,
+                          price: item.price || 0,
+                          discount: item.discount || 0,
+                          total: discountedTotal
+                        });
+                      }
+                    }
+                  });
+                  if (orderItems.length === 0) { alert(t('supplier_and_item_required')); return; }
+                  const totalCost = calculateTotal();
+                  const orderData = { ...currentOrder, items: orderItems, total_cost: totalCost };
+                  if (onSaveDraft) onSaveDraft(orderData);
+                }}
+                className="h-12 flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium md:h-10 md:rounded-md"
+              >
+                {safeT('save_draft', 'שמור טיוטה', 'Save Draft')}
+              </Button>
+              <Button type="submit" className="h-12 flex-[2] bg-[#00b074] hover:bg-[#00905e] text-white rounded-xl font-bold text-base md:h-10 md:rounded-md">
+                {order ? t('update_order') : t('send_order')}
+              </Button>
             </div>
-          )}
-          
-          <Button type="button" variant="outline" onClick={onCancel} className="h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm flex-1 sm:flex-none">
-            {safeT('cancel', 'ביטול', 'Cancel')}
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              if (!currentOrder.supplier_id) { alert(t('supplier_and_item_required')); return; }
-              const orderItems = [];
-              Object.keys(itemQuantities).forEach(itemId => {
-                const quantity = itemQuantities[itemId] || 0;
-                if (quantity > 0) {
-                  const item = availableItems.find(i => i.id === itemId);
-                  if (item) {
-                    const itemTotal = quantity * (item.price || 0);
-                    const discountedTotal = item.discount ? itemTotal * (1 - item.discount / 100) : itemTotal;
-                    orderItems.push({
-                      item_id: item.id,
-                      item_name: item.name,
-                      catalog_number: item.catalog_number || "",
-                      quantity: quantity,
-                      unit: item.unit,
-                      price: item.price || 0,
-                      discount: item.discount || 0,
-                      total: discountedTotal
-                    });
-                  }
-                }
-              });
-              if (orderItems.length === 0) { alert(t('supplier_and_item_required')); return; }
-              const totalCost = calculateTotal();
-              const orderData = { ...currentOrder, items: orderItems, total_cost: totalCost };
-              if (onSaveDraft) onSaveDraft(orderData);
-            }}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm flex-1 sm:flex-none"
-          >
-            {safeT('save_draft', 'שמור טיוטה', 'Save Draft')}
-          </Button>
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white h-9 sm:h-10 px-3 sm:px-6 text-xs sm:text-sm flex-1 sm:flex-none font-semibold">
-            {order ? t('update_order') : t('send_order')}
-          </Button>
+          </div>
         </div>
       </form>
     </motion.div>
