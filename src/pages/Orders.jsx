@@ -29,7 +29,6 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
-  const [customerFilter, setCustomerFilter] = useState("");
   const [datePreset, setDatePreset] = useState("all");
   const [sortBy, setSortBy] = useState("none");
   const [dateStart, setDateStart] = useState("");
@@ -1203,7 +1202,6 @@ export default function OrdersPage() {
           (order.order_number || '').toLowerCase().includes((searchTerm || '').toLowerCase());
         const matchesStatus = statusFilter === "all" || order.status === statusFilter;
         const matchesSupplier = supplierFilter === "all" || ((order.supplier_name || '').toLowerCase() === supplierFilter.toLowerCase());
-        const matchesCustomer = (customerFilter || '').trim() === '' || (order.restaurant_name || '').toLowerCase().includes(customerFilter.toLowerCase());
 
         const dateStr = order.delivery_date || order.created_date || order.updated_date;
         const ds = dateStr ? new Date(dateStr) : null;
@@ -1212,7 +1210,7 @@ export default function OrdersPage() {
         const beforeEnd = !dateEnd || (dsStr && dsStr <= dateEnd);
         const matchesDate = afterStart && beforeEnd;
 
-        return matchesSearch && matchesStatus && matchesSupplier && matchesCustomer && matchesDate;
+        return matchesSearch && matchesStatus && matchesSupplier && matchesDate;
       });
 
   const sortedOrders = useMemo(() => {
@@ -1420,12 +1418,6 @@ export default function OrdersPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Input
-                placeholder={safeT('customer_name', 'שם לקוח', 'Customer name')}
-                value={customerFilter}
-                onChange={(e) => setCustomerFilter(e.target.value)}
-                className="h-11 md:h-10 rounded-lg"
-              />
               <div className="flex items-center bg-gray-50/50 border border-gray-200 rounded-lg p-1 shadow-sm md:w-auto w-full overflow-x-auto">
                 <Select
                   value={datePreset}
@@ -1636,12 +1628,6 @@ export default function OrdersPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Input
-                placeholder={safeT('customer_name', 'שם לקוח', 'Customer name')}
-                value={customerFilter}
-                onChange={(e) => setCustomerFilter(e.target.value)}
-                className="h-11 rounded-lg"
-              />
               <div className="flex flex-col gap-2">
                 <Select
                   value={datePreset}
