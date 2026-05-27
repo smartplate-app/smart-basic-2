@@ -1569,9 +1569,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
                       </div>
 
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <Label className="text-lg font-semibold">
+                          <Label className="text-base font-semibold">
                             {formData.verified_items.length > 0 
                               ? (t('items') || 'פריטים') + ` (${formData.verified_items.length})`
                               : (safeT('add_items', '\u05d4\u05d5\u05e1\u05e3 \u05e4\u05e8\u05d9\u05d8\u05d9\u05dd', 'Add items') || 'הוסף פריטים')
@@ -1589,61 +1589,61 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         </div>
                         
                         {formData.verified_items.length > 0 && (
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {formData.verified_items.map((item, index) => (
                               <Card key={index} className="border-blue-200 bg-blue-50">
-                                <CardContent className="p-3">
-                                  <div className="flex flex-col gap-2">
-                                    <div className="flex items-center justify-between gap-2">
+                                <CardContent className="p-2">
+                                  <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center justify-between gap-1.5">
                                       <Input
                                         value={item.item_name}
                                         onChange={(e) => updateVerifiedItem(index, 'item_name', e.target.value)}
                                         placeholder={safeT('item_name', 'שם פריט', 'Item Name')}
-                                        className="font-medium flex-1 h-9 px-2 text-sm"
+                                        className="font-medium flex-1 h-7 px-2 text-xs"
                                       />
                                       <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => removeItem(index)}
-                                        className="text-red-600 hover:text-red-700 h-9 w-9 shrink-0"
+                                        className="text-red-600 hover:text-red-700 h-7 w-7 shrink-0"
                                       >
-                                        <X className="w-4 h-4" />
+                                        <X className="w-3.5 h-3.5" />
                                       </Button>
                                     </div>
                                     
                                     <div className="grid grid-cols-4 gap-1 sm:gap-2">
                                       <div className="flex flex-col items-center">
-                                        <Label className="text-[10px] sm:text-xs text-center w-full truncate mb-1">{language === 'he' ? 'הוזמן' : 'Ord'}</Label>
+                                        <Label className="text-[9px] sm:text-[10px] text-center w-full truncate mb-0.5">{language === 'he' ? 'הוזמן' : 'Ord'}</Label>
                                         <Input
                                           type="number"
                                           value={item.ordered_quantity}
                                           disabled
-                                          className="bg-gray-100 text-gray-500 h-8 px-1 text-center text-sm"
+                                          className="bg-gray-100 text-gray-500 h-7 px-1 text-center text-xs"
                                         />
                                       </div>
                                       <div className="flex flex-col items-center">
-                                        <Label className="text-[10px] sm:text-xs text-center w-full truncate mb-1">{t('received')}</Label>
+                                        <Label className="text-[9px] sm:text-[10px] text-center w-full truncate mb-0.5">{t('received')}</Label>
                                         <Input
                                           type="number"
                                           step="0.01"
                                           value={item.received_quantity}
                                           onChange={(e) => updateVerifiedItem(index, 'received_quantity', parseFloat(e.target.value) || 0)}
-                                          className="h-8 px-1 text-center text-sm"
+                                          className="h-7 px-1 text-center text-xs"
                                         />
                                       </div>
                                       <div className="flex flex-col items-center">
-                                        <Label className="text-[10px] sm:text-xs text-center w-full truncate mb-1">{t('price')}</Label>
+                                        <Label className="text-[9px] sm:text-[10px] text-center w-full truncate mb-0.5">{t('price')}</Label>
                                         <Input
                                           type="number"
                                           step="0.01"
                                           value={item.actual_price}
                                           onChange={(e) => updateVerifiedItem(index, 'actual_price', parseFloat(e.target.value) || 0)}
-                                          className={`h-8 px-1 text-center text-sm ${item.price_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}`}
+                                          className={`h-7 px-1 text-center text-xs ${item.price_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}`}
                                         />
                                       </div>
                                       <div className="flex flex-col items-center">
-                                        <Label className="text-[10px] sm:text-xs text-center w-full truncate mb-1">{language === 'he' ? 'הנחה %' : 'Disc %'}</Label>
+                                        <Label className="text-[9px] sm:text-[10px] text-center w-full truncate mb-0.5">{language === 'he' ? 'הנחה %' : 'Disc %'}</Label>
                                         <Input
                                           type="number"
                                           step="0.01"
@@ -1651,24 +1651,24 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                           max="100"
                                           value={item.actual_discount}
                                           onChange={(e) => updateVerifiedItem(index, 'actual_discount', parseFloat(e.target.value) || 0)}
-                                          className={`h-8 px-1 text-center text-sm ${item.discount_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}`}
+                                          className={`h-7 px-1 text-center text-xs ${item.discount_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}`}
                                         />
                                       </div>
                                     </div>
 
-                                    <div className="flex flex-col gap-1">
-                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0 && <span className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded font-medium inline-block w-fit border border-orange-200">{language === 'he' ? `הוזמן: ${item.ordered_quantity} | התקבל: ${item.received_quantity} (חריגה)` : `Ordered: ${item.ordered_quantity} | Received: ${item.received_quantity} (Mismatch)`}</span>}
-                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id && <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded font-medium inline-block w-fit border border-purple-200">{language === 'he' ? 'פריט זה לא הוזמן במקור' : 'Item was not originally ordered'}</span>}
+                                    <div className="flex flex-col gap-0.5">
+                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0 && <span className="text-[10px] text-orange-700 bg-orange-100 px-1.5 py-0.5 rounded font-medium inline-block w-fit border border-orange-200">{language === 'he' ? `הוזמן: ${item.ordered_quantity} | התקבל: ${item.received_quantity} (חריגה)` : `Ordered: ${item.ordered_quantity} | Received: ${item.received_quantity} (Mismatch)`}</span>}
+                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id && <span className="text-[10px] text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded font-medium inline-block w-fit border border-purple-200">{language === 'he' ? 'פריט זה לא הוזמן במקור' : 'Item was not originally ordered'}</span>}
                                     </div>
 
-                                    <div className="flex items-center gap-2 flex-wrap mt-1">
-                                      <div className="flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded border border-red-100 shrink-0">
-                                        <input type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600 w-3.5 h-3.5" />
-                                        <Label className="text-[11px] sm:text-sm text-red-800 font-semibold leading-none cursor-pointer" onClick={() => updateVerifiedItem(index, 'request_credit_quantity', !item.request_credit_quantity)}>{language === 'he' ? 'לזיכוי כמות' : 'Qty credit'}</Label>
+                                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                      <div className="flex items-center gap-1 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 shrink-0">
+                                        <input type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600 w-3 h-3" />
+                                        <Label className="text-[10px] sm:text-[11px] text-red-800 font-semibold leading-none cursor-pointer" onClick={() => updateVerifiedItem(index, 'request_credit_quantity', !item.request_credit_quantity)}>{language === 'he' ? 'לזיכוי כמות' : 'Qty credit'}</Label>
                                       </div>
-                                      <div className="flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded border border-red-100 shrink-0">
-                                        <input type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600 w-3.5 h-3.5" />
-                                        <Label className="text-[11px] sm:text-sm text-red-800 font-semibold leading-none cursor-pointer" onClick={() => updateVerifiedItem(index, 'request_credit_price', !item.request_credit_price)}>{language === 'he' ? 'לזיכוי מחיר' : 'Price credit'}</Label>
+                                      <div className="flex items-center gap-1 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 shrink-0">
+                                        <input type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600 w-3 h-3" />
+                                        <Label className="text-[10px] sm:text-[11px] text-red-800 font-semibold leading-none cursor-pointer" onClick={() => updateVerifiedItem(index, 'request_credit_price', !item.request_credit_price)}>{language === 'he' ? 'לזיכוי מחיר' : 'Price credit'}</Label>
                                       </div>
                                     </div>
                                   </div>
