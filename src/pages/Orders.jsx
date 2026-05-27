@@ -1526,17 +1526,43 @@ export default function OrdersPage() {
                 <Card 
                   key={order.id} 
                   className="p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleOpenPreview(order)}
+                  onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
                 >
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="font-bold text-gray-900">{order.supplier_name}</div>
+                        <div className="font-bold text-gray-900 flex items-center gap-2">
+                          {order.supplier_name}
+                          {!isViewer && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => { e.stopPropagation(); handleResend(order); }}
+                              className="h-7 w-7 text-gray-400 hover:text-gray-900 rounded-full"
+                              title={safeT('share','שתף','Share')}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </Button>
+                          )}
+                        </div>
                         <div className="text-sm text-gray-500">{order.order_number || '—'}</div>
                       </div>
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
-                        {statusLabels[order.status] || order.status}
-                      </span>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
+                          {statusLabels[order.status] || order.status}
+                        </span>
+                        {!isViewer && order.status === 'sent' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                            className="text-green-700 border-green-200 bg-green-50/50 hover:bg-green-100 rounded-full h-7 px-3 text-xs"
+                          >
+                            <PackageCheck className="w-3 h-3 rtl:ml-1 ltr:mr-1" />
+                            {safeT('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     
                     {order.delivery_date && (
@@ -1546,56 +1572,24 @@ export default function OrdersPage() {
                     )}
                     
                     <div className="flex justify-between items-center pt-2 border-t">
-                      <span className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}:</span>
-                      <span className="text-lg font-bold text-green-600">₪{(order.total_cost || 0).toFixed(2)}</span>
-                    </div>
-                    
-                    {!isViewer && (
-                      <div className="pt-3 border-t mt-3 flex items-center justify-between">
-                        {order.status === 'sent' ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                            className="text-green-700 border-green-200 bg-green-50/50 hover:bg-green-100 rounded-lg h-9 px-4"
-                          >
-                            <PackageCheck className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                            {safeT('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
-                          </Button>
-                        ) : (
-                          <div></div>
-                        )}
-                        
+                      <div>
+                        <span className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}:</span>
+                        <span className="text-lg font-bold text-green-600 mx-2">₪{(order.total_cost || 0).toFixed(2)}</span>
+                      </div>
+                      
+                      {!isViewer && (
                         <div className="flex items-center gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={(e) => { e.stopPropagation(); handleResend(order); }}
-                            className="h-9 w-9 text-gray-500 hover:text-gray-900 rounded-full"
+                            onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
+                            className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-full"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            <Trash2 className="w-4 h-4" />
                           </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-500 hover:text-gray-900 rounded-full" onClick={(e) => e.stopPropagation()}>
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-48">
-                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(order); }}>
-                                <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-                                {safeT('edit', 'עריכה', 'Edit')}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(order); }} className="text-red-600 focus:text-red-600">
-                                <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                                {safeT('delete', 'מחק', 'Delete')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </Card>
               );
@@ -1775,11 +1769,23 @@ export default function OrdersPage() {
                       <tr
                         key={order.id}
                         className="hover:bg-blue-50 cursor-pointer transition-colors"
-                        onClick={() => handleOpenPreview(order)}
-                        onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
+                        onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
                       >
                         <td className="px-4 py-4 text-start align-middle">
-                          <div className="text-sm font-semibold text-gray-900">{order.supplier_name}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-semibold text-gray-900">{order.supplier_name}</div>
+                            {!isViewer && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => { e.stopPropagation(); handleResend(order); }}
+                                className="h-7 w-7 text-gray-400 hover:text-gray-900 rounded-full"
+                                title={safeT('share','שתף','Share')}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                              </Button>
+                            )}
+                          </div>
                           {order.restaurant_name && (
                             <div className="text-xs text-gray-400 mt-0.5">{order.restaurant_name}</div>
                           )}
@@ -1791,53 +1797,35 @@ export default function OrdersPage() {
                           ₪{(order.total_cost || 0).toFixed(2)}
                         </td>
                         <td className="px-4 py-4 text-start align-middle">
-                          <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border-none ${statusColors[order.status]}`}>
-                            {statusLabels[order.status] || order.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-end align-middle">
-                          <div className="flex items-center justify-end gap-2 pointer-events-auto">
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border-none ${statusColors[order.status]}`}>
+                              {statusLabels[order.status] || order.status}
+                            </span>
                             {!isViewer && order.status === 'sent' && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                                className="h-8 px-3 text-xs bg-green-50/50 border-green-200 text-green-700 hover:bg-green-100 rounded-lg shadow-sm"
+                                className="h-7 px-3 text-xs bg-green-50/50 border-green-200 text-green-700 hover:bg-green-100 rounded-full shadow-sm"
                               >
                                 <PackageCheck className="w-3 h-3 rtl:ml-1 ltr:mr-1" />
                                 {safeT('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
                               </Button>
                             )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-end align-middle">
+                          <div className="flex items-center justify-end gap-2 pointer-events-auto">
                             {!isViewer && (
-                              <>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={(e) => { e.stopPropagation(); handleResend(order); }}
-                                  className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg"
-                                  title={safeT('share','שתף','Share')}
+                                  onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
+                                  className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-lg"
+                                  title={safeT('delete','מחק','Delete')}
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                  <Trash2 className="w-4 h-4" />
                                 </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg" onClick={(e) => e.stopPropagation()}>
-                                      <MoreHorizontal className="w-4 h-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align={isRTL ? "start" : "end"} className="w-40">
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(order); }}>
-                                      <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
-                                      {safeT('edit', 'עריכה', 'Edit')}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDelete(order); }} className="text-red-600 focus:text-red-600">
-                                      <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                                      {safeT('delete', 'מחק', 'Delete')}
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </>
                             )}
                           </div>
                         </td>
