@@ -1300,7 +1300,6 @@ export default function OrdersPage() {
                   <SelectItem value="all" className="rounded-xl font-medium">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
                   <SelectItem value="draft" className="rounded-xl">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent" className="rounded-xl">{t('status_sent')}</SelectItem>
-                  <SelectItem value="delivered" className="rounded-xl">{safeT('status_delivered', 'נמסר', 'Delivered')}</SelectItem>
                 </SelectContent>
               </Select>
               <div className="relative ml-auto rtl:ml-0 rtl:mr-auto min-w-[240px]">
