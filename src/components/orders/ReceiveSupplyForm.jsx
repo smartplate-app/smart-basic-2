@@ -1594,16 +1594,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             </div>
                             </>
                             )}
-                        {formData.needs_review && (
-                          <div>
-                            <Label className="text-xs text-gray-600">{language === 'he' ? 'סיבת בדיקה (אופציונלי)' : 'Review reason (optional)'} </Label>
-                            <Input
-                              value={formData.review_note}
-                              onChange={(e) => setFormData(prev => ({ ...prev, review_note: e.target.value }))}
-                              placeholder={language === 'he' ? 'מה לבדוק?' : 'What to check?'}
-                            />
-                          </div>
-                        )}
+
                       </div>
 
                       <div className="space-y-4">
