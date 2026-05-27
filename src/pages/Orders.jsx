@@ -1716,37 +1716,34 @@ export default function OrdersPage() {
             <table className="w-full relative">
               <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
                 <tr>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
-                    <div className="flex items-center justify-start rtl:justify-end gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
+                  <th className="px-4 py-4 text-start text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                    <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
                       {safeT('supplier','ספק','Supplier')}
                       <span className={`text-[10px] ${sortBy.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
                         {sortBy === 'supplier_asc' ? '↑' : sortBy === 'supplier_desc' ? '↓' : '⇅'}
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
-                    {safeT('order_number','מספר הזמנה','Order #')}
-                  </th>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-4 py-4 text-start text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                     {safeT('delivery_date','תאריך אספקה','Delivery date')}
                   </th>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
-                    <div className="flex items-center justify-start rtl:justify-end gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'cost_asc' ? 'cost_desc' : 'cost_asc')}>
+                  <th className="px-4 py-4 text-start text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                    <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'cost_asc' ? 'cost_desc' : 'cost_asc')}>
                       {safeT('total_cost','עלות כוללת','Total cost')}
                       <span className={`text-[10px] ${sortBy.startsWith('cost') ? 'text-gray-900' : 'text-gray-400'}`}>
                         {sortBy === 'cost_asc' ? '↑' : sortBy === 'cost_desc' ? '↓' : '⇅'}
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
-                    <div className="flex items-center justify-start rtl:justify-end gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'status_asc' ? 'status_desc' : 'status_asc')}>
+                  <th className="px-4 py-4 text-start text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                    <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'status_asc' ? 'status_desc' : 'status_asc')}>
                       {safeT('status','סטטוס','Status')}
                       <span className={`text-[10px] ${sortBy.startsWith('status') ? 'text-gray-900' : 'text-gray-400'}`}>
                         {sortBy === 'status_asc' ? '↑' : sortBy === 'status_desc' ? '↓' : '⇅'}
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-left text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-4 py-4 text-end text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
                   </th>
                 </tr>
               </thead>
@@ -1754,7 +1751,7 @@ export default function OrdersPage() {
                 <AnimatePresence>
                   {loading ? (
                     <tr>
-                      <td colSpan="6" className="px-4 py-12 text-center">
+                      <td colSpan="5" className="px-4 py-12 text-center">
                         <Loader className="w-8 h-8 animate-spin text-gray-600 mx-auto mb-2" />
                         <p className="text-gray-600">{t('loading')}</p>
                       </td>
@@ -1781,27 +1778,24 @@ export default function OrdersPage() {
                         onClick={() => handleOpenPreview(order)}
                         onDoubleClick={() => { if (!isViewer) handleEdit(order); }}
                       >
-                        <td className="px-4 py-4 text-right align-middle">
+                        <td className="px-4 py-4 text-start align-middle">
                           <div className="text-sm font-semibold text-gray-900">{order.supplier_name}</div>
                           {order.restaurant_name && (
                             <div className="text-xs text-gray-400 mt-0.5">{order.restaurant_name}</div>
                           )}
                         </td>
-                        <td className="px-4 py-4 text-right text-sm text-gray-500 align-middle">
-                          {order.order_number || '—'}
-                        </td>
-                        <td className="px-4 py-4 text-right text-sm text-gray-600 align-middle">
+                        <td className="px-4 py-4 text-start text-sm text-gray-600 align-middle">
                           {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
                         </td>
-                        <td className="px-4 py-4 text-right text-sm font-bold text-gray-900 align-middle">
+                        <td className="px-4 py-4 text-start text-sm font-bold text-gray-900 align-middle">
                           ₪{(order.total_cost || 0).toFixed(2)}
                         </td>
-                        <td className="px-4 py-4 text-right align-middle">
+                        <td className="px-4 py-4 text-start align-middle">
                           <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border-none ${statusColors[order.status]}`}>
                             {statusLabels[order.status] || order.status}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-right align-middle">
+                        <td className="px-4 py-4 text-end align-middle">
                           <div className="flex items-center justify-end gap-2 pointer-events-auto">
                             {!isViewer && order.status === 'sent' && (
                               <Button
