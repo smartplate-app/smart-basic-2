@@ -666,9 +666,19 @@ export default function OrdersPage() {
         linked_receipt_id: receiptData.linked_receipt_id || ""
       };
       await base44.entities.SupplyReceipt.create(cleanData);
+
+      const linkedOrderIds = [cleanData.order_id, ...(cleanData.linked_order_ids || [])].filter(Boolean);
+      if (linkedOrderIds.length > 0) {
+        await Promise.all(linkedOrderIds.map(orderId =>
+          base44.entities.Order.update(orderId, { status: 'delivered' }).catch(() => {})
+        ));
+        setOrders(prev => prev.map(o => linkedOrderIds.includes(o.id) ? { ...o, status: 'delivered' } : o));
+      }
+
       alert(t('receipt_saved_successfully'));
       setShowReceiveForm(false);
       setReceiveOrder(null);
+      await loadData(user);
     } catch (e) {
       console.error('Save receipt failed', e);
       alert((t('error_saving') || 'Error saving') + ': ' + (e?.message || e));
@@ -1336,7 +1346,7 @@ export default function OrdersPage() {
         {/* Mobile quick filters */}
         <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4">
           <div className="flex gap-2 pb-1 w-max after:content-[''] after:w-4 after:flex-shrink-0 before:content-[''] before:w-4 before:flex-shrink-0">
-            {['all','draft','sent'].map((s) => (
+            {['all','draft','sent','delivered'].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
@@ -1344,7 +1354,8 @@ export default function OrdersPage() {
               >
                 {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
                  s==='draft' ? t('status_draft') :
-                 t('status_sent')}
+                 s==='sent' ? t('status_sent') :
+                 safeT('status_delivered', 'התקבל', 'Delivered')}
               </button>
             ))}
           </div>
@@ -1405,6 +1416,7 @@ export default function OrdersPage() {
                   <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
+                  <SelectItem value="delivered">{safeT('status_delivered', 'התקבל', 'Delivered')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
@@ -1507,12 +1519,14 @@ export default function OrdersPage() {
             filteredOrders.map((order) => {
               const statusColors = {
                 sent: "bg-blue-50 text-blue-700 border-blue-200",
-                draft: "bg-yellow-50 text-yellow-700 border-yellow-200"
+                draft: "bg-yellow-50 text-yellow-700 border-yellow-200",
+                delivered: "bg-green-50 text-green-700 border-green-200"
               };
 
               const statusLabels = {
                 sent: t('status_sent'),
-                draft: t('status_draft')
+                draft: t('status_draft'),
+                delivered: safeT('status_delivered', 'התקבל', 'Delivered')
               };
 
               return (
@@ -1615,6 +1629,7 @@ export default function OrdersPage() {
                   <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
+                  <SelectItem value="delivered">{safeT('status_delivered', 'התקבל', 'Delivered')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
@@ -1741,12 +1756,14 @@ export default function OrdersPage() {
                   ) : sortedOrders.map((order) => {
                     const statusColors = {
                       sent: "bg-blue-50 text-blue-600",
-                      draft: "bg-gray-100 text-gray-600"
+                      draft: "bg-gray-100 text-gray-600",
+                      delivered: "bg-green-50 text-green-600"
                     };
 
                     const statusLabels = {
                       sent: t('status_sent'),
-                      draft: t('status_draft')
+                      draft: t('status_draft'),
+                      delivered: safeT('status_delivered', 'התקבל', 'Delivered')
                     };
 
                     return (

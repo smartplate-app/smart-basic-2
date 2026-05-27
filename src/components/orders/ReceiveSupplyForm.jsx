@@ -1741,12 +1741,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       </Alert>
                     )}
 
-                    <div className="flex gap-3 pt-4">
+                    <div className={`grid gap-2 pt-4 w-full ${scannedDocs.length > 1 ? 'grid-cols-2' : (receipt && onDelete ? 'grid-cols-3' : 'grid-cols-2')}`}>
                       {scannedDocs.length > 1 ? (
                         <>
                           <Button
                             type="button"
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white min-h-[44px] md:min-h-0"
+                            className="bg-green-600 hover:bg-green-700 text-white h-10 px-1 text-xs sm:text-sm shadow-none"
                             disabled={!formData.supplier_id || scannedDocs.some(d => !d.invoice_number || !d.invoice_date)}
                             onClick={async () => {
                               const hasDups = scannedDocs.some(d => d.duplicate);
@@ -1824,36 +1824,36 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               executeMultiSubmit();
                               }}
                               >
-                              <PackageCheck className="w-4 h-4 ml-2" />
-                            {language === 'he' ? 'שמור הכל' : 'Save all'}
+                              <PackageCheck className="w-3 h-3 sm:w-4 sm:h-4 ml-1 shrink-0" />
+                            <span className="truncate">{language === 'he' ? 'שמור הכל' : 'Save all'}</span>
                           </Button>
-                          <Button type="button" variant="outline" onClick={onCancel} className="flex-1 min-h-[44px] md:min-h-0">
-                            {safeT('cancel', 'ביטול', 'Cancel')}
+                          <Button type="button" variant="outline" onClick={onCancel} className="h-10 px-1 text-xs sm:text-sm shadow-none">
+                            <span className="truncate">{safeT('cancel', 'ביטול', 'Cancel')}</span>
                           </Button>
                         </>
                       ) : (
                         <>
                           <Button 
                             type="submit" 
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white min-h-[44px] md:min-h-0"
-                                                     disabled={!formData.invoice_number || formData.receipt_images.length === 0}
+                            className="bg-green-600 hover:bg-green-700 text-white h-10 px-1 text-xs sm:text-sm shadow-none"
+                            disabled={!formData.invoice_number || formData.receipt_images.length === 0}
                           >
-                            <PackageCheck className="w-4 h-4 ml-2" />
-                            {safeT('save_receipt', 'שמור קבלה', 'Save receipt')}
+                            <PackageCheck className="w-3 h-3 sm:w-4 sm:h-4 ml-1 shrink-0" />
+                            <span className="truncate">{safeT('save_receipt', 'שמור קבלה', 'Save')}</span>
                           </Button>
                           {receipt && onDelete && (
                             <Button
                               type="button"
                               variant="destructive"
                               onClick={() => onDelete(receipt)}
-                              className="flex-1 min-h-[44px] md:min-h-0"
+                              className="h-10 px-1 text-xs sm:text-sm shadow-none"
                             >
-                              <Trash2 className="w-4 h-4 ml-2" />
-                              {safeT('delete', 'מחק', 'Delete')}
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 ml-1 shrink-0" />
+                              <span className="truncate">{safeT('delete', 'מחיקה', 'Delete')}</span>
                             </Button>
                           )}
-                          <Button type="button" variant="outline" onClick={onCancel} className="flex-1 min-h-[44px] md:min-h-0">
-                            {safeT('cancel', 'ביטול', 'Cancel')}
+                          <Button type="button" variant="outline" onClick={onCancel} className="h-10 px-1 text-xs sm:text-sm shadow-none">
+                            <span className="truncate">{safeT('cancel', 'ביטול', 'Cancel')}</span>
                           </Button>
                         </>
                       )}
