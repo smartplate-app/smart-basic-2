@@ -1496,6 +1496,7 @@ export default function OrdersPage() {
 
 
          {/* Mobile View */}
+        {!showForm && (
         <div className="md:hidden space-y-4 pb-24">
           {loading ? (
             <div className="text-center py-12">
@@ -1596,6 +1597,7 @@ export default function OrdersPage() {
             })
           )}
         </div>
+        )}
 
         {/* Mobile Filters Drawer */}
         <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -1705,6 +1707,7 @@ export default function OrdersPage() {
         </Drawer>
 
         {/* Desktop View */}
+        {!showForm && (
         <div className="hidden md:block bg-white rounded-lg shadow relative">
           <div className="overflow-x-auto overflow-y-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <table className="w-full relative">
@@ -1843,6 +1846,7 @@ export default function OrdersPage() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* Mobile FAB for new order */}

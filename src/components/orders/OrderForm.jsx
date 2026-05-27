@@ -511,6 +511,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   );
                 })}
                 </div>
+                {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).length > 0 && (
+                  <div className="flex flex-col items-center justify-center py-6 text-gray-400 mt-2 border-t border-gray-100">
+                    <Check className="w-8 h-8 text-gray-300 mb-2 opacity-50" />
+                    <p className="text-sm">{language === 'he' ? 'הגעת לסוף רשימת הפריטים' : 'End of items list'}</p>
+                  </div>
+                )}
                 {showScrollTop && (
                   <button
                     type="button"
