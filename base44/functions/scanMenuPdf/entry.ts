@@ -87,7 +87,7 @@ VERY IMPORTANT: DO NOT TRANSLATE any dish names. Extract the exact text in its o
           name: itemName,
           type: 'sale_item',
           sale_price: item.price || 0,
-          created_by: user.email,
+          created_by: targetEmail, // Use targetEmail instead of user.email so it's isolated to the specific restaurant
           store_owner_email: targetEmail,
           is_from_last_scan: true
         });
