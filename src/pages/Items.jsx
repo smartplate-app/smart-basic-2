@@ -414,18 +414,21 @@ export default function ItemsPage() {
         alert(t('error_no_logged_in_user') || "Error: No user logged in");
         return;
       }
-      if (!editingItem) {
+      
+      const targetId = itemData.id || editingItem?.id;
+      
+      if (!targetId) {
         console.error("No item to update");
         alert(t('error_saving') + ": No item to update");
         return;
       }
       const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
 
-      await base44.entities.Item.update(editingItem.id, cleanData);
+      await base44.entities.Item.update(targetId, cleanData);
 
       // Sync warehouse catalog_items
       const currentWarehouseIds = cleanData.warehouse_ids || [];
-      const oldWarehouseIds = editingItem.warehouse_ids || [];
+      const oldWarehouseIds = editingItem?.warehouse_ids || [];
       
       const removedWarehouseIds = oldWarehouseIds.filter(wid => !currentWarehouseIds.includes(wid));
       const addedWarehouseIds = currentWarehouseIds.filter(wid => !oldWarehouseIds.includes(wid));
@@ -435,16 +438,16 @@ export default function ItemsPage() {
       const allWarehousesToUpdate = [];
       
       for (const wh of warehouses) {
-        const hasItemInCatalog = Array.isArray(wh.catalog_items) && wh.catalog_items.includes(editingItem.id);
+        const hasItemInCatalog = Array.isArray(wh.catalog_items) && wh.catalog_items.includes(targetId);
         const shouldBeInWarehouse = currentWarehouseIds.includes(wh.id);
         
         if (hasItemInCatalog && !shouldBeInWarehouse) {
           // Needs to be removed
-          const newCatalog = wh.catalog_items.filter(itemId => itemId !== editingItem.id);
+          const newCatalog = wh.catalog_items.filter(itemId => itemId !== targetId);
           allWarehousesToUpdate.push(base44.entities.Warehouse.update(wh.id, { catalog_items: newCatalog }));
         } else if (!hasItemInCatalog && shouldBeInWarehouse) {
           // Needs to be added
-          const newCatalog = [...(wh.catalog_items || []), editingItem.id];
+          const newCatalog = [...(wh.catalog_items || []), targetId];
           allWarehousesToUpdate.push(base44.entities.Warehouse.update(wh.id, { catalog_items: newCatalog }));
         }
       }
