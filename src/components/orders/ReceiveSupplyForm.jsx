@@ -6,13 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info, Eye } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
+import OrderPreviewModal from "@/components/orders/OrderPreviewModal";
 
 export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user }) {
+  const [previewOrder, setPreviewOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
   const [availableSuppliers, setAvailableSuppliers] = useState(Array.isArray(suppliers) ? suppliers : []);
@@ -953,10 +955,16 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
           {order && (
-            <div className="mb-2 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg p-3 text-sm">
-              {language === 'he'
-                ? `סריקה להזמנה ${order.order_number || '—'} • ספק: ${order.supplier_name || ''}. הקבלה תקושר להזמנה זו.`
-                : `Scanning for order ${order.order_number || '—'} • Supplier: ${order.supplier_name || ''}. This receipt will attach to this order.`}
+            <div className="mb-2 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg p-3 text-sm flex items-center justify-between gap-2">
+              <span className="leading-relaxed">
+                {language === 'he'
+                  ? `סריקה להזמנה ${order.order_number || '—'} • ספק: ${order.supplier_name || ''}. הקבלה תקושר להזמנה זו.`
+                  : `Scanning for order ${order.order_number || '—'} • Supplier: ${order.supplier_name || ''}. This receipt will attach to this order.`}
+              </span>
+              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOrder(order)} className="shrink-0 bg-white border-emerald-200 hover:bg-emerald-100 text-emerald-700">
+                <Eye className="w-4 h-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
+                {language === 'he' ? 'צפה בהזמנה' : 'Preview'}
+              </Button>
             </div>
           )}
 
@@ -1016,11 +1024,18 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 const checked = e.target.checked;
                                 setSelectedOpenOrderIds(prev => checked ? [...prev, o.id] : prev.filter(id => id !== o.id));
                               }}
-                              className="rounded w-5 h-5 accent-orange-600"
+                              className="rounded w-5 h-5 accent-orange-600 shrink-0"
                             />
-                            <span className="font-bold text-gray-900">{o.order_number}</span>
-                            <span className="text-gray-500">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
-                            <span className="text-green-600 font-bold ml-auto rtl:mr-auto rtl:ml-0">₪{(o.total_cost || 0).toFixed(2)}</span>
+                            <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-1 sm:gap-3 ml-1 rtl:mr-1 rtl:ml-0">
+                              <span 
+                                className="font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1.5 transition-colors"
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewOrder(o); }}
+                              >
+                                <Eye className="w-3.5 h-3.5" /> {o.order_number}
+                              </span>
+                              <span className="text-gray-500">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+                            </div>
+                            <span className="text-green-600 font-bold shrink-0 ml-auto rtl:mr-auto rtl:ml-0">₪{(o.total_cost || 0).toFixed(2)}</span>
                           </label>
                         ))}
                       </div>
@@ -1864,6 +1879,17 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {previewOrder && (
+        <OrderPreviewModal
+          order={previewOrder}
+          isOpen={!!previewOrder}
+          onClose={() => setPreviewOrder(null)}
+          onSend={() => {}}
+          onSendEmail={() => {}}
+          hideActions={true}
+        />
+      )}
     </>
   );
 }

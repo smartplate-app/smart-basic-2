@@ -7,7 +7,7 @@ import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
 
-export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail }) {
+export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, hideActions = false }) {
   const { t, language } = useLanguage();
   const safeT = (key, he, en) => {
     const v = t(key);
@@ -555,44 +555,46 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         </div>
 
         <div className="flex flex-col gap-2 p-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+24px)] border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
-          <div className="flex gap-2 w-full">
-            <Button
-              onClick={async () => {
-                if (onSendEmail) {
-                  setSending(true);
-                  try { await onSendEmail(); } catch(e) {}
-                  setSending(false);
-                }
-              }}
-              variant="outline"
-              className="flex-1 h-12 text-blue-600 border-blue-200 hover:bg-blue-50 text-[15px]"
-              disabled={downloading || sending}
-            >
-              {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4 ml-1.5" />}
-              {safeT('send_email', 'במייל', 'Email')}
-            </Button>
+          {!hideActions && (
+            <div className="flex gap-2 w-full">
+              <Button
+                onClick={async () => {
+                  if (onSendEmail) {
+                    setSending(true);
+                    try { await onSendEmail(); } catch(e) {}
+                    setSending(false);
+                  }
+                }}
+                variant="outline"
+                className="flex-1 h-12 text-blue-600 border-blue-200 hover:bg-blue-50 text-[15px]"
+                disabled={downloading || sending}
+              >
+                {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4 ml-1.5" />}
+                {safeT('send_email', 'במייל', 'Email')}
+              </Button>
 
-            <Button
-              onClick={() => { 
-                if (onSend) {
-                  onSend(order);
-                }
-              }}
-              className="flex-[1.5] h-12 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
-              disabled={downloading || sending}
-              data-testid="order-preview-send"
-            >
-              {sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <MessageCircle className="w-5 h-5 ml-1.5" />}
-              {safeT('send_message_whatsapp','בוואטסאפ','WhatsApp')}
-            </Button>
-          </div>
+              <Button
+                onClick={() => { 
+                  if (onSend) {
+                    onSend(order);
+                  }
+                }}
+                className="flex-[1.5] h-12 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
+                disabled={downloading || sending}
+                data-testid="order-preview-send"
+              >
+                {sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <MessageCircle className="w-5 h-5 ml-1.5" />}
+                {safeT('send_message_whatsapp','בוואטסאפ','WhatsApp')}
+              </Button>
+            </div>
+          )}
           
           <Button
             onClick={onClose}
             variant="ghost"
             className="w-full h-10 text-gray-500 hover:bg-gray-100"
           >
-            {safeT('back_to_edit', 'חזור לעריכת הזמנה', 'Back to Edit')}
+            {hideActions ? safeT('close', 'סגור', 'Close') : safeT('back_to_edit', 'חזור לעריכת הזמנה', 'Back to Edit')}
           </Button>
         </div>
       </motion.div>
