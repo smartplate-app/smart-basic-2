@@ -1640,7 +1640,16 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                       </Button>
                                     </div>
                                     
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-4 gap-3">
+                                      <div>
+                                        <Label className="text-xs">{language === 'he' ? 'הוזמן' : 'Ordered'}</Label>
+                                        <Input
+                                          type="number"
+                                          value={item.ordered_quantity}
+                                          disabled
+                                          className="bg-gray-100 text-gray-500"
+                                        />
+                                      </div>
                                       <div>
                                         <Label className="text-xs">{t('received')}</Label>
                                         <Input
@@ -1657,6 +1666,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                           step="0.01"
                                           value={item.actual_price}
                                           onChange={(e) => updateVerifiedItem(index, 'actual_price', parseFloat(e.target.value) || 0)}
+                                          className={item.price_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}
                                         />
                                       </div>
                                       <div>
@@ -1668,6 +1678,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                           max="100"
                                           value={item.actual_discount}
                                           onChange={(e) => updateVerifiedItem(index, 'actual_discount', parseFloat(e.target.value) || 0)}
+                                          className={item.discount_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}
                                         />
                                       </div>
                                     </div>
