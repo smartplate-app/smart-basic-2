@@ -18,44 +18,5 @@
   "required": [
     "name",
     "head_store_user_email"
-  ],
-  "rls": {
-    "create": {
-      "$or": [
-        {
-          "data.head_store_user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "read": {
-      "$or": [
-        {
-          "data.head_store_user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "data.head_store_user_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "delete": null
-  }
+  ]
 }

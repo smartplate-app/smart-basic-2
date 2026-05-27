@@ -913,12 +913,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
     onSubmit(finalData);
     };
 
-    const anomalies = checkForAnomalies();
-    if (anomalies.length > 0) {
-    setAnomalyCheck({ show: true, messages: anomalies, onContinue: executeSubmit });
-    return;
-    }
-
     executeSubmit();
     };
 
@@ -1778,12 +1772,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 alert((language === 'he' ? 'שמירה נכשלה' : 'Save failed') + ': ' + (e?.message || e));
                               }
                               };
-
-                              const anomalies = checkForAnomalies();
-                              if (anomalies.length > 0) {
-                              setAnomalyCheck({ show: true, messages: anomalies, onContinue: executeMultiSubmit });
-                              return;
-                              }
 
                               executeMultiSubmit();
                               }}

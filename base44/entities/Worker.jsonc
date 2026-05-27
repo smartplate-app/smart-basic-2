@@ -75,7 +75,12 @@
     "management_bonus": {
       "type": "number",
       "default": 0,
-      "description": "Monthly management bonus"
+      "description": "Monthly management bonus (fixed)"
+    },
+    "target_monthly_salary": {
+      "type": "number",
+      "default": 0,
+      "description": "Target monthly salary for managers (system calculates bonus to reach this)"
     },
     "employer_cost_percentage": {
       "type": "number",
