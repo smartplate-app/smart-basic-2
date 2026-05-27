@@ -1016,31 +1016,33 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       </div>
                       <div className="flex flex-col gap-2">
                         {openOrders.map(o => (
-                          <label key={o.id} className={`flex items-center justify-between gap-2 text-sm p-3 rounded-lg border cursor-pointer transition-colors ${selectedOpenOrderIds.includes(o.id) ? 'bg-[#d4a373]/10 border-[#d4a373]' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
+                          <div 
+                            key={o.id} 
+                            className={`flex items-center justify-between gap-2 text-sm p-3 rounded-lg border cursor-pointer transition-colors ${selectedOpenOrderIds.includes(o.id) ? 'bg-[#d4a373]/10 border-[#d4a373]' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                            onClick={() => setPreviewOrder(o)}
+                          >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <input
                                 type="checkbox"
                                 checked={selectedOpenOrderIds.includes(o.id)}
+                                onClick={(e) => e.stopPropagation()}
                                 onChange={(e) => {
                                   const checked = e.target.checked;
                                   setSelectedOpenOrderIds(prev => checked ? [...prev, o.id] : prev.filter(id => id !== o.id));
                                 }}
-                                className="rounded w-5 h-5 accent-[#d4a373] shrink-0"
+                                className="rounded w-5 h-5 accent-[#d4a373] shrink-0 cursor-pointer"
                               />
                               <div className="flex flex-col min-w-0">
-                                <span className="font-bold text-gray-800 flex items-center gap-1.5 transition-colors truncate">
-                                  <span className="truncate">{o.order_number}</span>
+                                <span className="font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 transition-colors truncate">
+                                  <Eye className="w-4 h-4 shrink-0" /> <span className="truncate">{o.order_number}</span>
                                 </span>
                                 <span className="text-gray-500 text-xs mt-0.5">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-3 shrink-0 ml-2 rtl:mr-2 rtl:ml-0">
                               <span className="text-gray-700 font-bold">₪{(o.total_cost || 0).toFixed(2)}</span>
-                              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewOrder(o); }}>
-                                <Eye className="w-4 h-4" />
-                              </Button>
                             </div>
-                          </label>
+                          </div>
                         ))}
                       </div>
                       {selectedOpenOrderIds.length > 0 && (
