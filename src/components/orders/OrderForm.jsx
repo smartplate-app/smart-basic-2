@@ -512,21 +512,22 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           />
         </div>
         
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 py-3 pb-safe shadow-[0_-8px_15px_rgba(0,0,0,0.08)] md:sticky md:bottom-0 md:bg-transparent md:border-none md:p-0 md:shadow-none">
-          <div className="flex flex-col gap-2 max-w-4xl mx-auto w-full">
+        <div className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 py-3 pb-safe shadow-[0_-8px_15px_rgba(0,0,0,0.08)] md:sticky md:bottom-0 md:bg-transparent md:border-none md:p-0 md:shadow-none ${cartPreviewOpen ? 'top-0 flex flex-col pt-safe md:top-auto md:pt-0' : ''}`}>
+          <div className={`flex flex-col gap-2 max-w-4xl mx-auto w-full ${cartPreviewOpen ? 'flex-1 h-full' : ''}`}>
             {cartPreviewOpen ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-gray-800">{language === 'he' ? 'סיכום עגלה' : 'Cart Summary'}</span>
+              <div className="flex flex-col gap-2 h-full">
+                <div className="flex justify-between items-center mb-2 mt-3 md:mt-0">
+                  <span className="font-bold text-gray-900 text-xl md:text-base">{language === 'he' ? 'סיכום עגלה' : 'Cart Summary'}</span>
                   <button 
                     type="button"
                     onClick={() => setCartPreviewOpen(false)}
-                    className="text-sm text-purple-600 hover:underline"
+                    className="text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
                   >
+                    <X className="w-4 h-4" />
                     {language === 'he' ? 'חזור לעריכה' : 'Back to Edit'}
                   </button>
                 </div>
-                <div className="max-h-[30vh] overflow-y-auto mb-2 border rounded-lg p-2 bg-gray-50 text-sm">
+                <div className="flex-1 overflow-y-auto mb-2 border rounded-lg p-3 bg-gray-50 text-sm md:max-h-[50vh]">
                   {cartItems.length === 0 ? (
                     <div className="text-center text-gray-500 py-4">{language === 'he' ? 'הסל ריק' : 'Cart is empty'}</div>
                   ) : (
