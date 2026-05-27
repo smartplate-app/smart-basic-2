@@ -63,7 +63,7 @@ export default function SupplyReceiptsPage() {
     const s = t(key);
     return (!s || s === key) ? (language?.startsWith('he') ? he : (en || key)) : s;
   };
-  const [activeTab, setActiveTab] = useState('receipts');
+  const [activeTab, setActiveTab] = useState('pending_orders');
   const [viewMode, setViewMode] = useState('list');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const startYRef = useRef(0);
@@ -540,9 +540,75 @@ export default function SupplyReceiptsPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
-            <TabsTrigger value="receipts">{tt('receipts_tab','קבלות','Receipts')}</TabsTrigger>
+            <TabsTrigger value="pending_orders">{language === 'he' ? 'הזמנות לקליטה' : 'Pending Orders'}</TabsTrigger>
+            <TabsTrigger value="receipts">{tt('receipts_tab','היסטוריית קבלות','Receipts History')}</TabsTrigger>
             <TabsTrigger value="monthly_report">{tt('monthly_summary','סיכום חודשי','Monthly Summary')}</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="pending_orders">
+            <AnimatePresence>
+              {showForm && selectedOrder && !editingReceipt && (
+                 <ReceiveSupplyForm
+                   order={selectedOrder}
+                   receipt={null}
+                   suppliers={suppliers}
+                   noOrderMode={false}
+                   user={user}
+                   onSubmit={handleReceiptSubmit}
+                   onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
+                 />
+               )}
+            </AnimatePresence>
+            {!showForm && (
+              <div className="space-y-6 pb-24">
+                {['today', 'future', 'past'].map(section => {
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  const sectionOrders = orders.filter(o => o.status === 'sent').filter(o => {
+                    const dateStr = o.delivery_date ? new Date(o.delivery_date).toISOString().split('T')[0] : '';
+                    if (section === 'today') return dateStr === todayStr;
+                    if (section === 'future') return dateStr > todayStr;
+                    if (section === 'past') return dateStr && dateStr < todayStr;
+                    return false;
+                  }).sort((a,b) => new Date(b.delivery_date || 0) - new Date(a.delivery_date || 0));
+
+                  if (sectionOrders.length === 0) return null;
+
+                  const sectionTitle = section === 'today' ? (language === 'he' ? 'להיום' : 'Today') :
+                                       section === 'future' ? (language === 'he' ? 'עתידיות' : 'Future') :
+                                       (language === 'he' ? 'לא נקלטו בעבר' : 'Past due');
+
+                  return (
+                    <div key={section}>
+                      <h3 className="text-lg font-bold text-gray-800 mb-3">{sectionTitle} ({sectionOrders.length})</h3>
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {sectionOrders.map(order => (
+                          <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="font-bold text-gray-900">{order.supplier_name}</div>
+                              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-100">{order.order_number}</span>
+                            </div>
+                            <div className="text-sm text-gray-600 mb-4">{new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>
+                            <Button
+                              onClick={() => { setSelectedOrder(order); setShowForm(true); }}
+                              className="w-full bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <PackageCheck className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                              {tt('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {orders.filter(o => o.status === 'sent').length === 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    {language === 'he' ? 'אין הזמנות פתוחות לקליטה.' : 'No open orders to receive.'}
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="receipts">
             <AnimatePresence>
@@ -563,18 +629,7 @@ export default function SupplyReceiptsPage() {
                 />
               )}
 
-              {/* Receive from Sent Order Form */}
-               {showForm && selectedOrder && !editingReceipt && (
-                 <ReceiveSupplyForm
-                   order={selectedOrder}
-                   receipt={null}
-                   suppliers={suppliers}
-                   noOrderMode={false}
-                   user={user}
-                   onSubmit={handleReceiptSubmit}
-                   onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
-                 />
-               )}
+              {/* Receive from Sent Order Form - moved to pending_orders tab */}
 
                {/* Supply Without Order Form */}
                {showNoOrderForm && (

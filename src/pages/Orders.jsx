@@ -1208,6 +1208,8 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders.filter(order => {
+        if (order.status === 'delivered') return false; // Hide received orders from Orders page
+        
         const matchesSearch = (order.supplier_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
           (order.order_number || '').toLowerCase().includes((searchTerm || '').toLowerCase());
         const matchesStatus = statusFilter === "all" || order.status === statusFilter;
@@ -1346,7 +1348,7 @@ export default function OrdersPage() {
         {/* Mobile quick filters */}
         <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4">
           <div className="flex gap-2 pb-1 w-max after:content-[''] after:w-4 after:flex-shrink-0 before:content-[''] before:w-4 before:flex-shrink-0">
-            {['all','draft','sent','delivered'].map((s) => (
+            {['all','draft','sent'].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
@@ -1354,8 +1356,7 @@ export default function OrdersPage() {
               >
                 {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
                  s==='draft' ? t('status_draft') :
-                 s==='sent' ? t('status_sent') :
-                 safeT('status_delivered', 'התקבל', 'Delivered')}
+                 t('status_sent')}
               </button>
             ))}
           </div>
@@ -1519,14 +1520,12 @@ export default function OrdersPage() {
             filteredOrders.map((order) => {
               const statusColors = {
                 sent: "bg-blue-50 text-blue-700 border-blue-200",
-                draft: "bg-yellow-50 text-yellow-700 border-yellow-200",
-                delivered: "bg-green-50 text-green-700 border-green-200"
+                draft: "bg-yellow-50 text-yellow-700 border-yellow-200"
               };
 
               const statusLabels = {
                 sent: t('status_sent'),
-                draft: t('status_draft'),
-                delivered: safeT('status_delivered', 'התקבל', 'Delivered')
+                draft: t('status_draft')
               };
 
               return (
@@ -1629,7 +1628,6 @@ export default function OrdersPage() {
                   <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
                   <SelectItem value="draft">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent">{t('status_sent')}</SelectItem>
-                  <SelectItem value="delivered">{safeT('status_delivered', 'התקבל', 'Delivered')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={supplierFilter} onValueChange={setSupplierFilter}>
@@ -1756,14 +1754,12 @@ export default function OrdersPage() {
                   ) : sortedOrders.map((order) => {
                     const statusColors = {
                       sent: "bg-blue-50 text-blue-600",
-                      draft: "bg-gray-100 text-gray-600",
-                      delivered: "bg-green-50 text-green-600"
+                      draft: "bg-gray-100 text-gray-600"
                     };
 
                     const statusLabels = {
                       sent: t('status_sent'),
-                      draft: t('status_draft'),
-                      delivered: safeT('status_delivered', 'התקבל', 'Delivered')
+                      draft: t('status_draft')
                     };
 
                     return (

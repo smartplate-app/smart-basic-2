@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info, Eye, Download, Check, ChevronsUpDown } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info, Eye, Download, Check, ChevronsUpDown, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -226,6 +226,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [anomalyCheck, setAnomalyCheck] = useState({ show: false, messages: [], onContinue: null });
   const [supplierPopoverOpen, setSupplierPopoverOpen] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(!!receipt);
 
   const checkForAnomalies = () => {
     const messages = [];
@@ -986,9 +987,17 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
     <>
       <Card className="mb-8 shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <CardTitle className="text-xl font-bold">
-          {noOrderMode ? t('supply_without_order') : t('receive')}
-        </CardTitle>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-xl font-bold">
+              {receipt ? (language === 'he' ? 'צפייה במסמך' : 'View Document') : (noOrderMode ? t('supply_without_order') : t('receive'))}
+            </CardTitle>
+            {isReadOnly && (
+              <Button type="button" variant="outline" size="sm" onClick={() => setIsReadOnly(false)} className="h-8 text-gray-700">
+                <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                {language === 'he' ? 'עריכת מסמך' : 'Edit Document'}
+              </Button>
+            )}
+          </div>
         <Button variant="ghost" size="icon" onClick={onCancel}>
           <X className="w-4 h-4" />
         </Button>
@@ -1089,6 +1098,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         className="hidden"
                         id="receipt-upload"
                         multiple
+                        disabled={isReadOnly}
                       />
                       <label
                         htmlFor="receipt-upload"
@@ -1127,25 +1137,27 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 <img src={url} alt={language === 'he' ? 'קבלה' : 'Receipt'} className="w-full h-full object-cover hover:scale-105 transition-transform" />
                               )}
                             </a>
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-1 right-1 h-6 w-6 opacity-80 hover:opacity-100 shadow-sm"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                removeImage(index);
-                              }}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
+                            {!isReadOnly && (
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-1 right-1 h-6 w-6 opacity-80 hover:opacity-100 shadow-sm"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  removeImage(index);
+                                }}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         ))}
                       </div>
                     )}
 
-                    {formData.receipt_images.length > 0 && (
+                    {formData.receipt_images.length > 0 && !isReadOnly && (
                       <div className="flex gap-2 sticky bottom-0 pb-safe z-50 bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur md:static md:bg-transparent md:dark:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
                         <Button
                           type="button"
@@ -1347,6 +1359,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               className="mt-1 font-semibold"
                               placeholder={safeT('enter_invoice_number', 'הזן מספר חשבונית', 'Enter invoice number')}
                               required
+                              disabled={isReadOnly}
                             />
                           </div>
                           <div>
@@ -1358,6 +1371,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               lang={language === 'he' ? 'he-IL' : undefined}
                               className="mt-1 font-semibold"
                               required
+                              disabled={isReadOnly}
                             />
                           </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -1370,6 +1384,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   onChange={(e) => handleExclVatChange(e.target.value)}
                                   className="mt-1 font-bold text-lg"
                                   placeholder="0.00"
+                                  disabled={isReadOnly}
                                 />
                               </div>
                               <div>
@@ -1382,6 +1397,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   className="mt-1 font-bold text-lg text-blue-700"
                                   placeholder="0.00"
                                   required={formData.document_type !== 'delivery_note'}
+                                  disabled={isReadOnly}
                                 />
                               </div>
                             </div>
@@ -1401,42 +1417,46 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       </div>
 
                       <div className="bg-white border rounded-lg p-3 mt-3 space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div className="col-span-full">
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
                             <Label className="text-xs text-gray-600 mb-2 block">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div className="flex flex-wrap gap-2">
                               <button
                                 type="button"
+                                disabled={isReadOnly}
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'invoice', is_refund: false }));
                                 }}
-                                className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'invoice' && !formData.is_refund ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1.5 px-3 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ${formData.document_type === 'invoice' && !formData.is_refund ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <Receipt className={`w-8 h-8 ${formData.document_type === 'invoice' && !formData.is_refund ? 'text-green-600' : 'text-gray-500'}`} strokeWidth={1.5} />
+                                <Receipt className="w-4 h-4" />
                                 <span>{language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}</span>
                               </button>
                               <button
                                 type="button"
+                                disabled={isReadOnly}
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'delivery_note', is_refund: false }));
                                 }}
-                                className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1.5 px-3 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <Package className={`w-8 h-8 ${formData.document_type === 'delivery_note' ? 'text-blue-600' : 'text-gray-500'}`} strokeWidth={1.5} />
+                                <Package className="w-4 h-4" />
                                 <span>{language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}</span>
                               </button>
                               <button
                                 type="button"
+                                disabled={isReadOnly}
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'summary_invoice', is_refund: false }));
                                 }}
-                                className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1.5 px-3 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <BarChart3 className={`w-8 h-8 ${formData.document_type === 'summary_invoice' ? 'text-purple-600' : 'text-gray-500'}`} strokeWidth={1.5} />
+                                <BarChart3 className="w-4 h-4" />
                                 <span>{language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}</span>
                               </button>
                               <button
                                 type="button"
+                                disabled={isReadOnly}
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'invoice', is_refund: true }));
                                   const currentIncl = parseFloat(inclVatInput);
@@ -1451,10 +1471,10 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                      setExclVatInput(newExcl.toFixed(2));
                                   }
                                 }}
-                                className={`py-3 px-3 rounded-xl border-2 text-sm font-bold flex flex-col items-center justify-center gap-2 transition-colors ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1.5 px-3 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <RefreshCcw className={`w-8 h-8 ${formData.is_refund ? 'text-orange-600' : 'text-gray-500'}`} strokeWidth={1.5} />
-                                <span>{language === 'he' ? 'חשבונית זיכוי (-)' : 'Refund (-)'}</span>
+                                <RefreshCcw className="w-4 h-4" />
+                                <span>{language === 'he' ? 'זיכוי (-)' : 'Refund (-)'}</span>
                               </button>
                             </div>
                           </div>
@@ -1463,6 +1483,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
+                              disabled={isReadOnly}
                               checked={!!formData.is_zero_vat}
                               onChange={(e) => {
                                 const zeroVat = e.target.checked;
@@ -1486,6 +1507,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             <label className="flex items-center gap-2 text-sm">
                               <input
                                 type="checkbox"
+                                disabled={isReadOnly}
                                 checked={!!formData.refund_received}
                                 onChange={(e) => setFormData(prev => ({ ...prev, refund_received: e.target.checked }))}
                                 className="rounded"
@@ -1551,6 +1573,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             <Select
                               value={formData.linked_receipt_id || ''}
                               onValueChange={(val) => setFormData(prev => ({ ...prev, linked_receipt_id: val }))}
+                              disabled={isReadOnly}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder={language === 'he' ? 'בחר קבלה לקישור' : 'Select receipt to link'} />
@@ -1577,21 +1600,23 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               : (safeT('add_items', '\u05d4\u05d5\u05e1\u05e3 \u05e4\u05e8\u05d9\u05d8\u05d9\u05dd', 'Add items') || 'הוסף פריטים')
                             }
                           </Label>
-                          <Button
-                            type="button"
-                            onClick={addManualItem}
-                            variant="outline"
-                            size="sm"
-                          >
-                            <Plus className="w-4 h-4 ml-2" />
-                            {safeT('add_item', 'הוסף פריט', 'Add item')}
-                          </Button>
+                          {!isReadOnly && (
+                            <Button
+                              type="button"
+                              onClick={addManualItem}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Plus className="w-4 h-4 ml-2" />
+                              {safeT('add_item', 'הוסף פריט', 'Add item')}
+                            </Button>
+                          )}
                         </div>
                         
                         {formData.verified_items.length > 0 && (
                           <div className="space-y-2">
                             {formData.verified_items.map((item, index) => (
-                              <Card key={index} className="border-blue-200 bg-blue-50">
+                              <Card key={index} className="border-slate-200 bg-slate-50 shadow-sm">
                                 <CardContent className="p-2">
                                   <div className="flex flex-col gap-1.5">
                                     <div className="flex items-center justify-between gap-1.5">
@@ -1600,16 +1625,19 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                         onChange={(e) => updateVerifiedItem(index, 'item_name', e.target.value)}
                                         placeholder={safeT('item_name', 'שם פריט', 'Item Name')}
                                         className="font-medium flex-1 h-7 px-2 text-xs"
+                                        disabled={isReadOnly}
                                       />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeItem(index)}
-                                        className="text-red-600 hover:text-red-700 h-7 w-7 shrink-0"
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                      </Button>
+                                      {!isReadOnly && (
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => removeItem(index)}
+                                          className="text-red-600 hover:text-red-700 h-7 w-7 shrink-0"
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </Button>
+                                      )}
                                     </div>
                                     
                                     <div className="grid grid-cols-4 gap-1 sm:gap-2">
@@ -1630,6 +1658,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                           value={item.received_quantity}
                                           onChange={(e) => updateVerifiedItem(index, 'received_quantity', parseFloat(e.target.value) || 0)}
                                           className="h-7 px-1 text-center text-xs"
+                                          disabled={isReadOnly}
                                         />
                                       </div>
                                       <div className="flex flex-col items-center">
@@ -1640,6 +1669,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                           value={item.actual_price}
                                           onChange={(e) => updateVerifiedItem(index, 'actual_price', parseFloat(e.target.value) || 0)}
                                           className={`h-7 px-1 text-center text-xs ${item.price_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}`}
+                                          disabled={isReadOnly}
                                         />
                                       </div>
                                       <div className="flex flex-col items-center">
@@ -1652,6 +1682,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                           value={item.actual_discount}
                                           onChange={(e) => updateVerifiedItem(index, 'actual_discount', parseFloat(e.target.value) || 0)}
                                           className={`h-7 px-1 text-center text-xs ${item.discount_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}`}
+                                          disabled={isReadOnly}
                                         />
                                       </div>
                                     </div>
@@ -1663,12 +1694,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
                                     <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                                       <div className="flex items-center gap-1 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 shrink-0">
-                                        <input type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600 w-3 h-3" />
-                                        <Label className="text-[10px] sm:text-[11px] text-red-800 font-semibold leading-none cursor-pointer" onClick={() => updateVerifiedItem(index, 'request_credit_quantity', !item.request_credit_quantity)}>{language === 'he' ? 'לזיכוי כמות' : 'Qty credit'}</Label>
+                                        <input disabled={isReadOnly} type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600 w-3 h-3" />
+                                        <Label className={`text-[10px] sm:text-[11px] text-red-800 font-semibold leading-none ${isReadOnly ? '' : 'cursor-pointer'}`} onClick={() => !isReadOnly && updateVerifiedItem(index, 'request_credit_quantity', !item.request_credit_quantity)}>{language === 'he' ? 'לזיכוי כמות' : 'Qty credit'}</Label>
                                       </div>
                                       <div className="flex items-center gap-1 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 shrink-0">
-                                        <input type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600 w-3 h-3" />
-                                        <Label className="text-[10px] sm:text-[11px] text-red-800 font-semibold leading-none cursor-pointer" onClick={() => updateVerifiedItem(index, 'request_credit_price', !item.request_credit_price)}>{language === 'he' ? 'לזיכוי מחיר' : 'Price credit'}</Label>
+                                        <input disabled={isReadOnly} type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600 w-3 h-3" />
+                                        <Label className={`text-[10px] sm:text-[11px] text-red-800 font-semibold leading-none ${isReadOnly ? '' : 'cursor-pointer'}`} onClick={() => !isReadOnly && updateVerifiedItem(index, 'request_credit_price', !item.request_credit_price)}>{language === 'he' ? 'לזיכוי מחיר' : 'Price credit'}</Label>
                                       </div>
                                     </div>
                                   </div>
@@ -1741,7 +1772,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       </Alert>
                     )}
 
-                    <div className={`grid gap-2 pt-4 w-full ${scannedDocs.length > 1 ? 'grid-cols-2' : (receipt && onDelete ? 'grid-cols-3' : 'grid-cols-2')}`}>
+                    <div className={`grid gap-2 pt-4 w-full ${scannedDocs.length > 1 ? 'grid-cols-2' : ((receipt && onDelete && !isReadOnly) ? 'grid-cols-3' : (!isReadOnly ? 'grid-cols-2' : 'grid-cols-1'))}`}>
                       {scannedDocs.length > 1 ? (
                         <>
                           <Button
@@ -1833,15 +1864,17 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         </>
                       ) : (
                         <>
-                          <Button 
-                            type="submit" 
-                            className="bg-green-600 hover:bg-green-700 text-white h-10 px-1 text-xs sm:text-sm shadow-none"
-                            disabled={!formData.invoice_number || formData.receipt_images.length === 0}
-                          >
-                            <PackageCheck className="w-3 h-3 sm:w-4 sm:h-4 ml-1 shrink-0" />
-                            <span className="truncate">{safeT('save_receipt', 'שמור קבלה', 'Save')}</span>
-                          </Button>
-                          {receipt && onDelete && (
+                          {!isReadOnly && (
+                            <Button 
+                              type="submit" 
+                              className="bg-green-600 hover:bg-green-700 text-white h-10 px-1 text-xs sm:text-sm shadow-none"
+                              disabled={!formData.invoice_number || formData.receipt_images.length === 0}
+                            >
+                              <PackageCheck className="w-3 h-3 sm:w-4 sm:h-4 ml-1 shrink-0" />
+                              <span className="truncate">{safeT('save_receipt', 'שמור קבלה', 'Save')}</span>
+                            </Button>
+                          )}
+                          {!isReadOnly && receipt && onDelete && (
                             <Button
                               type="button"
                               variant="destructive"
@@ -1853,7 +1886,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             </Button>
                           )}
                           <Button type="button" variant="outline" onClick={onCancel} className="h-10 px-1 text-xs sm:text-sm shadow-none">
-                            <span className="truncate">{safeT('cancel', 'ביטול', 'Cancel')}</span>
+                            <span className="truncate">{isReadOnly ? (language === 'he' ? 'סגור' : 'Close') : safeT('cancel', 'ביטול', 'Cancel')}</span>
                           </Button>
                         </>
                       )}
