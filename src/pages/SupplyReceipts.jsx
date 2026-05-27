@@ -336,6 +336,12 @@ export default function SupplyReceiptsPage() {
   };
 
   const filteredReceipts = receipts.filter(receipt => {
+    // Exclude resolved receipts (unless looking at specific refund/review status)
+    if (statusFilter === 'all' || statusFilter === 'invoices' || statusFilter === 'delivery_notes') {
+        const isResolved = receipt.reviewed || receipt.refund_received || receipt.linked_receipt_id;
+        if (isResolved) return false;
+    }
+
     const matchesSearch = receipt.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = (() => {
@@ -384,31 +390,42 @@ export default function SupplyReceiptsPage() {
   });
 
   const sortedReceipts = React.useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    let sortedList = [...filteredReceipts];
+
     if (sortBy === 'supplier_asc') {
-      return [...filteredReceipts].sort((a,b) => (a.supplier_name || '').localeCompare(b.supplier_name || ''));
+      sortedList.sort((a,b) => (a.supplier_name || '').localeCompare(b.supplier_name || ''));
+    } else if (sortBy === 'supplier_desc') {
+      sortedList.sort((a,b) => (b.supplier_name || '').localeCompare(a.supplier_name || ''));
+    } else if (sortBy === 'amount_asc') {
+      sortedList.sort((a,b) => (parseFloat(a.invoice_total||0) - parseFloat(b.invoice_total||0)));
+    } else if (sortBy === 'amount_desc') {
+      sortedList.sort((a,b) => (parseFloat(b.invoice_total||0) - parseFloat(a.invoice_total||0)));
+    } else if (sortBy === 'date_asc') {
+      sortedList.sort((a,b) => new Date(a.received_date) - new Date(b.received_date));
+    } else if (sortBy === 'date_desc') {
+      sortedList.sort((a,b) => new Date(b.received_date) - new Date(a.received_date));
+    } else if (sortBy === 'invoice_date_asc') {
+      sortedList.sort((a,b) => new Date(a.invoice_date || 0) - new Date(b.invoice_date || 0));
+    } else if (sortBy === 'invoice_date_desc') {
+      sortedList.sort((a,b) => new Date(b.invoice_date || 0) - new Date(a.invoice_date || 0));
+    } else {
+        // Default sort: new to old
+        sortedList.sort((a,b) => new Date(b.received_date) - new Date(a.received_date));
     }
-    if (sortBy === 'supplier_desc') {
-      return [...filteredReceipts].sort((a,b) => (b.supplier_name || '').localeCompare(a.supplier_name || ''));
-    }
-    if (sortBy === 'amount_asc') {
-      return [...filteredReceipts].sort((a,b) => (parseFloat(a.invoice_total||0) - parseFloat(b.invoice_total||0)));
-    }
-    if (sortBy === 'amount_desc') {
-      return [...filteredReceipts].sort((a,b) => (parseFloat(b.invoice_total||0) - parseFloat(a.invoice_total||0)));
-    }
-    if (sortBy === 'date_asc') {
-      return [...filteredReceipts].sort((a,b) => new Date(a.received_date) - new Date(b.received_date));
-    }
-    if (sortBy === 'date_desc') {
-      return [...filteredReceipts].sort((a,b) => new Date(b.received_date) - new Date(a.received_date));
-    }
-    if (sortBy === 'invoice_date_asc') {
-      return [...filteredReceipts].sort((a,b) => new Date(a.invoice_date || 0) - new Date(b.invoice_date || 0));
-    }
-    if (sortBy === 'invoice_date_desc') {
-      return [...filteredReceipts].sort((a,b) => new Date(b.invoice_date || 0) - new Date(a.invoice_date || 0));
-    }
-    return filteredReceipts;
+
+    // Give priority to today's receipts
+    sortedList.sort((a,b) => {
+        const isTodayA = a.received_date === todayStr;
+        const isTodayB = b.received_date === todayStr;
+        
+        if (isTodayA && !isTodayB) return -1;
+        if (!isTodayA && isTodayB) return 1;
+        return 0; // maintain previous sort order if both are today or both are not
+    });
+
+    return sortedList;
   }, [filteredReceipts, sortBy]);
 
   if (authLoading) {
