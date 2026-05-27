@@ -582,7 +582,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 p-3 sm:p-4 border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] pb-safe">
+        <div className="flex flex-col gap-2 p-3 sm:p-4 pt-3 pb-8 sm:pb-4 border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
           <div className="flex gap-2 w-full">
             <Button
               onClick={async () => {
