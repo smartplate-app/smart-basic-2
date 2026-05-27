@@ -1713,8 +1713,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
                                     <div className="flex items-center gap-4 flex-wrap mt-2">
                                       <div className="flex items-center gap-2"><input type="checkbox" checked={item.has_issue} onChange={(e) => updateVerifiedItem(index, 'has_issue', e.target.checked)} className="rounded" /><Label className="text-sm">{t('issue')}</Label></div>
-                                      <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100"><input type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600" /><Label className="text-sm text-red-800 font-semibold">{language === 'he' ? 'בקשה לזיקוי כמות' : 'Req. quantity credit'}</Label></div>
-                                      <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100"><input type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600" /><Label className="text-sm text-red-800 font-semibold">{language === 'he' ? 'בקשה לזיקוי מחיר' : 'Req. price credit'}</Label></div>
+                                      <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100"><input type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600" /><Label className="text-sm text-red-800 font-semibold">{language === 'he' ? 'בקשה לזיכוי כמות' : 'Req. quantity credit'}</Label></div>
+                                      <div className="flex items-center gap-2 bg-red-50 px-2 py-1 rounded border border-red-100"><input type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600" /><Label className="text-sm text-red-800 font-semibold">{language === 'he' ? 'בקשה לזיכוי מחיר' : 'Req. price credit'}</Label></div>
                                     </div>
 
                                     {item.has_issue && (
@@ -1764,7 +1764,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               window.open(whatsappUrl, '_blank');
                             }}
                           >
-                            {language === 'he' ? 'שלח בקשת זיקוי לספק (WhatsApp)' : 'Send Credit Request (WhatsApp)'}
+                            {language === 'he' ? 'שלח בקשת זיכוי לספק (WhatsApp)' : 'Send Credit Request (WhatsApp)'}
                           </Button>
                         </div>
                       )}
