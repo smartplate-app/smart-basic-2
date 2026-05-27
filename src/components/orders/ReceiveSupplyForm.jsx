@@ -955,15 +955,10 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
           {order && (
-            <div className="mb-2 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg p-3 text-sm flex items-center justify-between gap-2">
-              <span className="leading-relaxed">
-                {language === 'he'
-                  ? `סריקה להזמנה ${order.order_number || '—'} • ספק: ${order.supplier_name || ''}. הקבלה תקושר להזמנה זו.`
-                  : `Scanning for order ${order.order_number || '—'} • Supplier: ${order.supplier_name || ''}. This receipt will attach to this order.`}
-              </span>
-              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOrder(order)} className="shrink-0 bg-white border-emerald-200 hover:bg-emerald-100 text-emerald-700">
+            <div className="mb-4 flex">
+              <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOrder(order)} className="text-blue-600 border-blue-200 hover:bg-blue-50 bg-white shadow-sm">
                 <Eye className="w-4 h-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
-                {language === 'he' ? 'צפה בהזמנה' : 'Preview'}
+                {language === 'he' ? 'צפה בהזמנה' : 'Preview Order'}
               </Button>
             </div>
           )}
