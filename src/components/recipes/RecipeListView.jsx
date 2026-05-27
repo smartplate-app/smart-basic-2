@@ -1,19 +1,42 @@
-import React from "react";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ChefHat } from "lucide-react";
+import { Edit, Trash2, ChefHat, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 
 export default function RecipeListView({ recipes, onEdit, onDelete }) {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
+  const [sortDir, setSortDir] = useState(null);
+
+  const toggleSort = () => {
+    if (sortDir === null) setSortDir('asc');
+    else if (sortDir === 'asc') setSortDir('desc');
+    else setSortDir(null);
+  };
+
+  const sortedRecipes = [...recipes].sort((a, b) => {
+    if (!sortDir) return 0;
+    const nameA = a.name || '';
+    const nameB = b.name || '';
+    if (sortDir === 'asc') return nameA.localeCompare(nameB, language === 'he' ? 'he' : 'en');
+    return nameB.localeCompare(nameA, language === 'he' ? 'he' : 'en');
+  });
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <Table wrapperClassName="max-h-[calc(100vh-250px)]">
         <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
           <TableRow>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'שם המתכון' : 'Recipe Name'}</TableHead>
+            <TableHead 
+              className={`cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? "text-right" : "text-left"}`}
+              onClick={toggleSort}
+            >
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'שם המתכון' : 'Recipe Name'}
+                {sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : sortDir === 'desc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4 text-gray-400" />}
+              </div>
+            </TableHead>
             <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'סוג' : 'Type'}</TableHead>
             <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</TableHead>
             <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'מחיר מכירה' : 'Sale Price'}</TableHead>
@@ -22,7 +45,7 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {recipes.map((recipe) => (
+          {sortedRecipes.map((recipe) => (
             <TableRow key={recipe.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => onEdit(recipe)}>
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
