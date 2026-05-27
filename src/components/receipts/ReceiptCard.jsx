@@ -16,27 +16,6 @@ export default function ReceiptCard({ receipt, onEdit }) {
   const isSafari = typeof navigator !== 'undefined' && /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
   const pdfViewerUrl = (url) => `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}&rm=minimal`;
   
-  const statusConfig = {
-    verified: { 
-      label: t('status_verified'), 
-      color: "bg-green-50 text-green-700 border-green-200",
-      icon: CheckCircle
-    },
-    has_issues: { 
-      label: t('status_has_issues'), 
-      color: "bg-red-50 text-red-700 border-red-200",
-      icon: AlertCircle
-    },
-    pending: { 
-      label: t('status_pending'), 
-      color: "bg-yellow-50 text-yellow-700 border-yellow-200",
-      icon: Clock
-    }
-  };
-
-  const status = statusConfig[receipt.status] || statusConfig.pending;
-  const StatusIcon = status.icon;
-
   const [sendingToDokka, setSendingToDokka] = useState(false);
 
   const handleSendToDokka = async (e) => {
@@ -76,10 +55,6 @@ export default function ReceiptCard({ receipt, onEdit }) {
                 <h3 className="font-bold text-lg text-gray-900">
                   {receipt.supplier_name}
                 </h3>
-                <Badge className={`${status.color} border-none font-semibold flex items-center gap-1`}>
-                  <StatusIcon className="w-3 h-3" />
-                  {status.label}
-                </Badge>
                 {receipt.is_refund && (
                   <Badge className="bg-purple-50 text-purple-700 border-none">{t('refund') || 'Refund'}</Badge>
                 )}

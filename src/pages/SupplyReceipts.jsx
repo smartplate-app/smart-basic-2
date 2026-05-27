@@ -258,7 +258,6 @@ export default function SupplyReceiptsPage() {
         receipt_images: receiptData.receipt_images || [],
         invoice_total: parseFloat(receiptData.invoice_total),
         calculated_total: parseFloat(receiptData.calculated_total) || 0,
-        status: receiptData.status || "pending",
         is_refund: !!receiptData.is_refund,
         needs_review: !!receiptData.needs_review,
         review_note: receiptData.review_note || "",
@@ -602,7 +601,7 @@ export default function SupplyReceiptsPage() {
               }}
             >
               {[
-                { id: 'all', label: tt('all_statuses','כל הסטטוסים','All') },
+                { id: 'all', label: tt('all','הכל','All') },
                 { id: 'invoices', label: language === 'he' ? 'חשבוניות' : 'Invoices' },
                 { id: 'delivery_notes', label: language === 'he' ? 'תעודות משלוח' : 'Delivery Notes' },
                 { id: 'refund_invoice', label: language === 'he' ? 'זיכויים' : 'Refunds' },
@@ -826,10 +825,10 @@ export default function SupplyReceiptsPage() {
 
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200">
-                      <SelectValue placeholder={tt('receipt_status','סטטוס קבלה','Receipt status')} />
+                      <SelectValue placeholder={tt('receipt_status','סוג מסמך / התראות','Document type / Alerts')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{tt('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
+                      <SelectItem value="all">{tt('all','הכל','All')}</SelectItem>
                       <SelectItem value="invoices">{language === 'he' ? 'חשבוניות מס' : 'Tax invoices'}</SelectItem>
                       <SelectItem value="delivery_notes">{language === 'he' ? 'תעודות משלוח' : 'Delivery notes'}</SelectItem>
                       <SelectItem value="refund_invoice">{language === 'he' ? 'חשבונית זיכוי' : 'Refund invoice'}</SelectItem>

@@ -32,11 +32,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
 
   const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
 
-  const statusVariant = (status) => {
-    if (status === 'verified') return 'default';
-    if (status === 'has_issues') return 'destructive';
-    return 'secondary';
-  };
+
 
   const safeT = (key, he, en) => {
     const s = t(key);
@@ -146,7 +142,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               </th>
               <th className="px-4 pt-3 pb-3 text-center text-xs font-semibold text-gray-500 align-top">
                 <div className="flex flex-col gap-1.5 items-center">
-                  <span className="flex items-center justify-center h-5">{safeT('status', 'סטטוס', 'Status')}</span>
+                  <span className="flex items-center justify-center h-5">{safeT('status', 'סוג מסמך', 'Type')}</span>
                   {onStatusFilterChange && (
                     <select 
                       value={statusFilter || 'all'} 
@@ -226,24 +222,6 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </td>
                   <td className="px-4 py-4 text-center align-middle">
                     <div className="flex items-center justify-center gap-1 flex-wrap">
-                      <TooltipProvider>
-                        <Tooltip delayDuration={300}>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className={`cursor-help border-none text-[10px] px-1.5 py-0.5 h-auto leading-none ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
-                              {t(`status_${r.status}`) || r.status || '-'}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-blue-50 border-blue-100 text-gray-800 shadow-md text-xs p-3" side="top">
-                            <div className="font-bold text-blue-900 mb-2">{language === 'he' ? 'מקרא סטטוסים:' : 'Status Legend:'}</div>
-                            <div className="space-y-1.5">
-                              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-400"></div>{language === 'he' ? 'ממתין - טרם אומת' : 'Pending - Not verified yet'}</div>
-                              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div>{language === 'he' ? 'תקין - נבדק ואושר' : 'Verified - Checked and approved'}</div>
-                              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div>{language === 'he' ? 'חריגות - קיימת בעיה במחיר/כמות' : 'Has Issues - Price/qty mismatch'}</div>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
                       {(() => {
                         const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
                         if (isResolved) {
@@ -374,24 +352,6 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <div className="flex items-center gap-1 flex-wrap">
-                  <TooltipProvider>
-                    <Tooltip delayDuration={300}>
-                      <TooltipTrigger asChild>
-                        <Badge variant="outline" className={`cursor-help border-none text-[10px] px-1.5 py-0.5 h-auto leading-none ${statusVariant(r.status) === 'default' ? 'bg-green-50 text-green-700' : statusVariant(r.status) === 'destructive' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
-                          {t(`status_${r.status}`) || r.status || '-'}
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-blue-50 border-blue-100 text-gray-800 shadow-md text-xs p-3" side="top">
-                        <div className="font-bold text-blue-900 mb-2">{language === 'he' ? 'מקרא סטטוסים:' : 'Status Legend:'}</div>
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-gray-400"></div>{language === 'he' ? 'ממתין - טרם אומת' : 'Pending - Not verified yet'}</div>
-                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div>{language === 'he' ? 'תקין - נבדק ואושר' : 'Verified - Checked and approved'}</div>
-                          <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div>{language === 'he' ? 'חריגות - קיימת בעיה במחיר/כמות' : 'Has Issues - Price/qty mismatch'}</div>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
                   {(() => {
                     const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
                     if (isResolved) {
