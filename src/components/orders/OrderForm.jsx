@@ -589,7 +589,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                     {language === 'he' ? 'חזור לעריכה' : 'Back to Edit'}
                   </Button>
                   <Button type="submit" className="h-10 flex-1 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium text-sm md:rounded-lg px-1 shadow-sm">
-                    {order ? t('update_order') : safeT('send_order', 'שלח הזמנה', 'Send Order')}
+                    {safeT('send_to_supplier', 'שלח לספק', 'Send to Supplier')}
                   </Button>
                 </div>
               </div>
@@ -640,7 +640,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                     }}
                     className="h-10 flex-[0.8] bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg font-medium text-sm px-1 shadow-sm transition-colors"
                   >
-                    {safeT('save_draft', 'טיוטה', 'Draft')}
+                    {order ? safeT('update_draft', 'עדכן טיוטה', 'Update Draft') : safeT('save_draft', 'טיוטה', 'Draft')}
                   </Button>
                   <Button 
                     type="button" 
@@ -650,7 +650,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                     {language === 'he' ? 'צפה בסל' : 'Cart'}
                   </Button>
                   <Button type="submit" className="h-10 flex-[1.4] bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium text-sm px-1 shadow-sm transition-colors">
-                    {order ? t('update_order') : safeT('send_order', 'שלח הזמנה', 'Send Order')}
+                    {safeT('send_to_supplier', 'שלח לספק', 'Send to Supplier')}
                   </Button>
                 </div>
               </>
