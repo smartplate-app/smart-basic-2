@@ -267,7 +267,7 @@ const [authLoading, setAuthLoading] = useState(() => {
         }, [location.pathname, location.search]);
   
   useEffect(() => {
-            document.documentElement.dir = language === 'he' || language === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.dir = language?.startsWith('he') || language?.startsWith('ar') ? 'rtl' : 'ltr';
             document.documentElement.lang = language;
           }, [language]);
 

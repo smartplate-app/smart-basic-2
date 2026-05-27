@@ -58,10 +58,10 @@ export default function SupplyReceiptsPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [networkError, setNetworkError] = useState(false);
   const { t, language } = useLanguage();
-  const isRTL = language === 'he' || language === 'ar';
+  const isRTL = language?.startsWith('he') || language?.startsWith('ar');
   const tt = (key, he, en) => {
     const s = t(key);
-    return (!s || s === key) ? (language === 'he' ? he : (en || key)) : s;
+    return (!s || s === key) ? (language?.startsWith('he') ? he : (en || key)) : s;
   };
   const [activeTab, setActiveTab] = useState('receipts');
   const [viewMode, setViewMode] = useState('list');
@@ -454,6 +454,7 @@ export default function SupplyReceiptsPage() {
 
   return (
     <div
+      dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 md:p-8"
       onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
       onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
@@ -469,12 +470,12 @@ export default function SupplyReceiptsPage() {
             <Loader className={`w-5 h-5 text-green-600 ${refreshing ? 'animate-spin' : ''}`} style={{ transform: !refreshing ? `rotate(${pullDist * 2}deg)` : 'none' }} />
           </div>
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
+        <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+          <div className={isRTL ? 'text-right w-full md:w-auto' : ''}>
             <h1 className="text-3xl font-bold text-gray-900">{t('receipts_title')}</h1>
             <p className="text-gray-600 mt-2">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
           </div>
-          <div className="flex gap-3 flex-wrap items-center">
+          <div className={`flex gap-3 flex-wrap items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
             <div className="flex bg-white rounded-lg shadow-sm border">
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}

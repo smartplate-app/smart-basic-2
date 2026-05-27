@@ -11,12 +11,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false, sortBy, onSortChange, invoiceNumberFilter, onInvoiceNumberFilterChange, statusFilter, onStatusFilterChange }) {
   const { t, language } = useLanguage();
-  const isRTL = language === 'he' || language === 'ar';
+  const isRTL = language?.startsWith('he') || language?.startsWith('ar');
 
   const fmtDate = (d) => {
     if (!d) return '-';
     try {
-      return new Date(d).toLocaleDateString(language === 'he' ? 'he-IL' : (language === 'ar' ? 'ar-IL' : 'en-US'));
+      return new Date(d).toLocaleDateString(language?.startsWith('he') ? 'he-IL' : (language?.startsWith('ar') ? 'ar-IL' : 'en-US'));
     } catch {
       return d;
     }
@@ -25,18 +25,16 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
   const fmtCurrency = (n) => {
     const num = typeof n === 'number' ? n : parseFloat(n || 0);
     return num.toLocaleString(
-      language === 'he' ? 'he-IL' : (language === 'ar' ? 'ar-IL' : 'en-US'),
+      language?.startsWith('he') ? 'he-IL' : (language?.startsWith('ar') ? 'ar-IL' : 'en-US'),
       { minimumFractionDigits: 2, maximumFractionDigits: 2 }
     );
   };
 
   const isPdf = (url) => typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
 
-
-
   const safeT = (key, he, en) => {
     const s = t(key);
-    return (!s || s === key) ? (language === 'he' ? he : (en || key)) : s;
+    return (!s || s === key) ? (language?.startsWith('he') ? he : (en || key)) : s;
   };
 
   const [sendingToDokka, setSendingToDokka] = useState(null);
@@ -128,12 +126,12 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                 </div>
               </th>
               <th 
-                className="px-4 pt-4 pb-3 text-end text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-top"
+                className="px-4 pt-4 pb-3 text-start text-xs font-semibold text-gray-500 cursor-pointer hover:text-gray-900 transition-colors select-none align-top"
                 onClick={() => {
                   if (onSortChange) onSortChange(sortBy === 'amount_desc' ? 'amount_asc' : 'amount_desc');
                 }}
               >
-                <div className="flex items-center justify-end gap-1 h-5">
+                <div className="flex items-center justify-start gap-1 h-5">
                   {safeT('invoice_total', 'סכום בחשבונית', 'Amount')}
                   <span className={`text-[10px] ${sortBy?.startsWith('amount') ? 'text-gray-900' : 'text-gray-400'}`}>
                     {sortBy === 'amount_asc' ? '↑' : sortBy === 'amount_desc' ? '↓' : '⇅'}
@@ -163,7 +161,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               <th className="px-4 pt-4 pb-3 text-center text-xs font-semibold text-gray-500 align-top">
                 <div className="flex items-center justify-center h-5">{safeT('files', 'קבצים', 'Files')}</div>
               </th>
-              <th className="px-4 pt-4 pb-3 text-left text-xs font-semibold text-gray-500 align-top">
+              <th className="px-4 pt-4 pb-3 text-start text-xs font-semibold text-gray-500 align-top">
               </th>
             </tr>
           </thead>
@@ -217,7 +215,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   <td className="px-4 py-4 text-start text-sm text-gray-600 align-middle">
                     {fmtDate(r.invoice_date)}
                   </td>
-                  <td className="px-4 py-4 text-end text-sm font-bold text-blue-700 align-middle">
+                  <td className="px-4 py-4 text-start text-sm font-bold text-blue-700 align-middle">
                     {typeof r.invoice_total !== 'undefined' ? `₪${fmtCurrency(r.invoice_total)}` : '-'}
                   </td>
                   <td className="px-4 py-4 text-center align-middle">
@@ -269,7 +267,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                       <span className="text-xs text-gray-400">-</span>
                     )}
                   </td>
-                  <td className="px-4 py-4 text-left align-middle" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-4 py-4 text-end align-middle" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2 pointer-events-auto">
                       {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
                         <a href={r.receipt_images[0]} download target="_blank" rel="noopener noreferrer" className="inline-flex">
