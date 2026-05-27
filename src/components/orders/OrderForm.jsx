@@ -417,7 +417,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   return (
                     <div 
                       key={item.id} 
-                      className={`p-3 border rounded-xl transition-colors mb-2 ${
+                      className={`p-2 border rounded-xl transition-colors mb-1.5 ${
                         quantity > 0 
                           ? 'bg-white border-[#d8b4fe] shadow-sm' 
                           : isLowStock 
@@ -425,36 +425,36 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             : 'bg-white border-gray-200 hover:border-[#e9d5ff]'
                       }`}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-0.5">
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-sm text-gray-900 leading-tight">
                             {item.nickname || item.name} 
                             {item.nickname && <span className="text-[11px] text-gray-500 font-normal ml-1">({item.name})</span>}
                           </h4>
-                          <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-x-1">
+                          <div className="text-[11px] text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-1">
                             <span>{item.unit}</span>
                             {item.price > 0 && (
                               <span>
                                 {' • '}₪{item.price.toFixed(2)}
                               </span>
                             )}
-                            {item.catalog_number && <span className="text-gray-500">{' • '}{language === 'he' ? 'מספר קטלוגי' : 'Catalog number'}: {item.catalog_number}</span>}
+                            {item.catalog_number && <span className="text-gray-500">{' • '}{language === 'he' ? 'מקט' : 'Cat No'}: {item.catalog_number}</span>}
                           </div>
                         </div>
                         
-                        <div className="flex flex-row items-center justify-between sm:justify-end gap-4 shrink-0 mt-1 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-0 border-gray-100">
+                        <div className="flex flex-row items-center justify-between sm:justify-end gap-3 shrink-0 mt-1 sm:mt-0 pt-1.5 sm:pt-0 border-t sm:border-0 border-gray-100">
                           {quantity > 0 && item.price > 0 ? (
-                            <div className="text-sm font-bold text-[#8b5cf6] min-w-[4rem] rtl:text-right ltr:text-left">
+                            <div className="text-sm font-bold text-[#8b5cf6] min-w-[3.5rem] rtl:text-right ltr:text-left">
                               ₪{discountedTotal.toFixed(2)}
                             </div>
                           ) : (
-                            <div className="min-w-[4rem]"></div>
+                            <div className="min-w-[3.5rem]"></div>
                           )}
                           
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             <div className="flex flex-col items-center">
                               <Label className="text-[10px] text-gray-500 mb-0.5">{language === 'he' ? 'להזמנה' : 'Order'}</Label>
-                              <div className="flex items-center bg-white rounded-md border border-gray-300 h-8 w-16">
+                              <div className="flex items-center bg-white rounded-md border border-gray-300 h-7 w-14">
                                 <Input
                                   type="number"
                                   value={quantity || ''}
@@ -469,12 +469,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             
                             {hasMinStock && (
                               <div className="flex flex-col items-center">
-                                <Label className="text-[10px] text-gray-500 mb-0.5">{language === 'he' ? 'במלאי כרגע' : 'Stock'}</Label>
+                                <Label className="text-[10px] text-gray-500 mb-0.5">{language === 'he' ? 'מלאי' : 'Stock'}</Label>
                                 <Input
                                   type="number"
                                   value={stock || ''}
                                   onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
-                                  className={`w-14 h-8 text-sm text-center px-0 rounded-md border ${isLowStock ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-300'}`}
+                                  className={`w-12 h-7 text-sm text-center px-0 rounded-md border ${isLowStock ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-300'}`}
                                   placeholder="0"
                                 />
                               </div>
@@ -485,7 +485,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                       
                       {/* Smart suggestion */}
                       {(hasMinStock && stock > 0 && suggestedQty > 0 && quantity !== suggestedQty) && (
-                        <div className="flex items-center justify-start mt-2 px-1">
+                        <div className="flex items-center justify-start mt-1 px-0.5">
                           <button
                             type="button"
                             onClick={() => applySuggestedQuantity(item.id)}
