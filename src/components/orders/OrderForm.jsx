@@ -392,7 +392,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
 
         {currentOrder.supplier_id && (
           <div className="space-y-3">
-            <div className="mt-1 sm:mt-2 w-full">
+            <div className="mt-1 sm:mt-2 w-full sticky top-0 z-20 bg-white/95 backdrop-blur py-2 -mx-2 px-2 md:mx-0 md:px-0">
               <Input
                 placeholder={safeT('search_items', 'חפש פריטים...', 'Search items...')}
                 value={itemSearch}
