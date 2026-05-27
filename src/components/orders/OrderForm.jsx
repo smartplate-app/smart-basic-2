@@ -288,19 +288,19 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-xl shadow-lg p-6 mb-8"
+      className="bg-white sm:rounded-xl sm:shadow-lg p-3 sm:p-6 mb-8 relative"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2 flex flex-col">
-            <Label htmlFor="supplier">{t('supplier')} *</Label>
+      <form onSubmit={handleSubmit} className="flex flex-col space-y-3 sm:space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="space-y-1 sm:space-y-2 flex flex-col">
+            <Label htmlFor="supplier" className="text-xs sm:text-sm">{t('supplier')} *</Label>
             <Popover open={supplierOpen} onOpenChange={setSupplierOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   role="combobox"
                   aria-expanded={supplierOpen}
-                  className="w-full justify-between font-normal bg-transparent border-input"
+                  className="w-full justify-between font-normal bg-transparent border-input h-9 sm:h-10 text-xs sm:text-sm"
                   disabled={!!order}
                 >
                   {currentOrder.supplier_id
@@ -339,50 +339,53 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
             </Popover>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="delivery_date">{t('delivery_date')}</Label>
+          <div className="space-y-1 sm:space-y-2">
+            <Label htmlFor="delivery_date" className="text-xs sm:text-sm">{t('delivery_date')}</Label>
             <Input
               id="delivery_date"
               type="date"
               value={currentOrder.delivery_date}
               onChange={(e) => setCurrentOrder({...currentOrder, delivery_date: e.target.value})}
               lang={language === 'he' ? 'he-IL' : undefined}
+              className="h-9 sm:h-10"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="restaurant_name">{t('business_name')} *</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="space-y-1 sm:space-y-2">
+            <Label htmlFor="restaurant_name" className="text-xs sm:text-sm">{t('business_name')} *</Label>
             <Input
               id="restaurant_name"
               value={currentOrder.restaurant_name}
               onChange={(e) => setCurrentOrder({...currentOrder, restaurant_name: e.target.value})}
               placeholder={t('business_name')}
+              className="h-9 sm:h-10 text-sm"
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="restaurant_address">{t('business_address')}</Label>
+          <div className="space-y-1 sm:space-y-2">
+            <Label htmlFor="restaurant_address" className="text-xs sm:text-sm">{t('business_address')}</Label>
             <Input
               id="restaurant_address"
               value={currentOrder.restaurant_address}
               onChange={(e) => setCurrentOrder({...currentOrder, restaurant_address: e.target.value})}
               placeholder={t('business_address')}
+              className="h-9 sm:h-10 text-sm"
             />
           </div>
         </div>
 
         {currentOrder.supplier_id && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <Label className="text-lg font-semibold">{t('items')}</Label>
+            <div className="flex items-center justify-between gap-2 mt-1 sm:mt-2">
+              <Label className="text-sm sm:text-lg font-semibold whitespace-nowrap">{t('items')}</Label>
               <Input
                 placeholder={safeT('search_items', 'חפש פריטים...', 'Search items...')}
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
-                className="max-w-xs"
+                className="max-w-[180px] sm:max-w-xs h-8 sm:h-10 text-xs sm:text-sm"
               />
             </div>
 
@@ -396,7 +399,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {t('no_available_items')}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto border rounded-lg p-4 bg-gray-50">
+              <div className="grid grid-cols-1 gap-2 max-h-[65vh] overflow-y-auto border rounded-lg p-2 sm:p-4 bg-gray-50">
                 {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
                   const stock = currentStock[item.id] || 0;
@@ -409,7 +412,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   return (
                     <div 
                       key={item.id} 
-                      className={`p-4 rounded-lg border-2 transition-all ${
+                      className={`p-2 sm:p-3 rounded-lg border transition-all ${
                         quantity > 0 
                           ? 'bg-purple-50 border-purple-300 shadow-sm' 
                           : isLowStock 
@@ -417,101 +420,95 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             : 'bg-white border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div className="flex-1 w-full">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-gray-900">{item.nickname || item.name} {item.nickname && <span className="text-xs text-gray-500 font-normal">({item.name})</span>}</span>
-                            {hasMinStock && (
-                              <Badge variant="outline" className="text-xs">
-                                <Package className="w-3 h-3 mr-1" />
-                                {language === 'he' ? 'מינימום:' : 'Min:'} {item.minimum_stock}
-                              </Badge>
-                            )}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-sm leading-tight text-gray-900 truncate">
+                              {item.nickname || item.name} 
+                              {item.nickname && <span className="text-[10px] text-gray-500 font-normal ml-1">({item.name})</span>}
+                            </span>
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-[11px] sm:text-xs text-gray-500 leading-tight mt-0.5 truncate">
                             {item.unit}
                             {item.price > 0 && (
-                              <span className="mr-2">
+                              <span className="mr-1">
                                 {' • '}₪{item.price.toFixed(2)}
-                                {item.discount > 0 && (
-                                  <span className="text-green-600"> (-{item.discount}%)</span>
-                                )}
+                                {item.discount > 0 && <span className="text-green-600"> (-{item.discount}%)</span>}
                               </span>
                             )}
+                            {item.catalog_number && <span className="mr-1"> • {item.catalog_number}</span>}
                           </div>
-                          {item.catalog_number && (
-                            <div className="text-xs text-gray-500">
-                              {t('catalog_number')}: {item.catalog_number}
+                          {hasMinStock && (
+                            <div className="mt-1">
+                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
+                                {language === 'he' ? 'מינימום:' : 'Min:'} {item.minimum_stock}
+                              </Badge>
                             </div>
                           )}
                         </div>
                         
-                        <div className="flex flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                          {/* Current Stock + Order Quantity row */}
-                          <div className="flex items-center justify-start sm:justify-end gap-3 flex-wrap">
-                            {hasMinStock && (
-                              <div className="flex flex-col items-center">
-                                <Label className="text-xs text-gray-500 mb-1 whitespace-nowrap">
-                                  {language === 'he' ? 'במלאי' : 'Stock'}
-                                </Label>
-                                <Input
-                                  type="number"
-                                  value={stock || ''}
-                                  onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
-                                  className={`w-16 sm:w-20 text-center ${isLowStock ? 'border-orange-400 bg-orange-50' : ''}`}
-                                  placeholder="0"
-                                  min="0"
-                                  step="0.01"
-                                />
-                              </div>
-                            )}
-                            
-                            <div className="flex flex-col items-center">
-                              <Label className="text-xs text-gray-500 mb-1 whitespace-nowrap">
-                                {language === 'he' ? 'להזמנה' : 'Order'}
+                        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                          {hasMinStock && (
+                            <div className="flex flex-col items-center w-12 sm:w-16">
+                              <Label className="text-[10px] text-gray-400 mb-0.5 whitespace-nowrap">
+                                {language === 'he' ? 'במלאי' : 'Stock'}
                               </Label>
                               <Input
                                 type="number"
-                                value={quantity || ''}
-                                onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                                className="w-16 sm:w-20 text-center"
+                                value={stock || ''}
+                                onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
+                                className={`h-7 sm:h-8 text-center px-1 text-sm ${isLowStock ? 'border-orange-400 bg-orange-50' : ''}`}
                                 placeholder="0"
                                 min="0"
                                 step="0.01"
                               />
                             </div>
-                            
-                            {quantity > 0 && item.price > 0 && (
-                              <div className="text-sm font-semibold text-purple-700 text-center mt-5 min-w-[60px]">
-                                ₪{discountedTotal.toFixed(2)}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Smart suggestion */}
-                          {hasMinStock && stock > 0 && suggestedQty > 0 && quantity !== suggestedQty && (
-                            <button
-                              type="button"
-                              onClick={() => applySuggestedQuantity(item.id)}
-                              className="flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full hover:bg-green-200 transition-colors self-end"
-                            >
-                              <Check className="w-3 h-3" />
-                              {language === 'he' 
-                                ? `הזמן ${suggestedQty} להשלמה` 
-                                : `Order ${suggestedQty} to reach minimum`}
-                            </button>
                           )}
                           
-                          {hasMinStock && isLowStock && stock > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-orange-600 self-end">
-                              <AlertCircle className="w-3 h-3" />
-                              {language === 'he' 
-                                ? `חסרים ${suggestedQty} להגעה למינימום` 
-                                : `Need ${suggestedQty} more to reach minimum`}
+                          <div className="flex flex-col items-center w-14 sm:w-16">
+                            <Label className="text-[10px] text-gray-400 mb-0.5 whitespace-nowrap">
+                              {language === 'he' ? 'להזמנה' : 'Order'}
+                            </Label>
+                            <Input
+                              type="number"
+                              value={quantity || ''}
+                              onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                              className="h-7 sm:h-8 text-center px-1 text-sm font-medium"
+                              placeholder="0"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                          
+                          {quantity > 0 && item.price > 0 && (
+                            <div className="text-[11px] sm:text-xs font-semibold text-purple-700 text-center w-12 sm:w-14">
+                              ₪{discountedTotal.toFixed(2)}
                             </div>
                           )}
                         </div>
                       </div>
+                      
+                      {/* Smart suggestion */}
+                      {(hasMinStock && stock > 0 && suggestedQty > 0 && quantity !== suggestedQty) || (hasMinStock && isLowStock && stock > 0) ? (
+                        <div className="flex items-center justify-end gap-2 mt-1.5">
+                          {hasMinStock && isLowStock && stock > 0 && (
+                            <div className="flex items-center gap-1 text-[10px] text-orange-600">
+                              <AlertCircle className="w-3 h-3" />
+                              {language === 'he' ? `חסרים ${suggestedQty}` : `Need ${suggestedQty}`}
+                            </div>
+                          )}
+                          {hasMinStock && stock > 0 && suggestedQty > 0 && quantity !== suggestedQty && (
+                            <button
+                              type="button"
+                              onClick={() => applySuggestedQuantity(item.id)}
+                              className="flex items-center gap-1 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded hover:bg-green-200 transition-colors"
+                            >
+                              <Check className="w-2.5 h-2.5" />
+                              {language === 'he' ? `הזמן ${suggestedQty}` : `Order ${suggestedQty}`}
+                            </button>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -520,29 +517,28 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           </div>
         )}
 
-        {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border-2 border-purple-200">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-700">{t('total_cost')}:</span>
-              <span className="text-2xl font-bold text-purple-700">
-                ₪{calculateTotal().toFixed(2)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <Label htmlFor="notes">{t('notes')}</Label>
+        <div className="space-y-1 sm:space-y-2 mt-2">
+          <Label htmlFor="notes" className="text-xs sm:text-sm">{t('notes')}</Label>
           <Input
             id="notes"
             value={currentOrder.notes}
             onChange={(e) => setCurrentOrder({...currentOrder, notes: e.target.value})}
             placeholder={t('notes')}
+            className="h-8 sm:h-10 text-sm"
           />
         </div>
-
-        <div className="flex gap-3 justify-end">
-          <Button type="button" variant="outline" onClick={onCancel} className="min-h-[44px] md:min-h-0">
+        
+        <div className="sticky bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur py-3 border-t flex flex-wrap gap-2 justify-end -mx-3 sm:-mx-6 px-3 sm:px-6 mt-auto shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+          {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
+            <div className="w-full flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 p-2 sm:p-3 rounded-lg border border-purple-200 mb-2">
+              <span className="text-sm sm:text-base font-semibold text-gray-700">{t('total_cost')}:</span>
+              <span className="text-lg sm:text-xl font-bold text-purple-700">
+                ₪{calculateTotal().toFixed(2)}
+              </span>
+            </div>
+          )}
+          
+          <Button type="button" variant="outline" onClick={onCancel} className="h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm flex-1 sm:flex-none">
             {safeT('cancel', 'ביטול', 'Cancel')}
           </Button>
           <Button
@@ -575,11 +571,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               const orderData = { ...currentOrder, items: orderItems, total_cost: totalCost };
               if (onSaveDraft) onSaveDraft(orderData);
             }}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white min-h-[44px] md:min-h-0"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white h-9 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm flex-1 sm:flex-none"
           >
             {safeT('save_draft', 'שמור טיוטה', 'Save Draft')}
           </Button>
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white min-h-[44px] md:min-h-0">
+          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white h-9 sm:h-10 px-3 sm:px-6 text-xs sm:text-sm flex-1 sm:flex-none font-semibold">
             {order ? t('update_order') : t('send_order')}
           </Button>
         </div>
