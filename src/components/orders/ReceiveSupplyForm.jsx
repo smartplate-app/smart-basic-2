@@ -1614,98 +1614,125 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         </div>
                         
                         {formData.verified_items.length > 0 && (
-                          <div className="space-y-2">
-                            {formData.verified_items.map((item, index) => (
-                              <Card key={index} className="border-slate-200 bg-slate-50 shadow-sm">
-                                <CardContent className="p-2">
-                                  <div className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between gap-1.5">
-                                      <Input
-                                        value={item.item_name}
-                                        onChange={(e) => updateVerifiedItem(index, 'item_name', e.target.value)}
-                                        placeholder={safeT('item_name', 'שם פריט', 'Item Name')}
-                                        className="font-medium flex-1 h-7 px-2 text-xs"
-                                        disabled={isReadOnly}
-                                      />
-                                      {!isReadOnly && (
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() => removeItem(index)}
-                                          className="text-red-600 hover:text-red-700 h-7 w-7 shrink-0"
-                                        >
-                                          <X className="w-3.5 h-3.5" />
-                                        </Button>
+                          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                            <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                              <table className="w-full text-sm text-left rtl:text-right min-w-[600px]">
+                                <thead className="bg-[#f9fafb] text-[#4b5563] text-xs font-semibold">
+                                  <tr>
+                                    <th className="px-3 py-3 w-8 font-semibold">#</th>
+                                    <th className="px-3 py-3 font-semibold min-w-[140px] uppercase">{safeT('item_name', 'שם פריט', 'Item')}</th>
+                                    <th className="px-2 py-3 font-semibold w-16 text-center uppercase">{language === 'he' ? 'הוזמן' : 'Ord'}</th>
+                                    <th className="px-2 py-3 font-semibold w-20 text-center uppercase">{t('received')}</th>
+                                    <th className="px-2 py-3 font-semibold w-20 text-center uppercase">{t('price')}</th>
+                                    <th className="px-2 py-3 font-semibold w-16 text-center uppercase">{language === 'he' ? 'הנחה %' : 'Disc%'}</th>
+                                    <th className="px-2 py-3 font-semibold w-12 text-center"></th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {formData.verified_items.map((item, index) => (
+                                    <React.Fragment key={index}>
+                                      <tr className={`border-t border-[#f3f4f6] ${index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'} transition-colors`}>
+                                        <td className="px-3 py-2 text-[#9ca3af] text-xs text-center align-top pt-4">{index + 1}</td>
+                                        <td className="px-3 py-2 align-top pt-3">
+                                          <Input
+                                            value={item.item_name}
+                                            onChange={(e) => updateVerifiedItem(index, 'item_name', e.target.value)}
+                                            placeholder={safeT('item_name', 'שם פריט', 'Item Name')}
+                                            className="font-medium h-8 text-sm text-[#111827] border-transparent hover:border-gray-200 focus:border-blue-500 bg-transparent px-2 shadow-none"
+                                            disabled={isReadOnly}
+                                          />
+                                          {(!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0) && (
+                                            <div className="mt-1 px-2 text-[10px] text-orange-700 font-medium">
+                                              {language === 'he' ? 'חריגה בכמות' : 'Quantity mismatch'}
+                                            </div>
+                                          )}
+                                          {(!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id) && (
+                                            <div className="mt-1 px-2 text-[10px] text-purple-700 font-medium">
+                                              {language === 'he' ? 'לא הוזמן במקור' : 'Not ordered'}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td className="px-2 py-2 align-top pt-3">
+                                          <Input
+                                            type="number"
+                                            value={item.ordered_quantity}
+                                            disabled
+                                            className="bg-transparent text-gray-500 h-8 px-1 text-center text-sm border-transparent shadow-none"
+                                          />
+                                        </td>
+                                        <td className="px-2 py-2 align-top pt-3">
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={item.received_quantity}
+                                            onChange={(e) => updateVerifiedItem(index, 'received_quantity', parseFloat(e.target.value) || 0)}
+                                            className="h-8 px-1 text-center text-sm font-bold text-[#111827] border-gray-200 focus:border-blue-500"
+                                            disabled={isReadOnly}
+                                          />
+                                        </td>
+                                        <td className="px-2 py-2 align-top pt-3">
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            value={item.actual_price}
+                                            onChange={(e) => updateVerifiedItem(index, 'actual_price', parseFloat(e.target.value) || 0)}
+                                            className={`h-8 px-1 text-center text-sm font-bold ${item.price_changed ? 'text-red-600 border-red-300 focus-visible:ring-red-500 bg-red-50' : 'text-[#111827] border-gray-200 focus:border-blue-500'}`}
+                                            disabled={isReadOnly}
+                                          />
+                                        </td>
+                                        <td className="px-2 py-2 align-top pt-3">
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            max="100"
+                                            value={item.actual_discount}
+                                            onChange={(e) => updateVerifiedItem(index, 'actual_discount', parseFloat(e.target.value) || 0)}
+                                            className={`h-8 px-1 text-center text-sm font-bold ${item.discount_changed ? 'text-red-600 border-red-300 focus-visible:ring-red-500 bg-red-50' : 'text-[#111827] border-gray-200 focus:border-blue-500'}`}
+                                            disabled={isReadOnly}
+                                          />
+                                        </td>
+                                        <td className="px-2 py-2 text-center align-top pt-3">
+                                          {!isReadOnly && (
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() => removeItem(index)}
+                                              className="text-gray-400 hover:text-red-600 h-8 w-8 shrink-0"
+                                            >
+                                              <X className="w-4 h-4" />
+                                            </Button>
+                                          )}
+                                        </td>
+                                      </tr>
+                                      {/* Credit checkboxes row if discrepancies exist */}
+                                      {((item.price_changed || item.discount_changed || (item.ordered_quantity !== item.received_quantity && item.ordered_quantity > 0))) && (
+                                        <tr className={`${index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'}`}>
+                                          <td></td>
+                                          <td colSpan="6" className="px-3 pb-3 pt-0">
+                                            <div className="flex items-center gap-2 flex-wrap ml-2 rtl:mr-2 rtl:ml-0">
+                                              {item.ordered_quantity !== item.received_quantity && item.ordered_quantity > 0 && (
+                                                <label className="flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded border border-red-100 cursor-pointer w-fit transition-colors hover:bg-red-100">
+                                                  <input disabled={isReadOnly} type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600 w-3.5 h-3.5" />
+                                                  <span className="text-[11px] text-red-800 font-medium leading-none">{language === 'he' ? 'לזיכוי כמות' : 'Qty credit'}</span>
+                                                </label>
+                                              )}
+                                              {(item.price_changed || item.discount_changed) && (
+                                                <label className="flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded border border-red-100 cursor-pointer w-fit transition-colors hover:bg-red-100">
+                                                  <input disabled={isReadOnly} type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600 w-3.5 h-3.5" />
+                                                  <span className="text-[11px] text-red-800 font-medium leading-none">{language === 'he' ? 'לזיכוי מחיר' : 'Price credit'}</span>
+                                                </label>
+                                              )}
+                                            </div>
+                                          </td>
+                                        </tr>
                                       )}
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-4 gap-1 sm:gap-2">
-                                      <div className="flex flex-col items-center">
-                                        <Label className="text-[9px] sm:text-[10px] text-center w-full truncate mb-0.5">{language === 'he' ? 'הוזמן' : 'Ord'}</Label>
-                                        <Input
-                                          type="number"
-                                          value={item.ordered_quantity}
-                                          disabled
-                                          className="bg-gray-100 text-gray-500 h-7 px-1 text-center text-xs"
-                                        />
-                                      </div>
-                                      <div className="flex flex-col items-center">
-                                        <Label className="text-[9px] sm:text-[10px] text-center w-full truncate mb-0.5">{t('received')}</Label>
-                                        <Input
-                                          type="number"
-                                          step="0.01"
-                                          value={item.received_quantity}
-                                          onChange={(e) => updateVerifiedItem(index, 'received_quantity', parseFloat(e.target.value) || 0)}
-                                          className="h-7 px-1 text-center text-xs"
-                                          disabled={isReadOnly}
-                                        />
-                                      </div>
-                                      <div className="flex flex-col items-center">
-                                        <Label className="text-[9px] sm:text-[10px] text-center w-full truncate mb-0.5">{t('price')}</Label>
-                                        <Input
-                                          type="number"
-                                          step="0.01"
-                                          value={item.actual_price}
-                                          onChange={(e) => updateVerifiedItem(index, 'actual_price', parseFloat(e.target.value) || 0)}
-                                          className={`h-7 px-1 text-center text-xs ${item.price_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}`}
-                                          disabled={isReadOnly}
-                                        />
-                                      </div>
-                                      <div className="flex flex-col items-center">
-                                        <Label className="text-[9px] sm:text-[10px] text-center w-full truncate mb-0.5">{language === 'he' ? 'הנחה %' : 'Disc %'}</Label>
-                                        <Input
-                                          type="number"
-                                          step="0.01"
-                                          min="0"
-                                          max="100"
-                                          value={item.actual_discount}
-                                          onChange={(e) => updateVerifiedItem(index, 'actual_discount', parseFloat(e.target.value) || 0)}
-                                          className={`h-7 px-1 text-center text-xs ${item.discount_changed ? 'text-red-600 font-bold border-red-300 focus-visible:ring-red-500' : ''}`}
-                                          disabled={isReadOnly}
-                                        />
-                                      </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-0.5">
-                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0 && <span className="text-[10px] text-orange-700 bg-orange-100 px-1.5 py-0.5 rounded font-medium inline-block w-fit border border-orange-200">{language === 'he' ? `הוזמן: ${item.ordered_quantity} | התקבל: ${item.received_quantity} (חריגה)` : `Ordered: ${item.ordered_quantity} | Received: ${item.received_quantity} (Mismatch)`}</span>}
-                                      {!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id && <span className="text-[10px] text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded font-medium inline-block w-fit border border-purple-200">{language === 'he' ? 'פריט זה לא הוזמן במקור' : 'Item was not originally ordered'}</span>}
-                                    </div>
-
-                                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                                      <div className="flex items-center gap-1 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 shrink-0">
-                                        <input disabled={isReadOnly} type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600 w-3 h-3" />
-                                        <Label className={`text-[10px] sm:text-[11px] text-red-800 font-semibold leading-none ${isReadOnly ? '' : 'cursor-pointer'}`} onClick={() => !isReadOnly && updateVerifiedItem(index, 'request_credit_quantity', !item.request_credit_quantity)}>{language === 'he' ? 'לזיכוי כמות' : 'Qty credit'}</Label>
-                                      </div>
-                                      <div className="flex items-center gap-1 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 shrink-0">
-                                        <input disabled={isReadOnly} type="checkbox" checked={item.request_credit_price} onChange={(e) => updateVerifiedItem(index, 'request_credit_price', e.target.checked)} className="rounded accent-red-600 w-3 h-3" />
-                                        <Label className={`text-[10px] sm:text-[11px] text-red-800 font-semibold leading-none ${isReadOnly ? '' : 'cursor-pointer'}`} onClick={() => !isReadOnly && updateVerifiedItem(index, 'request_credit_price', !item.request_credit_price)}>{language === 'he' ? 'לזיכוי מחיר' : 'Price credit'}</Label>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
+                                    </React.Fragment>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         )}
                       </div>
