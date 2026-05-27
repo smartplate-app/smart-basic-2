@@ -131,7 +131,7 @@
     "create": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.created_by": "{{user.email}}"
         },
         {
           "data.store_owner_email": "{{user.email}}"
@@ -146,7 +146,7 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.created_by": "{{user.email}}"
         },
         {
           "data.store_owner_email": "{{user.email}}"
@@ -161,7 +161,7 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.created_by": "{{user.email}}"
         },
         {
           "data.store_owner_email": "{{user.email}}"
@@ -176,7 +176,7 @@
     "delete": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.created_by": "{{user.email}}"
         },
         {
           "data.store_owner_email": "{{user.email}}"

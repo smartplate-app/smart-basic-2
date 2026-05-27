@@ -481,7 +481,7 @@ const [authLoading, setAuthLoading] = useState(() => {
                 const cleanUrl = new URL(window.location.href);
                 cleanUrl.searchParams.delete('code');
                 cleanUrl.searchParams.delete('state');
-                base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search);
+                base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
                 return;
               }
         if (!user) setAuthLoading(false);
@@ -498,7 +498,7 @@ const [authLoading, setAuthLoading] = useState(() => {
         const cleanUrl = new URL(window.location.href);
         cleanUrl.searchParams.delete('code');
         cleanUrl.searchParams.delete('state');
-        base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search);
+        base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
         return;
       }
       
