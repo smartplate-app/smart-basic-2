@@ -1173,8 +1173,16 @@ export default function OrdersPage() {
 
   const handleDelete = async (order) => {
     if (isViewer) return;
-    const input = window.prompt(`Type DELETE to confirm deletion of order ${order.order_number || '—'}`);
-    if (!input || input.trim().toLowerCase() !== 'delete') return;
+    
+    if (order.status !== 'draft') {
+      const promptText = language === 'he' ? `הקלד "מחיקה" כדי לאשר את מחיקת ההזמנה ${order.order_number || '—'}` : `Type DELETE to confirm deletion of order ${order.order_number || '—'}`;
+      const input = window.prompt(promptText);
+      if (!input || (input.trim().toLowerCase() !== 'delete' && input.trim() !== 'מחיקה')) return;
+    } else {
+      const confirmText = language === 'he' ? 'האם אתה בטוח שברצונך למחוק את הטיוטה?' : 'Are you sure you want to delete this draft?';
+      if (!window.confirm(confirmText)) return;
+    }
+
     // Offline: queue delete and update UI
     if (!navigator.onLine) {
       offlineQueue.enqueue('orders', { action: 'delete_order', payload: { id: order.id } });
