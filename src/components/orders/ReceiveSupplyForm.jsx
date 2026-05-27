@@ -1420,16 +1420,16 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         <div className="grid grid-cols-1 gap-3">
                           <div>
                             <Label className="text-xs text-gray-600 mb-2 block">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-1.5">
                               <button
                                 type="button"
                                 disabled={isReadOnly}
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'invoice', is_refund: false }));
                                 }}
-                                className={`py-1.5 px-3 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ${formData.document_type === 'invoice' && !formData.is_refund ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.document_type === 'invoice' && !formData.is_refund ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <Receipt className="w-4 h-4" />
+                                <Receipt className="w-3.5 h-3.5" />
                                 <span>{language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}</span>
                               </button>
                               <button
@@ -1438,9 +1438,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'delivery_note', is_refund: false }));
                                 }}
-                                className={`py-1.5 px-3 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <Package className="w-4 h-4" />
+                                <Package className="w-3.5 h-3.5" />
                                 <span>{language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}</span>
                               </button>
                               <button
@@ -1449,9 +1449,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'summary_invoice', is_refund: false }));
                                 }}
-                                className={`py-1.5 px-3 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <BarChart3 className="w-4 h-4" />
+                                <BarChart3 className="w-3.5 h-3.5" />
                                 <span>{language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}</span>
                               </button>
                               <button
@@ -1471,9 +1471,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                      setExclVatInput(newExcl.toFixed(2));
                                   }
                                 }}
-                                className={`py-1.5 px-3 rounded-md border text-sm font-medium flex items-center gap-2 transition-colors ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <RefreshCcw className="w-4 h-4" />
+                                <RefreshCcw className="w-3.5 h-3.5" />
                                 <span>{language === 'he' ? 'זיכוי (-)' : 'Refund (-)'}</span>
                               </button>
                             </div>
