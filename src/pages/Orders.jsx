@@ -1516,15 +1516,11 @@ export default function OrdersPage() {
             filteredOrders.map((order) => {
               const statusColors = {
                 sent: "bg-blue-50 text-blue-700 border-blue-200",
-                confirmed: "bg-green-50 text-green-700 border-green-200",
-                delivered: "bg-purple-50 text-purple-700 border-purple-200",
                 draft: "bg-yellow-50 text-yellow-700 border-yellow-200"
               };
 
               const statusLabels = {
                 sent: t('status_sent'),
-                confirmed: t('status_confirmed'),
-                delivered: t('status_delivered'),
                 draft: t('status_draft')
               };
 
@@ -1760,15 +1756,11 @@ export default function OrdersPage() {
                   ) : sortedOrders.map((order) => {
                     const statusColors = {
                       sent: "bg-blue-50 text-blue-600",
-                      confirmed: "bg-green-50 text-green-600",
-                      delivered: "bg-purple-50 text-purple-600",
                       draft: "bg-gray-100 text-gray-600"
                     };
 
                     const statusLabels = {
                       sent: t('status_sent'),
-                      confirmed: t('status_confirmed'),
-                      delivered: t('status_delivered'),
                       draft: t('status_draft')
                     };
 

@@ -35,9 +35,7 @@
       "type": "string",
       "enum": [
         "draft",
-        "sent",
-        "confirmed",
-        "delivered"
+        "sent"
       ],
       "default": "draft",
       "description": "Order status"
