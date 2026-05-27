@@ -605,8 +605,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         actual_discount: 0,
         price_changed: false,
         discount_changed: false,
-        has_issue: !r.item_id || Number(r.match_confidence || 0) < 0.6,
-        issue_note: (!r.item_id || Number(r.match_confidence || 0) < 0.6) ? 'Low confidence match' : '',
+        has_issue: !r.item_id,
+        issue_note: !r.item_id ? (language === 'he' ? 'פריט לא מזוהה' : 'Unrecognized item') : '',
         units_per_package: 1,
         price_after_discount: 0,
       }));
@@ -657,13 +657,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
            mappedItems.forEach(mi => {
               const existingIndex = newItems.findIndex(ni => 
                  (ni.item_id && mi.item_id && ni.item_id === mi.item_id) || 
-                 (ni.item_name === mi.item_name)
+                 (ni.item_name && mi.item_name && ni.item_name.trim() === mi.item_name.trim())
               );
               if (existingIndex >= 0) {
                  newItems[existingIndex].received_quantity = mi.received_quantity;
                  newItems[existingIndex].actual_price = mi.actual_price;
-                 newItems[existingIndex].has_issue = mi.has_issue;
-                 newItems[existingIndex].issue_note = mi.issue_note;
+                 // השארנו את הפריט המקורי כתקין אם הוא תאם לפריט בהזמנה
               } else {
                  newItems.push(mi);
               }
