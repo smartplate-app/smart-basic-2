@@ -1525,7 +1525,7 @@ export default function OrdersPage() {
                     <div className="flex items-center justify-start gap-1.5 cursor-pointer hover:text-black" onClick={() => setSortBy(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
                       {safeT('supplier','ספק','Supplier')}
                       <span className={`text-xs ${sortBy.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {sortBy === 'supplier_asc' ? '↑' : sortBy === 'supplier_desc' ? '↓' : '↕'}
+                        {sortBy === 'supplier_asc' ? '↑' : '↓'}
                       </span>
                     </div>
                   </th>
@@ -1536,7 +1536,7 @@ export default function OrdersPage() {
                     <div className="flex items-center justify-start gap-1.5 cursor-pointer hover:text-black" onClick={() => setSortBy(sortBy === 'cost_asc' ? 'cost_desc' : 'cost_asc')}>
                       {safeT('total_cost','עלות כוללת','Total cost')}
                       <span className={`text-xs ${sortBy.startsWith('cost') ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {sortBy === 'cost_asc' ? '↑' : sortBy === 'cost_desc' ? '↓' : '↕'}
+                        {sortBy === 'cost_asc' ? '↑' : '↓'}
                       </span>
                     </div>
                   </th>
@@ -1544,7 +1544,7 @@ export default function OrdersPage() {
                     <div className="flex items-center justify-start gap-1.5 cursor-pointer hover:text-black" onClick={() => setSortBy(sortBy === 'status_asc' ? 'status_desc' : 'status_asc')}>
                       {safeT('status','סטטוס','Status')}
                       <span className={`text-xs ${sortBy.startsWith('status') ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {sortBy === 'status_asc' ? '↑' : sortBy === 'status_desc' ? '↓' : '↕'}
+                        {sortBy === 'status_asc' ? '↑' : '↓'}
                       </span>
                     </div>
                   </th>
