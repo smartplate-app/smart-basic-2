@@ -153,9 +153,14 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   }, [order]);
 
   const handleLoadItemsFromOrders = () => {
-     const selectedOrders = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
+     let selectedOrders = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
      if (order && selectedOpenOrderIds.includes(order.id) && !selectedOrders.find(o => o.id === order.id)) {
        selectedOrders.push(order);
+     }
+     
+     // If the order prop isn't in openOrders but is selected (fallback for noOrderMode if openOrders is used directly)
+     if (selectedOrders.length === 0 && selectedOpenOrderIds.length > 0) {
+       selectedOrders = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
      }
      
      const combinedItems = [];
@@ -188,8 +193,25 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
      
      if (combinedItems.length > 0) {
         setFormData(prev => {
-          const { calculatedTotal, totalsMatch } = recalculateTotals(combinedItems, prev.invoice_total);
-          return { ...prev, verified_items: combinedItems, calculated_total: calculatedTotal, totals_match: totalsMatch };
+          // Merge existing manual items with the loaded order items
+          const existingItems = [...(prev.verified_items || [])];
+          
+          combinedItems.forEach(ci => {
+            const existingIndex = existingItems.findIndex(ei => 
+              (ei.item_id && ci.item_id && ei.item_id === ci.item_id) || 
+              (ei.item_name && ci.item_name && ei.item_name === ci.item_name)
+            );
+            
+            if (existingIndex >= 0) {
+              existingItems[existingIndex].ordered_quantity += ci.ordered_quantity;
+              existingItems[existingIndex].received_quantity += ci.received_quantity;
+            } else {
+              existingItems.push(ci);
+            }
+          });
+
+          const { calculatedTotal, totalsMatch } = recalculateTotals(existingItems, prev.invoice_total);
+          return { ...prev, verified_items: existingItems, calculated_total: calculatedTotal, totals_match: totalsMatch };
         });
      }
   };
@@ -1019,21 +1041,27 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           <div 
                             key={o.id} 
                             className={`flex items-center justify-between gap-2 text-sm p-3 rounded-lg border cursor-pointer transition-colors ${selectedOpenOrderIds.includes(o.id) ? 'bg-[#d4a373]/10 border-[#d4a373]' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
-                            onClick={() => setPreviewOrder(o)}
+                            onClick={() => {
+                              setSelectedOpenOrderIds(prev => 
+                                prev.includes(o.id) ? prev.filter(id => id !== o.id) : [...prev, o.id]
+                              );
+                            }}
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <input
                                 type="checkbox"
                                 checked={selectedOpenOrderIds.includes(o.id)}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) => {
-                                  const checked = e.target.checked;
-                                  setSelectedOpenOrderIds(prev => checked ? [...prev, o.id] : prev.filter(id => id !== o.id));
-                                }}
-                                className="rounded w-5 h-5 accent-[#d4a373] shrink-0 cursor-pointer"
+                                readOnly
+                                className="rounded w-5 h-5 accent-[#d4a373] shrink-0 cursor-pointer pointer-events-none"
                               />
                               <div className="flex flex-col min-w-0">
-                                <span className="font-bold text-gray-900 hover:text-black flex items-center gap-1.5 transition-colors truncate">
+                                <span 
+                                  className="font-bold text-gray-900 hover:text-black flex items-center gap-1.5 transition-colors truncate"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPreviewOrder(o);
+                                  }}
+                                >
                                   <Eye className="w-4 h-4 shrink-0" /> <span className="truncate">{o.order_number}</span>
                                 </span>
                                 <span className="text-gray-500 text-xs mt-0.5">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
