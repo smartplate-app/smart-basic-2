@@ -1016,26 +1016,28 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       </Label>
                       <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
                         {openOrders.map(o => (
-                          <label key={o.id} className={`flex items-center gap-3 text-sm p-3 rounded-lg border cursor-pointer transition-colors ${selectedOpenOrderIds.includes(o.id) ? 'bg-orange-100 border-orange-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
-                            <input
-                              type="checkbox"
-                              checked={selectedOpenOrderIds.includes(o.id)}
-                              onChange={(e) => {
-                                const checked = e.target.checked;
-                                setSelectedOpenOrderIds(prev => checked ? [...prev, o.id] : prev.filter(id => id !== o.id));
-                              }}
-                              className="rounded w-5 h-5 accent-orange-600 shrink-0"
-                            />
-                            <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-1 sm:gap-3 ml-1 rtl:mr-1 rtl:ml-0">
-                              <span 
-                                className="font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1.5 transition-colors"
-                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewOrder(o); }}
-                              >
-                                <Eye className="w-3.5 h-3.5" /> {o.order_number}
-                              </span>
-                              <span className="text-gray-500">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+                          <label key={o.id} className={`flex items-center justify-between gap-2 text-sm p-3 rounded-lg border cursor-pointer transition-colors ${selectedOpenOrderIds.includes(o.id) ? 'bg-orange-100 border-orange-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <input
+                                type="checkbox"
+                                checked={selectedOpenOrderIds.includes(o.id)}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setSelectedOpenOrderIds(prev => checked ? [...prev, o.id] : prev.filter(id => id !== o.id));
+                                }}
+                                className="rounded w-5 h-5 accent-orange-600 shrink-0"
+                              />
+                              <div className="flex flex-col min-w-0">
+                                <span 
+                                  className="font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1.5 transition-colors truncate"
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewOrder(o); }}
+                                >
+                                  <Eye className="w-4 h-4 shrink-0" /> <span className="truncate">{o.order_number}</span>
+                                </span>
+                                <span className="text-gray-500 text-xs mt-0.5">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+                              </div>
                             </div>
-                            <span className="text-green-600 font-bold shrink-0 ml-auto rtl:mr-auto rtl:ml-0">₪{(o.total_cost || 0).toFixed(2)}</span>
+                            <span className="text-green-600 font-bold shrink-0 ml-2 rtl:mr-2 rtl:ml-0">₪{(o.total_cost || 0).toFixed(2)}</span>
                           </label>
                         ))}
                       </div>
