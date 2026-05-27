@@ -1709,7 +1709,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           <Button 
                             type="button" 
                             className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto font-bold"
-                            onClick={() => {
+                            onClick={async () => {
                               const supplier = availableSuppliers.find(s => s.id === formData.supplier_id);
                               const phone = (supplier?.phone || "").replace(/\D/g, "");
                               const creditItems = formData.verified_items.filter(i => i.request_credit_quantity || i.request_credit_price);
@@ -1727,6 +1727,19 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 text += "\n";
                               });
                               text += language === 'he' ? "אשמח לטיפולכם ולהפקת חשבונית זיכוי." : "Please process a credit invoice.";
+                              
+                              if (supplier?.email) {
+                                try {
+                                  await base44.integrations.Core.SendEmail({
+                                    to: supplier.email,
+                                    subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`,
+                                    body: text.replace(/\n/g, '<br/>')
+                                  });
+                                } catch (e) {
+                                  console.error("Failed to send email to supplier", e);
+                                }
+                              }
+
                               const whatsappUrl = phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
                               window.open(whatsappUrl, '_blank');
                             }}
