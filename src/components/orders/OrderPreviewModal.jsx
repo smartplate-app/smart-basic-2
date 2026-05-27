@@ -382,12 +382,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         };
 
         return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center sm:p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 50 }}
+        className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-5xl w-full max-h-[92dvh] sm:max-h-[90vh] overflow-hidden flex flex-col"
       >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
@@ -582,38 +582,45 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </div>
         </div>
 
-        <div className="flex flex-wrap sm:flex-nowrap gap-3 px-6 py-4 border-t bg-gray-50 sticky bottom-0">
+        <div className="flex flex-col gap-2 p-3 sm:p-4 border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] pb-safe">
+          <div className="flex gap-2 w-full">
+            <Button
+              onClick={async () => {
+                if (onSendEmail) {
+                  setSending(true);
+                  try { await onSendEmail(); } catch(e) {}
+                  setSending(false);
+                }
+              }}
+              variant="outline"
+              className="flex-1 h-12 text-blue-600 border-blue-200 hover:bg-blue-50 text-[15px]"
+              disabled={downloading || sending}
+            >
+              {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4 ml-1.5" />}
+              {safeT('send_email', 'במייל', 'Email')}
+            </Button>
+
+            <Button
+              onClick={() => { 
+                if (onSend) {
+                  onSend(order);
+                }
+              }}
+              className="flex-[1.5] h-12 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
+              disabled={downloading || sending}
+              data-testid="order-preview-send"
+            >
+              {sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <MessageCircle className="w-5 h-5 ml-1.5" />}
+              {safeT('send_message_whatsapp','בוואטסאפ','WhatsApp')}
+            </Button>
+          </div>
+          
           <Button
-            onClick={async () => {
-              if (onSendEmail) {
-                setSending(true);
-                try { await onSendEmail(); } catch(e) {}
-                setSending(false);
-              }
-            }}
-            variant="outline"
-            className="flex-1 sm:flex-none gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
-            disabled={downloading || sending}
+            onClick={onClose}
+            variant="ghost"
+            className="w-full h-10 text-gray-500 hover:bg-gray-100"
           >
-            {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-            {safeT('send_email', 'אימייל', 'Email')}
-          </Button>
-
-
-
-          <Button
-            onClick={() => { 
-              if (onSend) {
-                // DO NOT await or set state before calling onSend, it breaks Web Share API!
-                onSend(order);
-              }
-            }}
-            className="w-full sm:flex-1 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50"
-            disabled={downloading || sending}
-            data-testid="order-preview-send"
-          >
-            {sending ? <Loader className="w-5 h-5 mr-2 animate-spin" /> : <MessageCircle className="w-5 h-5 mr-2" />}
-            {safeT('send_message_whatsapp','הודעה / וואטסאפ','MESSEGES / WHATSAPP')}
+            {safeT('back_to_edit', 'חזור לעריכת הזמנה', 'Back to Edit')}
           </Button>
         </div>
       </motion.div>
