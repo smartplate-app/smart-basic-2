@@ -44,6 +44,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   const itemsContainerRef = React.useRef(null);
 
   React.useEffect(() => {
+    const handleWindowScroll = () => setShowScrollTop(window.scrollY > 300);
+    window.addEventListener("scroll", handleWindowScroll);
+    return () => window.removeEventListener("scroll", handleWindowScroll);
+  }, []);
+
+  React.useEffect(() => {
     const loadUser = async () => {
       try {
         const user = await base44.auth.me();
@@ -408,8 +414,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               <div className="relative">
                 <div 
                   ref={itemsContainerRef}
-                  onScroll={(e) => setShowScrollTop(e.target.scrollTop > 200)}
-                  className="flex flex-col max-h-[70vh] overflow-y-auto -mx-3 px-3 sm:mx-0 sm:px-0 bg-white gap-2 p-2 bg-gray-50 border rounded-lg pb-14"
+                  className="flex flex-col -mx-3 px-3 sm:mx-0 sm:px-0 bg-transparent gap-2 pb-6 pt-1"
                 >
                   {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
@@ -509,12 +514,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {showScrollTop && (
                   <button
                     type="button"
-                    onClick={() => itemsContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="absolute bottom-4 bg-white/90 backdrop-blur shadow-md border border-gray-200 text-gray-700 p-2.5 rounded-full hover:bg-gray-100 transition-all z-10"
-                    style={{ [language === 'he' ? 'left' : 'right']: '16px' }}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="fixed bottom-28 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-gray-200 text-gray-700 p-3 rounded-full hover:bg-gray-50 transition-all z-40"
+                    style={{ [language === 'he' ? 'left' : 'right']: '20px' }}
                     title={language === 'he' ? 'חזור למעלה' : 'Scroll to top'}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                   </button>
                 )}
               </div>
