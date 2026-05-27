@@ -1289,7 +1289,8 @@ export default function OrdersPage() {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 p-4 md:p-8 2xl:p-12"
+      dir={isRTL ? "rtl" : "ltr"}
+      className="min-h-screen bg-[#f8f9fa] p-4 md:p-8 2xl:p-12"
       onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
       onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
       onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); await loadData(user || (await base44.auth.me())); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
@@ -1304,12 +1305,14 @@ export default function OrdersPage() {
             <Loader className={`w-5 h-5 text-blue-600 ${refreshing ? 'animate-spin' : ''}`} style={{ transform: !refreshing ? `rotate(${pullDist * 2}deg)` : 'none' }} />
           </div>
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{safeT('orders_title', 'ניהול הזמנות', 'Orders Management')}</h1>
-            <p className="text-gray-600 mt-2">{t('orders_greeting', { name: (user.acting_as_user_name || user.full_name) })}</p>
+            <h1 className="text-4xl font-extrabold text-[#1a1f36] tracking-tight">{safeT('orders_title', 'ניהול הזמנות', 'Orders Management')}</h1>
+            <p className="text-gray-500 mt-2 text-lg">
+              {language === 'he' ? `שלום ${user.acting_as_user_name || user.full_name}, צור ושלח הזמנות לספקים שלך` : `Hello ${user.acting_as_user_name || user.full_name}, create and send orders to your suppliers`}
+            </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               variant="outline"
               onClick={verifyDraftsNow}
@@ -1329,9 +1332,9 @@ export default function OrdersPage() {
             {!isViewer && (
               <Button
                 onClick={() => setShowForm(!showForm)}
-                className="hidden md:inline-flex bg-[#d4a373] hover:bg-[#b88c60] text-white h-11 md:h-10 px-5 rounded-lg"
+                className="hidden md:inline-flex bg-[#d4a373] hover:bg-[#b88c60] text-white h-12 px-6 rounded-2xl shadow-sm text-base font-bold transition-all hover:scale-105"
               >
-                <Plus className="w-5 h-5 ml-2" />
+                <Plus className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0" />
                 {safeT('new_order', 'הזמנה חדשה', 'New Order')}
               </Button>
             )}
@@ -1399,39 +1402,8 @@ export default function OrdersPage() {
               </DialogContent>
             </Dialog>
 
-            <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  placeholder={safeT('search_orders', 'חיפוש הזמנות...', 'Search orders...')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10 h-11 md:h-10 text-base rounded-lg"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-11 md:h-10 rounded-lg">
-                  <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
-                  <SelectItem value="draft">{t('status_draft')}</SelectItem>
-                  <SelectItem value="sent">{t('status_sent')}</SelectItem>
-                  <SelectItem value="delivered">{safeT('status_delivered', 'התקבל', 'Delivered')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
-                <SelectTrigger className="h-11 md:h-10 rounded-lg">
-                  <SelectValue placeholder={safeT('supplier', 'ספק', 'Supplier')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{safeT('all', 'הכל', 'All')}</SelectItem>
-                  {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex items-center bg-gray-50/50 border border-gray-200 rounded-lg p-1 shadow-sm md:w-auto w-full overflow-x-auto">
+            <div className="hidden md:flex flex-wrap items-center gap-3 mb-8">
+              <div className="flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm overflow-x-auto p-1 max-w-full">
                 <Select
                   value={datePreset}
                   onValueChange={(v) => {
@@ -1470,16 +1442,16 @@ export default function OrdersPage() {
                     }
                   }}
                 >
-                  <SelectTrigger className={`h-11 md:h-8 border-transparent shadow-none w-auto min-w-[120px] transition-colors ${datePreset !== 'custom' ? 'bg-white font-medium shadow-sm rounded-md text-gray-900' : 'bg-transparent text-gray-600'}`}>
+                  <SelectTrigger className={`h-10 border-transparent shadow-none w-auto min-w-[120px] transition-colors rounded-xl ${datePreset !== 'custom' ? 'bg-white font-bold shadow-sm text-gray-900' : 'bg-transparent text-gray-600 font-medium hover:bg-gray-50'}`}>
                     <SelectValue placeholder={safeT('timeframe','תאריכים','Dates')} />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{safeT('all_time','כל הזמן','All time')}</SelectItem>
-                    <SelectItem value="week">{safeT('current_week','השבוע','This week')}</SelectItem>
-                    <SelectItem value="month">{safeT('current_month','החודש','This month')}</SelectItem>
-                    <SelectItem value="year">{safeT('current_year','מתחילת השנה','Year to date')}</SelectItem>
-                    <SelectItem value="last_year">{safeT('last_year','שנה שעברה','Last year')}</SelectItem>
-                    <SelectItem value="custom">{safeT('custom_range','מותאם אישית','Custom range')}</SelectItem>
+                  <SelectContent className="rounded-xl shadow-lg border-gray-100">
+                    <SelectItem value="all" className="rounded-lg">{safeT('all_time','כל הזמן','All time')}</SelectItem>
+                    <SelectItem value="week" className="rounded-lg">{safeT('current_week','השבוע','This week')}</SelectItem>
+                    <SelectItem value="month" className="rounded-lg">{safeT('current_month','החודש','This month')}</SelectItem>
+                    <SelectItem value="year" className="rounded-lg">{safeT('current_year','מתחילת השנה','Year to date')}</SelectItem>
+                    <SelectItem value="last_year" className="rounded-lg">{safeT('last_year','שנה שעברה','Last year')}</SelectItem>
+                    <SelectItem value="custom" className="rounded-lg">{safeT('custom_range','מותאם אישית','Custom range')}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -1489,22 +1461,53 @@ export default function OrdersPage() {
                       type="date"
                       value={dateStart}
                       onChange={(e) => setDateStart(e.target.value)}
-                      className="h-11 md:h-8 w-[135px] px-2 text-sm bg-white border-transparent shadow-sm rounded-md flex-shrink-0"
+                      className="h-10 w-[135px] px-2 text-sm bg-white border-gray-200 shadow-sm rounded-xl flex-shrink-0"
                     />
                     <span className="text-gray-400">-</span>
                     <Input
                       type="date"
                       value={dateEnd}
                       onChange={(e) => setDateEnd(e.target.value)}
-                      className="h-11 md:h-8 w-[135px] px-2 text-sm bg-white border-transparent shadow-sm rounded-md flex-shrink-0"
+                      className="h-10 w-[135px] px-2 text-sm bg-white border-gray-200 shadow-sm rounded-xl flex-shrink-0"
                     />
                   </div>
                 )}
               </div>
+              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                <SelectTrigger className="h-12 w-auto min-w-[140px] rounded-2xl bg-white border-gray-200 text-gray-700 shadow-sm font-medium hover:bg-gray-50 transition-colors">
+                  <SelectValue placeholder={safeT('supplier', 'ספק', 'Supplier')} />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl shadow-lg border-gray-100">
+                  <SelectItem value="all" className="rounded-xl font-medium">{safeT('all', 'הכל', 'All')}</SelectItem>
+                  {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
+                    <SelectItem key={name} value={name} className="rounded-xl">{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-12 w-auto min-w-[150px] rounded-2xl bg-white border-gray-200 text-gray-700 shadow-sm font-medium hover:bg-gray-50 transition-colors">
+                  <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl shadow-lg border-gray-100">
+                  <SelectItem value="all" className="rounded-xl font-medium">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
+                  <SelectItem value="draft" className="rounded-xl">{t('status_draft')}</SelectItem>
+                  <SelectItem value="sent" className="rounded-xl">{t('status_sent')}</SelectItem>
+                  <SelectItem value="delivered" className="rounded-xl">{safeT('status_delivered', 'נמסר', 'Delivered')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative ml-auto rtl:ml-0 rtl:mr-auto min-w-[240px]">
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 rtl:right-auto rtl:left-4" />
+                <Input
+                  placeholder={safeT('search_orders', 'חיפוש הזמנות...', 'Search orders...')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-11 rtl:pr-4 rtl:pl-11 h-12 text-base rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
+                />
+              </div>
             </div>
 
 
-         {/* Mobile View */}
+        {/* Mobile View */}
         {!showForm && (
         <div className="md:hidden space-y-4 pb-24">
           {loading ? (
@@ -1706,39 +1709,39 @@ export default function OrdersPage() {
 
         {/* Desktop View */}
         {!showForm && (
-        <div className="hidden md:block bg-white rounded-lg shadow relative">
-          <div className="overflow-x-auto overflow-y-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="hidden md:block bg-white rounded-3xl shadow-sm border border-gray-100 relative">
+          <div className="overflow-x-auto overflow-y-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-3xl">
             <table className="w-full relative">
               <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
                 <tr>
-                  <th className="px-4 py-4 text-left rtl:text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
-                    <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
+                  <th className="px-6 py-5 text-left rtl:text-right text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
+                    <div className="flex items-center justify-start gap-1.5 cursor-pointer hover:text-black" onClick={() => setSortBy(sortBy === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
                       {safeT('supplier','ספק','Supplier')}
-                      <span className={`text-[10px] ${sortBy.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {sortBy === 'supplier_asc' ? '↑' : sortBy === 'supplier_desc' ? '↓' : '⇅'}
+                      <span className={`text-xs ${sortBy.startsWith('supplier') ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {sortBy === 'supplier_asc' ? '↑' : sortBy === 'supplier_desc' ? '↓' : '↕'}
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-left rtl:text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-6 py-5 text-left rtl:text-right text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
                     {safeT('delivery_date','תאריך אספקה','Delivery date')}
                   </th>
-                  <th className="px-4 py-4 text-left rtl:text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
-                    <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'cost_asc' ? 'cost_desc' : 'cost_asc')}>
+                  <th className="px-6 py-5 text-left rtl:text-right text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
+                    <div className="flex items-center justify-start gap-1.5 cursor-pointer hover:text-black" onClick={() => setSortBy(sortBy === 'cost_asc' ? 'cost_desc' : 'cost_asc')}>
                       {safeT('total_cost','עלות כוללת','Total cost')}
-                      <span className={`text-[10px] ${sortBy.startsWith('cost') ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {sortBy === 'cost_asc' ? '↑' : sortBy === 'cost_desc' ? '↓' : '⇅'}
+                      <span className={`text-xs ${sortBy.startsWith('cost') ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {sortBy === 'cost_asc' ? '↑' : sortBy === 'cost_desc' ? '↓' : '↕'}
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-left rtl:text-right text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
-                    <div className="flex items-center justify-start gap-1 cursor-pointer hover:text-gray-900" onClick={() => setSortBy(sortBy === 'status_asc' ? 'status_desc' : 'status_asc')}>
+                  <th className="px-6 py-5 text-left rtl:text-right text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
+                    <div className="flex items-center justify-start gap-1.5 cursor-pointer hover:text-black" onClick={() => setSortBy(sortBy === 'status_asc' ? 'status_desc' : 'status_asc')}>
                       {safeT('status','סטטוס','Status')}
-                      <span className={`text-[10px] ${sortBy.startsWith('status') ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {sortBy === 'status_asc' ? '↑' : sortBy === 'status_desc' ? '↓' : '⇅'}
+                      <span className={`text-xs ${sortBy.startsWith('status') ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {sortBy === 'status_asc' ? '↑' : sortBy === 'status_desc' ? '↓' : '↕'}
                       </span>
                     </div>
                   </th>
-                  <th className="px-4 py-4 text-right rtl:text-left text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10">
+                  <th className="px-6 py-5 text-right rtl:text-left text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
                   </th>
                 </tr>
               </thead>
@@ -1765,18 +1768,18 @@ export default function OrdersPage() {
                     return (
                       <tr
                         key={order.id}
-                        className="hover:bg-blue-50 cursor-pointer transition-colors"
+                        className="hover:bg-gray-50 cursor-pointer transition-colors"
                         onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
                       >
-                        <td className="px-4 py-4 text-left rtl:text-right align-middle">
+                        <td className="px-6 py-5 text-left rtl:text-right align-middle">
                           <div className="flex items-center gap-2">
-                            <div className="text-sm font-semibold text-gray-900">{order.supplier_name}</div>
+                            <div className="text-base font-bold text-gray-900">{order.supplier_name}</div>
                             {!isViewer && (
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={(e) => { e.stopPropagation(); handleResend(order); }}
-                                className="h-7 w-7 text-gray-400 hover:text-gray-900 rounded-full"
+                                className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full"
                                 title={safeT('share','שתף','Share')}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -1784,44 +1787,45 @@ export default function OrdersPage() {
                             )}
                           </div>
                           {order.restaurant_name && (
-                            <div className="text-xs text-gray-400 mt-0.5">{order.restaurant_name}</div>
+                            <div className="text-sm text-gray-400 mt-1">{order.restaurant_name}</div>
                           )}
                         </td>
-                        <td className="px-4 py-4 text-left rtl:text-right text-sm text-gray-600 align-middle">
+                        <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
                           {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
                         </td>
-                        <td className="px-4 py-4 text-left rtl:text-right text-sm font-bold text-gray-900 align-middle">
+                        <td className="px-6 py-5 text-left rtl:text-right text-base font-bold text-gray-900 align-middle">
                           ₪{(order.total_cost || 0).toFixed(2)}
                         </td>
-                        <td className="px-4 py-4 text-left rtl:text-right align-middle">
+                        <td className="px-6 py-5 text-left rtl:text-right align-middle">
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full border-none ${statusColors[order.status]}`}>
+                            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border border-gray-200 bg-white shadow-sm ${order.status === 'sent' ? 'text-blue-600' : 'text-gray-700'}`}>
                               {statusLabels[order.status] || order.status}
+                              {order.status === 'draft' && <span className="ml-2 rtl:mr-2 rtl:ml-0">✓</span>}
                             </span>
                             {!isViewer && order.status === 'sent' && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                                className="h-7 px-3 text-xs bg-green-50/50 border-green-200 text-green-700 hover:bg-green-100 rounded-full shadow-sm"
+                                className="h-8 px-4 text-sm bg-green-50/50 border-green-200 text-green-700 hover:bg-green-100 rounded-full shadow-sm"
                               >
-                                <PackageCheck className="w-3 h-3 rtl:ml-1 ltr:mr-1" />
+                                <PackageCheck className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
                                 {safeT('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
                               </Button>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-right rtl:text-left align-middle">
+                        <td className="px-6 py-5 text-right rtl:text-left align-middle">
                           <div className="flex items-center justify-end gap-2 pointer-events-auto">
                             {!isViewer && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
-                                  className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-lg"
+                                  className="h-9 w-9 text-gray-400 hover:text-red-600 rounded-xl"
                                   title={safeT('delete','מחק','Delete')}
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-5 h-5" />
                                 </Button>
                             )}
                           </div>

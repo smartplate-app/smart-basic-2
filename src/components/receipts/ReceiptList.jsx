@@ -167,7 +167,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
           <tbody className="bg-white divide-y divide-gray-50">
             {loading ? (
               <tr>
-                <td colSpan="8" className="px-4 py-12 text-center">
+                <td colSpan="8" className="px-6 py-12 text-center">
                   <div className="flex justify-center mb-2">
                     <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
                   </div>
@@ -176,7 +176,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               </tr>
             ) : receipts.length === 0 ? (
               <tr>
-                <td colSpan="8" className="px-4 py-12 text-center text-gray-500">
+                <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                   {t('no_receipts_to_display') || 'אין קבלות להצגה'}
                 </td>
               </tr>
@@ -184,40 +184,40 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               receipts.map((r) => (
                 <tr
                   key={r.id}
-                  className="hover:bg-blue-50 cursor-pointer transition-colors"
+                  className="hover:bg-gray-50 cursor-pointer transition-colors"
                   onClick={() => onEdit && onEdit(r)}
                 >
-                  <td className="px-4 py-4 text-left rtl:text-right align-middle">
-                    <div className="text-sm font-semibold text-gray-900">{r.supplier_name || '-'}</div>
+                  <td className="px-6 py-5 text-left rtl:text-right align-middle">
+                    <div className="text-base font-bold text-gray-900">{r.supplier_name || '-'}</div>
                     {Array.isArray(r.verified_items) && r.verified_items.length > 0 && (
-                      <div className="text-xs text-gray-400 mt-0.5">
+                      <div className="text-sm text-gray-400 mt-1">
                         {safeT('items', 'פריטים', 'Items')}: {r.verified_items.length}
                       </div>
                     )}
                     {r.notes && (
-                      <div className="text-xs text-amber-600 mt-0.5 truncate max-w-[200px]" title={r.notes}>
+                      <div className="text-sm text-amber-600 mt-1 truncate max-w-[200px]" title={r.notes}>
                         {r.notes}
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-4 text-left rtl:text-right text-sm text-gray-500 align-middle">
+                  <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
                     {r.invoice_number || '-'}
                     {r.order_number && (
-                      <div className="text-xs text-gray-400 mt-0.5">
+                      <div className="text-sm text-gray-400 mt-1">
                         {safeT('order', 'הזמנה', 'Order')}: {r.order_number}
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-4 text-left rtl:text-right text-sm text-gray-600 align-middle">
+                  <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
                     {fmtDate(r.received_date)}
                   </td>
-                  <td className="px-4 py-4 text-left rtl:text-right text-sm text-gray-600 align-middle">
+                  <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
                     {fmtDate(r.invoice_date)}
                   </td>
-                  <td className="px-4 py-4 text-left rtl:text-right text-sm font-bold text-blue-700 align-middle">
+                  <td className="px-6 py-5 text-left rtl:text-right text-base font-bold text-gray-900 align-middle">
                     {typeof r.invoice_total !== 'undefined' ? `₪${fmtCurrency(r.invoice_total)}` : '-'}
                   </td>
-                  <td className="px-4 py-4 text-center align-middle">
+                  <td className="px-6 py-5 text-center align-middle">
                     <div className="flex items-center justify-center gap-1 flex-wrap">
                       {(() => {
                         const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
@@ -238,14 +238,14 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                       })()}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-center align-middle" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-6 py-5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                     {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 ? (
                       <div className="flex items-center justify-center gap-2">
                         <a
                           href={r.receipt_images[0]}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="relative block w-10 h-10 rounded-md overflow-hidden border border-gray-200 bg-white hover:border-gray-300 transition-colors"
+                          className="relative block w-10 h-10 rounded-xl overflow-hidden border border-gray-200 bg-white hover:border-gray-300 transition-colors"
                           title={(t('open_file') || 'Open file')}
                         >
                           {isPdf(r.receipt_images[0]) ? (
@@ -254,28 +254,28 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                             <img src={r.receipt_images[0]} alt="receipt" className="w-full h-full object-cover pointer-events-none" />
                           )}
                           {r.receipt_images.length > 1 && (
-                            <span className="absolute bottom-0 right-0 bg-black/60 backdrop-blur-sm text-white text-[9px] px-1 rounded-tl-md font-medium">
+                            <span className="absolute bottom-0 right-0 bg-black/60 backdrop-blur-sm text-white text-[10px] px-1.5 rounded-tl-xl font-medium">
                               +{r.receipt_images.length - 1}
                             </span>
                           )}
                         </a>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-400">-</span>
+                      <span className="text-sm text-gray-400">-</span>
                     )}
                   </td>
-                  <td className="px-4 py-4 text-right rtl:text-left align-middle" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-6 py-5 text-right rtl:text-left align-middle" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2 pointer-events-auto">
                       {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
                         <a href={r.receipt_images[0]} download target="_blank" rel="noopener noreferrer" className="inline-flex">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg" title={safeT('download', 'הורד', 'Download')}>
-                            <Download className="w-4 h-4" />
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-gray-400 hover:text-gray-900 rounded-xl" title={safeT('download', 'הורד', 'Download')}>
+                            <Download className="w-5 h-5" />
                           </Button>
                         </a>
                       )}
                       {onDelete && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-lg" onClick={(e) => { e.stopPropagation(); onDelete(r); }} title={safeT('delete', 'מחיקה', 'Delete')}>
-                          <Trash2 className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-red-600 rounded-xl" onClick={(e) => { e.stopPropagation(); onDelete(r); }} title={safeT('delete', 'מחיקה', 'Delete')}>
+                          <Trash2 className="w-5 h-5" />
                         </Button>
                       )}
                     </div>

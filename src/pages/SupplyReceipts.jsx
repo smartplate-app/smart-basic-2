@@ -455,7 +455,7 @@ export default function SupplyReceiptsPage() {
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 md:p-8"
+      className="min-h-screen bg-[#f8f9fa] p-4 md:p-8"
       onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
       onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
       onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); const u = user || await base44.auth.me(); await loadData(u.email, storeOwnerEmailState); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
@@ -472,30 +472,11 @@ export default function SupplyReceiptsPage() {
         </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="w-full md:w-auto">
-            <h1 className="text-3xl font-bold text-gray-900">{t('receipts_title')}</h1>
-            <p className="text-gray-600 mt-2">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
+            <h1 className="text-4xl font-extrabold text-[#1a1f36] tracking-tight">{t('receipts_title')}</h1>
+            <p className="text-gray-500 mt-2 text-lg">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
           </div>
           <div className="flex gap-3 flex-wrap items-center">
-            <div className="flex bg-white rounded-lg shadow-sm border">
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
-                title={tt('list','רשימה','List')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:bg-gray-100'}
-                title={tt('grid','כרטיסים','Grid')}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-            </div>
+            {/* Kept viewMode='list' as default, removed the toggle buttons from UI to match the clean aesthetic */}
 
            <Button
              variant="outline"
@@ -529,9 +510,9 @@ export default function SupplyReceiptsPage() {
                 setEditingReceipt(null); // Clear editing state
                 setSelectedOrder(null); // Clear any selected order
               }}
-              className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
+              className="bg-[#d4a373] hover:bg-[#b88c60] text-white h-12 px-6 rounded-2xl shadow-sm text-base font-bold transition-all hover:scale-105"
             >
-              <PackageCheck className="w-5 h-5 ml-2" />
+              <PackageCheck className="w-5 h-5 rtl:ml-2 rtl:mr-0 ltr:mr-2" />
               {tt('supply_without_order','קבלה ללא הזמנה','Supply without order')}
             </Button>
 
@@ -539,13 +520,13 @@ export default function SupplyReceiptsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
+          <TabsList className="mb-2 bg-white/50 border border-gray-200 rounded-2xl p-1 shadow-sm h-auto inline-flex flex-wrap gap-1">
             <TabsTrigger value="pending_orders">{language === 'he' ? 'הזמנות לקליטה' : 'Pending Orders'}</TabsTrigger>
             <TabsTrigger value="receipts">{tt('receipts_tab','היסטוריית קבלות','Receipts History')}</TabsTrigger>
             <TabsTrigger value="monthly_report">{tt('monthly_summary','סיכום חודשי','Monthly Summary')}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="pending_orders">
+          <TabsContent value="pending_orders" className="mt-8">
             <AnimatePresence>
               {showForm && selectedOrder && !editingReceipt && (
                  <ReceiveSupplyForm
@@ -610,7 +591,7 @@ export default function SupplyReceiptsPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="receipts">
+          <TabsContent value="receipts" className="mt-8">
             <AnimatePresence>
               {/* Editing Form */}
               {showForm && editingReceipt && (
@@ -694,21 +675,83 @@ export default function SupplyReceiptsPage() {
               ))}
             </div>
 
-            <div className="hidden md:flex flex-col gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm mb-6">
+            <div className="hidden md:flex flex-col gap-3 mb-8">
               <div className="flex flex-wrap items-center gap-3">
                 {(searchTerm || statusFilter !== 'all' || supplierFilter !== 'all' || sortBy !== 'none' || invoiceNumberFilter || datePreset !== 'all') && (
                   <Button variant="ghost" onClick={clearFilters} className="text-gray-500 hover:text-red-600 hover:bg-red-50 px-3 h-10 rounded-xl transition-colors">
                     {tt('clear_filters','נקה מסננים','Clear')}
                   </Button>
                 )}
-                <div className="relative flex-1 min-w-[200px] max-w-sm">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder={tt('search_receipts','חיפוש קבלות (לפי ספק או מס׳ קבלה)','Search receipts')}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-10 pr-9 rounded-xl bg-gray-50/50 border-gray-200 focus-visible:bg-white transition-colors"
-                  />
+                
+                <div className="flex items-center bg-white border border-gray-200 rounded-2xl shadow-sm overflow-x-auto p-1 max-w-full">
+                  <Select
+                    value={datePreset}
+                    onValueChange={(v) => {
+                      setDatePreset(v);
+                      const now = new Date();
+                      if (v === 'week') {
+                        const s = new Date(now);
+                        const dow = s.getDay(); // 0=Sunday
+                        s.setDate(s.getDate() - dow);
+                        s.setHours(0,0,0,0);
+                        const e = new Date(s);
+                        e.setDate(s.getDate() + 6);
+                        e.setHours(23,59,59,999);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'month') {
+                        const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                        const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'year') {
+                        const s = new Date(now.getFullYear(), 0, 1);
+                        const e = new Date(now.getFullYear(), 11, 31);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'last_year') {
+                        const s = new Date(now.getFullYear() - 1, 0, 1);
+                        const e = new Date(now.getFullYear() - 1, 11, 31);
+                        setDateFrom(s.toISOString().slice(0,10));
+                        setDateTo(e.toISOString().slice(0,10));
+                      } else if (v === 'all') {
+                        setDateFrom("");
+                        setDateTo("");
+                      } else if (v === 'custom') {
+                        // Keep current dateFrom and dateTo
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={`h-10 border-transparent shadow-none w-auto min-w-[120px] transition-colors rounded-xl ${datePreset !== 'custom' ? 'bg-white font-bold shadow-sm text-gray-900' : 'bg-transparent text-gray-600 font-medium hover:bg-gray-50'}`}>
+                      <SelectValue placeholder={tt('timeframe','תאריכים','Dates')} />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl shadow-lg border-gray-100">
+                      <SelectItem value="all" className="rounded-lg">{tt('all_time','כל הזמן','All time')}</SelectItem>
+                      <SelectItem value="week" className="rounded-lg">{tt('current_week','השבוע','This week')}</SelectItem>
+                      <SelectItem value="month" className="rounded-lg">{tt('current_month','החודש','This month')}</SelectItem>
+                      <SelectItem value="year" className="rounded-lg">{tt('current_year','מתחילת השנה','Year to date')}</SelectItem>
+                      <SelectItem value="last_year" className="rounded-lg">{tt('last_year','שנה שעברה','Last year')}</SelectItem>
+                      <SelectItem value="custom" className="rounded-lg">{tt('custom_range','טווח תאריכים מותאם...','Custom range')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {datePreset === 'custom' && (
+                    <div className="flex items-center gap-1.5 px-2 ml-1 border-l border-gray-200 rtl:border-l-0 rtl:border-r rtl:mr-1 animate-in fade-in zoom-in duration-200 flex-shrink-0">
+                      <Input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                        className="h-10 w-[135px] px-2 text-sm bg-white border-gray-200 shadow-sm rounded-xl flex-shrink-0"
+                      />
+                      <span className="text-gray-400">-</span>
+                      <Input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => setDateTo(e.target.value)}
+                        className="h-10 w-[135px] px-2 text-sm bg-white border-gray-200 shadow-sm rounded-xl flex-shrink-0"
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 <Popover open={supplierFilterOpen} onOpenChange={setSupplierFilterOpen}>
@@ -717,7 +760,7 @@ export default function SupplyReceiptsPage() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={supplierFilterOpen}
-                      className="h-10 rounded-xl bg-gray-50/50 border-gray-200 w-auto min-w-[160px] justify-between font-normal hover:bg-gray-100/50 text-gray-700"
+                      className="h-12 w-auto min-w-[140px] rounded-2xl bg-white border-gray-200 text-gray-700 shadow-sm font-medium hover:bg-gray-50 transition-colors justify-between"
                     >
                       {supplierFilter === "all" 
                         ? tt('all_suppliers','כל הספקים','All suppliers')
@@ -771,76 +814,14 @@ export default function SupplyReceiptsPage() {
                 </Popover>
 
                 {/* Removed Select dropdown for sorting as per user request - clicking on table headers handles this now */}
-
-                <div className="flex items-center bg-gray-50/50 border border-gray-200 rounded-xl p-1 shadow-sm">
-                  <Select
-                    value={datePreset}
-                    onValueChange={(v) => {
-                      setDatePreset(v);
-                      const now = new Date();
-                      if (v === 'week') {
-                        const s = new Date(now);
-                        const dow = s.getDay(); // 0=Sunday
-                        s.setDate(s.getDate() - dow);
-                        s.setHours(0,0,0,0);
-                        const e = new Date(s);
-                        e.setDate(s.getDate() + 6);
-                        e.setHours(23,59,59,999);
-                        setDateFrom(s.toISOString().slice(0,10));
-                        setDateTo(e.toISOString().slice(0,10));
-                      } else if (v === 'month') {
-                        const s = new Date(now.getFullYear(), now.getMonth(), 1);
-                        const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                        setDateFrom(s.toISOString().slice(0,10));
-                        setDateTo(e.toISOString().slice(0,10));
-                      } else if (v === 'year') {
-                        const s = new Date(now.getFullYear(), 0, 1);
-                        const e = new Date(now.getFullYear(), 11, 31);
-                        setDateFrom(s.toISOString().slice(0,10));
-                        setDateTo(e.toISOString().slice(0,10));
-                      } else if (v === 'last_year') {
-                        const s = new Date(now.getFullYear() - 1, 0, 1);
-                        const e = new Date(now.getFullYear() - 1, 11, 31);
-                        setDateFrom(s.toISOString().slice(0,10));
-                        setDateTo(e.toISOString().slice(0,10));
-                      } else if (v === 'all') {
-                        setDateFrom("");
-                        setDateTo("");
-                      } else if (v === 'custom') {
-                        // Keep current dateFrom and dateTo
-                      }
-                    }}
-                  >
-                    <SelectTrigger className={`h-8 border-transparent shadow-none w-auto min-w-[120px] transition-colors ${datePreset !== 'custom' ? 'bg-white font-medium shadow-sm rounded-lg text-green-700' : 'bg-transparent text-gray-600'}`}>
-                      <SelectValue placeholder={tt('timeframe','תאריכים','Dates')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{tt('all_time','כל הזמן','All time')}</SelectItem>
-                      <SelectItem value="week">{tt('current_week','השבוע','This week')}</SelectItem>
-                      <SelectItem value="month">{tt('current_month','החודש','This month')}</SelectItem>
-                      <SelectItem value="year">{tt('current_year','מתחילת השנה','Year to date')}</SelectItem>
-                      <SelectItem value="last_year">{tt('last_year','שנה שעברה','Last year')}</SelectItem>
-                      <SelectItem value="custom">{tt('custom_range','טווח תאריכים מותאם...','Custom range')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {datePreset === 'custom' && (
-                    <div className="flex items-center gap-1.5 px-2 ml-1 border-l border-gray-200 rtl:border-l-0 rtl:border-r rtl:mr-1 animate-in fade-in zoom-in duration-200">
-                      <Input
-                        type="date"
-                        value={dateFrom}
-                        onChange={(e) => setDateFrom(e.target.value)}
-                        className="h-8 w-32 px-2 text-sm bg-white border-transparent shadow-sm rounded-lg"
-                      />
-                      <span className="text-gray-400">-</span>
-                      <Input
-                        type="date"
-                        value={dateTo}
-                        onChange={(e) => setDateTo(e.target.value)}
-                        className="h-8 w-32 px-2 text-sm bg-white border-transparent shadow-sm rounded-lg"
-                      />
-                    </div>
-                  )}
+                <div className="relative ml-auto rtl:ml-0 rtl:mr-auto min-w-[240px]">
+                  <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 rtl:right-auto rtl:left-4" />
+                  <Input
+                    placeholder={tt('search_receipts','חיפוש קבלות (לפי ספק או מס׳ קבלה)','Search receipts')}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pr-11 rtl:pr-4 rtl:pl-11 h-12 text-base rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
+                  />
                 </div>
               </div>
 
@@ -856,7 +837,7 @@ export default function SupplyReceiptsPage() {
                 </div>
               )}
             </div>
-          </div>
+            </div>
 
             {/* Mobile Filters Drawer */}
             <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
