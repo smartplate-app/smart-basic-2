@@ -402,39 +402,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         className={`bg-white shadow-2xl overflow-hidden flex flex-col w-full ${viewMode === 'mobile' ? 'max-w-[430px] rounded-t-2xl sm:rounded-2xl max-h-[95dvh]' : 'max-w-5xl rounded-t-2xl sm:rounded-xl max-h-[92dvh] sm:max-h-[90vh]'}`}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-gray-900">{t('order_preview')}</h2>
-            {effectiveTotal > 0 && (
-              <div className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold text-sm">
-                ₪{formattedTotal}
-              </div>
-            )}
-            <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
-              <Button
-                variant={viewMode === 'mobile' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('mobile')}
-                className="gap-2"
-              >
-                <Smartphone className="w-4 h-4" />
-                {safeT('mobile','מובייל','Mobile')}
-              </Button>
-              <Button
-                variant={viewMode === 'desktop' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('desktop')}
-                className="gap-2"
-              >
-                <Monitor className="w-4 h-4" />
-                {safeT('desktop','דסקטופ','Desktop')}
-              </Button>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
+
 
         <div className="flex-1 bg-gray-100 p-2 sm:p-4 overflow-auto flex justify-center">
           <div className={`order-preview-embed not-prose bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden ${viewMode === 'mobile' ? 'w-full max-w-sm' : 'w-full'}`}>
