@@ -1479,19 +1479,19 @@ export default function OrdersPage() {
                 </Select>
 
                 {datePreset === 'custom' && (
-                  <div className="flex items-center gap-1.5 px-2 ml-1 border-l border-gray-200 rtl:border-l-0 rtl:border-r rtl:mr-1 animate-in fade-in zoom-in duration-200">
+                  <div className="flex items-center gap-1.5 px-2 ml-1 border-l border-gray-200 rtl:border-l-0 rtl:border-r rtl:mr-1 animate-in fade-in zoom-in duration-200 flex-shrink-0">
                     <Input
                       type="date"
                       value={dateStart}
                       onChange={(e) => setDateStart(e.target.value)}
-                      className="h-11 md:h-8 w-32 px-2 text-sm bg-white border-transparent shadow-sm rounded-md"
+                      className="h-11 md:h-8 w-[135px] px-2 text-sm bg-white border-transparent shadow-sm rounded-md flex-shrink-0"
                     />
                     <span className="text-gray-400">-</span>
                     <Input
                       type="date"
                       value={dateEnd}
                       onChange={(e) => setDateEnd(e.target.value)}
-                      className="h-11 md:h-8 w-32 px-2 text-sm bg-white border-transparent shadow-sm rounded-md"
+                      className="h-11 md:h-8 w-[135px] px-2 text-sm bg-white border-transparent shadow-sm rounded-md flex-shrink-0"
                     />
                   </div>
                 )}
