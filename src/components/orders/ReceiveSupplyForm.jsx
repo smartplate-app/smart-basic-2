@@ -813,7 +813,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
   const addManualItem = () => {
     setFormData(prev => {
-      const newItems = [...prev.verified_items, {
+      const newItem = {
         item_id: "", // New items have no existing item_id
         item_name: "",
         ordered_quantity: 0,
@@ -832,7 +832,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         price_after_discount: 0,
         request_credit_quantity: false,
         request_credit_price: false
-      }];
+      };
+      const newItems = [newItem, ...prev.verified_items];
       const { calculatedTotal, totalsMatch } = recalculateTotals(newItems, prev.invoice_total);
       return { ...prev, verified_items: newItems, calculated_total: calculatedTotal, totals_match: totalsMatch };
     });
