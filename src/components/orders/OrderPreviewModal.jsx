@@ -102,85 +102,91 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       tempContainer.style.left = '-9999px';
       tempContainer.style.top = '0';
       tempContainer.style.width = '430px'; // Mobile width ratio
-      tempContainer.style.background = 'white';
-      tempContainer.style.padding = '40px';
+      tempContainer.style.background = '#f9fafb';
+      tempContainer.style.padding = '32px';
       tempContainer.style.fontFamily = 'system-ui, sans-serif';
       tempContainer.style.direction = language === 'he' ? 'rtl' : 'ltr';
 
       // Build the order HTML
       tempContainer.innerHTML = `
-        <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 32px; text-align: center; border-radius: 16px 16px 0 0; margin: -40px -40px 20px -40px;">
-          <h1 style="font-size: 28px; font-weight: bold; margin: 0 0 8px 0;">
-            ${language === 'he' ? 'הזמנה' : 'Order'} #${ensuredNumber}
-          </h1>
-          <p style="font-size: 16px; opacity: 0.9; margin: 0;">
-            ${language === 'he' ? 'ספק:' : 'Supplier:'} ${order.supplier_name}
-          </p>
-          ${order.delivery_date ? `<p style="font-size: 14px; margin: 8px 0 0 0; opacity: 0.95;">📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</p>` : ''}
-        </div>
-
-        <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e2e8f0;">
-          <h2 style="font-size: 18px; font-weight: bold; color: #1e293b; margin: 0 0 12px 0;">
-            ${language === 'he' ? 'פרטי העסק' : 'Business Details'}
-          </h2>
-          <p style="margin: 8px 0; font-size: 16px;"><strong>🏢 ${order.restaurant_name}</strong></p>
-          ${order.restaurant_address ? `<p style="margin: 8px 0; font-size: 14px; color: #64748b;">📍 ${order.restaurant_address}</p>` : ''}
-        </div>
-
-        <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #fbbf24; text-align: center;">
-          <p style="margin: 0; font-size: 16px; font-weight: 600; color: #92400e;">
-            📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : (language === 'he' ? 'לא צוין' : 'Not specified')}
-          </p>
-        </div>
-
-        <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #22c55e;">
-          <h2 style="font-size: 18px; font-weight: bold; color: #15803d; margin: 0 0 16px 0;">
-            📋 ${language === 'he' ? 'רשימת מוצרים' : 'Items List'}
-          </h2>
-          <div style="background: white; border-radius: 8px; overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background: #f9fafb;">
-                  <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">#</th>
-                  <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'מוצר' : 'Item'}</th>
-                  <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'כמות' : 'Qty'}</th>
-                  <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'יחידה' : 'Unit'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(order.items || []).map((item, index) => `
-                  <tr style="background: ${index % 2 === 0 ? 'white' : '#f9fafb'};">
-                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
-                    <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">
-                      ${item.item_name}
-                      ${item.catalog_number ? `<br/><span style="font-size:12px; color:#6b7280; font-weight:normal;">${language === 'he' ? 'מק"ט:' : 'SKU:'} ${item.catalog_number}</span>` : ''}
-                    </td>
-                    <td style="padding: 12px; font-weight: 600; color: #059669; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.unit}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
+        <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);">
+          <div style="background: white; color: #111827; padding: 24px 16px 16px; text-align: center; border-bottom: 1px solid #f3f4f6;">
+            <h1 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.025em; word-break: break-word;">
+              ${order.supplier_name}
+            </h1>
+            <div style="display: inline-block; background: #f3f4f6; padding: 4px 12px; border-radius: 9999px; font-size: 14px; color: #4b5563; font-weight: 500;">
+              ${language === 'he' ? 'הזמנה' : 'Order'} <span dir="ltr" style="display: inline-block;">#${ensuredNumber}</span>
+            </div>
           </div>
-        </div>
+          
+          <div style="padding: 24px;">
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; font-size: 15px; color: #4b5563;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>${language === 'he' ? 'מאת:' : 'From:'}</span>
+                <span style="font-weight: 600; color: #111827;">${order.restaurant_name}</span>
+              </div>
+              ${order.restaurant_address ? `
+              <div style="display: flex; justify-content: space-between;">
+                <span>${language === 'he' ? 'כתובת:' : 'Address:'}</span>
+                <span style="font-weight: 500; color: #111827;">${order.restaurant_address}</span>
+              </div>` : ''}
+              ${order.delivery_date ? `
+              <div style="display: flex; justify-content: space-between;">
+                <span>${language === 'he' ? 'תאריך אספקה:' : 'Delivery:'}</span>
+                <span style="font-weight: 500; color: #111827;">${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+              </div>` : ''}
+            </div>
 
-         <div style="background: #ecfeff; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #06b6d4; text-align: center;">
-           <p style="margin: 0; font-size: 18px; font-weight: 700; color: #0e7490;">
-             ${language === 'he' ? 'סה״כ הזמנה:' : 'Order Total:'} ₪${formattedTotal}
-           </p>
-         </div>
+            <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 24px;">
+              <div style="padding: 12px 16px; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                <h2 style="font-size: 14px; font-weight: 600; color: #4b5563; margin: 0; text-transform: uppercase;">
+                  ${language === 'he' ? 'פריטים' : 'Items'}
+                </h2>
+              </div>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tbody>
+                  ${(order.items || []).map((item, index) => `
+                    <tr style="border-bottom: ${index < (order.items || []).length - 1 ? '1px solid #f3f4f6' : 'none'};">
+                      <td style="padding: 12px 16px; width: 30px; color: #9ca3af; font-size: 13px;">${index + 1}</td>
+                      <td style="padding: 12px 0; font-weight: 500; color: #111827; font-size: 15px;">
+                        ${item.item_name}
+                        ${item.catalog_number ? `<div style="font-size: 12px; color: #6b7280; font-weight: normal; margin-top: 2px;">${language === 'he' ? 'מק"ט:' : 'SKU:'} ${item.catalog_number}</div>` : ''}
+                      </td>
+                      <td style="padding: 12px 16px; text-align: ${language === 'he' ? 'left' : 'right'};">
+                        <div style="display: inline-flex; align-items: baseline; gap: 4px;">
+                          <span style="font-weight: 700; color: #111827; font-size: 15px;">${item.quantity}</span>
+                          <span style="color: #6b7280; font-size: 13px;">${item.unit}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
 
-         ${order.notes ? `
-        <div style="background: #fef7cd; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #f59e0b;">
-          <h3 style="font-size: 16px; font-weight: bold; color: #92400e; margin: 0 0 8px 0;">
-            📝 ${language === 'he' ? 'הערות' : 'Notes'}
-          </h3>
-          <p style="margin: 0; color: #78350f;">${order.notes}</p>
-        </div>
-        ` : ''}
+            ${formattedTotal && effectiveTotal > 0 ? `
+            <div style="padding: 16px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+              <span style="font-size: 15px; font-weight: 600; color: #4b5563;">
+                ${language === 'he' ? 'סה״כ לתשלום' : 'Total Amount'}
+              </span>
+              <span style="font-size: 20px; font-weight: 800; color: #111827;">
+                ₪${formattedTotal}
+              </span>
+            </div>` : ''}
 
-        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-          <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
+            ${order.notes ? `
+            <div style="background: #fffbeb; border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid #fde68a;">
+              <h3 style="font-size: 13px; font-weight: 600; color: #92400e; margin: 0 0 6px 0; text-transform: uppercase;">
+                ${language === 'he' ? 'הערות להזמנה' : 'Notes'}
+              </h3>
+              <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.5;">${order.notes}</p>
+            </div>
+            ` : ''}
+
+            <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+              <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
+            </div>
+          </div>
         </div>
       `;
 
@@ -276,78 +282,84 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             tempContainer.style.direction = language === 'he' ? 'rtl' : 'ltr';
 
             tempContainer.innerHTML = `
-              <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; padding: 32px; text-align: center; border-radius: 16px 16px 0 0; margin: -40px -40px 20px -40px;">
-                <h1 style="font-size: 32px; font-weight: bold; margin: 0 0 8px 0;">
-                  ${order.supplier_name}
-                </h1>
-                <p style="font-size: 16px; opacity: 0.9; margin: 0;">
-                  ${language === 'he' ? 'הזמנה' : 'Order'} #${ensuredNumber}
-                </p>
-                ${order.delivery_date ? `<p style="font-size: 14px; margin: 8px 0 0 0; opacity: 0.95;">📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</p>` : ''}
-              </div>
-
-              <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #e2e8f0;">
-                <h2 style="font-size: 18px; font-weight: bold; color: #1e293b; margin: 0 0 12px 0;">
-                  ${language === 'he' ? 'פרטי העסק' : 'Business Details'}
-                </h2>
-                <p style="margin: 8px 0; font-size: 16px;"><strong>🏢 ${order.restaurant_name}</strong></p>
-                ${order.restaurant_address ? `<p style="margin: 8px 0; font-size: 14px; color: #64748b;">📍 ${order.restaurant_address}</p>` : ''}
-              </div>
-
-              <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #fbbf24; text-align: center;">
-                <p style="margin: 0; font-size: 16px; font-weight: 600; color: #92400e;">
-                  📅 ${language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : (language === 'he' ? 'לא צוין' : 'Not specified')}
-                </p>
-              </div>
-
-              <div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #22c55e;">
-                <h2 style="font-size: 18px; font-weight: bold; color: #15803d; margin: 0 0 16px 0;">
-                  📋 ${language === 'he' ? 'רשימת מוצרים' : 'Items List'}
-                </h2>
-                <div style="background: white; border-radius: 8px; overflow: hidden;">
-                  <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                      <tr style="background: #f9fafb;">
-                        <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">#</th>
-                        <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'מוצר' : 'Item'}</th>
-                        <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'כמות' : 'Qty'}</th>
-                        <th style="padding: 12px; text-align: ${language === 'he' ? 'right' : 'left'}; border-bottom: 1px solid #e5e7eb;">${language === 'he' ? 'יחידה' : 'Unit'}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${(order.items || []).map((item, index) => `
-                        <tr style="background: ${index % 2 === 0 ? 'white' : '#f9fafb'};">
-                          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${index + 1}</td>
-                          <td style="padding: 12px; font-weight: 500; border-bottom: 1px solid #e5e7eb;">
-                      ${item.item_name}
-                      ${item.catalog_number ? `<br/><span style="font-size:12px; color:#6b7280; font-weight:normal;">${language === 'he' ? 'מק"ט:' : 'SKU:'} ${item.catalog_number}</span>` : ''}
-                    </td>
-                          <td style="padding: 12px; font-weight: 600; color: #059669; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
-                          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.unit}</td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
+              <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);">
+                <div style="background: white; color: #111827; padding: 24px 16px 16px; text-align: center; border-bottom: 1px solid #f3f4f6;">
+                  <h1 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.025em; word-break: break-word;">
+                    ${order.supplier_name}
+                  </h1>
+                  <div style="display: inline-block; background: #f3f4f6; padding: 4px 12px; border-radius: 9999px; font-size: 14px; color: #4b5563; font-weight: 500;">
+                    ${language === 'he' ? 'הזמנה' : 'Order'} <span dir="ltr" style="display: inline-block;">#${ensuredNumber}</span>
+                  </div>
                 </div>
-              </div>
+                
+                <div style="padding: 24px;">
+                  <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; font-size: 14px; color: #4b5563;">
+                    <div style="display: flex; justify-content: space-between;">
+                      <span>${language === 'he' ? 'מאת:' : 'From:'}</span>
+                      <span style="font-weight: 600; color: #111827;">${order.restaurant_name}</span>
+                    </div>
+                    ${order.restaurant_address ? `
+                    <div style="display: flex; justify-content: space-between;">
+                      <span>${language === 'he' ? 'כתובת:' : 'Address:'}</span>
+                      <span style="font-weight: 500; color: #111827;">${order.restaurant_address}</span>
+                    </div>` : ''}
+                    ${order.delivery_date ? `
+                    <div style="display: flex; justify-content: space-between;">
+                      <span>${language === 'he' ? 'תאריך אספקה:' : 'Delivery:'}</span>
+                      <span style="font-weight: 500; color: #111827;">${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+                    </div>` : ''}
+                  </div>
 
-               <div style="background: #ecfeff; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #06b6d4; text-align: center;">
-                 <p style="margin: 0; font-size: 18px; font-weight: 700; color: #0e7490;">
-                   ${language === 'he' ? 'סה״כ הזמנה:' : 'Order Total:'} ₪${formattedTotal}
-                 </p>
-               </div>
+                  <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 20px;">
+                    <div style="padding: 10px 14px; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                      <h2 style="font-size: 13px; font-weight: 600; color: #4b5563; margin: 0; text-transform: uppercase;">
+                        ${language === 'he' ? 'פריטים' : 'Items'}
+                      </h2>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <tbody>
+                        ${(order.items || []).map((item, index) => `
+                          <tr style="border-bottom: ${index < (order.items || []).length - 1 ? '1px solid #f3f4f6' : 'none'};">
+                            <td style="padding: 10px 14px; width: 20px; color: #9ca3af; font-size: 12px;">${index + 1}</td>
+                            <td style="padding: 10px 0; font-weight: 500; color: #111827; font-size: 14px;">
+                              ${item.item_name}
+                              ${item.catalog_number ? `<div style="font-size: 11px; color: #6b7280; font-weight: normal; margin-top: 2px;">${language === 'he' ? 'מק"ט:' : 'SKU:'} ${item.catalog_number}</div>` : ''}
+                            </td>
+                            <td style="padding: 10px 14px; text-align: ${language === 'he' ? 'left' : 'right'};">
+                              <div style="display: inline-flex; align-items: baseline; gap: 4px;">
+                                <span style="font-weight: 700; color: #111827; font-size: 14px;">${item.quantity}</span>
+                                <span style="color: #6b7280; font-size: 12px;">${item.unit}</span>
+                              </div>
+                            </td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </div>
 
-               ${order.notes ? `
-              <div style="background: #fef7cd; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 2px solid #f59e0b;">
-                <h3 style="font-size: 16px; font-weight: bold; color: #92400e; margin: 0 0 8px 0;">
-                  📝 ${language === 'he' ? 'הערות' : 'Notes'}
-                </h3>
-                <p style="margin: 0; color: #78350f;">${order.notes}</p>
-              </div>
-              ` : ''}
+                  ${formattedTotal && effectiveTotal > 0 ? `
+                  <div style="padding: 16px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <span style="font-size: 15px; font-weight: 600; color: #4b5563;">
+                      ${language === 'he' ? 'סה״כ לתשלום' : 'Total Amount'}
+                    </span>
+                    <span style="font-size: 20px; font-weight: 800; color: #111827;">
+                      ₪${formattedTotal}
+                    </span>
+                  </div>` : ''}
 
-              <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-                <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
+                  ${order.notes ? `
+                  <div style="background: #fffbeb; border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid #fde68a;">
+                    <h3 style="font-size: 13px; font-weight: 600; color: #92400e; margin: 0 0 6px 0; text-transform: uppercase;">
+                      ${language === 'he' ? 'הערות להזמנה' : 'Notes'}
+                    </h3>
+                    <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.5;">${order.notes}</p>
+                  </div>
+                  ` : ''}
+
+                  <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+                    <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
+                  </div>
+                </div>
               </div>
             `;
 
@@ -387,7 +399,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 50 }}
-        className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-5xl w-full max-h-[92dvh] sm:max-h-[90vh] overflow-hidden flex flex-col"
+        className={`bg-white shadow-2xl overflow-hidden flex flex-col w-full ${viewMode === 'mobile' ? 'max-w-[430px] rounded-t-2xl sm:rounded-2xl max-h-[95dvh]' : 'max-w-5xl rounded-t-2xl sm:rounded-xl max-h-[92dvh] sm:max-h-[90vh]'}`}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
@@ -423,151 +436,142 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </Button>
         </div>
 
-        <div className="flex-1 bg-gray-100 p-4 overflow-auto">
-          <div className={`order-preview-embed not-prose mx-auto bg-white shadow-lg ${viewMode === 'mobile' ? 'max-w-[375px]' : 'w-full'}`}>
-            <div className={`${viewMode === 'mobile' ? 'min-h-[667px]' : 'min-h-[600px]'} w-full relative`}>
+        <div className="flex-1 bg-gray-100 p-2 sm:p-4 overflow-auto flex justify-center">
+          <div className={`order-preview-embed not-prose bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden ${viewMode === 'mobile' ? 'w-full max-w-sm' : 'w-full'}`}>
+            <div className="w-full relative">
               <div style={{
-                  background: '#ffffff',
+                  background: '#f9fafb', // matching main app background
                   fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
                   direction: language === 'he' ? 'rtl' : 'ltr',
-                  padding: '16px',
+                  padding: '12px',
                   minHeight: '100%'
               }}>
                   <div style={{
-                      maxWidth: '430px', // Mobile width ratio
+                      maxWidth: '100%', 
                       margin: '0 auto',
                       backgroundColor: 'white',
-                      borderRadius: '16px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                      borderRadius: '12px',
+                      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
                       overflow: 'hidden',
                       border: '1px solid #e5e7eb'
                   }}>
                       {/* Header */}
                       <div style={{
-                          background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                          color: 'white',
-                          padding: '24px 16px',
-                          textAlign: 'center'
+                          background: 'white',
+                          color: '#111827',
+                          padding: '20px 16px 16px',
+                          textAlign: 'center',
+                          borderBottom: '1px solid #f3f4f6'
                       }}>
-                          <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px 0', wordBreak: 'break-word', overflowWrap: 'break-word', letterSpacing: '-0.025em' }}>
                               {order.supplier_name}
                           </h1>
-                          <p style={{ fontSize: '16px', opacity: 0.9, margin: 0 }}>
+                          <div style={{ display: 'inline-block', background: '#f3f4f6', padding: '4px 12px', borderRadius: '9999px', fontSize: '14px', color: '#4b5563', fontWeight: '500' }}>
                               {language === 'he' ? 'הזמנה' : 'Order'} <span dir="ltr" style={{ display: 'inline-block' }}>#{fallbackNumber}</span>
-                          </p>
-                          {order.delivery_date && (
-                            <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.95 }}>
-                              📅 {language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} {new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
-                            </p>
-                          )}
+                          </div>
                       </div>
 
                       {/* Content */}
                       <div style={{ padding: '24px' }}>
-                          {/* Business Info */}
+                          {/* Meta Details */}
                           <div style={{
-                              backgroundColor: '#f8fafc',
-                              borderRadius: '12px',
-                              padding: '20px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '8px',
                               marginBottom: '20px',
-                              border: '2px solid #e2e8f0'
+                              fontSize: '14px',
+                              color: '#4b5563'
                           }}>
-                              <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b', margin: '0 0 12px 0' }}>
-                                  {language === 'he' ? 'פרטי העסק' : 'Business Details'}
-                              </h2>
-                              <p style={{ margin: '8px 0', fontSize: '16px' }}>
-                                  <strong>🏢 {order.restaurant_name}</strong>
-                              </p>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>{language === 'he' ? 'מאת:' : 'From:'}</span>
+                                  <span style={{ fontWeight: '600', color: '#111827' }}>{order.restaurant_name}</span>
+                              </div>
                               {order.restaurant_address && (
-                                  <p style={{ margin: '8px 0', fontSize: '14px', color: '#64748b' }}>
-                                      📍 {order.restaurant_address}
-                                  </p>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                      <span>{language === 'he' ? 'כתובת:' : 'Address:'}</span>
+                                      <span style={{ fontWeight: '500', color: '#111827', textAlign: language === 'he' ? 'left' : 'right' }}>{order.restaurant_address}</span>
+                                  </div>
                               )}
-                          </div>
-
-                          {/* Delivery Date */}
-                          <div style={{
-                              backgroundColor: '#fef3c7',
-                              borderRadius: '12px',
-                              padding: '16px',
-                              marginBottom: '20px',
-                              border: '2px solid #fbbf24',
-                              textAlign: 'center'
-                          }}>
-                              <p style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#92400e' }}>
-                                  📅 {language === 'he' ? 'תאריך אספקה:' : 'Delivery Date:'} {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US') : (language === 'he' ? 'לא צוין' : 'Not specified')}
-                              </p>
+                              {order.delivery_date && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                      <span>{language === 'he' ? 'תאריך אספקה:' : 'Delivery:'}</span>
+                                      <span style={{ fontWeight: '500', color: '#111827' }}>{new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+                                  </div>
+                              )}
                           </div>
 
                           {/* Items List */}
                           <div style={{
-                              backgroundColor: '#f0fdf4',
+                              backgroundColor: 'white',
                               borderRadius: '12px',
-                              padding: '20px',
+                              padding: '0',
                               marginBottom: '20px',
-                              border: '2px solid #22c55e'
+                              border: '1px solid #e5e7eb',
+                              overflow: 'hidden'
                           }}>
-                              <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#15803d', margin: '0 0 16px 0' }}>
-                                  📋 {language === 'he' ? 'רשימת מוצרים' : 'Items List'}
-                              </h2>
-                              
-                              <div style={{ backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden' }}>
-                                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                      <thead>
-                                          <tr style={{ backgroundColor: '#f9fafb' }}>
-                                              <th style={{ padding: '12px', textAlign: language === 'he' ? 'right' : 'left', borderBottom: '1px solid #e5e7eb' }}>#</th>
-                                              <th style={{ padding: '12px', textAlign: language === 'he' ? 'right' : 'left', borderBottom: '1px solid #e5e7eb' }}>
-                                                  {language === 'he' ? 'מוצר' : 'Item'}
-                                              </th>
-                                              <th style={{ padding: '12px', textAlign: language === 'he' ? 'right' : 'left', borderBottom: '1px solid #e5e7eb' }}>
-                                                  {language === 'he' ? 'כמות' : 'Qty'}
-                                              </th>
-                                              <th style={{ padding: '12px', textAlign: language === 'he' ? 'right' : 'left', borderBottom: '1px solid #e5e7eb' }}>
-                                                  {language === 'he' ? 'יחידה' : 'Unit'}
-                                              </th>
+                              <div style={{ padding: '10px 14px', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                                  <h2 style={{ fontSize: '13px', fontWeight: '600', color: '#4b5563', margin: '0', textTransform: 'uppercase' }}>
+                                      {language === 'he' ? 'פריטים' : 'Items'}
+                                  </h2>
+                              </div>
+                              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                  <tbody>
+                                      {order.items && order.items.map((item, index) => (
+                                          <tr key={index} style={{ borderBottom: index < order.items.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+                                              <td style={{ padding: '10px 14px', width: '20px', color: '#9ca3af', fontSize: '12px' }}>{index + 1}</td>
+                                              <td style={{ padding: '10px 0', fontWeight: '500', color: '#111827', fontSize: '14px' }}>
+                                                  {item.item_name || item.item || item.name}
+                                                  {item.catalog_number && (
+                                                      <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 'normal', marginTop: '2px' }}>
+                                                          {language === 'he' ? 'מק"ט:' : 'SKU:'} {item.catalog_number}
+                                                      </div>
+                                                  )}
+                                              </td>
+                                              <td style={{ padding: '10px 14px', textAlign: language === 'he' ? 'left' : 'right' }}>
+                                                  <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px' }}>
+                                                      <span style={{ fontWeight: '700', color: '#111827', fontSize: '14px' }}>{item.quantity}</span>
+                                                      <span style={{ color: '#6b7280', fontSize: '12px' }}>{item.unit}</span>
+                                                  </div>
+                                              </td>
                                           </tr>
-                                      </thead>
-                                      <tbody>
-                                          {order.items && order.items.map((item, index) => (
-                                              <tr key={index} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#f9fafb' }}>
-                                                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{index + 1}</td>
-                                                  <td style={{ padding: '12px', fontWeight: '500', borderBottom: '1px solid #e5e7eb' }}>
-                                                      {item.item_name || item.item || item.name}
-                                                      {item.catalog_number && (
-                                                          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 'normal', marginTop: '2px' }}>
-                                                              {language === 'he' ? 'מק"ט:' : 'SKU:'} {item.catalog_number}
-                                                          </div>
-                                                      )}
-                                                  </td>
-                                                  <td style={{ padding: '12px', fontWeight: '600', color: '#059669', borderBottom: '1px solid #e5e7eb' }}>{item.quantity}</td>
-                                                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{item.unit}</td>
-                                              </tr>
-                                          ))}
-                                      </tbody>
-                                  </table>
-                                  </div>
-                                  {formattedTotal && effectiveTotal > 0 && (
-                                  <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#dcfce7', borderRadius: '8px', border: '1px solid #16a34a', textAlign: 'center' }}>
-                                      <span style={{ fontSize: '18px', fontWeight: 700, color: '#166534' }}>
-                                          {language === 'he' ? 'סה״כ הזמנה:' : 'Order Total:'} ₪{formattedTotal}
-                                      </span>
-                                  </div>
-                                  )}
-                                  </div>
+                                      ))}
+                                  </tbody>
+                              </table>
+                          </div>
+
+                          {formattedTotal && effectiveTotal > 0 && (
+                          <div style={{ 
+                              padding: '16px', 
+                              backgroundColor: '#f9fafb', 
+                              borderRadius: '12px', 
+                              border: '1px solid #e5e7eb', 
+                              display: 'flex', 
+                              justifyContent: 'space-between', 
+                              alignItems: 'center',
+                              marginBottom: '24px'
+                          }}>
+                              <span style={{ fontSize: '15px', fontWeight: 600, color: '#4b5563' }}>
+                                  {language === 'he' ? 'סה״כ לתשלום' : 'Total Amount'}
+                              </span>
+                              <span style={{ fontSize: '20px', fontWeight: 800, color: '#111827' }}>
+                                  ₪{formattedTotal}
+                              </span>
+                          </div>
+                          )}
 
                           {/* Notes */}
                           {order.notes && (
                               <div style={{
-                                  backgroundColor: '#fef7cd',
+                                  backgroundColor: '#fffbeb',
                                   borderRadius: '12px',
                                   padding: '16px',
-                                  marginBottom: '20px',
-                                  border: '2px solid #f59e0b'
+                                  marginBottom: '24px',
+                                  border: '1px solid #fde68a'
                               }}>
-                                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#92400e', margin: '0 0 8px 0' }}>
-                                      📝 {language === 'he' ? 'הערות' : 'Notes'}
+                                  <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#92400e', margin: '0 0 6px 0', textTransform: 'uppercase' }}>
+                                      {language === 'he' ? 'הערות להזמנה' : 'Notes'}
                                   </h3>
-                                  <p style={{ margin: 0, color: '#78350f' }}>{order.notes}</p>
+                                  <p style={{ margin: 0, color: '#78350f', fontSize: '14px', lineHeight: '1.5' }}>{order.notes}</p>
                               </div>
                           )}
 
@@ -582,7 +586,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 p-3 sm:p-4 pt-3 pb-8 sm:pb-4 border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+        <div className="flex flex-col gap-2 p-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+24px)] border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
           <div className="flex gap-2 w-full">
             <Button
               onClick={async () => {

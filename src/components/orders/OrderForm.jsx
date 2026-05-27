@@ -501,7 +501,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           </div>
         )}
 
-        <div className="space-y-1 sm:space-y-2 mt-2 pb-32">
+        <div className="space-y-1 sm:space-y-2 mt-2 pb-40">
           <Label htmlFor="notes" className="text-xs sm:text-sm">{t('notes')}</Label>
           <Input
             id="notes"
@@ -512,7 +512,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           />
         </div>
         
-        <div className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 pt-3 pb-8 md:pb-0 shadow-[0_-8px_15px_rgba(0,0,0,0.08)] md:sticky md:bottom-0 md:bg-transparent md:border-none md:p-0 md:shadow-none ${cartPreviewOpen ? 'top-0 flex flex-col pt-safe md:top-auto md:pt-0' : ''}`}>
+        <div className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-[0_-8px_15px_rgba(0,0,0,0.08)] md:sticky md:bottom-0 md:bg-white md:border-t-0 md:px-0 md:pt-4 md:pb-4 md:shadow-none ${cartPreviewOpen ? 'top-0 flex flex-col pt-safe md:top-auto md:pt-4 md:h-auto' : ''}`}>
           <div className={`flex flex-col gap-2 max-w-4xl mx-auto w-full ${cartPreviewOpen ? 'flex-1 h-full' : ''}`}>
             {cartPreviewOpen ? (
               <div className="flex flex-col gap-2 h-full">
