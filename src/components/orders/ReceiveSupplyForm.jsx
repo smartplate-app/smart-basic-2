@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info, Eye } from "lucide-react";
+import { Loader, Upload, X, Scan, AlertTriangle, TrendingUp, TrendingDown, Plus, RefreshCw, PackageCheck, Trash2, FileText, Camera, Receipt, Package, BarChart3, RefreshCcw, Info, Eye, Download } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -1004,14 +1004,19 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
               {(formData.supplier_id || receipt) && (
                 <>
                   {!receipt && openOrders.length > 0 && (
-                    <div className="space-y-2 mt-4 bg-orange-50/50 p-4 rounded-xl border border-orange-200">
-                      <Label className="text-orange-800 font-bold text-base flex items-center gap-2">
-                        <PackageCheck className="w-5 h-5" />
-                        {language === 'he' ? 'הזמנות פתוחות לספק זה (ניתן לסמן מספר הזמנות)' : 'Open orders for this supplier (can select multiple)'}
-                      </Label>
-                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
+                    <div className="space-y-3 mt-4 bg-gray-50/50 p-4 rounded-xl border border-gray-200 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-gray-800 font-bold text-base flex items-center gap-2">
+                          <PackageCheck className="w-5 h-5 text-gray-500" />
+                          {language === 'he' ? 'הזמנות פתוחות לספק זה' : 'Open orders for this supplier'}
+                        </Label>
+                        <span className="text-xs text-gray-500">
+                          {language === 'he' ? '(ניתן לסמן מספר הזמנות)' : '(Select multiple)'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-2">
                         {openOrders.map(o => (
-                          <label key={o.id} className={`flex items-center justify-between gap-2 text-sm p-3 rounded-lg border cursor-pointer transition-colors ${selectedOpenOrderIds.includes(o.id) ? 'bg-orange-100 border-orange-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
+                          <label key={o.id} className={`flex items-center justify-between gap-2 text-sm p-3 rounded-lg border cursor-pointer transition-colors ${selectedOpenOrderIds.includes(o.id) ? 'bg-[#d4a373]/10 border-[#d4a373]' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <input
                                 type="checkbox"
@@ -1020,24 +1025,27 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   const checked = e.target.checked;
                                   setSelectedOpenOrderIds(prev => checked ? [...prev, o.id] : prev.filter(id => id !== o.id));
                                 }}
-                                className="rounded w-5 h-5 accent-orange-600 shrink-0"
+                                className="rounded w-5 h-5 accent-[#d4a373] shrink-0"
                               />
                               <div className="flex flex-col min-w-0">
-                                <span 
-                                  className="font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-1.5 transition-colors truncate"
-                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewOrder(o); }}
-                                >
-                                  <Eye className="w-4 h-4 shrink-0" /> <span className="truncate">{o.order_number}</span>
+                                <span className="font-bold text-gray-800 flex items-center gap-1.5 transition-colors truncate">
+                                  <span className="truncate">{o.order_number}</span>
                                 </span>
                                 <span className="text-gray-500 text-xs mt-0.5">{new Date(o.created_date || o.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
                               </div>
                             </div>
-                            <span className="text-green-600 font-bold shrink-0 ml-2 rtl:mr-2 rtl:ml-0">₪{(o.total_cost || 0).toFixed(2)}</span>
+                            <div className="flex items-center gap-3 shrink-0 ml-2 rtl:mr-2 rtl:ml-0">
+                              <span className="text-gray-700 font-bold">₪{(o.total_cost || 0).toFixed(2)}</span>
+                              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewOrder(o); }}>
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </label>
                         ))}
                       </div>
                       {selectedOpenOrderIds.length > 0 && (
-                        <Button type="button" onClick={handleLoadItemsFromOrders} className="w-full mt-2 bg-orange-600 hover:bg-orange-700 text-white">
+                        <Button type="button" onClick={handleLoadItemsFromOrders} className="w-full mt-3 bg-[#d4a373] hover:bg-[#b88c60] text-white">
+                          <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
                           {language === 'he' ? `משוך פריטים מ-${selectedOpenOrderIds.length} הזמנות נבחרות` : `Load items from ${selectedOpenOrderIds.length} selected orders`}
                         </Button>
                       )}
