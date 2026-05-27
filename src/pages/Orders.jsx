@@ -749,159 +749,16 @@ export default function OrdersPage() {
   const handleSendNow = async (order) => {
     if (!order) return;
 
+    // Send order via the explicit WhatsApp handler directly
+    sendOrderToWhatsApp(order, { forceImageShare: false, preOpenedWindow: null });
+    
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-    const text = `You have received a new order from "${order.restaurant_name || ''}"\n\n*${safeT('order_number', 'מספר הזמנה', 'Order')}:* ${ensuredNumber}`;
     
     // Always mark as sent and send email in the background (if supplier has email)
     base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
     try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
 
-    const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
-    if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-      console.log('Order email sent to supplier in background');
-    }
-
-    // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
-    let file = pregeneratedShareFile;
-    let pngBlob = pregeneratedPngBlob;
-
-    // Immediately try to share to preserve user gesture on iOS/Android
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-    let shareSuccess = false;
-
-    if (navigator.share && isMobile) {
-      try {
-        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: `You have received a new order from "${order.restaurant_name || ''}"`,
-            text: text
-          });
-          shareSuccess = true;
-        } else {
-          await navigator.share({
-            title: `You have received a new order from "${order.restaurant_name || ''}"`,
-            text: text
-          });
-          shareSuccess = true;
-        }
-      } catch (shareErr) {
-        console.warn('Native share failed', shareErr);
-      }
-    }
-
-    if (shareSuccess) {
-      setPreviewOrder(null);
-      if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-        setTimeout(() => {
-          alert(language === 'he' ? `ההזמנה שותפה, וגם נשלחה במקביל למייל של הספק: ${selectedSupplier.email}` : `Order shared, and also sent in parallel to supplier email: ${selectedSupplier.email}`);
-        }, 500);
-      }
-      return;
-    }
-
-    // Fallback for Desktop / if share failed
-    if (!file) {
-      const temp = document.createElement('div');
-      temp.style.position = 'fixed';
-      temp.style.left = '-9999px';
-      temp.style.top = '0';
-      temp.style.width = '430px'; // Mobile width ratio
-      temp.style.background = 'white';
-      temp.style.padding = '24px';
-      temp.style.fontFamily = 'system-ui, sans-serif';
-      temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
-      temp.innerHTML = `
-        <div style="background: linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:24px;border-radius:16px 16px 0 0;margin:-32px -32px 16px -32px;text-align:center;">
-          <div style="font-size:28px;font-weight:800;">${order.supplier_name || ''}</div>
-          <div style="opacity:.9;margin-top:4px;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
-        </div>
-        <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
-          <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
-          ${order.restaurant_address ? `<div style="color:#334155">${order.restaurant_address}</div>` : ''}
-          ${order.delivery_date ? `<div style="margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
-        </div>
-        <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
-          <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
-          <table style="width:100%;border-collapse:collapse;">
-            <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
-            <tbody>
-              ${(order.items || []).map((it,i)=>`<tr style="background:${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.item_name||it.name||''}${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;font-weight:normal;">${language==='he'?'מק"ט:':'SKU:'} ${it.catalog_number}</span>` : ''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.unit||''}</td></tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-          <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
-        </div>
-      `;
-      document.body.appendChild(temp);
-      try {
-        const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-        pngBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        if (blob) {
-          file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
-        }
-      } catch (e) {
-        console.warn('Failed to generate image', e);
-      } finally {
-        try { document.body.removeChild(temp); } catch {}
-      }
-    }
-    
-    if (file) {
-      let copied = false;
-      if (navigator.clipboard && window.ClipboardItem && pngBlob) {
-        try {
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              'text/plain': new Blob([text], { type: 'text/plain' }),
-              'image/png': pngBlob
-            })
-          ]);
-          copied = true;
-        } catch (err) {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': pngBlob })
-            ]);
-            copied = true;
-          } catch (err2) {
-            console.warn('Clipboard copy failed', err2);
-          }
-        }
-      }
-
-      if (copied) {
-        const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Mac/.test(navigator.userAgent);
-        const pasteKey = isMac ? 'Cmd+V' : 'Ctrl+V';
-        alert(language === 'he' 
-          ? `התמונה הועתקה! וואטסאפ ייפתח כעת, פשוט לחץ ${pasteKey} בתוך הצ'אט כדי להדביק ולשלוח.\n\n(במידה ולספק יש אימייל, ההזמנה נשלחה גם לשם במקביל)` 
-          : `Image copied! WhatsApp will open now, just press ${pasteKey} in the chat to paste and send.\n\n(If the supplier has an email, it was also sent there)`);
-        
-        const rawPhone = String(order.supplier_phone || '').trim();
-        let phone = rawPhone.replace(/[^\d+]/g, '');
-        if (phone.startsWith('+')) phone = phone.slice(1);
-        if (phone.startsWith('00')) phone = phone.slice(2);
-        
-        const waUrl = phone ? `https://wa.me/${phone}` : `https://wa.me/`;
-        window.open(waUrl, '_blank');
-      } else {
-        const url = window.URL.createObjectURL(file);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `order-${ensuredNumber}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-        if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-            alert(language === 'he' ? 'ההזמנה ירדה למכשיר ונשלחה במייל לספק.' : 'Order downloaded and sent to supplier email.');
-        }
-      }
-    }
-    
     setPreviewOrder(null);
   };
 
@@ -1028,39 +885,16 @@ export default function OrdersPage() {
     }
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
-    // In editor preview (iframe) or desktop browsers, open in a new tab to avoid wa.me X-Frame-Options blocking
-    const tryOpenChain = (urls, stepMs = 1200) => {
-      let switched = false;
-      const onHide = () => { switched = true; };
-      document.addEventListener('visibilitychange', onHide, { once: true });
-
-      const openLink = (url) => {
-        if (opts && opts.preOpenedWindow && !opts.preOpenedWindow.closed) {
-          opts.preOpenedWindow.location.href = url;
-        } else if (window.self !== window.top) {
-          window.open(url, '_blank');
-        } else {
-          try { window.location.href = url; }
-          catch { window.location.assign(url); }
-        }
-      };
-
-      const tryNext = (i) => {
-        if (i >= urls.length || switched) return;
-        openLink(urls[i]);
-        setTimeout(() => { if (!switched) tryNext(i + 1); }, stepMs);
-      };
-      tryNext(0);
-    };
-
-
-    if (isAndroid) {
-      tryOpenChain([deeplink, apiUrl, waWeb, androidIntent]);
-    } else if (isIOS) {
-      tryOpenChain([deeplink, waWeb]);
+    if (isAndroid || isIOS) {
+      // On mobile, window.open with deep links (like wa.me) can fail with "This link couldn't be opened".
+      // We must use window.location.href to trigger the universal link properly natively.
+      window.location.href = waWeb;
     } else {
-      // Desktop: use api.whatsapp.com which handles the app deep link better, then fallback to web
-      tryOpenChain([apiUrl, waWeb]);
+      if (opts && opts.preOpenedWindow && !opts.preOpenedWindow.closed) {
+        opts.preOpenedWindow.location.href = waWeb;
+      } else {
+        window.open(waWeb, '_blank', 'noopener,noreferrer');
+      }
     }
 
 
@@ -1075,52 +909,26 @@ export default function OrdersPage() {
   };
 
   const handleConfirmSendWhatsApp = async () => {
-    if (!sendOptionOrder) return;
-    const order = sendOptionOrder;
-    setShowSendOptions(false);
-    // Pre-open a tab synchronously to avoid popup blockers and iframe embedding (Firefox/Preview)
-    const isAndroid = /Android/i.test(navigator.userAgent || '');
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-    const isIframe = window.self !== window.top;
-    let preOpenedWindow = null;
-    if (!isAndroid && !isIOS || isIframe) {
-      try { preOpenedWindow = window.open('about:blank', '_blank'); } catch (_) {}
-    }
-    try {
-      const { data } = await base44.functions.invoke('markOrderSent', {
-        orderId: order.id,
-        orderNumber: order.order_number
-      });
-      const updated = data?.order || {};
-      setOrders(prev => prev.map(o => {
-        if (o.id !== (updated.id || order.id)) return o;
-        const num = updated.order_number || o.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num };
-      }));
-      try { base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id }).catch(() => {}); } catch (e) {}
-      sendOrderToWhatsApp(updated.id ? updated : order, { preOpenedWindow });
-      setPreviewOrder(null);
-      await loadData(user);
-    } catch (e) {
-      // Preview sandbox sometimes returns 404 for freshly deployed functions.
-      // Fallback: proceed to WhatsApp and update UI optimistically.
-      console.warn('markOrderSent failed, proceeding with WA fallback:', e?.message || e);
-      setOrders(prev => prev.map(o => {
-        if (o.id !== order.id) return o;
-        const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num };
-      }));
-      try { sendOrderToWhatsApp(order, { preOpenedWindow }); } catch (_) {}
-      setPreviewOrder(null);
-      // Optionally retry in background without blocking UX
-      setTimeout(() => {
-        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number })
-          .catch(() => {});
-      }, 1200);
-    } finally {
-      setSendOptionOrder(null);
-    }
-    };
+  if (!sendOptionOrder) return;
+  const order = sendOptionOrder;
+  setShowSendOptions(false);
+
+  // Fallback: proceed to WhatsApp and update UI optimistically.
+  setOrders(prev => prev.map(o => {
+    if (o.id !== order.id) return o;
+    const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
+    return { ...o, status: 'sent', order_number: num };
+  }));
+  try { sendOrderToWhatsApp(order, { preOpenedWindow: null }); } catch (_) {}
+  setPreviewOrder(null);
+  // Optionally retry in background without blocking UX
+  setTimeout(() => {
+    base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number })
+      .catch(() => {});
+  }, 1200);
+
+  setSendOptionOrder(null);
+  };
 
     const handleConfirmSendStoreNext = async () => {
       if (!sendOptionOrder) return;
