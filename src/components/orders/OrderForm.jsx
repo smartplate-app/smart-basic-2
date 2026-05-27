@@ -549,7 +549,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 
                 {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
                   <div className="flex justify-between items-center w-full mb-1 px-1">
-                    <span className="text-xl sm:text-2xl font-bold text-purple-700">
+                    <span className="text-xl sm:text-2xl font-bold text-gray-900">
                       ₪{calculateTotal().toFixed(2)}
                     </span>
                     <span className="text-sm font-semibold text-gray-700">{t('total_cost') || 'סך הכל'}</span>
@@ -557,11 +557,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 )}
                 
                 <div className="flex gap-2 w-full">
-                  <Button type="button" variant="outline" onClick={onCancel} className="h-11 w-11 shrink-0 p-0 text-gray-500 border-gray-200 rounded-xl md:h-10 md:w-auto md:px-4">
-                    <span className="md:hidden"><X className="w-5 h-5" /></span>
+                  <Button type="button" variant="outline" onClick={onCancel} className="h-10 w-10 shrink-0 p-0 text-gray-500 border-gray-200 rounded-lg md:w-auto md:px-4">
+                    <span className="md:hidden"><X className="w-4 h-4" /></span>
                     <span className="hidden md:inline">{safeT('cancel', 'ביטול', 'Cancel')}</span>
                   </Button>
-                  <Button type="submit" className="h-11 flex-1 bg-[#9333ea] hover:bg-purple-700 text-white rounded-xl font-bold text-base md:h-10 md:rounded-md px-1 shadow-sm">
+                  <Button type="submit" className="h-10 flex-1 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium text-sm md:rounded-lg px-1 shadow-sm">
                     {order ? t('update_order') : safeT('send_order', 'שלח הזמנה', 'Send Order')}
                   </Button>
                 </div>
@@ -570,15 +570,15 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               <>
                 {Object.keys(itemQuantities).some(id => itemQuantities[id] > 0) && (
                   <div className="flex justify-between items-center w-full mb-1 px-1">
-                    <span className="text-xl sm:text-2xl font-bold text-purple-700">
+                    <span className="text-xl sm:text-2xl font-bold text-gray-900">
                       ₪{calculateTotal().toFixed(2)}
                     </span>
                     <span className="text-sm font-semibold text-gray-700">{t('total_cost') || 'סך הכל'}</span>
                   </div>
                 )}
                 <div className="flex gap-2 w-full">
-                  <Button type="button" variant="outline" onClick={onCancel} className="h-11 w-11 shrink-0 p-0 text-gray-500 border-gray-200 rounded-xl md:h-10 md:w-auto md:px-4">
-                    <span className="md:hidden"><X className="w-5 h-5" /></span>
+                  <Button type="button" variant="outline" onClick={onCancel} className="h-10 w-10 shrink-0 p-0 text-gray-500 border-gray-200 rounded-lg md:w-auto md:px-4">
+                    <span className="md:hidden"><X className="w-4 h-4" /></span>
                     <span className="hidden md:inline">{safeT('cancel', 'ביטול', 'Cancel')}</span>
                   </Button>
                   <Button
@@ -611,18 +611,18 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                       const orderData = { ...currentOrder, items: orderItems, total_cost: totalCost };
                       if (onSaveDraft) onSaveDraft(orderData);
                     }}
-                    className="h-11 flex-[0.8] bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-medium text-sm md:h-10 md:rounded-md px-1 shadow-sm"
+                    className="h-10 flex-[0.8] bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg font-medium text-sm px-1 shadow-sm transition-colors"
                   >
                     {safeT('save_draft', 'טיוטה', 'Draft')}
                   </Button>
                   <Button 
                     type="button" 
                     onClick={() => setCartPreviewOpen(true)}
-                    className="h-11 flex-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-xl font-medium text-sm md:h-10 md:rounded-md px-1"
+                    className="h-10 flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium text-sm px-1 shadow-sm transition-colors"
                   >
                     {language === 'he' ? 'צפה בסל' : 'Cart'}
                   </Button>
-                  <Button type="submit" className="h-11 flex-[1.4] bg-[#9333ea] hover:bg-purple-700 text-white rounded-xl font-bold text-base md:h-10 md:rounded-md px-1 shadow-sm">
+                  <Button type="submit" className="h-10 flex-[1.4] bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium text-sm px-1 shadow-sm transition-colors">
                     {order ? t('update_order') : safeT('send_order', 'שלח הזמנה', 'Send Order')}
                   </Button>
                 </div>
