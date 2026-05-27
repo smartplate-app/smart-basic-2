@@ -1846,7 +1846,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Mobile FAB for new order */}
-      {!isViewer && (
+      {!isViewer && !showForm && (
         <Button
           onClick={() => setShowForm(true)}
           className={`fixed bottom-20 ${isRTL ? 'left-4' : 'right-4'} h-14 w-14 rounded-full shadow-lg bg-[#d4a373] hover:bg-[#b88c60] md:hidden z-40`}
