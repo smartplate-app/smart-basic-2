@@ -1273,12 +1273,12 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
 
 
-            <div className="h-24 w-full"></div>
+            <div className="h-12 w-full md:hidden"></div>
 
-            <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 p-3 md:px-8 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)] flex justify-center">
-              <div className="w-full max-w-[1200px] flex justify-end">
+            <div className="sticky bottom-[56px] md:bottom-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 p-4 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)] flex justify-center -mx-6 -mb-6 mt-4 rounded-b-xl">
+              <div className="w-full max-w-[1200px] flex justify-end px-2">
                 <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60] w-full md:w-1/3 lg:w-1/4 text-white text-base h-12 rounded-xl font-bold shadow-md" disabled={isOffline}>
-                  {count ? t('update_count') : t('save_count')}
+                  {count ? t('update_count') : (language === 'he' ? 'שמור ספירה' : t('save_count'))}
                 </Button>
               </div>
             </div>

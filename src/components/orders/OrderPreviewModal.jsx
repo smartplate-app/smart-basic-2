@@ -7,7 +7,7 @@ import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
 
-export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, hideActions = false }) {
+export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, onShare, hideActions = false }) {
   const { t, language } = useLanguage();
   const safeT = (key, he, en) => {
     const v = t(key);
@@ -572,6 +572,19 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4 ml-1.5" />}
                 {safeT('send_email', 'במייל', 'Email')}
               </Button>
+
+              {onShare && (
+                <Button
+                  onClick={onShare}
+                  variant="outline"
+                  className="flex-1 h-12 text-gray-700 border-gray-200 hover:bg-gray-50 text-[15px]"
+                  disabled={downloading || sending}
+                >
+                  <Share className="w-4 h-4 ml-1.5" />
+                  <span className="hidden sm:inline">{safeT('share', 'שתף', 'Share')}</span>
+                  <span className="sm:hidden">{safeT('share', 'שתף', 'Share')}</span>
+                </Button>
+              )}
 
               <Button
                 onClick={() => { 

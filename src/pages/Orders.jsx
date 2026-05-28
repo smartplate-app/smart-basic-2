@@ -1752,6 +1752,30 @@ export default function OrdersPage() {
           isOpen={!!previewOrder}
           onClose={() => setPreviewOrder(null)}
           onSend={() => handleSendNow(previewOrder)}
+          onShare={async () => {
+            if (navigator.share) {
+              try {
+                const shareData = {
+                  title: `Order from ${previewOrder.restaurant_name || ''}`,
+                  text: `You have received a new order from "${previewOrder.restaurant_name || ''}"\n\nOrder #${previewOrder.order_number || ''}`
+                };
+                if (pregeneratedShareFile && navigator.canShare && navigator.canShare({ files: [pregeneratedShareFile] })) {
+                  shareData.files = [pregeneratedShareFile];
+                }
+                await navigator.share(shareData);
+                
+                // After share, mark as sent
+                const num = previewOrder.order_number || `ORD-${(previewOrder.id || Date.now()).toString().slice(-8)}`;
+                base44.functions.invoke('markOrderSent', { orderId: previewOrder.id, orderNumber: num }).catch(() => {});
+                setOrders(prev => prev.map(o => o.id === previewOrder.id ? { ...o, status: 'sent', order_number: num } : o));
+                setPreviewOrder(null);
+              } catch(e) {
+                console.log('Share failed or was cancelled', e);
+              }
+            } else {
+              alert(language === 'he' ? 'שיתוף לא נתמך בדפדפן זה' : 'Sharing is not supported on this browser');
+            }
+          }}
           onSendEmail={async () => {
             const selectedSupplier = suppliers.find(s => s.name === previewOrder.supplier_name || s.id === previewOrder.supplier_id);
             if (!selectedSupplier || !selectedSupplier.email || selectedSupplier.email.trim() === '') {
