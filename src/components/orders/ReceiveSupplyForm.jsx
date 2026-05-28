@@ -1755,41 +1755,31 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             type="button" 
                             className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto font-bold"
                             onClick={async () => {
-                              const supplier = availableSuppliers.find(s => s.id === formData.supplier_id);
-                              const phone = (supplier?.phone || "").replace(/\D/g, "");
+                              const s = availableSuppliers.find(x => x.id === formData.supplier_id);
+                              const phone = (s?.phone || "").replace(/\D/g, "");
                               const creditItems = formData.verified_items.filter(i => i.request_credit_quantity || i.request_credit_price);
+                              const rName = user?.business_name || user?.acting_as_store_name || user?.store_user_store_name || user?.full_name || '';
                               let text = language === 'he' 
-                                ? `שלום, בהמשך לקבלת סחורה (חשבונית מס' ${formData.invoice_number || 'ללא מספר'}) מצאנו פערים שמצריכים זיכוי:\n\n`
-                                : `Hello, regarding receipt (Invoice #${formData.invoice_number || 'N/A'}), we found discrepancies needing credit:\n\n`;
+                                ? `שלום, בהמשך לקבלת סחורה (חשבונית מס' ${formData.invoice_number || 'ללא מספר'}) למסעדת ${rName} מצאנו פערים שמצריכים זיכוי:\n\n`
+                                : `Hello, regarding receipt (Invoice #${formData.invoice_number || 'N/A'}) to ${rName}, we found discrepancies needing credit:\n\n`;
                               creditItems.forEach(i => {
                                 text += `- ${i.item_name}:\n`;
-                                if (i.request_credit_quantity) {
-                                  text += language === 'he' ? `  הוזמן: ${i.ordered_quantity}, התקבל בפועל: ${i.received_quantity} (פער של ${i.ordered_quantity - i.received_quantity})\n` : `  Ordered: ${i.ordered_quantity}, Received: ${i.received_quantity}\n`;
-                                }
-                                if (i.request_credit_price) {
-                                  text += language === 'he' ? `  מחיר שהוזמן: ₪${i.catalog_price}, מחיר בחשבונית: ₪${i.actual_price}\n` : `  Ordered Price: ${i.catalog_price}, Invoiced: ${i.actual_price}\n`;
-                                }
+                                if (i.request_credit_quantity) text += language === 'he' ? `  הוזמן: ${i.ordered_quantity}, התקבל בפועל: ${i.received_quantity} (פער של ${i.ordered_quantity - i.received_quantity})\n` : `  Ordered: ${i.ordered_quantity}, Received: ${i.received_quantity}\n`;
+                                if (i.request_credit_price) text += language === 'he' ? `  מחיר שהוזמן: ₪${i.catalog_price}, מחיר בחשבונית: ₪${i.actual_price}\n` : `  Ordered Price: ₪${i.catalog_price}, Invoiced: ₪${i.actual_price}\n`;
                                 text += "\n";
                               });
-                              text += language === 'he' ? "אשמח לטיפולכם ולהפקת חשבונית זיכוי." : "Please process a credit invoice.";
-                              
-                              if (supplier?.email) {
+                              text += language === 'he' ? "אשמח לטיפולכם ולהפקת חשבונית זיכוי.\n\n" : "Please process a credit invoice.\n\n";
+                              text += `${rName}\nהזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n`;
+                              if (s?.email) {
                                 try {
-                                  await base44.integrations.Core.SendEmail({
-                                    to: supplier.email,
-                                    subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`,
-                                    body: text.replace(/\n/g, '<br/>')
-                                  });
-                                } catch (e) {
-                                  console.error("Failed to send email to supplier", e);
-                                }
+                                  const logoHtml = user?.restaurant_logo ? `<br/><br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;"/>` : '';
+                                  await base44.integrations.Core.SendEmail({ to: s.email, subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`, body: text.replace(/\n/g, '<br/>') + logoHtml });
+                                } catch (e) {}
                               }
-
-                              const whatsappUrl = phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
-                              window.open(whatsappUrl, '_blank');
+                              window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                             }}
                           >
-                            {language === 'he' ? 'שלח בקשת זיכוי לספק (WhatsApp)' : 'Send Credit Request (WhatsApp)'}
+                            {language === 'he' ? 'שלח בקשת זיכוי לספק (וואטסאפ ולמייל המוגדר)' : 'Send Credit Request (WhatsApp & Email)'}
                           </Button>
                         </div>
                       )}
