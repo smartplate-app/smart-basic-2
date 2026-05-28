@@ -72,7 +72,11 @@ export default function StoreLogin() {
 
     } catch (err) {
       console.error(err);
-      setError(err.message || (language === 'he' ? 'שם משתמש או סיסמה שגויים' : 'Invalid username or password'));
+      let errorMsg = err?.response?.data?.error || err.message;
+      if (errorMsg === 'Request failed with status code 401' || errorMsg === 'Invalid username or password') {
+        errorMsg = language === 'he' ? 'שם משתמש או סיסמה שגויים' : 'Invalid username or password';
+      }
+      setError(errorMsg || (language === 'he' ? 'שם משתמש או סיסמה שגויים' : 'Invalid username or password'));
     } finally {
       setLoading(false);
     }

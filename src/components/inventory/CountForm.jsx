@@ -1259,7 +1259,16 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
 
 
-            <div className="flex flex-col md:flex-row gap-3 justify-end">
+            <div className="sticky bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md p-4 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex flex-col md:flex-row gap-3 justify-end mt-6 -mx-6 -mb-6">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="absolute ltr:left-4 rtl:right-4 top-1/2 -translate-y-1/2 rounded-full bg-gray-100 hover:bg-gray-200"
+              >
+                <ArrowUp className="w-5 h-5 text-gray-600" />
+              </Button>
               <Button type="button" variant="outline" onClick={onCancel} className="w-full md:w-auto">
                 {t('cancel')}
               </Button>
