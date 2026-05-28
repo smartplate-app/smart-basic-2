@@ -1027,7 +1027,13 @@ export default function OrdersPage() {
 
         const dateStr = order.delivery_date || order.created_date || order.updated_date;
         const ds = dateStr ? new Date(dateStr) : null;
-        const dsStr = ds ? ds.toISOString().slice(0,10) : '';
+        let dsStr = '';
+        if (ds && !isNaN(ds)) {
+          const y = ds.getFullYear();
+          const m = String(ds.getMonth() + 1).padStart(2, '0');
+          const d = String(ds.getDate()).padStart(2, '0');
+          dsStr = `${y}-${m}-${d}`;
+        }
         const afterStart = !dateStart || (dsStr && dsStr >= dateStart);
         const beforeEnd = !dateEnd || (dsStr && dsStr <= dateEnd);
         const matchesDate = afterStart && beforeEnd;
@@ -1123,13 +1129,6 @@ export default function OrdersPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setFiltersOpen(true)}
-              className="md:hidden h-11 w-11 p-0 rounded-xl"
-            >
-              <CalendarIcon className="w-5 h-5" />
-            </Button>
             {!isViewer && (
               <>
                 <Button
@@ -1152,17 +1151,25 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Mobile No Order Receive */}
-        <div className="md:hidden mb-4 flex flex-col gap-3">
+        {/* Mobile No Order Receive and Filter */}
+        <div className="md:hidden mb-4 flex gap-3">
           {!isViewer && (
             <Button
               onClick={() => setShowNoOrderReceiveForm(true)}
-              className="w-full bg-[#d4a373] hover:bg-[#b88c60] text-white h-12 rounded-xl shadow-sm text-base font-bold"
+              className="flex-1 bg-[#d4a373] hover:bg-[#b88c60] text-white h-12 rounded-xl shadow-sm text-sm sm:text-base font-bold px-2"
             >
-              <PackageCheck className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0" />
-              {safeT('receive_no_order', 'קבלת אספקה ללא הזמנה', 'Receive without order')}
+              <PackageCheck className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0 flex-shrink-0" />
+              <span className="truncate">{safeT('receive_no_order', 'קבלת אספקה ללא הזמנה', 'Receive without order')}</span>
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={() => setFiltersOpen(true)}
+            className={`h-12 border-gray-200 shadow-sm rounded-xl ${isViewer ? 'flex-1' : 'w-12 p-0 flex-shrink-0 bg-white'}`}
+          >
+            <CalendarIcon className={`w-5 h-5 text-gray-700 ${isViewer ? 'ml-2 rtl:ml-2 rtl:mr-0' : ''}`} />
+            {isViewer && safeT('filter_by_date', 'סינון לפי תאריך', 'Filter by Date')}
+          </Button>
         </div>
 
         {/* Mobile quick filters */}
