@@ -203,59 +203,70 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       // Remove temp container
       document.body.removeChild(tempContainer);
 
-      // Convert to blob and try to copy to clipboard (improved: JPEG then PNG)
-      canvas.toBlob(async (jpegBlob) => {
+      // Convert to blob and try to copy to clipboard
+      canvas.toBlob(async (blob) => {
         const number = ensuredNumber;
-        const file = new File([jpegBlob], `order-${number}.jpg`, { type: 'image/jpeg' });
+        const file = new File([blob], `order-${number}.png`, { type: 'image/png' });
 
         const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
 
-        // Mobile/iPad: ALWAYS use native app chooser when available; never open browser
         if (isMobile && navigator.share) {
           try {
             if (!navigator.canShare || navigator.canShare({ files: [file] })) {
               setDownloading(false);
               await navigator.share({ 
                 files: [file], 
-                title: `You have received a new order from "${order.restaurant_name || ''}"`,
-                text: `You have received a new order from "${order.restaurant_name || ''}"`
+                title: `Order #${number}`,
+                text: language === 'he' ? `הזמנה ממסעדת ${order.restaurant_name || ''}` : `Order from ${order.restaurant_name || ''}`
               });
-              return;
-            } else {
-              // Some Safari versions can't share files — show guidance instead of sending a link
-              setDownloading(false);
-              alert(language === 'he'
-                ? 'iOS בגרסאות ישנות לא מאפשר שיתוף תמונה מהדפדפן. הוסף את האפליקציה למסך הבית או עדכן iOS כדי לשתף את התמונה ישירות.'
-                : 'Older iOS versions cannot share an image from the browser. Add the app to your Home Screen or update iOS to share the JPG directly.');
               return;
             }
           } catch (_) { /* fallthrough to download */ }
         }
 
-        // Desktop devices: save the JPG for manual attach
+        // Desktop devices: save to clipboard and open WhatsApp Web
         if (!isMobile) {
-          const url = window.URL.createObjectURL(jpegBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `order-${number}.jpg`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          a.remove();
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            // Image is copied to clipboard, ready to paste
+          } catch (err) {
+            console.error('Clipboard copy failed', err);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `order-${number}.png`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+          }
+
+          const phone = (order.supplier_phone || "").replace(/\D/g, "");
+          const whatsappUrl = phone 
+            ? `https://web.whatsapp.com/send?phone=972${phone.startsWith('0') ? phone.slice(1) : phone}` 
+            : `https://web.whatsapp.com/send`;
+          
+          window.open(whatsappUrl, '_blank');
           setDownloading(false);
           return;
         }
 
-        // Mobile without Web Share support: show guidance (no forced download to avoid browser prompt)
-        try {
-          alert(language === 'he'
-            ? 'בשיתוף דרך הדפדפן: השתמש בכפתור השיתוף של Safari (הריבוע עם החץ) כדי לבחור אפליקציה.'
-            : 'Sharing from browser: use Safari’s Share button (square with up arrow) to choose an app.');
-        } catch (_) {}
+        // Mobile without Web Share support fallback
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `order-${number}.png`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
         setDownloading(false);
         return;
-      }, 'image/jpeg', 0.95);
+
+      }, 'image/png', 1.0);
 
     } catch (err) {
       console.error('Failed to process image:', err);
@@ -577,12 +588,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 onClick={async () => {
                   await handleDownloadImage({ shareOnly: true });
                 }}
-                className="flex-[1.5] h-12 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
+                className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
               >
                 {downloading || sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <Share className="w-5 h-5 ml-1.5" />}
-                {safeT('send_message_whatsapp','וואטסאפ / הודעות','WhatsApp / Messages')}
+                {safeT('share_order', 'שתף', 'Share')}
               </Button>
             </div>
           )}
