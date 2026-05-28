@@ -1475,48 +1475,40 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
                                 <RefreshCcw className="w-3.5 h-3.5" />
-                                <span>{language === 'he' ? 'זיכוי (-)' : 'Refund (-)'}</span>
+                                <span>{language === 'he' ? 'זיכוי מספק' : 'Refund from Supplier'}</span>
                               </button>
+                              <button
+                                type="button"
+                                disabled={isReadOnly}
+                                onClick={(e) => {
+                                  const zeroVat = !formData.is_zero_vat;
+                                  setFormData(prev => ({ ...prev, is_zero_vat: zeroVat }));
+                                  const currentIncl = parseFloat(inclVatInput);
+                                  if (!isNaN(currentIncl)) {
+                                    const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+                                    const vatRate = zeroVat ? 1 : userVatMultiplier;
+                                    const newExcl = currentIncl / vatRate;
+                                    setExclVatInput(newExcl.toFixed(2));
+                                  }
+                                }}
+                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.is_zero_vat ? 'border-green-600 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                              >
+                                <span>{language === 'he' ? 'ללא מע״מ (0%)' : 'No VAT (0%)'}</span>
+                              </button>
+                              {formData.is_refund && (
+                                <button
+                                  type="button"
+                                  disabled={isReadOnly}
+                                  onClick={(e) => {
+                                    setFormData(prev => ({ ...prev, refund_received: !prev.refund_received }));
+                                  }}
+                                  className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.refund_received ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                  <span>{language === 'he' ? 'הזיכוי התקבל' : 'Credit received'}</span>
+                                </button>
+                              )}
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-4 flex-wrap">
-                          <label className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              disabled={isReadOnly}
-                              checked={!!formData.is_zero_vat}
-                              onChange={(e) => {
-                                const zeroVat = e.target.checked;
-                                setFormData(prev => ({ ...prev, is_zero_vat: zeroVat }));
-                                const currentIncl = parseFloat(inclVatInput);
-                                if (!isNaN(currentIncl)) {
-                                  const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
-                                  const vatRate = zeroVat ? 1 : userVatMultiplier;
-                                  const newExcl = currentIncl / vatRate;
-                                  setExclVatInput(newExcl.toFixed(2));
-                                }
-                              }}
-                              className="rounded accent-green-600"
-                            />
-                            <span className={formData.is_zero_vat ? 'text-green-700 font-bold' : ''}>
-                              {language === 'he' ? 'ללא מע״מ (0%)' : 'No VAT (0%)'}
-                            </span>
-                          </label>
-
-                          {formData.is_refund && (
-                            <label className="flex items-center gap-2 text-sm">
-                              <input
-                                type="checkbox"
-                                disabled={isReadOnly}
-                                checked={!!formData.refund_received}
-                                onChange={(e) => setFormData(prev => ({ ...prev, refund_received: e.target.checked }))}
-                                className="rounded"
-                              />
-                              <span>{language === 'he' ? 'זיכוי התקבל' : 'Credit received'}</span>
-                            </label>
-                          )}
-
                         </div>
                         {formData.document_type === 'summary_invoice' && (
                           <div className="mt-2 p-3 border rounded-md bg-amber-50">
@@ -1566,9 +1558,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         )}
                         {formData.is_refund && (
                           <>
-                            <Alert variant="default" className="bg-amber-50 border-amber-200 mb-2">
-                              <AlertDescription dir={language === 'he' ? 'rtl' : undefined} className={language === 'he' ? 'text-right' : ''}>{language === 'he' ? 'בקבלת זיכוי מומלץ להעלות קובץ PDF, אחרת יש לתקן את הסכום ידנית על ידי הוספת מינוס (−).' : 'For credit invoices, we recommend uploading a PDF; otherwise adjust the amount manually by prefixing a minus (−).'}</AlertDescription>
-                            </Alert>
                             <div className="mt-3">
                             <Label className="text-xs text-gray-600">{language === 'he' ? 'קשר לזיכוי פתוח / לחשבונית (אופציונלי)' : 'Link to open credit / receipt (optional)'}</Label>
                             <Select value={formData.linked_receipt_id || ''} onValueChange={(val) => setFormData(prev => ({ ...prev, linked_receipt_id: val }))} disabled={isReadOnly}>
