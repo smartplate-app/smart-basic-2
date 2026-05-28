@@ -644,21 +644,8 @@ export default function SupplyReceiptsPage() {
          </div>
 
          <div className="flex flex-col gap-3 mb-4 relative">
-            <div className={`absolute top-0 w-12 h-full bg-gradient-to-l from-gray-50 to-transparent pointer-events-none z-10 md:hidden ${isRTL ? 'left-[-16px]' : 'right-[-16px]'}`}></div>
-            <div className={`absolute top-0 w-12 h-full bg-gradient-to-r from-gray-50 to-transparent pointer-events-none z-10 md:hidden ${isRTL ? 'right-[-16px]' : 'left-[-16px]'}`}></div>
             <div 
-              className="flex flex-nowrap overflow-x-auto pb-1 gap-2 -mx-4 px-4 md:mx-0 md:px-0 snap-x" 
-              style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
-              ref={(el) => {
-                if (el && !el.dataset.scrolled) {
-                  el.dataset.scrolled = 'true';
-                  setTimeout(() => {
-                    const direction = (language === 'he' || language === 'ar') ? -50 : 50;
-                    el.scrollBy({ left: direction, behavior: 'smooth' });
-                    setTimeout(() => el.scrollBy({ left: -direction, behavior: 'smooth' }), 300);
-                  }, 600);
-                }
-              }}
+              className="flex flex-wrap justify-center pb-1 gap-2 mx-0 px-0" 
             >
               {[
                 { id: 'all', label: tt('all','הכל','All') },
@@ -672,7 +659,7 @@ export default function SupplyReceiptsPage() {
                   onClick={() => setStatusFilter(status.id)}
                   className={`flex-shrink-0 whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                     statusFilter === status.id 
-                      ? 'bg-green-600 text-white border-green-600 shadow-sm' 
+                      ? 'bg-gray-900 text-white border-gray-900 shadow-sm' 
                       : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                   }`}
                 >

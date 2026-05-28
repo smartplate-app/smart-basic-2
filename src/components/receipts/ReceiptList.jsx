@@ -342,7 +342,7 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
       </div>
 
       {/* MOBILE VIEW */}
-      <div className="md:hidden space-y-4 p-4 bg-gray-50">
+      <div className="md:hidden space-y-2 p-2 bg-gray-50">
         {loading ? (
           Array(4).fill(0).map((_, i) => (
              <div key={i} className="bg-white rounded-xl shadow-sm p-4 animate-pulse border border-gray-100">
@@ -361,28 +361,28 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
           receipts.map((r) => (
             <div
               key={r.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md cursor-pointer transition-shadow"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 hover:shadow-md cursor-pointer transition-shadow"
               onClick={() => onEdit && onEdit(r)}
             >
-              <div className="flex justify-between items-start mb-3">
+              <div className="flex justify-between items-start mb-2">
                 <div>
                   <div className="font-bold text-gray-900 text-base">{r.supplier_name || '-'}</div>
-                  <div className="text-sm text-gray-500 mt-1">{r.invoice_number || '-'}</div>
+                  <div className="text-sm text-gray-900 mt-0.5">{r.invoice_number || '-'}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-blue-700">
+                  <div className="text-lg font-bold text-gray-900">
                     {typeof r.invoice_total !== 'undefined' ? `₪${fmtCurrency(r.invoice_total)}` : '-'}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1" title={language === 'he' ? 'תאריך קבלה' : 'Received Date'}>
+                  <div className="text-xs text-gray-600 mt-0.5" title={language === 'he' ? 'תאריך קבלה' : 'Received Date'}>
                     {language === 'he' ? 'קבלה: ' : 'Rec: '}{fmtDate(r.received_date)}
                   </div>
-                  <div className="text-xs text-gray-400" title={language === 'he' ? 'תאריך חשבונית' : 'Invoice Date'}>
+                  <div className="text-xs text-gray-600" title={language === 'he' ? 'תאריך חשבונית' : 'Invoice Date'}>
                     {language === 'he' ? 'חשבונית: ' : 'Inv: '}{fmtDate(r.invoice_date)}
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <div className="flex items-center gap-1 flex-wrap">
                   {(() => {
                     const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
