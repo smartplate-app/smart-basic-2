@@ -236,7 +236,7 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
                 <Button 
                 variant="destructive" 
                 disabled={
-                (language === 'he' ? deleteConfirmationText !== 'מחיקה' : deleteConfirmationText.toLowerCase() !== 'delete')
+                (language === 'he' ? deleteConfirmationText.trim() !== 'מחיקה' : deleteConfirmationText.trim().toLowerCase() !== 'delete')
                 }
                 onClick={() => {
                 if (onDelete && deleteDialogItem) {

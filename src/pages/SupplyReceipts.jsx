@@ -481,30 +481,7 @@ export default function SupplyReceiptsPage() {
           <div className="flex gap-3 flex-wrap items-center rtl:flex-row-reverse">
             {/* Kept viewMode='list' as default, removed the toggle buttons from UI to match the clean aesthetic */}
 
-           <Button
-             variant="outline"
-             onClick={async () => {
-               const list = (sortedReceipts || []).filter(r => r.is_refund || r.needs_review);
-               if (!list.length) { alert(t('no_refund_review_found') || 'No refund/review invoices in current view.'); return; }
-               const header = ['supplier','invoice_number','received_date','amount','flags','review_note'];
-               const esc = (s) => String(s ?? '').replace(/\"/g, '\\"');
-               const rows = list.map(r => {
-                 const flags = [r.is_refund ? 'refund' : null, r.needs_review ? 'review' : null].filter(Boolean).join('|');
-                 return [r.supplier_name || '', r.invoice_number || '', r.received_date || '', (r.invoice_total ?? 0), flags, r.review_note || ''];
-               });
-               const title = `Refund_Review_${new Date().toISOString().slice(0,10)}`;
-               const { data } = await base44.functions.invoke('createRefundReviewSheet', { header, rows, title });
-               if (data?.url) {
-                 window.open(data.url, '_blank');
-               } else {
-                 alert((t('export_failed') || 'Export failed') + (data?.error ? `: ${data.error}` : ''));
-               }
-             }}
-             className="flex items-center gap-2"
-           >
-             <FileText className="w-5 h-5 ml-2" />
-             {tt('refund_review_report','דוח זיכויים/בדיקה','Refund/Review report')}
-           </Button>
+
             <Button
               onClick={() => {
                 setActiveTab('receipts'); // Switch to the tab where the form is rendered

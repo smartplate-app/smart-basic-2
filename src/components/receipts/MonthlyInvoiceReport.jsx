@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { base44 } from "@/api/base44Client";
-import { ChevronLeft, ChevronRight, ChevronDown, Search, CloudUpload, FileSpreadsheet, HardDrive, Link as LinkIcon, Send } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Search, CloudUpload, FileSpreadsheet, HardDrive, Link as LinkIcon, Send, FileText } from "lucide-react";
 
 function normalizeText(str) {
   if (!str) return '';
@@ -116,6 +116,31 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
         {/* Main Header & Actions */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex flex-wrap items-center gap-3">
+            <Button
+             variant="outline"
+             disabled={uploading}
+             onClick={async () => {
+               const list = (monthReceipts || []).filter(r => r.is_refund || r.needs_review);
+               if (!list.length) { alert(language === 'he' ? 'לא נמצאו זיכויים בחודש זה' : 'No refund/review invoices in this month.'); return; }
+               const header = ['supplier','invoice_number','received_date','amount','flags','review_note'];
+               const rows = list.map(r => {
+                 const flags = [r.is_refund ? 'refund' : null, r.needs_review ? 'review' : null].filter(Boolean).join('|');
+                 return [r.supplier_name || '', r.invoice_number || '', r.received_date || '', (r.invoice_total ?? 0), flags, r.review_note || ''];
+               });
+               const title = `Refund_Review_${month}`;
+               const { data } = await base44.functions.invoke('createRefundReviewSheet', { header, rows, title });
+               if (data?.url) {
+                 window.open(data.url, '_blank');
+               } else {
+                 alert((language === 'he' ? 'ייצוא נכשל: ' : 'Export failed: ') + (data?.error || ''));
+               }
+             }}
+             className="h-11 md:h-10 px-4 rounded-lg bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm flex items-center gap-2"
+           >
+             <FileText className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+             {language === 'he' ? 'דוח זיכוי/לבדיקה' : 'Refund/Review report'}
+           </Button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -441,8 +466,8 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                       <tr
                         key={r.id}
                         className="hover:bg-blue-50 cursor-pointer transition-colors"
-                        onDoubleClick={() => setSelected(r)}
-                        title={t('double_click_to_view') || 'Double click to view'}
+                        onClick={() => setSelected(r)}
+                        title={language === 'he' ? 'לחץ לצפייה בחשבונית' : 'Click to view'}
                       >
                         <td className="px-4 py-3 text-sm text-gray-700 align-middle">
                           <div className="font-medium">{group.supplier_name}</div>

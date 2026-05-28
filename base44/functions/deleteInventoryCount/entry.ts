@@ -14,7 +14,11 @@ Deno.serve(async (req) => {
         const isAdminImpersonating = user.role === 'admin' && user.acting_as_user_email;
         const api = isAdminImpersonating ? base44.asServiceRole.entities : base44.entities;
 
-        await api.InventoryCount.delete(countId);
+        // Use service role to bypass RLS if user is a store user (worker/manager) or admin
+        const hasServiceAccess = isAdminImpersonating || user.store_user_role;
+        const deleteApi = hasServiceAccess ? base44.asServiceRole.entities : base44.entities;
+
+        await deleteApi.InventoryCount.delete(countId);
 
         return Response.json({ success: true });
 
