@@ -577,7 +577,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
+      <Dialog open={!!selected} onOpenChange={(val) => { if (!val) setSelected(null); }}>
         <DialogContent className={`max-w-4xl w-[90vw] ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
             <DialogTitle className="text-xl border-b pb-4">

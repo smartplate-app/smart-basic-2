@@ -192,24 +192,8 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </span>
                 </div>
               </th>
-              <th className="px-4 pt-3 pb-3 text-center text-xs font-semibold text-gray-500 align-top">
-                <div className="flex flex-col gap-1.5 items-center">
-                  <span className="flex items-center justify-center h-5">{safeT('status', 'סוג מסמך', 'Type')}</span>
-                  {onStatusFilterChange && (
-                    <select 
-                      value={statusFilter || 'all'} 
-                      onChange={(e) => onStatusFilterChange(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      className={`text-[10px] h-8 rounded-lg border border-gray-200 bg-white shadow-sm focus:border-green-500 outline-none w-full max-w-[100px] text-gray-700`}
-                    >
-                      <option value="all">{language === 'he' ? 'הכל' : 'All'}</option>
-                      <option value="invoices">{language === 'he' ? 'חשבוניות' : 'Invoices'}</option>
-                      <option value="delivery_notes">{language === 'he' ? 'תעודות' : 'Deliveries'}</option>
-                      <option value="refund_invoice">{language === 'he' ? 'זיכויים' : 'Refunds'}</option>
-                      <option value="awaiting_credit">{language === 'he' ? 'ממתין' : 'Awaiting'}</option>
-                    </select>
-                  )}
-                </div>
+              <th className="px-4 pt-4 pb-3 text-center text-xs font-semibold text-gray-500 align-top">
+                <div className="flex items-center justify-center h-5">{safeT('status', 'סוג מסמך', 'Type')}</div>
               </th>
               <th className="px-4 pt-4 pb-3 text-center text-xs font-semibold text-gray-500 align-top">
                 <div className="flex items-center justify-center h-5">{safeT('files', 'קבצים', 'Files')}</div>
@@ -256,11 +240,6 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </td>
                   <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
                     {r.invoice_number || '-'}
-                    {r.order_number && (
-                      <div className="text-sm text-gray-400 mt-1">
-                        {safeT('order', 'הזמנה', 'Order')}: {r.order_number}
-                      </div>
-                    )}
                   </td>
                   <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
                     {fmtDate(r.received_date)}
