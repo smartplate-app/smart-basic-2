@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        role: 'writer',
+        role: 'reader',
         type: 'anyone'
       })
     });

@@ -184,7 +184,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             ` : ''}
 
             <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-              <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
+              <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.</p>
             </div>
           </div>
         </div>
@@ -368,7 +368,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                   ` : ''}
 
                   <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-                    <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
+                    <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.</p>
                   </div>
                 </div>
               </div>
@@ -556,7 +556,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
                           {/* Footer */}
                           <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e5e7eb', color: '#6b7280' }}>
-                              <p style={{ fontSize: '12px', margin: 0, textTransform: 'uppercase' }}>SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
+                              <p style={{ fontSize: '12px', margin: 0, textTransform: 'uppercase' }}>SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.</p>
                           </div>
                       </div>
                   </div>
