@@ -1330,21 +1330,6 @@ export default function OrdersPage() {
                   </div>
                 )}
               </div>
-              <div className="relative min-w-[160px]">
-                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-auto rtl:left-4" />
-                <Input
-                  list="supplier-list"
-                  placeholder={safeT('search_supplier', 'חיפוש ספק...', 'Search supplier...')}
-                  value={supplierFilter === 'all' ? '' : supplierFilter}
-                  onChange={(e) => setSupplierFilter(e.target.value || 'all')}
-                  className="pr-10 rtl:pr-4 rtl:pl-10 h-12 text-sm rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
-                />
-                <datalist id="supplier-list">
-                  {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
-                    <option key={name} value={name} />
-                  ))}
-                </datalist>
-              </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="h-12 w-auto min-w-[150px] rounded-2xl bg-white border-gray-200 text-gray-700 shadow-sm font-medium hover:bg-gray-50 transition-colors">
                   <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
@@ -1358,7 +1343,7 @@ export default function OrdersPage() {
               <div className="relative ml-auto rtl:ml-0 rtl:mr-auto min-w-[240px]">
                 <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 rtl:right-auto rtl:left-4" />
                 <Input
-                  placeholder={safeT('search_orders', 'חיפוש הזמנות...', 'Search orders...')}
+                  placeholder={safeT('search_orders', 'חיפוש ספק או הזמנה...', 'Search...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pr-11 rtl:pr-4 rtl:pl-11 h-12 text-base rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
