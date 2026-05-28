@@ -1572,16 +1572,30 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             <div className="mt-3">
                             <Label className="text-xs text-gray-600">{language === 'he' ? 'קשר לזיכוי פתוח / לחשבונית (אופציונלי)' : 'Link to open credit / receipt (optional)'}</Label>
                             <Select value={formData.linked_receipt_id || ''} onValueChange={(val) => setFormData(prev => ({ ...prev, linked_receipt_id: val }))} disabled={isReadOnly}>
-                              <SelectTrigger><SelectValue placeholder={language === 'he' ? 'בחר זיכוי פתוח או קבלה לקישור' : 'Select open credit or receipt'} /></SelectTrigger>
-                              <SelectContent>
-                                {(previousReceipts || []).slice(0,200).map(r => (
-                                  <SelectItem key={r.id} value={r.id}>
-                                    {r.awaiting_credit ? '🔴 ' : ''}{(r.order_number || r.invoice_number || r.id)} • {new Date(r.received_date).toLocaleDateString(language==='he'?'he-IL':'en-US')} • {r.supplier_name}{r.awaiting_credit ? (language==='he'?' (ממתין לזיכוי)':' (Awaiting Credit)') : ''}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            </div>
+                               <SelectTrigger><SelectValue placeholder={language === 'he' ? 'בחר זיכוי פתוח או קבלה לקישור' : 'Select open credit or receipt'} /></SelectTrigger>
+                               <SelectContent>
+                                 {(previousReceipts || []).slice(0,200).map(r => (
+                                   <SelectItem key={r.id} value={r.id}>
+                                     {r.awaiting_credit ? '🔴 ' : ''}{(r.invoice_number || r.order_number || r.id)} • {new Date(r.received_date).toLocaleDateString(language==='he'?'he-IL':'en-US')} • {r.supplier_name}{r.awaiting_credit ? (language==='he'?' (ממתין לזיכוי)':' (Awaiting Credit)') : ''}
+                                   </SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                             {formData.linked_receipt_id && previousReceipts.find(r => r.id === formData.linked_receipt_id)?.verified_items?.some(i => i.request_credit_quantity || i.request_credit_price) && (
+                               <div className="mt-2 p-3 bg-red-50 border border-red-100 rounded-md text-sm text-red-800">
+                                 <div className="font-bold mb-1">{language === 'he' ? 'זיכויים ממתינים בחשבונית זו:' : 'Pending credits in this invoice:'}</div>
+                                 <ul className="list-disc list-inside space-y-1">
+                                   {previousReceipts.find(r => r.id === formData.linked_receipt_id).verified_items.filter(i => i.request_credit_quantity || i.request_credit_price).map((i, idx) => (
+                                     <li key={idx} className="text-xs">
+                                       <span className="font-medium">{i.item_name}</span>: 
+                                       {i.request_credit_quantity && (language === 'he' ? ` פער כמות (הוזמן ${i.ordered_quantity}, התקבל ${i.received_quantity})` : ` Qty gap (Ord: ${i.ordered_quantity}, Rec: ${i.received_quantity})`)}
+                                       {i.request_credit_price && (language === 'he' ? ` פער מחיר (₪${i.actual_price} במקום ₪${i.catalog_price})` : ` Price gap (₪${i.actual_price} instead of ₪${i.catalog_price})`)}
+                                     </li>
+                                   ))}
+                                 </ul>
+                               </div>
+                             )}
+                             </div>
                             </>
                             )}
 

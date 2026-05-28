@@ -1172,7 +1172,19 @@ export default function OrdersPage() {
           </Button>
         </div>
 
-        {/* Mobile quick filters */}
+        {/* Mobile Search and quick filters */}
+        <div className="md:hidden mb-4 flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rtl:right-auto rtl:left-3" />
+            <Input
+              placeholder={safeT('search_supplier', 'חיפוש ספק...', 'Search supplier...')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-10 pr-9 rtl:pr-3 rtl:pl-9 bg-white border-gray-200 rounded-xl text-sm shadow-sm"
+            />
+          </div>
+        </div>
+
         <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4">
           <div className="flex gap-2 pb-1 w-max after:content-[''] after:w-4 after:flex-shrink-0 before:content-[''] before:w-4 before:flex-shrink-0">
             {['all','draft','sent'].map((s) => (
