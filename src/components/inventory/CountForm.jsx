@@ -721,35 +721,6 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col md:grid md:grid-cols-4 gap-3">
-              <div className="md:col-span-4">
-                <Select 
-                   value={currentWarehouseTab} 
-                   onValueChange={(val) => { if (val === "__create__") { handleCreateWarehouse(); return; } handleWarehouseChange(val); }}
-                 >
-                  <SelectTrigger id="warehouse" className="border-blue-300 bg-blue-50 focus:ring-blue-500 font-medium text-blue-900 h-11">
-                    <SelectValue placeholder={language === 'he' ? 'בחר מחסן...' : 'Select Warehouse...'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                     <SelectItem value="all_summary" className="font-bold text-blue-600 bg-blue-50 mb-1 border-b border-blue-100">
-                       {language === 'he' ? '📋 סיכום ספירה (כל המחסנים)' : '📋 Full Summary (All Warehouses)'}
-                     </SelectItem>
-                     {!isCompleted && <SelectItem value="__create__">+ {t('new_warehouse') || 'New Warehouse'}</SelectItem>}
-                     {warehouseOptions.map(warehouse => (
-                       <SelectItem key={warehouse.id} value={warehouse.id}>
-                        <div className="flex items-center">
-                          <span>{language === 'he' ? 'מחסן:' : 'Warehouse:'} {warehouse.name}</span>
-                          {warehouse.catalog_items && warehouse.catalog_items.length > 0 && (
-                            <Badge variant="outline" className="ml-2">
-                              {warehouse.catalog_items.length} {t('items')}
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="md:col-span-2">
                 <Input
                   id="name"
@@ -809,6 +780,35 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                   <SelectContent>
                     <SelectItem value="in_progress">{language === 'he' ? 'סטטוס:' : 'Status:'} {t('status_in_progress')}</SelectItem>
                     <SelectItem value="completed">{language === 'he' ? 'סטטוס:' : 'Status:'} {t('status_completed')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="md:col-span-4">
+                <Select 
+                   value={currentWarehouseTab} 
+                   onValueChange={(val) => { if (val === "__create__") { handleCreateWarehouse(); return; } handleWarehouseChange(val); }}
+                 >
+                  <SelectTrigger id="warehouse" className="border-blue-300 bg-blue-50 focus:ring-blue-500 font-medium text-blue-900 h-11">
+                    <SelectValue placeholder={language === 'he' ? 'בחר מחסן...' : 'Select Warehouse...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                     <SelectItem value="all_summary" className="font-bold text-blue-600 bg-blue-50 mb-1 border-b border-blue-100">
+                       {language === 'he' ? '📋 סיכום ספירה (כל המחסנים)' : '📋 Full Summary (All Warehouses)'}
+                     </SelectItem>
+                     {!isCompleted && <SelectItem value="__create__">+ {t('new_warehouse') || 'New Warehouse'}</SelectItem>}
+                     {warehouseOptions.map(warehouse => (
+                       <SelectItem key={warehouse.id} value={warehouse.id}>
+                        <div className="flex items-center">
+                          <span>{language === 'he' ? 'מחסן:' : 'Warehouse:'} {warehouse.name}</span>
+                          {warehouse.catalog_items && warehouse.catalog_items.length > 0 && (
+                            <Badge variant="outline" className="ml-2">
+                              {warehouse.catalog_items.length} {t('items')}
+                            </Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
