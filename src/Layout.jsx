@@ -1116,44 +1116,38 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .v
 
         {/* Mobile Bottom Tab Bar */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 border-t dark:border-[#1e2a55] bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur pb-safe z-40 dark:backdrop-blur-0">
-          <div className={'grid grid-cols-5 text-xs ' + (isRTL ? 'text-right' : 'text-center')}>
-            <button onClick={() => setShowHelpChat(!showHelpChat)} className={'flex flex-col items-center py-2 ' + (showHelpChat ? 'text-green-600' : 'text-green-600')}>
-              <div className="bg-green-100 rounded-full p-1 mb-0.5">
-                <MessageCircle className="h-4 w-4" />
-              </div>
-              <span>{language === 'he' ? 'עוזר' : 'Help'}</span>
-            </button>
-            <Link 
-              to={createPageUrl('Dashboard')} 
-              onClick={(e) => { if (location.pathname === createPageUrl('Dashboard') || location.pathname === createPageUrl('Dashboard') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
-              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Dashboard') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
-            >
-              <BarChart2 className="h-5 w-5" />
-              <span>{language === 'he' ? 'דשבורד' : 'Dashboard'}</span>
-            </Link>
+          <div className={'grid grid-cols-4 text-xs ' + (isRTL ? 'text-right' : 'text-center')}>
             <Link 
               to={createPageUrl('Orders')} 
               onClick={(e) => { if (location.pathname === createPageUrl('Orders') || location.pathname === createPageUrl('Orders') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
               className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Orders') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="h-5 w-5 mb-1" />
               <span>{language === 'he' ? 'הזמנות' : 'Orders'}</span>
             </Link>
             <Link 
-              to={createPageUrl('Suppliers')} 
-              onClick={(e) => { if (location.pathname === createPageUrl('Suppliers') || location.pathname === createPageUrl('Suppliers') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
-              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('Suppliers') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
+              to={createPageUrl('MonthlyCount')} 
+              onClick={(e) => { if (location.pathname === createPageUrl('MonthlyCount') || location.pathname === createPageUrl('MonthlyCount') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('MonthlyCount') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
             >
-              <Users className="h-5 w-5" />
-              <span>{language === 'he' ? 'ספקים' : 'Suppliers'}</span>
+              <Warehouse className="h-5 w-5 mb-1" />
+              <span>{language === 'he' ? 'ספירות' : 'Counts'}</span>
             </Link>
             <Link 
-              to={createPageUrl('UserProfile')} 
-              onClick={(e) => { if (location.pathname === createPageUrl('UserProfile') || location.pathname === createPageUrl('UserProfile') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
-              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('UserProfile') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
+              to={createPageUrl('LaborCost')} 
+              onClick={(e) => { if (location.pathname === createPageUrl('LaborCost') || location.pathname === createPageUrl('LaborCost') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('LaborCost') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
             >
-              <UserCircle className="h-5 w-5" />
-              <span>{language === 'he' ? 'פרופיל' : 'Profile'}</span>
+              <Users className="h-5 w-5 mb-1" />
+              <span>{language === 'he' ? 'סידור' : 'Schedule'}</span>
+            </Link>
+            <Link 
+              to={createPageUrl('InventoryTransfers')} 
+              onClick={(e) => { if (location.pathname === createPageUrl('InventoryTransfers') || location.pathname === createPageUrl('InventoryTransfers') + '/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+              className={'flex flex-col items-center py-2 ' + (location.pathname.includes('InventoryTransfers') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
+            >
+              <ArrowLeftRight className="h-5 w-5 mb-1" />
+              <span>{language === 'he' ? 'העברות מלאי' : 'Transfers'}</span>
             </Link>
           </div>
         </nav>
