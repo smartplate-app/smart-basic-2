@@ -63,7 +63,7 @@ export default function SupplyReceiptsPage() {
     const s = t(key);
     return (!s || s === key) ? (language?.startsWith('he') ? he : (en || key)) : s;
   };
-  const [activeTab, setActiveTab] = useState('pending_orders');
+  const [activeTab, setActiveTab] = useState('receipts');
   const [viewMode, setViewMode] = useState('list');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const startYRef = useRef(0);
@@ -525,7 +525,7 @@ export default function SupplyReceiptsPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} dir={isRTL ? "rtl" : "ltr"}>
           <TabsList className="mb-2 bg-white/50 border border-gray-200 rounded-2xl p-1 shadow-sm h-auto inline-flex flex-wrap gap-1">
-            <TabsTrigger value="pending_orders">{language === 'he' ? 'הזמנות לקליטה' : 'Pending Orders'}</TabsTrigger>
+            <TabsTrigger value="pending_orders" className="hidden">{language === 'he' ? 'הזמנות לקליטה' : 'Pending Orders'}</TabsTrigger>
             <TabsTrigger value="receipts">{tt('receipts_tab','היסטוריית קבלות','Receipts History')}</TabsTrigger>
             <TabsTrigger value="monthly_report">{tt('monthly_summary','סיכום חודשי','Monthly Summary')}</TabsTrigger>
           </TabsList>
