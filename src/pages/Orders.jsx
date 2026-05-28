@@ -1348,8 +1348,8 @@ export default function OrdersPage() {
 
               return (
                 <div key={section} className="mb-6">
-                  <h3 className="font-bold text-gray-700 mb-3 px-1">{sectionTitle} ({sectionOrders.length})</h3>
-                  <div className="space-y-4">
+                  <h3 className="font-bold text-gray-700 mb-2 px-2 text-sm">{sectionTitle} ({sectionOrders.length})</h3>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
                     {sectionOrders.map((order) => {
                       const statusColors = {
                         sent: "bg-blue-50 text-blue-700 border-blue-200",
@@ -1362,77 +1362,67 @@ export default function OrdersPage() {
                       };
 
                       return (
-                        <Card 
+                        <div 
                           key={order.id} 
-                          className="p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                          className="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
                           onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
                         >
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-bold text-gray-900 flex items-center gap-2">
-                          {order.supplier_name}
-                          {!isViewer && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => { e.stopPropagation(); handleResend(order); }}
-                              className="h-7 w-7 text-gray-400 hover:text-gray-900 rounded-full"
-                              title={safeT('share','שתף','Share')}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                            </Button>
-                          )}
+                          {/* Right side (RTL) - Supplier & Cost */}
+                          <div className="flex flex-col flex-1 min-w-0 pr-1">
+                            <span className="font-bold text-gray-900 text-sm truncate">{order.supplier_name}</span>
+                            <span className="text-sm font-bold text-green-600 mt-0.5">₪{(order.total_cost || 0).toFixed(2)}</span>
+                          </div>
+
+                          {/* Center - Status/Action */}
+                          <div className="flex flex-col items-center flex-shrink-0 px-2">
+                            {!isViewer && order.status === 'sent' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                                className="text-green-700 border-green-200 bg-green-50 hover:bg-green-100 rounded-full h-8 px-3 text-xs shadow-none"
+                              >
+                                <PackageCheck className="w-3 h-3 rtl:ml-1 ltr:mr-1" />
+                                {safeT('receive_scan', 'קלוט', 'Receive')}
+                              </Button>
+                            ) : (
+                              <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
+                                {statusLabels[order.status] || order.status}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Left side (RTL) - Date & Actions */}
+                          <div className="flex flex-col items-end flex-shrink-0 min-w-[70px]">
+                            <span className="text-xs text-gray-500 mb-1 font-medium">
+                              {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '-'}
+                            </span>
+                            <div className="flex items-center -mr-2 rtl:-ml-2 rtl:mr-0">
+                              {!isViewer && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => { e.stopPropagation(); handleResend(order); }}
+                                  className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full"
+                                >
+                                  <Share className="w-4 h-4" />
+                                </Button>
+                              )}
+                              {!isViewer && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
+                                  className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-full"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500">{order.order_number || '—'}</div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
-                          {statusLabels[order.status] || order.status}
-                        </span>
-                        {!isViewer && order.status === 'sent' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
-                            className="text-green-700 border-green-200 bg-green-50/50 hover:bg-green-100 rounded-full h-7 px-3 text-xs"
-                          >
-                            <PackageCheck className="w-3 h-3 rtl:ml-1 ltr:mr-1" />
-                            {safeT('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {order.delivery_date && (
-                      <div className="text-sm text-gray-600">
-                        {safeT('delivery_date','תאריך אספקה','Delivery date')}: {new Date(order.delivery_date).toLocaleDateString('he-IL')}
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center pt-2 border-t">
-                      <div>
-                        <span className="text-sm text-gray-600">{safeT('total_cost','עלות כוללת','Total cost')}:</span>
-                        <span className="text-lg font-bold text-green-600 mx-2">₪{(order.total_cost || 0).toFixed(2)}</span>
-                      </div>
-                      
-                      {!isViewer && (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
-                            className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-full"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
+                      );
+                    })}
                   </div>
                 </div>
               );
