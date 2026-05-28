@@ -1519,9 +1519,9 @@ export default function OrdersPage() {
 
                 {datePreset === 'custom' && (
                   <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-200">
-                    <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} className="h-11 rounded-lg flex-1" />
+                    <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateStart} onChange={(e)=>setDateStart(e.target.value)} onPointerDown={(e)=>e.stopPropagation()} onClick={(e)=>e.stopPropagation()} className="h-11 rounded-lg flex-1" />
                     <span className="text-gray-500">–</span>
-                    <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} className="h-11 rounded-lg flex-1" />
+                    <Input type="date" lang={language === 'he' ? 'he-IL' : undefined} value={dateEnd} onChange={(e)=>setDateEnd(e.target.value)} onPointerDown={(e)=>e.stopPropagation()} onClick={(e)=>e.stopPropagation()} className="h-11 rounded-lg flex-1" />
                   </div>
                 )}
               </div>
