@@ -1556,9 +1556,9 @@ export default function OrdersPage() {
 
         {/* Desktop View */}
         {!showForm && (
-        <div className="hidden md:block bg-white rounded-3xl shadow-sm border border-gray-100 relative">
-          <div className="overflow-x-auto overflow-y-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-3xl">
-            <table className="w-full relative">
+        <div className="hidden md:block bg-white rounded-3xl shadow-sm border border-gray-100 relative" dir={isRTL ? "rtl" : "ltr"}>
+          <div className="overflow-x-auto overflow-y-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-3xl" dir={isRTL ? "rtl" : "ltr"}>
+            <table className="w-full relative" dir={isRTL ? "rtl" : "ltr"}>
               <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
                 <tr>
                   <th className="px-6 py-5 text-left rtl:text-right text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">

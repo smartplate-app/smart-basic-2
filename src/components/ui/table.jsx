@@ -1,15 +1,22 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/components/LanguageProvider"
 
-const Table = React.forwardRef(({ className, wrapperClassName, ...props }, ref) => (
-  <div className={cn("relative w-full overflow-auto", wrapperClassName)}>
-    <table
-      ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
-      {...props} />
-  </div>
-))
+const Table = React.forwardRef(({ className, wrapperClassName, ...props }, ref) => {
+  const { language } = useLanguage()
+  const isRTL = language === 'he' || language === 'ar'
+  
+  return (
+    <div className={cn("relative w-full overflow-auto", wrapperClassName)} dir={isRTL ? "rtl" : "ltr"}>
+      <table
+        ref={ref}
+        className={cn("w-full caption-bottom text-sm", className)}
+        dir={isRTL ? "rtl" : "ltr"}
+        {...props} />
+    </div>
+  )
+})
 Table.displayName = "Table"
 
 const TableHeader = React.forwardRef(({ className, ...props }, ref) => (
@@ -48,7 +55,7 @@ const TableHead = React.forwardRef(({ className, ...props }, ref) => (
   <th
     ref={ref}
     className={cn(
-      "h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "h-10 px-2 text-start align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props} />
@@ -59,7 +66,7 @@ const TableCell = React.forwardRef(({ className, ...props }, ref) => (
   <td
     ref={ref}
     className={cn(
-      "p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "p-2 align-middle text-start [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
     {...props} />
