@@ -1484,14 +1484,14 @@ export default function OrdersPage() {
         </div>
         )}
 
-        {/* Mobile Filters Drawer */}
-        <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>{safeT('filter_by_date', 'סינון לפי תאריך', 'Filter by Date')}</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4 space-y-4">
-              <div className="flex flex-col gap-2">
+        {/* Mobile Filters Dialog */}
+        <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <DialogContent className="w-[92vw] max-w-md rounded-3xl p-0 overflow-hidden">
+            <DialogHeader className="p-5 pb-4 border-b border-gray-100 bg-gray-50/50">
+              <DialogTitle className="text-xl font-bold">{safeT('filter_by_date', 'סינון לפי תאריך', 'Filter by Date')}</DialogTitle>
+            </DialogHeader>
+            <div className="p-5 space-y-5">
+              <div className="flex flex-col gap-3">
                 <Select
                   value={datePreset}
                   onValueChange={(v) => {
@@ -1549,10 +1549,10 @@ export default function OrdersPage() {
                   </div>
                 )}
               </div>
-              <Button onClick={() => setFiltersOpen(false)} className="w-full bg-[#d4a373] hover:bg-[#b88c60] text-white">{safeT('apply', 'החל', 'Apply')}</Button>
+              <Button onClick={() => setFiltersOpen(false)} className="w-full h-12 text-base font-bold bg-[#d4a373] hover:bg-[#b88c60] text-white rounded-xl shadow-sm mt-4">{safeT('apply', 'החל', 'Apply')}</Button>
             </div>
-          </DrawerContent>
-        </Drawer>
+          </DialogContent>
+        </Dialog>
 
         {/* Desktop View */}
         {!showForm && (
