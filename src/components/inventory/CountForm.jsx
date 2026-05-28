@@ -1053,36 +1053,17 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       {finalDisplayedItems.map((item, index) => {
                         const originalItem = items.find(i => i.id === item.item_id);
                         return (
-                          <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="py-3 border-b border-gray-100 flex items-start gap-3 px-1">
-                            {!isCompleted && currentWarehouseTab !== "all_summary" && (
-                              <button 
-                                type="button"
-                                className="mt-1 text-gray-300 hover:text-red-500 shrink-0 p-1"
-                                onClick={() => removeItem(item.item_id, item.warehouse_id)}
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            )}
-                            
+                          <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="py-3 border-b border-gray-100 flex items-center gap-3 px-1">
                             <div className="flex-1 min-w-0 flex flex-col">
                                <span className="font-medium text-sm text-gray-900 leading-tight">
                                  {originalItem?.nickname || item.item_name}
                                </span>
                                <span className="text-[11px] text-gray-500 mt-0.5">
-                                 {item.unit} <span className="mx-1 text-gray-300">|</span> ₪{Number(item.price_per_unit || 0).toFixed(2)}
+                                 {item.unit}
+                                 {currentWarehouseTab === "all_summary" && (
+                                   <> <span className="mx-1 text-gray-300">|</span> ₪{Number(item.price_per_unit || 0).toFixed(2)}</>
+                                 )}
                                </span>
-                               
-                               {currentWarehouseTab !== "all_summary" ? (
-                                 <Input 
-                                   value={item.notes || ''} 
-                                   onChange={(e) => updateItemNotes(item.item_id, item.warehouse_id, e.target.value)}
-                                   placeholder={language === 'he' ? 'הערות...' : 'Notes...'}
-                                   className="h-8 text-[11px] mt-2 bg-gray-50 border-gray-200 w-full"
-                                   disabled={isCompleted}
-                                 />
-                               ) : item.notes ? (
-                                 <span className="text-[11px] text-gray-500 mt-1 truncate">{item.notes}</span>
-                               ) : null}
                             </div>
                             
                             <div className="flex flex-col items-end shrink-0 w-[95px] md:w-[120px]">
@@ -1274,16 +1255,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               </div>
             )}
 
-            <div>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder={language === 'he' ? 'תיאור / הערות לספירה...' : 'Description / Notes...'}
-                className="h-20"
-                disabled={isCompleted}
-              />
-            </div>
+
 
             {/* Offline save banner */}
             {(isOffline || hasDraft) && (
