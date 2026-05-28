@@ -1390,7 +1390,7 @@ export default function OrdersPage() {
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
                     {sectionOrders.map((order) => {
                       const statusColors = {
-                        sent: "bg-blue-50 text-blue-700 border-blue-200",
+                        sent: "bg-white text-gray-900 border-gray-200 shadow-sm",
                         draft: "bg-yellow-50 text-yellow-700 border-yellow-200"
                       };
 
@@ -1656,7 +1656,7 @@ export default function OrdersPage() {
                         </td>
                         <td className="px-6 py-5 text-left rtl:text-right align-middle">
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border border-gray-200 bg-white shadow-sm ${order.status === 'sent' ? 'text-blue-600' : 'text-gray-700'}`}>
+                            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border border-gray-200 bg-white shadow-sm ${order.status === 'sent' ? 'text-gray-900' : 'text-gray-700'}`}>
                               {statusLabels[order.status] || order.status}
                               {order.status === 'draft' && <span className="ml-2 rtl:mr-2 rtl:ml-0">✓</span>}
                             </span>
