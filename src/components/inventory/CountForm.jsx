@@ -65,6 +65,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const isSubmittedRef = React.useRef(false);
   const formDataRef = React.useRef(formData);
   const [dbSavedAt, setDbSavedAt] = useState(null);
+  
+  const isCompleted = formData.status === 'completed';
 
   useEffect(() => {
     formDataRef.current = formData;
@@ -666,7 +668,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                      <SelectItem value="all_summary" className="font-bold text-blue-600 bg-blue-50 mb-1 border-b border-blue-100">
                        {language === 'he' ? '📋 סיכום ספירה (כל המחסנים)' : '📋 Full Summary (All Warehouses)'}
                      </SelectItem>
-                     <SelectItem value="__create__">+ {t('new_warehouse') || 'New Warehouse'}</SelectItem>
+                     {!isCompleted && <SelectItem value="__create__">+ {t('new_warehouse') || 'New Warehouse'}</SelectItem>}
                      {warehouseOptions.map(warehouse => (
                        <SelectItem key={warehouse.id} value={warehouse.id}>
                         <div className="flex items-center">
@@ -690,6 +692,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder={language === 'he' ? 'שם ספירה (למשל: סוף חודש דצמבר)' : 'Count Name (e.g., December month-end)'}
                   className="h-11"
+                  disabled={isCompleted}
                 />
               </div>
 
@@ -704,6 +707,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     value={formData.count_date}
                     onChange={(e) => setFormData(prev => ({ ...prev, count_date: e.target.value }))}
                     className="h-11 rtl:pr-12 ltr:pl-12"
+                    disabled={isCompleted}
                   />
                 </div>
               </div>
@@ -713,6 +717,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                   id="count_type"
                   value={formData.count_type}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, count_type: value }))}
+                  disabled={isCompleted}
                 >
                   <SelectTrigger className="h-11 w-full">
                     <SelectValue placeholder={t('count_type')} />
@@ -766,7 +771,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                           <Button
                             type="button"
                             onClick={handleSaveToWarehouseCatalog}
-                            disabled={savingCatalog}
+                            disabled={savingCatalog || isCompleted}
                             className="bg-cyan-600 hover:bg-cyan-700 w-full md:w-auto"
                           >
                             {savingCatalog ? (
@@ -808,7 +813,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                         )}
                       </div>
                       
-                      {currentWarehouseTab !== "all_summary" && (
+                      {!isCompleted && currentWarehouseTab !== "all_summary" && (
                         <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
                           <Popover open={isSearchFocused} onOpenChange={(open) => {
                             setIsSearchFocused(open);
@@ -984,7 +989,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                         const originalItem = items.find(i => i.id === item.item_id);
                         return (
                           <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="py-3 border-b border-gray-100 flex items-start gap-3 px-1">
-                            {currentWarehouseTab !== "all_summary" && (
+                            {!isCompleted && currentWarehouseTab !== "all_summary" && (
                               <button 
                                 type="button"
                                 className="mt-1 text-gray-300 hover:text-red-500 shrink-0 p-1"
@@ -1008,6 +1013,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                    onChange={(e) => updateItemNotes(item.item_id, item.warehouse_id, e.target.value)}
                                    placeholder={language === 'he' ? 'הערות...' : 'Notes...'}
                                    className="h-8 text-[11px] mt-2 bg-gray-50 border-gray-200 w-full"
+                                   disabled={isCompleted}
                                  />
                                ) : item.notes ? (
                                  <span className="text-[11px] text-gray-500 mt-1 truncate">{item.notes}</span>
@@ -1031,6 +1037,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                         className="w-full h-10 text-center font-bold text-sm md:text-base border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900 px-0.5"
                                         placeholder={language === 'he' ? 'ארגז' : 'Case'}
                                         title={language === 'he' ? 'ארגזים' : 'Cases'}
+                                        disabled={isCompleted}
                                       />
                                       <Input
                                         type="number"
@@ -1041,6 +1048,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                         className="w-full h-10 text-center font-bold text-sm md:text-base border-emerald-300 focus:border-emerald-600 focus:ring-emerald-600 shadow-sm hide-arrows bg-emerald-50/40 text-emerald-900 px-0.5"
                                         placeholder={language === 'he' ? 'יח\'' : 'Unit'}
                                         title={language === 'he' ? 'יחידות' : 'Units'}
+                                        disabled={isCompleted}
                                       />
                                     </div>
                                   ) : (
@@ -1052,6 +1060,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                       onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
                                       className="w-full h-10 text-center font-bold text-lg border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900"
                                       placeholder="0"
+                                      disabled={isCompleted}
                                     />
                                   )
                                )}
@@ -1117,6 +1126,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                           className="w-full h-9 md:h-10 px-1 md:px-2 text-center text-sm md:text-base border-blue-300 focus:border-blue-600 bg-blue-50/40 text-blue-900 hide-arrows"
                                           placeholder={language === 'he' ? 'ארגזים' : 'Cases'}
                                           title={language === 'he' ? 'ארגזים' : 'Cases'}
+                                          disabled={isCompleted}
                                         />
                                         <span className="text-gray-400 font-light">+</span>
                                         <Input
@@ -1128,6 +1138,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                           className="w-full h-9 md:h-10 px-1 md:px-2 text-center text-sm md:text-base border-emerald-300 focus:border-emerald-600 bg-emerald-50/40 text-emerald-900 hide-arrows"
                                           placeholder={language === 'he' ? 'יחידות' : 'Units'}
                                           title={language === 'he' ? 'יחידות בודדות' : 'Loose units'}
+                                          disabled={isCompleted}
                                         />
                                       </div>
                                     ) : (
@@ -1138,6 +1149,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                         value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
                                         onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
                                         className="w-20 md:w-24 h-9 md:h-10 px-2 md:px-3 text-center text-sm md:text-base hide-arrows"
+                                        disabled={isCompleted}
                                       />
                                     )
                                   )}
@@ -1158,11 +1170,12 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                       onChange={(e) => updateItemNotes(item.item_id, item.warehouse_id, e.target.value)}
                                       placeholder={t('notes')}
                                       className="w-full min-w-[100px] md:min-w-[150px] h-9 md:h-10 text-xs md:text-sm"
+                                      disabled={isCompleted}
                                     />
                                   )}
                                 </TableCell>
                                 <TableCell className="px-2 py-3 md:px-4 md:py-4">
-                                  {currentWarehouseTab !== "all_summary" && (
+                                  {!isCompleted && currentWarehouseTab !== "all_summary" && (
                                     <Button
                                       type="button"
                                       variant="ghost"
@@ -1203,6 +1216,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder={language === 'he' ? 'תיאור / הערות לספירה...' : 'Description / Notes...'}
                 className="h-20"
+                disabled={isCompleted}
               />
             </div>
 
