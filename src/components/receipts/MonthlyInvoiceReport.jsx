@@ -578,38 +578,38 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
       </Dialog>
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
+        <DialogContent className={`max-w-4xl w-[90vw] ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle>
-              {(t('invoice') || 'Invoice') + ': '}{selected?.invoice_number || '-'} • {selected?.supplier_name || ''}
+            <DialogTitle className="text-xl border-b pb-4">
+              {(t('invoice') || 'Invoice')} {selected?.invoice_number || '-'} <span className="text-gray-400 font-normal mx-2">•</span> {selected?.supplier_name || ''}
             </DialogTitle>
           </DialogHeader>
           {selected && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-6 text-sm bg-gray-50/50 p-4 rounded-xl border border-gray-100">
                 <div>
-                  <div className="text-gray-600">{t('invoice_date') || 'Date'}</div>
-                  <div className="font-medium">{moment(selected.invoice_date || selected.received_date).format('DD/MM/YYYY')}</div>
+                  <div className="text-gray-500 text-xs mb-1">{t('invoice_date') || 'Date'}</div>
+                  <div className="font-medium text-base text-gray-900">{moment(selected.invoice_date || selected.received_date).format('DD/MM/YYYY')}</div>
                 </div>
                 <div>
-                  <div className="text-gray-600">{t('invoice_total') || 'Total'}</div>
-                  <div className="font-bold text-emerald-700">₪{Number(selected.invoice_total || 0).toFixed(2)}</div>
+                  <div className="text-gray-500 text-xs mb-1">{t('invoice_total') || 'Total'}</div>
+                  <div className="font-bold text-gray-900 text-base">₪{Number(selected.invoice_total || 0).toFixed(2)}</div>
                 </div>
               </div>
 
               {Array.isArray(selected.receipt_images) && selected.receipt_images.length > 0 ? (
-                <div>
-                  <div className="text-sm font-semibold mb-2">{t('scanned_images') || 'Scanned Images'}</div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {selected.receipt_images.map((url, idx) => (
-                      <a key={idx} href={url} target="_blank" rel="noreferrer" className="block">
-                        <img src={url} alt={`Receipt ${idx + 1}`} className="w-full h-32 object-cover rounded border" />
-                      </a>
-                    ))}
-                  </div>
+                <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] pr-2 rounded-xl">
+                  {selected.receipt_images.map((url, idx) => {
+                     const isPdfUrl = typeof url === 'string' && /\.pdf(?:$|\?)/i.test(url);
+                     if (isPdfUrl) {
+                       return <iframe key={idx} src={url} className="w-full h-[65vh] border border-gray-200 shadow-sm rounded-xl" title={`Receipt ${idx + 1}`} />;
+                     } else {
+                       return <img key={idx} src={url} alt={`Receipt ${idx + 1}`} className="w-full h-auto max-h-[70vh] object-contain rounded-xl border border-gray-200 shadow-sm bg-gray-50" />;
+                     }
+                  })}
                 </div>
               ) : (
-                <div className="text-sm text-gray-500">{t('no_scanned_images') || 'No scanned images available.'}</div>
+                <div className="text-sm text-gray-500 py-12 text-center bg-gray-50 rounded-xl border border-gray-100">{t('no_scanned_images') || 'No scanned images available.'}</div>
               )}
             </div>
           )}

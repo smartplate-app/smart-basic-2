@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText, Check, ChevronsUpDown } from "lucide-react";
+import { Plus, Search, Loader, PackageCheck, AlertTriangle, Trash2, List, LayoutGrid, FileText, Check, ChevronsUpDown, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -636,11 +636,95 @@ export default function SupplyReceiptsPage() {
 
 
 
-            {/* Mobile Filters Drawer trigger */}
-         <div className="md:hidden mb-4">
-           <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
-             {tt('filters','מסננים ומיון','Filters & Sort')}
-           </Button>
+            {/* Mobile Actions: Search & Date Filter */}
+         <div className="md:hidden flex items-center gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder={tt('search_receipts','חיפוש קבלות...','Search receipts')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-9 rtl:pr-9 rtl:pl-3 h-11 text-sm rounded-xl bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
+              />
+            </div>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className={`h-11 w-11 shrink-0 rounded-xl bg-white shadow-sm border-gray-200 ${datePreset !== 'all' ? 'text-green-600 border-green-200 bg-green-50' : 'text-gray-600 hover:bg-gray-50'}`}>
+                  <Calendar className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-4 rounded-2xl shadow-xl" align="end">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 text-sm">{tt('timeframe','סנן לפי תאריך','Filter by date')}</h4>
+                  <Select
+                      value={datePreset}
+                      onValueChange={(v) => {
+                        setDatePreset(v);
+                        const now = new Date();
+                        if (v === 'week') {
+                          const s = new Date(now);
+                          const dow = s.getDay();
+                          s.setDate(s.getDate() - dow);
+                          s.setHours(0,0,0,0);
+                          const e = new Date(s);
+                          e.setDate(s.getDate() + 6);
+                          e.setHours(23,59,59,999);
+                          setDateFrom(s.toISOString().slice(0,10));
+                          setDateTo(e.toISOString().slice(0,10));
+                        } else if (v === 'month') {
+                          const s = new Date(now.getFullYear(), now.getMonth(), 1);
+                          const e = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                          setDateFrom(s.toISOString().slice(0,10));
+                          setDateTo(e.toISOString().slice(0,10));
+                        } else if (v === 'year') {
+                          const s = new Date(now.getFullYear(), 0, 1);
+                          const e = new Date(now.getFullYear(), 11, 31);
+                          setDateFrom(s.toISOString().slice(0,10));
+                          setDateTo(e.toISOString().slice(0,10));
+                        } else if (v === 'last_year') {
+                          const s = new Date(now.getFullYear() - 1, 0, 1);
+                          const e = new Date(now.getFullYear() - 1, 11, 31);
+                          setDateFrom(s.toISOString().slice(0,10));
+                          setDateTo(e.toISOString().slice(0,10));
+                        } else if (v === 'all') {
+                          setDateFrom("");
+                          setDateTo("");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl bg-gray-50/50 border-gray-200">
+                        <SelectValue placeholder={tt('timeframe','תאריכים','Dates')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{tt('all_time','כל הזמן','All time')}</SelectItem>
+                        <SelectItem value="week">{tt('current_week','השבוע','This week')}</SelectItem>
+                        <SelectItem value="month">{tt('current_month','החודש','This month')}</SelectItem>
+                        <SelectItem value="year">{tt('current_year','מתחילת השנה','Year to date')}</SelectItem>
+                        <SelectItem value="last_year">{tt('last_year','שנה שעברה','Last year')}</SelectItem>
+                        <SelectItem value="custom">{tt('custom_range','טווח מותאם אישית...','Custom range')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {datePreset === 'custom' && (
+                      <div className="flex flex-col gap-2 pt-2">
+                        <Input
+                          type="date"
+                          value={dateFrom}
+                          onChange={(e) => setDateFrom(e.target.value)}
+                          className="h-11 rounded-xl bg-gray-50/50 border-gray-200 text-sm"
+                        />
+                        <Input
+                          type="date"
+                          value={dateTo}
+                          onChange={(e) => setDateTo(e.target.value)}
+                          className="h-11 rounded-xl bg-gray-50/50 border-gray-200 text-sm"
+                        />
+                      </div>
+                    )}
+                </div>
+              </PopoverContent>
+            </Popover>
          </div>
 
          <div className="flex flex-col gap-3 mb-4 relative">
