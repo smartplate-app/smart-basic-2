@@ -410,6 +410,51 @@ export default function StoreUsersPage() {
                         </svg>
                         {language === 'he' ? 'שלח בווצאפ' : 'Send via WhatsApp'}
                       </Button>
+
+                      {/* HTML Email Copy Button */}
+                      <Button
+                        onClick={async () => {
+                          const loginLink = generatedCredentials?.loginUrl;
+                          const uname = generatedCredentials?.username;
+                          const pwd = generatedCredentials?.password;
+                          const htmlContent = `
+                            <div style="font-family: Arial, sans-serif; direction: ${isRTL ? 'rtl' : 'ltr'};">
+                              <p>${language === 'he' ? 'היי' : 'Hi'} ${userName}!</p>
+                              <p>${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} <strong>${user.business_name || user.full_name}</strong>.</p>
+                              <p><strong>${language === 'he' ? '💡 פרטי התחברות:' : '💡 Login Details:'}</strong></p>
+                              <ul>
+                                <li><strong>${language === 'he' ? 'קישור:' : 'Link:'}</strong> <a href="${loginLink}">${loginLink}</a></li>
+                                <li><strong>${language === 'he' ? 'שם משתמש:' : 'Username:'}</strong> ${uname}</li>
+                                <li><strong>${language === 'he' ? 'סיסמה:' : 'Password:'}</strong> ${pwd}</li>
+                              </ul>
+                            </div>
+                          `;
+                          try {
+                            const blobHtml = new Blob([htmlContent], { type: 'text/html' });
+                            const blobText = new Blob([htmlContent.replace(/<[^>]+>/g, '')], { type: 'text/plain' });
+                            const data = new ClipboardItem({
+                              'text/html': blobHtml,
+                              'text/plain': blobText,
+                            });
+                            await navigator.clipboard.write([data]);
+                            alert(language === 'he' ? "הועתק בהצלחה! ניתן להדביק במייל או בצ'אט" : "Copied successfully! You can paste it into an email or chat.");
+                          } catch (err) {
+                            console.error('Failed to copy html: ', err);
+                            // Fallback to text copy
+                            try {
+                              await navigator.clipboard.writeText(htmlContent.replace(/<[^>]+>/g, ''));
+                              alert(language === 'he' ? 'הועתק כטקסט רגיל!' : 'Copied as plain text!');
+                            } catch (e) {
+                              alert(language === 'he' ? 'שגיאה בהעתקה' : 'Error copying');
+                            }
+                          }
+                        }}
+                        variant="outline"
+                        className="w-full mb-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+                      >
+                        <Copy className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {language === 'he' ? 'העתק למייל (HTML)' : 'Copy for Email (HTML)'}
+                      </Button>
                     </div>
                     <Button 
                       variant="outline" 
