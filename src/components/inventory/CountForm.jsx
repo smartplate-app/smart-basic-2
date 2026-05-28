@@ -361,7 +361,10 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               const localIndex = newItems.findIndex(i => i.item_id === serverItem.item_id && i.warehouse_id === serverItem.warehouse_id);
               if (localIndex >= 0) {
                 const localItem = newItems[localIndex];
-                if (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes) {
+                const incomingTime = serverItem.last_updated_at || 0;
+                const localTime = localItem.last_updated_at || 0;
+                
+                if (incomingTime >= localTime && (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes)) {
                   newItems[localIndex] = { ...localItem, ...serverItem };
                   changed = true;
                 }
@@ -536,7 +539,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         counted_quantity: quantity,
         counted_cases: "",
         counted_units: "",
-        total_cost: qty * price
+        total_cost: qty * price,
+        last_updated_at: Date.now()
       };
       dirtyItemsRef.current.set(`${itemId}_${warehouseId}`, newItems[index]);
       return { ...prev, items: newItems };
@@ -579,7 +583,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         ...current,
         ...newValues,
         counted_quantity: (newValues.counted_cases === '' && newValues.counted_units === '') ? '' : totalQty,
-        total_cost: totalQty * price
+        total_cost: totalQty * price,
+        last_updated_at: Date.now()
       };
       dirtyItemsRef.current.set(`${itemId}_${warehouseId}`, newItems[index]);
       return { ...prev, items: newItems };
@@ -596,7 +601,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       newItems[index] = { 
         ...newItems[index], 
         price_per_unit: price,
-        total_cost: qty * priceValue
+        total_cost: qty * priceValue,
+        last_updated_at: Date.now()
       };
       dirtyItemsRef.current.set(`${itemId}_${warehouseId}`, newItems[index]);
       return { ...prev, items: newItems };
@@ -608,7 +614,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       const newItems = [...prev.items];
       const index = newItems.findIndex(i => i.item_id === itemId && i.warehouse_id === warehouseId);
       if (index === -1) return prev;
-      newItems[index] = { ...newItems[index], notes };
+      newItems[index] = { ...newItems[index], notes, last_updated_at: Date.now() };
       dirtyItemsRef.current.set(`${itemId}_${warehouseId}`, newItems[index]);
       return { ...prev, items: newItems };
     });

@@ -33,8 +33,12 @@ Deno.serve(async (req) => {
                 items = items.map(existingItem => {
                     if (existingItem.item_id === updatedItem.item_id && existingItem.warehouse_id === updatedItem.warehouse_id) {
                         found = true;
-                        // Only update if quantity changed
-                        if (existingItem.counted_quantity !== updatedItem.counted_quantity || existingItem.notes !== updatedItem.notes) {
+                        
+                        const incomingTime = updatedItem.last_updated_at || 0;
+                        const existingTime = existingItem.last_updated_at || 0;
+                        
+                        // Only update if incoming is newer or equal
+                        if (incomingTime >= existingTime && (existingItem.counted_quantity !== updatedItem.counted_quantity || existingItem.notes !== updatedItem.notes)) {
                             changed = true;
                             return { ...existingItem, ...updatedItem };
                         }
@@ -53,8 +57,6 @@ Deno.serve(async (req) => {
                 await base44.asServiceRole.entities.InventoryCount.update(count.id, {
                     items,
                     total_inventory_value,
-                    // If this is the current count being edited, we also update its name/notes if needed?
-                    // For simplicity, we just update the items. The frontend handles full saves on submit.
                 });
             }
         });
