@@ -152,7 +152,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           ...(user?.is_chain_head && user?.chain_id ? [{ title: language === 'he' ? 'דשבורד רשת' : 'Chain Dashboard', url: createPageUrl("ChainDashboard"), icon: BarChart2, adminOnly: false, workerHidden: false }] : []),
           // Core pages
           { title: t('nav_orders'), url: createPageUrl("Orders"), icon: ShoppingCart, adminOnly: false, workerHidden: false },
-          { title: t('nav_receipts'), url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false, workerHidden: false },
+          { title: language === 'he' ? 'משרד אחורי' : 'Back Office', url: createPageUrl("SupplyReceipts"), icon: PackageCheck, adminOnly: false, workerHidden: false },
           { title: t('nav_suppliers'), url: createPageUrl("Suppliers"), icon: Users, adminOnly: false, workerHidden: false },
           // The rest
           { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
