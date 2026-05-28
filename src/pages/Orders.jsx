@@ -1406,7 +1406,7 @@ export default function OrdersPage() {
                         <div 
                           key={order.id} 
                           className="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
-                          onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
+                          onClick={() => { if (!isViewer && order.status === 'draft') handleEdit(order); else handleOpenPreview(order); }}
                         >
                           {/* Right side (RTL) - Supplier & Cost */}
                           <div className="flex flex-col flex-1 min-w-0 pr-1">
@@ -1660,7 +1660,7 @@ export default function OrdersPage() {
                             <tr
                               key={order.id}
                               className="hover:bg-gray-50 cursor-pointer transition-colors"
-                              onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
+                              onClick={() => { if (!isViewer && order.status === 'draft') handleEdit(order); else handleOpenPreview(order); }}
                             >
                         <td className="px-6 py-5 text-left rtl:text-right align-middle">
                           <div className="flex items-center gap-2">
