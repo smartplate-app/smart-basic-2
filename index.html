@@ -1,52 +1,1509 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="manifest" href="/manifest.json" />
-    
-    <!-- Primary Meta Tags -->
-    <title>Smart Plate | The Ultimate Food Cost App</title>
-    <meta name="title" content="Smart Plate | The Ultimate Food Cost App" />
-    <meta name="description" content="Stop guessing, start profiting. Track inventory, calculate food costs, and manage suppliers with the ultimate app for restaurants. A smarter alternative to MarketMan." />
-    <meta name="keywords" content="food cost app, restaurant management software, labor cost app, restaurant profit, Smart Plate, MarketMan alternative" />
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartPlate — Restaurant Operations</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.5.0/Recharts.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0f11; --bg2: #17171b; --bg3: #1e1e24; --border: #2a2a32; --border2: #363640;
+    --text: #f0f0f4; --text2: #9898a8;
+    --accent: #ff6b35; --accent2: #ff8c5a;
+    --green: #22c55e; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+    --radius: 12px; --radius-sm: 8px; --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  html, body, #root { height: 100%; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Smart Plate | The Ultimate Food Cost App" />
-    <meta property="og:description" content="Stop guessing, start profiting. Track inventory, calculate food costs, and manage suppliers with the ultimate app for restaurants." />
-    <meta property="og:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" />
-    <meta property="og:url" content="https://foodcostapp.com/" />
+  .app { display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 240px; min-width: 240px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; transition: width 0.2s; }
+  .sidebar.collapsed { width: 64px; min-width: 64px; }
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { height: 60px; min-height: 60px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 12px; }
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
 
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Smart Plate | The Ultimate Food Cost App" />
-    <meta name="twitter:description" content="Stop guessing, start profiting. Track inventory, calculate food costs, and manage suppliers with the ultimate app for restaurants." />
-    <meta name="twitter:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" />
-    
-    <!-- Structured Data for Google SEO & AI -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Smart Plate",
-      "operatingSystem": "Web, iOS, Android",
-      "applicationCategory": "BusinessApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "description": "The ultimate food cost app and labor cost management software for restaurants. Track inventory, calculate food costs, and manage suppliers.",
-      "url": "https://foodcostapp.com/",
-      "image": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg",
-      "featureList": "Food Cost Management, Labor Cost Tracking, Supplier Orders, Inventory Counts"
+  .logo { padding: 18px 16px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+  .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: white; flex-shrink: 0; }
+  .logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; }
+  .nav-section { padding: 12px 8px; flex: 1; }
+  .nav-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text2); padding: 4px 8px 8px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; font-size: 14px; color: var(--text2); white-space: nowrap; overflow: hidden; user-select: none; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(255,107,53,0.12); color: var(--accent); font-weight: 500; }
+  .nav-item svg { flex-shrink: 0; }
+
+  .topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; flex: 1; }
+  .topbar-search { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; font-size: 13px; color: var(--text); outline: none; width: 220px; font-family: 'DM Sans', sans-serif; }
+  .topbar-search:focus { border-color: var(--accent); }
+  .topbar-search::placeholder { color: var(--text2); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; font-family: 'Syne', sans-serif; cursor: pointer; flex-shrink:0; }
+  .btn-icon { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); transition: all 0.15s; flex-shrink:0; }
+  .btn-icon:hover { background: var(--border); color: var(--text); }
+
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
+  .card-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
+  .card-body { padding: 20px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); border-radius: var(--radius) var(--radius) 0 0; }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.yellow::before { background: var(--yellow); }
+  .stat-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-ghost { background: transparent; color: var(--text2); }
+  .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-draft { background: rgba(152,152,168,0.15); color: var(--text2); }
+  .badge-sent { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .badge-confirmed { background: rgba(245,158,11,0.15); color: var(--yellow); }
+  .badge-delivered { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-paid { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-unpaid { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg3); }
+  td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 14px; color: var(--text); outline: none; font-family: 'DM Sans', sans-serif; transition: border-color 0.15s; }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text2); }
+  select.form-input option { background: var(--bg2); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; animation: fadeIn 0.15s; }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 560px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0,0,0,0.6); animation: slideUp 0.2s; }
+  .modal-lg { max-width: 720px; }
+  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; }
+  .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+  .close-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--bg3); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+  .close-btn:hover { background: var(--border); color: var(--text); }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 24px; }
+  .page-subtitle { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .filters-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .filter-select { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; font-size: 13px; color: var(--text); outline: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .search-box { position: relative; flex: 1; max-width: 280px; }
+  .search-box svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text2); }
+  .search-input { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px 7px 32px; font-size: 13px; color: var(--text); outline: none; font-family: 'DM Sans', sans-serif; }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text2); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty-state h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; color: var(--text); margin-bottom: 8px; margin-top: 16px; }
+  .empty-state p { font-size: 14px; }
+
+  .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .supplier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .supplier-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.15s; }
+  .supplier-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .recipe-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: all 0.15s; }
+  .recipe-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .recipe-header { padding: 14px; background: var(--bg3); }
+  .recipe-body { padding: 14px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 12px; }
+  .progress { height: 6px; background: var(--bg3); border-radius: 10px; overflow: hidden; margin-top: 8px; }
+  .progress-bar { height: 100%; border-radius: 10px; transition: width 0.3s; }
+  .order-item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow); animation: slideUp 0.2s; min-width: 280px; }
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error { border-left: 3px solid var(--red); }
+  .toast.info { border-left: 3px solid var(--blue); }
+
+  /* Spinner */
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+  .spinner-lg { width: 40px; height: 40px; border-width: 3px; }
+  .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 16px; background: var(--bg); }
+  .loading-screen p { color: var(--text2); font-size: 14px; }
+
+  /* Login */
+  .login-screen { display: flex; align-items: center; justify-content: center; height: 100vh; background: var(--bg); }
+  .login-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 400px; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+  .login-logo { width: 56px; height: 56px; background: var(--accent); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px; color: white; margin: 0 auto 20px; }
+
+  /* Error banner */
+  .error-banner { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; color: var(--red); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  .text-accent { color: var(--accent); }
+  .text-green { color: var(--green); }
+  .text-red { color: var(--red); }
+  .text-muted { color: var(--text2); }
+  .font-bold { font-weight: 700; }
+  .font-syne { font-family: 'Syne', sans-serif; }
+  .flex { display: flex; }
+  .items-center { align-items: center; }
+  .gap-2 { gap: 8px; }
+  .gap-1 { gap: 4px; }
+
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── CONFIG ──────────────────────────────────────────────
+const APP_ID  = "699c4d19592434b7f867b2c6";
+const API_KEY = "3975bba1c9bb4c0abae30e723b4aa7df";
+const BASE_URL = `https://api.base44.com/api/apps/${APP_ID}`;
+
+// ─── API CLIENT ──────────────────────────────────────────
+const api = {
+  headers: {
+    "Content-Type": "application/json",
+    "api_key": API_KEY
+  },
+
+  async request(method, path, body) {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers: this.headers,
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.error || `HTTP ${res.status}`);
     }
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    return res.json();
+  },
+
+  // Entity CRUD
+  entity: {
+    list: (name, filter, sort, limit) => {
+      const params = new URLSearchParams();
+      if (filter) params.set('filter', JSON.stringify(filter));
+      if (sort)   params.set('sort', sort);
+      if (limit)  params.set('limit', limit);
+      const qs = params.toString() ? `?${params}` : '';
+      return api.request('GET', `/entities/${name}${qs}`);
+    },
+    get:    (name, id)       => api.request('GET',    `/entities/${name}/${id}`),
+    create: (name, data)     => api.request('POST',   `/entities/${name}`, data),
+    update: (name, id, data) => api.request('PUT',    `/entities/${name}/${id}`, data),
+    delete: (name, id)       => api.request('DELETE', `/entities/${name}/${id}`),
+  },
+
+  // Serverless functions
+  invoke: (fnName, body) => api.request('POST', `/functions/${fnName}`, body),
+
+  // Auth
+  auth: {
+    me: () => api.request('GET', '/auth/me'),
+    isAuthenticated: async () => {
+      try { await api.auth.me(); return true; } catch { return false; }
+    }
+  }
+};
+
+// ─── HELPERS ─────────────────────────────────────────────
+const generateId = () => Math.random().toString(36).substr(2,9);
+const today = () => new Date().toISOString().split('T')[0];
+
+// ─── ICONS ───────────────────────────────────────────────
+const Ico = ({ name, size=16 }) => {
+  const paths = {
+    dashboard: "M18 20V10M12 20V4M6 20v-6",
+    orders:    "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2",
+    suppliers: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+    items:     "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+    receipts:  "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8",
+    recipes:   "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 8v4l3 3",
+    plus:      "M12 5v14M5 12h14",
+    search:    "M11 17a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM21 21l-4.35-4.35",
+    trash:     "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6",
+    edit:      "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z",
+    x:         "M18 6L6 18M6 6l12 12",
+    chevronL:  "M15 18l-6-6 6-6",
+    chevronR:  "M9 18l6-6-6-6",
+    refresh:   "M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15",
+    warning:   "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01",
+    user:      "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+    dollar:    "M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
+    package:   "M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16zM3.27 6.96L12 12.01l8.73-5.05M12 22.08V12",
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d={paths[name] || paths.package}/>
+    </svg>
+  );
+};
+
+// ─── TOAST ───────────────────────────────────────────────
+let _toast = null;
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  _toast = useCallback((msg, type='success') => {
+    const id = generateId();
+    setToasts(t => [...t, {id,msg,type}]);
+    setTimeout(() => setToasts(t => t.filter(x=>x.id!==id)), 3500);
+  }, []);
+  return <>
+    {children}
+    <div className="toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast ${t.type}`}>
+          {t.type==='success' && <span className="text-green">✓</span>}
+          {t.type==='error'   && <span className="text-red">✕</span>}
+          {t.type==='info'    && <span className="text-accent">●</span>}
+          {t.msg}
+        </div>
+      ))}
+    </div>
+  </>;
+}
+const toast = (msg,type='success') => _toast && _toast(msg,type);
+
+// ─── MODAL ───────────────────────────────────────────────
+function Modal({ title, onClose, children, footer, size='' }) {
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className={`modal ${size}`}>
+        <div className="modal-header">
+          <span className="modal-title">{title}</span>
+          <button className="close-btn" onClick={onClose}><Ico name="x" size={14}/></button>
+        </div>
+        <div className="modal-body">{children}</div>
+        {footer && <div className="modal-footer">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ─── STATUS BADGE ────────────────────────────────────────
+function StatusBadge({ status }) {
+  return <span className={`badge badge-${status}`}>{status}</span>;
+}
+
+// ─── LOADING / ERROR HELPERS ─────────────────────────────
+function PageSpinner() {
+  return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'80px 0',gap:12,color:'var(--text2)'}}>
+      <div className="spinner"/>  Loading from Base44…
+    </div>
+  );
+}
+
+function ErrorBanner({ message, onRetry }) {
+  return (
+    <div className="error-banner">
+      <Ico name="warning" size={16}/>
+      <span style={{flex:1}}>{message}</span>
+      {onRetry && <button className="btn btn-sm btn-secondary" onClick={onRetry} style={{marginLeft:8}}><Ico name="refresh" size={12}/> Retry</button>}
+    </div>
+  );
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────
+function Dashboard({ orders, receipts, suppliers }) {
+  const totalSpend   = orders.reduce((a,o)=>a+(o.total_cost||0),0);
+  const pendingCount = orders.filter(o=>o.status==='sent'||o.status==='confirmed').length;
+  const unpaidAmt    = receipts.filter(r=>r.status==='unpaid').reduce((a,r)=>a+r.total,0);
+
+  const spendBySupplier = suppliers.map(s=>({
+    name: s.name.split(' ')[0],
+    value: orders.filter(o=>o.supplier_id===s.id).reduce((a,o)=>a+(o.total_cost||0),0)
+  })).filter(x=>x.value>0);
+
+  const byStatus = [
+    {name:'Draft',    value:orders.filter(o=>o.status==='draft').length,     color:'#9898a8'},
+    {name:'Sent',     value:orders.filter(o=>o.status==='sent').length,      color:'#3b82f6'},
+    {name:'Confirmed',value:orders.filter(o=>o.status==='confirmed').length, color:'#f59e0b'},
+    {name:'Delivered',value:orders.filter(o=>o.status==='delivered').length, color:'#22c55e'},
+  ].filter(x=>x.value>0);
+
+  return (
+    <div>
+      <div className="page-header">
+        <div><div className="page-title">Dashboard</div><div className="page-subtitle">Live data from Base44</div></div>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-label">Total Spend</div>
+          <div className="stat-value">₪{totalSpend.toLocaleString('en',{maximumFractionDigits:0})}</div>
+          <div className="stat-sub">all orders</div>
+        </div>
+        <div className="stat-card green">
+          <div className="stat-label">Total Orders</div>
+          <div className="stat-value" style={{color:'var(--green)'}}>{orders.length}</div>
+          <div className="stat-sub">in database</div>
+        </div>
+        <div className="stat-card blue">
+          <div className="stat-label">Pending Delivery</div>
+          <div className="stat-value" style={{color:'var(--blue)'}}>{pendingCount}</div>
+          <div className="stat-sub">sent + confirmed</div>
+        </div>
+        <div className="stat-card yellow">
+          <div className="stat-label">Unpaid Invoices</div>
+          <div className="stat-value" style={{color:'var(--yellow)'}}>₪{unpaidAmt.toLocaleString('en',{maximumFractionDigits:0})}</div>
+          <div className="stat-sub">awaiting payment</div>
+        </div>
+      </div>
+
+      <div className="charts-grid">
+        <div className="card">
+          <div className="card-header"><span className="card-title">Spend by Supplier</span></div>
+          <div className="card-body" style={{height:240}}>
+            {spendBySupplier.length>0 ? (
+              <Recharts.ResponsiveContainer width="100%" height="100%">
+                <Recharts.BarChart data={spendBySupplier} margin={{top:0,right:10,left:-10,bottom:0}}>
+                  <Recharts.CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/>
+                  <Recharts.XAxis dataKey="name" tick={{fill:'var(--text2)',fontSize:12}} axisLine={false} tickLine={false}/>
+                  <Recharts.YAxis tick={{fill:'var(--text2)',fontSize:12}} axisLine={false} tickLine={false} tickFormatter={v=>`₪${v}`}/>
+                  <Recharts.Tooltip contentStyle={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8}} formatter={v=>[`₪${v.toLocaleString()}`,'Spend']}/>
+                  <Recharts.Bar dataKey="value" fill="var(--accent)" radius={[6,6,0,0]}/>
+                </Recharts.BarChart>
+              </Recharts.ResponsiveContainer>
+            ) : <div className="empty-state"><p>No orders yet</p></div>}
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Orders by Status</span></div>
+          <div className="card-body" style={{height:240}}>
+            {byStatus.length>0 ? (
+              <Recharts.ResponsiveContainer width="100%" height="100%">
+                <Recharts.PieChart>
+                  <Recharts.Pie data={byStatus} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" paddingAngle={3}>
+                    {byStatus.map((e,i)=><Recharts.Cell key={i} fill={e.color}/>)}
+                  </Recharts.Pie>
+                  <Recharts.Tooltip contentStyle={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8}}/>
+                  <Recharts.Legend iconType="circle" iconSize={8} formatter={v=><span style={{color:'var(--text2)',fontSize:12}}>{v}</span>}/>
+                </Recharts.PieChart>
+              </Recharts.ResponsiveContainer>
+            ) : <div className="empty-state"><p>No orders yet</p></div>}
+          </div>
+        </div>
+      </div>
+
+      <div className="two-col">
+        <div className="card">
+          <div className="card-header"><span className="card-title">Recent Orders</span></div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Supplier</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody>
+                {orders.slice(0,6).map(o=>(
+                  <tr key={o.id}>
+                    <td>{o.supplier_name}</td>
+                    <td className="font-bold">₪{(o.total_cost||0).toLocaleString('en',{maximumFractionDigits:0})}</td>
+                    <td><StatusBadge status={o.status}/></td>
+                  </tr>
+                ))}
+                {orders.length===0 && <tr><td colSpan={3} style={{textAlign:'center',color:'var(--text2)',padding:20}}>No orders yet</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header"><span className="card-title">Top Suppliers</span></div>
+          <div className="card-body">
+            {suppliers.map(s=>{
+              const spend = orders.filter(o=>o.supplier_id===s.id).reduce((a,o)=>a+(o.total_cost||0),0);
+              const maxSpend = Math.max(...suppliers.map(sup=>orders.filter(o=>o.supplier_id===sup.id).reduce((a,o)=>a+(o.total_cost||0),0)),1);
+              return (
+                <div key={s.id} style={{marginBottom:14}}>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:13,marginBottom:4}}>
+                    <span>{s.name}</span>
+                    <span className="font-bold text-accent">₪{spend.toLocaleString('en',{maximumFractionDigits:0})}</span>
+                  </div>
+                  <div className="progress">
+                    <div className="progress-bar" style={{width:`${(spend/maxSpend)*100}%`,background:'var(--accent)'}}/>
+                  </div>
+                </div>
+              );
+            })}
+            {suppliers.length===0 && <p style={{color:'var(--text2)',fontSize:13}}>No suppliers yet</p>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ORDERS ──────────────────────────────────────────────
+function Orders({ user }) {
+  const [orders, setOrders]       = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [items, setItems]         = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [showForm, setShowForm]   = useState(false);
+  const [editing, setEditing]     = useState(null);
+  const [search, setSearch]       = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [supplierFilter, setSupplierFilter] = useState('all');
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true); setError(null);
+      const email = user?.email;
+      const [ordersRes, suppliersRes, itemsRes] = await Promise.all([
+        api.entity.list('Order',    {created_by: email}, '-created_date', 500),
+        api.entity.list('Supplier', {created_by: email}, 'name', 200),
+        api.entity.list('Item',     {created_by: email}, 'name', 500),
+      ]);
+      setOrders(Array.isArray(ordersRes) ? ordersRes : (ordersRes?.data || []));
+      setSuppliers(Array.isArray(suppliersRes) ? suppliersRes : (suppliersRes?.data || []));
+      setItems(Array.isArray(itemsRes) ? itemsRes : (itemsRes?.data || []));
+    } catch(e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const filtered = useMemo(() => orders.filter(o=>{
+    if (statusFilter!=='all' && o.status!==statusFilter) return false;
+    if (supplierFilter!=='all' && o.supplier_id!==supplierFilter) return false;
+    if (search && !(o.supplier_name||'').toLowerCase().includes(search.toLowerCase()) &&
+                  !(o.order_number||'').toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }), [orders, statusFilter, supplierFilter, search]);
+
+  const handleSave = async (data) => {
+    try {
+      if (editing) {
+        const updated = await api.entity.update('Order', editing.id, data);
+        setOrders(prev=>prev.map(o=>o.id===editing.id?updated:o));
+        toast('Order updated');
+      } else {
+        const created = await api.entity.create('Order', {...data, created_by: user.email, order_number:`ORD-${Date.now().toString().slice(-6)}`});
+        setOrders(prev=>[created,...prev]);
+        toast('Order created');
+      }
+      setShowForm(false); setEditing(null);
+    } catch(e) { toast(e.message, 'error'); }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.entity.delete('Order', id);
+      setOrders(prev=>prev.filter(o=>o.id!==id));
+      toast('Order deleted','info');
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      const updated = await api.entity.update('Order', id, {status});
+      setOrders(prev=>prev.map(o=>o.id===id?updated:o));
+      toast(`Marked as ${status}`);
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <div className="page-title">Orders</div>
+          <div className="page-subtitle">{orders.length} orders in your account</div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn btn-secondary" onClick={loadData}><Ico name="refresh" size={14}/></button>
+          <button className="btn btn-primary" onClick={()=>{setEditing(null);setShowForm(true);}}><Ico name="plus" size={14}/> New Order</button>
+        </div>
+      </div>
+
+      {error && <ErrorBanner message={error} onRetry={loadData}/>}
+
+      <div className="filters-bar">
+        <div className="search-box">
+          <Ico name="search" size={14}/>
+          <input className="search-input" placeholder="Search orders…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        </div>
+        <select className="filter-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
+          <option value="all">All Status</option>
+          <option value="draft">Draft</option><option value="sent">Sent</option>
+          <option value="confirmed">Confirmed</option><option value="delivered">Delivered</option>
+        </select>
+        <select className="filter-select" value={supplierFilter} onChange={e=>setSupplierFilter(e.target.value)}>
+          <option value="all">All Suppliers</option>
+          {suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
+
+      {loading ? <PageSpinner/> : (
+        <div className="card">
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Order #</th><th>Supplier</th><th>Items</th><th>Total</th><th>Delivery</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                {filtered.length===0 && <tr><td colSpan={7}><div className="empty-state"><Ico name="orders" size={48}/><h3>No orders found</h3><p>Create your first order to get started</p></div></td></tr>}
+                {filtered.map(o=>(
+                  <tr key={o.id}>
+                    <td className="font-bold text-accent">{o.order_number||o.id?.slice(-8)||'—'}</td>
+                    <td>{o.supplier_name}</td>
+                    <td><span className="chip">{(o.items||[]).length} items</span></td>
+                    <td className="font-bold">₪{(o.total_cost||0).toLocaleString('en',{maximumFractionDigits:0})}</td>
+                    <td style={{color:'var(--text2)',fontSize:12}}>{o.delivery_date||'—'}</td>
+                    <td><StatusBadge status={o.status}/></td>
+                    <td>
+                      <div className="flex gap-1">
+                        {o.status==='draft'     && <button className="btn btn-sm btn-secondary" onClick={()=>handleStatusChange(o.id,'sent')}>Send</button>}
+                        {o.status==='sent'      && <button className="btn btn-sm btn-secondary" onClick={()=>handleStatusChange(o.id,'confirmed')}>Confirm</button>}
+                        {o.status==='confirmed' && <button className="btn btn-sm btn-secondary" onClick={()=>handleStatusChange(o.id,'delivered')}>Deliver</button>}
+                        <button className="btn-icon" onClick={()=>{setEditing(o);setShowForm(true);}} title="Edit"><Ico name="edit" size={14}/></button>
+                        <button className="btn-icon" onClick={()=>handleDelete(o.id)} style={{color:'var(--red)'}} title="Delete"><Ico name="trash" size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {showForm && <OrderForm order={editing} suppliers={suppliers} items={items} onSave={handleSave} onClose={()=>{setShowForm(false);setEditing(null);}}/>}
+    </div>
+  );
+}
+
+function OrderForm({ order, suppliers, items, onSave, onClose }) {
+  const [saving, setSaving]             = useState(false);
+  const [supplierId, setSupplierId]     = useState(order?.supplier_id||'');
+  const [status, setStatus]             = useState(order?.status||'draft');
+  const [deliveryDate, setDeliveryDate] = useState(order?.delivery_date||'');
+  const [notes, setNotes]               = useState(order?.notes||'');
+  const [orderItems, setOrderItems]     = useState(order?.items||[]);
+
+  const supplier      = suppliers.find(s=>s.id===supplierId);
+  const supplierItems = items.filter(i=>i.supplier_id===supplierId);
+
+  const addItem    = () => setOrderItems(p=>[...p,{item_id:'',item_name:'',quantity:1,unit:'unit',price:0,total:0}]);
+  const removeItem = idx => setOrderItems(p=>p.filter((_,i)=>i!==idx));
+  const updateItem = (idx,field,val) => {
+    setOrderItems(p=>{
+      const n=[...p]; n[idx]={...n[idx],[field]:val};
+      if (field==='item_id') {
+        const it=items.find(i=>i.id===val);
+        if(it){n[idx].item_name=it.name;n[idx].price=it.price_after_discount||it.price;n[idx].unit=it.unit;}
+      }
+      if (field==='quantity'||field==='price') {
+        n[idx].total=(parseFloat(n[idx].quantity)||0)*(parseFloat(n[idx].price)||0);
+      }
+      return n;
+    });
+  };
+
+  const total = orderItems.reduce((a,i)=>a+(parseFloat(i.total)||0),0);
+
+  const handleSubmit = async () => {
+    if(!supplierId){toast('Select a supplier','error');return;}
+    setSaving(true);
+    await onSave({supplier_id:supplierId,supplier_name:supplier?.name||'',status,delivery_date:deliveryDate,notes,items:orderItems,total_cost:total});
+    setSaving(false);
+  };
+
+  return (
+    <Modal title={order?'Edit Order':'New Order'} onClose={onClose} size="modal-lg"
+      footer={<>
+        <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>{saving?<><div className="spinner" style={{width:14,height:14}}/> Saving…</>:(order?'Update Order':'Create Order')}</button>
+      </>}
+    >
+      <div className="form-row">
+        <div className="form-group">
+          <label className="form-label">Supplier *</label>
+          <select className="form-input" value={supplierId} onChange={e=>setSupplierId(e.target.value)}>
+            <option value="">Select supplier…</option>
+            {suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Status</label>
+          <select className="form-input" value={status} onChange={e=>setStatus(e.target.value)}>
+            <option value="draft">Draft</option><option value="sent">Sent</option>
+            <option value="confirmed">Confirmed</option><option value="delivered">Delivered</option>
+          </select>
+        </div>
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label className="form-label">Delivery Date</label>
+          <input type="date" className="form-input" value={deliveryDate} onChange={e=>setDeliveryDate(e.target.value)}/>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Notes</label>
+          <input className="form-input" placeholder="Optional…" value={notes} onChange={e=>setNotes(e.target.value)}/>
+        </div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+        <span style={{fontSize:12,fontWeight:600,color:'var(--text2)',textTransform:'uppercase',letterSpacing:'0.5px'}}>Order Items</span>
+        <button className="btn btn-sm btn-secondary" onClick={addItem}><Ico name="plus" size={12}/> Add Item</button>
+      </div>
+      {orderItems.map((item,idx)=>(
+        <div key={idx} className="order-item-row">
+          <select className="form-input" style={{flex:2}} value={item.item_id} onChange={e=>updateItem(idx,'item_id',e.target.value)}>
+            <option value="">Select item…</option>
+            {(supplierId?supplierItems:items).map(i=><option key={i.id} value={i.id}>{i.name}</option>)}
+          </select>
+          <input className="form-input" type="number" placeholder="Qty" style={{width:70}} value={item.quantity} onChange={e=>updateItem(idx,'quantity',e.target.value)}/>
+          <input className="form-input" type="number" placeholder="₪" style={{width:90}} value={item.price} onChange={e=>updateItem(idx,'price',e.target.value)}/>
+          <span style={{minWidth:80,textAlign:'right',fontWeight:700,color:'var(--accent)',fontSize:13}}>₪{(item.total||0).toFixed(2)}</span>
+          <button className="btn-icon" onClick={()=>removeItem(idx)} style={{color:'var(--red)'}}><Ico name="trash" size={14}/></button>
+        </div>
+      ))}
+      {orderItems.length>0 && (
+        <div style={{textAlign:'right',marginTop:12,paddingTop:12,borderTop:'1px solid var(--border)',fontSize:16,fontWeight:800,fontFamily:'Syne'}}>
+          Total: <span className="text-accent">₪{total.toFixed(2)}</span>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+// ─── SUPPLIERS ───────────────────────────────────────────
+function Suppliers({ user, orders }) {
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [showForm, setShowForm]   = useState(false);
+  const [editing, setEditing]     = useState(null);
+  const [search, setSearch]       = useState('');
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true); setError(null);
+      const res = await api.entity.list('Supplier', {created_by: user.email}, 'name', 200);
+      setSuppliers(Array.isArray(res)?res:(res?.data||[]));
+    } catch(e) { setError(e.message); }
+    finally { setLoading(false); }
+  }, [user]);
+
+  useEffect(()=>{loadData();},[loadData]);
+
+  const filtered = suppliers.filter(s=>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    (s.contact_person||'').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSave = async (data) => {
+    try {
+      if (editing) {
+        const u = await api.entity.update('Supplier', editing.id, data);
+        setSuppliers(p=>p.map(s=>s.id===editing.id?u:s));
+        toast('Supplier updated');
+      } else {
+        const c = await api.entity.create('Supplier', {...data, created_by: user.email});
+        setSuppliers(p=>[c,...p]);
+        toast('Supplier added');
+      }
+      setShowForm(false); setEditing(null);
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.entity.delete('Supplier', id);
+      setSuppliers(p=>p.filter(s=>s.id!==id));
+      toast('Supplier removed','info');
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <div><div className="page-title">Suppliers</div><div className="page-subtitle">{suppliers.length} suppliers in your account</div></div>
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn btn-secondary" onClick={loadData}><Ico name="refresh" size={14}/></button>
+          <button className="btn btn-primary" onClick={()=>{setEditing(null);setShowForm(true);}}><Ico name="plus" size={14}/> Add Supplier</button>
+        </div>
+      </div>
+      {error && <ErrorBanner message={error} onRetry={loadData}/>}
+      <div className="filters-bar">
+        <div className="search-box"><Ico name="search" size={14}/><input className="search-input" placeholder="Search suppliers…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+      </div>
+      {loading ? <PageSpinner/> : (
+        <div className="supplier-grid">
+          {filtered.map(s=>{
+            const supplierOrders = orders.filter(o=>o.supplier_id===s.id);
+            const totalSpend = supplierOrders.reduce((a,o)=>a+(o.total_cost||0),0);
+            return (
+              <div key={s.id} className="supplier-card" onClick={()=>{setEditing(s);setShowForm(true);}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+                  <div>
+                    <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15,marginBottom:2}}>{s.name}</div>
+                    <div style={{fontSize:12,color:'var(--text2)'}}>{s.contact_person||'—'}</div>
+                  </div>
+                  <button className="btn-icon" style={{color:'var(--red)'}} onClick={e=>{e.stopPropagation();handleDelete(s.id);}}>
+                    <Ico name="trash" size={14}/>
+                  </button>
+                </div>
+                <div style={{fontSize:12,color:'var(--text2)',marginBottom:4}}>📞 {s.phone||'—'}</div>
+                <div style={{fontSize:12,color:'var(--text2)',marginBottom:10}}>✉️ {s.email||'—'}</div>
+                <div style={{display:'flex',gap:10,paddingTop:10,borderTop:'1px solid var(--border)'}}>
+                  <div style={{flex:1,textAlign:'center'}}>
+                    <div style={{fontSize:11,color:'var(--text2)'}}>Orders</div>
+                    <div style={{fontFamily:'Syne',fontWeight:700,fontSize:18,color:'var(--accent)'}}>{supplierOrders.length}</div>
+                  </div>
+                  <div style={{flex:1,textAlign:'center'}}>
+                    <div style={{fontSize:11,color:'var(--text2)'}}>Spend</div>
+                    <div style={{fontFamily:'Syne',fontWeight:700,fontSize:14}}>₪{totalSpend.toLocaleString('en',{maximumFractionDigits:0})}</div>
+                  </div>
+                  <div style={{flex:1,textAlign:'center'}}>
+                    <div style={{fontSize:11,color:'var(--text2)'}}>Min Order</div>
+                    <div style={{fontFamily:'Syne',fontWeight:700,fontSize:14}}>₪{s.minimum_order_amount||0}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length===0 && <div className="empty-state" style={{gridColumn:'1/-1'}}><Ico name="suppliers" size={48}/><h3>No suppliers yet</h3><p>Add your first supplier to get started</p></div>}
+        </div>
+      )}
+      {showForm && <SupplierForm supplier={editing} onSave={handleSave} onClose={()=>{setShowForm(false);setEditing(null);}}/>}
+    </div>
+  );
+}
+
+function SupplierForm({ supplier, onSave, onClose }) {
+  const [saving, setSaving] = useState(false);
+  const [name, setName]     = useState(supplier?.name||'');
+  const [contact, setContact] = useState(supplier?.contact_person||'');
+  const [phone, setPhone]   = useState(supplier?.phone||'');
+  const [email, setEmail]   = useState(supplier?.email||'');
+  const [type, setType]     = useState(supplier?.supplier_type||'simple');
+  const [minOrder, setMinOrder] = useState(supplier?.minimum_order_amount||'');
+
+  const handleSubmit = async () => {
+    if(!name.trim()){toast('Name is required','error');return;}
+    setSaving(true);
+    await onSave({name,contact_person:contact,phone,email,supplier_type:type,minimum_order_amount:parseFloat(minOrder)||0});
+    setSaving(false);
+  };
+
+  return (
+    <Modal title={supplier?'Edit Supplier':'Add Supplier'} onClose={onClose}
+      footer={<>
+        <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>{saving?'Saving…':(supplier?'Update':'Add Supplier')}</button>
+      </>}
+    >
+      <div className="form-group"><label className="form-label">Company Name *</label><input className="form-input" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Fresh Farms Co."/></div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Contact Person</label><input className="form-input" value={contact} onChange={e=>setContact(e.target.value)} placeholder="Full name"/></div>
+        <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="050-0000000"/></div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="contact@supplier.com"/></div>
+        <div className="form-group"><label className="form-label">Min Order (₪)</label><input className="form-input" type="number" value={minOrder} onChange={e=>setMinOrder(e.target.value)} placeholder="0"/></div>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Supplier Type</label>
+        <select className="form-input" value={type} onChange={e=>setType(e.target.value)}>
+          <option value="simple">Simple</option><option value="catalogic">Catalogic (with catalog)</option>
+        </select>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── ITEMS ───────────────────────────────────────────────
+function Items({ user }) {
+  const [items, setItems]         = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [showForm, setShowForm]   = useState(false);
+  const [editing, setEditing]     = useState(null);
+  const [search, setSearch]       = useState('');
+  const [supplierFilter, setSupplierFilter] = useState('all');
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true); setError(null);
+      const [itemsRes, suppliersRes] = await Promise.all([
+        api.entity.list('Item',     {created_by: user.email}, 'name', 500),
+        api.entity.list('Supplier', {created_by: user.email}, 'name', 200),
+      ]);
+      setItems(Array.isArray(itemsRes)?itemsRes:(itemsRes?.data||[]));
+      setSuppliers(Array.isArray(suppliersRes)?suppliersRes:(suppliersRes?.data||[]));
+    } catch(e) { setError(e.message); }
+    finally { setLoading(false); }
+  }, [user]);
+
+  useEffect(()=>{loadData();},[loadData]);
+
+  const filtered = useMemo(()=>items.filter(i=>{
+    if (supplierFilter!=='all' && i.supplier_id!==supplierFilter) return false;
+    if (search && !i.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }),[items,search,supplierFilter]);
+
+  const handleSave = async (data) => {
+    try {
+      if (editing) {
+        const u = await api.entity.update('Item', editing.id, data);
+        setItems(p=>p.map(i=>i.id===editing.id?u:i));
+        toast('Item updated');
+      } else {
+        const c = await api.entity.create('Item', {...data, created_by: user.email});
+        setItems(p=>[c,...p]);
+        toast('Item added');
+      }
+      setShowForm(false); setEditing(null);
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.entity.delete('Item', id);
+      setItems(p=>p.filter(i=>i.id!==id));
+      toast('Item deleted','info');
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <div><div className="page-title">Inventory Items</div><div className="page-subtitle">{items.length} items in your catalog</div></div>
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn btn-secondary" onClick={loadData}><Ico name="refresh" size={14}/></button>
+          <button className="btn btn-primary" onClick={()=>{setEditing(null);setShowForm(true);}}><Ico name="plus" size={14}/> Add Item</button>
+        </div>
+      </div>
+      {error && <ErrorBanner message={error} onRetry={loadData}/>}
+      <div className="filters-bar">
+        <div className="search-box"><Ico name="search" size={14}/><input className="search-input" placeholder="Search items…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <select className="filter-select" value={supplierFilter} onChange={e=>setSupplierFilter(e.target.value)}>
+          <option value="all">All Suppliers</option>
+          {suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
+      {loading ? <PageSpinner/> : (
+        <div className="card">
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Supplier</th><th>Catalog #</th><th>Unit</th><th>Price</th><th>Discount</th><th>Net Price</th><th>Min Stock</th><th>Actions</th></tr></thead>
+              <tbody>
+                {filtered.length===0 && <tr><td colSpan={9}><div className="empty-state"><Ico name="items" size={48}/><h3>No items found</h3></div></td></tr>}
+                {filtered.map(item=>(
+                  <tr key={item.id}>
+                    <td className="font-bold">{item.name}{item.nickname&&<span style={{fontSize:11,color:'var(--text2)',marginLeft:6}}>({item.nickname})</span>}</td>
+                    <td style={{color:'var(--text2)',fontSize:12}}>{item.supplier_name}</td>
+                    <td><span className="chip">{item.catalog_number||'—'}</span></td>
+                    <td style={{color:'var(--text2)'}}>{item.unit}</td>
+                    <td>₪{item.price}</td>
+                    <td>{item.discount>0?<span className="text-green">-{item.discount}%</span>:'—'}</td>
+                    <td className="font-bold text-accent">₪{(item.price_after_discount||(item.price*(1-(item.discount||0)/100))).toFixed(2)}</td>
+                    <td style={{color:'var(--text2)'}}>{item.minimum_stock||0}</td>
+                    <td>
+                      <div className="flex gap-1">
+                        <button className="btn-icon" onClick={()=>{setEditing(item);setShowForm(true);}}><Ico name="edit" size={14}/></button>
+                        <button className="btn-icon" onClick={()=>handleDelete(item.id)} style={{color:'var(--red)'}}><Ico name="trash" size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {showForm && <ItemForm item={editing} suppliers={suppliers} onSave={handleSave} onClose={()=>{setShowForm(false);setEditing(null);}}/>}
+    </div>
+  );
+}
+
+function ItemForm({ item, suppliers, onSave, onClose }) {
+  const [saving, setSaving]   = useState(false);
+  const [name, setName]       = useState(item?.name||'');
+  const [supplierId, setSupplierId] = useState(item?.supplier_id||'');
+  const [catNum, setCatNum]   = useState(item?.catalog_number||'');
+  const [unit, setUnit]       = useState(item?.unit||'unit');
+  const [price, setPrice]     = useState(item?.price||'');
+  const [discount, setDiscount] = useState(item?.discount||'');
+  const [minStock, setMinStock] = useState(item?.minimum_stock||'');
+  const supplier = suppliers.find(s=>s.id===supplierId);
+
+  const handleSubmit = async () => {
+    if(!name.trim()){toast('Name required','error');return;}
+    if(!supplierId){toast('Select a supplier','error');return;}
+    const p=parseFloat(price)||0, d=parseFloat(discount)||0;
+    setSaving(true);
+    await onSave({name,supplier_id:supplierId,supplier_name:supplier?.name||'',catalog_number:catNum,unit,price:p,discount:d,price_after_discount:p*(1-d/100),minimum_stock:parseFloat(minStock)||0});
+    setSaving(false);
+  };
+
+  return (
+    <Modal title={item?'Edit Item':'Add Item'} onClose={onClose}
+      footer={<>
+        <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>{saving?'Saving…':(item?'Update':'Add Item')}</button>
+      </>}
+    >
+      <div className="form-group"><label className="form-label">Item Name *</label><input className="form-input" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Cherry Tomatoes"/></div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Supplier *</label>
+          <select className="form-input" value={supplierId} onChange={e=>setSupplierId(e.target.value)}>
+            <option value="">Select supplier…</option>
+            {suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+        <div className="form-group"><label className="form-label">Catalog Number</label><input className="form-input" value={catNum} onChange={e=>setCatNum(e.target.value)} placeholder="SKU-001"/></div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Unit</label>
+          <select className="form-input" value={unit} onChange={e=>setUnit(e.target.value)}>
+            <option value="unit">Unit</option><option value="kg">kg</option><option value="gram">gram</option>
+            <option value="liter">liter</option><option value="ml">ml</option><option value="case">Case</option>
+          </select>
+        </div>
+        <div className="form-group"><label className="form-label">Min Stock</label><input className="form-input" type="number" value={minStock} onChange={e=>setMinStock(e.target.value)} placeholder="0"/></div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Price (₪)</label><input className="form-input" type="number" value={price} onChange={e=>setPrice(e.target.value)} placeholder="0.00"/></div>
+        <div className="form-group"><label className="form-label">Discount (%)</label><input className="form-input" type="number" value={discount} onChange={e=>setDiscount(e.target.value)} placeholder="0"/></div>
+      </div>
+      {price>0 && <div style={{background:'var(--bg3)',borderRadius:8,padding:'10px 14px',fontSize:13}}>Net Price: <strong className="text-accent">₪{(parseFloat(price||0)*(1-parseFloat(discount||0)/100)).toFixed(2)}</strong></div>}
+    </Modal>
+  );
+}
+
+// ─── RECEIPTS ────────────────────────────────────────────
+function SupplyReceipts({ user }) {
+  const [receipts, setReceipts]   = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [showForm, setShowForm]   = useState(false);
+  const [editing, setEditing]     = useState(null);
+  const [search, setSearch]       = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true); setError(null);
+      const [receiptsRes, suppliersRes] = await Promise.all([
+        api.entity.list('SupplyReceipt', {created_by: user.email}, '-received_date', 500),
+        api.entity.list('Supplier',      {created_by: user.email}, 'name', 200),
+      ]);
+      setReceipts(Array.isArray(receiptsRes)?receiptsRes:(receiptsRes?.data||[]));
+      setSuppliers(Array.isArray(suppliersRes)?suppliersRes:(suppliersRes?.data||[]));
+    } catch(e) { setError(e.message); }
+    finally { setLoading(false); }
+  }, [user]);
+
+  useEffect(()=>{loadData();},[loadData]);
+
+  const filtered = useMemo(()=>receipts.filter(r=>{
+    if (statusFilter!=='all'&&r.status!==statusFilter) return false;
+    if (search && !(r.supplier_name||'').toLowerCase().includes(search.toLowerCase())&&
+                  !(r.invoice_number||'').toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }),[receipts,search,statusFilter]);
+
+  const handleSave = async (data) => {
+    try {
+      if (editing) {
+        const u = await api.entity.update('SupplyReceipt', editing.id, data);
+        setReceipts(p=>p.map(r=>r.id===editing.id?u:r));
+        toast('Receipt updated');
+      } else {
+        const c = await api.entity.create('SupplyReceipt', {...data, created_by: user.email});
+        setReceipts(p=>[c,...p]);
+        toast('Receipt created');
+      }
+      setShowForm(false); setEditing(null);
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.entity.delete('SupplyReceipt', id);
+      setReceipts(p=>p.filter(r=>r.id!==id));
+      toast('Receipt deleted','info');
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  const togglePaid = async (id, current) => {
+    const newStatus = current==='paid'?'unpaid':'paid';
+    try {
+      const u = await api.entity.update('SupplyReceipt', id, {status: newStatus});
+      setReceipts(p=>p.map(r=>r.id===id?u:r));
+      toast(`Marked as ${newStatus}`);
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <div><div className="page-title">Supply Receipts</div><div className="page-subtitle">{receipts.length} receipts in your account</div></div>
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn btn-secondary" onClick={loadData}><Ico name="refresh" size={14}/></button>
+          <button className="btn btn-primary" onClick={()=>{setEditing(null);setShowForm(true);}}><Ico name="plus" size={14}/> New Receipt</button>
+        </div>
+      </div>
+      {error && <ErrorBanner message={error} onRetry={loadData}/>}
+      <div className="filters-bar">
+        <div className="search-box"><Ico name="search" size={14}/><input className="search-input" placeholder="Search receipts…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <select className="filter-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}>
+          <option value="all">All Status</option><option value="paid">Paid</option><option value="unpaid">Unpaid</option>
+        </select>
+      </div>
+      {loading ? <PageSpinner/> : (
+        <div className="card">
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Invoice #</th><th>Supplier</th><th>Date</th><th>Total</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+              <tbody>
+                {filtered.length===0 && <tr><td colSpan={7}><div className="empty-state"><Ico name="receipts" size={48}/><h3>No receipts found</h3></div></td></tr>}
+                {filtered.map(r=>(
+                  <tr key={r.id}>
+                    <td className="font-bold text-accent">{r.invoice_number||'—'}</td>
+                    <td>{r.supplier_name}</td>
+                    <td style={{color:'var(--text2)',fontSize:12}}>{r.received_date||r.date||'—'}</td>
+                    <td className="font-bold">₪{(r.total||0).toLocaleString('en',{maximumFractionDigits:0})}</td>
+                    <td>
+                      <span className={`badge badge-${r.status}`} style={{cursor:'pointer'}} onClick={()=>togglePaid(r.id,r.status)} title="Click to toggle">
+                        {r.status}
+                      </span>
+                    </td>
+                    <td style={{color:'var(--text2)',fontSize:12,maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.notes||'—'}</td>
+                    <td>
+                      <div className="flex gap-1">
+                        <button className="btn-icon" onClick={()=>{setEditing(r);setShowForm(true);}}><Ico name="edit" size={14}/></button>
+                        <button className="btn-icon" onClick={()=>handleDelete(r.id)} style={{color:'var(--red)'}}><Ico name="trash" size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {showForm && <ReceiptForm receipt={editing} suppliers={suppliers} onSave={handleSave} onClose={()=>{setShowForm(false);setEditing(null);}}/>}
+    </div>
+  );
+}
+
+function ReceiptForm({ receipt, suppliers, onSave, onClose }) {
+  const [saving, setSaving]           = useState(false);
+  const [supplierId, setSupplierId]   = useState(receipt?.supplier_id||'');
+  const [invoiceNumber, setInvoiceNumber] = useState(receipt?.invoice_number||'');
+  const [total, setTotal]             = useState(receipt?.total||'');
+  const [status, setStatus]           = useState(receipt?.status||'unpaid');
+  const [notes, setNotes]             = useState(receipt?.notes||'');
+  const [date, setDate]               = useState(receipt?.received_date||today());
+  const supplier = suppliers.find(s=>s.id===supplierId);
+
+  const handleSubmit = async () => {
+    if(!supplierId){toast('Select a supplier','error');return;}
+    setSaving(true);
+    await onSave({supplier_id:supplierId,supplier_name:supplier?.name||'',invoice_number:invoiceNumber,total:parseFloat(total)||0,status,notes,received_date:date});
+    setSaving(false);
+  };
+
+  return (
+    <Modal title={receipt?'Edit Receipt':'New Receipt'} onClose={onClose}
+      footer={<>
+        <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>{saving?'Saving…':(receipt?'Update':'Create Receipt')}</button>
+      </>}
+    >
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Supplier *</label>
+          <select className="form-input" value={supplierId} onChange={e=>setSupplierId(e.target.value)}>
+            <option value="">Select supplier…</option>
+            {suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+        <div className="form-group"><label className="form-label">Invoice Number</label><input className="form-input" value={invoiceNumber} onChange={e=>setInvoiceNumber(e.target.value)} placeholder="INV-0000"/></div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Total Amount (₪)</label><input className="form-input" type="number" value={total} onChange={e=>setTotal(e.target.value)} placeholder="0.00"/></div>
+        <div className="form-group"><label className="form-label">Date</label><input className="form-input" type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Payment Status</label>
+          <select className="form-input" value={status} onChange={e=>setStatus(e.target.value)}>
+            <option value="unpaid">Unpaid</option><option value="paid">Paid</option>
+          </select>
+        </div>
+        <div className="form-group"><label className="form-label">Notes</label><input className="form-input" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Optional…"/></div>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── RECIPES ─────────────────────────────────────────────
+function Recipes({ user }) {
+  const [recipes, setRecipes]     = useState([]);
+  const [items, setItems]         = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [showForm, setShowForm]   = useState(false);
+  const [editing, setEditing]     = useState(null);
+  const [search, setSearch]       = useState('');
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true); setError(null);
+      const [recipesRes, itemsRes] = await Promise.all([
+        api.entity.list('Recipe', {created_by: user.email}, '-created_date', 500),
+        api.entity.list('Item',   {created_by: user.email}, 'name', 500),
+      ]);
+      setRecipes(Array.isArray(recipesRes)?recipesRes:(recipesRes?.data||[]));
+      setItems(Array.isArray(itemsRes)?itemsRes:(itemsRes?.data||[]));
+    } catch(e) { setError(e.message); }
+    finally { setLoading(false); }
+  }, [user]);
+
+  useEffect(()=>{loadData();},[loadData]);
+
+  const filtered = recipes.filter(r=>r.name.toLowerCase().includes(search.toLowerCase()));
+  const calcCost = r=>(r.ingredients||[]).reduce((a,i)=>a+(parseFloat(i.quantity)||0)*(parseFloat(i.cost_per_unit)||0),0);
+
+  const handleSave = async (data) => {
+    try {
+      if (editing) {
+        const u = await api.entity.update('Recipe', editing.id, data);
+        setRecipes(p=>p.map(r=>r.id===editing.id?u:r));
+        toast('Recipe updated');
+      } else {
+        const c = await api.entity.create('Recipe', {...data, created_by: user.email});
+        setRecipes(p=>[c,...p]);
+        toast('Recipe added');
+      }
+      setShowForm(false); setEditing(null);
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.entity.delete('Recipe', id);
+      setRecipes(p=>p.filter(r=>r.id!==id));
+      toast('Recipe deleted','info');
+    } catch(e) { toast(e.message,'error'); }
+  };
+
+  const CATS = {salad:'🥗',main:'🍖',dessert:'🍰',soup:'🥣',side:'🥦',drink:'🥤'};
+
+  return (
+    <div>
+      <div className="page-header">
+        <div><div className="page-title">Recipes</div><div className="page-subtitle">{recipes.length} recipes in your account</div></div>
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn btn-secondary" onClick={loadData}><Ico name="refresh" size={14}/></button>
+          <button className="btn btn-primary" onClick={()=>{setEditing(null);setShowForm(true);}}><Ico name="plus" size={14}/> Add Recipe</button>
+        </div>
+      </div>
+      {error && <ErrorBanner message={error} onRetry={loadData}/>}
+      <div className="filters-bar">
+        <div className="search-box"><Ico name="search" size={14}/><input className="search-input" placeholder="Search recipes…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+      </div>
+      {loading ? <PageSpinner/> : (
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:16}}>
+          {filtered.map(recipe=>{
+            const cost   = calcCost(recipe);
+            const margin = recipe.selling_price>0?((recipe.selling_price-cost)/recipe.selling_price*100):0;
+            const costPct= recipe.selling_price>0?(cost/recipe.selling_price*100):0;
+            return (
+              <div key={recipe.id} className="recipe-card">
+                <div className="recipe-header" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <div>
+                    <div style={{fontSize:20,marginBottom:2}}>{CATS[recipe.category]||'🍽️'}</div>
+                    <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>{recipe.name}</div>
+                    <div style={{fontSize:11,color:'var(--text2)',textTransform:'capitalize'}}>{recipe.category||'recipe'}</div>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontSize:11,color:'var(--text2)'}}>Selling Price</div>
+                    <div style={{fontFamily:'Syne',fontWeight:800,fontSize:20,color:'var(--accent)'}}>₪{recipe.selling_price||0}</div>
+                  </div>
+                </div>
+                <div className="recipe-body">
+                  <div style={{display:'flex',gap:10,marginBottom:12}}>
+                    <div style={{flex:1,background:'var(--bg3)',borderRadius:8,padding:'8px 12px'}}>
+                      <div style={{fontSize:11,color:'var(--text2)'}}>Food Cost</div>
+                      <div style={{fontFamily:'Syne',fontWeight:700,fontSize:16}}>₪{cost.toFixed(2)}</div>
+                      <div style={{fontSize:11,color:costPct>35?'var(--red)':'var(--green)'}}>{costPct.toFixed(1)}%</div>
+                    </div>
+                    <div style={{flex:1,background:'var(--bg3)',borderRadius:8,padding:'8px 12px'}}>
+                      <div style={{fontSize:11,color:'var(--text2)'}}>Margin</div>
+                      <div style={{fontFamily:'Syne',fontWeight:700,fontSize:16,color:margin>60?'var(--green)':'var(--yellow)'}}>{margin.toFixed(1)}%</div>
+                      <div style={{fontSize:11,color:'var(--text2)'}}>₪{(recipe.selling_price-cost).toFixed(2)}</div>
+                    </div>
+                  </div>
+                  <div style={{fontSize:12,color:'var(--text2)',marginBottom:10}}>
+                    {(recipe.ingredients||[]).length} ingredient{(recipe.ingredients||[]).length!==1?'s':''}
+                  </div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button className="btn btn-sm btn-secondary" style={{flex:1}} onClick={()=>{setEditing(recipe);setShowForm(true);}}><Ico name="edit" size={12}/> Edit</button>
+                    <button className="btn btn-sm" onClick={()=>handleDelete(recipe.id)} style={{background:'rgba(239,68,68,0.08)',color:'var(--red)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:6,padding:'5px 10px',cursor:'pointer',fontSize:12,display:'flex',alignItems:'center',gap:4}}>
+                      <Ico name="trash" size={12}/>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length===0 && <div className="empty-state" style={{gridColumn:'1/-1'}}><Ico name="recipes" size={48}/><h3>No recipes yet</h3><p>Add your first recipe to track food cost</p></div>}
+        </div>
+      )}
+      {showForm && <RecipeForm recipe={editing} items={items} onSave={handleSave} onClose={()=>{setShowForm(false);setEditing(null);}}/>}
+    </div>
+  );
+}
+
+function RecipeForm({ recipe, items, onSave, onClose }) {
+  const [saving, setSaving]   = useState(false);
+  const [name, setName]       = useState(recipe?.name||'');
+  const [category, setCategory] = useState(recipe?.category||'main');
+  const [sellingPrice, setSellingPrice] = useState(recipe?.selling_price||'');
+  const [notes, setNotes]     = useState(recipe?.notes||'');
+  const [ingredients, setIngredients] = useState(recipe?.ingredients||[]);
+
+  const addIngredient    = () => setIngredients(p=>[...p,{item_id:'',item_name:'',quantity:1,unit:'unit',cost_per_unit:0}]);
+  const removeIngredient = idx => setIngredients(p=>p.filter((_,i)=>i!==idx));
+  const updateIngredient = (idx,field,val) => {
+    setIngredients(p=>{
+      const n=[...p]; n[idx]={...n[idx],[field]:val};
+      if(field==='item_id'){
+        const it=items.find(i=>i.id===val);
+        if(it){n[idx].item_name=it.name;n[idx].cost_per_unit=it.price_after_discount||(it.price*(1-(it.discount||0)/100));n[idx].unit=it.unit;}
+      }
+      return n;
+    });
+  };
+
+  const totalCost = ingredients.reduce((a,i)=>a+(parseFloat(i.quantity)||0)*(parseFloat(i.cost_per_unit)||0),0);
+
+  const handleSubmit = async () => {
+    if(!name.trim()){toast('Name required','error');return;}
+    setSaving(true);
+    await onSave({name,category,selling_price:parseFloat(sellingPrice)||0,notes,ingredients});
+    setSaving(false);
+  };
+
+  return (
+    <Modal title={recipe?'Edit Recipe':'Add Recipe'} onClose={onClose} size="modal-lg"
+      footer={<>
+        <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>{saving?'Saving…':(recipe?'Update':'Add Recipe')}</button>
+      </>}
+    >
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Recipe Name *</label><input className="form-input" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Greek Salad"/></div>
+        <div className="form-group"><label className="form-label">Category</label>
+          <select className="form-input" value={category} onChange={e=>setCategory(e.target.value)}>
+            <option value="salad">Salad</option><option value="main">Main Course</option>
+            <option value="soup">Soup</option><option value="side">Side Dish</option>
+            <option value="dessert">Dessert</option><option value="drink">Drink</option>
+          </select>
+        </div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label className="form-label">Selling Price (₪)</label><input className="form-input" type="number" value={sellingPrice} onChange={e=>setSellingPrice(e.target.value)} placeholder="0"/></div>
+        <div className="form-group"><label className="form-label">Notes</label><input className="form-input" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Prep notes…"/></div>
+      </div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+        <span style={{fontSize:12,fontWeight:600,color:'var(--text2)',textTransform:'uppercase',letterSpacing:'0.5px'}}>Ingredients</span>
+        <button className="btn btn-sm btn-secondary" onClick={addIngredient}><Ico name="plus" size={12}/> Add</button>
+      </div>
+      {ingredients.map((ing,idx)=>(
+        <div key={idx} className="order-item-row">
+          <select className="form-input" style={{flex:2}} value={ing.item_id} onChange={e=>updateIngredient(idx,'item_id',e.target.value)}>
+            <option value="">Select item…</option>
+            {items.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}
+          </select>
+          <input className="form-input" type="number" placeholder="Qty" style={{width:70}} value={ing.quantity} onChange={e=>updateIngredient(idx,'quantity',e.target.value)}/>
+          <span style={{fontSize:11,color:'var(--text2)',whiteSpace:'nowrap'}}>{ing.unit||''}</span>
+          <span style={{fontSize:12,color:'var(--text2)',whiteSpace:'nowrap',minWidth:60,textAlign:'right'}}>₪{((parseFloat(ing.quantity)||0)*(parseFloat(ing.cost_per_unit)||0)).toFixed(2)}</span>
+          <button className="btn-icon" onClick={()=>removeIngredient(idx)} style={{color:'var(--red)'}}><Ico name="trash" size={14}/></button>
+        </div>
+      ))}
+      {ingredients.length>0 && (
+        <div style={{display:'flex',gap:16,marginTop:12,padding:'12px',background:'var(--bg3)',borderRadius:8,fontSize:13}}>
+          <span>Total Cost: <strong className="text-accent">₪{totalCost.toFixed(2)}</strong></span>
+          {sellingPrice>0&&<><span>Cost %: <strong style={{color:totalCost/parseFloat(sellingPrice)>0.35?'var(--red)':'var(--green)'}}>{(totalCost/parseFloat(sellingPrice)*100).toFixed(1)}%</strong></span>
+          <span>Margin: <strong className="text-green">₪{(parseFloat(sellingPrice)-totalCost).toFixed(2)}</strong></span></>}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+// ─── MAIN APP ────────────────────────────────────────────
+const PAGES = [
+  {id:'dashboard', label:'Dashboard', icon:'dashboard'},
+  {id:'orders',    label:'Orders',    icon:'orders'},
+  {id:'receipts',  label:'Receipts',  icon:'receipts'},
+  {id:'suppliers', label:'Suppliers', icon:'suppliers'},
+  {id:'items',     label:'Items',     icon:'items'},
+  {id:'recipes',   label:'Recipes',   icon:'recipes'},
+];
+
+function App() {
+  const [user, setUser]               = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError]     = useState(null);
+  const [page, setPage]               = useState('dashboard');
+  const [collapsed, setCollapsed]     = useState(false);
+  const [orders, setOrders]           = useState([]);   // for dashboard cross-page
+  const [receipts, setReceipts]       = useState([]);
+  const [suppliers, setSuppliers]     = useState([]);
+
+  // Bootstrap auth
+  useEffect(()=>{
+    (async()=>{
+      try {
+        const me = await api.auth.me();
+        setUser(me);
+        // Prefetch dashboard data
+        const [o,r,s] = await Promise.all([
+          api.entity.list('Order',       {created_by: me.email}, '-created_date', 200),
+          api.entity.list('SupplyReceipt',{created_by: me.email}, '-received_date', 100),
+          api.entity.list('Supplier',    {created_by: me.email}, 'name', 100),
+        ]);
+        setOrders(Array.isArray(o)?o:(o?.data||[]));
+        setReceipts(Array.isArray(r)?r:(r?.data||[]));
+        setSuppliers(Array.isArray(s)?s:(s?.data||[]));
+      } catch(e) {
+        setAuthError(e.message);
+      } finally {
+        setAuthLoading(false);
+      }
+    })();
+  },[]);
+
+  if (authLoading) return (
+    <div className="loading-screen">
+      <div className="logo-icon" style={{width:56,height:56,fontSize:28}}>S</div>
+      <div className="spinner spinner-lg"/>
+      <p>Connecting to Base44…</p>
+    </div>
+  );
+
+  if (authError) return (
+    <div className="login-screen">
+      <div className="login-card">
+        <div className="login-logo">S</div>
+        <h2 style={{fontFamily:'Syne',fontWeight:800,fontSize:22,marginBottom:8}}>SmartPlate</h2>
+        <p style={{color:'var(--text2)',fontSize:14,marginBottom:20}}>Restaurant Operations Platform</p>
+        <div className="error-banner" style={{textAlign:'left'}}>
+          <Ico name="warning" size={16}/>
+          <div>
+            <div style={{fontWeight:600,marginBottom:2}}>Could not connect to Base44</div>
+            <div style={{fontSize:12,opacity:0.8}}>{authError}</div>
+          </div>
+        </div>
+        <p style={{fontSize:12,color:'var(--text2)',marginTop:12}}>Check that your API key is valid and Base44 is reachable.</p>
+      </div>
+    </div>
+  );
+
+  const currentPage = PAGES.find(p=>p.id===page);
+  const initials = user?.full_name ? user.full_name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2) : (user?.email||'U')[0].toUpperCase();
+
+  const renderPage = () => {
+    switch(page) {
+      case 'dashboard': return <Dashboard orders={orders} receipts={receipts} suppliers={suppliers}/>;
+      case 'orders':    return <Orders    user={user}/>;
+      case 'receipts':  return <SupplyReceipts user={user}/>;
+      case 'suppliers': return <Suppliers user={user} orders={orders}/>;
+      case 'items':     return <Items     user={user}/>;
+      case 'recipes':   return <Recipes   user={user}/>;
+      default: return null;
+    }
+  };
+
+  return (
+    <ToastProvider>
+      <div className="app">
+        <nav className={`sidebar ${collapsed?'collapsed':''}`}>
+          <div className="logo">
+            <div className="logo-icon">S</div>
+            {!collapsed && <span className="logo-text">SmartPlate</span>}
+          </div>
+          <div className="nav-section">
+            {!collapsed && <div className="nav-label">Navigation</div>}
+            {PAGES.map(p=>(
+              <div key={p.id} className={`nav-item ${page===p.id?'active':''}`} onClick={()=>setPage(p.id)} title={collapsed?p.label:''}>
+                <Ico name={p.icon} size={18}/>
+                {!collapsed && <span>{p.label}</span>}
+              </div>
+            ))}
+          </div>
+          <div style={{padding:'12px 8px',borderTop:'1px solid var(--border)'}}>
+            {!collapsed && user && (
+              <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,background:'var(--bg3)',marginBottom:8}}>
+                <div style={{width:28,height:28,borderRadius:'50%',background:'var(--accent)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0}}>{initials}</div>
+                <div style={{overflow:'hidden'}}>
+                  <div style={{fontSize:12,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{user.full_name||user.email}</div>
+                  <div style={{fontSize:10,color:'var(--text2)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{user.email}</div>
+                </div>
+              </div>
+            )}
+            <div className="nav-item" onClick={()=>setCollapsed(c=>!c)}>
+              <Ico name={collapsed?'chevronR':'chevronL'} size={18}/>
+              {!collapsed && <span>Collapse</span>}
+            </div>
+          </div>
+        </nav>
+
+        <div className="main">
+          <div className="topbar">
+            <span className="topbar-title">{currentPage?.label}</span>
+            <div style={{flex:1}}/>
+            <div style={{fontSize:12,color:'var(--text2)',marginRight:4}}>
+              🟢 Live — Base44
+            </div>
+            <div className="avatar" title={user?.email}>{initials}</div>
+          </div>
+          <div className="content">{renderPage()}</div>
+        </div>
+      </div>
+    </ToastProvider>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
 </html>
