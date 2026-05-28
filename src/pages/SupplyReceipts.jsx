@@ -507,6 +507,7 @@ export default function SupplyReceiptsPage() {
            </Button>
             <Button
               onClick={() => {
+                setActiveTab('receipts'); // Switch to the tab where the form is rendered
                 setShowNoOrderForm(true); // Open the no-order receipt creation form
                 setShowForm(false); // Close the manual receipt form if open
                 setShowReceiveForm(false); // Close the order selection flow if open
