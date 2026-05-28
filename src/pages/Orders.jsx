@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Share, Copy, FileCode, MoreHorizontal, PackageCheck } from "lucide-react";
+import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Share, Copy, FileCode, MoreHorizontal, PackageCheck, Send } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1405,7 +1405,7 @@ export default function OrdersPage() {
                                   onClick={(e) => { e.stopPropagation(); handleResend(order); }}
                                   className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full"
                                 >
-                                  <Share className="w-4 h-4" />
+                                  <Send className="w-4 h-4" />
                                 </Button>
                               )}
                               {!isViewer && (
@@ -1630,9 +1630,9 @@ export default function OrdersPage() {
                                 size="icon"
                                 onClick={(e) => { e.stopPropagation(); handleResend(order); }}
                                 className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full"
-                                title={safeT('share','שתף','Share')}
+                                title={safeT('send','שלח','Send')}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                <Send className="w-4 h-4" />
                               </Button>
                             )}
                           </div>
