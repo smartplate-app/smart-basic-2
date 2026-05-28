@@ -752,7 +752,7 @@ export default function OrdersPage() {
     if (!order) return;
 
     // Send order via the explicit WhatsApp handler directly
-    sendOrderToWhatsApp(order, { forceImageShare: false, preOpenedWindow: null });
+    await sendOrderToWhatsApp(order, { forceImageShare: false, preOpenedWindow: null });
     
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     
@@ -762,6 +762,7 @@ export default function OrdersPage() {
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
 
     setPreviewOrder(null);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
   };
 
   // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
@@ -921,7 +922,7 @@ export default function OrdersPage() {
     const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
     return { ...o, status: 'sent', order_number: num };
   }));
-  try { sendOrderToWhatsApp(order, { preOpenedWindow: null }); } catch (_) {}
+  try { await sendOrderToWhatsApp(order, { preOpenedWindow: null }); } catch (_) {}
   setPreviewOrder(null);
   // Optionally retry in background without blocking UX
   setTimeout(() => {
@@ -930,6 +931,7 @@ export default function OrdersPage() {
   }, 1200);
 
   setSendOptionOrder(null);
+  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
   };
 
     const handleConfirmSendStoreNext = async () => {
@@ -955,6 +957,7 @@ export default function OrdersPage() {
           base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number }).catch(() => {});
           setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent' } : o));
           alert(language === 'he' ? 'קובץ ה-XML עבור StoreNext הורד בהצלחה. יש לטעון אותו במערכת StoreNext.' : 'StoreNext XML downloaded successfully. Please upload it to StoreNext.');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           alert(language === 'he' ? 'שגיאה ביצירת קובץ StoreNext' : 'Error generating StoreNext file');
         }
@@ -977,7 +980,7 @@ export default function OrdersPage() {
       }));
 
       // Trigger share immediately using the pre-rendered file when available
-      try { sendOrderToWhatsApp(order, { forceImageShare: true, preparedFile: androidShareFile }); } catch (_) {}
+      try { await sendOrderToWhatsApp(order, { forceImageShare: true, preparedFile: androidShareFile }); } catch (_) {}
       setPreviewOrder(null);
 
       // Background: mark as sent and refresh (no blocking)
@@ -988,6 +991,7 @@ export default function OrdersPage() {
       }, 200);
 
       setSendOptionOrder(null);
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
     };
 
   const handleDelete = async (order) => {
@@ -1768,6 +1772,7 @@ export default function OrdersPage() {
             await doEmailSend(previewOrder);
             setTimeout(() => {
               alert(language === 'he' ? 'ההזמנה נשלחה בהצלחה לאימייל של הספק!' : 'Order sent successfully to supplier email!');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 500);
           }}
         />

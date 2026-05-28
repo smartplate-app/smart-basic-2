@@ -47,6 +47,18 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
       return (b.total_inventory_value || 0) - (a.total_inventory_value || 0);
     } else if (sortBy === 'date_asc') {
       return new Date(a.count_date) - new Date(b.count_date);
+    } else if (sortBy === 'name_asc') {
+      return (a.name || a.warehouse_name || '').localeCompare(b.name || b.warehouse_name || '');
+    } else if (sortBy === 'name_desc') {
+      return (b.name || b.warehouse_name || '').localeCompare(a.name || a.warehouse_name || '');
+    } else if (sortBy === 'status_asc') {
+      return (a.status || '').localeCompare(b.status || '');
+    } else if (sortBy === 'status_desc') {
+      return (b.status || '').localeCompare(a.status || '');
+    } else if (sortBy === 'warehouse_asc') {
+      return (a.warehouse_name || '').localeCompare(b.warehouse_name || '');
+    } else if (sortBy === 'warehouse_desc') {
+      return (b.warehouse_name || '').localeCompare(a.warehouse_name || '');
     } else { // date_desc is default
       return new Date(b.count_date) - new Date(a.count_date);
     }
@@ -58,8 +70,15 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
         <Table className="w-full">
           <TableHeader className="bg-gray-50 border-b">
             <TableRow>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('warehouse')}
+              <TableHead 
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setSortBy(sortBy === 'warehouse_desc' ? 'warehouse_asc' : 'warehouse_desc')}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  {sortBy === 'warehouse_desc' && <span className="text-gray-900">↓</span>}
+                  {sortBy === 'warehouse_asc' && <span className="text-gray-900">↑</span>}
+                  {t('warehouse')}
+                </div>
               </TableHead>
               <TableHead 
                 className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
@@ -97,8 +116,15 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
                   {t('total_inventory_value')}
                 </div>
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('status')}
+              <TableHead 
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setSortBy(sortBy === 'status_desc' ? 'status_asc' : 'status_desc')}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  {sortBy === 'status_desc' && <span className="text-gray-900">↓</span>}
+                  {sortBy === 'status_asc' && <span className="text-gray-900">↑</span>}
+                  {t('status')}
+                </div>
               </TableHead>
               <TableHead className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('actions') || 'פעולות'}
