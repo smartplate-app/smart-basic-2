@@ -471,11 +471,11 @@ export default function SupplyReceiptsPage() {
           </div>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div className="w-full md:w-auto">
-            <h1 className="text-4xl font-extrabold text-[#1a1f36] tracking-tight">{t('receipts_title')}</h1>
-            <p className="text-gray-500 mt-2 text-lg">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
+          <div className="w-full md:w-auto text-right">
+            <h1 className="text-3xl font-bold text-[#1a1f36] tracking-tight">{t('receipts_title')}</h1>
+            <p className="text-gray-500 mt-1 text-base">{t('receipts_greeting', { name: user?.full_name || '' })}</p>
           </div>
-          <div className="flex gap-3 flex-wrap items-center">
+          <div className="flex gap-3 flex-wrap items-center rtl:flex-row-reverse">
             {/* Kept viewMode='list' as default, removed the toggle buttons from UI to match the clean aesthetic */}
 
            <Button
@@ -560,26 +560,27 @@ export default function SupplyReceiptsPage() {
 
                   return (
                     <div key={section}>
-                      <h3 className="text-lg font-bold text-gray-800 mb-3">{sectionTitle} ({sectionOrders.length})</h3>
-                      <div className="flex flex-col gap-3">
+                      <h3 className="text-base font-medium text-gray-500 mb-3 px-1">{sectionTitle} ({sectionOrders.length})</h3>
+                      <div className="flex flex-col gap-2">
                         {sectionOrders.map(order => (
-                          <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 flex-1">
-                              <div className="font-bold text-gray-900 text-lg sm:w-1/3 truncate" title={order.supplier_name}>{order.supplier_name}</div>
-                              <div className="flex items-center gap-3">
-                                <span className="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-100 font-medium whitespace-nowrap">
+                          <div key={order.id} className="bg-white rounded-xl border border-gray-200/60 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-gray-300 transition-colors shadow-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 flex-1 text-right">
+                              <div className="font-medium text-gray-800 text-base sm:w-1/3 truncate text-right" title={order.supplier_name}>{order.supplier_name}</div>
+                              <div className="flex items-center justify-start sm:justify-start gap-3">
+                                <span className="text-xs text-gray-500 bg-gray-50/80 px-2 py-1 rounded-md border border-gray-100 whitespace-nowrap tracking-wide">
                                   {order.order_number}
                                 </span>
-                                <span className="text-sm text-gray-600 whitespace-nowrap">
+                                <span className="text-sm text-gray-400 whitespace-nowrap">
                                   {new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
                                 </span>
                               </div>
                             </div>
                             <Button
+                              variant="outline"
                               onClick={() => { setSelectedOrder(order); setShowForm(true); }}
-                              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex-shrink-0 font-bold"
+                              className="w-full sm:w-auto font-medium text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 transition-colors flex-shrink-0"
                             >
-                              <PackageCheck className="w-4 h-4 rtl:ml-2 rtl:mr-0 ltr:mr-2" />
+                              <PackageCheck className="w-4 h-4 rtl:ml-2 rtl:mr-0 ltr:mr-2 opacity-60" />
                               {tt('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
                             </Button>
                           </div>
