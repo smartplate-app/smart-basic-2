@@ -1027,7 +1027,7 @@ export default function OrdersPage() {
         const matchesSearch = (order.supplier_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
           (order.order_number || '').toLowerCase().includes((searchTerm || '').toLowerCase());
         const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-        const matchesSupplier = supplierFilter === "all" || ((order.supplier_name || '').toLowerCase() === supplierFilter.toLowerCase());
+        const matchesSupplier = supplierFilter === "all" || ((order.supplier_name || '').toLowerCase().includes(supplierFilter.toLowerCase()));
 
         const dateStr = order.delivery_date || order.created_date || order.updated_date;
         const ds = dateStr ? new Date(dateStr) : null;
@@ -1330,17 +1330,15 @@ export default function OrdersPage() {
                   </div>
                 )}
               </div>
-              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
-                <SelectTrigger className="h-12 w-auto min-w-[140px] rounded-2xl bg-white border-gray-200 text-gray-700 shadow-sm font-medium hover:bg-gray-50 transition-colors">
-                  <SelectValue placeholder={safeT('supplier', 'ספק', 'Supplier')} />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl shadow-lg border-gray-100">
-                  <SelectItem value="all" className="rounded-xl font-medium">{safeT('all', 'הכל', 'All')}</SelectItem>
-                  {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
-                    <SelectItem key={name} value={name} className="rounded-xl">{name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative min-w-[160px]">
+                <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-auto rtl:left-4" />
+                <Input
+                  placeholder={safeT('search_supplier', 'חיפוש ספק...', 'Search supplier...')}
+                  value={supplierFilter === 'all' ? '' : supplierFilter}
+                  onChange={(e) => setSupplierFilter(e.target.value || 'all')}
+                  className="pr-10 rtl:pr-4 rtl:pl-10 h-12 text-sm rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
+                />
+              </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="h-12 w-auto min-w-[150px] rounded-2xl bg-white border-gray-200 text-gray-700 shadow-sm font-medium hover:bg-gray-50 transition-colors">
                   <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
