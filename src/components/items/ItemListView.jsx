@@ -171,7 +171,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                   {item.catalog_number || '-'}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
-                  {item.units_per_package} {t('unit_' + item.unit)}
+                  {item.units_per_package} {language === 'he' ? ({ unit: 'יחידה', liter: 'ליטר', kg: 'קילוגרם', gram: 'גרם', ml: 'מ"ל', case: 'ארגז' }[item.unit] || item.unit) : item.unit}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-right text-sm text-gray-900 font-medium">
                   {item.price > 0 ? `₪${item.price.toFixed(2)}` : '-'} {/* Removed t('currency') */}
