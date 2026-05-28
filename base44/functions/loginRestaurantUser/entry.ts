@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.30';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -11,47 +11,49 @@ async function hashPassword(password) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { email, password } = await req.json();
+    const { username, password, email } = await req.json();
     
-    console.log('[loginRestaurantUser] Login attempt for:', email);
+    console.log('[loginRestaurantUser] Login attempt for:', username || email);
     
-    if (!email || !password) {
+    if ((!username && !email) || !password) {
       return Response.json({ 
         success: false, 
-        error: 'Email and password required' 
+        error: 'Username/Email and password required' 
       }, { status: 400 });
     }
     
-    // Hash the provided password
     const hashedPassword = await hashPassword(password);
     
-    // Find user by email
-    const users = await base44.asServiceRole.entities.RestaurantUser.filter({ 
-      email: email.toLowerCase(),
-      is_active: true
-    });
+    // Find user by email or by email starting with username@
+    let users = [];
+    if (email) {
+        users = await base44.asServiceRole.entities.RestaurantUser.filter({ 
+          email: email.toLowerCase(),
+          is_active: true
+        });
+    } else if (username) {
+        // Filter in memory since we can't easily query "startsWith" or regex directly in filter sometimes
+        const allUsers = await base44.asServiceRole.entities.RestaurantUser.filter({ is_active: true });
+        users = allUsers.filter(u => u.email.startsWith(username.toLowerCase() + '@'));
+    }
     
     console.log('[loginRestaurantUser] Found users:', users.length);
     
     if (!users || users.length === 0) {
-      console.log('[loginRestaurantUser] User not found in RestaurantUser entity');
       return Response.json({ 
         success: false, 
-        error: 'Invalid email or password' 
+        error: 'Invalid username or password' 
       }, { status: 401 });
     }
     
-    const user = users[0];
-    console.log('[loginRestaurantUser] User found, checking password...');
-    console.log('[loginRestaurantUser] Stored hash:', user.password);
-    console.log('[loginRestaurantUser] Provided hash:', hashedPassword);
+    // Find the one with matching password
+    const user = users.find(u => u.password === hashedPassword);
     
-    // Verify password
-    if (user.password !== hashedPassword) {
+    if (!user) {
       console.log('[loginRestaurantUser] Password mismatch!');
       return Response.json({ 
         success: false, 
-        error: 'Invalid email or password' 
+        error: 'Invalid username or password' 
       }, { status: 401 });
     }
     
@@ -66,7 +68,7 @@ Deno.serve(async (req) => {
       success: true,
       user: {
         id: user.id,
-        email: user.email,
+        email: user.email, // This is the important part: returning the constructed email
         full_name: user.full_name,
         role: user.role,
         store_id: user.store_id,

@@ -18,6 +18,7 @@ import MenuEngineeringPage from './pages/MenuEngineering';
 import InstagramStoryGreek from './pages/InstagramStoryGreek';
 import POSSettings from './pages/POSSettings';
 import PriceChangesPage from './pages/PriceChanges';
+import StoreLogin from './pages/StoreLogin';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -116,6 +117,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
+      <Route path="/StoreLogin" element={<StoreLogin />} />
       <Route element={<AppLayoutRoute />}>
         <Route path="/" element={<MainPage />} />
         {Object.entries(Pages).map(([path, Page]) => (

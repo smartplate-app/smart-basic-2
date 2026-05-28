@@ -44,41 +44,59 @@ Deno.serve(async (req) => {
       email: email.toLowerCase() 
     });
     
-    if (existingUsers && existingUsers.length > 0) {
-      return Response.json({ 
-        success: false, 
-        error: 'Email already exists' 
-      }, { status: 400 });
-    }
-    
     // Hash password
     const hashedPassword = await hashPassword(password);
     
-    // Create user
-    const newUser = await base44.asServiceRole.entities.RestaurantUser.create({
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      full_name: full_name,
-      phone: phone || '',
-      store_id: requester.id,
-      store_name: store_name || requester.business_name,
-      owner_email: owner_email || requester.email,
-      role: role,
-      is_active: true
-    });
+    let newUser;
+    if (existingUsers && existingUsers.length > 0) {
+      // Update existing user instead of failing (allows password/name updates)
+      newUser = await base44.asServiceRole.entities.RestaurantUser.update(existingUsers[0].id, {
+        password: hashedPassword,
+        full_name: full_name,
+        role: role,
+        is_active: true
+      });
+    } else {
+      // Create user
+      newUser = await base44.asServiceRole.entities.RestaurantUser.create({
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        full_name: full_name,
+        phone: phone || '',
+        store_id: requester.id,
+        store_name: store_name || requester.business_name,
+        owner_email: owner_email || requester.email,
+        role: role,
+        is_active: true
+      });
+    }
     
     console.log('[createRestaurantUser] User created successfully:', newUser.id);
     
-    // Also create StoreUser record for compatibility
-    await base44.asServiceRole.entities.StoreUser.create({
-      store_id: requester.id,
-      store_name: store_name || requester.business_name,
-      user_email: email.toLowerCase(),
-      user_name: full_name,
-      role: role,
-      owner_email: owner_email || requester.email,
-      is_active: true
+    // Check if StoreUser record already exists
+    const existingStoreUsers = await base44.asServiceRole.entities.StoreUser.filter({ 
+      user_email: email.toLowerCase() 
     });
+
+    if (existingStoreUsers && existingStoreUsers.length > 0) {
+      const storeUser = existingStoreUsers[0];
+      await base44.asServiceRole.entities.StoreUser.update(storeUser.id, {
+        user_name: full_name,
+        role: role,
+        is_active: true
+      });
+    } else {
+      // Also create StoreUser record for compatibility
+      await base44.asServiceRole.entities.StoreUser.create({
+        store_id: requester.id,
+        store_name: store_name || requester.business_name,
+        user_email: email.toLowerCase(),
+        user_name: full_name,
+        role: role,
+        owner_email: owner_email || requester.email,
+        is_active: true
+      });
+    }
     
     return Response.json({ 
       success: true,

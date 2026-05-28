@@ -21,9 +21,11 @@ export default function StoreUsersPage() {
   
   // Form states
   const [userName, setUserName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [userUsername, setUserUsername] = useState(""); // Replaced userEmail with username
+  const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState("worker");
   const [generatedLink, setGeneratedLink] = useState("");
+  const [generatedCredentials, setGeneratedCredentials] = useState(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [migrating, setMigrating] = useState(false);
@@ -104,7 +106,7 @@ export default function StoreUsersPage() {
   };
 
   const handleAddUser = async () => {
-      if (!userName.trim() || !userEmail.trim()) {
+      if (!userName.trim() || !userUsername.trim() || (!editingUser && !userPassword.trim())) {
         alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
         return;
       }
@@ -116,16 +118,17 @@ export default function StoreUsersPage() {
           const ownerEmail = user.acting_as_store_email || user.email;
           const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
           const restaurantAddress = user.business_address || '';
+          
+          // Generate an internal email based on username + owner ID to avoid collisions
+          const generatedInternalEmail = `${userUsername.toLowerCase().trim().replace(/[^a-z0-9]/g, '')}@${user.id}.local`;
 
-          // Create StoreUser record only
-          const createResponse = await base44.functions.invoke('createSimpleUserAccount', {
-            email: userEmail,
+          const createResponse = await base44.functions.invoke('createRestaurantUser', {
+            email: generatedInternalEmail,
+            password: userPassword,
             full_name: userName,
-            restaurant_name: storeName,
-            restaurant_address: restaurantAddress,
+            store_name: storeName,
             role: userRole,
             owner_email: ownerEmail,
-            store_id: ownerEmail,
             update_existing: !!editingUser
           });
 
@@ -141,7 +144,12 @@ export default function StoreUsersPage() {
         console.log('[StoreUsers] User list updated!');
 
         // Show success message
-        setGeneratedLink(userEmail);
+        setGeneratedCredentials({
+          username: userUsername,
+          password: userPassword,
+          loginUrl: `${window.location.origin}/#/StoreLogin`
+        });
+        setGeneratedLink(generatedInternalEmail);
         setLinkCopied(false);
 
         console.log('[StoreUsers] All done!');
@@ -180,7 +188,10 @@ export default function StoreUsersPage() {
   const handleEditUser = (storeUser) => {
       setEditingUser(storeUser);
       setUserName(storeUser.user_name);
-      setUserEmail(storeUser.user_email);
+      // Extract original username from email (e.g. username@storeid.local)
+      const extractedUsername = storeUser.user_email.split('@')[0];
+      setUserUsername(extractedUsername);
+      setUserPassword(''); // Force entering a new password if editing, or maybe we leave it blank to indicate no change (but API requires password currently)
       setUserRole(storeUser.role);
       setShowAddUser(true);
     };
@@ -251,8 +262,10 @@ export default function StoreUsersPage() {
             if (!open) {
               // Reset form when closing
               setGeneratedLink("");
+              setGeneratedCredentials(null);
               setUserName("");
-              setUserEmail("");
+              setUserUsername("");
+              setUserPassword("");
               setUserRole("worker");
               setLinkCopied(false);
               setEditingUser(null);
@@ -281,17 +294,27 @@ export default function StoreUsersPage() {
                   />
                 </div>
                 <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>{t.userEmail}</Label>
+                  <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'שם משתמש להתחברות' : 'Login Username'}</Label>
                   <Input 
-                    type="email"
-                    value={userEmail} 
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    placeholder="user@example.com"
+                    type="text"
+                    value={userUsername} 
+                    onChange={(e) => setUserUsername(e.target.value)}
+                    placeholder={language === 'he' ? 'לדוגמה: ivory' : 'e.g. ivory'}
+                    className={isRTL ? 'text-right' : ''}
+                    disabled={!!editingUser}
+                  />
+                  {editingUser && <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'לא ניתן לשנות שם משתמש קיים' : 'Cannot change existing username'}</p>}
+                </div>
+                <div>
+                  <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'סיסמה' : 'Password'}</Label>
+                  <Input 
+                    type="text"
+                    value={userPassword} 
+                    onChange={(e) => setUserPassword(e.target.value)}
+                    placeholder={language === 'he' ? 'הכנס סיסמה' : 'Enter password'}
                     className={isRTL ? 'text-right' : ''}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {language === 'he' ? 'המשתמש יתחבר דרך Google/Facebook' : 'User will login via Google/Facebook'}
-                  </p>
+                  {editingUser && <p className="text-xs text-amber-600 mt-1">{language === 'he' ? 'הכנס סיסמה חדשה (חובה לעדכן סיסמה בעריכה)' : 'Enter new password (required on edit)'}</p>}
                 </div>
                 <div>
                   <Label className={isRTL ? 'text-right block' : ''}>{t.role}</Label>
@@ -349,25 +372,33 @@ export default function StoreUsersPage() {
                         <Label className={`text-sm font-semibold text-gray-700 mb-2 block ${isRTL ? 'text-right' : ''}`}>
                           {language === 'he' ? '✅ המשתמש נוסף בהצלחה!' : '✅ User added successfully!'}
                         </Label>
-                        <div className="bg-blue-50 rounded-lg p-3">
-                          <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
-                            <strong>{language === 'he' ? '📧 אימייל:' : '📧 Email:'}</strong> {generatedLink}
-                          </p>
-                          <p className={`text-sm text-blue-700 mt-3 ${isRTL ? 'text-right' : ''}`}>
-                            <strong>{language === 'he' ? '💡 איך זה עובד:' : '💡 How it works:'}</strong>
-                          </p>
-                          <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
-                            <li>{language === 'he' ? 'המשתמש נכנס ל-smartplatebasic.com' : 'User goes to smartplatebasic.com'}</li>
-                            <li>{language === 'he' ? 'מתחבר דרך Google או Facebook' : 'Logs in via Google or Facebook'}</li>
-                            <li>{language === 'he' ? 'המערכת מזהה אוטומטית למסעדה שלך!' : 'System auto-detects your restaurant!'}</li>
-                          </ul>
-                        </div>
+                        {generatedCredentials && (
+                          <div className="bg-blue-50 rounded-lg p-3">
+                            <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
+                              <strong>{language === 'he' ? '👤 שם משתמש:' : '👤 Username:'}</strong> {generatedCredentials.username}
+                            </p>
+                            <p className={`text-sm text-blue-800 mt-1 ${isRTL ? 'text-right' : ''}`}>
+                              <strong>{language === 'he' ? '🔑 סיסמה:' : '🔑 Password:'}</strong> {generatedCredentials.password}
+                            </p>
+                            <p className={`text-sm text-blue-700 mt-3 ${isRTL ? 'text-right' : ''}`}>
+                              <strong>{language === 'he' ? '💡 איך מתחברים:' : '💡 How to login:'}</strong>
+                            </p>
+                            <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
+                              <li>{language === 'he' ? 'המשתמש נכנס לקישור הבא:' : 'User goes to the following link:'} <br/><a href={generatedCredentials.loginUrl} target="_blank" className="underline break-all">{generatedCredentials.loginUrl}</a></li>
+                              <li>{language === 'he' ? 'מזין את שם המשתמש והסיסמה שנוצרו עבורו.' : 'Enters the username and password created for them.'}</li>
+                              <li>{language === 'he' ? 'מקבל גישה ישירה למסעדה שלך בהתאם להרשאות.' : 'Gets direct access to your restaurant based on their role.'}</li>
+                            </ul>
+                          </div>
+                        )}
                       </div>
 
                       {/* WhatsApp Quick Share Button */}
                       <Button
                         onClick={() => {
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'הוזמנת להצטרף למסעדה' : 'You\'re invited to join'} ${user.business_name || user.full_name}.\n\n${language === 'he' ? '💡 איך להתחבר:' : '💡 How to login:'}\n${language === 'he' ? '1. היכנס ל: smartplatebasic.com' : '1. Go to: smartplatebasic.com'}\n${language === 'he' ? '2. התחבר דרך Google או Facebook' : '2. Login via Google or Facebook'}\n${language === 'he' ? '3. המערכת תזהה אוטומטית למסעדה!' : '3. System will auto-detect your restaurant!'}`;
+                          const loginLink = generatedCredentials?.loginUrl;
+                          const uname = generatedCredentials?.username;
+                          const pwd = generatedCredentials?.password;
+                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} ${user.business_name || user.full_name}.\n\n${language === 'he' ? '💡 פרטי התחברות:' : '💡 Login Details:'}\n${language === 'he' ? 'קישור:' : 'Link:'} ${loginLink}\n${language === 'he' ? 'שם משתמש:' : 'Username:'} ${uname}\n${language === 'he' ? 'סיסמה:' : 'Password:'} ${pwd}`;
                           const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                           window.open(whatsappUrl, '_blank');
                         }}
