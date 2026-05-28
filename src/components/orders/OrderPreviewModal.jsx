@@ -7,7 +7,7 @@ import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
 
-export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, onShare, hideActions = false }) {
+export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, hideActions = false }) {
   const { t, language } = useLanguage();
   const safeT = (key, he, en) => {
     const v = t(key);
@@ -573,31 +573,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 {safeT('send_email', 'במייל', 'Email')}
               </Button>
 
-              {onShare && (
-                <Button
-                  onClick={onShare}
-                  variant="outline"
-                  className="flex-1 h-12 text-gray-700 border-gray-200 hover:bg-gray-50 text-[15px]"
-                  disabled={downloading || sending}
-                >
-                  <Share className="w-4 h-4 ml-1.5" />
-                  <span className="hidden sm:inline">{safeT('share', 'שתף', 'Share')}</span>
-                  <span className="sm:hidden">{safeT('share', 'שתף', 'Share')}</span>
-                </Button>
-              )}
-
               <Button
-                onClick={() => { 
-                  if (onSend) {
-                    onSend(order);
-                  }
+                onClick={async () => {
+                  await handleDownloadImage({ shareOnly: true });
                 }}
                 className="flex-[1.5] h-12 bg-[#107c41] hover:bg-[#0c5e31] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
               >
-                {sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <MessageCircle className="w-5 h-5 ml-1.5" />}
-                {safeT('send_message_whatsapp','בוואטסאפ','WhatsApp')}
+                {downloading || sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <Share className="w-5 h-5 ml-1.5" />}
+                {safeT('send_message_whatsapp','וואטסאפ / הודעות','WhatsApp / Messages')}
               </Button>
             </div>
           )}

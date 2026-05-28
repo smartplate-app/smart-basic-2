@@ -36,8 +36,6 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [previewOrder, setPreviewOrder] = useState(null);
-  const [pregeneratedShareFile, setPregeneratedShareFile] = useState(null);
-  const [pregeneratedPngBlob, setPregeneratedPngBlob] = useState(null);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const [authLoading, setAuthLoading] = useState(true);
@@ -68,7 +66,6 @@ export default function OrdersPage() {
   // Send options chooser
   const [showSendOptions, setShowSendOptions] = useState(false);
   const [sendOptionOrder, setSendOptionOrder] = useState(null);
-  const [androidShareFile, setAndroidShareFile] = useState(null);
 
 
   // Hydrate from cache for instant UI, then optionally revalidate
@@ -81,71 +78,7 @@ export default function OrdersPage() {
     }
   }, []);
 
-  // Pre-generate share image to avoid losing user gesture on iOS Safari
-  // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
-  useEffect(() => {
-    if (!previewOrder) {
-      setPregeneratedShareFile(null);
-      setPregeneratedPngBlob(null);
-      return;
-    }
-
-    let isCancelled = false;
-    const generate = async () => {
-      const order = previewOrder;
-      const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-      const temp = document.createElement('div');
-      temp.style.position = 'fixed';
-      temp.style.left = '-9999px';
-      temp.style.top = '0';
-      temp.style.width = '800px';
-      temp.style.background = 'white';
-      temp.style.padding = '32px';
-      temp.style.fontFamily = 'system-ui, sans-serif';
-      temp.style.direction = (language === 'he' ? 'rtl' : 'ltr');
-      temp.innerHTML = `
-        <div style="background: linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:24px;border-radius:16px 16px 0 0;margin:-32px -32px 16px -32px;text-align:center;">
-          <div style="font-size:28px;font-weight:800;">${order.supplier_name || ''}</div>
-          <div style="opacity:.9;margin-top:4px;">${t('order_preview') || 'Order'} #${ensuredNumber}</div>
-        </div>
-        <div style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0;">
-          <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
-          ${order.restaurant_address ? `<div style="color:#334155">${order.restaurant_address}</div>` : ''}
-          ${order.delivery_date ? `<div style="margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
-        </div>
-        <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
-          <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
-          <table style="width:100%;border-collapse:collapse;">
-            <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
-            <tbody>
-              ${(order.items || []).map((it,i)=>`<tr style="background:${i%2===0?'#fff':'#f9fafb'}"><td style="padding:8px;border-bottom:1px solid #e5e7eb">${i+1}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.item_name||it.name||''}${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;font-weight:normal;">${language==='he'?'מק"ט:':'SKU:'} ${it.catalog_number}</span>` : ''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669">${it.quantity||''}</td><td style="padding:8px;border-bottom:1px solid #e5e7eb">${it.unit||''}</td></tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-          <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
-        </div>
-      `;
-      document.body.appendChild(temp);
-      try {
-        const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true });
-        if (isCancelled) return;
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-        const pngBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        if (blob && !isCancelled) {
-          const file = new File([blob], `order-${ensuredNumber}.jpg`, { type: 'image/jpeg' });
-          setPregeneratedShareFile(file);
-          setPregeneratedPngBlob(pngBlob);
-        }
-      } catch (e) {
-        console.warn('Pre-generation failed', e);
-      } finally {
-        try { document.body.removeChild(temp); } catch {}
-      }
-    };
-    generate();
-    return () => { isCancelled = true; };
-  }, [previewOrder, language, t]);
+  // No pre-generated file anymore
 
   const loadData = async (currentUser, retryAttempt = 0) => {
     try {
@@ -967,32 +900,7 @@ export default function OrdersPage() {
       setSendOptionOrder(null);
     };
 
-    const handleConfirmSendWhatsAppImage = async () => {
-      if (!sendOptionOrder) return;
-      const order = sendOptionOrder;
-      setShowSendOptions(false);
 
-      // Optimistic UI (do not block user gesture)
-      setOrders(prev => prev.map(o => {
-        if (o.id !== order.id) return o;
-        const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
-        return { ...o, status: 'sent', order_number: num };
-      }));
-
-      // Trigger share immediately using the pre-rendered file when available
-      try { await sendOrderToWhatsApp(order, { forceImageShare: true, preparedFile: androidShareFile }); } catch (_) {}
-      setPreviewOrder(null);
-
-      // Background: mark as sent and refresh (no blocking)
-      setTimeout(() => {
-        base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number }).catch(() => {});
-        try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
-        loadData(user).catch(() => {});
-      }, 200);
-
-      setSendOptionOrder(null);
-      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
-    };
 
   const handleDelete = async (order) => {
     if (isViewer) return;
@@ -1728,11 +1636,6 @@ export default function OrdersPage() {
           </DialogHeader>
           <div className="flex flex-col sm:flex-row sm:justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setShowSendOptions(false)} className="order-last sm:order-first">{safeT('cancel', 'ביטול', 'Cancel')}</Button>
-            {typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || '') && (
-              <Button onClick={handleConfirmSendWhatsAppImage} disabled={!androidShareFile} className="bg-[#25D366] hover:bg-[#128C7E] text-white disabled:opacity-60 disabled:cursor-not-allowed">
-                <MessageCircle className="w-4 h-4 mr-2" /> {(!androidShareFile) ? (language === 'he' ? 'מכין תמונה…' : 'Preparing image…') : (language === 'he' ? 'וואטסאפ (תמונה)' : 'WhatsApp (image)')}
-              </Button>
-            )}
             <Button onClick={handleConfirmSendWhatsApp} className="bg-[#25D366] hover:bg-[#128C7E] text-white">
               <MessageCircle className="w-4 h-4 mr-2" /> {language === 'he' ? 'וואטסאפ' : 'WhatsApp'}
             </Button>
@@ -1751,30 +1654,12 @@ export default function OrdersPage() {
           order={previewOrder}
           isOpen={!!previewOrder}
           onClose={() => setPreviewOrder(null)}
-          onSend={() => handleSendNow(previewOrder)}
-          onShare={async () => {
-            if (navigator.share) {
-              try {
-                const shareData = {
-                  title: `Order from ${previewOrder.restaurant_name || ''}`,
-                  text: `You have received a new order from "${previewOrder.restaurant_name || ''}"\n\nOrder #${previewOrder.order_number || ''}`
-                };
-                if (pregeneratedShareFile && navigator.canShare && navigator.canShare({ files: [pregeneratedShareFile] })) {
-                  shareData.files = [pregeneratedShareFile];
-                }
-                await navigator.share(shareData);
-                
-                // After share, mark as sent
-                const num = previewOrder.order_number || `ORD-${(previewOrder.id || Date.now()).toString().slice(-8)}`;
-                base44.functions.invoke('markOrderSent', { orderId: previewOrder.id, orderNumber: num }).catch(() => {});
-                setOrders(prev => prev.map(o => o.id === previewOrder.id ? { ...o, status: 'sent', order_number: num } : o));
-                setPreviewOrder(null);
-              } catch(e) {
-                console.log('Share failed or was cancelled', e);
-              }
-            } else {
-              alert(language === 'he' ? 'שיתוף לא נתמך בדפדפן זה' : 'Sharing is not supported on this browser');
-            }
+          onSend={(orderData) => {
+            // Updated by the modal when share is successful
+            const num = orderData?.order_number || previewOrder.order_number || `ORD-${(previewOrder.id || Date.now()).toString().slice(-8)}`;
+            base44.functions.invoke('markOrderSent', { orderId: previewOrder.id, orderNumber: num }).catch(() => {});
+            setOrders(prev => prev.map(o => o.id === previewOrder.id ? { ...o, status: 'sent', order_number: num } : o));
+            setPreviewOrder(null);
           }}
           onSendEmail={async () => {
             const selectedSupplier = suppliers.find(s => s.name === previewOrder.supplier_name || s.id === previewOrder.supplier_id);
