@@ -65,6 +65,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const isSubmittedRef = React.useRef(false);
   const formDataRef = React.useRef(formData);
   const [dbSavedAt, setDbSavedAt] = useState(null);
+  const dirtyItemsRef = React.useRef(new Map());
   
   const isCompleted = formData.status === 'completed';
 
@@ -288,54 +289,100 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     };
   }, [isOffline, language]);
 
-  // Auto-save draft to local storage and Database
+  // Auto-save draft to local storage and Database (Delta Sync)
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (!formData.warehouse_id && formData.items.length === 0 && !formData.name) return;
+    const timer = setInterval(async () => {
+      const currentData = formDataRef.current;
+      if (!currentData.warehouse_id && currentData.items.length === 0 && !currentData.name) return;
 
       // 1. Save locally for offline backup
       const dataToSave = {
-        ...formData,
+        ...currentData,
         savedAt: new Date().toISOString()
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
       setHasDraft(true);
 
-      // 2. Auto-save to Database if online
-      if (!isOffline && navigator.onLine) {
-        try {
+      // 2. Auto-save to Database via backend sync function if online
+      if (!isOffline && navigator.onLine && currentData.id) {
+        const dirtyItems = Array.from(dirtyItemsRef.current.values());
+        if (dirtyItems.length > 0) {
           if (isSavingRef.current) return;
           isSavingRef.current = true;
-          
-          const cleanedData = {
-            ...formData,
-            warehouse_name: formData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
-            items: formData.items.map(item => ({
+          try {
+            dirtyItemsRef.current.clear();
+            const cleanedDirtyItems = dirtyItems.map(item => ({
               ...item,
               counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
               price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
               total_cost: Number(item.total_cost) || 0
-            }))
-          };
+            }));
 
-          if (formData.id) {
-            await base44.entities.InventoryCount.update(formData.id, cleanedData);
+            await base44.functions.invoke('syncActiveCountItems', {
+              currentCountId: currentData.id,
+              updatedItems: cleanedDirtyItems
+            });
             setDbSavedAt(new Date());
-          } else {
-            const newCount = await base44.entities.InventoryCount.create({ ...cleanedData, status: formData.status || 'in_progress' });
-            setFormData(prev => ({ ...prev, id: newCount.id }));
-            setDbSavedAt(new Date());
+          } catch (error) {
+            console.error("DB Auto-save failed:", error);
+            // Restore dirty items if failed
+            dirtyItems.forEach(item => dirtyItemsRef.current.set(`${item.item_id}_${item.warehouse_id}`, item));
+          } finally {
+            isSavingRef.current = false;
           }
-        } catch (error) {
-          console.error("DB Auto-save failed:", error);
-        } finally {
-          isSavingRef.current = false;
         }
       }
-    }, 1000);
+    }, 1500);
 
-    return () => clearTimeout(timer);
-  }, [formData, isOffline, language]);
+    return () => clearInterval(timer);
+  }, [isOffline]);
+
+  // Real-time collaborative sync subscription
+  useEffect(() => {
+    if (!formData.id || isOffline || !navigator.onLine) return;
+
+    const unsubscribe = base44.entities.InventoryCount.subscribe((event) => {
+      // Sync from ANY updated inventory count (to catch merges from syncActiveCountItems for other counts too)
+      if (event.type === 'update' || event.type === 'create') {
+        const serverData = event.data;
+        if (!serverData || !serverData.items) return;
+        
+        // We only pull items from counts that belong to us/our store (syncActiveCountItems updates all our in_progress counts anyway)
+        // If it's our exact count ID, definitely merge it.
+        if (event.id === formData.id) {
+          setFormData(prev => {
+            const newItems = [...prev.items];
+            let changed = false;
+            
+            serverData.items.forEach(serverItem => {
+              const dirtyKey = `${serverItem.item_id}_${serverItem.warehouse_id}`;
+              if (dirtyItemsRef.current.has(dirtyKey)) return; // Skip actively edited items
+              
+              const localIndex = newItems.findIndex(i => i.item_id === serverItem.item_id && i.warehouse_id === serverItem.warehouse_id);
+              if (localIndex >= 0) {
+                const localItem = newItems[localIndex];
+                if (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes) {
+                  newItems[localIndex] = { ...localItem, ...serverItem };
+                  changed = true;
+                }
+              } else {
+                newItems.push(serverItem);
+                changed = true;
+              }
+            });
+            
+            if (changed) {
+              const total = newItems.reduce((sum, item) => sum + (Number(item.total_cost) || 0), 0);
+              return { ...prev, items: newItems, total_inventory_value: total };
+            }
+            return prev;
+          });
+        }
+      }
+    });
+    
+    return unsubscribe;
+  }, [formData.id, isOffline]);
 
   // Effect to populate filteredAvailableItems for the "Add Item" dropdown
   useEffect(() => {
@@ -491,6 +538,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         counted_units: "",
         total_cost: qty * price
       };
+      dirtyItemsRef.current.set(`${itemId}_${warehouseId}`, newItems[index]);
       return { ...prev, items: newItems };
     });
   };
@@ -533,7 +581,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         counted_quantity: (newValues.counted_cases === '' && newValues.counted_units === '') ? '' : totalQty,
         total_cost: totalQty * price
       };
-      
+      dirtyItemsRef.current.set(`${itemId}_${warehouseId}`, newItems[index]);
       return { ...prev, items: newItems };
     });
   };
@@ -550,6 +598,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         price_per_unit: price,
         total_cost: qty * priceValue
       };
+      dirtyItemsRef.current.set(`${itemId}_${warehouseId}`, newItems[index]);
       return { ...prev, items: newItems };
     });
   };
@@ -560,6 +609,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       const index = newItems.findIndex(i => i.item_id === itemId && i.warehouse_id === warehouseId);
       if (index === -1) return prev;
       newItems[index] = { ...newItems[index], notes };
+      dirtyItemsRef.current.set(`${itemId}_${warehouseId}`, newItems[index]);
       return { ...prev, items: newItems };
     });
   };
