@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader, Lock, User } from 'lucide-react';
+import { Loader, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageProvider';
 
 export default function StoreLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ export default function StoreLogin() {
           await base44.auth.register({
             email: userEmail,
             password: password,
-            full_name: storeUser.full_name
+            full_name: storeUser.full_name || storeUser.user_name || username
           });
           
           // Try login again after registration
@@ -66,7 +67,17 @@ export default function StoreLogin() {
           window.location.href = '/';
         } catch (regError) {
           console.error('Registration failed:', regError);
-          throw new Error(language === 'he' ? 'שגיאה בהרשמת המשתמש למערכת' : 'Failed to register user to the system');
+          let errorMsg = regError.message || 'Failed to register user to the system';
+          if (errorMsg.toLowerCase().includes('already registered') || errorMsg.toLowerCase().includes('already exists')) {
+             errorMsg = language === 'he' 
+               ? 'סיסמה שגויה או שהסיסמה שונתה על ידי המנהל (יש ליצור משתמש חדש אם הסיסמה שונתה).' 
+               : 'Invalid password or password was changed by manager (please create a new user if password was changed).';
+          } else {
+             errorMsg = language === 'he' 
+               ? `שגיאה בהרשמת המשתמש למערכת: ${errorMsg}` 
+               : `Failed to register user to the system: ${errorMsg}`;
+          }
+          throw new Error(errorMsg);
         }
       }
 
@@ -117,13 +128,20 @@ export default function StoreLogin() {
                 <Lock className={`absolute top-3 w-5 h-5 text-gray-400 ${language === 'he' ? 'right-3' : 'left-3'}`} />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={language === 'he' ? 'pr-10' : 'pl-10'}
+                  className={language === 'he' ? 'pr-10 pl-10' : 'pl-10 pr-10'}
                   required
                   autoComplete="current-password"
                 />
+                <button
+                  type="button"
+                  className={`absolute top-2.5 text-gray-400 hover:text-gray-600 ${language === 'he' ? 'left-3' : 'right-3'}`}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </div>
 
