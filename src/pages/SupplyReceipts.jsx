@@ -366,23 +366,17 @@ export default function SupplyReceiptsPage() {
     // Date range filter (inclusive)
     let matchesDate = true;
     if (dateFrom || dateTo) {
-      const recDate = new Date(receipt.received_date);
-      if (!isNaN(recDate)) {
-        let fD = dateFrom ? new Date(dateFrom) : null;
-        let tD = dateTo ? new Date(dateTo) : null;
+      const recDate = receipt.received_date ? receipt.received_date.split('T')[0] : '';
+      if (recDate) {
+        let fD = dateFrom;
+        let tD = dateTo;
         if (fD && tD && fD > tD) {
           const tmp = fD;
           fD = tD;
           tD = tmp;
         }
-        if (fD) {
-          fD.setHours(0,0,0,0);
-          if (recDate < fD) matchesDate = false;
-        }
-        if (matchesDate && tD) {
-          tD.setHours(23,59,59,999);
-          if (recDate > tD) matchesDate = false;
-        }
+        if (fD && recDate < fD) matchesDate = false;
+        if (matchesDate && tD && recDate > tD) matchesDate = false;
       } else {
         matchesDate = false;
       }

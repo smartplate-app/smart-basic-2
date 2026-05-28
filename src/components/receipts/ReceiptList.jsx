@@ -39,6 +39,36 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
 
   const [sendingToDokka, setSendingToDokka] = useState(null);
 
+  const handleDownload = async (e, url, defaultFilename) => {
+    e.stopPropagation();
+    e.preventDefault();
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Network response was not ok');
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      
+      let extension = '';
+      const urlMatch = url.match(/\.([a-zA-Z0-9]+)(?:[\?#]|$)/);
+      if (urlMatch) {
+        extension = `.${urlMatch[1]}`;
+      } else if (blob.type) {
+        extension = `.${blob.type.split('/')[1]}`;
+      }
+      
+      link.download = `${defaultFilename}${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
+      window.open(url, '_blank');
+    }
+  };
+
   const handleSendToDokka = async (e, receipt) => {
     e.stopPropagation();
     e.preventDefault();
@@ -267,11 +297,11 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   <td className="px-6 py-5 text-right rtl:text-left align-middle" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2 pointer-events-auto">
                       {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
-                        <a href={r.receipt_images[0]} download target="_blank" rel="noopener noreferrer" className="inline-flex">
+                        <button type="button" className="inline-flex" onClick={(e) => handleDownload(e, r.receipt_images[0], `receipt_${r.invoice_number || r.id}`)}>
                           <Button size="icon" variant="ghost" className="h-9 w-9 text-gray-400 hover:text-gray-900 rounded-xl" title={safeT('download', 'הורד', 'Download')}>
                             <Download className="w-5 h-5" />
                           </Button>
-                        </a>
+                        </button>
                       )}
                       {onDelete && (
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-red-600 rounded-xl" onClick={(e) => { e.stopPropagation(); onDelete(r); }} title={safeT('delete', 'מחיקה', 'Delete')}>
@@ -371,11 +401,11 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   )}
                   
                   {Array.isArray(r.receipt_images) && r.receipt_images.length > 0 && (
-                    <a href={r.receipt_images[0]} download target="_blank" rel="noopener noreferrer" className="inline-flex" onClick={(e) => e.stopPropagation()}>
+                    <button type="button" className="inline-flex" onClick={(e) => handleDownload(e, r.receipt_images[0], `receipt_${r.invoice_number || r.id}`)}>
                       <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full bg-gray-50 hover:bg-gray-100 border border-transparent" title={safeT('download', 'הורד', 'Download')}>
                         <Download className="w-4 h-4" />
                       </Button>
-                    </a>
+                    </button>
                   )}
                   {onDelete && (
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-full bg-gray-50 hover:bg-gray-100 border border-transparent" onClick={(e) => { e.stopPropagation(); onDelete(r); }} title={safeT('delete', 'מחיקה', 'Delete')}>
