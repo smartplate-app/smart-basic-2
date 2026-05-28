@@ -418,7 +418,8 @@ export default function StoreUsersPage() {
                         setShowAddUser(false);
                           setGeneratedLink("");
                           setUserName("");
-                          setUserEmail("");
+                          setUserUsername("");
+                          setUserPassword("");
                           setUserRole("worker");
                       }}
                     >
