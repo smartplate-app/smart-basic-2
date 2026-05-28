@@ -1333,11 +1333,17 @@ export default function OrdersPage() {
               <div className="relative min-w-[160px]">
                 <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-auto rtl:left-4" />
                 <Input
+                  list="supplier-list"
                   placeholder={safeT('search_supplier', 'חיפוש ספק...', 'Search supplier...')}
                   value={supplierFilter === 'all' ? '' : supplierFilter}
                   onChange={(e) => setSupplierFilter(e.target.value || 'all')}
                   className="pr-10 rtl:pr-4 rtl:pl-10 h-12 text-sm rounded-2xl bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
                 />
+                <datalist id="supplier-list">
+                  {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="h-12 w-auto min-w-[150px] rounded-2xl bg-white border-gray-200 text-gray-700 shadow-sm font-medium hover:bg-gray-50 transition-colors">
