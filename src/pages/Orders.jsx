@@ -1327,23 +1327,46 @@ export default function OrdersPage() {
               {t('no_orders_to_display')}
             </div>
           ) : (
-            filteredOrders.map((order) => {
-              const statusColors = {
-                sent: "bg-blue-50 text-blue-700 border-blue-200",
-                draft: "bg-yellow-50 text-yellow-700 border-yellow-200"
-              };
+            ['today', 'future', 'past', 'draft'].map(section => {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const sectionOrders = sortedOrders.filter(o => {
+                if (section === 'draft') return o.status === 'draft';
+                if (o.status !== 'sent') return false;
+                const dateStr = o.delivery_date ? new Date(o.delivery_date).toISOString().split('T')[0] : '';
+                if (section === 'today') return dateStr === todayStr;
+                if (section === 'future') return dateStr > todayStr;
+                if (section === 'past') return dateStr && dateStr < todayStr;
+                return false;
+              });
 
-              const statusLabels = {
-                sent: t('status_sent'),
-                draft: t('status_draft')
-              };
+              if (sectionOrders.length === 0) return null;
+              
+              const sectionTitle = section === 'today' ? (language === 'he' ? 'הזמנות להיום' : 'Today') :
+                                   section === 'future' ? (language === 'he' ? 'הזמנות עתידיות' : 'Future') :
+                                   section === 'past' ? (language === 'he' ? 'הזמנות שלא נקלטו' : 'Past due') :
+                                   (language === 'he' ? 'הזמנות בטיוטה' : 'Drafts');
 
               return (
-                <Card 
-                  key={order.id} 
-                  className="p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
-                >
+                <div key={section} className="mb-6">
+                  <h3 className="font-bold text-gray-700 mb-3 px-1">{sectionTitle} ({sectionOrders.length})</h3>
+                  <div className="space-y-4">
+                    {sectionOrders.map((order) => {
+                      const statusColors = {
+                        sent: "bg-blue-50 text-blue-700 border-blue-200",
+                        draft: "bg-yellow-50 text-yellow-700 border-yellow-200"
+                      };
+
+                      const statusLabels = {
+                        sent: t('status_sent'),
+                        draft: t('status_draft')
+                      };
+
+                      return (
+                        <Card 
+                          key={order.id} 
+                          className="p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
+                        >
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
@@ -1408,6 +1431,10 @@ export default function OrdersPage() {
                     </div>
                   </div>
                 </Card>
+              );
+            })}
+                  </div>
+                </div>
               );
             })
           )}
@@ -1561,23 +1588,49 @@ export default function OrdersPage() {
                         <p className="text-gray-600">{t('loading')}</p>
                       </td>
                     </tr>
-                  ) : sortedOrders.map((order) => {
-                    const statusColors = {
-                      sent: "bg-blue-50 text-blue-600",
-                      draft: "bg-gray-100 text-gray-600"
-                    };
-
-                    const statusLabels = {
-                      sent: t('status_sent'),
-                      draft: t('status_draft')
-                    };
+                  ) : ['today', 'future', 'past', 'draft'].map(section => {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const sectionOrders = sortedOrders.filter(o => {
+                      if (section === 'draft') return o.status === 'draft';
+                      if (o.status !== 'sent') return false;
+                      const dateStr = o.delivery_date ? new Date(o.delivery_date).toISOString().split('T')[0] : '';
+                      if (section === 'today') return dateStr === todayStr;
+                      if (section === 'future') return dateStr > todayStr;
+                      if (section === 'past') return dateStr && dateStr < todayStr;
+                      return false;
+                    });
+      
+                    if (sectionOrders.length === 0) return null;
+                    
+                    const sectionTitle = section === 'today' ? (language === 'he' ? 'הזמנות להיום' : 'Today') :
+                                         section === 'future' ? (language === 'he' ? 'הזמנות עתידיות' : 'Future') :
+                                         section === 'past' ? (language === 'he' ? 'הזמנות שלא נקלטו' : 'Past due') :
+                                         (language === 'he' ? 'הזמנות בטיוטה' : 'Drafts');
 
                     return (
-                      <tr
-                        key={order.id}
-                        className="hover:bg-gray-50 cursor-pointer transition-colors"
-                        onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
-                      >
+                      <React.Fragment key={section}>
+                        <tr>
+                          <td colSpan="5" className="px-6 py-3 bg-gray-50/80 border-b border-t border-gray-100 font-bold text-gray-700 text-sm">
+                            {sectionTitle} ({sectionOrders.length})
+                          </td>
+                        </tr>
+                        {sectionOrders.map((order) => {
+                          const statusColors = {
+                            sent: "bg-blue-50 text-blue-600",
+                            draft: "bg-gray-100 text-gray-600"
+                          };
+      
+                          const statusLabels = {
+                            sent: t('status_sent'),
+                            draft: t('status_draft')
+                          };
+
+                          return (
+                            <tr
+                              key={order.id}
+                              className="hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => { if (!isViewer) handleEdit(order); else handleOpenPreview(order); }}
+                            >
                         <td className="px-6 py-5 text-left rtl:text-right align-middle">
                           <div className="flex items-center gap-2">
                             <div className="text-base font-bold text-gray-900">{order.supplier_name}</div>
@@ -1640,6 +1693,9 @@ export default function OrdersPage() {
                       </tr>
                     );
                   })}
+                </React.Fragment>
+              );
+            })}
                 </AnimatePresence>
               </tbody>
             </table>
