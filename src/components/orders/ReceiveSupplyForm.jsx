@@ -1773,7 +1773,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               if (s?.email) {
                                 try {
                                   const logoHtml = user?.restaurant_logo ? `<br/><br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;"/>` : '';
-                                  await base44.integrations.Core.SendEmail({ to: s.email, subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`, body: text.replace(/\n/g, '<br/>') + logoHtml });
+                                  await base44.integrations.Core.SendEmail({ to: s.email, subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`, body: text.replace(/\n/g, '<br/>') + logoHtml + '<br/><br/><br/><br/><br/><br/><br/><br/>' });
                                 } catch (e) {}
                               }
                               window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');

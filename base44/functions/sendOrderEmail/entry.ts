@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     const fromDisplay = 'Smart Plate basic';
 
     const orderNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-    const restaurantName = order.restaurant_name || '';
+    const restaurantName = order.restaurant_name || user.business_name || user.acting_as_store_name || user.store_user_store_name || user.full_name || '';
     const deliveryDate = order.delivery_date || '';
     const items = Array.isArray(order.items) ? order.items : [];
 
@@ -113,15 +113,25 @@ Deno.serve(async (req) => {
         </table>
         
         <p style="margin:16px 0 0 0;color:#6b7280;font-size:12px;">Please reply to this email for any questions or confirmations.</p>
+        
+        <br/>
+        <br/>
+        ${restaurantName ? `<div style="font-weight: bold; margin-top: 10px;">${restaurantName}</div>` : ''}
+        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+          הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.
+        </div>
+        ${user.restaurant_logo ? `<br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;" />` : ''}
       </div>
       <div style="padding:12px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">Sent by Smart Plate basic</div>
     </div>
+    
+    <br/><br/><br/><br/><br/><br/><br/><br/>
   </body>
 </html>`;
 
     // Build plain text alternative (better deliverability for Exchange/Office365)
     const itemsTxt = items.map((it) => `• ${(it.item_name || '')}${it.catalog_number ? ` (SKU: ${it.catalog_number})` : ''} — ${Number(it.quantity || 0)} ${(it.unit || '')}`).join('\n');
-    const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.`;
+    const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.\n\n${restaurantName ? restaurantName + '\n' : ''}הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n\n\n\n\n\n`;
 
     const sendTo = async (rcpt) => {
       try {
