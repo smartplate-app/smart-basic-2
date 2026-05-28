@@ -205,9 +205,14 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       ...formData,
       savedAt: new Date().toISOString()
     };
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-    setHasDraft(true);
-    alert(language === 'he' ? '✓ הנתונים נשמרו מקומית בהצלחה!' : '✓ Data saved locally!');
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+      setHasDraft(true);
+      alert(language === 'he' ? '✓ הנתונים נשמרו מקומית בהצלחה!' : '✓ Data saved locally!');
+    } catch (err) {
+      console.error('LocalStorage quota exceeded', err);
+      alert(language === 'he' ? 'שגיאה: המקום לאחסון מקומי מלא. לא ניתן לשמור גיבוי.' : 'Error: Local storage is full. Cannot save draft.');
+    }
   };
 
   const loadFromLocalStorage = () => {
@@ -300,8 +305,12 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         ...currentData,
         savedAt: new Date().toISOString()
       };
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-      setHasDraft(true);
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+        setHasDraft(true);
+      } catch (err) {
+        console.warn('LocalStorage auto-save failed:', err);
+      }
 
       // 2. Auto-save to Database via backend sync function if online
       if (!isOffline && navigator.onLine && currentData.id) {
