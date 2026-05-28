@@ -147,7 +147,7 @@ export default function StoreUsersPage() {
         setGeneratedCredentials({
           username: userUsername,
           password: userPassword,
-          loginUrl: `${window.location.origin}/#/StoreLogin`
+          loginUrl: `${window.location.origin}/StoreLogin`
         });
         setGeneratedLink(generatedInternalEmail);
         setLinkCopied(false);
