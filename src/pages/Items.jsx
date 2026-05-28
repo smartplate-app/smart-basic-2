@@ -15,7 +15,7 @@ import ItemCard from "../components/items/ItemCard";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import ItemEditModal from "../components/items/ItemEditModal";
 import ItemListView from "../components/items/ItemListView";
-import SelectionBar from "../components/items/SelectionBar";
+import BulkWarehouseModal from "../components/items/BulkWarehouseModal";
 import ImportSuppliersItemsModal from "../components/items/ImportSuppliersItemsModal";
 import CleanDuplicatesModal from "../components/items/CleanDuplicatesModal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -54,6 +54,7 @@ export default function ItemsPage() {
   const [showCleanModal, setShowCleanModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [supplierFilterOpen, setSupplierFilterOpen] = useState(false);
+  const [showBulkWarehouseModal, setShowBulkWarehouseModal] = useState(false);
 
   // Hydrate from cache for instant UI
   React.useEffect(() => {
@@ -781,6 +782,44 @@ const handleCleanOrphans = async (ownerEmail) => {
                   {generatingPdf ? <Loader className="w-4 h-4 rtl:ml-2 ltr:mr-2 animate-spin" /> : <FileText className="w-4 h-4 rtl:ml-2 ltr:mr-2" />}
                   {language === 'he' ? 'הפק קטלוג' : 'Generate Catalog'}
                 </DropdownMenuItem>
+                {!isViewer && selectedIds.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setShowBulkWarehouseModal(true)}>
+                      <LayoutGrid className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                      {language === 'he' ? 'שייך פריטים נבחרים למחסנים' : 'Assign selected to warehouses'}
+                    </DropdownMenuItem>
+                    {selectedWarehouseId !== 'all' && (
+                      <DropdownMenuItem onClick={async () => {
+                        const currentWh = warehouses.find(w => w.id === selectedWarehouseId);
+                        if (!currentWh) return;
+                        const existing = Array.isArray(currentWh.catalog_items) ? currentWh.catalog_items : [];
+                        const next = existing.filter(id => !selectedIds.includes(id));
+                        await base44.entities.Warehouse.update(currentWh.id, { catalog_items: next });
+                        await Promise.all(selectedIds.map(async (itemId) => {
+                          const item = items.find(i => i.id === itemId);
+                          if (!item) return;
+                          const currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
+                          const currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
+                          if (!currentWids.includes(currentWh.id)) return;
+                          const newWids = currentWids.filter(id => id !== currentWh.id);
+                          const newWnames = currentWnames.filter(name => name !== currentWh.name);
+                          await base44.entities.Item.update(item.id, {
+                            warehouse_ids: newWids,
+                            warehouse_names: newWnames,
+                            warehouse_id: newWids.length > 0 ? newWids[0] : "",
+                            warehouse_name: newWnames.length > 0 ? newWnames[0] : ""
+                          });
+                        }));
+                        setSelectedIds([]);
+                        loadData(user);
+                      }}>
+                        <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-red-500" />
+                        <span className="text-red-500">{language === 'he' ? `הסר ממחסן נוכחי (${warehouses.find(w => w.id === selectedWarehouseId)?.name || ''})` : `Remove from current warehouse (${warehouses.find(w => w.id === selectedWarehouseId)?.name || ''})`}</span>
+                      </DropdownMenuItem>
+                    )}
+                  </>
+                )}
                 {!isViewer && (
                   <>
                     <DropdownMenuSeparator />
@@ -1042,89 +1081,55 @@ const handleCleanOrphans = async (ownerEmail) => {
        </AlertDialog>
 
        {!isViewer && (
-       <SelectionBar
-        selectedCount={selectedIds.length}
-        currentWarehouseName={selectedWarehouseId !== 'all' ? (warehouses.find(w => w.id === selectedWarehouseId)?.name || '') : ''}
-        warehouses={warehouses}
-        onRemoveFromCurrent={async () => {
-          if (selectedWarehouseId === 'all') return;
-          const wh = warehouses.find(w => w.id === selectedWarehouseId);
-          if (!wh) return;
-          // Update Warehouse catalog_items
-          const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
-          const next = existing.filter(id => !selectedIds.includes(id));
-          await base44.entities.Warehouse.update(wh.id, { catalog_items: next });
-          // Update each item to remove this warehouse from its warehouse_ids
-          await Promise.all(selectedIds.map(async (itemId) => {
-            const item = items.find(i => i.id === itemId);
-            if (!item) return;
-            const currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
-            const currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
-            if (!currentWids.includes(wh.id)) return;
-            const newWids = currentWids.filter(id => id !== wh.id);
-            const newWnames = currentWnames.filter(name => name !== wh.name);
-            await base44.entities.Item.update(item.id, {
-              warehouse_ids: newWids,
-              warehouse_names: newWnames,
-              warehouse_id: newWids.length > 0 ? newWids[0] : "",
-              warehouse_name: newWnames.length > 0 ? newWnames[0] : ""
-            });
-          }));
-          setSelectedIds([]);
-          loadData(user);
-        }}
-        onAssignToWarehouses={async (targetIds) => {
-          if (!targetIds || targetIds.length === 0) return;
-          
-          const targetWarehouses = warehouses.filter(w => targetIds.includes(w.id));
-          if (targetWarehouses.length === 0) return;
+         <BulkWarehouseModal
+           isOpen={showBulkWarehouseModal}
+           onClose={() => setShowBulkWarehouseModal(false)}
+           selectedCount={selectedIds.length}
+           warehouses={warehouses}
+           onAssignToWarehouses={async (targetIds) => {
+             if (!targetIds || targetIds.length === 0) return;
+             
+             const targetWarehouses = warehouses.filter(w => targetIds.includes(w.id));
+             if (targetWarehouses.length === 0) return;
 
-          // Update each warehouse's catalog_items
-          await Promise.all(targetWarehouses.map(async (wh) => {
-            const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
-            const next = Array.from(new Set([...existing, ...selectedIds]));
-            return base44.entities.Warehouse.update(wh.id, { catalog_items: next });
-          }));
+             // Update each warehouse's catalog_items
+             await Promise.all(targetWarehouses.map(async (wh) => {
+               const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
+               const next = Array.from(new Set([...existing, ...selectedIds]));
+               return base44.entities.Warehouse.update(wh.id, { catalog_items: next });
+             }));
 
-          // Update each item
-          await Promise.all(selectedIds.map(async (itemId) => {
-            const item = items.find(i => i.id === itemId);
-            if (!item) return;
-            let currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
-            let currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
-            
-            let updated = false;
-            targetWarehouses.forEach(wh => {
-              if (!currentWids.includes(wh.id)) {
-                currentWids.push(wh.id);
-                currentWnames.push(wh.name);
-                updated = true;
-              }
-            });
+             // Update each item
+             await Promise.all(selectedIds.map(async (itemId) => {
+               const item = items.find(i => i.id === itemId);
+               if (!item) return;
+               let currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
+               let currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
+               
+               let updated = false;
+               targetWarehouses.forEach(wh => {
+                 if (!currentWids.includes(wh.id)) {
+                   currentWids.push(wh.id);
+                   currentWnames.push(wh.name);
+                   updated = true;
+                 }
+               });
 
-            if (updated) {
-              await base44.entities.Item.update(item.id, {
-                warehouse_ids: currentWids,
-                warehouse_names: currentWnames,
-                warehouse_id: item.warehouse_id || currentWids[0],
-                warehouse_name: item.warehouse_name || currentWnames[0]
-              });
-            }
-          }));
+               if (updated) {
+                 await base44.entities.Item.update(item.id, {
+                   warehouse_ids: currentWids,
+                   warehouse_names: currentWnames,
+                   warehouse_id: item.warehouse_id || currentWids[0],
+                   warehouse_name: item.warehouse_name || currentWnames[0]
+                 });
+               }
+             }));
 
-          setSelectedIds([]);
-          loadData(user);
-        }}
-        onCreateNew={async () => {
-          const name = window.prompt('Warehouse name');
-          if (!name) return;
-          const created = await base44.entities.Warehouse.create({ name, catalog_items: selectedIds });
-          setWarehouses(prev => [...prev, created]);
-          setSelectedWarehouseId(created.id);
-          setSelectedIds([]);
-        }}
-        />
-        )}
+             setSelectedIds([]);
+             loadData(user);
+           }}
+         />
+       )}
 
         <ImportSuppliersItemsModal 
           isOpen={showImportModal}

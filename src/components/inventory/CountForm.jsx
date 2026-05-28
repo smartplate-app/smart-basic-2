@@ -61,6 +61,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [showCustomItemForm, setShowCustomItemForm] = useState(false);
   const [customItemData, setCustomItemData] = useState({ name: '', price: '' });
   const [creatingCustom, setCreatingCustom] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const isSavingRef = React.useRef(false);
   const isSubmittedRef = React.useRef(false);
   const formDataRef = React.useRef(formData);
@@ -68,6 +69,18 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const dirtyItemsRef = React.useRef(new Map());
   
   const isCompleted = formData.status === 'completed';
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     formDataRef.current = formData;
@@ -855,7 +868,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center mb-2 mt-4 flex-wrap gap-2 sticky top-[57px] md:top-0 z-40 bg-white/95 backdrop-blur-sm py-3 border-b border-gray-100 shadow-sm -mx-4 md:mx-0 px-4 md:px-0">
+                    <div className="flex justify-between items-center mb-2 mt-4 flex-wrap gap-2 sticky top-[64px] md:top-0 z-40 bg-white/95 backdrop-blur-sm py-3 border-b border-gray-100 shadow-sm -mx-4 md:mx-0 px-4 md:px-0">
                       <div className="relative flex-1 md:w-1/3 min-w-[150px]">
                         <Input
                           type="text"
@@ -1260,11 +1273,22 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
 
 
-            <div className="sticky bottom-[56px] md:bottom-0 inset-x-0 z-50 bg-white p-3 border-t border-gray-100 flex justify-end mt-6 -mx-4 md:-mx-6 -mb-6 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+            <div className="sticky bottom-[56px] md:bottom-0 z-50 bg-white p-3 border-t border-gray-100 flex justify-end mt-6 -mx-4 md:-mx-6 -mb-6 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
               <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60] w-full text-white text-base h-12 rounded-xl font-bold shadow-md" disabled={isOffline}>
                 {count ? t('update_count') : t('save_count')}
               </Button>
             </div>
+            {showScrollTop && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={scrollToTop}
+                className="fixed bottom-[130px] md:bottom-20 right-4 z-50 rounded-full w-10 h-10 bg-white shadow-lg border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                <ArrowUp className="w-5 h-5" />
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>
