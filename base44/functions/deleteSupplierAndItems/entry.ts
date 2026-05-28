@@ -22,11 +22,13 @@ Deno.serve(async (req) => {
 
     const ownerEmail = supplier.created_by || supplier.store_owner_email;
     const actingAsStoreEmail = user.acting_as_store_email || null;
+    const actingAsUserEmail = user.acting_as_user_email || null;
     const storeOwnerEmail = user.store_user_owner_email || null;
 
     let allowed = (
       user.email === ownerEmail ||
       (actingAsStoreEmail && actingAsStoreEmail === ownerEmail) ||
+      (actingAsUserEmail && actingAsUserEmail === ownerEmail) ||
       (storeOwnerEmail && (storeOwnerEmail === ownerEmail)) ||
       user.role === 'admin'
     );
@@ -81,8 +83,8 @@ Deno.serve(async (req) => {
 
     // Delete all items of this supplier (by id) and any orphan items matching supplier name for this owner
     const itemsById = await base44.asServiceRole.entities.Item.filter({ supplier_id: supplierId });
-    const itemsByNameCreated = await base44.asServiceRole.entities.Item.filter({ supplier_name: supplier.name, created_by: ownerEmail });
-    const itemsByNameStore = await base44.asServiceRole.entities.Item.filter({ supplier_name: supplier.name, store_owner_email: ownerEmail });
+    const itemsByNameCreated = ownerEmail ? await base44.asServiceRole.entities.Item.filter({ supplier_name: supplier.name, created_by: ownerEmail }) : [];
+    const itemsByNameStore = ownerEmail ? await base44.asServiceRole.entities.Item.filter({ supplier_name: supplier.name, store_owner_email: ownerEmail }) : [];
 
     const allToDeleteMap = new Map();
     for (const it of [...itemsById, ...itemsByNameCreated, ...itemsByNameStore]) {
