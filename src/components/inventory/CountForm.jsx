@@ -72,9 +72,9 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
+      setShowScrollTop(window.scrollY > 100);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -1273,21 +1273,28 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
 
 
-            <div className="sticky bottom-[56px] md:bottom-0 z-50 bg-white p-3 border-t border-gray-100 flex justify-end mt-6 -mx-4 md:-mx-6 -mb-6 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
-              <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60] w-full text-white text-base h-12 rounded-xl font-bold shadow-md" disabled={isOffline}>
-                {count ? t('update_count') : t('save_count')}
-              </Button>
+            <div className="h-24 w-full"></div>
+
+            <div className="fixed bottom-[56px] md:bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 p-3 md:px-8 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)] flex justify-center">
+              <div className="w-full max-w-[1200px] flex justify-end">
+                <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60] w-full md:w-1/3 lg:w-1/4 text-white text-base h-12 rounded-xl font-bold shadow-md" disabled={isOffline}>
+                  {count ? t('update_count') : t('save_count')}
+                </Button>
+              </div>
             </div>
+            
             {showScrollTop && (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={scrollToTop}
-                className="fixed bottom-[130px] md:bottom-20 right-4 z-50 rounded-full w-10 h-10 bg-white shadow-lg border-gray-200 text-gray-600 hover:bg-gray-50"
-              >
-                <ArrowUp className="w-5 h-5" />
-              </Button>
+              <div className="fixed bottom-[130px] md:bottom-[90px] right-4 md:right-8 z-50 transition-all duration-300">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={scrollToTop}
+                  className="rounded-full w-12 h-12 bg-white shadow-xl border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                >
+                  <ArrowUp className="w-6 h-6" />
+                </Button>
+              </div>
             )}
           </form>
         </CardContent>
