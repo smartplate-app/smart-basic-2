@@ -627,21 +627,14 @@ export default function MonthlyCountPage() {
             </DropdownMenu>
 
             {!isViewer && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="bg-[#d4a373] hover:bg-[#b88c60] text-white" disabled={warehouses.length === 0}>
-                    <Plus className="w-5 h-5 rtl:ml-2 ltr:mr-2" />
-                    {t('new_count') || 'New Count'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align={language === 'he' ? 'start' : 'end'} className="w-56">
-                  <DropdownMenuItem onClick={() => { setShowCountForm(true); setEditingCount(null); }}>
-                    <Plus className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                    {language === 'he' ? 'ספירה רגילה (ריקה)' : 'Regular Count (Empty)'}
-                  </DropdownMenuItem>
-
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button 
+                onClick={() => { setShowCountForm(true); setEditingCount(null); }}
+                className="bg-[#d4a373] hover:bg-[#b88c60] text-white" 
+                disabled={warehouses.length === 0}
+              >
+                <Plus className="w-5 h-5 rtl:ml-2 ltr:mr-2" />
+                {t('new_count') || 'New Count'}
+              </Button>
             )}
           </div>
         </div>

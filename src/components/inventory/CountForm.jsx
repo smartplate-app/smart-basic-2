@@ -727,14 +727,14 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                   value={formData.name || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder={language === 'he' ? 'שם ספירה (למשל: סוף חודש דצמבר)' : 'Count Name (e.g., December month-end)'}
-                  className="h-11"
+                  className="h-11 font-normal text-gray-700 bg-gray-50 border-gray-200"
                   disabled={isCompleted}
                 />
               </div>
 
               <div className="md:col-span-2">
                 <div className="relative">
-                  <div className="absolute top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none ltr:left-3 rtl:right-3 bg-white px-1">
+                  <div className="absolute top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none ltr:left-3 rtl:right-3 bg-gray-50 px-1">
                     {language === 'he' ? 'תאריך:' : 'Date:'}
                   </div>
                   <Input
@@ -742,7 +742,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     type="date"
                     value={formData.count_date}
                     onChange={(e) => setFormData(prev => ({ ...prev, count_date: e.target.value }))}
-                    className="h-11 rtl:pr-12 ltr:pl-12"
+                    className="h-11 rtl:pr-12 ltr:pl-12 font-normal text-gray-700 bg-gray-50 border-gray-200"
                     disabled={isCompleted}
                   />
                 </div>
@@ -755,7 +755,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                   onValueChange={(value) => setFormData(prev => ({ ...prev, count_type: value }))}
                   disabled={isCompleted}
                 >
-                  <SelectTrigger className="h-11 w-full">
+                  <SelectTrigger className="h-11 w-full font-normal text-gray-700 bg-gray-50 border-gray-200">
                     <SelectValue placeholder={t('count_type')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -774,7 +774,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                   value={formData.status}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                 >
-                  <SelectTrigger className="h-11 w-full">
+                  <SelectTrigger className="h-11 w-full font-normal text-gray-700 bg-gray-50 border-gray-200">
                     <SelectValue placeholder={t('status')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -784,25 +784,25 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 </Select>
               </div>
 
-              <div className="md:col-span-4">
+              <div className="md:col-span-4 mt-2">
                 <Select 
                    value={currentWarehouseTab} 
                    onValueChange={(val) => { if (val === "__create__") { handleCreateWarehouse(); return; } handleWarehouseChange(val); }}
                  >
-                  <SelectTrigger id="warehouse" className="border-blue-300 bg-blue-50 focus:ring-blue-500 font-medium text-blue-900 h-11">
-                    <SelectValue placeholder={language === 'he' ? 'בחר מחסן...' : 'Select Warehouse...'} />
+                  <SelectTrigger id="warehouse" className="border-teal-200 bg-teal-50/50 hover:bg-teal-50 focus:ring-teal-500 font-medium text-teal-800 h-12 shadow-sm transition-colors cursor-pointer">
+                    <SelectValue placeholder={language === 'he' ? 'בחר מחסן לספירה...' : 'Select Warehouse...'} />
                   </SelectTrigger>
                   <SelectContent>
-                     <SelectItem value="all_summary" className="font-bold text-blue-600 bg-blue-50 mb-1 border-b border-blue-100">
+                     <SelectItem value="all_summary" className="font-bold text-teal-700 bg-teal-50 mb-1 border-b border-teal-100">
                        {language === 'he' ? '📋 סיכום ספירה (כל המחסנים)' : '📋 Full Summary (All Warehouses)'}
                      </SelectItem>
                      {!isCompleted && <SelectItem value="__create__">+ {t('new_warehouse') || 'New Warehouse'}</SelectItem>}
                      {warehouseOptions.map(warehouse => (
                        <SelectItem key={warehouse.id} value={warehouse.id}>
                         <div className="flex items-center">
-                          <span>{language === 'he' ? 'מחסן:' : 'Warehouse:'} {warehouse.name}</span>
+                          <span className="font-normal text-base">{language === 'he' ? 'מחסן:' : 'Warehouse:'} {warehouse.name}</span>
                           {warehouse.catalog_items && warehouse.catalog_items.length > 0 && (
-                            <Badge variant="outline" className="ml-2">
+                            <Badge variant="outline" className="ml-2 font-normal text-xs bg-gray-50">
                               {warehouse.catalog_items.length} {t('items')}
                             </Badge>
                           )}
@@ -1055,7 +1055,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                         return (
                           <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="py-3 border-b border-gray-100 flex items-center gap-3 px-1">
                             <div className="flex-1 min-w-0 flex flex-col">
-                               <span className="font-medium text-sm text-gray-900 leading-tight">
+                               <span className={`text-sm text-gray-800 leading-tight ${originalItem?.nickname ? 'font-bold' : 'font-normal'}`}>
                                  {originalItem?.nickname || item.item_name}
                                </span>
                                <span className="text-[11px] text-gray-500 mt-0.5">
@@ -1151,8 +1151,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
                             return (
                               <TableRow key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index}>
-                                <TableCell className="font-medium px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm min-w-[120px] leading-snug">
-                                  {originalItem?.nickname || item.item_name}
+                                  <TableCell className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm min-w-[120px] leading-snug font-normal text-gray-800">
+                                  {originalItem?.nickname ? <span className="font-bold">{originalItem.nickname}</span> : item.item_name}
                                   {originalItem?.nickname && <span className="text-[11px] md:text-xs text-gray-500 block font-normal mt-0.5 leading-tight">{item.item_name}</span>}
                                 </TableCell>
                                 <TableCell className="px-2 py-3 md:px-4 md:py-4">
