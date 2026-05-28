@@ -523,6 +523,7 @@ useEffect(() => {
       const supplierId = formData.supplier_id || receipt?.supplier_id;
       const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
       const filtered = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
+      filtered.sort((a, b) => (b.awaiting_credit?1:0) - (a.awaiting_credit?1:0) || new Date(b.received_date) - new Date(a.received_date));
       setPreviousReceipts(filtered.slice(0, 200));
     } catch (e) { setPreviousReceipts([]); }
   })();
@@ -1569,19 +1570,13 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               <AlertDescription dir={language === 'he' ? 'rtl' : undefined} className={language === 'he' ? 'text-right' : ''}>{language === 'he' ? 'בקבלת זיכוי מומלץ להעלות קובץ PDF, אחרת יש לתקן את הסכום ידנית על ידי הוספת מינוס (−).' : 'For credit invoices, we recommend uploading a PDF; otherwise adjust the amount manually by prefixing a minus (−).'}</AlertDescription>
                             </Alert>
                             <div className="mt-3">
-                            <Label className="text-xs text-gray-600">{language === 'he' ? 'קשר לחשבונית המקורית (אופציונלי)' : 'Link to original receipt (optional)'} </Label>
-                            <Select
-                              value={formData.linked_receipt_id || ''}
-                              onValueChange={(val) => setFormData(prev => ({ ...prev, linked_receipt_id: val }))}
-                              disabled={isReadOnly}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder={language === 'he' ? 'בחר קבלה לקישור' : 'Select receipt to link'} />
-                              </SelectTrigger>
+                            <Label className="text-xs text-gray-600">{language === 'he' ? 'קשר לזיכוי פתוח / לחשבונית (אופציונלי)' : 'Link to open credit / receipt (optional)'}</Label>
+                            <Select value={formData.linked_receipt_id || ''} onValueChange={(val) => setFormData(prev => ({ ...prev, linked_receipt_id: val }))} disabled={isReadOnly}>
+                              <SelectTrigger><SelectValue placeholder={language === 'he' ? 'בחר זיכוי פתוח או קבלה לקישור' : 'Select open credit or receipt'} /></SelectTrigger>
                               <SelectContent>
                                 {(previousReceipts || []).slice(0,200).map(r => (
                                   <SelectItem key={r.id} value={r.id}>
-                                    {(r.order_number || r.invoice_number || r.id)} • {new Date(r.received_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} • {r.supplier_name}
+                                    {r.awaiting_credit ? '🔴 ' : ''}{(r.order_number || r.invoice_number || r.id)} • {new Date(r.received_date).toLocaleDateString(language==='he'?'he-IL':'en-US')} • {r.supplier_name}{r.awaiting_credit ? (language==='he'?' (ממתין לזיכוי)':' (Awaiting Credit)') : ''}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -1867,11 +1862,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 document_type: d.document_type || (formData.document_type || "invoice")
                               }));
                               try {
-                                if (base44.entities.SupplyReceipt.bulkCreate) {
-                                  await base44.entities.SupplyReceipt.bulkCreate(payloads);
-                                } else {
-                                  await Promise.all(payloads.map(p => base44.entities.SupplyReceipt.create(p)));
-                                }
+                                if (base44.entities.SupplyReceipt.bulkCreate) await base44.entities.SupplyReceipt.bulkCreate(payloads);
+                                else await Promise.all(payloads.map(p => base44.entities.SupplyReceipt.create(p)));
+                                if (formData.linked_receipt_id && payloads.some(p => p.is_refund)) await base44.entities.SupplyReceipt.update(formData.linked_receipt_id, {awaiting_credit: false, refund_received: true}).catch(()=>{});
                                 alert(language === 'he' ? 'נשמרו כל החשבוניות' : 'All invoices saved');
                                 onCancel && onCancel();
                               } catch (e) {

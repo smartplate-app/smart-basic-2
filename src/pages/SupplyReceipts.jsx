@@ -282,6 +282,14 @@ export default function SupplyReceiptsPage() {
         }
       }
 
+      // Update linked receipt to clear awaiting_credit and set refund_received
+      if (cleanData.linked_receipt_id && cleanData.is_refund) {
+        await base44.entities.SupplyReceipt.update(cleanData.linked_receipt_id, {
+          awaiting_credit: false,
+          refund_received: true
+        }).catch(() => {});
+      }
+
       // Reset all form-related states
       setShowForm(false); // Closes manual/editing form
       setShowReceiveForm(false); // Closes order selection list
