@@ -523,7 +523,7 @@ export default function SupplyReceiptsPage() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} dir={isRTL ? "rtl" : "ltr"}>
           <TabsList className="mb-2 bg-white/50 border border-gray-200 rounded-2xl p-1 shadow-sm h-auto inline-flex flex-wrap gap-1">
             <TabsTrigger value="pending_orders">{language === 'he' ? 'הזמנות לקליטה' : 'Pending Orders'}</TabsTrigger>
             <TabsTrigger value="receipts">{tt('receipts_tab','היסטוריית קבלות','Receipts History')}</TabsTrigger>

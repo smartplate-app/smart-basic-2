@@ -117,9 +117,9 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
   };
 
   return (
-    <div className="bg-white rounded-lg shadow border border-gray-100 relative">
-      <div className="hidden md:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-h-[70vh]">
-        <table className="w-full relative">
+    <div className="bg-white rounded-lg shadow border border-gray-100 relative" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="hidden md:block overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-h-[70vh]" dir={isRTL ? "rtl" : "ltr"}>
+        <table className="w-full relative" dir={isRTL ? "rtl" : "ltr"}>
           <thead className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
             <tr>
               <th 
