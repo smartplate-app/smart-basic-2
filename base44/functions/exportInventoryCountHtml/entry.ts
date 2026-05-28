@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 // Generates a full HTML page for an InventoryCount with proper UTF-8 + Hebrew font and RTL support
 Deno.serve(async (req) => {
@@ -15,8 +15,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'count_id is required' }, { status: 400 });
     }
 
-    const records = await base44.entities.InventoryCount.filter({ id: countId });
-    const count = Array.isArray(records) && records.length ? records[0] : null;
+    const count = await base44.entities.InventoryCount.get(countId).catch(() => null);
     if (!count) {
       return Response.json({ error: 'Inventory count not found' }, { status: 404 });
     }
