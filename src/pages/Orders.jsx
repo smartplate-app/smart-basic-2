@@ -63,6 +63,7 @@ export default function OrdersPage() {
   const [pullDist, setPullDist] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [showReceiveForm, setShowReceiveForm] = useState(false);
+  const [showNoOrderReceiveForm, setShowNoOrderReceiveForm] = useState(false);
   const [receiveOrder, setReceiveOrder] = useState(null);
   // Send options chooser
   const [showSendOptions, setShowSendOptions] = useState(false);
@@ -677,6 +678,7 @@ export default function OrdersPage() {
 
       alert(t('receipt_saved_successfully'));
       setShowReceiveForm(false);
+      setShowNoOrderReceiveForm(false);
       setReceiveOrder(null);
       await loadData(user);
     } catch (e) {
@@ -1138,20 +1140,39 @@ export default function OrdersPage() {
               </Button>
             )}
             {!isViewer && (
-              <Button
-                onClick={() => setShowForm(!showForm)}
-                className="hidden md:inline-flex bg-[#d4a373] hover:bg-[#b88c60] text-white h-12 px-6 rounded-2xl shadow-sm text-base font-bold transition-all hover:scale-105"
-              >
-                <Plus className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0" />
-                {safeT('new_order', 'הזמנה חדשה', 'New Order')}
-              </Button>
+              <>
+                <Button
+                  onClick={() => setShowNoOrderReceiveForm(true)}
+                  variant="outline"
+                  className="hidden md:inline-flex border-[#d4a373] text-[#d4a373] hover:bg-[#d4a373] hover:text-white h-12 px-6 rounded-2xl shadow-sm text-base font-bold transition-all"
+                >
+                  <PackageCheck className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0" />
+                  {safeT('receive_no_order', 'קבלת אספקה ללא הזמנה', 'Receive without order')}
+                </Button>
+                <Button
+                  onClick={() => setShowForm(!showForm)}
+                  className="hidden md:inline-flex bg-[#d4a373] hover:bg-[#b88c60] text-white h-12 px-6 rounded-2xl shadow-sm text-base font-bold transition-all hover:scale-105"
+                >
+                  <Plus className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0" />
+                  {safeT('new_order', 'הזמנה חדשה', 'New Order')}
+                </Button>
+              </>
             )}
           </div>
         </div>
 
-        {/* Mobile Filters Drawer trigger */}
-        <div className="md:hidden mb-4">
-          <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full">
+        {/* Mobile Filters Drawer trigger & No Order Receive */}
+        <div className="md:hidden mb-4 flex flex-col gap-3">
+          {!isViewer && (
+            <Button
+              onClick={() => setShowNoOrderReceiveForm(true)}
+              className="w-full bg-[#d4a373] hover:bg-[#b88c60] text-white h-12 rounded-xl shadow-sm text-base font-bold"
+            >
+              <PackageCheck className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0" />
+              {safeT('receive_no_order', 'קבלת אספקה ללא הזמנה', 'Receive without order')}
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full h-11 rounded-xl">
             {safeT('filters', 'סינון', 'Filters')}
           </Button>
         </div>
@@ -1207,6 +1228,26 @@ export default function OrdersPage() {
                     />
                   </div>
                 )}
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showNoOrderReceiveForm} onOpenChange={setShowNoOrderReceiveForm}>
+              <DialogContent className="max-w-3xl md:max-w-4xl w-[96vw] max-h-[90vh] overflow-y-auto p-0">
+                <DialogHeader className="sr-only">
+                  <DialogTitle>Receive / Scan Without Order</DialogTitle>
+                  <DialogDescription></DialogDescription>
+                </DialogHeader>
+                <div className="overflow-y-auto p-1">
+                  <ReceiveSupplyForm
+                    order={null}
+                    receipt={null}
+                    suppliers={suppliers}
+                    noOrderMode={true}
+                    onSubmit={handleReceiveSubmit}
+                    onCancel={() => setShowNoOrderReceiveForm(false)}
+                    autoOpenUpload={true}
+                  />
+                </div>
               </DialogContent>
             </Dialog>
 
