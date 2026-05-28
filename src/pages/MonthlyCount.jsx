@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, Warehouse as WarehouseIcon, RefreshCw, LayoutGrid, List, FileSpreadsheet, Camera, Upload, Merge, MoreHorizontal, FileDown } from "lucide-react";
+import { Plus, Search, Loader, Warehouse as WarehouseIcon, RefreshCw, LayoutGrid, List, FileSpreadsheet, Camera, Upload, Merge, MoreHorizontal, FileDown, ChevronDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ export default function MonthlyCountPage() {
   const [networkError, setNetworkError] = useState(null);
   const [viewMode, setViewMode] = useState("list");
   const [showExcelImport, setShowExcelImport] = useState(false);
+  const [showNewCountOptions, setShowNewCountOptions] = useState(false);
   const [showScreenshotImport, setShowScreenshotImport] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const { t, language } = useLanguage();
@@ -627,14 +628,33 @@ export default function MonthlyCountPage() {
             </DropdownMenu>
 
             {!isViewer && (
-              <Button 
-                onClick={() => { setShowCountForm(true); setEditingCount(null); }}
-                className="bg-[#d4a373] hover:bg-[#b88c60] text-white" 
-                disabled={warehouses.length === 0}
-              >
-                <Plus className="w-5 h-5 rtl:ml-2 ltr:mr-2" />
-                {t('new_count') || 'New Count'}
-              </Button>
+              <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                <Button 
+                  onClick={() => { setShowCountForm(true); setEditingCount(null); }}
+                  className="bg-[#d4a373] hover:bg-[#b88c60] text-white flex-1 md:flex-none shadow-sm h-11 md:h-10" 
+                  disabled={warehouses.length === 0}
+                >
+                  <Plus className={`w-4 h-4 ${language === 'he' ? 'ml-2' : 'mr-2'}`} />
+                  {t('new_count') || 'New Count'}
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-11 md:h-10 px-3 bg-white border-gray-200">
+                      <ChevronDown className="w-4 h-4 text-gray-600" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align={language === 'he' ? 'start' : 'end'} className="w-56">
+                    <DropdownMenuItem onClick={() => { setShowExcelImport(true); setShowNewCountOptions(false); }} className="py-3">
+                      <FileSpreadsheet className="w-4 h-4 mr-2 text-green-600" />
+                      <div className="flex flex-col">
+                        <span>{language === 'he' ? 'ייבא מאקסל' : 'Import from Excel'}</span>
+                        <span className="text-xs text-gray-500">{language === 'he' ? 'העלה קובץ ספירה מהקופה' : 'Upload POS count file'}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             )}
           </div>
         </div>

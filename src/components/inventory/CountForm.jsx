@@ -1053,12 +1053,12 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       {finalDisplayedItems.map((item, index) => {
                         const originalItem = items.find(i => i.id === item.item_id);
                         return (
-                          <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="py-3 border-b border-gray-100 flex items-center gap-3 px-1">
+                          <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="py-2 border-b border-gray-100 flex items-center gap-2 px-1">
                             <div className="flex-1 min-w-0 flex flex-col">
-                               <span className={`text-sm text-gray-800 leading-tight ${originalItem?.nickname ? 'font-bold' : 'font-normal'}`}>
+                               <span className={`text-[13px] md:text-sm text-gray-800 leading-tight ${originalItem?.nickname ? 'font-bold' : 'font-normal'}`}>
                                  {originalItem?.nickname || item.item_name}
                                </span>
-                               <span className="text-[11px] text-gray-500 mt-0.5">
+                               <span className="text-[10px] md:text-[11px] text-gray-500 mt-0.5">
                                  {item.unit}
                                  {currentWarehouseTab === "all_summary" && (
                                    <> <span className="mx-1 text-gray-300">|</span> ₪{Number(item.price_per_unit || 0).toFixed(2)}</>
@@ -1068,7 +1068,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                             
                             <div className="flex flex-col items-end shrink-0 w-[95px] md:w-[120px]">
                                {currentWarehouseTab === "all_summary" ? (
-                                  <div className="h-10 w-full bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center font-bold text-lg text-gray-900">
+                                  <div className="h-9 w-full bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center font-bold text-base text-gray-900">
                                     {typeof item.counted_quantity === 'number' ? Number(item.counted_quantity).toFixed(2).replace(/\.00$/, '') : item.counted_quantity}
                                   </div>
                                ) : (
@@ -1080,7 +1080,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                         step="any"
                                         value={item.counted_cases ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.floor(item.counted_quantity) : '')}
                                         onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'cases', e.target.value, originalItem?.units_per_package)}
-                                        className="w-full h-10 text-center font-bold text-sm md:text-base border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900 px-0.5"
+                                        className="w-full h-9 text-center font-bold text-sm border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900 px-0.5"
                                         placeholder={language === 'he' ? 'ארגז' : 'Case'}
                                         title={language === 'he' ? 'ארגזים' : 'Cases'}
                                         disabled={isCompleted}
@@ -1091,7 +1091,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                         step="any"
                                         value={item.counted_units ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.round((item.counted_quantity - Math.floor(item.counted_quantity)) * (originalItem?.units_per_package || 1)) : '')}
                                         onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'units', e.target.value, originalItem?.units_per_package)}
-                                        className="w-full h-10 text-center font-bold text-sm md:text-base border-emerald-300 focus:border-emerald-600 focus:ring-emerald-600 shadow-sm hide-arrows bg-emerald-50/40 text-emerald-900 px-0.5"
+                                        className="w-full h-9 text-center font-bold text-sm border-emerald-300 focus:border-emerald-600 focus:ring-emerald-600 shadow-sm hide-arrows bg-emerald-50/40 text-emerald-900 px-0.5"
                                         placeholder={language === 'he' ? 'יח\'' : 'Unit'}
                                         title={language === 'he' ? 'יחידות' : 'Units'}
                                         disabled={isCompleted}
@@ -1104,13 +1104,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                       step="any"
                                       value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
                                       onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
-                                      className="w-full h-10 text-center font-bold text-lg border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900"
+                                      className="w-full h-9 text-center font-bold text-base border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900"
                                       placeholder="0"
                                       disabled={isCompleted}
                                     />
                                   )
                                )}
-                               <span className="text-[10px] font-medium text-green-600 mt-1.5">
+                               <span className="text-[10px] font-medium text-green-600 mt-1">
                                  ₪{item.total_cost?.toFixed(2) || '0.00'}
                                </span>
                             </div>
@@ -1153,7 +1153,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                               <TableRow key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index}>
                                   <TableCell className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm min-w-[120px] leading-snug font-normal text-gray-800">
                                   {originalItem?.nickname ? <span className="font-bold">{originalItem.nickname}</span> : item.item_name}
-                                  {originalItem?.nickname && <span className="text-[11px] md:text-xs text-gray-500 block font-normal mt-0.5 leading-tight">{item.item_name}</span>}
+                                  {originalItem?.nickname && <span className="text-[11px] md:text-xs text-gray-500 block mt-0.5 leading-tight">{item.item_name}</span>}
                                 </TableCell>
                                 <TableCell className="px-2 py-3 md:px-4 md:py-4">
                                   {currentWarehouseTab === "all_summary" ? (
@@ -1259,20 +1259,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
 
 
-            <div className="sticky bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md p-4 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex flex-col md:flex-row gap-3 justify-end mt-6 -mx-6 -mb-6">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="icon"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="absolute ltr:left-4 rtl:right-4 top-1/2 -translate-y-1/2 rounded-full bg-gray-100 hover:bg-gray-200"
-              >
-                <ArrowUp className="w-5 h-5 text-gray-600" />
-              </Button>
-              <Button type="button" variant="outline" onClick={onCancel} className="w-full md:w-auto">
-                {t('cancel')}
-              </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto" disabled={isOffline}>
+            <div className="sticky bottom-0 inset-x-0 z-50 bg-white p-3 border-t border-gray-100 flex justify-end mt-6 -mx-6 -mb-6 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 w-full text-base h-12 rounded-xl font-bold shadow-md" disabled={isOffline}>
                 {count ? t('update_count') : t('save_count')}
               </Button>
             </div>
