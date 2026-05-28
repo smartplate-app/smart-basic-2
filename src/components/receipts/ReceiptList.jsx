@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import { useState } from "react";
 import PdfThumbnail from "./PdfThumbnail";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { jsPDF } from "jspdf";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUpdate, loading = false, sortBy, onSortChange, invoiceNumberFilter, onInvoiceNumberFilterChange, statusFilter, onStatusFilterChange }) {
@@ -46,23 +47,46 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
       const response = await fetch(url);
       if (!response.ok) throw new Error('Network response was not ok');
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
       
-      let extension = '';
-      const urlMatch = url.match(/\.([a-zA-Z0-9]+)(?:[\?#]|$)/);
-      if (urlMatch) {
-        extension = `.${urlMatch[1]}`;
-      } else if (blob.type) {
-        extension = `.${blob.type.split('/')[1]}`;
+      const isPdfUrl = /\.pdf(?:$|\?)/i.test(url) || blob.type === 'application/pdf';
+      
+      if (isPdfUrl) {
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${defaultFilename}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      } else {
+        const imgUrl = window.URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const imgData = canvas.toDataURL('image/jpeg', 1.0);
+          
+          const orientation = img.width > img.height ? 'l' : 'p';
+          const pdf = new jsPDF({
+            orientation: orientation,
+            unit: 'px',
+            format: [img.width, img.height]
+          });
+          
+          pdf.addImage(imgData, 'JPEG', 0, 0, img.width, img.height);
+          pdf.save(`${defaultFilename}.pdf`);
+          window.URL.revokeObjectURL(imgUrl);
+        };
+        img.onerror = () => {
+          window.URL.revokeObjectURL(imgUrl);
+          throw new Error("Failed to load image for PDF conversion");
+        };
+        img.src = imgUrl;
       }
-      
-      link.download = `${defaultFilename}${extension}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error('Download failed:', err);
       window.open(url, '_blank');
