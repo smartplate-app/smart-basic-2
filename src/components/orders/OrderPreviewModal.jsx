@@ -594,7 +594,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             variant="ghost"
             className="w-full h-10 text-gray-500 hover:bg-gray-100"
           >
-            {hideActions ? safeT('close', 'סגור', 'Close') : safeT('back_to_edit', 'חזור לעריכת הזמנה', 'Back to Edit')}
+            {hideActions || order?.status !== 'draft' ? safeT('close', 'סגור', 'Close') : safeT('back_to_edit', 'חזור לעריכת הזמנה', 'Back to Edit')}
           </Button>
         </div>
       </motion.div>
