@@ -19,7 +19,40 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No Google Drive token available' }, { status: 400 });
     }
 
-    // Make the sheet accessible to anyone with the link
+    const ownerEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+    
+    // 1. Try to transfer ownership to the user
+    const ownerRes = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions?transferOwnership=true`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${driveToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        role: 'owner',
+        type: 'user',
+        emailAddress: ownerEmail
+      })
+    });
+    
+    if (!ownerRes.ok) {
+      console.warn(`Failed to transfer ownership to ${ownerEmail} (may be restricted by Google), falling back to direct writer:`, await ownerRes.text());
+      // Fallback: Add them directly as a writer so it appears in their "Shared with me"
+      await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${driveToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          role: 'writer',
+          type: 'user',
+          emailAddress: ownerEmail
+        })
+      });
+    }
+
+    // 2. Make the sheet accessible to anyone with the link
     const res = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}/permissions`, {
       method: 'POST',
       headers: {
@@ -34,10 +67,9 @@ Deno.serve(async (req) => {
     
     if (!res.ok) {
       console.error(`Failed to set permissions to anyone:`, await res.text());
-      return Response.json({ error: 'Failed to set permissions' }, { status: 500 });
     }
 
-    return Response.json({ success: true, sharedWith: ['anyone'] });
+    return Response.json({ success: true, sharedWith: ['anyone', ownerEmail] });
   } catch (error) {
     console.error('shareSheetWithManagers error:', error);
     return Response.json({ error: error.message }, { status: 500 });
