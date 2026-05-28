@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Share, Copy, FileCode, MoreHorizontal, PackageCheck, Send } from "lucide-react";
+import { Plus, Search, Loader, RefreshCw, Edit, AlertCircle, Trash2, Mail, MessageCircle, Share, Copy, FileCode, MoreHorizontal, PackageCheck, Send, CalendarIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1123,6 +1123,13 @@ export default function OrdersPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setFiltersOpen(true)}
+              className="md:hidden h-11 w-11 p-0 rounded-xl"
+            >
+              <CalendarIcon className="w-5 h-5" />
+            </Button>
             {!isViewer && (
               <>
                 <Button
@@ -1145,7 +1152,7 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Mobile Filters Drawer trigger & No Order Receive */}
+        {/* Mobile No Order Receive */}
         <div className="md:hidden mb-4 flex flex-col gap-3">
           {!isViewer && (
             <Button
@@ -1156,9 +1163,6 @@ export default function OrdersPage() {
               {safeT('receive_no_order', 'קבלת אספקה ללא הזמנה', 'Receive without order')}
             </Button>
           )}
-          <Button variant="outline" onClick={() => setFiltersOpen(true)} className="w-full h-11 rounded-xl">
-            {safeT('filters', 'סינון', 'Filters')}
-          </Button>
         </div>
 
         {/* Mobile quick filters */}
@@ -1460,39 +1464,9 @@ export default function OrdersPage() {
         <Drawer open={filtersOpen} onOpenChange={setFiltersOpen}>
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle>{safeT('filters', 'סינון', 'Filters')}</DrawerTitle>
+              <DrawerTitle>{safeT('filter_by_date', 'סינון לפי תאריך', 'Filter by Date')}</DrawerTitle>
             </DrawerHeader>
             <div className="p-4 space-y-4">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  placeholder={safeT('search_orders', 'חיפוש הזמנות...', 'Search orders...')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10 h-11 text-base rounded-lg"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-11 rounded-lg">
-                  <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
-                  <SelectItem value="draft">{t('status_draft')}</SelectItem>
-                  <SelectItem value="sent">{t('status_sent')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
-                <SelectTrigger className="h-11 rounded-lg">
-                  <SelectValue placeholder={safeT('supplier', 'ספק', 'Supplier')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{safeT('all', 'הכל', 'All')}</SelectItem>
-                  {Array.from(new Set((suppliers || []).map(s => s.name).filter(Boolean))).map((name) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <div className="flex flex-col gap-2">
                 <Select
                   value={datePreset}
@@ -1551,7 +1525,7 @@ export default function OrdersPage() {
                   </div>
                 )}
               </div>
-              <Button onClick={() => setFiltersOpen(false)} className="w-full">{safeT('apply', 'החל', 'Apply')}</Button>
+              <Button onClick={() => setFiltersOpen(false)} className="w-full bg-[#d4a373] hover:bg-[#b88c60] text-white">{safeT('apply', 'החל', 'Apply')}</Button>
             </div>
           </DrawerContent>
         </Drawer>
