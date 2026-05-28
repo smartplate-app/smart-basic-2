@@ -639,10 +639,7 @@ export default function MonthlyCountPage() {
                     <Plus className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
                     {language === 'he' ? 'ספירה רגילה (ריקה)' : 'Regular Count (Empty)'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleNewDailyCount} disabled={items.length === 0}>
-                    <LayoutGrid className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                    {language === 'he' ? 'ספירת אקספרס (ממלאת הכל)' : 'Express Count (Fills all)'}
-                  </DropdownMenuItem>
+
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

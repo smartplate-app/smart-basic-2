@@ -252,23 +252,12 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </td>
                   <td className="px-6 py-5 text-center align-middle">
                     <div className="flex items-center justify-center gap-1 flex-wrap">
-                      {(() => {
-                        const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
-                        if (isResolved) {
-                          return <Badge className="bg-emerald-50 text-emerald-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none flex items-center gap-0.5">{language === 'he' ? 'התקבל' : 'Received'} <Check className="w-2.5 h-2.5" /></Badge>;
-                        }
-                        return (
-                          <>
-                            {r.is_refund && (
-                              <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
-                            )}
-
-                            {r.awaiting_credit && (
-                              <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
-                            )}
-                          </>
-                        );
-                      })()}
+                      {r.is_refund && (
+                    <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
+                  )}
+                  {r.awaiting_credit && (
+                    <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
+                  )}
                     </div>
                   </td>
                   <td className="px-6 py-5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
@@ -363,23 +352,12 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <div className="flex items-center gap-1 flex-wrap">
-                  {(() => {
-                    const isResolved = r.reviewed || r.refund_received || r.linked_receipt_id;
-                    if (isResolved) {
-                      return <Badge className="bg-emerald-50 text-emerald-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none flex items-center gap-0.5">{language === 'he' ? 'התקבל' : 'Received'} <Check className="w-2.5 h-2.5" /></Badge>;
-                    }
-                    return (
-                      <>
-                        {r.is_refund && (
-                          <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
-                        )}
-
-                        {r.awaiting_credit && (
-                          <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
-                        )}
-                      </>
-                    );
-                  })()}
+                  {r.is_refund && (
+                    <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
+                  )}
+                  {r.awaiting_credit && (
+                    <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
