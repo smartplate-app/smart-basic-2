@@ -1,34 +1,34 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.30';
 
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
 
-        if (!user || (user.role !== 'admin' && !user.admin_original_email)) {
-            return Response.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+        if (!user) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { countIds } = await req.json();
+        const { countIds, mergedName } = await req.json();
 
         if (!countIds || countIds.length < 2) {
              return Response.json({ error: 'Select at least 2 counts to merge' }, { status: 400 });
         }
 
-        // Fetch counts using service role
+        const workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+
+        // Fetch counts using service role but only merge ones belonging to this store
         const counts = [];
         for (const id of countIds) {
             const count = await base44.asServiceRole.entities.InventoryCount.get(id);
-            if (count) {
+            if (count && count.created_by === workingEmail) {
                 counts.push(count);
             }
         }
 
-        if (counts.length === 0) {
-            return Response.json({ error: 'Counts not found' }, { status: 404 });
+        if (counts.length < 2) {
+            return Response.json({ error: 'Not enough valid counts found for this user' }, { status: 404 });
         }
-
-        const targetEmail = counts[0].created_by;
 
         const mergedItemsMap = new Map();
         counts.forEach(count => {
@@ -40,8 +40,12 @@ Deno.serve(async (req) => {
                     const existing = mergedItemsMap.get(key);
                     existing.counted_quantity = (Number(existing.counted_quantity) || 0) + (Number(item.counted_quantity) || 0);
                     existing.total_cost = (Number(existing.total_cost) || 0) + (Number(item.total_cost) || 0);
+                    
+                    if (item.notes) {
+                        existing.notes = existing.notes ? `${existing.notes}, ${item.notes}` : item.notes;
+                    }
                 } else {
-                    mergedItemsMap.set(key, { ...item });
+                    mergedItemsMap.set(key, { ...item, warehouse_id: "all_summary", warehouse_name: "Summary" });
                 }
             });
         });
@@ -50,25 +54,25 @@ Deno.serve(async (req) => {
         const totalInventoryValue = mergedItems.reduce((sum, item) => sum + (item.total_cost || 0), 0);
 
         const newCount = {
-            warehouse_id: "",
-            warehouse_name: "Merged Count",
+            warehouse_id: "all_summary",
+            warehouse_name: mergedName || "Head Warehouse Summary",
             count_date: counts[0].count_date,
             count_type: "monthly",
             items: mergedItems,
             total_inventory_value: totalInventoryValue,
-            name: "Merged: " + counts.map(c => c.name || c.warehouse_name).join(", "),
-            notes: "Auto-merged by Admin.",
-            status: "in_progress", // Keep as in progress so user can continue working
-            created_by: targetEmail // Important: Assign it to the original user
+            name: mergedName || "Head Warehouse Summary",
+            notes: "Auto-merged from: " + counts.map(c => c.name || c.warehouse_name).join(", "),
+            status: "in_progress", // Keep as in progress so user can review before completing
+            created_by: workingEmail
         };
 
-        await base44.asServiceRole.entities.InventoryCount.create(newCount);
+        const createdCount = await base44.asServiceRole.entities.InventoryCount.create(newCount);
 
         for (const count of counts) {
             await base44.asServiceRole.entities.InventoryCount.delete(count.id);
         }
 
-        return Response.json({ success: true });
+        return Response.json({ success: true, count: createdCount });
 
     } catch (error) {
         return Response.json({ error: error.message }, { status: 500 });

@@ -614,12 +614,12 @@ export default function MonthlyCountPage() {
                     </DropdownMenuItem>
                   </>
                 )}
-                {(user?.role === 'admin' || user?.admin_original_email) && (
+                {!isViewer && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setShowMergeModal(true)} className="text-purple-600 focus:text-purple-600">
                       <Merge className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                      {language === 'he' ? 'מזג ספירות (אדמין)' : 'Merge Counts (Admin)'}
+                      {language === 'he' ? 'מזג ספירות' : 'Merge Counts'}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -863,6 +863,23 @@ export default function MonthlyCountPage() {
                 {language === 'he' ? 'בחר את הספירות שתרצה לאחד לאחת. הפעולה תיצור ספירה חדשה משולבת ותמחוק את המקוריות.' : 'Select counts to merge into one. This will create a new combined count and delete the original ones.'}
               </DialogDescription>
             </DialogHeader>
+            <div className="flex justify-start mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  const todaysCounts = counts.filter(c => c.count_date === today).map(c => c.id);
+                  if (todaysCounts.length > 0) {
+                    setSelectedCountsForMerge(todaysCounts);
+                  } else {
+                    alert(language === 'he' ? 'לא נמצאו ספירות פתוחות להיום' : 'No open counts found for today');
+                  }
+                }}
+              >
+                {language === 'he' ? 'בחר את הספירות של היום' : "Select Today's Counts"}
+              </Button>
+            </div>
             <div className="space-y-4 my-4">
               {counts.length === 0 ? (
                 <p className="text-gray-500">{language === 'he' ? 'אין ספירות זמינות' : 'No counts available'}</p>
@@ -900,7 +917,11 @@ export default function MonthlyCountPage() {
                   try {
                     setShowMergeModal(false);
                     setLoading(true);
-                    const response = await base44.functions.invoke('mergeInventoryCounts', { countIds: selectedCountsForMerge });
+                    const mergedName = language === 'he' ? 'סיכום מחסן ראשי' : 'Head Warehouse Summary';
+                    const response = await base44.functions.invoke('mergeInventoryCounts', { 
+                        countIds: selectedCountsForMerge,
+                        mergedName: mergedName
+                    });
                     
                     if (!response.data.success) {
                         throw new Error(response.data.error || 'Failed to merge counts');
