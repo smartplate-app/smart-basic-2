@@ -24,6 +24,7 @@ import { useLanguage } from "../LanguageProvider";
 export default function CountListView({ counts, onEdit, onDelete, onExport }) {
   const [deleteDialogItem, setDeleteDialogItem] = useState(null);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc");
   const { t, language } = useLanguage();
 
   const statusColors = {
@@ -39,6 +40,18 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
     annual: t('annual')
   };
 
+  const sortedCounts = [...counts].sort((a, b) => {
+    if (sortBy === 'value_asc') {
+      return (a.total_inventory_value || 0) - (b.total_inventory_value || 0);
+    } else if (sortBy === 'value_desc') {
+      return (b.total_inventory_value || 0) - (a.total_inventory_value || 0);
+    } else if (sortBy === 'date_asc') {
+      return new Date(a.count_date) - new Date(b.count_date);
+    } else { // date_desc is default
+      return new Date(b.count_date) - new Date(a.count_date);
+    }
+  });
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -48,11 +61,25 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
               <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('warehouse')}
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {language === 'he' ? 'שם ספירה' : 'Name'}
+              <TableHead 
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setSortBy(sortBy === 'name_desc' ? 'name_asc' : 'name_desc')}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  {sortBy === 'name_desc' && <span className="text-gray-900">↓</span>}
+                  {sortBy === 'name_asc' && <span className="text-gray-900">↑</span>}
+                  {language === 'he' ? 'שם ספירה' : 'Name'}
+                </div>
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('count_date')}
+              <TableHead 
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setSortBy(sortBy === 'date_desc' ? 'date_asc' : 'date_desc')}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  {sortBy === 'date_desc' && <span className="text-gray-900">↓</span>}
+                  {sortBy === 'date_asc' && <span className="text-gray-900">↑</span>}
+                  {t('count_date')}
+                </div>
               </TableHead>
               <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('count_type')}
@@ -60,8 +87,15 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
               <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('items')}
               </TableHead>
-              <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('total_inventory_value')}
+              <TableHead 
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setSortBy(sortBy === 'value_desc' ? 'value_asc' : 'value_desc')}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  {sortBy === 'value_desc' && <span className="text-gray-900">↓</span>}
+                  {sortBy === 'value_asc' && <span className="text-gray-900">↑</span>}
+                  {t('total_inventory_value')}
+                </div>
               </TableHead>
               <TableHead className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('status')}
@@ -72,7 +106,7 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
             </TableRow>
           </TableHeader>
           <TableBody className="bg-white divide-y divide-gray-200">
-            {counts.map((count) => (
+            {sortedCounts.map((count) => (
               <TableRow
                 key={count.id}
                 onDoubleClick={() => onEdit(count)}

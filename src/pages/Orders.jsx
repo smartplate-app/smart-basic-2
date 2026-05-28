@@ -1172,21 +1172,18 @@ export default function OrdersPage() {
           </Button>
         </div>
 
-        {/* Mobile Search and quick filters */}
-        <div className="md:hidden mb-4 flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rtl:right-auto rtl:left-3" />
+        {/* Mobile quick filters */}
+        <div className="md:hidden mb-3 flex items-center gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4 px-4 pb-1">
+          <div className="relative flex-shrink-0 w-32">
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-auto rtl:left-3" />
             <Input
-              placeholder={safeT('search_supplier', 'חיפוש ספק...', 'Search supplier...')}
+              placeholder={safeT('supplier', 'שם ספק', 'Supplier')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-10 pr-9 rtl:pr-3 rtl:pl-9 bg-white border-gray-200 rounded-xl text-sm shadow-sm"
+              className="h-8 pr-8 rtl:pr-2 rtl:pl-8 text-xs rounded-full bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
             />
           </div>
-        </div>
-
-        <div className="md:hidden mb-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4">
-          <div className="flex gap-2 pb-1 w-max after:content-[''] after:w-4 after:flex-shrink-0 before:content-[''] before:w-4 before:flex-shrink-0">
+          <div className="flex gap-2 w-max after:content-[''] after:w-4 after:flex-shrink-0">
             {['all','draft','sent'].map((s) => (
               <button
                 key={s}
