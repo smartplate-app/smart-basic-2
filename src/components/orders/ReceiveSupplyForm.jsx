@@ -1416,20 +1416,20 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         </div>
                       </div>
 
-                      <div className="bg-white border rounded-lg p-3 mt-3 space-y-3">
+                      <div className="bg-white border rounded-lg p-4 mt-4 space-y-5 shadow-sm">
                         <div className="grid grid-cols-1 gap-3">
                           <div>
-                            <Label className="text-xs text-gray-600 mb-2 block">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
-                            <div className="flex flex-wrap gap-1.5">
+                            <Label className="text-sm text-gray-800 mb-3 block font-semibold">{language === 'he' ? 'סוג מסמך' : 'Document type'}</Label>
+                            <div className="flex flex-wrap gap-2">
                               <button
                                 type="button"
                                 disabled={isReadOnly}
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'invoice', is_refund: false }));
                                 }}
-                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.document_type === 'invoice' && !formData.is_refund ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-2 px-4 rounded-md border text-sm font-medium flex items-center gap-2 transition-all shadow-sm ${formData.document_type === 'invoice' && !formData.is_refund ? 'border-green-500 bg-green-50 text-green-700 ring-1 ring-green-500/20' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <Receipt className="w-3.5 h-3.5" />
+                                <Receipt className="w-4 h-4" />
                                 <span>{language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}</span>
                               </button>
                               <button
@@ -1438,9 +1438,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'delivery_note', is_refund: false }));
                                 }}
-                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-2 px-4 rounded-md border text-sm font-medium flex items-center gap-2 transition-all shadow-sm ${formData.document_type === 'delivery_note' ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500/20' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <Package className="w-3.5 h-3.5" />
+                                <Package className="w-4 h-4" />
                                 <span>{language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}</span>
                               </button>
                               <button
@@ -1449,9 +1449,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 onClick={() => {
                                   setFormData(prev => ({ ...prev, document_type: 'summary_invoice', is_refund: false }));
                                 }}
-                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-2 px-4 rounded-md border text-sm font-medium flex items-center gap-2 transition-all shadow-sm ${formData.document_type === 'summary_invoice' ? 'border-purple-500 bg-purple-50 text-purple-700 ring-1 ring-purple-500/20' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <BarChart3 className="w-3.5 h-3.5" />
+                                <BarChart3 className="w-4 h-4" />
                                 <span>{language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}</span>
                               </button>
                               <button
@@ -1471,45 +1471,56 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                      setExclVatInput(newExcl.toFixed(2));
                                   }
                                 }}
-                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-2 px-4 rounded-md border text-sm font-medium flex items-center gap-2 transition-all shadow-sm ${formData.is_refund ? 'border-orange-500 bg-orange-50 text-orange-700 ring-1 ring-orange-500/20' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                               >
-                                <RefreshCcw className="w-3.5 h-3.5" />
+                                <RefreshCcw className="w-4 h-4" />
                                 <span>{language === 'he' ? 'זיכוי מספק' : 'Refund from Supplier'}</span>
                               </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-100">
+                          <Label className="text-xs text-gray-500 mb-2.5 block font-medium">
+                            {language === 'he' ? 'מאפיינים נוספים (ניתן לערוך במידת הצורך)' : 'Additional attributes (editable)'}
+                          </Label>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              disabled={isReadOnly}
+                              onClick={(e) => {
+                                const zeroVat = !formData.is_zero_vat;
+                                setFormData(prev => ({ ...prev, is_zero_vat: zeroVat }));
+                                const currentIncl = parseFloat(inclVatInput);
+                                if (!isNaN(currentIncl)) {
+                                  const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
+                                  const vatRate = zeroVat ? 1 : userVatMultiplier;
+                                  const newExcl = currentIncl / vatRate;
+                                  setExclVatInput(newExcl.toFixed(2));
+                                }
+                              }}
+                              className={`py-1.5 px-3 rounded-full border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.is_zero_vat ? 'border-green-300 bg-green-50 text-green-700' : 'border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                            >
+                              <Check className={`w-3.5 h-3.5 ${formData.is_zero_vat ? 'opacity-100' : 'opacity-0 hidden'}`} />
+                              <span>{language === 'he' ? 'ללא מע״מ (0%)' : 'No VAT (0%)'}</span>
+                            </button>
+                            
+                            {formData.is_refund && (
                               <button
                                 type="button"
                                 disabled={isReadOnly}
                                 onClick={(e) => {
-                                  const zeroVat = !formData.is_zero_vat;
-                                  setFormData(prev => ({ ...prev, is_zero_vat: zeroVat }));
-                                  const currentIncl = parseFloat(inclVatInput);
-                                  if (!isNaN(currentIncl)) {
-                                    const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
-                                    const vatRate = zeroVat ? 1 : userVatMultiplier;
-                                    const newExcl = currentIncl / vatRate;
-                                    setExclVatInput(newExcl.toFixed(2));
-                                  }
+                                  setFormData(prev => ({ ...prev, refund_received: !prev.refund_received }));
                                 }}
-                                className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.is_zero_vat ? 'border-green-600 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+                                className={`py-1.5 px-3 rounded-full border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.refund_received ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
                               >
-                                <span>{language === 'he' ? 'ללא מע״מ (0%)' : 'No VAT (0%)'}</span>
-                              </button>
-                              {formData.is_refund && (
-                                <button
-                                  type="button"
-                                  disabled={isReadOnly}
-                                  onClick={(e) => {
-                                    setFormData(prev => ({ ...prev, refund_received: !prev.refund_received }));
-                                  }}
-                                  className={`py-1 px-2.5 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${formData.refund_received ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
-                                >
-                                  <span>{language === 'he' ? 'הזיכוי התקבל' : 'Credit received'}</span>
+                                <Check className={`w-3.5 h-3.5 ${formData.refund_received ? 'opacity-100' : 'opacity-0 hidden'}`} />
+                                <span>{language === 'he' ? 'הזיכוי התקבל' : 'Credit received'}</span>
                                 </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        {formData.document_type === 'summary_invoice' && (
+                                )}
+                                </div>
+                                </div>
+                                {formData.document_type === 'summary_invoice' && (
                           <div className="mt-2 p-3 border rounded-md bg-amber-50">
                             <Label className="text-xs text-gray-700">{language === 'he' ? 'בחר תעודות משלוח לחיוב' : 'Select delivery notes to include'}</Label>
                             {!formData.supplier_id ? (
