@@ -111,6 +111,11 @@ export default function StoreUsersPage() {
         return;
       }
 
+      if (userPassword && userPassword.trim().length < 6) {
+        alert(language === 'he' ? 'הסיסמה חייבת להכיל לפחות 6 תווים' : 'Password must be at least 6 characters');
+        return;
+      }
+
       try {
           setSaving(true);
           console.log('[StoreUsers] Starting user creation/update...');
@@ -156,10 +161,12 @@ export default function StoreUsersPage() {
       } catch (error) {
         console.error("[StoreUsers] Error adding/updating user:", error);
 
-        let errorMessage = error.message || 'Unknown error occurred';
+        let errorMessage = error?.response?.data?.error || error.message || 'Unknown error occurred';
 
         if (language === 'he') {
-          if (errorMessage.includes('Email already exists')) {
+          if (errorMessage.includes('6 characters')) {
+            errorMessage = 'הסיסמה חייבת להכיל לפחות 6 תווים';
+          } else if (errorMessage.includes('Email already exists')) {
             errorMessage = '❌ האימייל כבר קיים במערכת';
           } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('permission')) {
             errorMessage = 'אין הרשאה לבצע פעולה זו';
