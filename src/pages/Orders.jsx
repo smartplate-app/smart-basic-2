@@ -1123,22 +1123,6 @@ export default function OrdersPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={verifyDraftsNow}
-              className="h-11 md:h-10 px-4 rounded-lg"
-            >
-              {safeT('status_draft', 'טיוטה', 'Draft')} ✓
-            </Button>
-            {(user.acting_as_store_email || user.acting_as_user_email) && !isViewer && (
-              <Button
-                variant="outline"
-                onClick={fixLatestDraft}
-                className="h-11 md:h-10 px-4 rounded-lg"
-              >
-                {safeT('fix_last_draft', 'תקן טיוטה → נשלח', 'Fix last draft → sent')}
-              </Button>
-            )}
             {!isViewer && (
               <>
                 <Button
