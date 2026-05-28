@@ -1156,45 +1156,45 @@ export default function OrdersPage() {
         </div>
 
         {/* Mobile No Order Receive and Filter */}
-        <div className="md:hidden mb-4 flex gap-3">
+        <div className="md:hidden mb-4 flex gap-2">
           {!isViewer && (
             <Button
               onClick={() => setShowNoOrderReceiveForm(true)}
-              className="flex-1 bg-[#d4a373] hover:bg-[#b88c60] text-white h-12 rounded-xl shadow-sm text-sm sm:text-base font-bold px-2"
+              className="flex-1 bg-[#d4a373] hover:bg-[#b88c60] text-white h-11 rounded-xl shadow-sm text-sm font-bold px-2"
             >
-              <PackageCheck className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0 flex-shrink-0" />
+              <PackageCheck className="w-4 h-4 ml-1.5 rtl:ml-1.5 rtl:mr-0 flex-shrink-0" />
               <span className="truncate">{safeT('receive_no_order', 'קבלת אספקה ללא הזמנה', 'Receive without order')}</span>
             </Button>
           )}
           <Button
             variant="outline"
             onClick={() => setFiltersOpen(true)}
-            className={`h-12 border-gray-200 shadow-sm rounded-xl ${isViewer ? 'flex-1' : 'w-12 p-0 flex-shrink-0 bg-white'}`}
+            className={`h-11 border-gray-200 shadow-sm rounded-xl ${isViewer ? 'flex-1' : 'w-11 p-0 flex-shrink-0 bg-white'}`}
           >
-            <CalendarIcon className={`w-5 h-5 text-gray-700 ${isViewer ? 'ml-2 rtl:ml-2 rtl:mr-0' : ''}`} />
+            <CalendarIcon className={`w-4 h-4 text-gray-700 ${isViewer ? 'ml-2 rtl:ml-2 rtl:mr-0' : ''}`} />
             {isViewer && safeT('filter_by_date', 'סינון לפי תאריך', 'Filter by Date')}
           </Button>
         </div>
 
         {/* Mobile quick filters */}
-        <div className="md:hidden mb-3 flex items-center gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4 px-4 pb-1">
-          <div className="relative flex-shrink-0 w-32">
+        <div className="md:hidden mb-4 flex flex-col gap-2">
+          <div className="relative w-full">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-auto rtl:left-3" />
             <Input
-              placeholder={safeT('supplier', 'שם ספק', 'Supplier')}
+              placeholder={safeT('search_orders', 'חיפוש ספק או הזמנה...', 'Search...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-8 pr-8 rtl:pr-2 rtl:pl-8 text-xs rounded-full bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300"
+              className="h-10 pr-9 rtl:pr-3 rtl:pl-9 text-sm rounded-xl bg-white border-gray-200 shadow-sm focus-visible:ring-gray-300 w-full"
             />
           </div>
-          <div className="flex gap-2 w-max after:content-[''] after:w-4 after:flex-shrink-0">
+          <div className="flex gap-2 w-full justify-between">
             {['all','draft','sent'].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 text-sm rounded-full border flex-shrink-0 whitespace-nowrap ${statusFilter===s ? 'bg-[#d4a373] text-white border-[#d4a373]' : 'bg-white text-gray-700 border-gray-300'}`}
+                className={`flex-1 py-2 text-xs font-medium rounded-xl border transition-colors ${statusFilter===s ? 'bg-[#d4a373] text-white border-[#d4a373]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
               >
-                {s==='all' ? safeT('all_statuses','כל הסטטוסים','All') :
+                {s==='all' ? safeT('all_statuses','הכל','All') :
                  s==='draft' ? t('status_draft') :
                  t('status_sent')}
               </button>
