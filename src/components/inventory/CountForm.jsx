@@ -855,14 +855,14 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center mb-2 mt-4 flex-wrap gap-2">
-                      <div className="relative w-full md:w-1/3 flex-shrink-0">
+                    <div className="flex justify-between items-center mb-2 mt-4 flex-wrap gap-2 sticky top-[57px] md:top-0 z-40 bg-white/95 backdrop-blur-sm py-3 border-b border-gray-100 shadow-sm -mx-4 md:mx-0 px-4 md:px-0">
+                      <div className="relative flex-1 md:w-1/3 min-w-[150px]">
                         <Input
                           type="text"
                           placeholder={language === 'he' ? 'חפש פריט במחסן...' : 'Search item in warehouse...'}
                           value={tableSearchTerm}
                           onChange={(e) => setTableSearchTerm(e.target.value)}
-                          className={language === 'he' || language === 'ar' ? 'pr-9' : 'pl-9'}
+                          className={`${language === 'he' || language === 'ar' ? 'pr-9' : 'pl-9'} bg-white font-medium`}
                         />
                         <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 ${language === 'he' || language === 'ar' ? 'right-3' : 'left-3'}`} />
                         {tableSearchTerm && (
@@ -879,7 +879,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       </div>
                       
                       {!isCompleted && currentWarehouseTab !== "all_summary" && (
-                        <div className="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                        <div className="flex shrink-0">
                           <Popover open={isSearchFocused} onOpenChange={(open) => {
                             setIsSearchFocused(open);
                             if (open) {
@@ -887,10 +887,10 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                             }
                           }}>
                             <PopoverTrigger asChild>
-                              <Button type="button" variant="outline" className="bg-white">
-                                <Plus className={`w-4 h-4 ${language === 'he' || language === 'ar' ? 'ml-2' : 'mr-2'}`} />
-                                {language === 'he' ? 'הוסף פריט לספירה' : 'Add Item'}
-                                {reloadingItems && <Loader className={`w-3 h-3 animate-spin ${language === 'he' || language === 'ar' ? 'mr-2' : 'ml-2'}`} />}
+                              <Button type="button" variant="outline" className="bg-white whitespace-nowrap px-3 md:px-4 shadow-sm border-gray-200 text-gray-900 font-medium">
+                                <Plus className={`w-4 h-4 ${language === 'he' || language === 'ar' ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                                <span>{language === 'he' ? 'הוסף פריט לספירה' : 'Add Item'}</span>
+                                {reloadingItems && <Loader className={`w-3 h-3 animate-spin ${language === 'he' || language === 'ar' ? 'mr-1' : 'ml-1'}`} />}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-[300px] p-2" align={language === 'he' || language === 'ar' ? 'end' : 'start'}>
@@ -1049,24 +1049,24 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     </div>
 
                     {/* Mobile View - Simple Rows */}
-                    <div className="md:hidden flex flex-col border-t border-gray-200 max-h-[65vh] overflow-y-auto">
+                    <div className="md:hidden flex flex-col border-t border-gray-200">
                       {finalDisplayedItems.map((item, index) => {
                         const originalItem = items.find(i => i.id === item.item_id);
                         return (
                           <div key={item.item_id + "_" + (item.warehouse_id || "summary") + "_" + index} className="py-2 border-b border-gray-100 flex items-center gap-2 px-1">
                             <div className="flex-1 min-w-0 flex flex-col">
-                               <span className={`text-[13px] md:text-sm text-gray-800 leading-tight ${originalItem?.nickname ? 'font-bold' : 'font-normal'}`}>
+                               <span className={`text-[13px] md:text-sm text-gray-900 leading-tight ${originalItem?.nickname ? 'font-bold' : 'font-medium'}`}>
                                  {originalItem?.nickname || item.item_name}
                                </span>
-                               <span className="text-[10px] md:text-[11px] text-gray-500 mt-0.5">
-                                 {item.unit}
+                               <span className="text-[11px] md:text-xs text-gray-500 mt-0.5">
+                                 {language === 'he' ? (item.unit === 'unit' ? 'יח\'' : item.unit === 'case' ? 'ארגז' : item.unit) : item.unit}
                                  {currentWarehouseTab === "all_summary" && (
                                    <> <span className="mx-1 text-gray-300">|</span> ₪{Number(item.price_per_unit || 0).toFixed(2)}</>
                                  )}
                                </span>
                             </div>
                             
-                            <div className="flex flex-col items-end shrink-0 w-[95px] md:w-[120px]">
+                            <div className="flex flex-col items-end shrink-0 w-[105px] md:w-[120px]">
                                {currentWarehouseTab === "all_summary" ? (
                                   <div className="h-9 w-full bg-gray-50 border border-gray-200 rounded-md flex items-center justify-center font-bold text-base text-gray-900">
                                     {typeof item.counted_quantity === 'number' ? Number(item.counted_quantity).toFixed(2).replace(/\.00$/, '') : item.counted_quantity}
@@ -1080,7 +1080,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                         step="any"
                                         value={item.counted_cases ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.floor(item.counted_quantity) : '')}
                                         onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'cases', e.target.value, originalItem?.units_per_package)}
-                                        className="w-full h-9 text-center font-bold text-sm border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900 px-0.5"
+                                        className="w-full h-9 text-center font-bold text-base border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900 px-0.5"
                                         placeholder={language === 'he' ? 'ארגז' : 'Case'}
                                         title={language === 'he' ? 'ארגזים' : 'Cases'}
                                         disabled={isCompleted}
@@ -1091,7 +1091,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                         step="any"
                                         value={item.counted_units ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.round((item.counted_quantity - Math.floor(item.counted_quantity)) * (originalItem?.units_per_package || 1)) : '')}
                                         onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'units', e.target.value, originalItem?.units_per_package)}
-                                        className="w-full h-9 text-center font-bold text-sm border-emerald-300 focus:border-emerald-600 focus:ring-emerald-600 shadow-sm hide-arrows bg-emerald-50/40 text-emerald-900 px-0.5"
+                                        className="w-full h-9 text-center font-bold text-base border-emerald-300 focus:border-emerald-600 focus:ring-emerald-600 shadow-sm hide-arrows bg-emerald-50/40 text-emerald-900 px-0.5"
                                         placeholder={language === 'he' ? 'יח\'' : 'Unit'}
                                         title={language === 'he' ? 'יחידות' : 'Units'}
                                         disabled={isCompleted}
@@ -1104,7 +1104,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                       step="any"
                                       value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
                                       onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
-                                      className="w-full h-9 text-center font-bold text-base border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900"
+                                      className="w-full h-9 text-center font-bold text-lg border-blue-300 focus:border-blue-600 focus:ring-blue-600 shadow-sm hide-arrows bg-blue-50/40 text-blue-900"
                                       placeholder="0"
                                       disabled={isCompleted}
                                     />
@@ -1120,7 +1120,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     </div>
 
                     {/* Desktop View - Table */}
-                    <div className="hidden md:block border rounded-lg overflow-x-auto overflow-y-auto max-h-[60vh] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div className="hidden md:block border rounded-lg overflow-x-auto overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       <Table>
                         <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
                           <TableRow>
@@ -1169,7 +1169,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                           step="any"
                                           value={item.counted_cases ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.floor(item.counted_quantity) : '')}
                                           onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'cases', e.target.value, originalItem?.units_per_package)}
-                                          className="w-full h-9 md:h-10 px-1 md:px-2 text-center text-sm md:text-base border-blue-300 focus:border-blue-600 bg-blue-50/40 text-blue-900 hide-arrows"
+                                          className="w-full h-9 md:h-10 px-1 md:px-2 text-center font-bold text-sm md:text-base border-blue-300 focus:border-blue-600 bg-blue-50/40 text-blue-900 hide-arrows"
                                           placeholder={language === 'he' ? 'ארגזים' : 'Cases'}
                                           title={language === 'he' ? 'ארגזים' : 'Cases'}
                                           disabled={isCompleted}
@@ -1181,7 +1181,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                           step="any"
                                           value={item.counted_units ?? (typeof item.counted_quantity === 'number' && item.counted_quantity > 0 ? Math.round((item.counted_quantity - Math.floor(item.counted_quantity)) * (originalItem?.units_per_package || 1)) : '')}
                                           onChange={(e) => updateItemQuantitySplit(item.item_id, item.warehouse_id, 'units', e.target.value, originalItem?.units_per_package)}
-                                          className="w-full h-9 md:h-10 px-1 md:px-2 text-center text-sm md:text-base border-emerald-300 focus:border-emerald-600 bg-emerald-50/40 text-emerald-900 hide-arrows"
+                                          className="w-full h-9 md:h-10 px-1 md:px-2 text-center font-bold text-sm md:text-base border-emerald-300 focus:border-emerald-600 bg-emerald-50/40 text-emerald-900 hide-arrows"
                                           placeholder={language === 'he' ? 'יחידות' : 'Units'}
                                           title={language === 'he' ? 'יחידות בודדות' : 'Loose units'}
                                           disabled={isCompleted}
@@ -1194,7 +1194,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                         step="any" 
                                         value={item.counted_quantity === 0 && typeof item.counted_quantity === 'number' ? '' : item.counted_quantity}
                                         onChange={(e) => updateItemQuantity(item.item_id, item.warehouse_id, e.target.value)}
-                                        className="w-20 md:w-24 h-9 md:h-10 px-2 md:px-3 text-center text-sm md:text-base hide-arrows"
+                                        className="w-20 md:w-24 h-9 md:h-10 px-2 md:px-3 text-center font-bold text-sm md:text-base border-blue-300 focus:border-blue-600 bg-blue-50/40 text-blue-900 hide-arrows"
+                                        placeholder="0"
                                         disabled={isCompleted}
                                       />
                                     )
@@ -1259,8 +1260,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
 
 
-            <div className="sticky bottom-0 inset-x-0 z-50 bg-white p-3 border-t border-gray-100 flex justify-end mt-6 -mx-6 -mb-6 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 w-full text-base h-12 rounded-xl font-bold shadow-md" disabled={isOffline}>
+            <div className="sticky bottom-[56px] md:bottom-0 inset-x-0 z-50 bg-white p-3 border-t border-gray-100 flex justify-end mt-6 -mx-4 md:-mx-6 -mb-6 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+              <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60] w-full text-white text-base h-12 rounded-xl font-bold shadow-md" disabled={isOffline}>
                 {count ? t('update_count') : t('save_count')}
               </Button>
             </div>
