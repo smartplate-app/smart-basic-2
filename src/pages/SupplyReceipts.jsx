@@ -563,18 +563,11 @@ export default function SupplyReceiptsPage() {
                       <h3 className="text-base font-medium text-gray-500 mb-3 px-1">{sectionTitle} ({sectionOrders.length})</h3>
                       <div className="flex flex-col gap-2">
                         {sectionOrders.map(order => (
-                          <div key={order.id} className="bg-white rounded-xl border border-gray-200/60 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-gray-300 transition-colors shadow-sm">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 flex-1 text-right">
-                              <div className="font-medium text-gray-800 text-base sm:w-1/3 truncate text-right" title={order.supplier_name}>{order.supplier_name}</div>
-                              <div className="flex items-center justify-start sm:justify-start gap-3">
-                                <span className="text-xs text-gray-500 bg-gray-50/80 px-2 py-1 rounded-md border border-gray-100 whitespace-nowrap tracking-wide">
-                                  {order.order_number}
-                                </span>
-                                <span className="text-sm text-gray-400 whitespace-nowrap">
-                                  {new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
-                                </span>
-                              </div>
+                          <div key={order.id} className="bg-white rounded-xl border border-gray-200/60 p-3.5 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-gray-300 transition-colors shadow-sm">
+                            <div className="font-medium text-gray-800 text-base flex-1 truncate text-right" title={order.supplier_name}>
+                              {order.supplier_name}
                             </div>
+                            
                             <Button
                               variant="outline"
                               onClick={() => { setSelectedOrder(order); setShowForm(true); }}
@@ -583,6 +576,10 @@ export default function SupplyReceiptsPage() {
                               <PackageCheck className="w-4 h-4 rtl:ml-2 rtl:mr-0 ltr:mr-2 opacity-60" />
                               {tt('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
                             </Button>
+
+                            <div className="text-sm text-gray-400 whitespace-nowrap text-right sm:text-left sm:w-24">
+                              {new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}
+                            </div>
                           </div>
                         ))}
                       </div>
