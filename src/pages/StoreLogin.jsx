@@ -78,6 +78,10 @@ export default function StoreLogin() {
              errorMsg = language === 'he'
                ? 'האפליקציה מוגדרת כפרטית. יש לשנות את הגדרות האפליקציה ל-Public ב-Dashboard -> Settings כדי לאפשר לעובדים להתחבר בפעם הראשונה.'
                : 'App is set to Private. Go to Dashboard -> Settings and change Privacy to Public so workers can login.';
+          } else if (errorMsg.includes('verify your email')) {
+             errorMsg = language === 'he'
+               ? 'יש לכבות את "Require Email Verification" (אימות אימייל) בהגדרות האפליקציה (Dashboard -> Settings -> Authentication) כדי לאפשר לעובדים להתחבר.'
+               : 'Please disable "Require Email Verification" in the app settings (Dashboard -> Settings -> Authentication) to allow workers to login.';
           } else {
              errorMsg = language === 'he' 
                ? `שגיאה בהרשמת המשתמש למערכת: ${errorMsg}` 
