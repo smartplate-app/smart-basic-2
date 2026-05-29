@@ -34,7 +34,8 @@ Deno.serve(async (req) => {
     } else if (username) {
         // Filter in memory since we can't easily query "startsWith" or regex directly in filter sometimes
         const allUsers = await base44.asServiceRole.entities.RestaurantUser.filter({ is_active: true });
-        users = allUsers.filter(u => u.email.startsWith(username.toLowerCase() + '@'));
+        const uname = username.toLowerCase().trim();
+        users = allUsers.filter(u => u.email === uname || u.email.startsWith(uname + '@'));
     }
     
     console.log('[loginRestaurantUser] Found users:', users.length);

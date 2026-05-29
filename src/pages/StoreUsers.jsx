@@ -124,8 +124,14 @@ export default function StoreUsersPage() {
           const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
           const restaurantAddress = user.business_address || '';
           
-          // Generate an internal email based on username + owner ID to avoid collisions
-          const generatedInternalEmail = `${userUsername.toLowerCase().trim().replace(/[^a-z0-9]/g, '')}@${user.id}.local`;
+          // The username is now required to be an email address
+          const generatedInternalEmail = userUsername.toLowerCase().trim();
+          
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(generatedInternalEmail)) {
+            alert(language === 'he' ? 'שם המשתמש חייב להיות אימייל' : 'Username must be an email address');
+            setSaving(false);
+            return;
+          }
 
           const createResponse = await base44.functions.invoke('createRestaurantUser', {
             email: generatedInternalEmail,
@@ -195,9 +201,9 @@ export default function StoreUsersPage() {
   const handleEditUser = (storeUser) => {
       setEditingUser(storeUser);
       setUserName(storeUser.user_name);
-      // Extract original username from email (e.g. username@storeid.local)
-      const extractedUsername = storeUser.user_email.split('@')[0];
-      setUserUsername(extractedUsername);
+      // For older users it might have a .local domain, for new it's an email
+      const isLocal = storeUser.user_email.endsWith('.local');
+      setUserUsername(isLocal ? storeUser.user_email.split('@')[0] : storeUser.user_email);
       setUserPassword(''); // Force entering a new password if editing, or maybe we leave it blank to indicate no change (but API requires password currently)
       setUserRole(storeUser.role);
       setShowAddUser(true);
@@ -306,7 +312,7 @@ export default function StoreUsersPage() {
                     type="text"
                     value={userUsername} 
                     onChange={(e) => setUserUsername(e.target.value)}
-                    placeholder={language === 'he' ? 'לדוגמה: ivory' : 'e.g. ivory'}
+                    placeholder={language === 'he' ? 'לדוגמה: user@email.com' : 'e.g. user@email.com'}
                     className={isRTL ? 'text-right' : ''}
                     disabled={!!editingUser}
                   />

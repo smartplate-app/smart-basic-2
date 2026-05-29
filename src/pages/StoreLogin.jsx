@@ -122,7 +122,7 @@ export default function StoreLogin() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className={language === 'he' ? 'pr-10' : 'pl-10'}
-                  placeholder={language === 'he' ? 'לדוגמה: dani' : 'e.g. dani'}
+                  placeholder={language === 'he' ? 'לדוגמה: dani או user@email.com' : 'e.g. dani or user@email.com'}
                   autoComplete="username"
                   required
                 />
