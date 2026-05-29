@@ -147,7 +147,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       const { data } = await base44.functions.invoke('exportSingleCountToSheets', {
         title,
         items: itemsToExport,
-        total_value: formData.total_inventory_value
+        total_value: formData.total_inventory_value,
+        language
       });
       
       if (data?.success && data?.spreadsheetUrl) {

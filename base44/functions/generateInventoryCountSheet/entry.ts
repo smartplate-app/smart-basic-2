@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { targetEmail, sheet_name, warehouse_id } = await req.json().catch(() => ({}));
+    const { targetEmail, sheet_name, warehouse_id, language } = await req.json().catch(() => ({}));
     const workingEmail = targetEmail || user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
 
     const driveToken = await base44.asServiceRole.connectors.getAccessToken('googledrive');
@@ -92,7 +92,18 @@ Deno.serve(async (req) => {
       items = items.filter(it => it.warehouse_id === warehouse_id || (it.warehouse_ids && it.warehouse_ids.includes(warehouse_id)));
     }
 
-    const headers = [
+    const isHebrew = language === 'he';
+    const headers = isHebrew ? [
+      'שם ספק',
+      'שם פריט',
+      'יחידה',
+      'מק"ט',
+      'מחיר ליחידה',
+      'שם מחסן',
+      'ארגזים שנספרו',
+      'יחידות שנספרו',
+      'הערות'
+    ] : [
       'supplier_name',
       'item_name',
       'unit',
@@ -174,6 +185,17 @@ Deno.serve(async (req) => {
                     endColumnIndex: headers.length
                   }
                 }
+              }
+            },
+            {
+              updateSheetProperties: {
+                properties: {
+                  sheetId: 0,
+                  gridProperties: {
+                    frozenRowCount: 1
+                  }
+                },
+                fields: 'gridProperties.frozenRowCount'
               }
             }
           ]

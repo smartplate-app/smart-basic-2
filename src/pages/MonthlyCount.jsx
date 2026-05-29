@@ -431,7 +431,7 @@ export default function MonthlyCountPage() {
   const handleGenerateCountSheet = async () => {
     try {
       setGeneratingSheet(true);
-      const payload = warehouseFilter !== 'all' ? { warehouse_id: warehouseFilter } : {};
+      const payload = warehouseFilter !== 'all' ? { warehouse_id: warehouseFilter, language } : { language };
       const { data } = await base44.functions.invoke('generateInventoryCountSheet', payload);
       if (data?.sheet?.webViewLink) {
         window.open(data.sheet.webViewLink, '_blank');

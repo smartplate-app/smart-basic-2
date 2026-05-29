@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { title: rawTitle, items, total_value } = body;
+    const { title: rawTitle, items, total_value, language } = body;
 
     if (!items || !Array.isArray(items)) {
       return Response.json({ error: 'Items array is required' }, { status: 400 });
@@ -114,10 +114,21 @@ Deno.serve(async (req) => {
         });
         
         const values = [];
-        values.push([title + (s.title === 'Summary' ? ' (Summary)' : ` - ${s.title}`), '', '', '', '', '', '']); // Title row
-        values.push(['Item Name', 'Counted Cases', 'Counted Units', 'Unit', 'Price per Unit', 'Total Cost', 'Notes']); // Headers
+        const isHebrew = language === 'he';
+        const summarySuffix = isHebrew ? ' (סיכום)' : ' (Summary)';
+        const titleRow = title + (s.title === 'Summary' ? summarySuffix : ` - ${s.title}`);
+        
+        values.push([titleRow, '', '', '', '', '', '']); // Title row
+        
+        const headers = isHebrew 
+           ? ['שם פריט', 'ארגזים שנספרו', 'יחידות שנספרו', 'יחידה', 'מחיר ליחידה', 'עלות כוללת', 'הערות']
+           : ['Item Name', 'Counted Cases', 'Counted Units', 'Unit', 'Price per Unit', 'Total Cost', 'Notes'];
+        values.push(headers); // Headers
+        
         for (const row of dataRows) values.push(row);
-        values.push(['', '', '', '', 'Total', s.total || 0, '']); // Total row
+        
+        const totalLabel = isHebrew ? 'סה"כ' : 'Total';
+        values.push(['', '', '', '', totalLabel, s.total || 0, '']); // Total row
         
         valuesData.push({
            range: `'${sheetTitle}'!A1:G${values.length}`,
@@ -157,6 +168,17 @@ Deno.serve(async (req) => {
                 }
               },
               fields: 'userEnteredFormat(backgroundColor,textFormat)'
+            }
+            },
+            {
+            updateSheetProperties: {
+              properties: {
+                sheetId: sheetId,
+                gridProperties: {
+                  frozenRowCount: 2
+                }
+              },
+              fields: 'gridProperties.frozenRowCount'
             }
             },
             {
