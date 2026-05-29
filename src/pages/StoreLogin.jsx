@@ -52,6 +52,14 @@ export default function StoreLogin() {
         // Login successful
         window.location.href = '/';
       } catch (authError) {
+        // If login fails due to email verification, throw immediately
+        if (authError?.message?.includes('verify your email')) {
+          let vErr = language === 'he'
+            ? 'יש לכבות את "Require Email Verification" (אימות אימייל) בהגדרות האפליקציה (Dashboard -> Settings -> Authentication) כדי לאפשר לעובדים להתחבר.'
+            : 'Please disable "Require Email Verification" in the app settings (Dashboard -> Settings -> Authentication) to allow workers to login.';
+          throw new Error(vErr);
+        }
+
         // If login fails, they might not be registered in Base44 yet
         console.log('Base44 login failed, attempting registration...', authError);
         
@@ -78,6 +86,12 @@ export default function StoreLogin() {
              errorMsg = language === 'he'
                ? 'האפליקציה מוגדרת כפרטית. יש לשנות את הגדרות האפליקציה ל-Public ב-Dashboard -> Settings כדי לאפשר לעובדים להתחבר בפעם הראשונה.'
                : 'App is set to Private. Go to Dashboard -> Settings and change Privacy to Public so workers can login.';
+          } else if (errorMsg.includes('already registered') || errorMsg.includes('already exists')) {
+             // If email already exists, and we failed to login above, it means this email 
+             // belongs to an existing Base44 account with a different password.
+             errorMsg = language === 'he' 
+               ? 'אימייל זה כבר רשום במערכת כמשתמש ראשי (בעל סיסמה שונה). אנא התחבר דרך מסך ההתחברות הראשי, או בקש מהמנהל להגדיר לך משתמש/אימייל אחר.' 
+               : 'This email is already registered as a main user with a different password. Please login via the main login screen, or ask your manager to set a different username for you.';
           } else if (errorMsg.includes('verify your email')) {
              errorMsg = language === 'he'
                ? 'יש לכבות את "Require Email Verification" (אימות אימייל) בהגדרות האפליקציה (Dashboard -> Settings -> Authentication) כדי לאפשר לעובדים להתחבר.'
