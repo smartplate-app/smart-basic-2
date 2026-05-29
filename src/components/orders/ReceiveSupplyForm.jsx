@@ -1776,6 +1776,20 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   await base44.integrations.Core.SendEmail({ to: s.email, subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`, body: text.replace(/\n/g, '<br/>') + logoHtml + '<br/><br/><br/><br/><br/><br/><br/><br/>' });
                                 } catch (e) {}
                               }
+                              
+                              const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                              const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
+                              
+                              if (isMobile && navigator.share) {
+                                try {
+                                  await navigator.share({
+                                    title: language === 'he' ? 'בקשת זיכוי' : 'Credit Request',
+                                    text: text
+                                  });
+                                  return;
+                                } catch (_) { /* fallback */ }
+                              }
+                              
                               window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                             }}
                           >
