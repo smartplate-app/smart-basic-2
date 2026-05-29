@@ -51,8 +51,9 @@ Deno.serve(async (req) => {
     // OAuth token for Google Sheets
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlesheets');
 
+    const isHebrew = language === 'he';
     const sheetsRequests = sheetData.map((s, i) => ({
-       properties: { title: s.title, sheetId: 100 + i }
+       properties: { title: s.title, sheetId: 100 + i, rightToLeft: isHebrew }
     }));
 
     // Create spreadsheet

@@ -161,6 +161,29 @@ Deno.serve(async (req) => {
       body: { name: sheet_name || `InventoryCount-${monthLabel}` , mimeType: 'application/vnd.google-apps.spreadsheet', parents: [parent.id] }
     });
 
+    if (isHebrew) {
+      try {
+        await sheetsRequest(sheetsToken, `/v4/spreadsheets/${fileMeta.id}:batchUpdate`, {
+          method: 'POST',
+          body: {
+            requests: [
+              {
+                updateSheetProperties: {
+                  properties: {
+                    sheetId: 0,
+                    rightToLeft: true
+                  },
+                  fields: 'rightToLeft'
+                }
+              }
+            ]
+          }
+        });
+      } catch (e) {
+        console.error('Failed to set RTL:', e);
+      }
+    }
+
     await sheetsRequest(sheetsToken, `/v4/spreadsheets/${fileMeta.id}/values:batchUpdate`, {
       method: 'POST',
       body: {
@@ -196,6 +219,16 @@ Deno.serve(async (req) => {
                   }
                 },
                 fields: 'gridProperties.frozenRowCount'
+              }
+            },
+            {
+              autoResizeDimensions: {
+                dimensions: {
+                  sheetId: 0,
+                  dimension: 'COLUMNS',
+                  startIndex: 0,
+                  endIndex: headers.length
+                }
               }
             }
           ]
