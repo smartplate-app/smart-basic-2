@@ -1793,7 +1793,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                             }}
                           >
-                            {language === 'he' ? 'שלח בקשת זיכוי לספק (וואטסאפ ולמייל המוגדר)' : 'Send Credit Request (WhatsApp & Email)'}
+                            {language === 'he' ? 'שלח בקשת זיכוי לספק (למייל ולנייד המוגדר)' : 'Send Credit Request (Email & Mobile)'}
                           </Button>
                         </div>
                       )}
