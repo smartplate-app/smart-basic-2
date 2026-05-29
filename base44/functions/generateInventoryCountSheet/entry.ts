@@ -99,7 +99,8 @@ Deno.serve(async (req) => {
       'catalog_number',
       'price_per_unit',
       'warehouse_name',
-      'counted_qty',
+      'counted_cases',
+      'counted_units',
       'notes'
     ];
 
@@ -124,6 +125,7 @@ Deno.serve(async (req) => {
                (a.name||'').localeCompare(b.name||'');
       })
       .map(it => {
+        const isCaseItem = it.unit === 'case';
         return [
           it.supplier_name || '',
           it.name || '',
@@ -131,8 +133,9 @@ Deno.serve(async (req) => {
           it.catalog_number || '',
           Number(it.price || 0),
           it.single_warehouse_name || '',
-          '',
-          ''
+          isCaseItem ? '' : 'N/A', // Counted Cases
+          '',                      // Counted Units
+          ''                       // Notes
         ];
       });
 

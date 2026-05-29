@@ -46,27 +46,39 @@ Deno.serve(async (req) => {
     const rows = valuesRes?.values || [];
     if (rows.length < 2) return Response.json({ error: 'Sheet has no data' }, { status: 400 });
 
-    const headers = rows[0].map(h => String(h||'').trim().toLowerCase());
-    const idx = (name) => headers.indexOf(name);
+    let headerRowIdx = 0;
+    const foundIdx = rows.findIndex(r => r.map(c => String(c||'').trim().toLowerCase()).includes('item_name') || r.map(c => String(c||'').trim().toLowerCase()).includes('item name'));
+    if (foundIdx >= 0) headerRowIdx = foundIdx;
+
+    const headers = rows[headerRowIdx].map(h => String(h||'').trim().toLowerCase().replace(/\s+/g, '_'));
+    const idx = (name) => {
+       const i = headers.indexOf(name);
+       if (i >= 0) return i;
+       // try matching without underscores
+       return headers.findIndex(h => h.replace(/_/g, '') === name.replace(/_/g, ''));
+    };
+    
     const iSupplier = idx('supplier_name');
     const iName = idx('item_name');
     const iUnit = idx('unit');
     const iCatalog = idx('catalog_number');
     const iPrice = idx('price_per_unit');
-    const iQty = idx('counted_qty');
+    const iQty = idx('counted_qty') >= 0 ? idx('counted_qty') : (idx('counted_units') >= 0 ? idx('counted_units') : idx('quantity'));
+    const iCases = idx('counted_cases') >= 0 ? idx('counted_cases') : idx('cases');
     const iNotes = idx('notes');
 
     const allItems = await base44.entities.Item.filter({ created_by: workingEmail }, 'name');
 
     const items = [];
-    for (let r = 1; r < rows.length; r++) {
+    for (let r = headerRowIdx + 1; r < rows.length; r++) {
       const row = rows[r] || [];
       const itemName = iName >= 0 ? row[iName] : undefined;
-      if (!itemName) continue;
+      if (!itemName || itemName.toString().trim().toLowerCase() === 'total' || itemName === '') continue;
       const catalog = iCatalog >= 0 ? row[iCatalog] : '';
       const unit = iUnit >= 0 ? row[iUnit] : '';
       const price = iPrice >= 0 ? toNumber(row[iPrice]) : 0;
-      const qty = iQty >= 0 ? toNumber(row[iQty]) : 0;
+      const qtyUnits = iQty >= 0 ? toNumber(row[iQty]) : 0;
+      const qtyCases = iCases >= 0 ? toNumber(row[iCases]) : 0;
       const notes = iNotes >= 0 ? (row[iNotes] || '') : '';
 
       let matched = null;
@@ -77,13 +89,29 @@ Deno.serve(async (req) => {
         matched = allItems.find(i => (i.name || '').toString().trim().toLowerCase() === itemName.toString().trim().toLowerCase());
       }
 
+      let finalQty = qtyUnits;
+      if (qtyCases > 0 || row[iCases] !== undefined && String(row[iCases]).trim() !== '') {
+          const upp = matched?.units_per_package || 1;
+          // counted_quantity stores total quantity (which in case of 'case' unit is the number of cases).
+          // If the item unit is 'case', total cases = cases + units / units_per_package
+          // If the item unit is 'unit', total units = cases * units_per_package + units
+          const itemUnit = unit || matched?.unit || '';
+          if (itemUnit === 'case') {
+             finalQty = qtyCases + (qtyUnits / upp);
+          } else {
+             finalQty = qtyUnits + (qtyCases * upp);
+          }
+      }
+
+      const finalPrice = price || matched?.price || 0;
+
       items.push({
         item_id: matched?.id || '',
         item_name: matched?.name || String(itemName),
-        counted_quantity: qty,
+        counted_quantity: finalQty,
         unit: unit || matched?.unit || '',
-        price_per_unit: price || matched?.price || 0,
-        total_cost: (price || matched?.price || 0) * qty,
+        price_per_unit: finalPrice,
+        total_cost: finalPrice * finalQty,
         notes
       });
     }

@@ -84,23 +84,43 @@ Deno.serve(async (req) => {
         const sheetTitle = s.title;
         const sheetId = 100 + i;
         
-        const dataRows = s.items.map(item => [
-          item.item_name || '',
-          item.counted_quantity !== undefined ? item.counted_quantity : '',
-          item.unit || '',
-          item.price_per_unit !== undefined ? item.price_per_unit : '',
-          item.total_cost !== undefined ? item.total_cost : '',
-          item.notes || ''
-        ]);
+        const dataRows = s.items.map(item => {
+           let cases = 'N/A';
+           let units = item.counted_quantity !== undefined ? item.counted_quantity : '';
+           
+           if (item.unit === 'case') {
+               // When item unit is 'case', counted_quantity is the total cases
+               // To split it we would need units_per_package, which we don't have here.
+               // Let's just output the total in Cases column and leave Units blank.
+               if (units !== '') {
+                   cases = Math.floor(Number(units));
+                   let fraction = Number(units) - cases;
+                   units = fraction > 0 ? fraction.toFixed(2) : '';
+               } else {
+                   cases = '';
+                   units = '';
+               }
+           }
+           
+           return [
+              item.item_name || '',
+              cases,
+              units,
+              item.unit || '',
+              item.price_per_unit !== undefined ? item.price_per_unit : '',
+              item.total_cost !== undefined ? item.total_cost : '',
+              item.notes || ''
+           ];
+        });
         
         const values = [];
-        values.push([title + (s.title === 'Summary' ? ' (Summary)' : ` - ${s.title}`), '', '', '', '', '']); // Title row
-        values.push(['Item Name', 'Quantity', 'Unit', 'Price per Unit', 'Total Cost', 'Notes']); // Headers
+        values.push([title + (s.title === 'Summary' ? ' (Summary)' : ` - ${s.title}`), '', '', '', '', '', '']); // Title row
+        values.push(['Item Name', 'Counted Cases', 'Counted Units', 'Unit', 'Price per Unit', 'Total Cost', 'Notes']); // Headers
         for (const row of dataRows) values.push(row);
-        values.push(['', '', '', 'Total', s.total || 0, '']); // Total row
+        values.push(['', '', '', '', 'Total', s.total || 0, '']); // Total row
         
         valuesData.push({
-           range: `'${sheetTitle}'!A1:F${values.length}`,
+           range: `'${sheetTitle}'!A1:G${values.length}`,
            values
         });
         
@@ -109,63 +129,63 @@ Deno.serve(async (req) => {
         
         formattingRequests.push(
             {
-              mergeCells: {
-                range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 6 },
-                mergeType: 'MERGE_ALL'
-              }
+            mergeCells: {
+              range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 7 },
+              mergeType: 'MERGE_ALL'
+            }
             },
             {
-              repeatCell: {
-                range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 6 },
-                cell: {
-                  userEnteredFormat: {
-                    horizontalAlignment: 'CENTER',
-                    backgroundColor: { red: 0.85, green: 0.92, blue: 0.98 },
-                    textFormat: { bold: true, fontSize: 14, foregroundColor: { red: 0.1, green: 0.2, blue: 0.3 } }
-                  }
-                },
-                fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
-              }
+            repeatCell: {
+              range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 7 },
+              cell: {
+                userEnteredFormat: {
+                  horizontalAlignment: 'CENTER',
+                  backgroundColor: { red: 0.85, green: 0.92, blue: 0.98 },
+                  textFormat: { bold: true, fontSize: 14, foregroundColor: { red: 0.1, green: 0.2, blue: 0.3 } }
+                }
+              },
+              fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)'
+            }
             },
             {
-              repeatCell: {
-                range: { sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: 6 },
-                cell: {
-                  userEnteredFormat: {
-                    backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 },
-                    textFormat: { bold: true }
-                  }
-                },
-                fields: 'userEnteredFormat(backgroundColor,textFormat)'
-              }
+            repeatCell: {
+              range: { sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: 7 },
+              cell: {
+                userEnteredFormat: {
+                  backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 },
+                  textFormat: { bold: true }
+                }
+              },
+              fields: 'userEnteredFormat(backgroundColor,textFormat)'
+            }
             },
             {
-              repeatCell: {
-                range: { sheetId, startRowIndex: 2, endRowIndex: totalRowIndex + 1, startColumnIndex: 3, endColumnIndex: 5 },
-                cell: {
-                  userEnteredFormat: {
-                    numberFormat: { type: 'NUMBER', pattern: '#,##0.00' }
-                  }
-                },
-                fields: 'userEnteredFormat.numberFormat'
-              }
+            repeatCell: {
+              range: { sheetId, startRowIndex: 2, endRowIndex: totalRowIndex + 1, startColumnIndex: 4, endColumnIndex: 6 },
+              cell: {
+                userEnteredFormat: {
+                  numberFormat: { type: 'NUMBER', pattern: '#,##0.00' }
+                }
+              },
+              fields: 'userEnteredFormat.numberFormat'
+            }
             },
             {
-              repeatCell: {
-                range: { sheetId, startRowIndex: totalRowIndex, endRowIndex: totalRowIndex + 1, startColumnIndex: 0, endColumnIndex: 6 },
-                cell: {
-                  userEnteredFormat: {
-                    textFormat: { bold: true },
-                    backgroundColor: { red: 0.96, green: 0.96, blue: 0.86 }
-                  }
-                },
-                fields: 'userEnteredFormat(textFormat,backgroundColor)'
-              }
+            repeatCell: {
+              range: { sheetId, startRowIndex: totalRowIndex, endRowIndex: totalRowIndex + 1, startColumnIndex: 0, endColumnIndex: 7 },
+              cell: {
+                userEnteredFormat: {
+                  textFormat: { bold: true },
+                  backgroundColor: { red: 0.96, green: 0.96, blue: 0.86 }
+                }
+              },
+              fields: 'userEnteredFormat(textFormat,backgroundColor)'
+            }
             },
             {
-              autoResizeDimensions: {
-                dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 6 }
-              }
+            autoResizeDimensions: {
+              dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 7 }
+            }
             }
         );
     }
