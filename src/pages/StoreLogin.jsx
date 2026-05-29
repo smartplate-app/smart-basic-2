@@ -59,7 +59,9 @@ export default function StoreLogin() {
           await base44.auth.register({
             email: userEmail,
             password: password,
-            full_name: storeUser.full_name || storeUser.user_name || username
+            full_name: storeUser.full_name || storeUser.user_name || username,
+            business_name: storeUser.store_name || 'Restaurant Worker',
+            business_address: 'Worker'
           });
           
           // Try login again after registration
@@ -72,6 +74,10 @@ export default function StoreLogin() {
              errorMsg = language === 'he' 
                ? 'סיסמה שגויה או שהסיסמה שונתה על ידי המנהל (יש ליצור משתמש חדש אם הסיסמה שונתה).' 
                : 'Invalid password or password was changed by manager (please create a new user if password was changed).';
+          } else if (errorMsg.includes('auth_required') || errorMsg.includes('logged in')) {
+             errorMsg = language === 'he'
+               ? 'האפליקציה מוגדרת כפרטית. יש לשנות את הגדרות האפליקציה ל-Public ב-Dashboard -> Settings כדי לאפשר לעובדים להתחבר בפעם הראשונה.'
+               : 'App is set to Private. Go to Dashboard -> Settings and change Privacy to Public so workers can login.';
           } else {
              errorMsg = language === 'he' 
                ? `שגיאה בהרשמת המשתמש למערכת: ${errorMsg}` 
