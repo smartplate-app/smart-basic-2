@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { createPageUrl } from "@/utils";
 import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Video, Share, Sun, Moon, ChefHat, BarChart3, Calculator } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -46,6 +47,18 @@ const [authLoading, setAuthLoading] = useState(() => {
       const { t, language } = useLanguage();
   const [navSearchTerm, setNavSearchTerm] = useState("");
   const [isIncognito, setIsIncognito] = useState(false);
+  const [customNavOrder, setCustomNavOrder] = useState([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      try {
+        const saved = localStorage.getItem(`b44_nav_order_${user.id}`);
+        if (saved) {
+          setCustomNavOrder(JSON.parse(saved));
+        }
+      } catch(e) {}
+    }
+  }, [user?.id]);
   // PWA install (global)
   const [installPromptEvent, setInstallPromptEvent] = useState(null);
   const [isPwaInstalled, setIsPwaInstalled] = useState(false);
@@ -627,6 +640,54 @@ const [authLoading, setAuthLoading] = useState(() => {
     item.title.toLowerCase().includes(navSearchTerm.toLowerCase())
   );
 
+  const orderedNavigationItems = React.useMemo(() => {
+    let items = [...filteredNavigationItems];
+    if (customNavOrder && customNavOrder.length > 0) {
+      items.sort((a, b) => {
+        const idxA = customNavOrder.indexOf(a.url);
+        const idxB = customNavOrder.indexOf(b.url);
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
+    }
+    return items;
+  }, [filteredNavigationItems, customNavOrder]);
+
+  const handleNavDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const startIndex = result.source.index;
+    const endIndex = result.destination.index;
+    
+    const newItems = Array.from(orderedNavigationItems);
+    const [removed] = newItems.splice(startIndex, 1);
+    newItems.splice(endIndex, 0, removed);
+    
+    let currentFullOrder = customNavOrder.length > 0 ? [...customNavOrder] : navigationItems.map(i => i.url);
+    currentFullOrder = currentFullOrder.filter(url => url !== removed.url);
+    
+    if (endIndex === 0) {
+      currentFullOrder.unshift(removed.url);
+    } else {
+      const itemBefore = newItems[endIndex - 1];
+      const idxBeforeInFull = currentFullOrder.indexOf(itemBefore.url);
+      if (idxBeforeInFull !== -1) {
+        currentFullOrder.splice(idxBeforeInFull + 1, 0, removed.url);
+      } else {
+        currentFullOrder.push(removed.url);
+      }
+    }
+    
+    setCustomNavOrder(currentFullOrder);
+    if (user?.id) {
+      try {
+        localStorage.setItem(`b44_nav_order_${user.id}`, JSON.stringify(currentFullOrder));
+      } catch(e) {}
+    }
+  };
+
     const exitAdminControl = async () => {
       try {
         await base44.auth.updateMe({
@@ -976,21 +1037,41 @@ const [authLoading, setAuthLoading] = useState(() => {
             // Avoid full reload if user ctrl/cmd-clicks
             const a = e.target.closest('a'); if (a && a.target === '_blank') e.stopPropagation();
           }}>
-            <ul className="space-y-2">
-              {filteredNavigationItems.map((item) => (
-                <li key={item.title}>
-                  <Link 
-                    to={item.url}
-                    preventScrollReset
-                    onClick={() => setSidebarOpen(false)}
-                    className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-[#d4a373] text-white font-bold dark:bg-[#d4a373]' : (item.isLightGray ? 'text-gray-400 hover:bg-gray-100 dark:text-slate-500 dark:hover:bg-[#0a1430]' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]'))}
+            <DragDropContext onDragEnd={handleNavDragEnd}>
+              <Droppable droppableId="sidebar-nav">
+                {(provided) => (
+                  <ul 
+                    className="space-y-2"
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.title}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    {orderedNavigationItems.map((item, index) => (
+                      <Draggable key={item.url} draggableId={item.url} index={index}>
+                        {(provided, snapshot) => (
+                          <li 
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className={snapshot.isDragging ? "opacity-90 scale-[1.02] bg-white dark:bg-[#0b1530] shadow-md rounded-lg transition-all z-50 list-none" : "transition-all list-none"}
+                          >
+                            <Link 
+                              to={item.url}
+                              preventScrollReset
+                              onClick={() => setSidebarOpen(false)}
+                              className={'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ' + (isRTL ? 'flex-row-reverse text-right ' : '') + ((location.pathname === item.url || location.pathname.includes(item.url.split('/').pop())) ? 'bg-[#d4a373] text-white font-bold dark:bg-[#d4a373]' : (item.isLightGray ? 'text-gray-400 hover:bg-gray-100 dark:text-slate-500 dark:hover:bg-[#0a1430]' : 'text-gray-900 hover:bg-gray-100 dark:text-slate-100 dark:hover:bg-[#0a1430]'))}
+                            >
+                              <item.icon className="w-5 h-5" />
+                              <span>{item.title}</span>
+                            </Link>
+                          </li>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </ul>
+                )}
+              </Droppable>
+            </DragDropContext>
           </nav>
         </aside>
 
