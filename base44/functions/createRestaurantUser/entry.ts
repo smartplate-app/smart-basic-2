@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.StoreUser.update(storeUser.id, {
         user_name: full_name,
         role: role,
+        store_name: store_name || requester.business_name,
         is_active: true
       });
     } else {
