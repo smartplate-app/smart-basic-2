@@ -20,6 +20,7 @@ import NetworkErrorHandler from "../components/NetworkErrorHandler";
 import { offlineQueue } from "../components/offline/offlineQueue";
 import { notifyOS } from "../components/notifications/notify";
 import { getCache, setCache, isStale } from "../components/utils/cache";
+import { toast } from "sonner";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -691,7 +692,14 @@ export default function OrdersPage() {
     
     // Always mark as sent and send email in the background (if supplier has email)
     base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: ensuredNumber }).catch(() => {});
-    try { base44.functions.invoke('sendOrderEmail', { orderId: order.id }).catch(() => {}); } catch (e) {}
+    
+    const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
+    if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+      base44.functions.invoke('sendOrderEmail', { orderId: order.id })
+        .then(() => toast.success(language === 'he' ? 'ההזמנה נשלחה בהצלחה גם למייל של הספק!' : 'Order also sent to supplier email!'))
+        .catch(() => {});
+    }
+    
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'sent', order_number: ensuredNumber } : o));
 
     setPreviewOrder(null);
@@ -863,6 +871,14 @@ export default function OrdersPage() {
   setTimeout(() => {
     base44.functions.invoke('markOrderSent', { orderId: order.id, orderNumber: order.order_number })
       .catch(() => {});
+      
+    // Send email automatically
+    const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
+    if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+      base44.functions.invoke('sendOrderEmail', { orderId: order.id })
+        .then(() => toast.success(language === 'he' ? 'ההזמנה נשלחה בהצלחה גם למייל של הספק!' : 'Order also sent to supplier email!'))
+        .catch(() => {});
+    }
   }, 1200);
 
   setSendOptionOrder(null);
@@ -1660,7 +1676,19 @@ export default function OrdersPage() {
             // Updated by the modal when share is successful
             const num = orderData?.order_number || previewOrder.order_number || `ORD-${(previewOrder.id || Date.now()).toString().slice(-8)}`;
             base44.functions.invoke('markOrderSent', { orderId: previewOrder.id, orderNumber: num }).catch(() => {});
-            try { base44.functions.invoke('sendOrderEmail', { orderId: previewOrder.id }).catch(() => {}); } catch (e) {}
+            
+            // Send email automatically
+            const selectedSupplier = suppliers.find(s => s.name === previewOrder.supplier_name || s.id === previewOrder.supplier_id);
+            if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
+              base44.functions.invoke('sendOrderEmail', { orderId: previewOrder.id })
+                .then(() => {
+                  setTimeout(() => {
+                    toast.success(language === 'he' ? 'ההזמנה נשלחה בהצלחה גם למייל של הספק!' : 'Order also sent to supplier email!');
+                  }, 1500); // Slight delay so it shows after the share sheet finishes
+                })
+                .catch(() => {});
+            }
+            
             setOrders(prev => prev.map(o => o.id === previewOrder.id ? { ...o, status: 'sent', order_number: num } : o));
             setPreviewOrder(null);
           }}
