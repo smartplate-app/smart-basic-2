@@ -183,8 +183,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             </div>
             ` : ''}
 
-            <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-              <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.</p>
+            <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+              <div style="font-size: 14px; font-weight: 800; color: #111827; letter-spacing: 1px;">SMART PLATE BASIC</div>
+              <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
             </div>
           </div>
         </div>
@@ -367,8 +368,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                   </div>
                   ` : ''}
 
-                  <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-                    <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.</p>
+                  <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                    <div style="font-size: 14px; font-weight: 800; color: #111827; letter-spacing: 1px;">SMART PLATE BASIC</div>
+                    <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
                   </div>
                 </div>
               </div>
@@ -555,8 +557,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                           )}
 
                           {/* Footer */}
-                          <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e5e7eb', color: '#6b7280' }}>
-                              <p style={{ fontSize: '12px', margin: 0, textTransform: 'uppercase' }}>SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.</p>
+                          <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                              <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827', letterSpacing: '1px' }}>SMART PLATE BASIC</div>
+                              <div style={{ fontSize: '9px', marginTop: '2px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>The ultimate food & labor cost app</div>
                           </div>
                       </div>
                   </div>

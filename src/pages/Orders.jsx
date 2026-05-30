@@ -763,8 +763,9 @@ export default function OrdersPage() {
             </tbody>
           </table>
         </div>
-        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280;">
-          <p style="font-size: 12px; margin: 0; text-transform: uppercase;">SMART PLATE - THE ULTIMATE FOOD & LABOR COST APP FOR RESTAURANTS</p>
+        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+          <div style="font-size: 14px; font-weight: 800; color: #111827; letter-spacing: 1px;">SMART PLATE BASIC</div>
+          <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
         </div>
       `;
       document.body.appendChild(temp);
