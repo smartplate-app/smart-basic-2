@@ -436,9 +436,9 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             : 'bg-white border-gray-200 hover:border-[#e9d5ff]'
                       }`}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-0.5">
+                      <div className="flex flex-row items-center justify-between gap-2 px-1">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-gray-900 leading-tight">
+                          <h4 className="font-bold text-sm text-gray-900 leading-tight truncate">
                             {item.nickname || item.name} 
                             {item.nickname && <span className="text-[11px] text-gray-500 font-normal ml-1">({item.name})</span>}
                           </h4>
@@ -453,19 +453,19 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                           </div>
                         </div>
                         
-                        <div className="flex flex-row items-center justify-between sm:justify-end gap-3 shrink-0 mt-1 sm:mt-0 pt-1.5 sm:pt-0 border-t sm:border-0 border-gray-100">
+                        <div className="flex flex-row items-center justify-end gap-3 shrink-0">
                           {quantity > 0 && item.price > 0 ? (
-                            <div className="text-sm font-bold text-[#8b5cf6] min-w-[3.5rem] rtl:text-right ltr:text-left">
+                            <div className="text-sm font-bold text-[#8b5cf6] hidden sm:block min-w-[3.5rem] rtl:text-right ltr:text-left">
                               ₪{discountedTotal.toFixed(2)}
                             </div>
                           ) : (
-                            <div className="min-w-[3.5rem]"></div>
+                            <div className="hidden sm:block min-w-[3.5rem]"></div>
                           )}
                           
                           <div className="flex items-center gap-2">
                             <div className="flex flex-col items-center">
                               <Label className="text-[10px] text-gray-500 mb-0.5">{language === 'he' ? 'להזמנה' : 'Order'}</Label>
-                              <div className="flex items-center bg-white rounded-md border border-gray-300 h-7 w-14">
+                              <div className="flex items-center bg-white rounded-md border border-gray-300 h-8 w-16">
                                 <Input
                                   type="number"
                                   value={quantity || ''}
