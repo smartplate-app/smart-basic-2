@@ -22,7 +22,6 @@ export default function StoreUsersPage() {
   // Form states
   const [userName, setUserName] = useState("");
   const [userUsername, setUserUsername] = useState(""); // Replaced userEmail with username
-  const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState("worker");
   const [generatedLink, setGeneratedLink] = useState("");
   const [generatedCredentials, setGeneratedCredentials] = useState(null);
@@ -106,13 +105,8 @@ export default function StoreUsersPage() {
   };
 
   const handleAddUser = async () => {
-      if (!userName.trim() || !userUsername.trim() || (!editingUser && !userPassword.trim())) {
+      if (!userName.trim() || !userUsername.trim()) {
         alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
-        return;
-      }
-
-      if (userPassword && userPassword.trim().length < 6) {
-        alert(language === 'he' ? 'הסיסמה חייבת להכיל לפחות 6 תווים' : 'Password must be at least 6 characters');
         return;
       }
 
@@ -122,7 +116,6 @@ export default function StoreUsersPage() {
 
           const ownerEmail = user.acting_as_store_email || user.email;
           const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
-          const restaurantAddress = user.business_address || '';
           
           // The username is now required to be an email address
           const generatedInternalEmail = userUsername.toLowerCase().trim();
@@ -133,11 +126,10 @@ export default function StoreUsersPage() {
             return;
           }
 
-          const createResponse = await base44.functions.invoke('createRestaurantUser', {
+          const createResponse = await base44.functions.invoke('createSimpleUserAccount', {
             email: generatedInternalEmail,
-            password: userPassword,
             full_name: userName,
-            store_name: storeName,
+            restaurant_name: storeName,
             role: userRole,
             owner_email: ownerEmail,
             update_existing: !!editingUser
@@ -156,15 +148,14 @@ export default function StoreUsersPage() {
 
         // Show success message
         setGeneratedCredentials({
-          username: userUsername,
-          password: userPassword,
+          username: generatedInternalEmail,
           loginUrl: `${window.location.origin}/StoreLogin`
         });
         setGeneratedLink(generatedInternalEmail);
         setLinkCopied(false);
 
         console.log('[StoreUsers] All done!');
-      } catch (error) {
+        } catch (error) {
         console.error("[StoreUsers] Error adding/updating user:", error);
 
         let errorMessage = error?.response?.data?.error || error.message || 'Unknown error occurred';
@@ -204,7 +195,6 @@ export default function StoreUsersPage() {
       // For older users it might have a .local domain, for new it's an email
       const isLocal = storeUser.user_email.endsWith('.local');
       setUserUsername(isLocal ? storeUser.user_email.split('@')[0] : storeUser.user_email);
-      setUserPassword(''); // Force entering a new password if editing, or maybe we leave it blank to indicate no change (but API requires password currently)
       setUserRole(storeUser.role);
       setShowAddUser(true);
     };
@@ -278,7 +268,6 @@ export default function StoreUsersPage() {
               setGeneratedCredentials(null);
               setUserName("");
               setUserUsername("");
-              setUserPassword("");
               setUserRole("worker");
               setLinkCopied(false);
               setEditingUser(null);
@@ -318,17 +307,7 @@ export default function StoreUsersPage() {
                   />
                   {editingUser && <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'לא ניתן לשנות שם משתמש קיים' : 'Cannot change existing username'}</p>}
                 </div>
-                <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'סיסמה' : 'Password'}</Label>
-                  <Input 
-                    type="text"
-                    value={userPassword} 
-                    onChange={(e) => setUserPassword(e.target.value)}
-                    placeholder={language === 'he' ? 'הכנס סיסמה' : 'Enter password'}
-                    className={isRTL ? 'text-right' : ''}
-                  />
-                  {editingUser && <p className="text-xs text-amber-600 mt-1">{language === 'he' ? 'הכנס סיסמה חדשה (חובה לעדכן סיסמה בעריכה)' : 'Enter new password (required on edit)'}</p>}
-                </div>
+
                 <div>
                   <Label className={isRTL ? 'text-right block' : ''}>{t.role}</Label>
                   <Select value={userRole} onValueChange={setUserRole}>
@@ -388,17 +367,14 @@ export default function StoreUsersPage() {
                         {generatedCredentials && (
                           <div className="bg-blue-50 rounded-lg p-3">
                             <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
-                              <strong>{language === 'he' ? '👤 שם משתמש:' : '👤 Username:'}</strong> {generatedCredentials.username}
-                            </p>
-                            <p className={`text-sm text-blue-800 mt-1 ${isRTL ? 'text-right' : ''}`}>
-                              <strong>{language === 'he' ? '🔑 סיסמה:' : '🔑 Password:'}</strong> {generatedCredentials.password}
+                              <strong>{language === 'he' ? '👤 משתמש:' : '👤 User:'}</strong> {generatedCredentials.username}
                             </p>
                             <p className={`text-sm text-blue-700 mt-3 ${isRTL ? 'text-right' : ''}`}>
                               <strong>{language === 'he' ? '💡 איך מתחברים:' : '💡 How to login:'}</strong>
                             </p>
                             <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
                               <li>{language === 'he' ? 'המשתמש נכנס לקישור הבא:' : 'User goes to the following link:'} <br/><a href={generatedCredentials.loginUrl} target="_blank" className="underline break-all">{generatedCredentials.loginUrl}</a></li>
-                              <li>{language === 'he' ? 'מזין את שם המשתמש והסיסמה שנוצרו עבורו.' : 'Enters the username and password created for them.'}</li>
+                              <li>{language === 'he' ? 'לוחץ על ״המשך עם גוגל/אפל״ ובוחר בחשבון עם המייל הזה.' : 'Clicks "Continue with Google/Apple" and uses this email address.'}</li>
                               <li>{language === 'he' ? 'מקבל גישה ישירה למסעדה שלך בהתאם להרשאות.' : 'Gets direct access to your restaurant based on their role.'}</li>
                             </ul>
                           </div>
@@ -410,8 +386,7 @@ export default function StoreUsersPage() {
                         onClick={() => {
                           const loginLink = generatedCredentials?.loginUrl;
                           const uname = generatedCredentials?.username;
-                          const pwd = generatedCredentials?.password;
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} ${user.business_name || user.full_name}.\n\n${language === 'he' ? '💡 פרטי התחברות:' : '💡 Login Details:'}\n${language === 'he' ? 'קישור:' : 'Link:'} ${loginLink}\n${language === 'he' ? 'שם משתמש:' : 'Username:'} ${uname}\n${language === 'he' ? 'סיסמה:' : 'Password:'} ${pwd}`;
+                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} ${user.business_name || user.full_name}.\n\n${language === 'he' ? '💡 כל מה שצריך לעשות זה להיכנס לקישור ולהתחבר דרך גוגל/אפל עם המייל הזה:' : '💡 All you need to do is go to this link and login via Google/Apple using this email:'}\n${uname}\n\n${language === 'he' ? 'קישור:' : 'Link:'} ${loginLink}`;
                           const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                           window.open(whatsappUrl, '_blank');
                         }}
@@ -429,16 +404,14 @@ export default function StoreUsersPage() {
                         onClick={async () => {
                           const loginLink = generatedCredentials?.loginUrl;
                           const uname = generatedCredentials?.username;
-                          const pwd = generatedCredentials?.password;
                           const htmlContent = `
                             <div style="font-family: Arial, sans-serif; direction: ${isRTL ? 'rtl' : 'ltr'};">
                               <p>${language === 'he' ? 'היי' : 'Hi'} ${userName}!</p>
                               <p>${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} <strong>${user.business_name || user.full_name}</strong>.</p>
-                              <p><strong>${language === 'he' ? '💡 פרטי התחברות:' : '💡 Login Details:'}</strong></p>
+                              <p><strong>${language === 'he' ? '💡 כל מה שצריך לעשות זה להיכנס לקישור ולהתחבר דרך גוגל/אפל עם המייל הזה:' : '💡 All you need to do is go to this link and login via Google/Apple using this email:'}</strong></p>
                               <ul>
+                                <li><strong>${language === 'he' ? 'מייל:' : 'Email:'}</strong> ${uname}</li>
                                 <li><strong>${language === 'he' ? 'קישור:' : 'Link:'}</strong> <a href="${loginLink}">${loginLink}</a></li>
-                                <li><strong>${language === 'he' ? 'שם משתמש:' : 'Username:'}</strong> ${uname}</li>
-                                <li><strong>${language === 'he' ? 'סיסמה:' : 'Password:'}</strong> ${pwd}</li>
                               </ul>
                             </div>
                           `;
@@ -477,7 +450,6 @@ export default function StoreUsersPage() {
                           setGeneratedLink("");
                           setUserName("");
                           setUserUsername("");
-                          setUserPassword("");
                           setUserRole("worker");
                       }}
                     >
