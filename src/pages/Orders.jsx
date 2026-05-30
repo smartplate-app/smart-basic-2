@@ -766,6 +766,7 @@ export default function OrdersPage() {
         <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
           <div style="font-size: 14px; font-weight: 800; color: #111827; letter-spacing: 1px;">SMART PLATE BASIC</div>
           <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
+          <div style="font-size: 10px; margin-top: 4px; font-weight: 600; color: #2563eb;">foodcostapp.com</div>
         </div>
       `;
       document.body.appendChild(temp);
