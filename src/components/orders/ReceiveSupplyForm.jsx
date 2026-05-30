@@ -1073,12 +1073,14 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         ))}
                       </div>
                       {selectedOpenOrderIds.length > 0 && (
-                        <Button type="button" onClick={handleLoadItemsFromOrders} className="w-full mt-3 bg-[#d4a373] hover:bg-[#b88c60] text-white h-auto py-3 px-2 sm:px-4">
-                          <span className="flex items-center justify-center flex-wrap gap-2 text-center text-sm sm:text-base whitespace-normal break-words leading-tight">
-                            <Download className="w-4 h-4 shrink-0" />
-                            <span>{language === 'he' ? `משוך פריטים מ-${selectedOpenOrderIds.length} הזמנות נבחרות` : `Load items from ${selectedOpenOrderIds.length} selected orders`}</span>
-                          </span>
-                        </Button>
+                        <div className="hidden">
+                          <Button type="button" onClick={handleLoadItemsFromOrders} className="w-full mt-3 bg-[#d4a373] hover:bg-[#b88c60] text-white h-auto py-3 px-2 sm:px-4">
+                            <span className="flex items-center justify-center flex-wrap gap-2 text-center text-sm sm:text-base whitespace-normal break-words leading-tight">
+                              <Download className="w-4 h-4 shrink-0" />
+                              <span>{language === 'he' ? `משוך פריטים מ-${selectedOpenOrderIds.length} הזמנות נבחרות` : `Load items from ${selectedOpenOrderIds.length} selected orders`}</span>
+                            </span>
+                          </Button>
+                        </div>
                       )}
                     </div>
                   )}
