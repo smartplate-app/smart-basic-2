@@ -107,10 +107,16 @@ export default function StoreLogin() {
 
     } catch (err) {
       console.error(err);
-      let errorMsg = err?.response?.data?.error || err.message;
+      let errorMsg = err?.response?.data?.error || err.message || '';
+      
       if (errorMsg === 'Request failed with status code 401' || errorMsg === 'Invalid username or password') {
         errorMsg = language === 'he' ? 'שם משתמש או סיסמה שגויים' : 'Invalid username or password';
+      } else if (errorMsg.includes('auth_required') || errorMsg.includes('logged in')) {
+        errorMsg = language === 'he'
+          ? 'האפליקציה מוגדרת כפרטית. יש לשנות את הגדרות האפליקציה ל-Public ב-Dashboard -> Settings כדי לאפשר לעובדים להתחבר.'
+          : 'App is set to Private. Go to Dashboard -> Settings and change Privacy to Public so workers can login.';
       }
+      
       setError(errorMsg || (language === 'he' ? 'שם משתמש או סיסמה שגויים' : 'Invalid username or password'));
     } finally {
       setLoading(false);
