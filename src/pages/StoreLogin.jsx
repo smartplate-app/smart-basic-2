@@ -5,13 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Loader, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Loader, Lock, User, Eye, EyeOff, Key } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageProvider';
 
 export default function StoreLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showOtpForm, setShowOtpForm] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpEmail, setOtpEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -54,10 +57,9 @@ export default function StoreLogin() {
       } catch (authError) {
         // If login fails due to email verification, throw immediately
         if (authError?.message?.includes('verify your email')) {
-          let vErr = language === 'he'
-            ? 'נשלח אלייך מייל אימות! אנא היכנס לתיבת המייל שלך (חפש גם בספאם), לחץ על קישור האימות, ואז נסה להתחבר שוב.'
-            : 'A verification email was sent to your inbox! Please check your email (and spam), click the verification link, and then try logging in again.';
-          throw new Error(vErr);
+          setOtpEmail(userEmail);
+          setShowOtpForm(true);
+          return;
         }
 
         // If login fails, they might not be registered in Base44 yet
@@ -93,9 +95,9 @@ export default function StoreLogin() {
                ? 'אימייל זה כבר רשום במערכת כמשתמש ראשי (בעל סיסמה שונה). אנא התחבר דרך מסך ההתחברות הראשי, או בקש מהמנהל להגדיר לך משתמש/אימייל אחר.' 
                : 'This email is already registered as a main user with a different password. Please login via the main login screen, or ask your manager to set a different username for you.';
           } else if (errorMsg.includes('verify your email')) {
-             errorMsg = language === 'he'
-               ? 'נשלח אלייך מייל אימות! אנא היכנס לתיבת המייל שלך (חפש גם בספאם), לחץ על קישור האימות, ואז נסה להתחבר שוב.'
-               : 'A verification email was sent to your inbox! Please check your email (and spam), click the verification link, and then try logging in again.';
+             setOtpEmail(userEmail);
+             setShowOtpForm(true);
+             return;
           } else {
              errorMsg = language === 'he' 
                ? `שגיאה בהרשמת המשתמש למערכת: ${errorMsg}` 
@@ -123,6 +125,28 @@ export default function StoreLogin() {
     }
   };
 
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otpCode) return;
+    try {
+      setLoading(true);
+      setError('');
+      await base44.auth.verifyOtp({
+        email: otpEmail,
+        token: otpCode,
+        type: 'signup'
+      });
+      // Verification successful, now login
+      await base44.auth.loginViaEmailPassword(otpEmail, password);
+      window.location.href = '/';
+    } catch (err) {
+      console.error(err);
+      setError(language === 'he' ? 'קוד שגוי או שפג תוקפו' : 'Invalid or expired code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
@@ -135,7 +159,55 @@ export default function StoreLogin() {
           </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4" dir={language === 'he' ? 'rtl' : 'ltr'}>
+          {showOtpForm ? (
+            <form onSubmit={handleVerifyOtp} className="space-y-4" dir={language === 'he' ? 'rtl' : 'ltr'}>
+              <div className="space-y-2">
+                <Label htmlFor="otpCode">{language === 'he' ? 'קוד אימות (6 ספרות)' : 'Verification Code (6 digits)'}</Label>
+                <div className="relative">
+                  <Key className={`absolute top-3 w-5 h-5 text-gray-400 ${language === 'he' ? 'right-3' : 'left-3'}`} />
+                  <Input
+                    id="otpCode"
+                    type="text"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    className={language === 'he' ? 'pr-10' : 'pl-10'}
+                    placeholder="123456"
+                    required
+                  />
+                </div>
+              </div>
+              
+              {error && (
+                <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 h-11 text-lg mt-4"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader className="w-5 h-5 animate-spin" />
+                ) : (
+                  language === 'he' ? 'אמת והתחבר' : 'Verify & Login'
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full mt-2"
+                onClick={() => {
+                  setShowOtpForm(false);
+                  setError('');
+                }}
+              >
+                {language === 'he' ? 'חזור להתחברות' : 'Back to Login'}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleLogin} className="space-y-4" dir={language === 'he' ? 'rtl' : 'ltr'}>
             <div className="space-y-2">
               <Label htmlFor="username">{language === 'he' ? 'שם משתמש' : 'Username'}</Label>
               <div className="relative">
@@ -193,6 +265,7 @@ export default function StoreLogin() {
               )}
             </Button>
           </form>
+          )}
         </CardContent>
       </Card>
     </div>
