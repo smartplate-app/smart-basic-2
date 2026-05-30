@@ -128,7 +128,7 @@ export default function ReceiptForm({ receipt, onSubmit, onCancel }) {
           item_name: item.item_name,
           ordered_quantity: item.quantity,
           certificate_quantity: item.quantity,
-          received_quantity: item.quantity,
+          received_quantity: 0,
           unit: item.unit,
           catalog_price: catalogItem?.price || 0,
           catalog_discount: catalogItem?.discount || 0,

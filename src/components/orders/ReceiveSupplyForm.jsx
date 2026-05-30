@@ -172,13 +172,12 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
           const existing = combinedItems.find(i => i.item_id === oi.item_id && i.item_name === (oi.item_name || oi.name));
           if (existing) {
              existing.ordered_quantity += Number(oi.quantity || 0);
-             existing.received_quantity += Number(oi.quantity || 0);
           } else {
              combinedItems.push({
                item_id: oi.item_id,
                item_name: oi.item_name || oi.name,
                ordered_quantity: Number(oi.quantity || 0),
-               received_quantity: Number(oi.quantity || 0),
+               received_quantity: 0,
                unit: oi.unit || 'unit',
                catalog_price: Number(oi.price || 0),
                actual_price: Number(oi.price || 0),

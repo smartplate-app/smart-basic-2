@@ -303,7 +303,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
       exit={{ opacity: 0, y: -20 }}
       className="bg-white sm:rounded-xl sm:shadow-lg p-3 sm:p-6 mb-8 relative"
     >
-      <form onSubmit={handleSubmit} className="flex flex-col space-y-3 sm:space-y-4">
+      <form onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} className="flex flex-col space-y-3 sm:space-y-4 w-full box-border">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="space-y-1 sm:space-y-2 flex flex-col">
             <Label htmlFor="supplier" className="text-xs sm:text-sm">{t('supplier')} *</Label>
@@ -392,7 +392,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
 
         {currentOrder.supplier_id && (
           <div className="space-y-3">
-            <div className="mt-1 sm:mt-2 w-full sticky top-0 z-20 bg-white/95 backdrop-blur py-2 -mx-2 px-2 md:mx-0 md:px-0">
+            <div className="mt-1 sm:mt-2 w-full sticky top-0 z-20 bg-white/95 backdrop-blur py-2">
               <Input
                 placeholder={safeT('search_items', 'חפש פריטים...', 'Search items...')}
                 value={itemSearch}
@@ -414,7 +414,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               <div className="relative">
                 <div 
                   ref={itemsContainerRef}
-                  className="flex flex-col -mx-3 px-3 sm:mx-0 sm:px-0 bg-transparent gap-2 pb-6 pt-1"
+                  className="flex flex-col bg-transparent gap-2 pb-6 pt-1 w-full box-border"
                 >
                   {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
