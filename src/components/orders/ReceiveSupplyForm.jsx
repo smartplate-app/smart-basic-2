@@ -1623,71 +1623,71 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         {formData.verified_items.length > 0 && (
                           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                             <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                              <table className="w-full text-sm text-left rtl:text-right min-w-[600px]">
-                                <thead className="bg-[#f9fafb] text-[#4b5563] text-xs font-semibold">
+                              <table className="w-full text-sm text-left rtl:text-right">
+                                <thead className="bg-[#f9fafb] text-[#4b5563] text-[10px] sm:text-xs font-semibold">
                                   <tr>
-                                    <th className="px-3 py-3 w-8 font-semibold">#</th>
-                                    <th className="px-3 py-3 font-semibold min-w-[140px] uppercase">{safeT('item_name', 'שם פריט', 'Item')}</th>
-                                    <th className="px-2 py-3 font-semibold w-16 text-center uppercase">{language === 'he' ? 'הוזמן' : 'Ord'}</th>
-                                    <th className="px-2 py-3 font-semibold w-20 text-center uppercase">{t('received')}</th>
-                                    <th className="px-2 py-3 font-semibold w-20 text-center uppercase">{t('price')}</th>
-                                    <th className="px-2 py-3 font-semibold w-16 text-center uppercase">{language === 'he' ? 'הנחה %' : 'Disc%'}</th>
-                                    <th className="px-2 py-3 font-semibold w-12 text-center"></th>
+                                    <th className="px-1 sm:px-3 py-2 sm:py-3 w-6 sm:w-8 font-semibold text-center">#</th>
+                                    <th className="px-1 sm:px-3 py-2 sm:py-3 font-semibold min-w-[90px] sm:min-w-[140px] uppercase">{safeT('item_name', 'שם פריט', 'Item')}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-10 sm:w-16 text-center uppercase">{language === 'he' ? 'הוזמן' : 'Ord'}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-14 sm:w-20 text-center uppercase">{language === 'he' ? 'התקבל' : 'Rec'}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-14 sm:w-20 text-center uppercase">{t('price')}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-12 sm:w-16 text-center uppercase">{language === 'he' ? 'הנחה %' : 'Disc%'}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-8 sm:w-12 text-center"></th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {formData.verified_items.map((item, index) => (
                                     <tbody key={index} className="contents">
                                       <tr className={`border-t border-[#f3f4f6] ${index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'} transition-colors`}>
-                                        <td className="px-3 py-2 text-[#9ca3af] text-xs text-center align-top pt-4">{index + 1}</td>
-                                        <td className="px-3 py-2 align-top pt-3">
+                                        <td className="px-1 sm:px-3 py-1 sm:py-2 text-[#9ca3af] text-[10px] sm:text-xs text-center align-middle">{index + 1}</td>
+                                        <td className="px-1 sm:px-3 py-1 sm:py-2 align-middle">
                                           <Input
                                             value={item.item_name}
                                             onChange={(e) => updateVerifiedItem(index, 'item_name', e.target.value)}
                                             placeholder={safeT('item_name', 'שם פריט', 'Item Name')}
-                                            className="font-medium h-8 text-sm text-[#111827] border-transparent hover:border-gray-200 focus:border-blue-500 bg-transparent px-2 shadow-none"
+                                            className="font-medium h-7 sm:h-8 text-[11px] sm:text-sm text-[#111827] border-transparent hover:border-gray-200 focus:border-blue-500 bg-transparent px-1 sm:px-2 shadow-none min-w-[90px] w-full"
                                             disabled={isReadOnly}
                                           />
                                           {(!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0) && (
-                                            <div className="mt-1 px-2 text-[10px] text-orange-700 font-medium">
+                                            <div className="mt-0.5 px-1 text-[9px] sm:text-[10px] text-orange-700 font-medium leading-none">
                                               {language === 'he' ? 'חריגה בכמות' : 'Quantity mismatch'}
                                             </div>
                                           )}
                                           {(!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id) && (
-                                            <div className="mt-1 px-2 text-[10px] text-purple-700 font-medium">
+                                            <div className="mt-0.5 px-1 text-[9px] sm:text-[10px] text-purple-700 font-medium leading-none">
                                               {language === 'he' ? 'לא הוזמן במקור' : 'Not ordered'}
                                             </div>
                                           )}
                                         </td>
-                                        <td className="px-2 py-2 align-top pt-3">
+                                        <td className="px-0.5 sm:px-2 py-1 sm:py-2 align-middle">
                                           <Input
                                             type="number"
                                             value={item.ordered_quantity}
                                             disabled
-                                            className="bg-transparent text-gray-500 h-8 px-1 text-center text-sm border-transparent shadow-none"
+                                            className="bg-transparent text-gray-500 h-7 sm:h-8 px-0 sm:px-1 text-center text-[11px] sm:text-sm border-transparent shadow-none"
                                           />
                                         </td>
-                                        <td className="px-2 py-2 align-top pt-3">
+                                        <td className="px-0.5 sm:px-2 py-1 sm:py-2 align-middle">
                                           <Input
                                             type="number"
                                             step="0.01"
                                             value={item.received_quantity}
                                             onChange={(e) => updateVerifiedItem(index, 'received_quantity', parseFloat(e.target.value) || 0)}
-                                            className="h-8 px-1 text-center text-sm font-bold text-[#111827] border-gray-200 focus:border-blue-500"
+                                            className="h-7 sm:h-8 px-0.5 sm:px-1 text-center text-[11px] sm:text-sm font-bold text-[#111827] border-gray-200 focus:border-blue-500 w-full"
                                             disabled={isReadOnly}
                                           />
                                         </td>
-                                        <td className="px-2 py-2 align-top pt-3">
+                                        <td className="px-0.5 sm:px-2 py-1 sm:py-2 align-middle">
                                           <Input
                                             type="number"
                                             step="0.01"
                                             value={item.actual_price}
                                             onChange={(e) => updateVerifiedItem(index, 'actual_price', parseFloat(e.target.value) || 0)}
-                                            className={`h-8 px-1 text-center text-sm font-bold ${item.price_changed ? 'text-red-600 border-red-300 focus-visible:ring-red-500 bg-red-50' : 'text-[#111827] border-gray-200 focus:border-blue-500'}`}
+                                            className={`h-7 sm:h-8 px-0.5 sm:px-1 text-center text-[11px] sm:text-sm font-bold w-full ${item.price_changed ? 'text-red-600 border-red-300 focus-visible:ring-red-500 bg-red-50' : 'text-[#111827] border-gray-200 focus:border-blue-500'}`}
                                             disabled={isReadOnly}
                                           />
                                         </td>
-                                        <td className="px-2 py-2 align-top pt-3">
+                                        <td className="px-0.5 sm:px-2 py-1 sm:py-2 align-middle">
                                           <Input
                                             type="number"
                                             step="0.01"
@@ -1695,11 +1695,11 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                             max="100"
                                             value={item.actual_discount}
                                             onChange={(e) => updateVerifiedItem(index, 'actual_discount', parseFloat(e.target.value) || 0)}
-                                            className={`h-8 px-1 text-center text-sm font-bold ${item.discount_changed ? 'text-red-600 border-red-300 focus-visible:ring-red-500 bg-red-50' : 'text-[#111827] border-gray-200 focus:border-blue-500'}`}
+                                            className={`h-7 sm:h-8 px-0.5 sm:px-1 text-center text-[11px] sm:text-sm font-bold w-full ${item.discount_changed ? 'text-red-600 border-red-300 focus-visible:ring-red-500 bg-red-50' : 'text-[#111827] border-gray-200 focus:border-blue-500'}`}
                                             disabled={isReadOnly}
                                           />
                                         </td>
-                                        <td className="px-2 py-2 text-center align-top pt-3">
+                                        <td className="px-0.5 sm:px-2 py-1 sm:py-2 text-center align-middle">
                                           {!isReadOnly && (
                                             <Button
                                               type="button"
