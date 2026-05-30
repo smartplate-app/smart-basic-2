@@ -414,7 +414,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               <div className="relative">
                 <div 
                   ref={itemsContainerRef}
-                  className="flex flex-col bg-transparent gap-2 pb-6 pt-1 w-full box-border"
+                  className="flex flex-col bg-transparent gap-1.5 pb-6 pt-1 w-full box-border"
                 >
                   {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
@@ -428,7 +428,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   return (
                     <div 
                       key={item.id} 
-                      className={`p-2 border rounded-xl transition-colors mb-1.5 ${
+                      className={`p-1.5 border rounded-xl transition-colors ${
                         quantity > 0 
                           ? 'bg-white border-[#d8b4fe] shadow-sm' 
                           : isLowStock 
