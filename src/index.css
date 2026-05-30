@@ -169,6 +169,10 @@ button:focus-visible {
 @layer base {
   html, body {
     overscroll-behavior-y: none;
+    overflow-x: hidden;
+  }
+  #root {
+    overflow-x: hidden;
   }
   * {
     @apply border-border outline-ring/50;

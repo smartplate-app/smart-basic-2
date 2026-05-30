@@ -373,7 +373,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               value={currentOrder.restaurant_name}
               onChange={(e) => setCurrentOrder({...currentOrder, restaurant_name: e.target.value})}
               placeholder={t('business_name')}
-              className="h-9 sm:h-10 text-sm"
+              className="h-9 sm:h-10 text-base sm:text-sm"
               required
             />
           </div>
@@ -385,7 +385,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               value={currentOrder.restaurant_address}
               onChange={(e) => setCurrentOrder({...currentOrder, restaurant_address: e.target.value})}
               placeholder={t('business_address')}
-              className="h-9 sm:h-10 text-sm"
+              className="h-9 sm:h-10 text-base sm:text-sm"
             />
           </div>
         </div>
@@ -397,7 +397,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 placeholder={safeT('search_items', 'חפש פריטים...', 'Search items...')}
                 value={itemSearch}
                 onChange={(e) => setItemSearch(e.target.value)}
-                className="w-full h-11 text-sm bg-gray-50 border-gray-200 rounded-xl"
+                className="w-full h-11 text-base sm:text-sm bg-gray-50 border-gray-200 rounded-xl"
               />
             </div>
 
@@ -470,7 +470,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                                   type="number"
                                   value={quantity || ''}
                                   onChange={(e) => handleQuantityChange(item.id, e.target.value)}
-                                  className="flex-1 h-full text-center px-0 text-sm font-medium border-0 bg-transparent focus-visible:ring-0 rounded-none shadow-none"
+                                  className="flex-1 h-full text-center px-0 text-base font-medium border-0 bg-transparent focus-visible:ring-0 rounded-none shadow-none"
                                   placeholder="0"
                                   min="0"
                                   step="0.01"
@@ -485,7 +485,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                                   type="number"
                                   value={stock || ''}
                                   onChange={(e) => handleCurrentStockChange(item.id, e.target.value)}
-                                  className={`w-12 h-7 text-sm text-center px-0 rounded-md border ${isLowStock ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-300'}`}
+                                  className={`w-12 h-7 text-base sm:text-sm text-center px-0 rounded-md border ${isLowStock ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-300'}`}
                                   placeholder="0"
                                 />
                               </div>
@@ -540,7 +540,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
             value={currentOrder.notes}
             onChange={(e) => setCurrentOrder({...currentOrder, notes: e.target.value})}
             placeholder={t('notes')}
-            className="h-8 sm:h-10 text-sm"
+            className="h-8 sm:h-10 text-base sm:text-sm"
           />
         </div>
         
