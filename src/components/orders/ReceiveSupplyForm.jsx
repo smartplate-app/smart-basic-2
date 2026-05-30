@@ -1631,10 +1631,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                     <th className="px-1 sm:px-3 py-2 sm:py-3 w-6 sm:w-8 font-semibold text-center">#</th>
                                     <th className="px-1 sm:px-3 py-2 sm:py-3 font-semibold min-w-[90px] sm:min-w-[140px] uppercase">{safeT('item_name', 'שם פריט', 'Item')}</th>
                                     <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-10 sm:w-16 text-center uppercase">{language === 'he' ? 'הוזמן' : 'Ord'}</th>
-                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-14 sm:w-20 text-center uppercase">{language === 'he' ? 'התקבל' : 'Rec'}</th>
-                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-14 sm:w-20 text-center uppercase">{t('price')}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-16 sm:w-24 text-center uppercase">{language === 'he' ? 'התקבל' : 'Rec'}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-16 sm:w-24 text-center uppercase">{t('price')}</th>
                                     <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-12 sm:w-16 text-center uppercase">{language === 'he' ? 'הנחה %' : 'Disc%'}</th>
-                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-8 sm:w-12 text-center"></th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -1701,25 +1700,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                             disabled={isReadOnly}
                                           />
                                         </td>
-                                        <td className="px-0.5 sm:px-2 py-1 sm:py-2 text-center align-middle">
-                                          {!isReadOnly && (
-                                            <Button
-                                              type="button"
-                                              variant="ghost"
-                                              size="icon"
-                                              onClick={() => removeItem(index)}
-                                              className="text-gray-400 hover:text-red-600 h-8 w-8 shrink-0"
-                                            >
-                                              <X className="w-4 h-4" />
-                                            </Button>
-                                          )}
-                                        </td>
                                       </tr>
                                       {/* Credit checkboxes row if discrepancies exist */}
                                       {((item.price_changed || item.discount_changed || (item.ordered_quantity !== item.received_quantity && item.ordered_quantity > 0))) && (
                                         <tr className={`${index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'}`}>
                                           <td></td>
-                                          <td colSpan="6" className="px-3 pb-3 pt-0">
+                                          <td colSpan="5" className="px-3 pb-3 pt-0">
                                             <div className="flex items-center gap-2 flex-wrap ml-2 rtl:mr-2 rtl:ml-0">
                                               {item.ordered_quantity !== item.received_quantity && item.ordered_quantity > 0 && (
                                                 <label className="flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded border border-red-100 cursor-pointer w-fit transition-colors hover:bg-red-100">
