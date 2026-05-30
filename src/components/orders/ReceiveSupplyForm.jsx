@@ -229,15 +229,15 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
 
   const checkForAnomalies = () => {
     const messages = [];
-    const quantityMismatch = formData.verified_items.filter(i => i.received_quantity !== i.ordered_quantity && i.ordered_quantity > 0);
+    const quantityMismatch = formData.verified_items.filter(i => i.received_quantity !== i.certificate_quantity && i.certificate_quantity > 0);
     const notOrdered = formData.verified_items.filter(i => i.received_quantity > 0 && i.ordered_quantity === 0 && i.item_id);
     const notRecognized = formData.verified_items.filter(i => !i.item_id && i.item_name);
 
     if (!noOrderMode && (order || openOrders.length > 0)) {
       if (quantityMismatch.length > 0) {
         messages.push(language === 'he' 
-          ? `הכמות שהתקבלה שונה מהכמות שהוזמנה עבור ${quantityMismatch.length} פריטים.` 
-          : `The received quantity differs from the ordered quantity for ${quantityMismatch.length} items.`);
+          ? `הכמות שהתקבלה שונה מהכמות שחוייבה בחשבונית עבור ${quantityMismatch.length} פריטים.` 
+          : `The received quantity differs from the billed quantity for ${quantityMismatch.length} items.`);
       }
       if (notOrdered.length > 0) {
         messages.push(language === 'he' 
@@ -1588,7 +1588,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                    {previousReceipts.find(r => r.id === formData.linked_receipt_id).verified_items.filter(i => i.request_credit_quantity || i.request_credit_price).map((i, idx) => (
                                      <li key={idx} className="text-xs">
                                        <span className="font-medium">{i.item_name}</span>: 
-                                       {i.request_credit_quantity && (language === 'he' ? ` פער כמות (הוזמן ${i.ordered_quantity}, התקבל ${i.received_quantity})` : ` Qty gap (Ord: ${i.ordered_quantity}, Rec: ${i.received_quantity})`)}
+                                       {i.request_credit_quantity && (language === 'he' ? ` פער כמות (חוייב בחשבונית ${i.certificate_quantity || 0}, התקבל בפועל ${i.received_quantity})` : ` Qty gap (Billed: ${i.certificate_quantity || 0}, Rec: ${i.received_quantity})`)}
                                        {i.request_credit_price && (language === 'he' ? ` פער מחיר (₪${i.actual_price} במקום ₪${i.catalog_price})` : ` Price gap (₪${i.actual_price} instead of ₪${i.catalog_price})`)}
                                      </li>
                                    ))}
@@ -1649,9 +1649,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                             className="font-medium h-7 sm:h-8 text-[11px] sm:text-sm text-[#111827] border-transparent hover:border-gray-200 focus:border-blue-500 bg-transparent px-1 sm:px-2 shadow-none min-w-[90px] w-full"
                                             disabled={isReadOnly}
                                           />
-                                          {(!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.ordered_quantity && item.ordered_quantity > 0) && (
+                                          {(!noOrderMode && (order || openOrders.length > 0) && item.received_quantity !== item.certificate_quantity && item.certificate_quantity > 0) && (
                                             <div className="mt-0.5 px-1 text-[9px] sm:text-[10px] text-orange-700 font-medium leading-none">
-                                              {language === 'he' ? 'חריגה בכמות' : 'Quantity mismatch'}
+                                              {language === 'he' ? 'פער מהחשבונית' : 'Invoice mismatch'}
                                             </div>
                                           )}
                                           {(!noOrderMode && (order || openOrders.length > 0) && item.received_quantity > 0 && item.ordered_quantity === 0 && item.item_id) && (
@@ -1702,12 +1702,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                         </td>
                                       </tr>
                                       {/* Credit checkboxes row if discrepancies exist */}
-                                      {((item.price_changed || item.discount_changed || (item.ordered_quantity !== item.received_quantity && item.ordered_quantity > 0))) && (
+                                      {((item.price_changed || item.discount_changed || (item.certificate_quantity !== item.received_quantity && item.certificate_quantity > 0))) && (
                                         <tr className={`${index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'}`}>
                                           <td></td>
                                           <td colSpan="5" className="px-3 pb-3 pt-0">
                                             <div className="flex items-center gap-2 flex-wrap ml-2 rtl:mr-2 rtl:ml-0">
-                                              {item.ordered_quantity !== item.received_quantity && item.ordered_quantity > 0 && (
+                                              {item.certificate_quantity !== item.received_quantity && item.certificate_quantity > 0 && (
                                                 <label className="flex items-center gap-1.5 bg-red-50 px-2 py-1 rounded border border-red-100 cursor-pointer w-fit transition-colors hover:bg-red-100">
                                                   <input disabled={isReadOnly} type="checkbox" checked={item.request_credit_quantity} onChange={(e) => updateVerifiedItem(index, 'request_credit_quantity', e.target.checked)} className="rounded accent-red-600 w-3.5 h-3.5" />
                                                   <span className="text-[11px] text-red-800 font-medium leading-none">{language === 'he' ? 'לזיכוי כמות' : 'Qty credit'}</span>
@@ -1751,7 +1751,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 : `Hello, regarding receipt (Invoice #${formData.invoice_number || 'N/A'}) to ${rName}, we found discrepancies needing credit:\n\n`;
                               creditItems.forEach(i => {
                                 text += `- ${i.item_name}:\n`;
-                                if (i.request_credit_quantity) text += language === 'he' ? `  הוזמן: ${i.ordered_quantity}, התקבל בפועל: ${i.received_quantity} (פער של ${i.ordered_quantity - i.received_quantity})\n` : `  Ordered: ${i.ordered_quantity}, Received: ${i.received_quantity}\n`;
+                                if (i.request_credit_quantity) text += language === 'he' ? `  חוייב בחשבונית: ${i.certificate_quantity || 0}, התקבל בפועל: ${i.received_quantity} (פער של ${(i.certificate_quantity || 0) - i.received_quantity})\n` : `  Billed: ${i.certificate_quantity || 0}, Received: ${i.received_quantity}\n`;
                                 if (i.request_credit_price) text += language === 'he' ? `  מחיר שהוזמן: ₪${i.catalog_price}, מחיר בחשבונית: ₪${i.actual_price}\n` : `  Ordered Price: ₪${i.catalog_price}, Invoiced: ₪${i.actual_price}\n`;
                                 text += "\n";
                               });
