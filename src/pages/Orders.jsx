@@ -1660,6 +1660,7 @@ export default function OrdersPage() {
             // Updated by the modal when share is successful
             const num = orderData?.order_number || previewOrder.order_number || `ORD-${(previewOrder.id || Date.now()).toString().slice(-8)}`;
             base44.functions.invoke('markOrderSent', { orderId: previewOrder.id, orderNumber: num }).catch(() => {});
+            try { base44.functions.invoke('sendOrderEmail', { orderId: previewOrder.id }).catch(() => {}); } catch (e) {}
             setOrders(prev => prev.map(o => o.id === previewOrder.id ? { ...o, status: 'sent', order_number: num } : o));
             setPreviewOrder(null);
           }}
