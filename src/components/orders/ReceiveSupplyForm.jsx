@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "../LanguageProvider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 import OrderPreviewModal from "@/components/orders/OrderPreviewModal";
 
@@ -219,9 +220,10 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
         });
      }
   };
-  const [scanning, setScanning] = useState(false);
+  const [scanning, setScanning] = useState(false); const [scanProgress, setScanProgress] = useState(0);
   const [matching, setMatching] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  useEffect(() => { let interval; if (scanning) { setScanProgress(0); interval = setInterval(() => { setScanProgress(p => p >= 90 ? 90 : p + Math.max(1, (90 - p) * 0.15)); }, 500); } else { setScanProgress(100); const t = setTimeout(() => setScanProgress(0), 500); return () => clearTimeout(t); } return () => clearInterval(interval); }, [scanning]);
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [anomalyCheck, setAnomalyCheck] = useState({ show: false, messages: [], onContinue: null });
   const [supplierPopoverOpen, setSupplierPopoverOpen] = useState(false);
@@ -1159,38 +1161,29 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                     )}
 
                     {formData.receipt_images.length > 0 && !isReadOnly && (
-                      <div className="flex gap-2 sticky bottom-0 pb-safe z-50 bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur md:static md:bg-transparent md:dark:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
-                        <Button
-                          type="button"
-                          onClick={handleAutoScan}
-                          disabled={scanning}
-                          className="flex-1 bg-[#d4a373] hover:bg-[#b88c60] text-white dark:text-white min-h-[44px] md:min-h-0"
-                        >
-                          {scanning ? (
-                            <>
-                              <Loader className="w-4 h-4 ml-2 animate-spin" />
-                              {t('scanning_invoice')}
-                            </>
-                          ) : (
-                            <>
-                              <Scan className="w-4 h-4 ml-2" />
-                              {formData.manual_entry_mode ? (safeT('re_scan_header', 'סרוק מחדש', 'Re-scan header') || 'סרוק מחדש') : safeT('auto_scan', 'סריקה אוטומטית', 'Auto scan')}
-                            </>
-                          )}
-                        </Button>
-                        
-                        {/* Match items button removed per request */}
-                          {!formData.manual_entry_mode && (
-                          <Button
-                            type="button"
-                            onClick={handleSkipScanAndEnterManually}
-                            variant="outline"
-                            className="flex-1 min-h-[44px] md:min-h-0"
-                          >
-                            <Plus className="w-4 h-4 ml-2" />
-                            {safeT('enter_manually', 'הזן ידנית', 'Enter manually')}
-                          </Button>
+                      <div className="flex flex-col gap-2 sticky bottom-0 pb-safe z-50 bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur md:static md:bg-transparent md:dark:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
+                        {scanning && (
+                          <div className="w-full space-y-1.5 px-1 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="flex justify-between text-[11px] text-[#d4a373] font-bold px-1">
+                              <span>{language === 'he' ? 'סורק ומנתח נתונים...' : 'Scanning and analyzing...'}</span>
+                              <span>{Math.round(scanProgress)}%</span>
+                            </div>
+                            <Progress value={scanProgress} className="h-2 bg-[#d4a373]/20 [&>div]:bg-[#d4a373]" />
+                          </div>
                         )}
+                        <div className="flex gap-2">
+                          <Button type="button" onClick={handleAutoScan} disabled={scanning} className="flex-1 bg-[#d4a373] hover:bg-[#b88c60] text-white dark:text-white min-h-[44px] md:min-h-0 relative overflow-hidden">
+                            {scanning && <div className="absolute top-0 right-0 bottom-0 bg-black/10 transition-all duration-500 ease-out" style={{ width: `${scanProgress}%` }} />}
+                            <span className="relative z-10 flex items-center justify-center w-full">
+                              {scanning ? <><Loader className="w-4 h-4 ml-2 animate-spin" />{t('scanning_invoice') || (language === 'he' ? 'סורק חשבונית...' : 'Scanning...')}</> : <><Scan className="w-4 h-4 ml-2" />{formData.manual_entry_mode ? (safeT('re_scan_header', 'סרוק מחדש', 'Re-scan header') || 'סרוק מחדש') : safeT('auto_scan', 'סריקה אוטומטית', 'Auto scan')}</>}
+                            </span>
+                          </Button>
+                          {!formData.manual_entry_mode && (
+                            <Button type="button" onClick={handleSkipScanAndEnterManually} variant="outline" disabled={scanning} className="flex-1 min-h-[44px] md:min-h-0">
+                              <Plus className="w-4 h-4 ml-2" />{safeT('enter_manually', 'הזן ידנית', 'Enter manually')}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
