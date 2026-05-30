@@ -55,8 +55,8 @@ export default function StoreLogin() {
         // If login fails due to email verification, throw immediately
         if (authError?.message?.includes('verify your email')) {
           let vErr = language === 'he'
-            ? 'יש לכבות את "Require Email Verification" (אימות אימייל) בהגדרות האפליקציה (Dashboard -> Settings -> Authentication) כדי לאפשר לעובדים להתחבר.'
-            : 'Please disable "Require Email Verification" in the app settings (Dashboard -> Settings -> Authentication) to allow workers to login.';
+            ? 'נשלח אלייך מייל אימות! אנא היכנס לתיבת המייל שלך (חפש גם בספאם), לחץ על קישור האימות, ואז נסה להתחבר שוב.'
+            : 'A verification email was sent to your inbox! Please check your email (and spam), click the verification link, and then try logging in again.';
           throw new Error(vErr);
         }
 
@@ -94,8 +94,8 @@ export default function StoreLogin() {
                : 'This email is already registered as a main user with a different password. Please login via the main login screen, or ask your manager to set a different username for you.';
           } else if (errorMsg.includes('verify your email')) {
              errorMsg = language === 'he'
-               ? 'יש לכבות את "Require Email Verification" (אימות אימייל) בהגדרות האפליקציה (Dashboard -> Settings -> Authentication) כדי לאפשר לעובדים להתחבר.'
-               : 'Please disable "Require Email Verification" in the app settings (Dashboard -> Settings -> Authentication) to allow workers to login.';
+               ? 'נשלח אלייך מייל אימות! אנא היכנס לתיבת המייל שלך (חפש גם בספאם), לחץ על קישור האימות, ואז נסה להתחבר שוב.'
+               : 'A verification email was sent to your inbox! Please check your email (and spam), click the verification link, and then try logging in again.';
           } else {
              errorMsg = language === 'he' 
                ? `שגיאה בהרשמת המשתמש למערכת: ${errorMsg}` 
