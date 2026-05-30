@@ -196,6 +196,40 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label htmlFor="content_unit">{language === 'he' ? 'יחידת מידה לתכולה' : 'Content unit'}</Label>
+              <Select 
+                value={formData.content_unit || "unit"}
+                onValueChange={(value) => handleChange("content_unit", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('unit_type')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">{t('unit_kg') || "ק״ג"}</SelectItem>
+                  <SelectItem value="gram">{t('unit_g') || "גרם"}</SelectItem>
+                  <SelectItem value="liter">{t('unit_liter') || "ליטר"}</SelectItem>
+                  <SelectItem value="ml">{t('unit_ml') || "מ״ל"}</SelectItem>
+                  <SelectItem value="unit">{t('unit_piece') || "יחידה"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="content_per_unit">{language === 'he' ? 'תכולה ליחידה' : 'Content per unit'}</Label>
+              <Input
+                id="content_per_unit"
+                type="number"
+                value={formData.content_per_unit || ''}
+                onChange={(e) => handleChange('content_per_unit', parseFloat(e.target.value) || 1)}
+                min="0.01"
+                step="0.01"
+              />
+              <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'כמה יש ביחידה אחת (למשל 330 לפחית)' : 'Amount per single unit'}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="price">{t('price')}</Label>
               <Input
                 id="price"
