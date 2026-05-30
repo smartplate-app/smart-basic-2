@@ -629,7 +629,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         item_id: r.item_id || "",
         item_name: r.item_name || r.name_extracted || r.name || "",
         ordered_quantity: 0,
-        certificate_quantity: 0,
+        certificate_quantity: Number(r.quantity || 0),
         received_quantity: Number(r.quantity || 0),
         unit: r.unit || "unit",
         catalog_price: 0,
@@ -685,14 +685,15 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         let newItems = [...formData.verified_items];
         // Merge scanned items with existing order items
         if (newItems.length > 0 && mappedItems.length > 0) {
-           // Reset received quantities to 0 for ordered items before applying scanned quantities
-           newItems = newItems.map(item => ({ ...item, received_quantity: 0 }));
+           // Reset received and certificate quantities to 0 for ordered items before applying scanned quantities
+           newItems = newItems.map(item => ({ ...item, received_quantity: 0, certificate_quantity: 0 }));
            mappedItems.forEach(mi => {
               const existingIndex = newItems.findIndex(ni => 
                  (ni.item_id && mi.item_id && ni.item_id === mi.item_id) || 
                  (ni.item_name && mi.item_name && ni.item_name.trim() === mi.item_name.trim())
               );
               if (existingIndex >= 0) {
+                 newItems[existingIndex].certificate_quantity = mi.certificate_quantity;
                  newItems[existingIndex].received_quantity = mi.received_quantity;
                  newItems[existingIndex].actual_price = mi.actual_price;
                  // השארנו את הפריט המקורי כתקין אם הוא תאם לפריט בהזמנה
@@ -1623,10 +1624,11 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   <tr>
                                     <th className="px-1 sm:px-3 py-2 sm:py-3 w-6 sm:w-8 font-semibold text-center">#</th>
                                     <th className="px-1 sm:px-3 py-2 sm:py-3 font-semibold min-w-[90px] sm:min-w-[140px] uppercase">{safeT('item_name', 'שם פריט', 'Item')}</th>
-                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-10 sm:w-16 text-center uppercase">{language === 'he' ? 'הוזמן' : 'Ord'}</th>
-                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-16 sm:w-24 text-center uppercase">{language === 'he' ? 'התקבל' : 'Rec'}</th>
-                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-16 sm:w-24 text-center uppercase">{t('price')}</th>
-                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-12 sm:w-16 text-center uppercase">{language === 'he' ? 'הנחה %' : 'Disc%'}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-10 sm:w-14 text-center uppercase">{language === 'he' ? 'הוזמן' : 'Ord'}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-14 sm:w-20 text-center uppercase">{language === 'he' ? 'בחשבונית' : 'Bill'}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-14 sm:w-20 text-center uppercase">{language === 'he' ? 'התקבל' : 'Rec'}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-14 sm:w-20 text-center uppercase">{t('price')}</th>
+                                    <th className="px-1 sm:px-2 py-2 sm:py-3 font-semibold w-12 sm:w-14 text-center uppercase">{language === 'he' ? 'הנחה %' : 'Disc%'}</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -1665,9 +1667,19 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                           <Input
                                             type="number"
                                             step="0.01"
+                                            value={item.certificate_quantity}
+                                            onChange={(e) => updateVerifiedItem(index, 'certificate_quantity', parseFloat(e.target.value) || 0)}
+                                            className="h-7 sm:h-8 px-0.5 sm:px-1 text-center text-[11px] sm:text-sm font-bold text-gray-600 border-gray-200 focus:border-blue-500 w-full"
+                                            disabled={isReadOnly}
+                                          />
+                                        </td>
+                                        <td className="px-0.5 sm:px-2 py-1 sm:py-2 align-middle">
+                                          <Input
+                                            type="number"
+                                            step="0.01"
                                             value={item.received_quantity}
                                             onChange={(e) => updateVerifiedItem(index, 'received_quantity', parseFloat(e.target.value) || 0)}
-                                            className="h-7 sm:h-8 px-0.5 sm:px-1 text-center text-[11px] sm:text-sm font-bold text-[#111827] border-gray-200 focus:border-blue-500 w-full"
+                                            className={`h-7 sm:h-8 px-0.5 sm:px-1 text-center text-[11px] sm:text-sm font-bold w-full ${item.received_quantity !== item.certificate_quantity ? 'text-orange-600 border-orange-300 focus-visible:ring-orange-500 bg-orange-50' : 'text-[#111827] border-gray-200 focus:border-blue-500'}`}
                                             disabled={isReadOnly}
                                           />
                                         </td>
