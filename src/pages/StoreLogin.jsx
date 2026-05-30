@@ -58,6 +58,7 @@ export default function StoreLogin() {
         // If login fails due to email verification, throw immediately
         if (authError?.message?.includes('verify your email')) {
           setOtpEmail(userEmail);
+          try { await base44.auth.resendOtp(userEmail); } catch(e) {}
           setShowOtpForm(true);
           return;
         }
@@ -96,6 +97,7 @@ export default function StoreLogin() {
                : 'This email is already registered as a main user with a different password. Please login via the main login screen, or ask your manager to set a different username for you.';
           } else if (errorMsg.includes('verify your email')) {
              setOtpEmail(userEmail);
+             try { await base44.auth.resendOtp(userEmail); } catch(e) {}
              setShowOtpForm(true);
              return;
           } else {
@@ -162,6 +164,9 @@ export default function StoreLogin() {
           {showOtpForm ? (
             <form onSubmit={handleVerifyOtp} className="space-y-4" dir={language === 'he' ? 'rtl' : 'ltr'}>
               <div className="space-y-2">
+                <div className="text-center p-3 bg-green-50 text-green-700 text-sm rounded-md border border-green-200 mb-4">
+                  {language === 'he' ? 'שלחנו לך קוד אימות חדש למייל!' : 'We sent a new verification code to your email!'}
+                </div>
                 <Label htmlFor="otpCode">{language === 'he' ? 'קוד אימות (6 ספרות)' : 'Verification Code (6 digits)'}</Label>
                 <div className="relative">
                   <Key className={`absolute top-3 w-5 h-5 text-gray-400 ${language === 'he' ? 'right-3' : 'left-3'}`} />
