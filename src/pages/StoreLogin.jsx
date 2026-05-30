@@ -134,7 +134,7 @@ export default function StoreLogin() {
       await base44.auth.verifyOtp({
         email: otpEmail,
         token: otpCode,
-        type: 'signup'
+        type: 'email'
       });
       // Verification successful, now login
       await base44.auth.loginViaEmailPassword(otpEmail, password);
