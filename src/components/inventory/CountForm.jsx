@@ -271,10 +271,26 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             }))
           };
           
-          const newCount = await base44.entities.InventoryCount.create({ ...cleanedData, status: 'in_progress' });
-          if (isMounted) {
-            setFormData(prev => ({ ...prev, id: newCount.id }));
-            setDbSavedAt(new Date());
+          const { data } = await base44.functions.invoke('getOrCreateCountDraft', cleanedData);
+          if (data?.success && data.count) {
+            if (isMounted) {
+              setFormData(prev => {
+                // If it's an existing draft, merge the items from the server
+                if (!data.isNew && data.count.items && data.count.items.length > 0) {
+                  // Keep our local items but add any missing from server
+                  const mergedItems = [...prev.items];
+                  data.count.items.forEach(serverItem => {
+                    const exists = mergedItems.find(i => i.item_id === serverItem.item_id && i.warehouse_id === serverItem.warehouse_id);
+                    if (!exists) {
+                      mergedItems.push(serverItem);
+                    }
+                  });
+                  return { ...prev, id: data.count.id, items: mergedItems, total_inventory_value: data.count.total_inventory_value };
+                }
+                return { ...prev, id: data.count.id };
+              });
+              setDbSavedAt(new Date());
+            }
           }
         } catch (error) {
           console.error("Initial draft creation failed:", error);
