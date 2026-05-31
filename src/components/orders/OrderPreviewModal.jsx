@@ -235,6 +235,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
         // 1) Android APKs struggle with share sheet image support: directly open WhatsApp
         if (isAndroid) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            alert(language === 'he' ? 'ההזמנה הועתקה כתמונה! הדבק אותה בשיחה (Paste).' : 'Order copied as image! Paste it in the chat.');
+          } catch (err) {
+            console.warn("Android clipboard copy failed", err);
+          }
           setDownloading(false);
           let formattedPhone = phone;
           if (formattedPhone && formattedPhone.startsWith('0')) {
