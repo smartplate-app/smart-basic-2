@@ -223,29 +223,59 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       const file = new File([blob], `order_${safeName}.jpg`, { type: 'image/jpeg' });
       const intro = language === 'he' ? `הזמנה ממסעדת ${order.restaurant_name || ''}` : `Order from ${order.restaurant_name || ''}`;
 
+      const rawPhone = String(order.supplier_phone || '').trim();
+      let phone = rawPhone.replace(/[^\d+]/g, '');
+      if (phone.startsWith('+')) phone = phone.slice(1);
+      if (phone.startsWith('00')) phone = phone.slice(2);
+      if (phone && phone.startsWith('0')) phone = '972' + phone.slice(1);
+      const waUrl = phone 
+        ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(intro)}`
+        : `https://wa.me/?text=${encodeURIComponent(intro)}`;
+
       setDownloading(false);
 
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent || '');
+      
+      let shareSucceeded = false;
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ 
             files: [file], 
             title: intro,
-            text: intro
+            text: isAndroid ? undefined : intro
           });
+          shareSucceeded = true;
         } catch(e) {
           console.error('Share failed', e);
+          if (e.name === 'AbortError') return; // User cancelled
         }
-      } else {
+      } 
+      
+      if (!shareSucceeded) {
         const imageUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = imageUrl;
-        a.download = 'order.jpg';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
-        
-        toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
+        if (isMobile) {
+          // Fallback to paste guide for APKs where native share fails
+          setPasteGuideUrl({ 
+            clipboardSuccess: false, 
+            imageUrl, 
+            waUrl 
+          });
+        } else {
+          // Desktop fallback
+          const a = document.createElement('a');
+          a.href = imageUrl;
+          a.download = `order_${safeName}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
+          toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
+          
+          window.open(phone 
+            ? `https://web.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(intro)}` 
+            : `https://web.whatsapp.com/send?text=${encodeURIComponent(intro)}`, '_blank');
+        }
       }
 
     } catch (err) {
