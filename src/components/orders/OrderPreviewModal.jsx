@@ -18,7 +18,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
-  const [pasteGuideUrl, setPasteGuideUrl] = useState(null);
   const urlRef = useRef('');
   
   if (!isOpen || !order) return null;
@@ -243,11 +242,16 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
            formattedPhone = '972' + formattedPhone.slice(1);
         }
 
-        // 1) Use the native share sheet if supported (iOS, modern Android Chrome)
-        if (navigator.share) {
+        const waUrl = formattedPhone 
+          ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
+          : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+
+        setDownloading(false);
+
+        // 1) Try the native share sheet first (for ALL mobile devices including Android)
+        if (isMobile && navigator.share) {
           try {
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-              setDownloading(false);
               await navigator.share({ 
                 files: [file], 
                 title: `Order #${number}`,
@@ -255,64 +259,29 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
               });
               return;
             } else {
-              setDownloading(false);
               await navigator.share({ text: shareText });
               return;
             }
           } catch (e) {
-            if (e.name !== 'AbortError') {
-              try {
-                setDownloading(false);
-                await navigator.share({ text: shareText });
-                return;
-              } catch (err2) { /* fallthrough */ }
-            } else {
-              setDownloading(false);
+            console.error('Share failed', e);
+            if (e.name === 'AbortError') {
+              return; // User cancelled the share sheet manually
+            }
+            // If it failed for another reason, try text-only share as a last resort
+            try {
+              await navigator.share({ text: shareText });
               return;
+            } catch (err2) {
+              if (err2.name === 'AbortError') return;
+              // Fallthrough to WhatsApp deep link
             }
           }
         }
 
-        // 2) Fallback for when navigator.share is NOT supported (e.g. Android APK WebViews or Desktop)
-        setDownloading(false);
-        
+        // 2) Fallbacks if native share is not available or failed
         if (isMobile) {
-          // Android APK fallback: deep links (wa.me) CANNOT carry files, so we MUST copy the image to the clipboard first.
-          if (isAndroid) {
-            try {
-              await navigator.clipboard.write([
-                new ClipboardItem({ 'image/png': blob })
-              ]);
-              
-              const waUrl = formattedPhone 
-                ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
-                : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-              
-              setPasteGuideUrl(waUrl);
-
-              // Download the image silently in the background
-              try {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `order-${number}.png`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
-              } catch (e) {}
-
-              return; // Wait for user to click the modal
-            } catch (err) {
-              console.warn("Android clipboard copy failed", err);
-            }
-          }
-
-          // APK fallback: Open WhatsApp directly using window.open (if not Android or clipboard failed)
-          const waUrl = formattedPhone 
-            ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
-            : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-          window.open(waUrl, '_blank');
+          // Mobile fallback: deep links (wa.me) using window.location.href (works in APK WebViews)
+          window.location.href = waUrl;
           
           // Download the image silently in the background
           try {
@@ -701,40 +670,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </Button>
         </div>
       </motion.div>
-
-      {/* Really Big Android Paste Guide Popup */}
-      {pasteGuideUrl && (
-        <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100"
-            dir={language === 'he' ? 'rtl' : 'ltr'}
-          >
-            <div className="w-24 h-24 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Check className="w-12 h-12 text-[#25D366]" />
-            </div>
-            <h2 className="text-3xl font-black mb-4 text-gray-900 leading-tight tracking-tight">
-              {language === 'he' ? 'התמונה הועתקה!' : 'Image Copied!'}
-            </h2>
-            <p className="text-xl text-gray-600 mb-8 font-medium leading-relaxed">
-              {language === 'he' ? 'בוואטסאפ, לחץ לחיצה ארוכה על שורת ההודעה ובחר ' : 'In WhatsApp, long-press the message box and select '}
-              <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״הדבק״' : '"Paste"'}</strong>
-              {language === 'he' ? ' כדי לצרף את ההזמנה.' : ' to attach the order.'}
-            </p>
-            <Button 
-              className="w-full h-16 text-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95"
-              onClick={() => {
-                window.open(pasteGuideUrl, '_blank');
-                setPasteGuideUrl(null);
-              }}
-            >
-              <MessageCircle className={`w-7 h-7 ${language === 'he' ? 'ml-3' : 'mr-3'}`} />
-              {language === 'he' ? 'הבנתי, פתח וואטסאפ' : 'Got it, Open WhatsApp'}
-            </Button>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }
