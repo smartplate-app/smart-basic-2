@@ -24,7 +24,12 @@ Deno.serve(async (req) => {
         });
 
         const updatePromises = allInProgress.map(async (count) => {
-            let items = count.items || [];
+            // Re-fetch the count immediately before applying changes to minimize race conditions
+            // between multiple users counting simultaneously.
+            const freshCount = await base44.asServiceRole.entities.InventoryCount.get(count.id);
+            if (!freshCount) return;
+
+            let items = freshCount.items || [];
             let changed = false;
 
             // Apply updates
