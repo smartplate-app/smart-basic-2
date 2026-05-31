@@ -13,19 +13,6 @@ Deno.serve(async (req) => {
 
         const countDate = body.count_date || new Date().toISOString().split('T')[0];
 
-        // Find existing in_progress draft for today for this store
-        const existingDrafts = await base44.asServiceRole.entities.InventoryCount.filter({
-            created_by: workingEmail,
-            status: 'in_progress',
-            count_date: countDate
-        });
-
-        if (existingDrafts && existingDrafts.length > 0) {
-            // If there's an existing draft, return it so the frontend can join it
-            // instead of creating a new duplicate draft
-            return Response.json({ success: true, count: existingDrafts[0], isNew: false });
-        }
-
         // Clean up the initial data
         const cleanedData = {
             ...body,
@@ -34,7 +21,7 @@ Deno.serve(async (req) => {
             store_owner_email: workingEmail
         };
 
-        // If no draft exists, create a new one
+        // Always create a new one (do not fetch existing to avoid overwriting a deliberately clean "New Count")
         const newCount = await base44.asServiceRole.entities.InventoryCount.create(cleanedData);
         
         return Response.json({ success: true, count: newCount, isNew: true });

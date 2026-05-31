@@ -276,63 +276,10 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     setFormData(prev => ({ ...prev, total_inventory_value: total }));
   }, [formData.items]);
 
-  // Create initial draft immediately on mount if it's a new count
-  useEffect(() => {
-    let isMounted = true;
-    if (!formDataRef.current.id && !isOffline && navigator.onLine) {
-      const createInitialDraft = async () => {
-        try {
-          if (isSavingRef.current) return;
-          isSavingRef.current = true;
-          
-          const currentData = formDataRef.current;
-          const cleanedData = {
-            ...currentData,
-            warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
-            items: currentData.items.map(item => ({
-              ...item,
-              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-              total_cost: Number(item.total_cost) || 0
-            }))
-          };
-          
-          const { data } = await base44.functions.invoke('getOrCreateCountDraft', cleanedData);
-          if (data?.success && data.count) {
-            if (isMounted) {
-              setFormData(prev => {
-                // If it's an existing draft, merge the items from the server
-                if (!data.isNew && data.count.items && data.count.items.length > 0) {
-                  // Keep our local items but add any missing from server
-                  const mergedItems = [...prev.items];
-                  data.count.items.forEach(serverItem => {
-                    const exists = mergedItems.find(i => i.item_id === serverItem.item_id && i.warehouse_id === serverItem.warehouse_id);
-                    if (!exists) {
-                      mergedItems.push(serverItem);
-                    }
-                  });
-                  return { ...prev, id: data.count.id, items: mergedItems, total_inventory_value: data.count.total_inventory_value };
-                }
-                return { ...prev, id: data.count.id };
-              });
-              setDbSavedAt(new Date());
-            }
-          }
-        } catch (error) {
-          console.error("Initial draft creation failed:", error);
-        } finally {
-          isSavingRef.current = false;
-        }
-      };
-      createInitialDraft();
-    }
-    return () => { isMounted = false; };
-  }, [isOffline, language]);
-
   // Handle unmount explicit save (e.g. switching tabs or clicking X)
   useEffect(() => {
     return () => {
-      if (!isOffline && navigator.onLine && formDataRef.current?.id && !isSubmittedRef.current) {
+      if (formDataRef.current?.id && !isSubmittedRef.current) {
         const currentData = formDataRef.current;
         const cleanedData = {
           ...currentData,
@@ -348,7 +295,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         base44.entities.InventoryCount.update(currentData.id, cleanedData).catch(console.error);
       }
     };
-  }, [isOffline, language]);
+  }, [language]);
 
   // Auto-save draft to local storage and Database (Delta Sync)
   useEffect(() => {
@@ -368,8 +315,36 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         console.warn('LocalStorage auto-save failed:', err);
       }
 
-      // 2. Auto-save to Database via backend sync function if online
-      if (!isOffline && navigator.onLine && currentData.id) {
+      // 2. Auto-save to Database
+      if (!currentData.id) {
+        // Create initial draft upon first data entry
+        if (isSavingRef.current) return;
+        isSavingRef.current = true;
+        try {
+          const cleanedData = {
+            ...currentData,
+            warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
+            items: currentData.items.map(item => ({
+              ...item,
+              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+              total_cost: Number(item.total_cost) || 0
+            }))
+          };
+          const newCount = await base44.entities.InventoryCount.create(cleanedData);
+          if (newCount?.id) {
+            setFormData(prev => ({ ...prev, id: newCount.id }));
+            dirtyItemsRef.current.clear();
+            dirtyMetadataRef.current = false;
+            setDbSavedAt(new Date());
+          }
+        } catch (error) {
+          console.error("Initial live draft creation failed:", error);
+        } finally {
+          isSavingRef.current = false;
+        }
+      } else {
+        // Delta sync for existing draft
         const dirtyItems = Array.from(dirtyItemsRef.current.values());
         const hasDirtyMetadata = dirtyMetadataRef.current;
         if (dirtyItems.length > 0 || hasDirtyMetadata) {
@@ -414,11 +389,11 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     }, 1500);
 
     return () => clearInterval(timer);
-  }, [isOffline]);
+  }, [language]);
 
   // Real-time collaborative sync subscription
   useEffect(() => {
-    if (!formData.id || isOffline || !navigator.onLine) return;
+    if (!formData.id) return;
 
     const unsubscribe = base44.entities.InventoryCount.subscribe((event) => {
       // Sync from ANY updated inventory count (to catch merges from syncActiveCountItems for other counts too)
