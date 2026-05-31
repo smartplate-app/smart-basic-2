@@ -194,17 +194,6 @@ export default function WorkerPortal() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col items-center gap-2 mb-6">
-          <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
-            alt="Smart Plate"
-            className="h-16 object-contain"
-          />
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-black tracking-wide">SMART PLATE BASIC</span>
-            <span className="text-xs text-gray-500 tracking-wider">food cost app</span>
-          </div>
-        </div>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('worker_portal')}</h1>
           <p className="text-gray-600">{t('worker_portal_note')}</p>
