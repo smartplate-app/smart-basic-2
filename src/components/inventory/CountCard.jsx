@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Edit, Trash2, Package, Warehouse as WarehouseIcon } from "lucide-react";
+import { Calendar, Edit, Trash2, Package, Warehouse as WarehouseIcon, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
 
-export default function CountCard({ count, onEdit, onDelete }) {
-  const { t } = useLanguage();
+export default function CountCard({ count, onEdit, onDelete, onExportSheet }) {
+  const { t, language } = useLanguage();
 
   const statusColors = {
     in_progress: "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -119,6 +119,18 @@ export default function CountCard({ count, onEdit, onDelete }) {
               {t('created_at')}: {new Date(count.created_date).toLocaleDateString('he-IL')}
             </Badge>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onExportSheet && onExportSheet(count);
+                }}
+                className="border-green-600 text-green-600 hover:bg-green-50"
+                title={language === 'he' ? 'ייצוא לאקסל/Sheets' : 'Export to Sheets'}
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

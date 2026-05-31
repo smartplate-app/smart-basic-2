@@ -416,7 +416,21 @@ export default function MonthlyCountPage() {
         end_date: exportEndDate
       });
       if (data?.success && data?.spreadsheetUrl) {
-        window.open(data.spreadsheetUrl, '_blank');
+         const url = data.spreadsheetUrl;
+         const a = document.createElement('a');
+         a.href = url;
+         a.target = '_blank';
+         a.rel = 'noopener noreferrer';
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
+         
+         // Fallback for Android WebView / APK to force intent
+         setTimeout(() => {
+           if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+             window.location.href = url;
+           }
+         }, 500);
       } else {
         alert(t('error_saving') || 'Export failed');
       }
@@ -434,7 +448,21 @@ export default function MonthlyCountPage() {
       const payload = warehouseFilter !== 'all' ? { warehouse_id: warehouseFilter, language } : { language };
       const { data } = await base44.functions.invoke('generateInventoryCountSheet', payload);
       if (data?.sheet?.webViewLink) {
-        window.open(data.sheet.webViewLink, '_blank');
+         const url = data.sheet.webViewLink;
+         const a = document.createElement('a');
+         a.href = url;
+         a.target = '_blank';
+         a.rel = 'noopener noreferrer';
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
+         
+         // Fallback for Android WebView / APK to force intent
+         setTimeout(() => {
+           if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+             window.location.href = url;
+           }
+         }, 500);
       }
       alert((t('export_completed') || 'Generated') + (data?.sheet?.webViewLink ? `\n${data.sheet.webViewLink}` : ''));
     } catch (e) {
@@ -466,6 +494,44 @@ export default function MonthlyCountPage() {
       alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
     } finally {
       setImportingSheet(false);
+    }
+  };
+
+  const handleExportSingleSheet = async (count) => {
+    try {
+      const payload = {
+        title: count.name || count.warehouse_name,
+        items: count.items || [],
+        total_value: count.total_inventory_value || 0,
+        language
+      };
+      
+      const { data } = await base44.functions.invoke('exportSingleCountToSheets', payload);
+      
+      if (data?.success && data?.spreadsheetUrl) {
+         alert((language === 'he' ? 'יוצא בהצלחה! פותח את הגיליון...' : 'Exported successfully! Opening sheet...'));
+         const url = data.spreadsheetUrl;
+         
+         const a = document.createElement('a');
+         a.href = url;
+         a.target = '_blank';
+         a.rel = 'noopener noreferrer';
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
+         
+         // Fallback for Android WebView / APK to force intent and open Google Drive
+         setTimeout(() => {
+           if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+             window.location.href = url;
+           }
+         }, 500);
+
+      } else {
+        alert(t('error_saving') || 'Export failed');
+      }
+    } catch (e) {
+      alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
     }
   };
 
@@ -778,6 +844,7 @@ export default function MonthlyCountPage() {
                           count={count}
                           onEdit={handleEditCount}
                           onDelete={handleDeleteCount}
+                          onExportSheet={handleExportSingleSheet}
                         />
                       ))}
                     </AnimatePresence>
@@ -788,6 +855,7 @@ export default function MonthlyCountPage() {
                     onEdit={handleEditCount}
                     onDelete={handleDeleteCount}
                     onExport={handleExportPdf}
+                    onExportSheet={handleExportSingleSheet}
                   />
                 )}
 

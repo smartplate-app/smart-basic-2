@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, FileText, MoreHorizontal, Download } from "lucide-react";
+import { Pencil, Trash2, FileText, MoreHorizontal, Download, FileSpreadsheet } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "../LanguageProvider";
 
-export default function CountListView({ counts, onEdit, onDelete, onExport }) {
+export default function CountListView({ counts, onEdit, onDelete, onExport, onExportSheet }) {
   const [deleteDialogItem, setDeleteDialogItem] = useState(null);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
@@ -163,6 +163,15 @@ export default function CountListView({ counts, onEdit, onDelete, onExport }) {
                 </TableCell>
                 <TableCell className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-center gap-1 flex-nowrap">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onExportSheet && onExportSheet(count)}
+                      className="text-gray-500 hover:text-green-600 hover:bg-green-50"
+                      title={language === 'he' ? 'ייצוא לאקסל/Sheets' : 'Export to Sheets'}
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
