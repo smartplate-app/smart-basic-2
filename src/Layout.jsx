@@ -1160,13 +1160,17 @@ aside.bg-gray-100 { background-color: #f3f4f6 !important; }
 .dark ::placeholder { color: #9fb0e0 !important; }
 
 /* Disable text selection on UI controls */
-button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden, .viewer-readonly { -webkit-user-select: none; -ms-user-select: none; user-select: none; }
+button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden { -webkit-user-select: none; -ms-user-select: none; user-select: none; }
 
 /* Safe area helpers */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 .pt-safe { padding-top: env(safe-area-inset-top); }
 
 .sidebar-hidden > * { padding-left: 0 !important; padding-right: 0 !important; }
+
+/* Make sure the viewer container itself remains fully scrollable */
+.viewer-readonly { touch-action: auto !important; pointer-events: auto !important; user-select: auto; }
+
 /* Viewer read-only hard guard: disables interactive controls within page content */
 .viewer-readonly button, .viewer-readonly [type="submit"], .viewer-readonly input, .viewer-readonly select, .viewer-readonly textarea, .viewer-readonly [role="switch"], .viewer-readonly [role="button"] { pointer-events: none !important; opacity: 0.6 !important; cursor: not-allowed !important; }
 .viewer-readonly .ql-toolbar, .viewer-readonly .ql-editor { pointer-events: none !important; }
