@@ -214,6 +214,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
         const isAndroid = /Android/i.test(navigator.userAgent || '') && !isIOS;
+        
+        // Ensure iOS (both Safari and WKWebView) attempts to use the native Share API.
+        // We explicitly tell it to never trigger the Android shortcut flow.
 
         const unitLabel = (u) => {
           if (!u) return '';
@@ -234,32 +237,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           if (phone.startsWith('00')) phone = phone.slice(2);
         }
 
-        // 1) Android APKs struggle with share sheet image support: directly open WhatsApp
-        if (isAndroid) {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': blob })
-            ]);
-            alert(language === 'he' ? 'ההזמנה הועתקה כתמונה! הדבק אותה בשיחה (Paste).' : 'Order copied as image! Paste it in the chat.');
-          } catch (err) {
-            console.warn("Android clipboard copy failed", err);
-          }
-          setDownloading(false);
-          let formattedPhone = phone;
-          if (formattedPhone && formattedPhone.startsWith('0')) {
-             formattedPhone = '972' + formattedPhone.slice(1);
-          }
-          const waUrl = formattedPhone 
-            ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
-            : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-          window.location.href = waUrl;
-          return;
+        let formattedPhone = phone;
+        if (formattedPhone && formattedPhone.startsWith('0')) {
+           formattedPhone = '972' + formattedPhone.slice(1);
         }
 
-        // 2) iOS / Mobile Safari: Attempt to use the native share sheet
-        if (isMobile && navigator.share) {
+        // 1) Use the native share sheet if supported (iOS, modern Android Chrome)
+        if (navigator.share) {
           try {
-            if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
               setDownloading(false);
               await navigator.share({ 
                 files: [file], 
@@ -286,13 +272,33 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           }
         }
 
-        // 3) Desktop devices: save to clipboard and open WhatsApp Web
-        if (!isMobile) {
+        // 2) Fallback for when navigator.share is NOT supported (e.g. Android APK WebViews or Desktop)
+        setDownloading(false);
+        
+        if (isMobile) {
+          // APK fallback: Open WhatsApp directly using window.open
+          const waUrl = formattedPhone 
+            ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
+            : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+          window.open(waUrl, '_blank');
+          
+          // Download the image silently in the background
+          try {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `order-${number}.png`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+          } catch (e) {}
+        } else {
+          // Desktop fallback: copy to clipboard and open WhatsApp Web
           try {
             await navigator.clipboard.write([
               new ClipboardItem({ 'image/png': blob })
             ]);
-            // Image is copied to clipboard, ready to paste
           } catch (err) {
             console.error('Clipboard copy failed', err);
             const url = window.URL.createObjectURL(blob);
@@ -305,26 +311,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             a.remove();
           }
 
-          const phone = (order.supplier_phone || "").replace(/\D/g, "");
-          const whatsappUrl = phone 
-            ? `https://web.whatsapp.com/send?phone=972${phone.startsWith('0') ? phone.slice(1) : phone}` 
-            : `https://web.whatsapp.com/send`;
+          const whatsappUrl = formattedPhone 
+            ? `https://web.whatsapp.com/send?phone=${encodeURIComponent(formattedPhone)}&text=${encodeURIComponent(shareText)}` 
+            : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
           
           window.open(whatsappUrl, '_blank');
-          setDownloading(false);
-          return;
         }
-
-        // Mobile without Web Share support fallback
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `order-${number}.png`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-        setDownloading(false);
         return;
 
       }, 'image/png', 1.0);

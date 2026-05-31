@@ -840,9 +840,8 @@ export default function OrdersPage() {
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
     if (isAndroid || isIOS) {
-      // On mobile, window.open with deep links (like wa.me) can fail with "This link couldn't be opened".
-      // We must use window.location.href to trigger the universal link properly natively.
-      window.location.href = waWeb;
+      // APKs / WebViews prefer window.open to correctly trigger intents for wa.me links
+      window.open(waWeb, '_blank', 'noopener,noreferrer');
     } else {
       if (opts && opts.preOpenedWindow && !opts.preOpenedWindow.closed) {
         opts.preOpenedWindow.location.href = waWeb;
