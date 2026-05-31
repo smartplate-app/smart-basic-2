@@ -121,10 +121,10 @@
     "create": {
       "$or": [
         {
-          "data.created_by": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "data.store_owner_email": "{{user.email}}"
+          "store_owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -136,10 +136,10 @@
     "read": {
       "$or": [
         {
-          "data.created_by": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "data.store_owner_email": "{{user.email}}"
+          "store_owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -151,10 +151,10 @@
     "update": {
       "$or": [
         {
-          "data.created_by": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "data.store_owner_email": "{{user.email}}"
+          "store_owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -166,10 +166,10 @@
     "delete": {
       "$or": [
         {
-          "data.created_by": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "data.store_owner_email": "{{user.email}}"
+          "store_owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
