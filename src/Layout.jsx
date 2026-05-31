@@ -284,6 +284,15 @@ const [authLoading, setAuthLoading] = useState(() => {
             document.documentElement.lang = language;
           }, [language]);
 
+  // Restrict horizontal scroll only on specific pages
+  useEffect(() => {
+    if (currentPageName === 'Orders' || currentPageName === 'SupplyReceipts') {
+      document.documentElement.classList.add('no-horizontal-scroll');
+    } else {
+      document.documentElement.classList.remove('no-horizontal-scroll');
+    }
+  }, [currentPageName]);
+
 
 
           // Enable lite mode for low-memory devices or very old Chrome versions

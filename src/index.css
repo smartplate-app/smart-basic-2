@@ -169,9 +169,12 @@ button:focus-visible {
 @layer base {
   html, body {
     overscroll-behavior-y: none;
-    overflow-x: hidden;
   }
-  #root {
+  
+  /* Only applied when class is present (e.g., Orders and SupplyReceipts pages) */
+  html.no-horizontal-scroll, 
+  html.no-horizontal-scroll body, 
+  html.no-horizontal-scroll #root {
     overflow-x: hidden;
   }
   * {
