@@ -120,19 +120,19 @@ export default function SuppliersPage() {
                     } catch {}
 
                     const promises = [
-                      base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, '-created_date'),
-                      base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, '-created_date'),
-                      base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
-                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
-                      base44.entities.Item.filter({ created_by: storeOwnerEmail }),
-                      base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }),
-                      base44.entities.Item.filter({ created_by: workingEmail }),
-                      base44.entities.Item.filter({ store_owner_email: workingEmail })
+                      base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, '-created_date', 10000),
+                      base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, '-created_date', 10000),
+                      base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date', 10000),
+                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date', 10000),
+                      base44.entities.Item.filter({ created_by: storeOwnerEmail }, null, 10000),
+                      base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }, null, 10000),
+                      base44.entities.Item.filter({ created_by: workingEmail }, null, 10000),
+                      base44.entities.Item.filter({ store_owner_email: workingEmail }, null, 10000)
                     ];
                     if (headEmail) {
                       promises.push(
-                        base44.entities.Supplier.filter({ created_by: headEmail }, '-created_date'),
-                        base44.entities.Item.filter({ created_by: headEmail })
+                        base44.entities.Supplier.filter({ created_by: headEmail }, '-created_date', 10000),
+                        base44.entities.Item.filter({ created_by: headEmail }, null, 10000)
                       );
                     }
                     const results = await Promise.all(promises);
@@ -177,21 +177,21 @@ export default function SuppliersPage() {
                       }
                       if (headEmail) {
                         const [headSuppliers, headItems, ownSuppliers, ownItems, storeSuppliers, storeItems] = await Promise.all([
-                          base44.entities.Supplier.filter({ created_by: headEmail }, '-created_date'),
-                          base44.entities.Item.filter({ created_by: headEmail }),
-                          base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
-                          base44.entities.Item.filter({ created_by: workingEmail }),
-                          base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
-                          base44.entities.Item.filter({ created_by: workingEmail })
+                          base44.entities.Supplier.filter({ created_by: headEmail }, '-created_date', 10000),
+                          base44.entities.Item.filter({ created_by: headEmail }, null, 10000),
+                          base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date', 10000),
+                          base44.entities.Item.filter({ created_by: workingEmail }, null, 10000),
+                          base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date', 10000),
+                          base44.entities.Item.filter({ created_by: workingEmail }, null, 10000)
                         ]);
                         const allSuppliers = [...headSuppliers, ...ownSuppliers, ...storeSuppliers];
                         suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
                         itemsData = [...headItems, ...ownItems, ...storeItems].filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
                       } else {
                         const [ownSuppliers, ownItems, storeSuppliers] = await Promise.all([
-                          base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
-                          base44.entities.Item.filter({ created_by: workingEmail }),
-                          base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date')
+                          base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date', 10000),
+                          base44.entities.Item.filter({ created_by: workingEmail }, null, 10000),
+                          base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date', 10000)
                         ]);
                         const allSuppliers = [...ownSuppliers, ...storeSuppliers];
                         suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
@@ -212,10 +212,10 @@ export default function SuppliersPage() {
                   } else {
                     // Head store or no chain - load TARGET user's suppliers + any with store_owner_email
                     const [ownSuppliers, ownItems1, storeSuppliers, ownItems2] = await Promise.all([
-                      base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
-                      base44.entities.Item.filter({ created_by: workingEmail }),
-                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
-                      base44.entities.Item.filter({ store_owner_email: workingEmail })
+                      base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date', 10000),
+                      base44.entities.Item.filter({ created_by: workingEmail }, null, 10000),
+                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date', 10000),
+                      base44.entities.Item.filter({ store_owner_email: workingEmail }, null, 10000)
                     ]);
                     const allSuppliers = [...ownSuppliers, ...storeSuppliers];
                     suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
@@ -459,8 +459,8 @@ export default function SuppliersPage() {
       
       // Fetch all orders and receipts
       const [allOrders, allReceipts] = await Promise.all([
-        base44.entities.Order.filter({ created_by: workingEmail }),
-        base44.entities.SupplyReceipt.filter({ created_by: workingEmail })
+        base44.entities.Order.filter({ created_by: workingEmail }, '-created_date', 10000),
+        base44.entities.SupplyReceipt.filter({ created_by: workingEmail }, '-created_date', 10000)
       ]);
       
       // Filter by date range

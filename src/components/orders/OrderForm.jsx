@@ -109,12 +109,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
       const queries = [];
 
       // Always include items tagged by store owner for the working (controlled) user
-      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: workingEmail }, 'name'));
+      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: workingEmail }, 'name', 10000));
 
       if (ownerEmail) {
         // Controlled user is a store user → include owner's items as well
-        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, 'name'));
-        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: ownerEmail }, 'name'));
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, 'name', 10000));
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: ownerEmail }, 'name', 10000));
       } else {
         // Detect chain head for the controlled user via ChainStore
         let headEmail = null;
@@ -127,12 +127,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           }
         } catch {}
         if (headEmail) {
-          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: headEmail }, 'name'));
+          queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: headEmail }, 'name', 10000));
         }
       }
 
       // Always include working user's own items
-      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
+      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name', 10000));
 
       // Use a mobile-safe Promise.all with per-promise fallbacks (older mobile Safari lacks allSettled)
       const safeQueries = queries.map(p => p.then(res => res).catch(() => []));

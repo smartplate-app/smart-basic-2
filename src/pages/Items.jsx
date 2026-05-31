@@ -124,13 +124,13 @@ export default function ItemsPage() {
         // Store user - load data from the store owner
         console.log('[Items] Loading as STORE USER from owner:', storeOwnerEmail);
         const [ownerItems, ownItemsByStoreOwner, managerCreated, ownerSuppliers, managerSuppliers, ownerWarehouses, myWarehouses] = await Promise.all([
-          base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date"),
-          base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }, "-created_date"),
-          base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date"),
-          base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
-          base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name"),
-          base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name"),
-          base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name")
+          base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date", 10000),
+          base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }, "-created_date", 10000),
+          base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date", 10000),
+          base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name", 10000),
+          base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name", 10000),
+          base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name", 10000),
+          base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name", 10000)
         ]);
         console.log('[Items] Loaded from owner:', {
           ownerItems: ownerItems.length,
@@ -174,12 +174,12 @@ export default function ItemsPage() {
           }
           if (headEmail) {
             const [headItems, headSuppliers, headWarehouses, ownItems, ownSuppliers, ownWarehouses] = await Promise.all([
-              base44.entities.Item.filter({ created_by: headEmail }, "-created_date"),
-              base44.entities.Supplier.filter({ created_by: headEmail }, "name"),
-              base44.entities.Warehouse.filter({ created_by: headEmail }, "name"),
-              base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date"),
-              base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name"),
-              base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name")
+              base44.entities.Item.filter({ created_by: headEmail }, "-created_date", 10000),
+              base44.entities.Supplier.filter({ created_by: headEmail }, "name", 10000),
+              base44.entities.Warehouse.filter({ created_by: headEmail }, "name", 10000),
+              base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date", 10000),
+              base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name", 10000),
+              base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name", 10000)
             ]);
             itemsData = [...headItems, ...ownItems]
               .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
@@ -187,12 +187,12 @@ export default function ItemsPage() {
             warehousesData = [...headWarehouses, ...ownWarehouses];
           } else {
             const [ownCreated, ownedByStore, suppliers, storeSuppliers, warehouses1, warehouses2] = await Promise.all([
-              base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date"),
-              base44.entities.Item.filter({ store_owner_email: effectiveEmail }, "-created_date"),
-              base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name"),
-              base44.entities.Supplier.filter({ store_owner_email: effectiveEmail }, "name"),
-              base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name"),
-              base44.entities.Warehouse.filter({ store_owner_email: effectiveEmail }, "name")
+              base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date", 10000),
+              base44.entities.Item.filter({ store_owner_email: effectiveEmail }, "-created_date", 10000),
+              base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name", 10000),
+              base44.entities.Supplier.filter({ store_owner_email: effectiveEmail }, "name", 10000),
+              base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name", 10000),
+              base44.entities.Warehouse.filter({ store_owner_email: effectiveEmail }, "name", 10000)
             ]);
             const allItems = [...ownCreated, ...ownedByStore];
             itemsData = Array.from(new Map(allItems.map(i => [i.id, i])).values())
@@ -218,12 +218,12 @@ export default function ItemsPage() {
       } else {
         // Head store or no chain - include items created by owner and items attributed to owner via store_owner_email
         const [ownCreated, ownedByStore, suppliers, storeSuppliers, warehouses1, warehouses2] = await Promise.all([
-          base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date"),
-          base44.entities.Item.filter({ store_owner_email: effectiveEmail }, "-created_date"),
-          base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name"),
-          base44.entities.Supplier.filter({ store_owner_email: effectiveEmail }, "name"),
-          base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name"),
-          base44.entities.Warehouse.filter({ store_owner_email: effectiveEmail }, "name")
+          base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date", 10000),
+          base44.entities.Item.filter({ store_owner_email: effectiveEmail }, "-created_date", 10000),
+          base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name", 10000),
+          base44.entities.Supplier.filter({ store_owner_email: effectiveEmail }, "name", 10000),
+          base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name", 10000),
+          base44.entities.Warehouse.filter({ store_owner_email: effectiveEmail }, "name", 10000)
         ]);
         const allItems = [...ownCreated, ...ownedByStore];
         itemsData = Array.from(new Map(allItems.map(i => [i.id, i])).values())
