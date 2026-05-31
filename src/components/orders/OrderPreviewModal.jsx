@@ -214,29 +214,44 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
 
         if (isMobile && navigator.share) {
+          const unitLabel = (u) => {
+            if (!u) return '';
+            if (language !== 'he') return u;
+            const map = { unit: 'יחידות', liter: 'ליטר', kg: 'ק״ג', case: 'ארגזים', gram: 'גרם', ml: 'מ״ל' };
+            return map[u] || u;
+          };
+          
+          const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
+          const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
+          const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${unitLabel(it.unit || it.u || '')}`).join('\\n');
+          const shareText = `${intro}\\n\\n*${numLbl}:* ${number}\\n\\n*${safeT('items', 'פריטים', 'Items')}:*\\n${itemsText}`;
+
           try {
             if (!navigator.canShare || navigator.canShare({ files: [file] })) {
               setDownloading(false);
-              const unitLabel = (u) => {
-                if (!u) return '';
-                if (language !== 'he') return u;
-                const map = { unit: 'יחידות', liter: 'ליטר', kg: 'ק״ג', case: 'ארגזים', gram: 'גרם', ml: 'מ״ל' };
-                return map[u] || u;
-              };
-              
-              const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
-              const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
-              const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${unitLabel(it.unit || it.u || '')}`).join('\\n');
-              const shareText = `${intro}\\n\\n*${numLbl}:* ${number}\\n\\n*${safeT('items', 'פריטים', 'Items')}:*\\n${itemsText}`;
-
               await navigator.share({ 
                 files: [file], 
                 title: `Order #${number}`,
                 text: shareText
               });
               return;
+            } else {
+              setDownloading(false);
+              await navigator.share({ text: shareText });
+              return;
             }
-          } catch (_) { /* fallthrough to download */ }
+          } catch (e) {
+            if (e.name !== 'AbortError') {
+              try {
+                setDownloading(false);
+                await navigator.share({ text: shareText });
+                return;
+              } catch (err2) { /* fallthrough */ }
+            } else {
+              setDownloading(false);
+              return;
+            }
+          }
         }
 
         // Desktop devices: save to clipboard and open WhatsApp Web

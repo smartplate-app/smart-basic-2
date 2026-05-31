@@ -791,7 +791,7 @@ export default function OrdersPage() {
     }
 
     // 1) Use system share ONLY when explicitly forcing image share (e.g. Android pre-rendered image)
-    if (opts && opts.forceImageShare) {
+    if (opts && opts.forceImageShare && navigator.share) {
       const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
       if (canShareFiles) {
         try {
@@ -799,7 +799,14 @@ export default function OrdersPage() {
           return;
         } catch (e) {
           console.warn('[WA Image Share] Share failed, falling back:', e?.name || e);
+          if (e.name !== 'AbortError') {
+            try { await navigator.share({ text }); return; } catch (e2) {}
+          } else {
+            return;
+          }
         }
+      } else {
+        try { await navigator.share({ text }); return; } catch (e2) {}
       }
     }
 
