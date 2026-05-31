@@ -12,8 +12,16 @@ export default function StoreLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader className="space-y-3 text-center pb-6">
-          <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-2">
-            <User className="w-8 h-8 text-blue-600" />
+          <div className="flex flex-col items-center gap-2 mb-2 mt-2">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+              alt="Smart Plate"
+              className="h-16 object-contain"
+            />
+            <div className="flex flex-col items-center">
+              <span className="text-xl font-bold text-black tracking-wide">SMART PLATE BASIC</span>
+              <span className="text-xs text-gray-500 tracking-wider">food cost app</span>
+            </div>
           </div>
           <CardTitle className="text-2xl font-bold">{language === 'he' ? 'התחברות למערכת' : 'Restaurant Login'}</CardTitle>
           <CardDescription className="text-base text-gray-500">
