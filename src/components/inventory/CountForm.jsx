@@ -51,7 +51,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [savingCatalog, setSavingCatalog] = useState(false);
   const [filteredAvailableItems, setFilteredAvailableItems] = useState([]);
   const [hasDraft, setHasDraft] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(false); // Forced false to prevent Android WebView navigator.onLine issues
   const [warehouseOptions, setWarehouseOptions] = useState(warehouses || []);
   const [availableSearch, setAvailableSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -209,16 +209,9 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     setFormData(prev => ({ ...prev, items: sortedItems }));
   };
 
-  // Monitor online/offline status
+  // Monitor online/offline status (Disabled to prevent Android WebView issues)
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    setIsOffline(false);
   }, []);
 
   // Check for existing draft on load
@@ -276,26 +269,41 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     setFormData(prev => ({ ...prev, total_inventory_value: total }));
   }, [formData.items]);
 
-  // Handle unmount explicit save (e.g. switching tabs or clicking X)
+  // Handle unmount explicit save
   useEffect(() => {
     return () => {
-      if (formDataRef.current?.id && !isSubmittedRef.current) {
-        const currentData = formDataRef.current;
-        const cleanedData = {
-          ...currentData,
-          warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
-          items: currentData.items.map(item => ({
+      const currentData = formDataRef.current;
+      if (currentData?.id) {
+        const dirtyItems = Array.from(dirtyItemsRef.current.values());
+        const hasDirtyMetadata = dirtyMetadataRef.current;
+        if (dirtyItems.length > 0 || hasDirtyMetadata) {
+          const cleanedDirtyItems = dirtyItems.map(item => ({
             ...item,
             counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
             price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
             total_cost: Number(item.total_cost) || 0
-          }))
-        };
-        // Fire and forget
-        base44.entities.InventoryCount.update(currentData.id, cleanedData).catch(console.error);
+          }));
+
+          const metadata = hasDirtyMetadata ? {
+            name: currentData.name,
+            count_date: currentData.count_date,
+            count_type: currentData.count_type,
+            warehouse_id: currentData.warehouse_id,
+            warehouse_name: currentData.warehouse_name,
+            status: currentData.status,
+            notes: currentData.notes
+          } : null;
+
+          // Fire and forget
+          base44.functions.invoke('syncActiveCountItems', {
+            currentCountId: currentData.id,
+            updatedItems: cleanedDirtyItems,
+            metadata
+          }).catch(console.error);
+        }
       }
     };
-  }, [language]);
+  }, []);
 
   // Auto-save draft to local storage and Database (Delta Sync)
   useEffect(() => {
@@ -704,22 +712,6 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    isSubmittedRef.current = true;
-    // Clear local storage after successful submit
-    clearLocalStorage();
-    
-    // Clean up empty fields to avoid backend validation errors
-    const cleanedData = {
-      ...formData,
-      items: formData.items.map(item => ({
-        ...item,
-        counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-        price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-        total_cost: Number(item.total_cost) || 0
-      }))
-    };
-
-    onSubmit(cleanedData);
   };
 
   let displayedItems = [];
@@ -1329,9 +1321,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             <div className="h-12 w-full md:hidden"></div>
 
             <div className="sticky bottom-[56px] md:bottom-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 p-4 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)] flex justify-center -mx-6 -mb-6 mt-4 rounded-b-xl">
-              <div className="w-full max-w-[1200px] flex justify-end px-2">
-                <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60] w-full md:w-1/3 lg:w-1/4 text-white text-base h-12 rounded-xl font-bold shadow-md" disabled={isOffline}>
-                  {count ? t('update_count') : (language === 'he' ? 'שמור ספירה' : t('save_count'))}
+              <div className="w-full max-w-[1200px] flex justify-between items-center px-2">
+                <div className="text-sm text-gray-500 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  {language === 'he' ? 'נשמר אוטומטית בענן' : 'Auto-saving to cloud'}
+                </div>
+                <Button type="button" onClick={onCancel} className="bg-gray-800 hover:bg-gray-900 w-1/2 md:w-1/3 lg:w-1/4 text-white text-base h-12 rounded-xl font-bold shadow-md">
+                  {language === 'he' ? 'סיום / סגור' : 'Done / Close'}
                 </Button>
               </div>
             </div>
