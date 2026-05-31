@@ -405,11 +405,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {t('no_available_items')}
               </div>
             ) : (
-              <div className="relative border rounded-xl overflow-clip mt-1 shadow-sm bg-gray-50/50" style={{ isolation: 'isolate' }}>
+              <div className="relative mt-1 w-full max-w-full" style={{ isolation: 'isolate' }}>
                 <div 
                   ref={itemsContainerRef}
                   onScroll={(e) => setShowScrollTop(e.target.scrollTop > 300)}
-                  className="flex flex-col bg-transparent gap-1.5 p-2 w-full box-border overflow-y-auto scroll-smooth"
+                  className="flex flex-col bg-gray-50/50 border rounded-xl shadow-sm gap-1.5 p-2 w-full max-w-full box-border overflow-y-auto overflow-x-hidden scroll-smooth"
                   style={{ maxHeight: '55vh' }}
                 >
                   {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
