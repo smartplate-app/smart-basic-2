@@ -215,126 +215,35 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       // Remove temp container
       document.body.removeChild(tempContainer);
 
-      // Convert to blob and try to copy to clipboard
-      canvas.toBlob(async (blob) => {
-        const number = ensuredNumber;
-        const file = new File([blob], `order-${number}.jpg`, { type: 'image/jpeg' });
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      const r = await fetch(dataUrl);
+      const blob = await r.blob();
+      
+      const file = new File([blob], 'order.jpg', { type: 'image/jpeg' });
 
-        const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
-        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
-        const isAndroid = /Android/i.test(navigator.userAgent || '') && !isIOS;
+      setDownloading(false);
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ 
+            files: [file], 
+            title: language === 'he' ? 'הזמנה לספק' : 'Order' 
+          });
+        } catch(e) {
+          console.error('Share failed', e);
+        }
+      } else {
+        const imageUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = imageUrl;
+        a.download = 'order.jpg';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
         
-        // Ensure iOS (both Safari and WKWebView) attempts to use the native Share API.
-        // We explicitly tell it to never trigger the Android shortcut flow.
-
-        const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
-        const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
-        const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${getUnitLabel(it.unit || it.u || '')}`).join('\n');
-        const shareText = `${intro}\n\n*${numLbl}:* ${number}\n\n*${safeT('items', 'פריטים', 'Items')}:*\n${itemsText}`;
-
-        const rawPhone = String(order.supplier_phone || '').trim();
-        let phone = '';
-        if (rawPhone) {
-          phone = rawPhone.replace(/[^\\d+]/g, '');
-          if (phone.startsWith('+')) phone = phone.slice(1);
-          if (phone.startsWith('00')) phone = phone.slice(2);
-        }
-
-        let formattedPhone = phone;
-        if (formattedPhone && formattedPhone.startsWith('0')) {
-           formattedPhone = '972' + formattedPhone.slice(1);
-        }
-
-        const waUrl = formattedPhone 
-          ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
-          : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-
-        setDownloading(false);
-
-        // 1) Try the native share sheet first (for ALL mobile devices including Android)
-        if (isMobile && navigator.share) {
-          try {
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-              await navigator.share({ 
-                files: [file], 
-                title: language === 'he' ? 'הזמנה לספק' : `Order #${number}`,
-                text: shareText
-              });
-              return;
-            } else {
-              // Instead of sharing plain text, fallback to Android deep link with image copy/download
-              throw new Error("Cannot share file natively");
-            }
-          } catch (e) {
-            console.error('Share failed', e);
-            if (e.name === 'AbortError') {
-              setDownloading(false);
-              return; // User cancelled the share sheet manually
-            }
-            // Fallthrough to image download/clipboard guide instead of plain text sharing
-          }
-        }
-
-        // 2) Fallbacks if native share is not available or failed
-        if (isMobile) {
-          let clipboardSuccess = false;
-          let imageUrl = null;
-          try {
-            if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
-              await navigator.clipboard.write([
-                new ClipboardItem({ 'image/jpeg': blob })
-              ]);
-              clipboardSuccess = true;
-            }
-          } catch (err) {
-            console.warn("Clipboard copy failed", err);
-          }
-          
-          try {
-            imageUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = imageUrl;
-            a.download = `order-${number}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            
-            // Show toast in case it wasn't intercepted by the paste guide
-            toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
-          } catch (e) {}
-
-          setPasteGuideUrl({ waUrl, clipboardSuccess, imageUrl });
-          return; // Wait for user to click the modal
-        } else {
-          // Desktop fallback: copy to clipboard and open WhatsApp Web
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ 'image/jpeg': blob })
-            ]);
-          } catch (err) {
-            console.error('Clipboard copy failed', err);
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `order-${number}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
-            
-            toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
-          }
-
-          const whatsappUrl = formattedPhone 
-            ? `https://web.whatsapp.com/send?phone=${encodeURIComponent(formattedPhone)}&text=${encodeURIComponent(shareText)}` 
-            : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-          
-          window.open(whatsappUrl, '_blank');
-        }
-        return;
-
-      }, 'image/jpeg', 0.95);
+        toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
+      }
 
     } catch (err) {
       console.error('Failed to process image:', err);
@@ -685,75 +594,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         </div>
       </motion.div>
 
-      {/* Really Big Android Paste Guide Popup */}
-      {pasteGuideUrl && (
-        <div className="fixed inset-0 bg-black/90 z-[200] flex flex-col items-center justify-center p-4 overflow-y-auto">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100 my-auto"
-            dir={language === 'he' ? 'rtl' : 'ltr'}
-          >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 sm:w-10 sm:h-10 text-[#25D366]" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black mb-3 text-gray-900 leading-tight tracking-tight">
-              {pasteGuideUrl.clipboardSuccess 
-                ? (language === 'he' ? 'התמונה הועתקה!' : 'Image Copied!') 
-                : (language === 'he' ? 'התמונה מוכנה!' : 'Image Ready!')}
-            </h2>
-            
-            <p className="text-lg sm:text-xl text-gray-600 mb-6 font-medium leading-relaxed">
-              {pasteGuideUrl.clipboardSuccess ? (
-                <>
-                  {language === 'he' ? 'בוואטסאפ, לחץ לחיצה ארוכה על שורת ההודעה ובחר ' : 'In WhatsApp, long-press the message box and select '}
-                  <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״הדבק״' : '"Paste"'}</strong>
-                  {language === 'he' ? ' כדי לצרף את ההזמנה.' : ' to attach the order.'}
-                </>
-              ) : (
-                <>
-                  {language === 'he' ? 'התמונה הורדה לטלפון. בוואטסאפ, לחץ על האטב/פלוס ובחר ב' : 'Image downloaded. In WhatsApp, tap attachment/plus and select '}
-                  <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״גלריה״' : '"Gallery"'}</strong>
-                  {language === 'he' ? ' כדי לצרף את ההזמנה שירדה.' : ' to attach the order.'}
-                </>
-              )}
-            </p>
 
-            {!pasteGuideUrl.clipboardSuccess && pasteGuideUrl.imageUrl && (
-              <div className="mb-6 relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-inner">
-                <p className="text-xs text-gray-500 mb-2 mt-2 font-medium">
-                  {language === 'he' ? 'אם ההורדה נכשלה, אפשר ללחוץ ארוכות על התמונה כאן ולבחור ״שתף תמונה״' : 'If download failed, long press here and select "Share Image"'}
-                </p>
-                <img src={pasteGuideUrl.imageUrl} alt="Order Preview" className="w-full max-h-[250px] object-contain mx-auto" />
-              </div>
-            )}
-
-            <div className="flex flex-col gap-3">
-              <Button 
-                className="w-full h-14 sm:h-16 text-lg sm:text-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95"
-                onClick={() => {
-                  window.open(pasteGuideUrl.waUrl, '_blank');
-                  if (pasteGuideUrl.imageUrl) window.URL.revokeObjectURL(pasteGuideUrl.imageUrl);
-                  setPasteGuideUrl(null);
-                }}
-              >
-                <MessageCircle className={`w-6 h-6 sm:w-7 sm:h-7 ${language === 'he' ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'}`} />
-                {language === 'he' ? 'הבנתי, פתח וואטסאפ' : 'Got it, Open WhatsApp'}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  if (pasteGuideUrl.imageUrl) window.URL.revokeObjectURL(pasteGuideUrl.imageUrl);
-                  setPasteGuideUrl(null);
-                }}
-                className="text-gray-500 hover:bg-gray-100 h-12"
-              >
-                {safeT('close', 'סגור', 'Close')}
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }
