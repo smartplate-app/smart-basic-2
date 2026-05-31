@@ -771,11 +771,7 @@ export default function OrdersPage() {
             </tbody>
           </table>
         </div>
-        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-          <div style="font-size: 14px; font-weight: 800; color: #111827; letter-spacing: 1px;">SMART PLATE BASIC</div>
-          <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
-          <div style="font-size: 10px; margin-top: 4px; font-weight: 600; color: #2563eb;">foodcostapp.com</div>
-        </div>
+
       `;
       document.body.appendChild(temp);
       try {
@@ -1003,11 +999,6 @@ export default function OrdersPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
-            alt="Smart Plate"
-            className="h-20 object-contain animate-pulse"
-          />
           <Loader className="w-12 h-12 animate-spin text-gray-600" />
           <p className="text-lg text-gray-700">{t('loading')}</p>
           {retryCount > 0 && (

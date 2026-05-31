@@ -23,14 +23,14 @@ export default function StoreLogin() {
         <CardContent>
           <div className="space-y-4">
             <Button 
-              onClick={() => base44.auth.loginWithOAuth({ provider: 'google', redirectTo: window.location.origin })}
+              onClick={() => base44.auth.redirectToLogin(window.location.origin)}
               className="w-full h-12 text-lg font-medium bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 shadow-sm transition-all flex items-center justify-center gap-3"
             >
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
               {language === 'he' ? 'המשך עם גוגל' : 'Continue with Google'}
             </Button>
             <Button 
-              onClick={() => base44.auth.loginWithOAuth({ provider: 'apple', redirectTo: window.location.origin })}
+              onClick={() => base44.auth.redirectToLogin(window.location.origin)}
               className="w-full h-12 text-lg font-medium bg-black hover:bg-gray-900 text-white shadow-sm transition-all flex items-center justify-center gap-3"
             >
               <img src="https://www.svgrepo.com/show/511330/apple-173.svg" className="w-5 h-5 invert" alt="Apple" />
