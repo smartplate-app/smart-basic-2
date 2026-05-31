@@ -305,11 +305,55 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     };
   }, []);
 
+  const [syncStatus, setSyncStatus] = useState('saved'); // 'saved', 'saving', 'error'
+
+  // Create initial draft immediately on mount if it's a new count
+  useEffect(() => {
+    let isMounted = true;
+    if (!formDataRef.current.id) {
+      const createInitialDraft = async () => {
+        try {
+          if (isSavingRef.current) return;
+          isSavingRef.current = true;
+          setSyncStatus('saving');
+          
+          const currentData = formDataRef.current;
+          const cleanedData = {
+            ...currentData,
+            warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
+            items: currentData.items.map(item => ({
+              ...item,
+              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+              total_cost: Number(item.total_cost) || 0
+            }))
+          };
+          
+          // Instead of getOrCreateCountDraft, we directly call the entity to create a clean draft.
+          const newCount = await base44.entities.InventoryCount.create(cleanedData);
+          if (newCount?.id && isMounted) {
+            setFormData(prev => ({ ...prev, id: newCount.id }));
+            dirtyItemsRef.current.clear();
+            dirtyMetadataRef.current = false;
+            setDbSavedAt(new Date());
+            setSyncStatus('saved');
+          }
+        } catch (error) {
+          console.error("Initial draft creation failed:", error);
+          if (isMounted) setSyncStatus('error');
+        } finally {
+          isSavingRef.current = false;
+        }
+      };
+      createInitialDraft();
+    }
+    return () => { isMounted = false; };
+  }, [language]);
+
   // Auto-save draft to local storage and Database (Delta Sync)
   useEffect(() => {
     const timer = setInterval(async () => {
       const currentData = formDataRef.current;
-      if (!currentData.warehouse_id && currentData.items.length === 0 && !currentData.name) return;
 
       // 1. Save locally for offline backup
       const dataToSave = {
@@ -324,40 +368,14 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       }
 
       // 2. Auto-save to Database
-      if (!currentData.id) {
-        // Create initial draft upon first data entry
-        if (isSavingRef.current) return;
-        isSavingRef.current = true;
-        try {
-          const cleanedData = {
-            ...currentData,
-            warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
-            items: currentData.items.map(item => ({
-              ...item,
-              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-              total_cost: Number(item.total_cost) || 0
-            }))
-          };
-          const newCount = await base44.entities.InventoryCount.create(cleanedData);
-          if (newCount?.id) {
-            setFormData(prev => ({ ...prev, id: newCount.id }));
-            dirtyItemsRef.current.clear();
-            dirtyMetadataRef.current = false;
-            setDbSavedAt(new Date());
-          }
-        } catch (error) {
-          console.error("Initial live draft creation failed:", error);
-        } finally {
-          isSavingRef.current = false;
-        }
-      } else {
+      if (currentData.id) {
         // Delta sync for existing draft
         const dirtyItems = Array.from(dirtyItemsRef.current.values());
         const hasDirtyMetadata = dirtyMetadataRef.current;
         if (dirtyItems.length > 0 || hasDirtyMetadata) {
           if (isSavingRef.current) return;
           isSavingRef.current = true;
+          setSyncStatus('saving');
           try {
             dirtyItemsRef.current.clear();
             dirtyMetadataRef.current = false;
@@ -384,11 +402,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               metadata
             });
             setDbSavedAt(new Date());
+            setSyncStatus('saved');
           } catch (error) {
             console.error("DB Auto-save failed:", error);
             // Restore dirty items if failed
             dirtyItems.forEach(item => dirtyItemsRef.current.set(`${item.item_id}_${item.warehouse_id}`, item));
             if (hasDirtyMetadata) dirtyMetadataRef.current = true;
+            setSyncStatus('error');
           } finally {
             isSavingRef.current = false;
           }
@@ -1322,9 +1342,23 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
             <div className="sticky bottom-[56px] md:bottom-0 z-40 bg-white/95 backdrop-blur border-t border-gray-200 p-4 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.1)] flex justify-center -mx-6 -mb-6 mt-4 rounded-b-xl">
               <div className="w-full max-w-[1200px] flex justify-between items-center px-2">
-                <div className="text-sm text-gray-500 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  {language === 'he' ? 'נשמר אוטומטית בענן' : 'Auto-saving to cloud'}
+                <div className="text-sm flex items-center gap-2">
+                  {syncStatus === 'saving' ? (
+                    <>
+                      <Loader className="w-4 h-4 text-blue-500 animate-spin" />
+                      <span className="text-blue-500">{language === 'he' ? 'שומר...' : 'Saving...'}</span>
+                    </>
+                  ) : syncStatus === 'error' ? (
+                    <>
+                      <WifiOff className="w-4 h-4 text-red-500" />
+                      <span className="text-red-500">{language === 'he' ? 'שגיאת שמירה' : 'Save Error'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                      <span className="text-green-600 font-medium">{language === 'he' ? 'נשמר בלייב בענן' : 'Saved live to cloud'}</span>
+                    </>
+                  )}
                 </div>
                 <Button type="button" onClick={onCancel} className="bg-gray-800 hover:bg-gray-900 w-1/2 md:w-1/3 lg:w-1/4 text-white text-base h-12 rounded-xl font-bold shadow-md">
                   {language === 'he' ? 'סיום / סגור' : 'Done / Close'}
