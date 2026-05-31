@@ -18,6 +18,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [pasteGuideUrl, setPasteGuideUrl] = useState(null);
   const urlRef = useRef('');
   
   if (!isOpen || !order) return null;
@@ -282,13 +283,32 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
               await navigator.clipboard.write([
                 new ClipboardItem({ 'image/png': blob })
               ]);
-              alert(language === 'he' ? 'ההזמנה הועתקה כתמונה! לחץ על שורת ההודעה והדבק אותה בשיחה (Paste).' : 'Order copied as image! Tap the message box and paste it in the chat.');
+              
+              const waUrl = formattedPhone 
+                ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
+                : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+              
+              setPasteGuideUrl(waUrl);
+
+              // Download the image silently in the background
+              try {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `order-${number}.png`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+              } catch (e) {}
+
+              return; // Wait for user to click the modal
             } catch (err) {
               console.warn("Android clipboard copy failed", err);
             }
           }
 
-          // APK fallback: Open WhatsApp directly using window.open
+          // APK fallback: Open WhatsApp directly using window.open (if not Android or clipboard failed)
           const waUrl = formattedPhone 
             ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
             : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
@@ -681,6 +701,40 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </Button>
         </div>
       </motion.div>
+
+      {/* Really Big Android Paste Guide Popup */}
+      {pasteGuideUrl && (
+        <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100"
+            dir={language === 'he' ? 'rtl' : 'ltr'}
+          >
+            <div className="w-24 h-24 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Check className="w-12 h-12 text-[#25D366]" />
+            </div>
+            <h2 className="text-3xl font-black mb-4 text-gray-900 leading-tight tracking-tight">
+              {language === 'he' ? 'התמונה הועתקה!' : 'Image Copied!'}
+            </h2>
+            <p className="text-xl text-gray-600 mb-8 font-medium leading-relaxed">
+              {language === 'he' ? 'בוואטסאפ, לחץ לחיצה ארוכה על שורת ההודעה ובחר ' : 'In WhatsApp, long-press the message box and select '}
+              <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״הדבק״' : '"Paste"'}</strong>
+              {language === 'he' ? ' כדי לצרף את ההזמנה.' : ' to attach the order.'}
+            </p>
+            <Button 
+              className="w-full h-16 text-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95"
+              onClick={() => {
+                window.open(pasteGuideUrl, '_blank');
+                setPasteGuideUrl(null);
+              }}
+            >
+              <MessageCircle className={`w-7 h-7 ${language === 'he' ? 'ml-3' : 'mr-3'}`} />
+              {language === 'he' ? 'הבנתי, פתח וואטסאפ' : 'Got it, Open WhatsApp'}
+            </Button>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
