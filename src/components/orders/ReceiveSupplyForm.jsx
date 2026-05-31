@@ -1763,10 +1763,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               text += language === 'he' ? "אשמח לטיפולכם ולהפקת חשבונית זיכוי.\n\n" : "Please process a credit invoice.\n\n";
                               text += `${rName}\nהזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n`;
                               if (s?.email) {
-                                try {
-                                  const logoHtml = user?.restaurant_logo ? `<br/><br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;"/>` : '';
-                                  await base44.integrations.Core.SendEmail({ to: s.email, subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`, body: text.replace(/\n/g, '<br/>') + logoHtml + '<br/><br/><br/><br/><br/><br/><br/><br/>' });
-                                } catch (e) {}
+                                const rawSubj = language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`;
+                                base44.functions.invoke('sendCreditRequestEmail', { to: s.email, rawSubject: rawSubj, text, html: text.replace(/\n/g, '<br/>') + (user?.restaurant_logo ? `<br/><br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;"/>` : '') + '<br/><br/><br/><br/><br/><br/><br/><br/>' }).then(() => { setTimeout(() => { import("sonner").then(({ toast }) => { toast.success(language === 'he' ? 'בקשת הזיכוי נשלחה בהצלחה גם למייל של הספק!' : 'Credit request also sent to supplier email!'); }); }, 1500); }).catch(() => {});
                               }
                               
                               const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
