@@ -4601,12 +4601,12 @@ const translations = {
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-    // Load language from localStorage or default to 'en'
+    // Load language from localStorage or default to 'he'
     const [language, setLanguageState] = useState(() => {
         try {
-            return localStorage.getItem('app_language') || 'en';
+            return localStorage.getItem('app_language') || 'he';
         } catch {
-            return 'en';
+            return 'he';
         }
     });
 
