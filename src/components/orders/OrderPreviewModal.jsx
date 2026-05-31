@@ -14,6 +14,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
     if (language === 'he' && (v === key || !v)) return he;
     return (v === key || !v) ? (en ?? key) : v;
   };
+
+  const getUnitLabel = (u) => {
+    if (!u) return '';
+    if (language !== 'he') return u;
+    const map = { unit: 'יחידה', liter: 'ליטר', kg: 'ק״ג', case: 'ארגז', gram: 'גרם', ml: 'מ״ל' };
+    return map[u] || u;
+  };
+
   const [viewMode, setViewMode] = useState('mobile');
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -46,7 +54,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
     r: order.restaurant_name,
     a: order.restaurant_address,
     d: order.delivery_date,
-    i: (order.items || []).map(it => ({ n: (it.item_name || it.item || it.name || ''), c: (it.catalog_number || ''), q: it.quantity, u: (it.unit || it.u || '') })),
+    i: (order.items || []).map(it => ({ n: (it.item_name || it.item || it.name || ''), c: (it.catalog_number || ''), q: it.quantity, u: getUnitLabel(it.unit || it.u || '') })),
     t: order.notes,
     m: effectiveTotal
   };
@@ -156,7 +164,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                       <td style="padding: 12px 16px; text-align: ${language === 'he' ? 'left' : 'right'};">
                         <div style="display: inline-flex; align-items: baseline; gap: 4px;">
                           <span style="font-weight: 700; color: #111827; font-size: 15px;">${item.quantity}</span>
-                          <span style="color: #6b7280; font-size: 13px;">${item.unit}</span>
+                          <span style="color: #6b7280; font-size: 13px;">${getUnitLabel(item.unit)}</span>
                         </div>
                       </td>
                     </tr>
@@ -219,15 +227,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         // Ensure iOS (both Safari and WKWebView) attempts to use the native Share API.
         // We explicitly tell it to never trigger the Android shortcut flow.
 
-        const unitLabel = (u) => {
-          if (!u) return '';
-          if (language !== 'he') return u;
-          const map = { unit: 'יחידות', liter: 'ליטר', kg: 'ק״ג', case: 'ארגזים', gram: 'גרם', ml: 'מ״ל' };
-          return map[u] || u;
-        };
         const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
         const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
-        const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${unitLabel(it.unit || it.u || '')}`).join('\\n');
+        const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${getUnitLabel(it.unit || it.u || '')}`).join('\\n');
         const shareText = `${intro}\\n\\n*${numLbl}:* ${number}\\n\\n*${safeT('items', 'פריטים', 'Items')}:*\\n${itemsText}`;
 
         const rawPhone = String(order.supplier_phone || '').trim();
@@ -421,7 +423,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                             <td style="padding: 10px 14px; text-align: ${language === 'he' ? 'left' : 'right'};">
                               <div style="display: inline-flex; align-items: baseline; gap: 4px;">
                                 <span style="font-weight: 700; color: #111827; font-size: 14px;">${item.quantity}</span>
-                                <span style="color: #6b7280; font-size: 12px;">${item.unit}</span>
+                                <span style="color: #6b7280; font-size: 12px;">${getUnitLabel(item.unit)}</span>
                               </div>
                             </td>
                           </tr>
@@ -593,7 +595,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                                               <td style={{ padding: '10px 14px', textAlign: language === 'he' ? 'left' : 'right' }}>
                                                   <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px' }}>
                                                       <span style={{ fontWeight: '700', color: '#111827', fontSize: '14px' }}>{item.quantity}</span>
-                                                      <span style={{ color: '#6b7280', fontSize: '12px' }}>{item.unit}</span>
+                                                      <span style={{ color: '#6b7280', fontSize: '12px' }}>{getUnitLabel(item.unit)}</span>
                                                   </div>
                                               </td>
                                           </tr>
