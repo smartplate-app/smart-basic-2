@@ -48,8 +48,15 @@ Deno.serve(async (req) => {
     }
     const toHeader = recipients.join(', ');
 
-    // Compose email (English-only to avoid garbled subjects)
-    const subject = (body?.subject && String(body.subject)) || `New order from ${order.restaurant_name || ''} via Smart Plate Basic App`;
+    // Compose email
+    // Encode the subject to base64 (RFC 2047) so Hebrew works correctly via the Gmail API
+    const rawSubject = (body?.subject && String(body.subject)) || `New order from ${order.restaurant_name || ''} via Smart Plate Basic App`;
+    const utf8Subject = new TextEncoder().encode(rawSubject);
+    let binarySubject = '';
+    for (let i = 0; i < utf8Subject.length; i++) {
+      binarySubject += String.fromCharCode(utf8Subject[i]);
+    }
+    const subject = `=?utf-8?B?${btoa(binarySubject)}?=`;
     const adminCc = 'admin@smartplate.org';
     const replyTo = (body?.reply_to_override && String(body.reply_to_override)) || user.email || 'no-reply@smartplate.org';
     const fromDisplay = 'Smart Plate basic';
