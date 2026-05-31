@@ -748,6 +748,11 @@ const [authLoading, setAuthLoading] = useState(() => {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="flex flex-col items-center gap-4">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+            alt="Smart Plate"
+            className="h-20 object-contain animate-pulse"
+          />
           <div className="flex flex-col items-center gap-2">
             <div className="w-12 h-12 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
             <p className="text-lg text-gray-700 font-medium">
@@ -911,15 +916,25 @@ const [authLoading, setAuthLoading] = useState(() => {
                         </button>
                         <div className="flex flex-col items-center">
                           <div className="flex items-center gap-2">
-                            {user?.restaurant_logo ? (
-                              <img 
-                                src={user.restaurant_logo} 
-                                alt="Restaurant Logo"
-                                className="h-10 object-contain rounded-lg"
-                              />
-                            ) : (
-                              <div className="text-lg font-bold text-black dark:text-white tracking-wide">{user?.business_name || 'System'}</div>
+                            <img 
+                              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                              alt="Smart Plate"
+                              className="h-10 object-contain"
+                            />
+                            {user?.restaurant_logo && (
+                              <>
+                                <span className="text-gray-300 text-lg mx-2">+</span>
+                                <img 
+                                  src={user.restaurant_logo} 
+                                  alt="Restaurant Logo"
+                                  className="h-10 w-10 object-contain rounded-lg"
+                                />
+                              </>
                             )}
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span className="text-lg font-bold text-black dark:text-white tracking-wide">BASIC</span>
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 tracking-wider">food cost app</span>
                           </div>
                         </div>
                         <div className="flex items-center">
@@ -951,15 +966,25 @@ const [authLoading, setAuthLoading] = useState(() => {
                             </Button>
                             <div className={'flex flex-col items-center justify-center flex-1 ' + (isRTL ? 'flex-row-reverse text-right' : 'text-left')}>
                               <div className="flex items-center gap-3">
-                                {user?.restaurant_logo ? (
-                                  <img 
-                                    src={user.restaurant_logo} 
-                                    alt="Restaurant Logo"
-                                    className="h-14 object-contain rounded-lg"
-                                  />
-                                ) : (
-                                  <span className="text-xl font-bold text-black dark:text-white tracking-wide">{user?.business_name || 'System'}</span>
+                                <img 
+                                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                                  alt="Smart Plate"
+                                  className="h-14 object-contain flex-shrink-0"
+                                />
+                                {user?.restaurant_logo && (
+                                  <>
+                                    <span className="text-gray-300 text-2xl mx-2">+</span>
+                                    <img 
+                                      src={user.restaurant_logo} 
+                                      alt="Restaurant Logo"
+                                      className="h-14 w-14 object-contain rounded-lg"
+                                    />
+                                  </>
                                 )}
+                              </div>
+                              <div className="flex flex-col items-center mt-2">
+                                <span className="text-xl font-bold text-black dark:text-white tracking-wide">BASIC</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 tracking-wider">food cost app</span>
                               </div>
                             </div>
                             <div className="w-8"></div>

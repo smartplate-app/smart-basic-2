@@ -1623,6 +1623,11 @@ export default function OrdersPage() {
           )}
         </div>
         )}
+        <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e5e7eb', marginTop: '32px', paddingBottom: '32px' }}>
+          <div style={{ fontSize: '14px', fontWeight: '800', color: '#111827', letterSpacing: '1px' }}>SMART PLATE BASIC</div>
+          <div style={{ fontSize: '9px', marginTop: '2px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>The ultimate food & labor cost app</div>
+          <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: '600', color: '#2563eb' }}>foodcostapp.com</div>
+        </div>
       </div>
 
       {/* Mobile FAB for new order */}
