@@ -182,8 +182,8 @@ export default function OrdersPage() {
         const [ownerSuppliers, ownerStoreSuppliers, ownerOrders, myOrders] = await Promise.all([
           base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
           base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, "name"),
-          base44.entities.Order.filter({ $or: [{ created_by: storeOwnerEmail }, { store_owner_email: storeOwnerEmail }] }, "-created_date", 150),
-          base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date", 150)
+          base44.entities.Order.filter({ $or: [{ created_by: storeOwnerEmail }, { store_owner_email: storeOwnerEmail }] }, "-created_date"),
+          base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date")
         ]);
         suppliersData = [...ownerSuppliers, ...ownerStoreSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         const merged = [...ownerOrders, ...myOrders];
@@ -204,7 +204,7 @@ export default function OrdersPage() {
             base44.entities.Supplier.filter({ store_owner_email: headEmail }, "name"),
             base44.entities.Supplier.filter({ created_by: currentUser.email }, "name"),
             base44.entities.Supplier.filter({ store_owner_email: currentUser.email }, "name"),
-            base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date", 250)
+            base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date")
           ]);
           suppliersData = [...headSuppliers, ...headStoreSuppliers, ...ownSuppliers, ...ownStoreSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
           ordersData = ownOrders;
@@ -219,15 +219,15 @@ export default function OrdersPage() {
           const branchEmails = chainStores.filter(s => !s.is_head_store).map(s => s.user_email);
           
           const orderPromises = [
-            base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date", 150)
+            base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date")
           ];
           for (const email of branchEmails) {
-            orderPromises.push(base44.entities.Order.filter({ $or: [{ created_by: email }, { store_owner_email: email }] }, "-created_date", 150));
+            orderPromises.push(base44.entities.Order.filter({ $or: [{ created_by: email }, { store_owner_email: email }] }, "-created_date"));
           }
           const ordersArrays = await Promise.all(orderPromises);
           allOrders = ordersArrays.flat();
         } else {
-          allOrders = await base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date", 250);
+          allOrders = await base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date");
         }
 
         const [ownSuppliers, storeSuppliers] = await Promise.all([
@@ -242,13 +242,13 @@ export default function OrdersPage() {
       // Always include context user's drafts (supports admin-controlling + sub-users)
       let myDrafts = [];
       try {
-        myDrafts = await base44.entities.Order.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }], status: 'draft' }, "-created_date", 50);
+        myDrafts = await base44.entities.Order.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }], status: 'draft' }, "-created_date");
       } catch (_) { myDrafts = []; }
 
       // Fallback: fetch drafts by status only and filter client-side by creator
       let fallbackDrafts = [];
       try {
-        const draftsByStatus = await base44.entities.Order.filter({ status: 'draft' }, "-created_date", 100);
+        const draftsByStatus = await base44.entities.Order.filter({ status: 'draft' }, "-created_date");
         fallbackDrafts = (draftsByStatus || []).filter(o => o?.created_by === workingEmail);
       } catch (_) { fallbackDrafts = []; }
 
@@ -1037,8 +1037,20 @@ export default function OrdersPage() {
     <div
       dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen bg-[#f8f9fa] p-4 md:p-8 2xl:p-12"
+      onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
+      onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
+      onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); await loadData(user || (await base44.auth.me())); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
     >
       <div className="w-full">
+        {/* Native-style Pull to Refresh Indicator */}
+        <div 
+          className="md:hidden fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none transition-transform" 
+          style={{ transform: `translateY(${refreshing ? 60 : pullDist - 40}px)`, opacity: pullDist > 10 || refreshing ? 1 : 0 }}
+        >
+          <div className="bg-white rounded-full shadow-lg h-10 w-10 flex items-center justify-center border border-gray-100">
+            <Loader className={`w-5 h-5 text-blue-600 ${refreshing ? 'animate-spin' : ''}`} style={{ transform: !refreshing ? `rotate(${pullDist * 2}deg)` : 'none' }} />
+          </div>
+        </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
           <div>
             <h1 className="text-4xl font-extrabold text-[#1a1f36] tracking-tight">{safeT('orders_title', 'ניהול הזמנות', 'Orders Management')}</h1>

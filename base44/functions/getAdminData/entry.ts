@@ -33,8 +33,8 @@ Deno.serve(async (req) => {
                 wasteReports,
                 monthlyDashboardData
             ] = await Promise.all([
-                base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 250),
-                base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 250),
+                base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
+                base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.Item.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.Supplier.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.InventoryCount.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
@@ -85,8 +85,8 @@ Deno.serve(async (req) => {
                 wasteReports,
                 priceChanges
             ] = await Promise.all([
-                base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 250),
-                base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 250),
+                base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
+                base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.Item.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.Supplier.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
                 base44.asServiceRole.entities.InventoryCount.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),

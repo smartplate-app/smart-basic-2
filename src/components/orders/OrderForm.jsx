@@ -44,6 +44,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   const itemsContainerRef = React.useRef(null);
 
   React.useEffect(() => {
+    const handleWindowScroll = () => setShowScrollTop(window.scrollY > 300);
+    window.addEventListener("scroll", handleWindowScroll);
+    return () => window.removeEventListener("scroll", handleWindowScroll);
+  }, []);
+
+  React.useEffect(() => {
     const loadUser = async () => {
       try {
         const user = await base44.auth.me();
@@ -405,12 +411,10 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {t('no_available_items')}
               </div>
             ) : (
-              <div className="relative mt-1 w-full max-w-full" style={{ isolation: 'isolate' }}>
+              <div className="relative">
                 <div 
                   ref={itemsContainerRef}
-                  onScroll={(e) => setShowScrollTop(e.target.scrollTop > 300)}
-                  className="flex flex-col bg-gray-50/50 border rounded-xl shadow-sm gap-1.5 p-2 w-full max-w-full box-border overflow-y-auto overflow-x-hidden scroll-smooth"
-                  style={{ maxHeight: '55vh' }}
+                  className="flex flex-col bg-transparent gap-1.5 pb-6 pt-1 w-full box-border"
                 >
                   {availableItems.filter(i => !itemSearch || i.name?.toLowerCase().includes(itemSearch.toLowerCase()) || i.catalog_number?.toLowerCase().includes(itemSearch.toLowerCase())).map((item) => {
                   const quantity = itemQuantities[item.id] || 0;
@@ -516,8 +520,8 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                 {showScrollTop && (
                   <button
                     type="button"
-                    onClick={() => itemsContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="absolute bottom-4 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-gray-200 text-gray-700 p-3 rounded-full hover:bg-gray-50 transition-all z-40"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="fixed bottom-28 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-gray-200 text-gray-700 p-3 rounded-full hover:bg-gray-50 transition-all z-40"
                     style={{ [language === 'he' ? 'left' : 'right']: '20px' }}
                     title={language === 'he' ? 'חזור למעלה' : 'Scroll to top'}
                   >

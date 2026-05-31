@@ -149,7 +149,8 @@ const [authLoading, setAuthLoading] = useState(() => {
   const timer = setTimeout(() => {
   try {
     if (authLoading && !user) {
-      setAuthLoading(false);
+      sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
+      base44.auth.redirectToLogin(window.location.pathname + window.location.search);
     }
   } catch {}
   }, 8000);
@@ -487,7 +488,30 @@ const [authLoading, setAuthLoading] = useState(() => {
       // Redirect unauthenticated users
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403 || String(err?.message || '').toLowerCase().includes('logged in');
       if (unauthorized) {
-        setAuthLoading(false);
+              if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
+                setAuthLoading(false);
+                try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('code');
+                cleanUrl.searchParams.delete('state');
+                base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+                return;
+              }
+        if (!user) setAuthLoading(false);
+        let cooldownUntil = 0;
+        try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
+        const inCooldown = cooldownUntil > Date.now();
+        const params = new URLSearchParams(window.location.search);
+        const oauthBack = params.has('code') || params.has('state');
+        if (attemptNumber < 2 || (inCooldown && attemptNumber < 4) || (oauthBack && attemptNumber < 5)) {
+          setTimeout(() => loadAuth(attemptNumber + 1), 1200);
+          return;
+        }
+        
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('code');
+        cleanUrl.searchParams.delete('state');
+        base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
         return;
       }
       
