@@ -1749,6 +1749,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             onClick={async () => {
                               const s = availableSuppliers.find(x => x.id === formData.supplier_id);
                               const phone = (s?.phone || "").replace(/\D/g, "");
+                              const targetEmail = s?.email || formData.supplier_email;
                               const creditItems = formData.verified_items.filter(i => i.request_credit_quantity || i.request_credit_price);
                               const rName = user?.business_name || user?.acting_as_store_name || user?.store_user_store_name || user?.full_name || '';
                               let text = language === 'he' 
@@ -1762,37 +1763,30 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               });
                               text += language === 'he' ? "אשמח לטיפולכם ולהפקת חשבונית זיכוי.\n\n" : "Please process a credit invoice.\n\n";
                               text += `${rName}\nהזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n`;
-                              if (s?.email) {
+                              if (targetEmail) {
                                 const logoHtml = user?.restaurant_logo ? `<br/><br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;"/>` : '';
                                 const htmlBody = text.replace(/\n/g, '<br/>') + logoHtml + '<br/><br/><br/><br/><br/><br/><br/><br/>';
-                                // Fire email without awaiting, to ensure the native share sheet fires before Android's user gesture token expires
                                 base44.functions.invoke('sendCreditRequestEmail', {
-                                  to: s.email,
+                                  to: targetEmail,
                                   subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`,
                                   text: text,
                                   html: htmlBody
-                                }).catch((e) => {
-                                  console.error("Error sending credit request email via backend:", e);
-                                });
+                                }).catch((e) => console.error("Error sending credit request email via backend:", e));
                               }
-                              
                               const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
                               const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
-                              
                               if (isMobile && navigator.share) {
                                 try {
-                                  await navigator.share({
-                                    title: language === 'he' ? 'בקשת זיכוי' : 'Credit Request',
-                                    text: text
-                                  });
+                                  await navigator.share({ title: language === 'he' ? 'בקשת זיכוי' : 'Credit Request', text: text });
+                                  if (targetEmail) alert(language === 'he' ? `בקשת הזיכוי נשלחה גם למייל הספק: ${targetEmail}` : `Credit request also sent to supplier email: ${targetEmail}`);
                                   return;
                                 } catch (_) { /* fallback */ }
                               }
-                              
                               window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                              if (targetEmail) setTimeout(() => alert(language === 'he' ? `בקשת הזיכוי נשלחה גם למייל הספק: ${targetEmail}` : `Credit request also sent to supplier email: ${targetEmail}`), 500);
                             }}
                           >
-                            {language === 'he' ? 'שלח בקשת זיכוי לסוכן בהודעה' : 'Send Credit Request (Email & Mobile)'}
+                            {language === 'he' ? 'שלח בקשת זיכוי (אימייל + נייד)' : 'Send Credit Request (Email & Mobile)'}
                           </Button>
                         </div>
                       )}
