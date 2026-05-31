@@ -716,7 +716,7 @@ export default function OrdersPage() {
   const itemsText = (order.items || []).map(it => `• ${it.item_name || it.name || ''} - ${it.quantity} ${unitLabel(it.unit)}`).join('\n');
   
   const text = `${intro}\n\n*${numLbl}:* ${ensuredNumber}\n\n*${safeT('items', 'פריטים', 'Items')}:*\n${itemsText}`;
-    const isAndroid = /Android/i.test(navigator.userAgent || '');
+    const isAndroid = /Android/i.test(navigator.userAgent || '') && !(/iPhone|iPad|iPod/i.test(navigator.userAgent || ''));
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
     // No pre-opened tabs to avoid blockers/new-tab flashes
     const preOpened = null;
