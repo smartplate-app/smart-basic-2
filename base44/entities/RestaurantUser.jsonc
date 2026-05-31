@@ -74,7 +74,7 @@
           "email": "{{user.email}}"
         },
         {
-          "owner_email": "{{user.email}}"
+          "data.owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -89,7 +89,7 @@
           "email": "{{user.email}}"
         },
         {
-          "owner_email": "{{user.email}}"
+          "data.owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -101,7 +101,7 @@
     "delete": {
       "$or": [
         {
-          "owner_email": "{{user.email}}"
+          "data.owner_email": "{{user.email}}"
         },
         {
           "user_condition": {

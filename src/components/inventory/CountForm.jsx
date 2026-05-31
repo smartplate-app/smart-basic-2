@@ -435,7 +435,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       }
       
       workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
-      const fetchedItems = await base44.entities.Item.filter({ created_by: workingEmail }, "name", 10000);
+      const fetchedItems = await base44.entities.Item.filter({ created_by: workingEmail }, "name");
       setItems(fetchedItems || []);
     } catch (e) {
       console.error("Failed to reload items", e);

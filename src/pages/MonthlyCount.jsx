@@ -98,13 +98,13 @@ export default function MonthlyCountPage() {
             }
         } else {
             console.log("[MonthlyCount] Loading counts...");
-            countsData = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date", 10000);
+            countsData = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date");
             await new Promise(resolve => setTimeout(resolve, 500));
             console.log("[MonthlyCount] Loading warehouses...");
-            warehousesData = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name", 10000);
+            warehousesData = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name");
             await new Promise(resolve => setTimeout(resolve, 500));
             console.log("[MonthlyCount] Loading items...");
-            itemsData = await base44.entities.Item.filter({ created_by: userEmail }, "name", 10000);
+            itemsData = await base44.entities.Item.filter({ created_by: userEmail }, "name");
         }
       } catch (e) {
           console.error("Error fetching admin data for counts", e);

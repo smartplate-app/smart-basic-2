@@ -152,19 +152,15 @@ Deno.serve(async (req) => {
     }
 
     // Attach supplier fields
-    const targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
-
     const payload = items.map(it => ({
       ...it,
       supplier_id: supplierId,
       supplier_name: supplierName || '',
       unit: normalizeUnit(it.unit || 'unit'),
-      created_by: targetEmail,
-      store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
     }));
 
-    // Create items (service role so we can set created_by explicitly)
-    const created = await base44.asServiceRole.entities.Item.bulkCreate(payload);
+    // Create items (user-scoped)
+    const created = await base44.entities.Item.bulkCreate(payload);
 
     return Response.json({ success: true, created_count: created.length });
   } catch (error) {
