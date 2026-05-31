@@ -212,7 +212,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
         const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
-        const isAndroid = /Android/i.test(navigator.userAgent || '');
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
+        const isAndroid = /Android/i.test(navigator.userAgent || '') && !isIOS;
 
         const unitLabel = (u) => {
           if (!u) return '';
