@@ -1,25 +1,21 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-  const userEmail = "guestroom@smartplate.org";
+    try {
+        const base44 = createClientFromRequest(req);
+        
+        let adminItem = await base44.asServiceRole.entities.Item.create({
+            name: "Test Admin Item",
+            supplier_id: "test",
+            unit: "unit",
+            created_by: "guestroom@smartplate.org"
+        });
 
-  const suppliersOwner = await base44.asServiceRole.entities.Supplier.filter({
-    store_owner_email: userEmail
-  }, null, 5000);
-  const suppliersCreator = await base44.asServiceRole.entities.Supplier.filter({
-    created_by: userEmail
-  }, null, 5000);
-
-  const suppliers = [...suppliersOwner, ...suppliersCreator];
-  // Deduplicate the array by ID just in case
-  const uniqueSuppliers = Array.from(new Map(suppliers.map(s => [s.id, s])).values());
-
-  const oliphantSuppliers = uniqueSuppliers.filter(s => 
-    s.name && s.name.includes("אוליפנט")
-  );
-
-  return Response.json({
-    oliphantSuppliers
-  });
+        return Response.json({
+            created_by_id: adminItem.created_by_id,
+            success: true
+        });
+    } catch (error) {
+        return Response.json({ error: error.message }, { status: 500 });
+    }
 });
