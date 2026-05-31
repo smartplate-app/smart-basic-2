@@ -67,8 +67,34 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const formDataRef = React.useRef(formData);
   const [dbSavedAt, setDbSavedAt] = useState(null);
   const dirtyItemsRef = React.useRef(new Map());
+  const dirtyMetadataRef = React.useRef(false);
+  const previousMetadataRef = React.useRef({ name: formData.name, count_date: formData.count_date, count_type: formData.count_type, warehouse_id: formData.warehouse_id, warehouse_name: formData.warehouse_name, status: formData.status, notes: formData.notes });
   
   const isCompleted = formData.status === 'completed';
+
+  useEffect(() => {
+    const prev = previousMetadataRef.current;
+    if (
+      prev.name !== formData.name ||
+      prev.count_date !== formData.count_date ||
+      prev.count_type !== formData.count_type ||
+      prev.warehouse_id !== formData.warehouse_id ||
+      prev.warehouse_name !== formData.warehouse_name ||
+      prev.status !== formData.status ||
+      prev.notes !== formData.notes
+    ) {
+      dirtyMetadataRef.current = true;
+      previousMetadataRef.current = {
+        name: formData.name,
+        count_date: formData.count_date,
+        count_type: formData.count_type,
+        warehouse_id: formData.warehouse_id,
+        warehouse_name: formData.warehouse_name,
+        status: formData.status,
+        notes: formData.notes
+      };
+    }
+  }, [formData.name, formData.count_date, formData.count_type, formData.warehouse_id, formData.warehouse_name, formData.status, formData.notes]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -345,11 +371,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       // 2. Auto-save to Database via backend sync function if online
       if (!isOffline && navigator.onLine && currentData.id) {
         const dirtyItems = Array.from(dirtyItemsRef.current.values());
-        if (dirtyItems.length > 0) {
+        const hasDirtyMetadata = dirtyMetadataRef.current;
+        if (dirtyItems.length > 0 || hasDirtyMetadata) {
           if (isSavingRef.current) return;
           isSavingRef.current = true;
           try {
             dirtyItemsRef.current.clear();
+            dirtyMetadataRef.current = false;
             const cleanedDirtyItems = dirtyItems.map(item => ({
               ...item,
               counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
@@ -357,15 +385,27 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               total_cost: Number(item.total_cost) || 0
             }));
 
+            const metadata = hasDirtyMetadata ? {
+              name: currentData.name,
+              count_date: currentData.count_date,
+              count_type: currentData.count_type,
+              warehouse_id: currentData.warehouse_id,
+              warehouse_name: currentData.warehouse_name,
+              status: currentData.status,
+              notes: currentData.notes
+            } : null;
+
             await base44.functions.invoke('syncActiveCountItems', {
               currentCountId: currentData.id,
-              updatedItems: cleanedDirtyItems
+              updatedItems: cleanedDirtyItems,
+              metadata
             });
             setDbSavedAt(new Date());
           } catch (error) {
             console.error("DB Auto-save failed:", error);
             // Restore dirty items if failed
             dirtyItems.forEach(item => dirtyItemsRef.current.set(`${item.item_id}_${item.warehouse_id}`, item));
+            if (hasDirtyMetadata) dirtyMetadataRef.current = true;
           } finally {
             isSavingRef.current = false;
           }
@@ -413,9 +453,30 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               }
             });
             
-            if (changed) {
-              const total = newItems.reduce((sum, item) => sum + (Number(item.total_cost) || 0), 0);
-              return { ...prev, items: newItems, total_inventory_value: total };
+            const metaChanged = !dirtyMetadataRef.current && (
+              (serverData.name !== undefined && serverData.name !== prev.name) ||
+              (serverData.count_date !== undefined && serverData.count_date !== prev.count_date) ||
+              (serverData.count_type !== undefined && serverData.count_type !== prev.count_type) ||
+              (serverData.warehouse_id !== undefined && serverData.warehouse_id !== prev.warehouse_id) ||
+              (serverData.warehouse_name !== undefined && serverData.warehouse_name !== prev.warehouse_name) ||
+              (serverData.status !== undefined && serverData.status !== prev.status) ||
+              (serverData.notes !== undefined && serverData.notes !== prev.notes)
+            );
+
+            if (changed || metaChanged) {
+              const total = changed ? newItems.reduce((sum, item) => sum + (Number(item.total_cost) || 0), 0) : prev.total_inventory_value;
+              return { 
+                ...prev, 
+                items: newItems, 
+                total_inventory_value: total,
+                name: !dirtyMetadataRef.current && serverData.name !== undefined ? serverData.name : prev.name,
+                count_date: !dirtyMetadataRef.current && serverData.count_date !== undefined ? serverData.count_date : prev.count_date,
+                count_type: !dirtyMetadataRef.current && serverData.count_type !== undefined ? serverData.count_type : prev.count_type,
+                warehouse_id: !dirtyMetadataRef.current && serverData.warehouse_id !== undefined ? serverData.warehouse_id : prev.warehouse_id,
+                warehouse_name: !dirtyMetadataRef.current && serverData.warehouse_name !== undefined ? serverData.warehouse_name : prev.warehouse_name,
+                status: !dirtyMetadataRef.current && serverData.status !== undefined ? serverData.status : prev.status,
+                notes: !dirtyMetadataRef.current && serverData.notes !== undefined ? serverData.notes : prev.notes
+              };
             }
             return prev;
           });

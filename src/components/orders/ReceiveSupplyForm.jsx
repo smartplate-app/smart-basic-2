@@ -281,6 +281,13 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     return v;
   };
 
+  const getUnitLabel = (u) => {
+    if (!u) return '';
+    if (language !== 'he') return u;
+    const map = { unit: 'יחידה', liter: 'ליטר', kg: 'ק״ג', case: 'ארגז', gram: 'גרם', ml: 'מ״ל' };
+    return map[u] || u;
+  };
+
   // Detect PDF URLs (handles query strings)
   const isPdfUrl = (u) => {
     try { return /\.pdf(\?|$)/i.test(String(u || '')); } catch { return false; }
@@ -1653,8 +1660,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                             <div className="mt-0.5 px-1 text-[9px] sm:text-[10px] text-purple-700 font-medium leading-none">
                                               {language === 'he' ? 'לא הוזמן במקור' : 'Not ordered'}
                                             </div>
-                                          )}
-                                        </td>
+                                            )}
+                                            <div className="mt-0.5 px-1 text-[10px] sm:text-[11px] text-gray-500">{getUnitLabel(item.unit)}</div>
+                                            </td>
                                         <td className="px-0.5 sm:px-2 py-1 sm:py-2 align-middle">
                                           <Input
                                             type="number"

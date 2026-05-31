@@ -20,6 +20,13 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     return (v === key || !v) ? (en ?? key) : v;
   };
 
+  const getUnitLabel = (u) => {
+    if (!u) return '';
+    if (language !== 'he') return u;
+    const map = { unit: 'יחידה', liter: 'ליטר', kg: 'ק״ג', case: 'ארגז', gram: 'גרם', ml: 'מ״ל' };
+    return map[u] || u;
+  };
+
   const [currentOrder, setCurrentOrder] = React.useState(order || {
     supplier_id: "",
     supplier_name: "",
@@ -443,7 +450,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                             {item.nickname && <span className="text-[11px] text-gray-500 font-normal ml-1">({item.name})</span>}
                           </h4>
                           <div className="text-[11px] text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-1">
-                            <span>{item.unit}</span>
+                            <span>{getUnitLabel(item.unit)}</span>
                             {item.price > 0 && (
                               <span>
                                 {' • '}₪{item.price.toFixed(2)}
@@ -566,7 +573,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                         <div key={item.id} className="flex justify-between items-center border-b border-gray-200 py-1.5 last:border-0">
                           <div className="flex-1">
                             <span className="font-semibold text-gray-800">{item.name}</span>
-                            <div className="text-xs text-gray-500">{qty} {item.unit} x ₪{(item.price * (1 - (item.discount || 0) / 100)).toFixed(2)}</div>
+                            <div className="text-xs text-gray-500">{qty} {getUnitLabel(item.unit)} x ₪{(item.price * (1 - (item.discount || 0) / 100)).toFixed(2)}</div>
                           </div>
                           <span className="font-bold text-purple-700">₪{discountedTotal.toFixed(2)}</span>
                         </div>

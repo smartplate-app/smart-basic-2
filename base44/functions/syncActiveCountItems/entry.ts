@@ -8,9 +8,9 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { currentCountId, updatedItems } = await req.json();
+        const { currentCountId, updatedItems, metadata } = await req.json();
 
-        if (!updatedItems || updatedItems.length === 0) {
+        if ((!updatedItems || updatedItems.length === 0) && !metadata) {
             return Response.json({ success: true });
         }
 
@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
             let changed = false;
 
             // Apply updates
-            for (const updatedItem of updatedItems) {
+            for (const updatedItem of (updatedItems || [])) {
                 let found = false;
                 items = items.map(existingItem => {
                     if (existingItem.item_id === updatedItem.item_id && existingItem.warehouse_id === updatedItem.warehouse_id) {
@@ -59,10 +59,11 @@ Deno.serve(async (req) => {
 
             if (changed || count.id === currentCountId) { // Always update the current one to update saved timestamp
                 const total_inventory_value = items.reduce((sum, i) => sum + (Number(i.total_cost) || 0), 0);
-                await base44.asServiceRole.entities.InventoryCount.update(count.id, {
-                    items,
-                    total_inventory_value,
-                });
+                const updates = { items, total_inventory_value };
+                if (count.id === currentCountId && metadata) {
+                    Object.assign(updates, metadata);
+                }
+                await base44.asServiceRole.entities.InventoryCount.update(count.id, updates);
             }
         });
 

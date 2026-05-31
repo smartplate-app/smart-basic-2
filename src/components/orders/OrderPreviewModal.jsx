@@ -285,29 +285,33 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         if (isMobile) {
           // Android APK fallback: deep links (wa.me) CANNOT carry files, so we MUST copy the image to the clipboard first.
           if (isAndroid) {
+            let clipboardSuccess = false;
+            let imageUrl = null;
             try {
-              await navigator.clipboard.write([
-                new ClipboardItem({ 'image/png': blob })
-              ]);
-              
-              setPasteGuideUrl(waUrl);
-
-              // Download the image silently in the background
-              try {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `order-${number}.png`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
-              } catch (e) {}
-
-              return; // Wait for user to click the modal
+              if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+                await navigator.clipboard.write([
+                  new ClipboardItem({ 'image/png': blob })
+                ]);
+                clipboardSuccess = true;
+              }
             } catch (err) {
               console.warn("Android clipboard copy failed", err);
             }
+            
+            try {
+              imageUrl = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = imageUrl;
+              a.download = `order-${number}.png`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+            } catch (e) {}
+
+            // Always show the popup on Android WebViews so the user can see what to do,
+            // and we'll display the image so they can long-press to share it if download failed.
+            setPasteGuideUrl({ waUrl, clipboardSuccess, imageUrl });
+            return; // Wait for user to click the modal
           }
 
           // Mobile fallback: deep links (wa.me) using window.location.href (works in APK WebViews)
@@ -703,34 +707,70 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
       {/* Really Big Android Paste Guide Popup */}
       {pasteGuideUrl && (
-        <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/90 z-[200] flex flex-col items-center justify-center p-4 overflow-y-auto">
           <motion.div 
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100"
+            className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100 my-auto"
             dir={language === 'he' ? 'rtl' : 'ltr'}
           >
-            <div className="w-24 h-24 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Check className="w-12 h-12 text-[#25D366]" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 sm:w-10 sm:h-10 text-[#25D366]" />
             </div>
-            <h2 className="text-3xl font-black mb-4 text-gray-900 leading-tight tracking-tight">
-              {language === 'he' ? 'התמונה הועתקה!' : 'Image Copied!'}
+            <h2 className="text-2xl sm:text-3xl font-black mb-3 text-gray-900 leading-tight tracking-tight">
+              {pasteGuideUrl.clipboardSuccess 
+                ? (language === 'he' ? 'התמונה הועתקה!' : 'Image Copied!') 
+                : (language === 'he' ? 'התמונה מוכנה!' : 'Image Ready!')}
             </h2>
-            <p className="text-xl text-gray-600 mb-8 font-medium leading-relaxed">
-              {language === 'he' ? 'בוואטסאפ, לחץ לחיצה ארוכה על שורת ההודעה ובחר ' : 'In WhatsApp, long-press the message box and select '}
-              <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״הדבק״' : '"Paste"'}</strong>
-              {language === 'he' ? ' כדי לצרף את ההזמנה.' : ' to attach the order.'}
+            
+            <p className="text-lg sm:text-xl text-gray-600 mb-6 font-medium leading-relaxed">
+              {pasteGuideUrl.clipboardSuccess ? (
+                <>
+                  {language === 'he' ? 'בוואטסאפ, לחץ לחיצה ארוכה על שורת ההודעה ובחר ' : 'In WhatsApp, long-press the message box and select '}
+                  <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״הדבק״' : '"Paste"'}</strong>
+                  {language === 'he' ? ' כדי לצרף את ההזמנה.' : ' to attach the order.'}
+                </>
+              ) : (
+                <>
+                  {language === 'he' ? 'התמונה הורדה לטלפון. בוואטסאפ, לחץ על האטב/פלוס ובחר ב' : 'Image downloaded. In WhatsApp, tap attachment/plus and select '}
+                  <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״גלריה״' : '"Gallery"'}</strong>
+                  {language === 'he' ? ' כדי לצרף את ההזמנה שירדה.' : ' to attach the order.'}
+                </>
+              )}
             </p>
-            <Button 
-              className="w-full h-16 text-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95"
-              onClick={() => {
-                window.open(pasteGuideUrl, '_blank');
-                setPasteGuideUrl(null);
-              }}
-            >
-              <MessageCircle className={`w-7 h-7 ${language === 'he' ? 'ml-3' : 'mr-3'}`} />
-              {language === 'he' ? 'הבנתי, פתח וואטסאפ' : 'Got it, Open WhatsApp'}
-            </Button>
+
+            {!pasteGuideUrl.clipboardSuccess && pasteGuideUrl.imageUrl && (
+              <div className="mb-6 relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-inner">
+                <p className="text-xs text-gray-500 mb-2 mt-2 font-medium">
+                  {language === 'he' ? 'אם ההורדה נכשלה, אפשר ללחוץ ארוכות על התמונה כאן ולבחור ״שתף תמונה״' : 'If download failed, long press here and select "Share Image"'}
+                </p>
+                <img src={pasteGuideUrl.imageUrl} alt="Order Preview" className="w-full max-h-[250px] object-contain mx-auto" />
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3">
+              <Button 
+                className="w-full h-14 sm:h-16 text-lg sm:text-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95"
+                onClick={() => {
+                  window.open(pasteGuideUrl.waUrl, '_blank');
+                  if (pasteGuideUrl.imageUrl) window.URL.revokeObjectURL(pasteGuideUrl.imageUrl);
+                  setPasteGuideUrl(null);
+                }}
+              >
+                <MessageCircle className={`w-6 h-6 sm:w-7 sm:h-7 ${language === 'he' ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'}`} />
+                {language === 'he' ? 'הבנתי, פתח וואטסאפ' : 'Got it, Open WhatsApp'}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  if (pasteGuideUrl.imageUrl) window.URL.revokeObjectURL(pasteGuideUrl.imageUrl);
+                  setPasteGuideUrl(null);
+                }}
+                className="text-gray-500 hover:bg-gray-100 h-12"
+              >
+                {safeT('close', 'סגור', 'Close')}
+              </Button>
+            </div>
           </motion.div>
         </div>
       )}
