@@ -1763,18 +1763,17 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               text += language === 'he' ? "אשמח לטיפולכם ולהפקת חשבונית זיכוי.\n\n" : "Please process a credit invoice.\n\n";
                               text += `${rName}\nהזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n`;
                               if (s?.email) {
-                                try {
-                                  const logoHtml = user?.restaurant_logo ? `<br/><br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;"/>` : '';
-                                  const htmlBody = text.replace(/\n/g, '<br/>') + logoHtml + '<br/><br/><br/><br/><br/><br/><br/><br/>';
-                                  await base44.functions.invoke('sendCreditRequestEmail', {
-                                    to: s.email,
-                                    subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`,
-                                    text: text,
-                                    html: htmlBody
-                                  });
-                                } catch (e) {
+                                const logoHtml = user?.restaurant_logo ? `<br/><br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;"/>` : '';
+                                const htmlBody = text.replace(/\n/g, '<br/>') + logoHtml + '<br/><br/><br/><br/><br/><br/><br/><br/>';
+                                // Fire email without awaiting, to ensure the native share sheet fires before Android's user gesture token expires
+                                base44.functions.invoke('sendCreditRequestEmail', {
+                                  to: s.email,
+                                  subject: language === 'he' ? `בקשת זיכוי - חשבונית ${formData.invoice_number || 'ללא מספר'}` : `Credit Request - Invoice ${formData.invoice_number || 'N/A'}`,
+                                  text: text,
+                                  html: htmlBody
+                                }).catch((e) => {
                                   console.error("Error sending credit request email via backend:", e);
-                                }
+                                });
                               }
                               
                               const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
