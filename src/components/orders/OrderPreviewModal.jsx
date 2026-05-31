@@ -212,20 +212,43 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
         const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
+        const isAndroid = /Android/i.test(navigator.userAgent || '');
 
+        const unitLabel = (u) => {
+          if (!u) return '';
+          if (language !== 'he') return u;
+          const map = { unit: 'יחידות', liter: 'ליטר', kg: 'ק״ג', case: 'ארגזים', gram: 'גרם', ml: 'מ״ל' };
+          return map[u] || u;
+        };
+        const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
+        const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
+        const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${unitLabel(it.unit || it.u || '')}`).join('\\n');
+        const shareText = `${intro}\\n\\n*${numLbl}:* ${number}\\n\\n*${safeT('items', 'פריטים', 'Items')}:*\\n${itemsText}`;
+
+        const rawPhone = String(order.supplier_phone || '').trim();
+        let phone = '';
+        if (rawPhone) {
+          phone = rawPhone.replace(/[^\\d+]/g, '');
+          if (phone.startsWith('+')) phone = phone.slice(1);
+          if (phone.startsWith('00')) phone = phone.slice(2);
+        }
+
+        // 1) Android APKs struggle with share sheet image support: directly open WhatsApp
+        if (isAndroid) {
+          setDownloading(false);
+          let formattedPhone = phone;
+          if (formattedPhone && formattedPhone.startsWith('0')) {
+             formattedPhone = '972' + formattedPhone.slice(1);
+          }
+          const waUrl = formattedPhone 
+            ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
+            : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+          window.location.href = waUrl;
+          return;
+        }
+
+        // 2) iOS / Mobile Safari: Attempt to use the native share sheet
         if (isMobile && navigator.share) {
-          const unitLabel = (u) => {
-            if (!u) return '';
-            if (language !== 'he') return u;
-            const map = { unit: 'יחידות', liter: 'ליטר', kg: 'ק״ג', case: 'ארגזים', gram: 'גרם', ml: 'מ״ל' };
-            return map[u] || u;
-          };
-          
-          const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
-          const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
-          const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${unitLabel(it.unit || it.u || '')}`).join('\\n');
-          const shareText = `${intro}\\n\\n*${numLbl}:* ${number}\\n\\n*${safeT('items', 'פריטים', 'Items')}:*\\n${itemsText}`;
-
           try {
             if (!navigator.canShare || navigator.canShare({ files: [file] })) {
               setDownloading(false);
@@ -254,7 +277,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           }
         }
 
-        // Desktop devices: save to clipboard and open WhatsApp Web
+        // 3) Desktop devices: save to clipboard and open WhatsApp Web
         if (!isMobile) {
           try {
             await navigator.clipboard.write([

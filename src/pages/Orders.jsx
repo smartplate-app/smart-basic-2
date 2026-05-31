@@ -728,6 +728,7 @@ export default function OrdersPage() {
       let p = rawPhone.replace(/[^\d+]/g, '');
       if (p.startsWith('+')) p = p.slice(1);
       if (p.startsWith('00')) p = p.slice(2);
+      if (p.startsWith('0')) p = '972' + p.slice(1);
       return p; // E.164 without '+' if possible
     })();
 
