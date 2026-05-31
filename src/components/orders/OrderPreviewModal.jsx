@@ -217,10 +217,22 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           try {
             if (!navigator.canShare || navigator.canShare({ files: [file] })) {
               setDownloading(false);
+              const unitLabel = (u) => {
+                if (!u) return '';
+                if (language !== 'he') return u;
+                const map = { unit: 'יחידות', liter: 'ליטר', kg: 'ק״ג', case: 'ארגזים', gram: 'גרם', ml: 'מ״ל' };
+                return map[u] || u;
+              };
+              
+              const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
+              const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
+              const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${unitLabel(it.unit || it.u || '')}`).join('\\n');
+              const shareText = `${intro}\\n\\n*${numLbl}:* ${number}\\n\\n*${safeT('items', 'פריטים', 'Items')}:*\\n${itemsText}`;
+
               await navigator.share({ 
                 files: [file], 
                 title: `Order #${number}`,
-                text: language === 'he' ? `הזמנה ממסעדת ${order.restaurant_name || ''}` : `Order from ${order.restaurant_name || ''}`
+                text: shareText
               });
               return;
             }
