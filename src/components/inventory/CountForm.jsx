@@ -74,29 +74,27 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
   useEffect(() => {
     const prev = previousMetadataRef.current;
-    const isNewCount = !formData.id;
-    
-    const nameChanged = prev.name !== formData.name;
-    const dateChanged = prev.count_date !== formData.count_date;
-    const typeChanged = prev.count_type !== formData.count_type;
-    const notesChanged = prev.notes !== formData.notes;
-    const statusChanged = prev.status !== formData.status;
-    const whChanged = prev.warehouse_id !== formData.warehouse_id || prev.warehouse_name !== formData.warehouse_name;
-
-    if (nameChanged || dateChanged || typeChanged || notesChanged || statusChanged || (!isNewCount && whChanged)) {
+    if (
+      prev.name !== formData.name ||
+      prev.count_date !== formData.count_date ||
+      prev.count_type !== formData.count_type ||
+      prev.warehouse_id !== formData.warehouse_id ||
+      prev.warehouse_name !== formData.warehouse_name ||
+      prev.status !== formData.status ||
+      prev.notes !== formData.notes
+    ) {
       dirtyMetadataRef.current = true;
+      previousMetadataRef.current = {
+        name: formData.name,
+        count_date: formData.count_date,
+        count_type: formData.count_type,
+        warehouse_id: formData.warehouse_id,
+        warehouse_name: formData.warehouse_name,
+        status: formData.status,
+        notes: formData.notes
+      };
     }
-
-    previousMetadataRef.current = {
-      name: formData.name,
-      count_date: formData.count_date,
-      count_type: formData.count_type,
-      warehouse_id: formData.warehouse_id,
-      warehouse_name: formData.warehouse_name,
-      status: formData.status,
-      notes: formData.notes
-    };
-  }, [formData.id, formData.name, formData.count_date, formData.count_type, formData.warehouse_id, formData.warehouse_name, formData.status, formData.notes]);
+  }, [formData.name, formData.count_date, formData.count_type, formData.warehouse_id, formData.warehouse_name, formData.status, formData.notes]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -278,6 +276,59 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     setFormData(prev => ({ ...prev, total_inventory_value: total }));
   }, [formData.items]);
 
+  // Create initial draft immediately on mount if it's a new count
+  useEffect(() => {
+    let isMounted = true;
+    if (!formDataRef.current.id && !isOffline && navigator.onLine) {
+      const createInitialDraft = async () => {
+        try {
+          if (isSavingRef.current) return;
+          isSavingRef.current = true;
+          
+          const currentData = formDataRef.current;
+          const cleanedData = {
+            ...currentData,
+            warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
+            items: currentData.items.map(item => ({
+              ...item,
+              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+              total_cost: Number(item.total_cost) || 0
+            }))
+          };
+          
+          const { data } = await base44.functions.invoke('getOrCreateCountDraft', cleanedData);
+          if (data?.success && data.count) {
+            if (isMounted) {
+              setFormData(prev => {
+                // If it's an existing draft, merge the items from the server
+                if (!data.isNew && data.count.items && data.count.items.length > 0) {
+                  // Keep our local items but add any missing from server
+                  const mergedItems = [...prev.items];
+                  data.count.items.forEach(serverItem => {
+                    const exists = mergedItems.find(i => i.item_id === serverItem.item_id && i.warehouse_id === serverItem.warehouse_id);
+                    if (!exists) {
+                      mergedItems.push(serverItem);
+                    }
+                  });
+                  return { ...prev, id: data.count.id, items: mergedItems, total_inventory_value: data.count.total_inventory_value };
+                }
+                return { ...prev, id: data.count.id };
+              });
+              setDbSavedAt(new Date());
+            }
+          }
+        } catch (error) {
+          console.error("Initial draft creation failed:", error);
+        } finally {
+          isSavingRef.current = false;
+        }
+      };
+      createInitialDraft();
+    }
+    return () => { isMounted = false; };
+  }, [isOffline, language]);
+
   // Handle unmount explicit save (e.g. switching tabs or clicking X)
   useEffect(() => {
     return () => {
@@ -318,90 +369,52 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       }
 
       // 2. Auto-save to Database via backend sync function if online
-      if (!isOffline && navigator.onLine) {
-        if (!currentData.id) {
-          // Creating a new count only when there is dirty data
-          const dirtyItems = Array.from(dirtyItemsRef.current.values());
-          const hasDirtyMetadata = dirtyMetadataRef.current;
-          if (dirtyItems.length > 0 || hasDirtyMetadata) {
-            if (isSavingRef.current) return;
-            isSavingRef.current = true;
-            try {
-              dirtyItemsRef.current.clear();
-              dirtyMetadataRef.current = false;
+      if (!isOffline && navigator.onLine && currentData.id) {
+        const dirtyItems = Array.from(dirtyItemsRef.current.values());
+        const hasDirtyMetadata = dirtyMetadataRef.current;
+        if (dirtyItems.length > 0 || hasDirtyMetadata) {
+          if (isSavingRef.current) return;
+          isSavingRef.current = true;
+          try {
+            dirtyItemsRef.current.clear();
+            dirtyMetadataRef.current = false;
+            const cleanedDirtyItems = dirtyItems.map(item => ({
+              ...item,
+              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+              total_cost: Number(item.total_cost) || 0
+            }));
 
-              const cleanedData = {
-                ...currentData,
-                warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
-                items: currentData.items.map(item => ({
-                  ...item,
-                  counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-                  price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-                  total_cost: Number(item.total_cost) || 0
-                }))
-              };
+            const metadata = hasDirtyMetadata ? {
+              name: currentData.name,
+              count_date: currentData.count_date,
+              count_type: currentData.count_type,
+              warehouse_id: currentData.warehouse_id,
+              warehouse_name: currentData.warehouse_name,
+              status: currentData.status,
+              notes: currentData.notes
+            } : null;
 
-              const created = await base44.entities.InventoryCount.create(cleanedData);
-              if (created && created.id) {
-                setFormData(prev => ({ ...prev, id: created.id }));
-                setDbSavedAt(new Date());
-              }
-            } catch (err) {
-              console.error("DB Auto-create failed:", err);
-              dirtyItems.forEach(item => dirtyItemsRef.current.set(`${item.item_id}_${item.warehouse_id}`, item));
-              if (hasDirtyMetadata) dirtyMetadataRef.current = true;
-            } finally {
-              isSavingRef.current = false;
-            }
-          }
-        } else {
-          // Existing count sync logic
-          const dirtyItems = Array.from(dirtyItemsRef.current.values());
-          const hasDirtyMetadata = dirtyMetadataRef.current;
-          if (dirtyItems.length > 0 || hasDirtyMetadata) {
-            if (isSavingRef.current) return;
-            isSavingRef.current = true;
-            try {
-              dirtyItemsRef.current.clear();
-              dirtyMetadataRef.current = false;
-              const cleanedDirtyItems = dirtyItems.map(item => ({
-                ...item,
-                counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-                price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-                total_cost: Number(item.total_cost) || 0
-              }));
-
-              const metadata = hasDirtyMetadata ? {
-                name: currentData.name,
-                count_date: currentData.count_date,
-                count_type: currentData.count_type,
-                warehouse_id: currentData.warehouse_id,
-                warehouse_name: currentData.warehouse_name,
-                status: currentData.status,
-                notes: currentData.notes
-              } : null;
-
-              await base44.functions.invoke('syncActiveCountItems', {
-                currentCountId: currentData.id,
-                updatedItems: cleanedDirtyItems,
-                metadata
-              });
-              setDbSavedAt(new Date());
-            } catch (error) {
-              console.error("DB Auto-save failed:", error);
-              // Restore dirty items if failed
-              dirtyItems.forEach(item => dirtyItemsRef.current.set(`${item.item_id}_${item.warehouse_id}`, item));
-              if (hasDirtyMetadata) dirtyMetadataRef.current = true;
-            } finally {
-              isSavingRef.current = false;
-            }
+            await base44.functions.invoke('syncActiveCountItems', {
+              currentCountId: currentData.id,
+              updatedItems: cleanedDirtyItems,
+              metadata
+            });
+            setDbSavedAt(new Date());
+          } catch (error) {
+            console.error("DB Auto-save failed:", error);
+            // Restore dirty items if failed
+            dirtyItems.forEach(item => dirtyItemsRef.current.set(`${item.item_id}_${item.warehouse_id}`, item));
+            if (hasDirtyMetadata) dirtyMetadataRef.current = true;
+          } finally {
+            isSavingRef.current = false;
           }
         }
       }
     }, 1500);
 
     return () => clearInterval(timer);
-  }, [isOffline, language]);
+  }, [isOffline]);
 
   // Real-time collaborative sync subscription
   useEffect(() => {
@@ -430,7 +443,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 const incomingTime = serverItem.last_updated_at || 0;
                 const localTime = localItem.last_updated_at || 0;
                 
-                if (incomingTime >= localTime && (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes || localItem.counted_cases !== serverItem.counted_cases || localItem.counted_units !== serverItem.counted_units)) {
+                if (incomingTime >= localTime && (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes)) {
                   newItems[localIndex] = { ...localItem, ...serverItem };
                   changed = true;
                 }

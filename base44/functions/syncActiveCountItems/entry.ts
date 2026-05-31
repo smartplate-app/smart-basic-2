@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
                         const existingTime = existingItem.last_updated_at || 0;
                         
                         // Only update if incoming is newer or equal
-                        if (incomingTime >= existingTime && (existingItem.counted_quantity !== updatedItem.counted_quantity || existingItem.notes !== updatedItem.notes || existingItem.counted_cases !== updatedItem.counted_cases || existingItem.counted_units !== updatedItem.counted_units)) {
+                        if (incomingTime >= existingTime && (existingItem.counted_quantity !== updatedItem.counted_quantity || existingItem.notes !== updatedItem.notes)) {
                             changed = true;
                             return { ...existingItem, ...updatedItem };
                         }
