@@ -6,6 +6,7 @@ import { useLanguage } from '../LanguageProvider';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, hideActions = false }) {
   const { t, language } = useLanguage();
@@ -217,7 +218,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       // Convert to blob and try to copy to clipboard
       canvas.toBlob(async (blob) => {
         const number = ensuredNumber;
-        const file = new File([blob], `order-${number}.png`, { type: 'image/png' });
+        const file = new File([blob], `order-${number}.jpg`, { type: 'image/jpeg' });
 
         const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
@@ -229,8 +230,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
         const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
         const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
-        const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${getUnitLabel(it.unit || it.u || '')}`).join('\\n');
-        const shareText = `${intro}\\n\\n*${numLbl}:* ${number}\\n\\n*${safeT('items', 'פריטים', 'Items')}:*\\n${itemsText}`;
+        const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${getUnitLabel(it.unit || it.u || '')}`).join('\n');
+        const shareText = `${intro}\n\n*${numLbl}:* ${number}\n\n*${safeT('items', 'פריטים', 'Items')}:*\n${itemsText}`;
 
         const rawPhone = String(order.supplier_phone || '').trim();
         let phone = '';
@@ -257,93 +258,72 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
               await navigator.share({ 
                 files: [file], 
-                title: `Order #${number}`,
+                title: language === 'he' ? 'הזמנה לספק' : `Order #${number}`,
                 text: shareText
               });
               return;
             } else {
-              await navigator.share({ text: shareText });
-              return;
+              // Instead of sharing plain text, fallback to Android deep link with image copy/download
+              throw new Error("Cannot share file natively");
             }
           } catch (e) {
             console.error('Share failed', e);
             if (e.name === 'AbortError') {
+              setDownloading(false);
               return; // User cancelled the share sheet manually
             }
-            // If it failed for another reason, try text-only share as a last resort
-            try {
-              await navigator.share({ text: shareText });
-              return;
-            } catch (err2) {
-              if (err2.name === 'AbortError') return;
-              // Fallthrough to WhatsApp deep link
-            }
+            // Fallthrough to image download/clipboard guide instead of plain text sharing
           }
         }
 
         // 2) Fallbacks if native share is not available or failed
         if (isMobile) {
-          // Android APK fallback: deep links (wa.me) CANNOT carry files, so we MUST copy the image to the clipboard first.
-          if (isAndroid) {
-            let clipboardSuccess = false;
-            let imageUrl = null;
-            try {
-              if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
-                await navigator.clipboard.write([
-                  new ClipboardItem({ 'image/png': blob })
-                ]);
-                clipboardSuccess = true;
-              }
-            } catch (err) {
-              console.warn("Android clipboard copy failed", err);
-            }
-            
-            try {
-              imageUrl = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = imageUrl;
-              a.download = `order-${number}.png`;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-            } catch (e) {}
-
-            // Always show the popup on Android WebViews so the user can see what to do,
-            // and we'll display the image so they can long-press to share it if download failed.
-            setPasteGuideUrl({ waUrl, clipboardSuccess, imageUrl });
-            return; // Wait for user to click the modal
-          }
-
-          // Mobile fallback: deep links (wa.me) using window.location.href (works in APK WebViews)
-          window.location.href = waUrl;
-          
-          // Download the image silently in the background
+          let clipboardSuccess = false;
+          let imageUrl = null;
           try {
-            const url = window.URL.createObjectURL(blob);
+            if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+              await navigator.clipboard.write([
+                new ClipboardItem({ 'image/jpeg': blob })
+              ]);
+              clipboardSuccess = true;
+            }
+          } catch (err) {
+            console.warn("Clipboard copy failed", err);
+          }
+          
+          try {
+            imageUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `order-${number}.png`;
+            a.href = imageUrl;
+            a.download = `order-${number}.jpg`;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             a.remove();
+            
+            // Show toast in case it wasn't intercepted by the paste guide
+            toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
           } catch (e) {}
+
+          setPasteGuideUrl({ waUrl, clipboardSuccess, imageUrl });
+          return; // Wait for user to click the modal
         } else {
           // Desktop fallback: copy to clipboard and open WhatsApp Web
           try {
             await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': blob })
+              new ClipboardItem({ 'image/jpeg': blob })
             ]);
           } catch (err) {
             console.error('Clipboard copy failed', err);
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `order-${number}.png`;
+            a.download = `order-${number}.jpg`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
             a.remove();
+            
+            toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
           }
 
           const whatsappUrl = formattedPhone 
@@ -354,7 +334,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         }
         return;
 
-      }, 'image/png', 1.0);
+      }, 'image/jpeg', 0.95);
 
     } catch (err) {
       console.error('Failed to process image:', err);
