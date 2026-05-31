@@ -276,6 +276,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         setDownloading(false);
         
         if (isMobile) {
+          // Android APK fallback: deep links (wa.me) CANNOT carry files, so we MUST copy the image to the clipboard first.
+          if (isAndroid) {
+            try {
+              await navigator.clipboard.write([
+                new ClipboardItem({ 'image/png': blob })
+              ]);
+              alert(language === 'he' ? 'ההזמנה הועתקה כתמונה! לחץ על שורת ההודעה והדבק אותה בשיחה (Paste).' : 'Order copied as image! Tap the message box and paste it in the chat.');
+            } catch (err) {
+              console.warn("Android clipboard copy failed", err);
+            }
+          }
+
           // APK fallback: Open WhatsApp directly using window.open
           const waUrl = formattedPhone 
             ? `https://wa.me/${encodeURIComponent(formattedPhone)}?text=${encodeURIComponent(shareText)}`
