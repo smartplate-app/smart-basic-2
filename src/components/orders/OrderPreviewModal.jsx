@@ -560,6 +560,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
                           {/* Footer */}
                           <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                              <img 
+                                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                                alt="Smart Plate"
+                                style={{ height: '40px', objectFit: 'contain', margin: '0 auto 6px' }}
+                              />
                               <div style={{ fontSize: '14px', fontWeight: 800, color: '#111827', letterSpacing: '1px' }}>SMART PLATE BASIC</div>
                               <div style={{ fontSize: '9px', marginTop: '2px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>The ultimate food & labor cost app</div>
                               <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: 600, color: '#2563eb' }}>foodcostapp.com</div>
