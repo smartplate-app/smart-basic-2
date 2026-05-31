@@ -228,11 +228,24 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       if (phone.startsWith('+')) phone = phone.slice(1);
       if (phone.startsWith('00')) phone = phone.slice(2);
       if (phone && phone.startsWith('0')) phone = '972' + phone.slice(1);
-      const waUrl = phone 
-        ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(intro)}`
-        : `https://wa.me/?text=${encodeURIComponent(intro)}`;
+
+      toast.loading(language === 'he' ? 'מעלה תמונה...' : 'Uploading image...', { id: 'upload_image' });
+      let uploadedUrl = null;
+      try {
+        const uploadRes = await base44.integrations.Core.UploadFile({ file });
+        uploadedUrl = uploadRes.file_url;
+        toast.dismiss('upload_image');
+      } catch (err) {
+        console.error('Failed to upload image:', err);
+        toast.dismiss('upload_image');
+      }
 
       setDownloading(false);
+
+      const textWithLink = uploadedUrl ? `${intro}\n\n${uploadedUrl}` : intro;
+      const waUrlWithLink = phone 
+        ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(textWithLink)}`
+        : `https://wa.me/?text=${encodeURIComponent(textWithLink)}`;
 
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       const isAndroid = /Android/i.test(navigator.userAgent || '');
@@ -255,31 +268,34 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       } 
       
       if (!shareSucceeded) {
-        const imageUrl = window.URL.createObjectURL(blob);
-        
-        // Explicitly force the file download so it is saved to the gallery
-        const a = document.createElement('a');
-        a.href = imageUrl;
-        a.download = `order_${safeName}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        
         if (isMobile) {
-          // Show the popup guide with the WhatsApp button
+          // If we successfully got a public URL, we can just show the paste guide or open WA directly
+          // but since they prefer the image, if native share failed, we'll let them copy/download it.
+          const imageUrl = window.URL.createObjectURL(blob);
           setPasteGuideUrl({ 
             clipboardSuccess: false, 
-            imageUrl, 
-            waUrl 
+            imageUrl: uploadedUrl || imageUrl, 
+            waUrl: waUrlWithLink 
           });
         } else {
           // Desktop fallback
-          setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
-          toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
-          
-          window.open(phone 
-            ? `https://web.whatsapp.com/send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(intro)}` 
-            : `https://web.whatsapp.com/send?text=${encodeURIComponent(intro)}`, '_blank');
+          if (uploadedUrl) {
+            window.open(uploadedUrl, '_blank');
+            setTimeout(() => {
+              window.open(waUrlWithLink, '_blank');
+            }, 500);
+          } else {
+            const imageUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = imageUrl;
+            a.download = `order_${safeName}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
+            window.open(waUrlWithLink, '_blank');
+          }
+          toast.success(language === 'he' ? 'התמונה מוכנה - עבור לווצאפ' : 'Image ready - switch to WhatsApp');
         }
       }
 
@@ -291,135 +307,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
 
 
-        // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
-        const handleDownloadJPG = async () => {
-          try {
-            setDownloading(true);
-            const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-
-            const tempContainer = document.createElement('div');
-            tempContainer.style.position = 'fixed';
-            tempContainer.style.left = '-9999px';
-            tempContainer.style.top = '0';
-            tempContainer.style.width = '430px'; // Mobile width ratio
-            tempContainer.style.background = 'white';
-            tempContainer.style.padding = '40px';
-            tempContainer.style.fontFamily = 'system-ui, sans-serif';
-            tempContainer.style.direction = language === 'he' ? 'rtl' : 'ltr';
-
-            tempContainer.innerHTML = `
-              <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);">
-                <div style="background: white; color: #111827; padding: 24px 16px 16px; text-align: center; border-bottom: 1px solid #f3f4f6;">
-                  <h1 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.025em; word-break: break-word;">
-                    ${order.supplier_name}
-                  </h1>
-                  <div style="display: inline-block; background: #f3f4f6; padding: 4px 12px; border-radius: 9999px; font-size: 14px; color: #4b5563; font-weight: 500;">
-                    ${language === 'he' ? 'הזמנה' : 'Order'} <span dir="ltr" style="display: inline-block;">#${ensuredNumber}</span>
-                  </div>
-                </div>
-                
-                <div style="padding: 24px;">
-                  <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; font-size: 14px; color: #4b5563;">
-                    <div style="display: flex; justify-content: space-between;">
-                      <span>${language === 'he' ? 'מאת:' : 'From:'}</span>
-                      <span style="font-weight: 600; color: #111827;">${order.restaurant_name}</span>
-                    </div>
-                    ${order.restaurant_address ? `
-                    <div style="display: flex; justify-content: space-between;">
-                      <span>${language === 'he' ? 'כתובת:' : 'Address:'}</span>
-                      <span style="font-weight: 500; color: #111827;">${order.restaurant_address}</span>
-                    </div>` : ''}
-                    ${order.delivery_date ? `
-                    <div style="display: flex; justify-content: space-between;">
-                      <span>${language === 'he' ? 'תאריך אספקה:' : 'Delivery:'}</span>
-                      <span style="font-weight: 500; color: #111827;">${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
-                    </div>` : ''}
-                  </div>
-
-                  <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 20px;">
-                    <div style="padding: 10px 14px; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
-                      <h2 style="font-size: 13px; font-weight: 600; color: #4b5563; margin: 0; text-transform: uppercase;">
-                        ${language === 'he' ? 'פריטים' : 'Items'}
-                      </h2>
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse;">
-                      <tbody>
-                        ${(order.items || []).map((item, index) => `
-                          <tr style="border-bottom: ${index < (order.items || []).length - 1 ? '1px solid #f3f4f6' : 'none'};">
-                            <td style="padding: 10px 14px; width: 20px; color: #9ca3af; font-size: 12px;">${index + 1}</td>
-                            <td style="padding: 10px 0; font-weight: 500; color: #111827; font-size: 14px;">
-                              ${item.item_name}
-                              ${item.catalog_number ? `<div style="font-size: 11px; color: #6b7280; font-weight: normal; margin-top: 2px;">${language === 'he' ? 'מק"ט:' : 'SKU:'} ${item.catalog_number}</div>` : ''}
-                            </td>
-                            <td style="padding: 10px 14px; text-align: ${language === 'he' ? 'left' : 'right'};">
-                              <div style="display: inline-flex; align-items: baseline; gap: 4px;">
-                                <span style="font-weight: 700; color: #111827; font-size: 14px;">${item.quantity}</span>
-                                <span style="color: #6b7280; font-size: 12px;">${getUnitLabel(item.unit)}</span>
-                              </div>
-                            </td>
-                          </tr>
-                        `).join('')}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  ${formattedTotal && effectiveTotal > 0 ? `
-                  <div style="padding: 16px; background: #f9fafb; border-radius: 12px; border: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                    <span style="font-size: 15px; font-weight: 600; color: #4b5563;">
-                      ${language === 'he' ? 'סה״כ לתשלום' : 'Total Amount'}
-                    </span>
-                    <span style="font-size: 20px; font-weight: 800; color: #111827;">
-                      ₪${formattedTotal}
-                    </span>
-                  </div>` : ''}
-
-                  ${order.notes ? `
-                  <div style="background: #fffbeb; border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid #fde68a;">
-                    <h3 style="font-size: 13px; font-weight: 600; color: #92400e; margin: 0 0 6px 0; text-transform: uppercase;">
-                      ${language === 'he' ? 'הערות להזמנה' : 'Notes'}
-                    </h3>
-                    <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.5;">${order.notes}</p>
-                  </div>
-                  ` : ''}
-
-                  <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                    <div style="font-size: 14px; font-weight: 800; color: #111827; letter-spacing: 1px;">SMART PLATE BASIC</div>
-                    <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
-                    <div style="font-size: 10px; margin-top: 4px; font-weight: 600; color: #2563eb;">foodcostapp.com</div>
-                  </div>
-                </div>
-              </div>
-            `;
-
-            document.body.appendChild(tempContainer);
-
-            const canvas = await html2canvas(tempContainer, {
-              scale: 2,
-              backgroundColor: '#ffffff',
-              logging: false,
-              useCORS: true
-            });
-
-            document.body.removeChild(tempContainer);
-
-            canvas.toBlob(async (blob) => {
-              const number = ensuredNumber;
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `order-${number}.jpg`;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              a.remove();
-              setDownloading(false);
-            }, 'image/jpeg', 0.95);
-
-          } catch (err) {
-            console.error('Failed to download image:', err);
-            setDownloading(false);
-          }
-        };
+        // Unused handleDownloadJPG removed.
 
         return (
           <div className="fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center sm:p-4">
