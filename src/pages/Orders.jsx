@@ -50,7 +50,7 @@ export default function OrdersPage() {
   const unitLabel = (u) => {
     if (!u) return '';
     if (language !== 'he') return u;
-    const map = { unit: 'יחידה', liter: 'ליטר', kg: 'ק"ג', case: 'ארגז' };
+    const map = { unit: 'יחידות', liter: 'ליטר', kg: 'ק״ג', case: 'ארגזים', gram: 'גרם', ml: 'מ״ל' };
     return map[u] || u;
   };
 
@@ -660,7 +660,7 @@ export default function OrdersPage() {
 
       // Fire-and-forget: email supplier (sendOrderEmail handles dedup + CC)
       try {
-        base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id })
+        base44.functions.invoke('sendOrderEmail', { orderId: updated.id || order.id, language })
           .then((res) => {
             if (res?.data?.success) {
               console.log('[Email] Order emailed (recipients merged, CC admin)');
@@ -695,7 +695,7 @@ export default function OrdersPage() {
     
     const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
     if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-      base44.functions.invoke('sendOrderEmail', { orderId: order.id })
+      base44.functions.invoke('sendOrderEmail', { orderId: order.id, language })
         .then(() => toast.success(language === 'he' ? 'ההזמנה נשלחה בהצלחה גם למייל של הספק!' : 'Order also sent to supplier email!'))
         .catch(() => {});
     }
@@ -709,9 +709,13 @@ export default function OrdersPage() {
   // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
   const sendOrderToWhatsApp = async (order, opts = {}) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-    const intro = `You have received a new order from "${order.restaurant_name || ''}"`;
+    const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
   const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
-  const text = `${intro}\n\n*${numLbl}:* ${ensuredNumber}`;
+  
+  // Format items for text
+  const itemsText = (order.items || []).map(it => `• ${it.item_name || it.name || ''} - ${it.quantity} ${unitLabel(it.unit)}`).join('\n');
+  
+  const text = `${intro}\n\n*${numLbl}:* ${ensuredNumber}\n\n*${safeT('items', 'פריטים', 'Items')}:*\n${itemsText}`;
     const isAndroid = /Android/i.test(navigator.userAgent || '');
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
     // No pre-opened tabs to avoid blockers/new-tab flashes
@@ -767,7 +771,7 @@ export default function OrdersPage() {
           <table style="width:100%;border-collapse:collapse;">
             <thead><tr style="background:#f9fafb"><th style="padding:8px;text-align:${language==='he'?'right':'left'}">#</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('item') || 'Item'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('quantity') || 'Qty'}</th><th style="padding:8px;text-align:${language==='he'?'right':'left'}">${t('unit') || 'Unit'}</th></tr></thead>
             <tbody>
-              ${(order.items || []).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;font-weight:normal;">${language==='he'?'מק"ט:':'SKU:'} ${it.catalog_number}</span>` : ''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.unit||''}</td></tr>`).join('')}
+              ${(order.items || []).map((it,i)=>`<tr style=\"background:${i%2===0?'#fff':'#f9fafb'}\"><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${i+1}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${it.item_name||it.name||''}${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;font-weight:normal;">${language==='he'?'מק"ט:':'SKU:'} ${it.catalog_number}</span>` : ''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb;font-weight:700;color:#059669\">${it.quantity||''}</td><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">${unitLabel(it.unit||'')}</td></tr>`).join('')}
             </tbody>
           </table>
         </div>
@@ -871,7 +875,7 @@ export default function OrdersPage() {
     // Send email automatically
     const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
     if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-      base44.functions.invoke('sendOrderEmail', { orderId: order.id })
+      base44.functions.invoke('sendOrderEmail', { orderId: order.id, language })
         .then(() => toast.success(language === 'he' ? 'ההזמנה נשלחה בהצלחה גם למייל של הספק!' : 'Order also sent to supplier email!'))
         .catch(() => {});
     }
@@ -1671,7 +1675,7 @@ export default function OrdersPage() {
             // Send email automatically
             const selectedSupplier = suppliers.find(s => s.name === previewOrder.supplier_name || s.id === previewOrder.supplier_id);
             if (selectedSupplier && selectedSupplier.email && selectedSupplier.email.trim() !== '') {
-              base44.functions.invoke('sendOrderEmail', { orderId: previewOrder.id })
+              base44.functions.invoke('sendOrderEmail', { orderId: previewOrder.id, language })
                 .then(() => {
                   setTimeout(() => {
                     toast.success(language === 'he' ? 'ההזמנה נשלחה בהצלחה גם למייל של הספק!' : 'Order also sent to supplier email!');

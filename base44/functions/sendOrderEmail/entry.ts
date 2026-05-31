@@ -66,17 +66,31 @@ Deno.serve(async (req) => {
     const deliveryDate = order.delivery_date || '';
     const items = Array.isArray(order.items) ? order.items : [];
 
-    const itemsRows = items.map((it) => `
+    const itemsRows = items.map((it) => {
+      let displayUnit = (it.unit || '').toString();
+      if (body?.language === 'he') {
+        const translations = {
+          'case': 'ארגזים',
+          'unit': 'יחידות',
+          'kg': 'ק״ג',
+          'gram': 'גרם',
+          'liter': 'ליטר',
+          'ml': 'מ״ל'
+        };
+        displayUnit = translations[displayUnit] || displayUnit;
+      }
+      return `
       <tr>
         <td style="padding:6px 8px;border:1px solid #e5e7eb;">
           ${(it.item_name || '').toString()}
           ${it.catalog_number ? `<br/><span style="font-size:12px;color:#6b7280;">SKU: ${it.catalog_number}</span>` : ''}
         </td>
         <td style="padding:6px 8px;border:1px solid #e5e7eb;">${Number(it.quantity || 0)}</td>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${(it.unit || '').toString()}</td>
+        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${displayUnit}</td>
         <td style="padding:6px 8px;border:1px solid #e5e7eb;">₪${Number(it.total || (Number(it.price || 0) * Number(it.quantity || 0))).toFixed(2)}</td>
       </tr>
-    `).join('');
+      `;
+    }).join('');
 
     const totalCost = Number(order.total_cost || 0).toFixed(2);
 
@@ -137,7 +151,21 @@ Deno.serve(async (req) => {
 </html>`;
 
     // Build plain text alternative (better deliverability for Exchange/Office365)
-    const itemsTxt = items.map((it) => `• ${(it.item_name || '')}${it.catalog_number ? ` (SKU: ${it.catalog_number})` : ''} — ${Number(it.quantity || 0)} ${(it.unit || '')}`).join('\n');
+    const itemsTxt = items.map((it) => {
+      let displayUnit = (it.unit || '').toString();
+      if (body?.language === 'he') {
+        const translations = {
+          'case': 'ארגזים',
+          'unit': 'יחידות',
+          'kg': 'ק״ג',
+          'gram': 'גרם',
+          'liter': 'ליטר',
+          'ml': 'מ״ל'
+        };
+        displayUnit = translations[displayUnit] || displayUnit;
+      }
+      return `• ${(it.item_name || '')}${it.catalog_number ? ` (SKU: ${it.catalog_number})` : ''} — ${Number(it.quantity || 0)} ${displayUnit}`;
+    }).join('\n');
     const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.\n\n${restaurantName ? restaurantName + '\n' : ''}הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n\n\n\n\n\n`;
 
     // Attempt to use Gmail connector if authorized, fallback to Core.SendEmail

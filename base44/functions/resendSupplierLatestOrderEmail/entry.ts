@@ -77,7 +77,8 @@ Deno.serve(async (req) => {
     // 3) Send email using existing sender (adds CC to admin, Reply-To, Gmail connector)
     const sendRes = await base44.asServiceRole.functions.invoke('sendOrderEmail', {
       orderId: targetOrder.id,
-      to: toEmail
+      to: toEmail,
+      language: body?.language
     });
 
     const ok = sendRes?.status >= 200 && sendRes?.status < 300 && !!sendRes?.data && sendRes?.data?.success !== false;
