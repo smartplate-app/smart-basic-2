@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { X, Smartphone, Monitor, Copy, Check, Download, Share, MessageCircle, Loader, Mail } from 'lucide-react';
 import { useLanguage } from '../LanguageProvider';
+import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
 import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
@@ -26,7 +27,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
-  const [pasteGuideUrl, setPasteGuideUrl] = useState(null);
   const urlRef = useRef('');
   
   if (!isOpen || !order) return null;
@@ -217,7 +217,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       // Convert to blob and try to copy to clipboard
       canvas.toBlob(async (blob) => {
         const number = ensuredNumber;
-        const file = new File([blob], `order-${number}.png`, { type: 'image/png' });
 
         const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
@@ -231,6 +230,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
         const itemsText = (order.items || []).map(it => `• ${it.item_name || it.item || it.name || ''} - ${it.quantity} ${getUnitLabel(it.unit || it.u || '')}`).join('\\n');
         const shareText = `${intro}\\n\\n*${numLbl}:* ${number}\\n\\n*${safeT('items', 'פריטים', 'Items')}:*\\n${itemsText}`;
+        const file = new File([blob], `order-${number}.jpg`, { type: 'image/jpeg' });
 
         const rawPhone = String(order.supplier_phone || '').trim();
         let phone = '';
@@ -251,18 +251,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
         setDownloading(false);
 
-        // 1) Try the native share sheet first (for ALL mobile devices including Android)
+        // Try the native share sheet first
         if (isMobile && navigator.share) {
           try {
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
               await navigator.share({ 
                 files: [file], 
-                title: `Order #${number}`,
-                text: shareText
+                title: language === 'he' ? 'הזמנה לספק' : `Order #${number}`
               });
-              return;
-            } else {
-              await navigator.share({ text: shareText });
               return;
             }
           } catch (e) {
@@ -270,64 +266,29 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             if (e.name === 'AbortError') {
               return; // User cancelled the share sheet manually
             }
-            // If it failed for another reason, try text-only share as a last resort
-            try {
-              await navigator.share({ text: shareText });
-              return;
-            } catch (err2) {
-              if (err2.name === 'AbortError') return;
-              // Fallthrough to WhatsApp deep link
-            }
           }
         }
 
-        // 2) Fallbacks if native share is not available or failed
+        // If no native share, or share failed (and not aborted), or can't share files
+        // Fallback: Download the image and show a toast
         if (isMobile) {
-          // Android APK fallback: deep links (wa.me) CANNOT carry files, so we MUST copy the image to the clipboard first.
-          if (isAndroid) {
-            let clipboardSuccess = false;
-            let imageUrl = null;
-            try {
-              if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
-                await navigator.clipboard.write([
-                  new ClipboardItem({ 'image/png': blob })
-                ]);
-                clipboardSuccess = true;
-              }
-            } catch (err) {
-              console.warn("Android clipboard copy failed", err);
-            }
-            
-            try {
-              imageUrl = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = imageUrl;
-              a.download = `order-${number}.png`;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-            } catch (e) {}
-
-            // Always show the popup on Android WebViews so the user can see what to do,
-            // and we'll display the image so they can long-press to share it if download failed.
-            setPasteGuideUrl({ waUrl, clipboardSuccess, imageUrl });
-            return; // Wait for user to click the modal
-          }
-
-          // Mobile fallback: deep links (wa.me) using window.location.href (works in APK WebViews)
-          window.location.href = waUrl;
-          
-          // Download the image silently in the background
           try {
-            const url = window.URL.createObjectURL(blob);
+            const imageUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `order-${number}.png`;
+            a.href = imageUrl;
+            a.download = `order-${number}.jpg`;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             a.remove();
-          } catch (e) {}
+            window.URL.revokeObjectURL(imageUrl);
+            toast.success(language === 'he' ? "התמונה הורדה — שלח אותה ידנית" : "Image downloaded — please share manually");
+            setTimeout(() => {
+              window.location.href = waUrl;
+            }, 1500);
+          } catch (e) {
+            console.error('Download fallback failed', e);
+          }
+          return;
         } else {
           // Desktop fallback: copy to clipboard and open WhatsApp Web
           try {
@@ -339,7 +300,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `order-${number}.png`;
+            a.download = `order-${number}.jpg`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
@@ -347,8 +308,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           }
 
           const whatsappUrl = formattedPhone 
-            ? `https://web.whatsapp.com/send?phone=${encodeURIComponent(formattedPhone)}&text=${encodeURIComponent(shareText)}` 
-            : `https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+            ? `https://web.whatsapp.com/send?phone=${encodeURIComponent(formattedPhone)}` 
+            : `https://web.whatsapp.com/send`;
           
           window.open(whatsappUrl, '_blank');
         }
@@ -705,75 +666,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         </div>
       </motion.div>
 
-      {/* Really Big Android Paste Guide Popup */}
-      {pasteGuideUrl && (
-        <div className="fixed inset-0 bg-black/90 z-[200] flex flex-col items-center justify-center p-4 overflow-y-auto">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100 my-auto"
-            dir={language === 'he' ? 'rtl' : 'ltr'}
-          >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 sm:w-10 sm:h-10 text-[#25D366]" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black mb-3 text-gray-900 leading-tight tracking-tight">
-              {pasteGuideUrl.clipboardSuccess 
-                ? (language === 'he' ? 'התמונה הועתקה!' : 'Image Copied!') 
-                : (language === 'he' ? 'התמונה מוכנה!' : 'Image Ready!')}
-            </h2>
-            
-            <p className="text-lg sm:text-xl text-gray-600 mb-6 font-medium leading-relaxed">
-              {pasteGuideUrl.clipboardSuccess ? (
-                <>
-                  {language === 'he' ? 'בוואטסאפ, לחץ לחיצה ארוכה על שורת ההודעה ובחר ' : 'In WhatsApp, long-press the message box and select '}
-                  <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״הדבק״' : '"Paste"'}</strong>
-                  {language === 'he' ? ' כדי לצרף את ההזמנה.' : ' to attach the order.'}
-                </>
-              ) : (
-                <>
-                  {language === 'he' ? 'התמונה הורדה לטלפון. בוואטסאפ, לחץ על האטב/פלוס ובחר ב' : 'Image downloaded. In WhatsApp, tap attachment/plus and select '}
-                  <strong className="text-gray-900 bg-gray-100 px-2 py-1 rounded-md">{language === 'he' ? '״גלריה״' : '"Gallery"'}</strong>
-                  {language === 'he' ? ' כדי לצרף את ההזמנה שירדה.' : ' to attach the order.'}
-                </>
-              )}
-            </p>
 
-            {!pasteGuideUrl.clipboardSuccess && pasteGuideUrl.imageUrl && (
-              <div className="mb-6 relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50 shadow-inner">
-                <p className="text-xs text-gray-500 mb-2 mt-2 font-medium">
-                  {language === 'he' ? 'אם ההורדה נכשלה, אפשר ללחוץ ארוכות על התמונה כאן ולבחור ״שתף תמונה״' : 'If download failed, long press here and select "Share Image"'}
-                </p>
-                <img src={pasteGuideUrl.imageUrl} alt="Order Preview" className="w-full max-h-[250px] object-contain mx-auto" />
-              </div>
-            )}
-
-            <div className="flex flex-col gap-3">
-              <Button 
-                className="w-full h-14 sm:h-16 text-lg sm:text-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl shadow-lg transition-transform active:scale-95"
-                onClick={() => {
-                  window.open(pasteGuideUrl.waUrl, '_blank');
-                  if (pasteGuideUrl.imageUrl) window.URL.revokeObjectURL(pasteGuideUrl.imageUrl);
-                  setPasteGuideUrl(null);
-                }}
-              >
-                <MessageCircle className={`w-6 h-6 sm:w-7 sm:h-7 ${language === 'he' ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'}`} />
-                {language === 'he' ? 'הבנתי, פתח וואטסאפ' : 'Got it, Open WhatsApp'}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  if (pasteGuideUrl.imageUrl) window.URL.revokeObjectURL(pasteGuideUrl.imageUrl);
-                  setPasteGuideUrl(null);
-                }}
-                className="text-gray-500 hover:bg-gray-100 h-12"
-              >
-                {safeT('close', 'סגור', 'Close')}
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }

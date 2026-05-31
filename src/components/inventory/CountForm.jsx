@@ -73,6 +73,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const isCompleted = formData.status === 'completed';
 
   useEffect(() => {
+    // Only mark metadata as dirty if we already did initial load
+    if (!formData.id) return;
     const prev = previousMetadataRef.current;
     if (
       prev.name !== formData.name ||
@@ -94,7 +96,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         notes: formData.notes
       };
     }
-  }, [formData.name, formData.count_date, formData.count_type, formData.warehouse_id, formData.warehouse_name, formData.status, formData.notes]);
+  }, [formData.id, formData.name, formData.count_date, formData.count_type, formData.warehouse_id, formData.warehouse_name, formData.status, formData.notes]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -443,7 +445,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 const incomingTime = serverItem.last_updated_at || 0;
                 const localTime = localItem.last_updated_at || 0;
                 
-                if (incomingTime >= localTime && (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes)) {
+                if (incomingTime >= localTime && (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes || localItem.counted_cases !== serverItem.counted_cases || localItem.counted_units !== serverItem.counted_units)) {
                   newItems[localIndex] = { ...localItem, ...serverItem };
                   changed = true;
                 }
