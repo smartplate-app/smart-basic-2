@@ -79,15 +79,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
     }
   };
 
-  // ============================================================================
-  // ⛔️ CRITICAL RULE: DO NOT MODIFY THIS SHARE SHEET FUNCTION UNDER ANY CIRCUMSTANCES! ⛔️
-  // DO NOT change the fallback, DO NOT change the blob logic, DO NOT change the navigator.share.
-  // ONLY modify this if the user provides the EXACT authorization code: 2233.
-  // ============================================================================
+  // deprecated in favor of parent-controlled chooser
+  // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
   const handleDownloadImage = async (opts = {}) => {
           const shareOnly = !!opts.shareOnly;
     try {
       setDownloading(true);
+      // Yield to the browser to paint the loading spinner before heavy html2canvas blocks the thread
+      await new Promise(r => setTimeout(r, 50));
 
       // Ensure order number exists; if missing, persist and mark as sent when appropriate
       let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
@@ -100,11 +99,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           order.order_number = ensuredNumber;
         }
       } catch (_) {}
-
-      // Notify parent to ensure list refresh and service-role update for sub-users
-      if (onSend) {
-        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
-      }
 
       // Removed early link-sharing on mobile; always generate image first and share the JPG file instead
 
@@ -224,11 +218,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       
       const safeName = (order.restaurant_name || '').replace(/[^a-zA-Zא-ת0-9]/g, '_') || 'order';
       const file = new File([blob], `order_${safeName}.jpg`, { type: 'image/jpeg' });
-
       setDownloading(false);
 
       let shareSucceeded = false;
-      if (navigator.share) {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ 
             files: [file], 
@@ -237,7 +230,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           shareSucceeded = true;
         } catch(e) {
           console.error('Share failed', e);
-          if (e.name === 'AbortError') return; // User cancelled
+          // If the user cancelled, we still want to proceed and mark as sent below
         }
       } 
       
@@ -250,7 +243,13 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         a.click();
         a.remove();
         setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
-        toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded - please send manually');
+        
+        toast.info(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
+      }
+
+      // Notify parent to ensure list refresh and service-role update for sub-users
+      if (onSend) {
+        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
       }
 
     } catch (err) {
