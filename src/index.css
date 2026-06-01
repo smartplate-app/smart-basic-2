@@ -168,15 +168,14 @@ button:focus-visible {
 
 @layer base {
   html, body {
-    /* removed overscroll-behavior-y: none to fix scroll issues on old Android */
+    overscroll-behavior-y: none;
   }
   
   /* Only applied when class is present (e.g., Orders and SupplyReceipts pages) */
-  html.no-horizontal-scroll {
-    overflow-x: clip;
-  }
-  html.no-horizontal-scroll body {
-    overflow-x: clip;
+  html.no-horizontal-scroll, 
+  html.no-horizontal-scroll body, 
+  html.no-horizontal-scroll #root {
+    overflow-x: hidden;
   }
   * {
     @apply border-border outline-ring/50;
