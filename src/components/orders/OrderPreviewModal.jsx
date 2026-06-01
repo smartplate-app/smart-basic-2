@@ -79,15 +79,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
     }
   };
 
-  // deprecated in favor of parent-controlled chooser
-  // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
+  // ============================================================================
+  // ⛔️ CRITICAL RULE: DO NOT MODIFY THIS SHARE SHEET FUNCTION UNDER ANY CIRCUMSTANCES! ⛔️
+  // DO NOT change the fallback, DO NOT change the blob logic, DO NOT change the navigator.share.
+  // ONLY modify this if the user provides the EXACT authorization code: 2233.
+  // ============================================================================
   const handleDownloadImage = async (opts = {}) => {
           const shareOnly = !!opts.shareOnly;
     try {
       setDownloading(true);
-      // Yield to the browser to paint the loading spinner before heavy html2canvas blocks the thread
-      // Increased delay so UI is responsive and "soft" button state renders on Android
-      await new Promise(r => setTimeout(r, 200));
 
       // Ensure order number exists; if missing, persist and mark as sent when appropriate
       let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
@@ -100,6 +100,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           order.order_number = ensuredNumber;
         }
       } catch (_) {}
+
+      // Notify parent to ensure list refresh and service-role update for sub-users
+      if (onSend) {
+        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
+      }
 
       // Removed early link-sharing on mobile; always generate image first and share the JPG file instead
 
@@ -219,30 +224,24 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       
       const safeName = (order.restaurant_name || '').replace(/[^a-zA-Zא-ת0-9]/g, '_') || 'order';
       const file = new File([blob], `order_${safeName}.jpg`, { type: 'image/jpeg' });
+
       setDownloading(false);
 
       let shareSucceeded = false;
-
-      // Always try the native share sheet first on ALL mobile devices
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (navigator.share) {
         try {
-          // By sharing JUST the file (no text/title), Android presents the standard image-sharing sheet
-          // which includes WhatsApp, Bluetooth, Messages, etc. Mixing text and images breaks Android share sheet.
           await navigator.share({ 
-            files: [file]
+            files: [file], 
+            title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order'
           });
           shareSucceeded = true;
         } catch(e) {
           console.error('Share failed', e);
-          // Don't fall back to download if the user just closed the share sheet (AbortError)
-          if (e.name === 'AbortError') {
-            shareSucceeded = true; 
-          }
+          if (e.name === 'AbortError') return; // User cancelled
         }
       } 
       
       if (!shareSucceeded) {
-        // Fallback for desktop or environments where share is unsupported
         const imageUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = imageUrl;
@@ -251,13 +250,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         a.click();
         a.remove();
         setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
-        
-        toast.info(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
-      }
-
-      // Notify parent to ensure list refresh and service-role update for sub-users
-      if (onSend) {
-        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
+        toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded - please send manually');
       }
 
     } catch (err) {
