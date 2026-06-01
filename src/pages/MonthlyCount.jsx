@@ -996,7 +996,7 @@ export default function MonthlyCountPage() {
                     <label htmlFor={`merge-${c.id}`} className="flex-1 cursor-pointer flex justify-between items-center ml-2 rtl:mr-2">
                       <div>
                         <span className="font-semibold block">{c.name || c.warehouse_name || 'Unnamed Count'}</span>
-                        <span className="text-sm text-gray-500">{c.count_date} • {c.items?.length || 0} items</span>
+                        <span className="text-sm text-gray-500">{c.count_date} • {c.items?.filter(item => (item.counted_quantity || 0) > 0).length || 0} items</span>
                       </div>
                       <span className="font-bold">₪{(c.total_inventory_value || 0).toFixed(2)}</span>
                     </label>

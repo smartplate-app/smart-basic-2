@@ -149,8 +149,7 @@ const [authLoading, setAuthLoading] = useState(() => {
   const timer = setTimeout(() => {
   try {
     if (authLoading && !user) {
-      sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
-      base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+      setAuthLoading(false);
     }
   } catch {}
   }, 8000);
@@ -497,15 +496,6 @@ const [authLoading, setAuthLoading] = useState(() => {
       // Redirect unauthenticated users
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403 || String(err?.message || '').toLowerCase().includes('logged in');
       if (unauthorized) {
-              if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
-                setAuthLoading(false);
-                try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
-                const cleanUrl = new URL(window.location.href);
-                cleanUrl.searchParams.delete('code');
-                cleanUrl.searchParams.delete('state');
-                base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
-                return;
-              }
         if (!user) setAuthLoading(false);
         let cooldownUntil = 0;
         try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
@@ -516,18 +506,13 @@ const [authLoading, setAuthLoading] = useState(() => {
           setTimeout(() => loadAuth(attemptNumber + 1), 1200);
           return;
         }
-        
-        const cleanUrl = new URL(window.location.href);
-        cleanUrl.searchParams.delete('code');
-        cleanUrl.searchParams.delete('state');
-        base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+        setAuthLoading(false);
         return;
       }
       
       console.error("[Layout] Max retries reached or non-network error");
-      // Just redirect to login on ANY error if they don't have a user instead of showing "Connection error"
       if (!user && !localStorage.getItem('b44_user_cache')) {
-         base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+         setAuthLoading(false);
          return;
       }
       setError(err.message || "Failed to load app");

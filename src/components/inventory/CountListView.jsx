@@ -151,7 +151,7 @@ export default function CountListView({ counts, onEdit, onDelete, onExport, onEx
                   {countTypeLabels[count.count_type]}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
-                  {count.items?.length || 0}
+                  {count.items?.filter(item => (item.counted_quantity || 0) > 0).length || 0}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-right text-sm font-bold text-green-600">
                   ₪{(count.total_inventory_value || 0).toFixed(2)}
