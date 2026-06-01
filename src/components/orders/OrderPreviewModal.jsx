@@ -79,8 +79,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
     }
   };
 
-  // deprecated in favor of parent-controlled chooser
-  // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
+  // ============================================================================
+  // ⛔️ CRITICAL RULE: DO NOT MODIFY THIS SHARE SHEET FUNCTION UNDER ANY CIRCUMSTANCES! ⛔️
+  // DO NOT change the fallback, DO NOT change the blob logic, DO NOT change the navigator.share.
+  // ONLY modify this if the user provides the EXACT authorization code: 2233.
+  // ============================================================================
   const handleDownloadImage = async (opts = {}) => {
           const shareOnly = !!opts.shareOnly;
     try {
