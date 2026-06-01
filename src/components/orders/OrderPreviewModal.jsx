@@ -86,7 +86,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
     try {
       setDownloading(true);
       // Yield to the browser to paint the loading spinner before heavy html2canvas blocks the thread
-      await new Promise(r => setTimeout(r, 50));
+      // Increased delay so UI is responsive and "soft" button state renders on Android
+      await new Promise(r => setTimeout(r, 200));
 
       // Ensure order number exists; if missing, persist and mark as sent when appropriate
       let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
@@ -221,7 +222,43 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       setDownloading(false);
 
       let shareSucceeded = false;
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const isAndroid = /Android/i.test(navigator.userAgent || '');
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
+      // On Android, bypass the native share sheet, copy the image and open WhatsApp directly.
+      if (isAndroid) {
+        try {
+          if (navigator.clipboard && navigator.clipboard.write) {
+            await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
+            toast.success(language === 'he' ? 'התמונה הועתקה! וואטסאפ ייפתח כעת, הדבק לשליחה.' : 'Image copied! WhatsApp will open, paste to send.');
+          }
+          
+          const rawPhone = String(order.supplier_phone || '').trim();
+          let phone = '';
+          if (rawPhone) {
+            let p = rawPhone.replace(/[^\d+]/g, '');
+            if (p.startsWith('+')) p = p.slice(1);
+            if (p.startsWith('00')) p = p.slice(2);
+            if (p.startsWith('0')) p = '972' + p.slice(1);
+            phone = p;
+          }
+          
+          const waUrl = phone 
+            ? `https://wa.me/${encodeURIComponent(phone)}` 
+            : `https://wa.me/`;
+            
+          setTimeout(() => {
+            window.open(waUrl, '_blank', 'noopener,noreferrer');
+          }, 300);
+          
+          shareSucceeded = true;
+        } catch (e) {
+          console.error('Android clipboard/WhatsApp bypass failed', e);
+          // Fall back to standard share sheet below
+        }
+      }
+
+      if (!shareSucceeded && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ 
             files: [file], 
@@ -234,7 +271,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         }
       } 
       
-      if (!shareSucceeded) {
+      if (!shareSucceeded && !isAndroid) {
         const imageUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = imageUrl;

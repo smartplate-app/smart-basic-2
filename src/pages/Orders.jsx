@@ -745,9 +745,11 @@ export default function OrdersPage() {
       ? `intent://send?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`
       : `intent://send?text=${encodeURIComponent(text)}#Intent;scheme=whatsapp;package=com.whatsapp;end`;
 
-    // Prepare a shareable JPG (skip on Android unless forced for image share); prefer pre-rendered file when available
+    // Prepare a shareable JPG; prefer pre-rendered file when available
     let file = (opts && opts.preparedFile) ? opts.preparedFile : null;
-    if ((!isAndroid || (opts && opts.forceImageShare)) && !file) {
+    if (!file) {
+      // Yield to let UI update before heavy canvas work
+      await new Promise(r => setTimeout(r, 150));
       const temp = document.createElement('div');
       temp.style.position = 'fixed';
       temp.style.left = '-9999px';
@@ -791,8 +793,8 @@ export default function OrdersPage() {
       }
     }
 
-    // 1) Use system share ONLY when explicitly forcing image share (e.g. Android pre-rendered image)
-    if (opts && opts.forceImageShare && navigator.share) {
+    // 1) Use system share ONLY on iOS (unless explicitly bypassing)
+    if (isIOS && navigator.share) {
       const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
       if (canShareFiles) {
         try {
@@ -800,27 +802,21 @@ export default function OrdersPage() {
           return;
         } catch (e) {
           console.warn('[WA Image Share] Share failed, falling back:', e?.name || e);
-          if (e.name !== 'AbortError') {
-            try { await navigator.share({ text }); return; } catch (e2) {}
-          } else {
-            return;
-          }
+          if (e.name === 'AbortError') return;
         }
-      } else {
-        try { await navigator.share({ text }); return; } catch (e2) {}
       }
     }
 
     // 2) Best-effort: copy image OR text to clipboard (Web/App)
     let copiedImage = false;
     let copiedText = false;
-    // Some Android WebViews require a user gesture; this runs right after a button click
     if (file && navigator.clipboard && 'write' in navigator.clipboard) {
       try {
-        // @ts-ignore ClipboardItem may not be typed in some environments
         await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
         copiedImage = true;
-      } catch (_) {}
+      } catch (err) {
+        console.warn('Image clipboard write failed', err);
+      }
     }
     if (!copiedImage && navigator.clipboard && 'writeText' in navigator.clipboard) {
       try {
@@ -829,26 +825,32 @@ export default function OrdersPage() {
       } catch (_) {}
     }
     
-    // Alert user on desktop if copied successfully
-    if (copiedImage && !isAndroid && !isIOS) {
-      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Mac/.test(navigator.userAgent);
-      const pasteKey = isMac ? 'Cmd+V' : 'Ctrl+V';
-      alert(language === 'he' 
-        ? `התמונה הועתקה! וואטסאפ ייפתח כעת, פשוט לחץ ${pasteKey} בתוך הצ'אט כדי להדביק ולשלוח.` 
-        : `Image copied! WhatsApp will open now, just press ${pasteKey} in the chat to paste and send.`);
-    }
-
-    // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
-    if (isAndroid || isIOS) {
-      // APKs / WebViews prefer window.open to correctly trigger intents for wa.me links
-      window.open(waWeb, '_blank', 'noopener,noreferrer');
-    } else {
-      if (opts && opts.preOpenedWindow && !opts.preOpenedWindow.closed) {
-        opts.preOpenedWindow.location.href = waWeb;
-      } else {
-        window.open(waWeb, '_blank', 'noopener,noreferrer');
+    // Alert user if copied successfully (especially important on Android)
+    if (copiedImage) {
+      if (isAndroid) {
+        toast.success(language === 'he' ? 'התמונה הועתקה! וואטסאפ ייפתח כעת, הדבק לשליחה.' : 'Image copied! WhatsApp will open, paste to send.');
+      } else if (!isIOS) {
+        const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Mac/.test(navigator.userAgent);
+        const pasteKey = isMac ? 'Cmd+V' : 'Ctrl+V';
+        alert(language === 'he' 
+          ? `התמונה הועתקה! וואטסאפ ייפתח כעת, פשוט לחץ ${pasteKey} בתוך הצ'אט כדי להדביק ולשלוח.` 
+          : `Image copied! WhatsApp will open now, just press ${pasteKey} in the chat to paste and send.`);
       }
     }
+
+    // 3) Open WhatsApp app directly (bypassing share sheet for Android to avoid Bluetooth/App chooser clutter)
+    // Add a tiny delay so the toast shows before the window switch
+    setTimeout(() => {
+      if (isAndroid || isIOS) {
+        window.open(waWeb, '_blank', 'noopener,noreferrer');
+      } else {
+        if (opts && opts.preOpenedWindow && !opts.preOpenedWindow.closed) {
+          opts.preOpenedWindow.location.href = waWeb;
+        } else {
+          window.open(waWeb, '_blank', 'noopener,noreferrer');
+        }
+      }
+    }, 300);
 
 
   };
