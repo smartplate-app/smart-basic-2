@@ -180,6 +180,12 @@
           "amount"
         ]
       }
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "store_owner_email": {
+      "type": "string"
     }
   },
   "required": [
@@ -187,5 +193,67 @@
     "job_position_id",
     "payment_type",
     "payment_amount"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.created_by": "{{user.email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.created_by": "{{user.email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.created_by": "{{user.email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.created_by": "{{user.email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
 }
