@@ -495,7 +495,7 @@ const [authLoading, setAuthLoading] = useState(() => {
       }
       
       // Redirect unauthenticated users
-      const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403 || String(err?.message || '').toLowerCase().includes('logged in');
+      const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || String(err?.message || '').toLowerCase().includes('logged in');
       if (unauthorized) {
               if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
                 setAuthLoading(false);
