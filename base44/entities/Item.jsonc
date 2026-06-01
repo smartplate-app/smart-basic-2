@@ -127,9 +127,16 @@
           "data.store_owner_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "admin"
-          }
+          "data.created_by": "{{user.data.store_user_owner_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.data.store_user_owner_email}}"
+        },
+        {
+          "data.created_by": "{{user.data.acting_as_store_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.data.acting_as_store_email}}"
         }
       ]
     },
@@ -142,9 +149,16 @@
           "data.store_owner_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "admin"
-          }
+          "data.created_by": "{{user.data.store_user_owner_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.data.store_user_owner_email}}"
+        },
+        {
+          "data.created_by": "{{user.data.acting_as_store_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.data.acting_as_store_email}}"
         }
       ]
     },
@@ -157,9 +171,16 @@
           "data.store_owner_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "admin"
-          }
+          "data.created_by": "{{user.data.store_user_owner_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.data.store_user_owner_email}}"
+        },
+        {
+          "data.created_by": "{{user.data.acting_as_store_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.data.acting_as_store_email}}"
         }
       ]
     },
@@ -172,9 +193,16 @@
           "data.store_owner_email": "{{user.email}}"
         },
         {
-          "user_condition": {
-            "role": "admin"
-          }
+          "data.created_by": "{{user.data.store_user_owner_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.data.store_user_owner_email}}"
+        },
+        {
+          "data.created_by": "{{user.data.acting_as_store_email}}"
+        },
+        {
+          "data.store_owner_email": "{{user.data.acting_as_store_email}}"
         }
       ]
     }
