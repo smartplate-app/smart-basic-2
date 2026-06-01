@@ -242,23 +242,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
       setDownloading(false);
 
-      const textWithLink = uploadedUrl ? `${intro}\n\n${uploadedUrl}` : intro;
-      const waUrlWithLink = phone 
-        ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(textWithLink)}`
-        : `https://wa.me/?text=${encodeURIComponent(textWithLink)}`;
-
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      const isAndroid = /Android/i.test(navigator.userAgent || '');
-      
       let shareSucceeded = false;
-      // Skip native share completely on Android - the native OS sheet is very slow 
-      // and APK WebViews often block/drop files in the intent.
-      if (!isAndroid && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ 
             files: [file], 
-            title: intro,
-            text: intro
+            title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order'
           });
           shareSucceeded = true;
         } catch(e) {
@@ -268,35 +257,15 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       } 
       
       if (!shareSucceeded) {
-        if (isMobile) {
-          // If we successfully got a public URL, we can just show the paste guide or open WA directly
-          // but since they prefer the image, if native share failed, we'll let them copy/download it.
-          const imageUrl = window.URL.createObjectURL(blob);
-          setPasteGuideUrl({ 
-            clipboardSuccess: false, 
-            imageUrl: uploadedUrl || imageUrl, 
-            waUrl: waUrlWithLink 
-          });
-        } else {
-          // Desktop fallback
-          if (uploadedUrl) {
-            window.open(uploadedUrl, '_blank');
-            setTimeout(() => {
-              window.open(waUrlWithLink, '_blank');
-            }, 500);
-          } else {
-            const imageUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = imageUrl;
-            a.download = `order_${safeName}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
-            window.open(waUrlWithLink, '_blank');
-          }
-          toast.success(language === 'he' ? 'התמונה מוכנה - עבור לווצאפ' : 'Image ready - switch to WhatsApp');
-        }
+        const imageUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = imageUrl;
+        a.download = `order_${safeName}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
+        toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded - please send manually');
       }
 
     } catch (err) {
