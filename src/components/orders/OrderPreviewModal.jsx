@@ -85,6 +85,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           const shareOnly = !!opts.shareOnly;
     try {
       setDownloading(true);
+      // Yield to the browser to paint the loading spinner before heavy html2canvas blocks the thread
+      await new Promise(r => setTimeout(r, 50));
 
       // Ensure order number exists; if missing, persist and mark as sent when appropriate
       let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
@@ -97,11 +99,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           order.order_number = ensuredNumber;
         }
       } catch (_) {}
-
-      // Notify parent to ensure list refresh and service-role update for sub-users
-      if (onSend) {
-        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
-      }
 
       // Removed early link-sharing on mobile; always generate image first and share the JPG file instead
 
@@ -233,7 +230,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           shareSucceeded = true;
         } catch(e) {
           console.error('Share failed', e);
-          if (e.name === 'AbortError') return; // User cancelled
+          // If the user cancelled, we still want to proceed and mark as sent below
         }
       } 
       
@@ -248,6 +245,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
         
         toast.info(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded — send it manually');
+      }
+
+      // Notify parent to ensure list refresh and service-role update for sub-users
+      if (onSend) {
+        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
       }
 
     } catch (err) {
