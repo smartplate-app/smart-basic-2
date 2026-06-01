@@ -793,54 +793,63 @@ export default function OrdersPage() {
       }
     }
 
-    // 1) Use system share ONLY on iOS (unless explicitly bypassing)
-    if (isIOS && navigator.share) {
+    let shareSucceeded = false;
+
+    // 1) Use system share on all mobile devices (iOS and Android)
+    // Passing ONLY the file (omitting text/title) significantly improves Android share sheet compatibility,
+    // ensuring apps like WhatsApp and Bluetooth are available.
+    if (navigator.share) {
       const canShareFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
       if (canShareFiles) {
         try {
-          await navigator.share({ files: [file], text, title: `You have received a new order from "${order.restaurant_name || ''}"` });
+          await navigator.share({ files: [file] });
+          shareSucceeded = true;
           return;
         } catch (e) {
           console.warn('[WA Image Share] Share failed, falling back:', e?.name || e);
           if (e.name === 'AbortError') return;
         }
+      } else {
+        // If file sharing is not supported, share text
+        try {
+          await navigator.share({ text });
+          shareSucceeded = true;
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
       }
     }
 
-    // 2) Best-effort: copy image OR text to clipboard (Web/App)
-    let copiedImage = false;
-    let copiedText = false;
-    if (file && navigator.clipboard && 'write' in navigator.clipboard) {
-      try {
-        await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
-        copiedImage = true;
-      } catch (err) {
-        console.warn('Image clipboard write failed', err);
+    if (!shareSucceeded) {
+      // 2) Best-effort: copy image OR text to clipboard (Web/App)
+      let copiedImage = false;
+      let copiedText = false;
+      if (file && navigator.clipboard && 'write' in navigator.clipboard) {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
+          copiedImage = true;
+        } catch (err) {
+          console.warn('Image clipboard write failed', err);
+        }
       }
-    }
-    if (!copiedImage && navigator.clipboard && 'writeText' in navigator.clipboard) {
-      try {
-        await navigator.clipboard.writeText(text);
-        copiedText = true;
-      } catch (_) {}
-    }
-    
-    // Alert user if copied successfully (especially important on Android)
-    if (copiedImage) {
-      if (isAndroid) {
-        toast.success(language === 'he' ? 'התמונה הועתקה! וואטסאפ ייפתח כעת, הדבק לשליחה.' : 'Image copied! WhatsApp will open, paste to send.');
-      } else if (!isIOS) {
+      if (!copiedImage && navigator.clipboard && 'writeText' in navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(text);
+          copiedText = true;
+        } catch (_) {}
+      }
+      
+      // Alert user if copied successfully
+      if (copiedImage && !isIOS && !isAndroid) {
         const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Mac/.test(navigator.userAgent);
         const pasteKey = isMac ? 'Cmd+V' : 'Ctrl+V';
         alert(language === 'he' 
           ? `התמונה הועתקה! וואטסאפ ייפתח כעת, פשוט לחץ ${pasteKey} בתוך הצ'אט כדי להדביק ולשלוח.` 
           : `Image copied! WhatsApp will open now, just press ${pasteKey} in the chat to paste and send.`);
       }
-    }
 
-    // 3) Open WhatsApp app directly (bypassing share sheet for Android to avoid Bluetooth/App chooser clutter)
-    // Add a tiny delay so the toast shows before the window switch
-    setTimeout(() => {
+      // 3) Open WhatsApp app directly
       if (isAndroid || isIOS) {
         window.open(waWeb, '_blank', 'noopener,noreferrer');
       } else {
@@ -850,7 +859,7 @@ export default function OrdersPage() {
           window.open(waWeb, '_blank', 'noopener,noreferrer');
         }
       }
-    }, 300);
+    }
 
 
   };

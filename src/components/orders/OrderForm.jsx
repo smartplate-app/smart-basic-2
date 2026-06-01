@@ -115,6 +115,23 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
       // Build queries to include all relevant sources and merge
       const queries = [];
 
+      const isAdminControlling = user?.role === 'admin' && workingEmail !== user.email;
+
+      if (isAdminControlling) {
+        try {
+          const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: ownerEmail || workingEmail });
+          if (data?.success && data?.data?.items) {
+            const allItems = data.data.items;
+            const supplierItems = allItems.filter(i => i.supplier_id === supplierId);
+            setAvailableItems(supplierItems);
+            setLoadingItems(false);
+            return;
+          }
+        } catch(e) {
+          console.error("Admin load items failed", e);
+        }
+      }
+
       // Always include items tagged by store owner for the working (controlled) user
       queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: workingEmail }, 'name'));
 

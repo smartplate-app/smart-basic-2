@@ -222,56 +222,27 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       setDownloading(false);
 
       let shareSucceeded = false;
-      const isAndroid = /Android/i.test(navigator.userAgent || '');
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
 
-      // On Android, bypass the native share sheet, copy the image and open WhatsApp directly.
-      if (isAndroid) {
+      // Always try the native share sheet first on ALL mobile devices
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-          if (navigator.clipboard && navigator.clipboard.write) {
-            await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
-            toast.success(language === 'he' ? 'התמונה הועתקה! וואטסאפ ייפתח כעת, הדבק לשליחה.' : 'Image copied! WhatsApp will open, paste to send.');
-          }
-          
-          const rawPhone = String(order.supplier_phone || '').trim();
-          let phone = '';
-          if (rawPhone) {
-            let p = rawPhone.replace(/[^\d+]/g, '');
-            if (p.startsWith('+')) p = p.slice(1);
-            if (p.startsWith('00')) p = p.slice(2);
-            if (p.startsWith('0')) p = '972' + p.slice(1);
-            phone = p;
-          }
-          
-          const waUrl = phone 
-            ? `https://wa.me/${encodeURIComponent(phone)}` 
-            : `https://wa.me/`;
-            
-          setTimeout(() => {
-            window.open(waUrl, '_blank', 'noopener,noreferrer');
-          }, 300);
-          
-          shareSucceeded = true;
-        } catch (e) {
-          console.error('Android clipboard/WhatsApp bypass failed', e);
-          // Fall back to standard share sheet below
-        }
-      }
-
-      if (!shareSucceeded && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
+          // By sharing JUST the file (no text/title), Android presents the standard image-sharing sheet
+          // which includes WhatsApp, Bluetooth, Messages, etc. Mixing text and images breaks Android share sheet.
           await navigator.share({ 
-            files: [file], 
-            title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order'
+            files: [file]
           });
           shareSucceeded = true;
         } catch(e) {
           console.error('Share failed', e);
-          // If the user cancelled, we still want to proceed and mark as sent below
+          // Don't fall back to download if the user just closed the share sheet (AbortError)
+          if (e.name === 'AbortError') {
+            shareSucceeded = true; 
+          }
         }
       } 
       
-      if (!shareSucceeded && !isAndroid) {
+      if (!shareSucceeded) {
+        // Fallback for desktop or environments where share is unsupported
         const imageUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = imageUrl;
