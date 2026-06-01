@@ -459,20 +459,8 @@ export default function SupplyReceiptsPage() {
     <div
       dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen bg-[#f8f9fa] p-4 md:p-8"
-      onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
-      onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
-      onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); const u = user || await base44.auth.me(); await loadData(u.email, storeOwnerEmailState); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
     >
       <div className="w-full">
-        {/* Native-style Pull to Refresh Indicator */}
-        <div 
-          className="md:hidden fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none transition-transform" 
-          style={{ transform: `translateY(${refreshing ? 60 : pullDist - 40}px)`, opacity: pullDist > 10 || refreshing ? 1 : 0 }}
-        >
-          <div className="bg-white rounded-full shadow-lg h-10 w-10 flex items-center justify-center border border-gray-100">
-            <Loader className={`w-5 h-5 text-green-600 ${refreshing ? 'animate-spin' : ''}`} style={{ transform: !refreshing ? `rotate(${pullDist * 2}deg)` : 'none' }} />
-          </div>
-        </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="w-full md:w-auto text-right">
             <h1 className="text-3xl font-bold text-[#1a1f36] tracking-tight">{language === 'he' ? 'משרד אחורי' : 'Back Office'}</h1>
