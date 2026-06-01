@@ -163,6 +163,7 @@ export default function MonthlyCountPage() {
     let mounted = true;
     let retryTimeout = null;
     let initTimeout = null;
+    let unsubscribeCounts = null;
     
     const checkAuthAndLoadData = async (retryAttempt = 0) => {
       try {
@@ -232,6 +233,23 @@ export default function MonthlyCountPage() {
           } else {
             await loadData(workingEmail);
           }
+          
+          // Setup real-time subscription for the counts list
+          unsubscribeCounts = base44.entities.InventoryCount.subscribe((event) => {
+            if (!mounted) return;
+            setCounts(prevCounts => {
+              if (event.type === 'create') {
+                if (!prevCounts.find(c => c.id === event.id) && event.data.created_by === workingEmail) {
+                  return [event.data, ...prevCounts];
+                }
+              } else if (event.type === 'update') {
+                return prevCounts.map(c => c.id === event.id ? { ...c, ...event.data } : c);
+              } else if (event.type === 'delete') {
+                return prevCounts.filter(c => c.id !== event.id);
+              }
+              return prevCounts;
+            });
+          });
         }
       } catch (error) {
         console.error(`[MonthlyCount] Authentication error (attempt ${retryAttempt + 1}):`, error);
@@ -284,6 +302,9 @@ export default function MonthlyCountPage() {
       }
       if (initTimeout) {
         clearTimeout(initTimeout);
+      }
+      if (unsubscribeCounts) {
+        unsubscribeCounts();
       }
     };
   }, []); // Removed 't' dependency to prevent infinite fetch loops causing rate limits

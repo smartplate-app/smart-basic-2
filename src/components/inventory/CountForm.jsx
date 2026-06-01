@@ -307,49 +307,6 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
   const [syncStatus, setSyncStatus] = useState('saved'); // 'saved', 'saving', 'error'
 
-  // Create initial draft immediately on mount if it's a new count
-  useEffect(() => {
-    let isMounted = true;
-    if (!formDataRef.current.id) {
-      const createInitialDraft = async () => {
-        try {
-          if (isSavingRef.current) return;
-          isSavingRef.current = true;
-          setSyncStatus('saving');
-          
-          const currentData = formDataRef.current;
-          const cleanedData = {
-            ...currentData,
-            warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
-            items: currentData.items.map(item => ({
-              ...item,
-              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-              total_cost: Number(item.total_cost) || 0
-            }))
-          };
-          
-          // Instead of getOrCreateCountDraft, we directly call the entity to create a clean draft.
-          const newCount = await base44.entities.InventoryCount.create(cleanedData);
-          if (newCount?.id && isMounted) {
-            setFormData(prev => ({ ...prev, id: newCount.id }));
-            dirtyItemsRef.current.clear();
-            dirtyMetadataRef.current = false;
-            setDbSavedAt(new Date());
-            setSyncStatus('saved');
-          }
-        } catch (error) {
-          console.error("Initial draft creation failed:", error);
-          if (isMounted) setSyncStatus('error');
-        } finally {
-          isSavingRef.current = false;
-        }
-      };
-      createInitialDraft();
-    }
-    return () => { isMounted = false; };
-  }, [language]);
-
   // Auto-save draft to local storage and Database (Delta Sync)
   useEffect(() => {
     const timer = setInterval(async () => {
@@ -368,7 +325,51 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       }
 
       // 2. Auto-save to Database
-      if (currentData.id) {
+      if (!currentData.id) {
+        // Only create if there's an item or metadata changed
+        const hasAnyEntered = dirtyItemsRef.current.size > 0 || currentData.items.some(i => i.counted_quantity !== "" && i.counted_quantity != null && i.counted_quantity !== 0) || currentData.name || dirtyMetadataRef.current;
+        if (!hasAnyEntered) return;
+
+        if (isSavingRef.current) return;
+        isSavingRef.current = true;
+        setSyncStatus('saving');
+        try {
+          const cleanedData = {
+            ...currentData,
+            warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
+            items: currentData.items.map(item => ({
+              ...item,
+              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+              total_cost: Number(item.total_cost) || 0
+            }))
+          };
+          
+          const dirtyItemsAtStart = Array.from(dirtyItemsRef.current.keys());
+          const hasDirtyMetadataAtStart = dirtyMetadataRef.current;
+
+          const newCount = await base44.entities.InventoryCount.create(cleanedData);
+          if (newCount?.id) {
+            setFormData(prev => ({ ...prev, id: newCount.id }));
+            
+            // Only clear items that were already in the creation payload
+            for (const key of dirtyItemsAtStart) {
+              dirtyItemsRef.current.delete(key);
+            }
+            if (hasDirtyMetadataAtStart) {
+              dirtyMetadataRef.current = false;
+            }
+            
+            setDbSavedAt(new Date());
+            setSyncStatus('saved');
+          }
+        } catch (error) {
+          console.error("Initial live draft creation failed:", error);
+          setSyncStatus('error');
+        } finally {
+          isSavingRef.current = false;
+        }
+      } else {
         // Delta sync for existing draft
         const dirtyItems = Array.from(dirtyItemsRef.current.values());
         const hasDirtyMetadata = dirtyMetadataRef.current;
@@ -405,8 +406,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             setSyncStatus('saved');
           } catch (error) {
             console.error("DB Auto-save failed:", error);
-            // Restore dirty items if failed
-            dirtyItems.forEach(item => dirtyItemsRef.current.set(`${item.item_id}_${item.warehouse_id}`, item));
+            // Restore dirty items if failed, ONLY if not actively edited during the request
+            dirtyItems.forEach(item => {
+              const key = `${item.item_id}_${item.warehouse_id}`;
+              if (!dirtyItemsRef.current.has(key)) {
+                dirtyItemsRef.current.set(key, item);
+              }
+            });
             if (hasDirtyMetadata) dirtyMetadataRef.current = true;
             setSyncStatus('error');
           } finally {
@@ -446,7 +452,9 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 const incomingTime = serverItem.last_updated_at || 0;
                 const localTime = localItem.last_updated_at || 0;
                 
-                if (incomingTime >= localTime && (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes)) {
+                const isJustFlattenedZero = serverItem.counted_quantity === 0 && localItem.counted_quantity === "";
+                
+                if (incomingTime >= localTime && !isJustFlattenedZero && (localItem.counted_quantity !== serverItem.counted_quantity || localItem.notes !== serverItem.notes)) {
                   newItems[localIndex] = { ...localItem, ...serverItem };
                   changed = true;
                 }
