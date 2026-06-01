@@ -221,29 +221,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       
       const safeName = (order.restaurant_name || '').replace(/[^a-zA-Zא-ת0-9]/g, '_') || 'order';
       const file = new File([blob], `order_${safeName}.jpg`, { type: 'image/jpeg' });
-      const intro = language === 'he' ? `הזמנה ממסעדת ${order.restaurant_name || ''}` : `Order from ${order.restaurant_name || ''}`;
-
-      const rawPhone = String(order.supplier_phone || '').trim();
-      let phone = rawPhone.replace(/[^\d+]/g, '');
-      if (phone.startsWith('+')) phone = phone.slice(1);
-      if (phone.startsWith('00')) phone = phone.slice(2);
-      if (phone && phone.startsWith('0')) phone = '972' + phone.slice(1);
-
-      toast.loading(language === 'he' ? 'מעלה תמונה...' : 'Uploading image...', { id: 'upload_image' });
-      let uploadedUrl = null;
-      try {
-        const uploadRes = await base44.integrations.Core.UploadFile({ file });
-        uploadedUrl = uploadRes.file_url;
-        toast.dismiss('upload_image');
-      } catch (err) {
-        console.error('Failed to upload image:', err);
-        toast.dismiss('upload_image');
-      }
 
       setDownloading(false);
 
       let shareSucceeded = false;
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (navigator.share) {
         try {
           await navigator.share({ 
             files: [file], 
