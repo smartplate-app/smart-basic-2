@@ -60,9 +60,9 @@ export default function MonthlyCountPage() {
     }
   }, []);
 
-  const loadData = async (userEmail, retryAttempt = 0) => {
+  const loadData = async (userEmail, retryAttempt = 0, isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       setNetworkError(null);
       setRetryCount(retryAttempt);
       
@@ -77,8 +77,6 @@ export default function MonthlyCountPage() {
         console.log(`[MonthlyCount] Waiting ${delay}ms before retry...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
       
       let countsData = [];
       let warehousesData = [];
@@ -97,14 +95,15 @@ export default function MonthlyCountPage() {
                 itemsData = data.data.items || [];
             }
         } else {
-            console.log("[MonthlyCount] Loading counts...");
-            countsData = await base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date");
-            await new Promise(resolve => setTimeout(resolve, 500));
-            console.log("[MonthlyCount] Loading warehouses...");
-            warehousesData = await base44.entities.Warehouse.filter({ created_by: userEmail }, "name");
-            await new Promise(resolve => setTimeout(resolve, 500));
-            console.log("[MonthlyCount] Loading items...");
-            itemsData = await base44.entities.Item.filter({ created_by: userEmail }, "name");
+            console.log("[MonthlyCount] Loading data in parallel...");
+            const [fetchedCounts, fetchedWarehouses, fetchedItems] = await Promise.all([
+              base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date"),
+              base44.entities.Warehouse.filter({ created_by: userEmail }, "name"),
+              base44.entities.Item.filter({ created_by: userEmail }, "name")
+            ]);
+            countsData = fetchedCounts || [];
+            warehousesData = fetchedWarehouses || [];
+            itemsData = fetchedItems || [];
         }
       } catch (e) {
           console.error("Error fetching admin data for counts", e);
@@ -179,11 +178,6 @@ export default function MonthlyCountPage() {
           throw new Error('No internet connection. Please check your network.');
         }
         
-        if (retryAttempt === 0) {
-          console.log('[MonthlyCount] Initial delay for SDK initialization...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
         if (retryAttempt > 0) {
           const delay = Math.min(3000 * Math.pow(1.5, retryAttempt - 1), 15000);
           console.log(`[MonthlyCount] Waiting ${delay}ms before auth retry...`);
@@ -199,8 +193,6 @@ export default function MonthlyCountPage() {
         setUser(currentUser);
         setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_role === 'worker' || currentUser.store_user_read_only === true);
         setAuthLoading(false);
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
         
         if (mounted) {
           // Determine the working email based on user type
@@ -228,8 +220,9 @@ export default function MonthlyCountPage() {
           const stale = isStale(c, 180000);
           
           // Always fetch in background to ensure we see newly auto-saved drafts
-          if (c?.data) {
-            loadData(workingEmail).catch(console.error);
+          const hasCachedCounts = c?.data?.counts?.length > 0;
+          if (c?.data && hasCachedCounts) {
+            loadData(workingEmail, 0, true).catch(console.error);
           } else {
             await loadData(workingEmail);
           }

@@ -210,12 +210,6 @@ export default function CountListView({ counts, onEdit, onDelete, onExport, onEx
                 </Table>
                 </div>
 
-                {counts.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
-                {t('no_counts_to_display')}
-                </div>
-                )}
-
                 <Dialog open={!!deleteDialogItem} onOpenChange={(open) => !open && setDeleteDialogItem(null)}>
                 <DialogContent>
                 <DialogHeader>
