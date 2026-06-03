@@ -9,9 +9,11 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { AnimatePresence } from "framer-motion";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import MonthlyInvoiceReport from "../components/receipts/MonthlyInvoiceReport";
 import { useLanguage } from "../components/LanguageProvider";
 import NetworkErrorHandler from "../components/NetworkErrorHandler";
+import { toast } from "sonner";
 import { getCache, setCache, isStale } from "../components/utils/cache";
 
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
@@ -29,6 +31,7 @@ export default function SupplyReceiptsPage() {
   const [showNoOrderForm, setShowNoOrderForm] = useState(false); // NEW STATE
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [editingReceipt, setEditingReceipt] = useState(null);
+  const [receiptToDelete, setReceiptToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [supplierFilter, setSupplierFilter] = useState("all");
@@ -314,25 +317,27 @@ export default function SupplyReceiptsPage() {
     setSelectedOrder(null); // Clear any pre-selected order
   };
 
-  const handleDeleteReceipt = async (receipt) => {
+  const handleDeleteReceipt = (receipt) => {
+    setReceiptToDelete(receipt);
+  };
+
+  const confirmDelete = async () => {
+    if (!receiptToDelete) return;
     try {
-      const details = `${receipt.supplier_name || ''} • ${receipt.invoice_number || '-'} • ${receipt.received_date || ''}`;
-      const ok = window.confirm((t('confirm_delete_receipt') || 'Delete this receipt?') + '\n' + details);
-      if (!ok) return;
+      await base44.entities.SupplyReceipt.delete(receiptToDelete.id);
       
-      await base44.entities.SupplyReceipt.delete(receipt.id);
-      
-      setReceipts(prev => prev.filter(r => r.id !== receipt.id));
+      setReceipts(prev => prev.filter(r => r.id !== receiptToDelete.id));
       
       // Also close the form if this receipt was being edited
-      if (editingReceipt && editingReceipt.id === receipt.id) {
+      if (editingReceipt && editingReceipt.id === receiptToDelete.id) {
         setShowForm(false);
         setEditingReceipt(null);
       }
       
-      alert(t('deleted_successfully') || 'Deleted successfully');
+      setReceiptToDelete(null);
+      toast.success(t('deleted_successfully') || (language === 'he' ? 'נמחק בהצלחה' : 'Deleted successfully'));
     } catch (e) {
-      alert((t('delete_failed') || 'Delete failed') + ': ' + (e?.message || e));
+      toast.error((t('delete_failed') || (language === 'he' ? 'מחיקה נכשלה' : 'Delete failed')) + ': ' + (e?.message || e));
     }
   };
 
@@ -1096,6 +1101,37 @@ export default function SupplyReceiptsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={!!receiptToDelete} onOpenChange={(open) => { if (!open) setReceiptToDelete(null); }}>
+        <DialogContent className="max-w-md" dir={isRTL ? "rtl" : "ltr"}>
+          <DialogHeader>
+            <DialogTitle className="text-red-600 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" />
+              {language === 'he' ? 'מחיקת קבלה' : 'Delete Receipt'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'he' 
+                ? 'האם אתה בטוח שברצונך למחוק קבלה זו? פעולה זו בלתי הפיכה.' 
+                : 'Are you sure you want to delete this receipt? This action cannot be undone.'}
+            </DialogDescription>
+          </DialogHeader>
+          {receiptToDelete && (
+            <div className="py-4 text-sm text-gray-700 bg-gray-50 rounded-lg p-3 border border-gray-100 mt-2">
+              <div className="font-bold text-base mb-1">{receiptToDelete.supplier_name || '-'}</div>
+              <div>{language === 'he' ? 'מספר חשבונית:' : 'Invoice:'} {receiptToDelete.invoice_number || '-'}</div>
+              <div>{language === 'he' ? 'תאריך קבלה:' : 'Received:'} {new Date(receiptToDelete.received_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>
+            </div>
+          )}
+          <DialogFooter className="mt-4 gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setReceiptToDelete(null)}>
+              {tt('cancel', 'ביטול', 'Cancel')}
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              {tt('delete', 'מחק קבלה', 'Delete Receipt')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
