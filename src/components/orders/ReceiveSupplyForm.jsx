@@ -1746,15 +1746,13 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       </div>
 
                       {formData.verified_items.some(i => i.request_credit_quantity || i.request_credit_price) && (
-                        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">
-                          <h4 className="font-bold text-red-800 mb-2">{language === 'he' ? 'פריטים דורשים זיכוי' : 'Items pending credit'}</h4>
-                          <p className="text-sm text-red-700 mb-4">
-                            {language === 'he' ? 'סימנת פריטים עם פערים המצריכים בקשת זיכוי מהספק.' : 'You marked items with discrepancies requiring a credit request from the supplier.'}
-                          </p>
-                          <Button 
-                            type="button" 
-                            className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto font-bold"
-                            onClick={async () => {
+                        <div className={`mt-4 p-4 border rounded-lg shadow-sm ${formData.refund_received ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                          <h4 className={`font-bold mb-2 ${formData.refund_received ? 'text-green-800' : 'text-red-800'}`}>
+                            {language === 'he' ? (formData.refund_received ? 'פריטים שדרשו זיכוי (טופל)' : 'פריטים דורשים זיכוי') : (formData.refund_received ? 'Items that required credit (Resolved)' : 'Items pending credit')}</h4>
+                          <p className={`text-sm mb-4 ${formData.refund_received ? 'text-green-700' : 'text-red-700'}`}>
+                            {language === 'he' ? (formData.refund_received ? 'פערים אלו כבר זוכו וטופלו.' : 'סימנת פריטים עם פערים המצריכים בקשת זיכוי מהספק.') : (formData.refund_received ? 'These discrepancies were already credited and resolved.' : 'You marked items with discrepancies requiring a credit request from the supplier.')}</p>
+                          {!formData.refund_received && (
+                          <Button type="button" className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto font-bold" onClick={async () => {
                               const s = availableSuppliers.find(x => x.id === formData.supplier_id);
                               const phone = (s?.phone || "").replace(/\D/g, "");
                               const targetEmail = s?.email || formData.supplier_email;
@@ -1796,6 +1794,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           >
                             {language === 'he' ? 'שלח בקשת זיכוי (אימייל + נייד)' : 'Send Credit Request (Email & Mobile)'}
                           </Button>
+                          )}
                         </div>
                       )}
                     </>

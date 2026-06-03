@@ -252,12 +252,21 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   </td>
                   <td className="px-6 py-5 text-center align-middle">
                     <div className="flex items-center justify-center gap-1 flex-wrap">
+                      {!r.is_refund && r.document_type === 'invoice' && (
+                        <Badge className="bg-blue-50 text-blue-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}</Badge>
+                      )}
+                      {!r.is_refund && r.document_type === 'delivery_note' && (
+                        <Badge className="bg-teal-50 text-teal-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}</Badge>
+                      )}
+                      {!r.is_refund && r.document_type === 'summary_invoice' && (
+                        <Badge className="bg-indigo-50 text-indigo-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}</Badge>
+                      )}
                       {r.is_refund && (
-                    <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
-                  )}
-                  {r.awaiting_credit && (
-                    <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
-                  )}
+                        <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'חשבונית זיכוי', 'Refund')}</Badge>
+                      )}
+                      {r.awaiting_credit && (
+                        <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
@@ -352,8 +361,17 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
               
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <div className="flex items-center gap-1 flex-wrap">
+                  {!r.is_refund && r.document_type === 'invoice' && (
+                    <Badge className="bg-blue-50 text-blue-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'חשבונית מס' : 'Tax Invoice'}</Badge>
+                  )}
+                  {!r.is_refund && r.document_type === 'delivery_note' && (
+                    <Badge className="bg-teal-50 text-teal-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'תעודת משלוח' : 'Delivery Note'}</Badge>
+                  )}
+                  {!r.is_refund && r.document_type === 'summary_invoice' && (
+                    <Badge className="bg-indigo-50 text-indigo-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'חשבונית מרכזת' : 'Summary Invoice'}</Badge>
+                  )}
                   {r.is_refund && (
-                    <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'זיכוי', 'Refund')}</Badge>
+                    <Badge className="bg-purple-50 text-purple-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{safeT('refund', 'חשבונית זיכוי', 'Refund')}</Badge>
                   )}
                   {r.awaiting_credit && (
                     <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
