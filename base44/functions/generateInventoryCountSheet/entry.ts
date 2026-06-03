@@ -92,6 +92,30 @@ Deno.serve(async (req) => {
       items = items.filter(it => it.warehouse_id === warehouse_id || (it.warehouse_ids && it.warehouse_ids.includes(warehouse_id)));
     }
 
+    // Make sure we include items assigned via the warehouse's catalog_items
+    if (warehouse_id) {
+      try {
+        const whQuery = isAdminImpersonating 
+          ? await base44.asServiceRole.entities.Warehouse.filter({ id: warehouse_id })
+          : await base44.entities.Warehouse.filter({ id: warehouse_id });
+        const wh = whQuery?.[0];
+        if (wh && wh.catalog_items) {
+          // If the item ID is in the warehouse's catalog_items array, force it to match
+          items.forEach(it => {
+            if (wh.catalog_items.includes(it.id)) {
+              it.warehouse_id = warehouse_id;
+              if (!it.warehouse_ids) it.warehouse_ids = [];
+              if (!it.warehouse_ids.includes(warehouse_id)) it.warehouse_ids.push(warehouse_id);
+              if (!it.warehouse_names) it.warehouse_names = [];
+              if (!it.warehouse_names.includes(wh.name)) it.warehouse_names.push(wh.name);
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Error fetching warehouse for catalog items', e);
+      }
+    }
+
     const isHebrew = language === 'he';
     const headers = isHebrew ? [
       'שם ספק',

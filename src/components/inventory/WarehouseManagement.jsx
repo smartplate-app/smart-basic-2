@@ -38,8 +38,13 @@ export default function WarehouseManagement({ warehouses, onClose }) {
 
   const loadItems = async () => {
     try {
-      const items = await Item.list();
-      setAllItems(items);
+      const user = await base44.auth.me();
+      let workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+      if (user.role === 'admin' && user.acting_as_user_email) {
+          workingEmail = user.acting_as_user_email;
+      }
+      const fetchedItems = await Item.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }, "name", 10000);
+      setAllItems(fetchedItems || []);
     } catch (error) {
       console.error("Error loading items:", error);
     }

@@ -97,10 +97,11 @@ export default function MonthlyCountPage() {
             }
         } else {
             console.log("[MonthlyCount] Loading data in parallel...");
+            const query = { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
             const [fetchedCounts, fetchedWarehouses, fetchedItems] = await Promise.all([
-              base44.entities.InventoryCount.filter({ created_by: userEmail }, "-count_date"),
-              base44.entities.Warehouse.filter({ created_by: userEmail }, "name"),
-              base44.entities.Item.filter({ created_by: userEmail }, "name")
+              base44.entities.InventoryCount.filter(query, "-count_date", 10000),
+              base44.entities.Warehouse.filter(query, "name", 10000),
+              base44.entities.Item.filter(query, "name", 10000)
             ]);
             countsData = fetchedCounts || [];
             warehousesData = fetchedWarehouses || [];
