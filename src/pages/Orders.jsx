@@ -604,9 +604,7 @@ export default function OrdersPage() {
 
       const linkedOrderIds = [cleanData.order_id, ...(cleanData.linked_order_ids || [])].filter(Boolean);
       if (linkedOrderIds.length > 0) {
-        await Promise.all(linkedOrderIds.map(orderId =>
-          base44.entities.Order.update(orderId, { status: 'delivered' }).catch(() => {})
-        ));
+        await base44.functions.invoke('markOrdersDelivered', { orderIds: linkedOrderIds }).catch(() => {});
         setOrders(prev => prev.map(o => linkedOrderIds.includes(o.id) ? { ...o, status: 'delivered' } : o));
       }
 
