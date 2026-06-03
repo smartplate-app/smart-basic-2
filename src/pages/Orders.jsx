@@ -685,8 +685,11 @@ export default function OrdersPage() {
   const handleSendNow = async (order) => {
     if (!order) return;
 
+    // Open the window synchronously BEFORE any await to bypass Chrome's popup blocker
+    const waWindow = window.open('', '_blank');
+
     // Send order via the explicit WhatsApp handler directly
-    await sendOrderToWhatsApp(order, { forceImageShare: false, preOpenedWindow: null });
+    await sendOrderToWhatsApp(order, { forceImageShare: false, preOpenedWindow: waWindow });
     
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     
@@ -839,15 +842,13 @@ export default function OrdersPage() {
     }
 
     // 3) Open WhatsApp app first, fall back to WhatsApp Web (works for unsaved numbers via wa.me)
-    if (isAndroid || isIOS) {
-      // APKs / WebViews prefer window.open to correctly trigger intents for wa.me links
-      window.open(waWeb, '_blank', 'noopener,noreferrer');
+    if (opts && opts.preOpenedWindow && !opts.preOpenedWindow.closed) {
+      opts.preOpenedWindow.location.href = waWeb;
+    } else if (isAndroid || isIOS) {
+      // Fallback: use location.href for reliable mobile intents if no preOpenedWindow
+      window.location.href = waWeb;
     } else {
-      if (opts && opts.preOpenedWindow && !opts.preOpenedWindow.closed) {
-        opts.preOpenedWindow.location.href = waWeb;
-      } else {
-        window.open(waWeb, '_blank', 'noopener,noreferrer');
-      }
+      window.open(waWeb, '_blank', 'noopener,noreferrer');
     }
 
 
@@ -866,13 +867,16 @@ export default function OrdersPage() {
   const order = sendOptionOrder;
   setShowSendOptions(false);
 
+  // Open the window synchronously BEFORE any await to bypass Chrome's popup blocker
+  const waWindow = window.open('', '_blank');
+
   // Fallback: proceed to WhatsApp and update UI optimistically.
   setOrders(prev => prev.map(o => {
     if (o.id !== order.id) return o;
     const num = order.order_number || `ORD-${(o.id || Date.now()).toString().slice(-8)}`;
     return { ...o, status: 'sent', order_number: num };
   }));
-  try { await sendOrderToWhatsApp(order, { preOpenedWindow: null }); } catch (_) {}
+  try { await sendOrderToWhatsApp(order, { preOpenedWindow: waWindow }); } catch (_) { if (waWindow) waWindow.close(); }
   setPreviewOrder(null);
   // Optionally retry in background without blocking UX
   setTimeout(() => {
