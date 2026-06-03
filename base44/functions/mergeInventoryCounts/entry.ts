@@ -68,8 +68,13 @@ Deno.serve(async (req) => {
 
         const createdCount = await base44.asServiceRole.entities.InventoryCount.create(newCount);
 
+        // We DO NOT delete the old counts anymore to keep data intact
+        // Just mark them as merged in the notes or rename them
         for (const count of counts) {
-            await base44.asServiceRole.entities.InventoryCount.delete(count.id);
+            await base44.asServiceRole.entities.InventoryCount.update(count.id, {
+                notes: ((count.notes || '') + ' [Merged into ' + createdCount.id + ']').trim(),
+                name: ((count.name || count.warehouse_name || '') + ' (Merged)').trim()
+            });
         }
 
         return Response.json({ success: true, count: createdCount });

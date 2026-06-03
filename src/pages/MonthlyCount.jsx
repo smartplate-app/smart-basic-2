@@ -952,7 +952,7 @@ export default function MonthlyCountPage() {
             <DialogHeader>
               <DialogTitle>{language === 'he' ? 'מיזוג ספירות (מצב אדמין)' : 'Merge Counts (Admin Mode)'}</DialogTitle>
               <DialogDescription>
-                {language === 'he' ? 'בחר את הספירות שתרצה לאחד לאחת. הפעולה תיצור ספירה חדשה משולבת ותמחוק את המקוריות.' : 'Select counts to merge into one. This will create a new combined count and delete the original ones.'}
+                {language === 'he' ? 'בחר את הספירות שתרצה לאחד לאחת. הפעולה תיצור ספירה חדשה משולבת (הספירות המקוריות יישמרו כגיבוי).' : 'Select counts to merge into one. This will create a new combined count (the original counts will be kept as backups).'}
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-start mt-2">
@@ -1005,7 +1005,7 @@ export default function MonthlyCountPage() {
                     alert(language === 'he' ? 'בחר לפחות 2 ספירות למיזוג' : 'Select at least 2 counts to merge');
                     return;
                   }
-                  if (!confirm(language === 'he' ? 'האם אתה בטוח שברצונך לאחד ספירות אלו? פעולה זו בלתי הפיכה ותמחוק את הספירות המקוריות.' : 'Are you sure you want to merge these counts? This cannot be undone and original counts will be deleted.')) return;
+                  if (!confirm(language === 'he' ? 'האם אתה בטוח שברצונך לאחד ספירות אלו? תיווצר ספירה חדשה והספירות הישנות יישמרו כגיבוי ולא יימחקו.' : 'Are you sure you want to merge these counts? A new count will be created and the old ones will be kept as backups.')) return;
                   try {
                     setShowMergeModal(false);
                     setLoading(true);
