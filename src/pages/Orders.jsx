@@ -28,7 +28,7 @@ export default function OrdersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("history");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [datePreset, setDatePreset] = useState("all");
   const [sortBy, setSortBy] = useState("none");
@@ -959,11 +959,11 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders.filter(order => {
-        if (order.status === 'delivered') return false; // Hide received orders from Orders page
+        if (order.status === 'delivered' && statusFilter !== 'history') return false; // Hide received orders from Orders page
         
         const matchesSearch = (order.supplier_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
           (order.order_number || '').toLowerCase().includes((searchTerm || '').toLowerCase());
-        const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+        const matchesStatus = statusFilter === "history" || order.status === statusFilter;
         const matchesSupplier = supplierFilter === "all" || ((order.supplier_name || '').toLowerCase().includes(supplierFilter.toLowerCase()));
 
         const dateStr = order.delivery_date || order.created_date || order.updated_date;
@@ -1120,13 +1120,13 @@ export default function OrdersPage() {
             />
           </div>
           <div className="flex gap-2 w-full justify-between">
-            {['all','draft','sent'].map((s) => (
+            {['history','draft','sent'].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
                 className={`flex-1 py-2 text-xs font-medium rounded-xl border transition-colors ${statusFilter===s ? 'bg-[#d4a373] text-white border-[#d4a373]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
               >
-                {s==='all' ? safeT('all_statuses','הכל','All') :
+                {s==='history' ? safeT('order_history','היסטוריית הזמנות','Order History') :
                  s==='draft' ? t('status_draft') :
                  t('status_sent')}
               </button>
@@ -1267,7 +1267,7 @@ export default function OrdersPage() {
                   <SelectValue placeholder={safeT('order_status', 'סטטוס הזמנה', 'Order status')} />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl shadow-lg border-gray-100">
-                  <SelectItem value="all" className="rounded-xl font-medium">{safeT('all_statuses','כל הסטטוסים','All statuses')}</SelectItem>
+                  <SelectItem value="history" className="rounded-xl font-medium">{safeT('order_history','היסטוריית הזמנות','Order History')}</SelectItem>
                   <SelectItem value="draft" className="rounded-xl">{t('status_draft')}</SelectItem>
                   <SelectItem value="sent" className="rounded-xl">{t('status_sent')}</SelectItem>
                 </SelectContent>
@@ -1301,7 +1301,7 @@ export default function OrdersPage() {
               const todayStr = new Date().toISOString().split('T')[0];
               const sectionOrders = sortedOrders.filter(o => {
                 if (section === 'draft') return o.status === 'draft';
-                if (o.status !== 'sent') return false;
+                if (o.status !== 'sent' && o.status !== 'delivered') return false;
                 const dateStr = o.delivery_date ? new Date(o.delivery_date).toISOString().split('T')[0] : '';
                 if (section === 'today') return dateStr === todayStr;
                 if (section === 'future') return dateStr > todayStr;
@@ -1323,12 +1323,14 @@ export default function OrdersPage() {
                     {sectionOrders.map((order) => {
                       const statusColors = {
                         sent: "bg-white text-gray-900 border-gray-200 shadow-sm",
-                        draft: "bg-yellow-50 text-yellow-700 border-yellow-200"
+                        draft: "bg-yellow-50 text-yellow-700 border-yellow-200",
+                        delivered: "bg-green-50 text-green-700 border-green-200 shadow-sm"
                       };
 
                       const statusLabels = {
                         sent: t('status_sent'),
-                        draft: t('status_draft')
+                        draft: t('status_draft'),
+                        delivered: safeT('status_delivered', 'סופק', 'Delivered')
                       };
 
                       return (
@@ -1522,7 +1524,7 @@ export default function OrdersPage() {
                     const todayStr = new Date().toISOString().split('T')[0];
                     const sectionOrders = sortedOrders.filter(o => {
                       if (section === 'draft') return o.status === 'draft';
-                      if (o.status !== 'sent') return false;
+                      if (o.status !== 'sent' && o.status !== 'delivered') return false;
                       const dateStr = o.delivery_date ? new Date(o.delivery_date).toISOString().split('T')[0] : '';
                       if (section === 'today') return dateStr === todayStr;
                       if (section === 'future') return dateStr > todayStr;
@@ -1552,7 +1554,8 @@ export default function OrdersPage() {
       
                           const statusLabels = {
                             sent: t('status_sent'),
-                            draft: t('status_draft')
+                            draft: t('status_draft'),
+                            delivered: safeT('status_delivered', 'סופק', 'Delivered')
                           };
 
                           return (
@@ -1588,7 +1591,7 @@ export default function OrdersPage() {
                         </td>
                         <td className="px-6 py-5 text-left rtl:text-right align-middle">
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border border-gray-200 bg-white shadow-sm ${order.status === 'sent' ? 'text-gray-900' : 'text-gray-700'}`}>
+                            <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border border-gray-200 shadow-sm ${order.status === 'sent' ? 'text-gray-900 bg-white' : order.status === 'delivered' ? 'text-green-700 bg-green-50 border-green-200' : 'text-gray-700 bg-white'}`}>
                               {statusLabels[order.status] || order.status}
                               {order.status === 'draft' && <span className="ml-2 rtl:mr-2 rtl:ml-0">✓</span>}
                             </span>
