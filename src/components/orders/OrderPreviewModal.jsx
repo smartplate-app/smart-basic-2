@@ -242,15 +242,39 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       } 
       
       if (!shareSucceeded) {
-        const imageUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = imageUrl;
-        a.download = `order_${safeName}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
-        toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded - please send manually');
+        // Fallback for Android APK / when share fails: Try to copy to clipboard so they can paste it
+        let copied = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.write) {
+            // Clipboard API generally requires image/png
+            const pngDataUrl = canvas.toDataURL('image/png');
+            const pngRes = await fetch(pngDataUrl);
+            const pngBlob = await pngRes.blob();
+            
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                'image/png': pngBlob
+              })
+            ]);
+            copied = true;
+            toast.success(language === 'he' ? 'התמונה הועתקה! פתח וואטסאפ והדבק' : 'Image copied! Open WhatsApp and paste');
+          }
+        } catch (copyErr) {
+          console.error('Clipboard copy failed', copyErr);
+        }
+
+        // Final fallback: download
+        if (!copied) {
+          const imageUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = imageUrl;
+          a.download = `order_${safeName}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
+          toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded - please send manually');
+        }
       }
 
     } catch (err) {
@@ -416,7 +440,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                           {/* Footer */}
                           <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
                               <img 
-                                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png" 
                                 alt="Smart Plate"
                                 style={{ height: '40px', objectFit: 'contain', margin: '0 auto 6px' }}
                               />

@@ -1163,12 +1163,56 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       costElements.forEach(el => el.style.display = '');
       
       const image = canvas.toDataURL('image/jpeg', 0.95);
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = 'AJ.jpg';
-      link.click();
       
-      toast.success(language === 'he' ? 'הלוח הורד בהצלחה' : 'Schedule downloaded successfully');
+      // Try to use native share on mobile if supported
+      let shared = false;
+      if (navigator.share) {
+        try {
+          const blob = await (await fetch(image)).blob();
+          const file = new File([blob], 'AJ.jpg', { type: 'image/jpeg' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: language === 'he' ? 'סידור עבודה' : 'Weekly Schedule',
+            });
+            shared = true;
+          }
+        } catch (err) {
+          console.log('Share failed or was cancelled', err);
+          // Don't show error if user just cancelled the share sheet
+          if (err.name !== 'AbortError') {
+             // Fallback to download
+          } else {
+             shared = true; // User cancelled, don't download
+          }
+        }
+      }
+      
+      if (!shared) {
+        let copied = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.write) {
+            const pngDataUrl = canvas.toDataURL('image/png');
+            const pngRes = await fetch(pngDataUrl);
+            const pngBlob = await pngRes.blob();
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': pngBlob })
+            ]);
+            copied = true;
+            toast.success(language === 'he' ? 'הלוח הועתק! פתח וואטסאפ והדבק' : 'Schedule copied! Open WhatsApp and paste');
+          }
+        } catch (copyErr) {
+          console.error('Clipboard copy failed', copyErr);
+        }
+
+        if (!copied) {
+          const link = document.createElement('a');
+          link.href = image;
+          link.download = 'AJ.jpg';
+          link.click();
+          toast.success(language === 'he' ? 'הלוח הורד בהצלחה' : 'Schedule downloaded successfully');
+        }
+      }
     } catch (error) {
       toast.error(language === 'he' ? 'שגיאה בהורדת התמונה' : 'Error downloading image');
       const costElements = element.querySelectorAll('.shift-cost');
