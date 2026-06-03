@@ -122,7 +122,7 @@ const translations = {
         "orders_greeting": "שלום {name}, צור ושלח הזמנות לספקים שלך",
         "search_orders": "חיפוש הזמנות...",
         "order_status": "סטטוס הזמנה",
-        "status_sent": "נשלח", "status_confirmed": "אושר", "status_delivered": "נמסר",
+        "status_sent": "נשלח", "status_confirmed": "אושר", "status_delivered": "סופק",
         "no_orders_to_display": "אין הזמנות להצגה",
         "start_by_creating_order": "התחל על ידי יצירת הזמנה חדשה",
         "edit_order": "עריכת הזמנה",
