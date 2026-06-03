@@ -48,6 +48,7 @@ export default function MonthlyCountPage() {
   const [isViewer, setIsViewer] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportDatePreset, setExportDatePreset] = useState("month");
+  const [exportingSingleSheetId, setExportingSingleSheetId] = useState(null);
 
   // Hydrate from cache for instant UI
   useEffect(() => {
@@ -513,6 +514,7 @@ export default function MonthlyCountPage() {
 
   const handleExportSingleSheet = async (count) => {
     try {
+      setExportingSingleSheetId(count.id);
       const payload = {
         title: count.name || count.warehouse_name,
         items: count.items || [],
@@ -523,7 +525,8 @@ export default function MonthlyCountPage() {
       const { data } = await base44.functions.invoke('exportSingleCountToSheets', payload);
       
       if (data?.success && data?.spreadsheetUrl) {
-         alert((language === 'he' ? 'יוצא בהצלחה! פותח את הגיליון...' : 'Exported successfully! Opening sheet...'));
+         // Optionally remove the alert so the redirect is totally seamless
+         // alert((language === 'he' ? 'יוצא בהצלחה! פותח את הגיליון...' : 'Exported successfully! Opening sheet...'));
          const url = data.spreadsheetUrl;
          
          const a = document.createElement('a');
@@ -546,6 +549,8 @@ export default function MonthlyCountPage() {
       }
     } catch (e) {
       alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
+    } finally {
+      setExportingSingleSheetId(null);
     }
   };
 
@@ -870,6 +875,7 @@ export default function MonthlyCountPage() {
                     onDelete={handleDeleteCount}
                     onExport={handleExportPdf}
                     onExportSheet={handleExportSingleSheet}
+                    exportingSheetId={exportingSingleSheetId}
                   />
                 )}
 

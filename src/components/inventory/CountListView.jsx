@@ -21,7 +21,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "../LanguageProvider";
 
-export default function CountListView({ counts, onEdit, onDelete, onExport, onExportSheet }) {
+import { Loader } from "lucide-react";
+
+export default function CountListView({ counts, onEdit, onDelete, onExport, onExportSheet, exportingSheetId }) {
   const [deleteDialogItem, setDeleteDialogItem] = useState(null);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
@@ -166,11 +168,16 @@ export default function CountListView({ counts, onEdit, onDelete, onExport, onEx
                     <Button
                       variant="ghost"
                       size="icon"
+                      disabled={exportingSheetId === count.id}
                       onClick={() => onExportSheet && onExportSheet(count)}
-                      className="text-gray-500 hover:text-green-600 hover:bg-green-50"
+                      className="text-gray-500 hover:text-green-600 hover:bg-green-50 relative"
                       title={language === 'he' ? 'ייצוא לאקסל/Sheets' : 'Export to Sheets'}
                     >
-                      <FileSpreadsheet className="w-4 h-4" />
+                      {exportingSheetId === count.id ? (
+                        <Loader className="w-4 h-4 animate-spin text-green-600" />
+                      ) : (
+                        <FileSpreadsheet className="w-4 h-4" />
+                      )}
                     </Button>
                     <Button
                       variant="ghost"
