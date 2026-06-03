@@ -209,7 +209,7 @@ export default function RestaurantInvitePage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="flex flex-col items-center gap-4">
           <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png" 
             alt="Smart Plate"
             className="h-20 object-contain animate-pulse"
           />
@@ -246,7 +246,7 @@ export default function RestaurantInvitePage() {
           <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
             <div className="flex items-center justify-center gap-3 mb-2">
               <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png" 
                 alt="Smart Plate"
                 className="h-12 object-contain"
               />
