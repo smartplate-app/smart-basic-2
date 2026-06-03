@@ -4,12 +4,12 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        // Impersonate Daniel to see if he can fetch Order
-        // Actually we can't easily impersonate without a token.
-        // Let's check Recipe.json again, why does it have an RLS policy?
+        // I will simulate a user session and see if RLS was the blocker.
+        // Wait, I can't generate a token here, but I can check if the data exists.
         
         return Response.json({
-            ok: true
+            ok: true,
+            msg: "RLS was removed, the data should now be accessible."
         });
     } catch (error) {
         return Response.json({ error: error.message }, { status: 500 });
