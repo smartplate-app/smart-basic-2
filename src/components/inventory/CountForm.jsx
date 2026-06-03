@@ -503,7 +503,10 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     const term = (availableSearch || '').trim().toLowerCase();
     const newFilteredItems = items.filter(item => {
       const isNotInCount = !formData.items.some(countItem => countItem.item_id === item.id && countItem.warehouse_id === currentWarehouseTab);
-      const matches = !term || (item.name || '').toLowerCase().includes(term);
+      const matches = !term || 
+        (item.name || '').toLowerCase().includes(term) ||
+        (item.nickname || '').toLowerCase().includes(term) ||
+        (item.supplier_name || '').toLowerCase().includes(term);
       return isNotInCount && matches;
     });
     setFilteredAvailableItems(newFilteredItems);
@@ -773,7 +776,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     const originalItem = items.find(i => i.id === item.item_id);
     return !tableSearchTerm || 
       (item.item_name || '').toLowerCase().includes(tableSearchTerm.toLowerCase()) || 
-      (originalItem?.nickname || '').toLowerCase().includes(tableSearchTerm.toLowerCase());
+      (originalItem?.nickname || '').toLowerCase().includes(tableSearchTerm.toLowerCase()) ||
+      (originalItem?.supplier_name || '').toLowerCase().includes(tableSearchTerm.toLowerCase());
   });
 
   return (

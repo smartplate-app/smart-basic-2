@@ -21,6 +21,7 @@ export default function WarehouseManagement({ warehouses, onClose }) {
   const [showItemSelection, setShowItemSelection] = useState(null);
   const [itemSelectionMode, setItemSelectionMode] = useState('daily'); // 'daily' | 'catalog'
   const [allItems, setAllItems] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     location: "",
@@ -381,11 +382,19 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                 </p>
               </div>
 
+              <div className="mb-4">
+                <Input
+                  placeholder={t('search') || 'Search items...'}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
               <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-4">
                 {allItems.length === 0 ? (
                   <p className="text-gray-500">{t('no_items_to_display')}</p>
                 ) : (
-                  allItems.map(item => (
+                  allItems.filter(item => !searchTerm || (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (item.nickname || '').toLowerCase().includes(searchTerm.toLowerCase()) || (item.supplier_name || '').toLowerCase().includes(searchTerm.toLowerCase())).map(item => (
                     <div key={item.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
                       <Checkbox
                        checked={(itemSelectionMode === 'daily' ? (formData.daily_count_items || []) : (formData.catalog_items || [])).includes(item.id)}
