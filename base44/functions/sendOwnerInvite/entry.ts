@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       regards: 'Best regards,',
       brand: fromName
     };
-    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg';
+    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png';
     const htmlBody = `<!doctype html>
 <html lang="${language}" dir="${dir}">
 <head>
