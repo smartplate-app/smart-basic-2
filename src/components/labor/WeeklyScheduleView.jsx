@@ -1153,6 +1153,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       const costElements = element.querySelectorAll('.shift-cost');
       costElements.forEach(el => el.style.display = 'none');
       
+      // Yield to let the toast appear and UI settle before html2canvas blocks
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       const canvas = await html2canvas(element, {
         scale: 2,
         backgroundColor: '#ffffff',

@@ -88,6 +88,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           const shareOnly = !!opts.shareOnly;
     try {
       setDownloading(true);
+      // Yield to ensure the loading spinner renders before heavy html2canvas blocks the thread
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       // Ensure order number exists; if missing, persist and mark as sent when appropriate
       let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
@@ -218,7 +220,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       // Remove temp container
       document.body.removeChild(tempContainer);
 
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85); // Compress slightly to ensure swift Android share
       const r = await fetch(dataUrl);
       const blob = await r.blob();
       
@@ -226,9 +228,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       const file = new File([blob], `order_${safeName}.jpg`, { type: 'image/jpeg' });
 
       setDownloading(false);
+      // Yield to let React remove the spinner before the share sheet opens
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       let shareSucceeded = false;
-      if (navigator.share) {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ 
             files: [file], 
@@ -237,7 +241,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           shareSucceeded = true;
         } catch(e) {
           console.error('Share failed', e);
-          if (e.name === 'AbortError') return; // User cancelled
+          if (e.name === 'AbortError' || (e.message && e.message.includes('abort'))) {
+             return; // User cancelled, do not trigger fallback
+          }
         }
       } 
       
