@@ -150,6 +150,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 <span>${language === 'he' ? 'תאריך אספקה:' : 'Delivery:'}</span>
                 <span style="font-weight: 500; color: #111827;">${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
               </div>` : ''}
+              <div style="display: flex; justify-content: space-between;">
+                <span>${language === 'he' ? 'נשלח בתאריך:' : 'Sent At:'}</span>
+                <span style="font-weight: 500; color: #111827;" dir="ltr">${new Date().toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}</span>
+              </div>
             </div>
 
             <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 24px;">
@@ -366,6 +370,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                                       <span style={{ fontWeight: '500', color: '#111827' }}>{new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
                                   </div>
                               )}
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>{language === 'he' ? 'נשלח בתאריך:' : 'Sent At:'}</span>
+                                  <span style={{ fontWeight: '500', color: '#111827' }} dir="ltr">{new Date().toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} {new Date().toLocaleTimeString(language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}</span>
+                              </div>
                           </div>
 
                           {/* Items List */}

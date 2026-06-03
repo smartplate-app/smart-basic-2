@@ -119,6 +119,7 @@ Deno.serve(async (req) => {
           <div style="margin:4px 0;"><strong>From:</strong> ${restaurantName || '-'}</div>
           <div style="margin:4px 0;"><strong>Order #:</strong> ${orderNumber}</div>
           <div style="margin:4px 0;"><strong>Delivery date:</strong> ${deliveryDate || '-'}</div>
+          <div style="margin:4px 0;"><strong>Sent at:</strong> <span dir="ltr">${new Date().toLocaleDateString(body?.language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(body?.language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}</span></div>
           <div style="margin:4px 0;"><strong>Total:</strong> ₪${totalCost}</div>
         </div>
         <table style="width:100%;border-collapse:collapse;margin:10px 0 16px 0;font-size:13px;">
@@ -166,7 +167,7 @@ Deno.serve(async (req) => {
       }
       return `• ${(it.item_name || '')}${it.catalog_number ? ` (SKU: ${it.catalog_number})` : ''} — ${Number(it.quantity || 0)} ${displayUnit}`;
     }).join('\n');
-    const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.\n\n${restaurantName ? restaurantName + '\n' : ''}הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n\n\n\n\n\n`;
+    const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nSent at: ${new Date().toLocaleDateString(body?.language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(body?.language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.\n\n${restaurantName ? restaurantName + '\n' : ''}הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n\n\n\n\n\n`;
 
     // Attempt to use Gmail connector if authorized, fallback to Core.SendEmail
     const sendTo = async (rcpt) => {

@@ -718,7 +718,9 @@ export default function OrdersPage() {
   // Format items for text
   const itemsText = (order.items || []).map(it => `• ${it.item_name || it.name || ''} - ${it.quantity} ${unitLabel(it.unit)}`).join('\n');
   
-  const text = `${intro}\n\n*${numLbl}:* ${ensuredNumber}\n\n*${safeT('items', 'פריטים', 'Items')}:*\n${itemsText}`;
+  const sentAtLbl = language === 'he' ? 'נשלח בתאריך' : 'Sent At';
+  const sentAtVal = `${new Date().toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}`;
+  const text = `${intro}\n\n*${numLbl}:* ${ensuredNumber}\n*${sentAtLbl}:* ${sentAtVal}\n\n*${safeT('items', 'פריטים', 'Items')}:*\n${itemsText}`;
     const isAndroid = /Android/i.test(navigator.userAgent || '') && !(/iPhone|iPad|iPod/i.test(navigator.userAgent || ''));
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
     // No pre-opened tabs to avoid blockers/new-tab flashes
@@ -769,6 +771,7 @@ export default function OrdersPage() {
           <div style="font-weight:700;color:#0f172a;margin-bottom:8px;">${t('order_from') || 'From'}: ${order.restaurant_name || ''}</div>
           ${order.restaurant_address ? `<div style=\"color:#334155\">${order.restaurant_address}</div>` : ''}
           ${order.delivery_date ? `<div style=\"margin-top:8px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;display:inline-block;\">${t('delivery_date') || 'Delivery'}: ${new Date(order.delivery_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</div>` : ''}
+          <div style="margin-top:8px;color:#334155;display:block;">${language === 'he' ? 'נשלח בתאריך:' : 'Sent At:'} <span dir="ltr">${new Date().toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}</span></div>
         </div>
         <div style="border:2px solid #22c55e;border-radius:12px;padding:16px;margin:12px 0;">
           <div style="font-weight:800;color:#166534;margin-bottom:8px;">${t('items') || 'Items'}</div>
