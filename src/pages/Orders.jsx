@@ -439,6 +439,22 @@ export default function OrdersPage() {
     return offlineQueue.onOnline('orders', processItem);
   }, [user]);
 
+  // Real-time sync for orders updated from the backend (e.g. automations)
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = base44.entities.Order.subscribe((event) => {
+      if (event.type === 'update' && event.data) {
+        setOrders(prev => {
+          const updated = prev.map(o => o.id === event.id ? { ...o, ...event.data } : o);
+          const c = getCache('orders_v1');
+          if (c?.data) setCache('orders_v1', { ...c.data, orders: updated });
+          return updated;
+        });
+      }
+    });
+    return unsubscribe;
+  }, [user]);
+
   // OS notification: orders left in draft for >24h (once per day)
   useEffect(() => {
     if (!orders || orders.length === 0) return;
