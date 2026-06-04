@@ -263,6 +263,59 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 };
               }
               updatedCount++;
+            } else {
+              // Add missing item if not found in current count
+              const cleanUpdateName = String(update.item_name || '').trim();
+              const originalItem = items.find(i => 
+                String(i.name || '').trim() === cleanUpdateName || 
+                String(i.nickname || '').trim() === cleanUpdateName || 
+                String(i.name || '').trim() === cleanUpdateName.replace(' (Summary)', '') || 
+                String(i.name || '').trim() === cleanUpdateName.replace(' (סיכום)', '')
+              );
+              
+              if (originalItem) {
+                const isCase = originalItem.unit === 'case';
+                let cases = '', units = '', totalQty = '';
+                
+                if (isCase) {
+                  cases = update.cases !== null ? update.cases : '';
+                  units = update.units !== null ? update.units : '';
+                  const c = parseFloat(cases) || 0;
+                  const u = parseFloat(units) || 0;
+                  const upp = originalItem.units_per_package || 1;
+                  totalQty = (cases === '' && units === '') ? '' : (c + (u / upp));
+                } else {
+                  const qty = update.units !== null ? update.units : (update.cases !== null ? update.cases : '');
+                  totalQty = qty;
+                }
+
+                if (totalQty !== '') {
+                  const actualWhId = targetWarehouseId || originalItem.warehouse_id || "multi";
+                  const actualWhName = update.warehouse_name && !update.warehouse_name.includes('Summary') && !update.warehouse_name.includes('סיכום') 
+                    ? update.warehouse_name 
+                    : (originalItem.warehouse_name || "");
+                    
+                  const q = parseFloat(totalQty) || 0;
+                  const price = Number(originalItem.price || 0) * (1 - (Number(originalItem.discount || 0) / 100));
+                  
+                  newItems.push({
+                    item_id: originalItem.id,
+                    item_name: originalItem.name,
+                    warehouse_id: actualWhId,
+                    warehouse_name: actualWhName,
+                    supplier_name: originalItem.supplier_name,
+                    unit: originalItem.unit,
+                    price_per_unit: price,
+                    counted_cases: cases,
+                    counted_units: units,
+                    counted_quantity: totalQty,
+                    total_cost: q * price,
+                    notes: update.notes || "",
+                    last_updated_at: Date.now()
+                  });
+                  updatedCount++;
+                }
+              }
             }
           }
           
