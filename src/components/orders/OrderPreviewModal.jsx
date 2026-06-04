@@ -490,30 +490,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
               <Button
                 onClick={async () => {
-                  try {
-                    let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-                    if (!order.order_number && order.id) {
-                      await base44.entities.Order.update(order.id, {
-                        order_number: ensuredNumber,
-                        status: order.status === 'draft' ? 'sent' : (order.status || 'sent')
-                      });
-                    }
-                    if (navigator.share) {
-                      await navigator.share({
-                        title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
-                        text: language === 'he' ? 'צפה בהזמנה:' : 'View order:',
-                        url: orderUrl
-                      });
-                    } else {
-                      await navigator.clipboard.writeText(orderUrl);
-                      toast.success(language === 'he' ? 'הקישור הועתק!' : 'Link copied!');
-                    }
-                    if (onSend) {
-                      await onSend({ ...order, order_number: ensuredNumber, status: 'sent' });
-                    }
-                  } catch (e) {
-                    console.error('Share failed', e);
-                  }
+                  await handleDownloadImage({ shareOnly: true });
                 }}
                 className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
                 disabled={downloading || sending}
