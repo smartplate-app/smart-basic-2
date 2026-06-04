@@ -34,6 +34,9 @@ let pathToUse = location.pathname;
 if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
   pathToUse = location.hash.substring(1);
 }
+if (pathToUse.includes('?')) {
+  pathToUse = pathToUse.split('?')[0];
+}
 const pathParts = pathToUse.split('/').filter(Boolean);
 let currentPageName = pathParts.length > 0 ? pathParts[pathParts.length - 1] : mainPageKey;
   
@@ -87,6 +90,9 @@ const AuthenticatedApp = () => {
     let pathToUse = location.pathname;
   if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
     pathToUse = location.hash.substring(1);
+  }
+  if (pathToUse.includes('?')) {
+    pathToUse = pathToUse.split('?')[0];
   }
 
   const isPublicRoute = publicRoutes.some(route => 
