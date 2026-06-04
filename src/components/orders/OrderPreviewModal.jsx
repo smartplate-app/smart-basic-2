@@ -227,10 +227,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         }
       } catch (_) {}
       
-      const itemsText = (order.items || []).map(it => `• ${it.item_name || it.name || ''} - ${it.quantity} ${getUnitLabel(it.unit)}`).join('\n');
       const shareText = language === 'he' 
-        ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}\n\nפריטים:\n${itemsText}\n\nלצפייה בהזמנה המלאה:\n${orderUrl}`
-        : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}\n\nItems:\n${itemsText}\n\nView full order:\n${orderUrl}`;
+        ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
+        : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
 
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
