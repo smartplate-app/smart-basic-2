@@ -1364,9 +1364,12 @@ export default function OrdersPage() {
                       </div>
 
                       {/* Left side (RTL) - Date & Actions */}
-                      <div className="flex flex-col items-end flex-shrink-0 min-w-[70px]">
-                        <span className="text-xs text-gray-500 mb-1 font-medium">
-                          {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '-'}
+                      <div className="flex flex-col items-end flex-shrink-0 min-w-[80px]">
+                        <span className="text-[10px] text-gray-400 mb-0.5 whitespace-nowrap">
+                          {language === 'he' ? 'הוזמן:' : 'Ordered:'} {order.created_date ? new Date(order.created_date).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '-'}
+                        </span>
+                        <span className="text-xs text-gray-500 mb-1 font-medium whitespace-nowrap">
+                          {language === 'he' ? 'לאספקה:' : 'Delivery:'} {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '-'}
                         </span>
                         <div className="flex items-center -mr-2 rtl:-ml-2 rtl:mr-0">
                           {!isViewer && (
@@ -1465,9 +1468,12 @@ export default function OrdersPage() {
                           </div>
 
                           {/* Left side (RTL) - Date & Actions */}
-                          <div className="flex flex-col items-end flex-shrink-0 min-w-[70px]">
-                            <span className="text-xs text-gray-500 mb-1 font-medium">
-                              {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '-'}
+                          <div className="flex flex-col items-end flex-shrink-0 min-w-[80px]">
+                            <span className="text-[10px] text-gray-400 mb-0.5 whitespace-nowrap">
+                              {language === 'he' ? 'הוזמן:' : 'Ordered:'} {order.created_date ? new Date(order.created_date).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '-'}
+                            </span>
+                            <span className="text-xs text-gray-500 mb-1 font-medium whitespace-nowrap">
+                              {language === 'he' ? 'לאספקה:' : 'Delivery:'} {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '-'}
                             </span>
                             <div className="flex items-center -mr-2 rtl:-ml-2 rtl:mr-0">
                               {!isViewer && (
@@ -1589,6 +1595,9 @@ export default function OrdersPage() {
                     </div>
                   </th>
                   <th className="px-6 py-5 text-left rtl:text-right text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
+                    {safeT('created_date','תאריך הזמנה','Order date')}
+                  </th>
+                  <th className="px-6 py-5 text-left rtl:text-right text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
                     {safeT('delivery_date','תאריך אספקה','Delivery date')}
                   </th>
                   <th className="px-6 py-5 text-left rtl:text-right text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
@@ -1615,7 +1624,7 @@ export default function OrdersPage() {
                 <AnimatePresence>
                   {loading ? (
                     <tr>
-                      <td colSpan="5" className="px-4 py-12 text-center">
+                      <td colSpan="6" className="px-4 py-12 text-center">
                         <Loader className="w-8 h-8 animate-spin text-gray-600 mx-auto mb-2" />
                         <p className="text-gray-600">{t('loading')}</p>
                       </td>
@@ -1658,6 +1667,9 @@ export default function OrdersPage() {
                         {order.restaurant_name && (
                           <div className="text-sm text-gray-400 mt-1">{order.restaurant_name}</div>
                         )}
+                      </td>
+                      <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
+                        {order.created_date ? new Date(order.created_date).toLocaleDateString('he-IL') : '-'}
                       </td>
                       <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
                         {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
@@ -1725,7 +1737,7 @@ export default function OrdersPage() {
                     return (
                       <React.Fragment key={section}>
                         <tr>
-                          <td colSpan="5" className="px-6 py-3 bg-gray-50/80 border-b border-t border-gray-100 font-bold text-gray-700 text-sm">
+                          <td colSpan="6" className="px-6 py-3 bg-gray-50/80 border-b border-t border-gray-100 font-bold text-gray-700 text-sm">
                             {sectionTitle} ({sectionOrders.length})
                           </td>
                         </tr>
@@ -1765,6 +1777,9 @@ export default function OrdersPage() {
                           {order.restaurant_name && (
                             <div className="text-sm text-gray-400 mt-1">{order.restaurant_name}</div>
                           )}
+                        </td>
+                        <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
+                          {order.created_date ? new Date(order.created_date).toLocaleDateString('he-IL') : '-'}
                         </td>
                         <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
                           {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
