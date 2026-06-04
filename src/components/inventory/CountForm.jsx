@@ -221,10 +221,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           let updatedCount = 0;
           
           for (const update of data.updates) {
+            const wh = warehouseOptions.find(w => w.name === update.warehouse_name);
+            const targetWarehouseId = wh ? wh.id : null;
+
             // Find the item
             const itemIndex = newItems.findIndex(i => 
               (i.item_name === update.item_name || i.item_name === update.item_name.replace(' (Summary)', '') || i.item_name === update.item_name.replace(' (סיכום)', '')) && 
-              (i.warehouse_name === update.warehouse_name || update.warehouse_name === 'Summary')
+              (i.warehouse_id === targetWarehouseId || update.warehouse_name === 'Summary' || update.warehouse_name === 'סיכום')
             );
             
             if (itemIndex >= 0) {
@@ -372,12 +375,17 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         const dirtyItems = Array.from(dirtyItemsRef.current.values());
         const hasDirtyMetadata = dirtyMetadataRef.current;
         if (dirtyItems.length > 0 || hasDirtyMetadata) {
-          const cleanedDirtyItems = dirtyItems.map(item => ({
-            ...item,
-            counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-            price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-            total_cost: Number(item.total_cost) || 0
-          }));
+          const cleanedDirtyItems = dirtyItems.map(item => {
+            const cQty = Number(item.counted_quantity);
+            const pUnit = Number(item.price_per_unit);
+            const tCost = Number(item.total_cost);
+            return {
+              ...item,
+              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null || isNaN(cQty) ? 0 : cQty,
+              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null || isNaN(pUnit) ? 0 : pUnit,
+              total_cost: isNaN(tCost) ? 0 : tCost
+            };
+          });
 
           const metadata = hasDirtyMetadata ? {
             name: currentData.name,
@@ -432,12 +440,17 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           const cleanedData = {
             ...currentData,
             warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
-            items: currentData.items.map(item => ({
-              ...item,
-              counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-              price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-              total_cost: Number(item.total_cost) || 0
-            }))
+            items: currentData.items.map(item => {
+              const cQty = Number(item.counted_quantity);
+              const pUnit = Number(item.price_per_unit);
+              const tCost = Number(item.total_cost);
+              return {
+                ...item,
+                counted_quantity: item.counted_quantity === "" || item.counted_quantity == null || isNaN(cQty) ? 0 : cQty,
+                price_per_unit: item.price_per_unit === "" || item.price_per_unit == null || isNaN(pUnit) ? 0 : pUnit,
+                total_cost: isNaN(tCost) ? 0 : tCost
+              };
+            })
           };
           
           const dirtyItemsAtStart = Array.from(dirtyItemsRef.current.keys());

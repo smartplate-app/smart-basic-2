@@ -70,16 +70,18 @@ Deno.serve(async (req) => {
                 const itemName = row[0];
                 if (!itemName || itemName.includes('Total') || itemName.includes('סה"כ')) continue;
 
-                const casesStr = row[1] || '';
-                const unitsStr = row[2] || '';
-                const notes = row[6] || '';
+                const casesStr = String(row[1] ?? '').trim();
+                const unitsStr = String(row[2] ?? '').trim();
+                const notes = String(row[6] ?? '').trim();
                 
-                let parsedCases = casesStr.trim() === '' || casesStr.trim().toUpperCase() === 'N/A' ? '' : Number(casesStr);
-                let parsedUnits = unitsStr.trim() === '' ? '' : Number(unitsStr);
+                let parsedCases = casesStr === '' || casesStr.toUpperCase() === 'N/A' ? '' : Number(casesStr.replace(/,/g, ''));
+                let parsedUnits = unitsStr === '' ? '' : Number(unitsStr.replace(/,/g, ''));
+                
+                if (isNaN(parsedCases)) parsedCases = '';
+                if (isNaN(parsedUnits)) parsedUnits = '';
                 
                 // If both are empty strings or invalid, we skip updating this item to 0 unless explicitly 0?
-                // Actually if they are empty, maybe they didn't count it. We can just pass the values back and let frontend handle it.
-                if (casesStr.trim() === '' && unitsStr.trim() === '') continue;
+                if (casesStr === '' && unitsStr === '') continue;
                 
                 updates.push({
                     warehouse_name: sheetName,
