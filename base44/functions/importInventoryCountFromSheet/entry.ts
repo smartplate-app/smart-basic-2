@@ -16,7 +16,7 @@ function extractSheetId(input) {
   if (!input) return '';
   try {
     const url = new URL(input);
-    const m = url.pathname.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    const m = url.pathname.match(/\/spreadsheets\/d\/(?:e\/)?([a-zA-Z0-9-_]+)/);
     return m ? m[1] : input;
   } catch {
     return input; // maybe already an ID
@@ -127,7 +127,9 @@ Deno.serve(async (req) => {
       total_inventory_value,
       name: count_name || `Imported Count ${new Date().toISOString().slice(0,10)}`,
       notes: `Imported from Google Sheet ${sheetId}`,
-      status: 'in_progress'
+      status: 'in_progress',
+      created_by: workingEmail,
+      store_owner_email: workingEmail
     };
 
     const created = await base44.entities.InventoryCount.create(countObj);
