@@ -42,13 +42,13 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           tempContainer.style.left = '-9999px';
           tempContainer.style.top = '0';
           tempContainer.style.width = '430px';
-          tempContainer.style.background = '#f9fafb';
-          tempContainer.style.padding = '32px';
+          tempContainer.style.background = '#ffffff';
+          tempContainer.style.padding = '24px';
           tempContainer.style.fontFamily = 'system-ui, sans-serif';
           tempContainer.style.direction = language === 'he' ? 'rtl' : 'ltr';
 
           tempContainer.innerHTML = `
-            <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);">
+            <div style="background: white; overflow: hidden;">
               <div style="background: white; color: #111827; padding: 24px 16px 16px; text-align: center; border-bottom: 1px solid #f3f4f6;">
                 <h1 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.025em; word-break: break-word;">
                   ${order.supplier_name}
@@ -238,14 +238,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       tempContainer.style.left = '-9999px';
       tempContainer.style.top = '0';
       tempContainer.style.width = '430px'; // Mobile width ratio
-      tempContainer.style.background = '#f9fafb';
-      tempContainer.style.padding = '32px';
+      tempContainer.style.background = '#ffffff';
+      tempContainer.style.padding = '24px';
       tempContainer.style.fontFamily = 'system-ui, sans-serif';
       tempContainer.style.direction = language === 'he' ? 'rtl' : 'ltr';
 
       // Build the order HTML
       tempContainer.innerHTML = `
-        <div style="background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);">
+        <div style="background: white; overflow: hidden;">
           <div style="background: white; color: #111827; padding: 24px 16px 16px; text-align: center; border-bottom: 1px solid #f3f4f6;">
             <h1 style="font-size: 24px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.025em; word-break: break-word;">
               ${order.supplier_name}
@@ -441,20 +441,17 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           <div className={`order-preview-embed not-prose bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden ${viewMode === 'mobile' ? 'w-full max-w-sm h-fit' : 'w-full h-fit'}`}>
             <div className="w-full relative">
               <div style={{
-                  background: '#f9fafb', // matching main app background
+                  background: '#ffffff',
                   fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
                   direction: language === 'he' ? 'rtl' : 'ltr',
-                  padding: '12px',
+                  padding: '24px',
                   minHeight: '100%'
               }}>
                   <div style={{
                       maxWidth: '100%', 
                       margin: '0 auto',
                       backgroundColor: 'white',
-                      borderRadius: '12px',
-                      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-                      overflow: 'hidden',
-                      border: '1px solid #e5e7eb'
+                      overflow: 'hidden'
                   }}>
                       {/* Header */}
                       <div style={{
