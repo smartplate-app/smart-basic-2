@@ -280,14 +280,6 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     }
 
     const totalCost = calculateTotal();
-    
-    const selectedSupplier = suppliers.find(s => s.id === currentOrder.supplier_id);
-    if (selectedSupplier && selectedSupplier.minimum_order_amount > 0) {
-      if (totalCost < selectedSupplier.minimum_order_amount) {
-        alert(language === 'he' ? `לא ניתן לשלוח את ההזמנה. לספק זה מוגדר מינימום להזמנה של ₪${selectedSupplier.minimum_order_amount}.` : `Cannot send order. This supplier has a minimum order amount of ₪${selectedSupplier.minimum_order_amount}.`);
-        return;
-      }
-    }
 
     const orderData = {
       ...currentOrder,

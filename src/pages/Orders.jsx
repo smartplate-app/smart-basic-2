@@ -651,12 +651,6 @@ export default function OrdersPage() {
   };
 
   const handleOpenPreview = (order) => {
-    const selectedSupplier = suppliers.find(s => s.name === order.supplier_name || s.id === order.supplier_id);
-    if (selectedSupplier && selectedSupplier.minimum_order_amount > 0 && order.total_cost < selectedSupplier.minimum_order_amount && order.status === 'draft') {
-      alert(language === 'he' ? `לא ניתן לשלוח את ההזמנה. לספק זה מוגדר מינימום להזמנה של ₪${selectedSupplier.minimum_order_amount}. אנא הוסף פריטים להזמנה.` : `Cannot send order. This supplier has a minimum order amount of ₪${selectedSupplier.minimum_order_amount}.`);
-      if (!isViewer) handleEdit(order);
-      return;
-    }
     setPreviewOrder(order);
   };
 
