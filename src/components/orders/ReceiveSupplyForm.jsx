@@ -933,6 +933,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
     try {
       const newItemsToCreate = formData.verified_items.filter(item => !item.item_id && item.item_name);
       if (newItemsToCreate.length > 0) {
+        const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
         for (const item of newItemsToCreate) {
           const itemPayload = {
             name: item.item_name,
@@ -941,7 +942,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
             price: item.actual_price || 0,
             unit: item.unit || 'unit',
             is_pending_completion: true,
-            status: 'pending_completion'
+            status: 'pending_completion',
+            store_owner_email: workingEmail,
+            created_by: user?.email
           };
           const createdItem = await base44.entities.Item.create(itemPayload);
           // Update the receipt item with the new ID
@@ -1829,13 +1832,14 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               }
 
                               const executeMultiSubmit = async () => {
-                                const wEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-                                const baseData = { supplier_id: formData.supplier_id, supplier_name: formData.supplier_name, supplier_email: formData.supplier_email, received_date: formData.received_date, store_owner_email: wEmail, created_by: user?.email, verified_items: [], price_changes_summary: [], has_price_changes: false, notes: formData.notes || "", needs_review: !!formData.needs_review, review_note: formData.review_note || "" };
+                                const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+                                const baseData = { supplier_id: formData.supplier_id, supplier_name: formData.supplier_name, supplier_email: formData.supplier_email, received_date: formData.received_date, store_owner_email: workingEmail, created_by: user?.email, verified_items: [], price_changes_summary: [], has_price_changes: false, notes: formData.notes || "", needs_review: !!formData.needs_review, review_note: formData.review_note || "" };
                               // Create missing items from the first doc's items (since multiple docs just copy baseData)
                               const itemsWithIssues = baseData.verified_items?.filter(item => !item.item_id && item.item_name) || [];
                               if (itemsWithIssues.length > 0) {
                                 for (const item of itemsWithIssues) {
                                   try {
+                                    const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
                                     const createdItem = await base44.entities.Item.create({
                                       name: item.item_name,
                                       supplier_id: 'pending',
@@ -1843,7 +1847,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                       price: item.actual_price || 0,
                                       unit: item.unit || 'unit',
                                       is_pending_completion: true,
-                                      status: 'pending_completion'
+                                      status: 'pending_completion',
+                                      store_owner_email: workingEmail,
+                                      created_by: user?.email
                                     });
                                     item.item_id = createdItem.id;
                                   } catch(e) { console.error(e); }
