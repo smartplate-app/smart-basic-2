@@ -67,6 +67,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [showImportSheetModal, setShowImportSheetModal] = useState(false);
   const [importSheetUrl, setImportSheetUrl] = useState("");
   const [importingFromSheet, setImportingFromSheet] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
   const isSavingRef = React.useRef(false);
   const isSubmittedRef = React.useRef(false);
   const formDataRef = React.useRef(formData);
@@ -211,10 +212,27 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
 
   const handleImportValuesFromSheet = async () => {
     if (!importSheetUrl) return;
+    let progressInterval;
     try {
       setImportingFromSheet(true);
+      setImportProgress(10);
+      
+      progressInterval = setInterval(() => {
+        setImportProgress(p => {
+            // Slower progress curve since LLM matching takes time
+            if (p < 30) return p + 10;
+            if (p < 60) return p + 5;
+            if (p < 85) return p + 2;
+            if (p < 95) return p + 1;
+            return p;
+        });
+      }, 1000);
+
       const { data } = await base44.functions.invoke('importCountValuesFromSheet', { sheet_url: importSheetUrl });
       
+      clearInterval(progressInterval);
+      setImportProgress(100);
+
       if (data?.success && data.updates) {
         setFormData(prev => {
           const newItems = [...prev.items];
@@ -357,7 +375,10 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       console.error(error);
       alert((t('error_saving') || 'Error') + ': ' + (error.message || 'Unknown error'));
     } finally {
-      setImportingFromSheet(false);
+      setTimeout(() => {
+        setImportingFromSheet(false);
+        setImportProgress(0);
+      }, 500);
     }
   };
 
@@ -1636,14 +1657,26 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               className="text-left"
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowImportSheetModal(false); setImportSheetUrl(""); }}>
-              {t('cancel') || 'Cancel'}
-            </Button>
-            <Button onClick={handleImportValuesFromSheet} disabled={!importSheetUrl || importingFromSheet} className="bg-blue-600 hover:bg-blue-700 text-white">
-              {importingFromSheet && <Loader className="w-4 h-4 mr-2 animate-spin" />}
-              {language === 'he' ? 'קלוט נתונים' : 'Import Data'}
-            </Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <div className="flex-1 w-full mt-2 sm:mt-0 order-first sm:order-none mr-auto">
+              {importingFromSheet && importProgress > 0 && (
+                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mt-3">
+                  <div 
+                    className="h-full bg-blue-600 transition-all duration-300 ease-out" 
+                    style={{ width: `${importProgress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => { setShowImportSheetModal(false); setImportSheetUrl(""); setImportProgress(0); }}>
+                {t('cancel') || 'Cancel'}
+              </Button>
+              <Button onClick={handleImportValuesFromSheet} disabled={!importSheetUrl || importingFromSheet} className="bg-blue-600 hover:bg-blue-700 text-white relative overflow-hidden">
+                {importingFromSheet && <Loader className="w-4 h-4 mr-2 animate-spin relative z-10" />}
+                <span className="relative z-10">{language === 'he' ? 'קלוט נתונים' : 'Import Data'}</span>
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

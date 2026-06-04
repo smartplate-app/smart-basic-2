@@ -15,11 +15,11 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Sheet URL is required' }, { status: 400 });
         }
 
-        const match = sheet_url.match(/\/d\/(.*?)(?:\/|$)/);
-        if (!match || !match[1]) {
-            return Response.json({ error: 'Invalid Google Sheets URL' }, { status: 400 });
+        let spreadsheetId = sheet_url;
+        const match = sheet_url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (match && match[1]) {
+            spreadsheetId = match[1];
         }
-        const spreadsheetId = match[1];
 
         const { accessToken } = await base44.asServiceRole.connectors.getConnection("googlesheets");
 
@@ -32,7 +32,9 @@ Deno.serve(async (req) => {
         });
 
         if (!metaRes.ok) {
-            throw new Error(`Failed to fetch spreadsheet info`);
+            const errText = await metaRes.text();
+            console.error("Sheets API Error:", errText);
+            throw new Error(`Failed to fetch spreadsheet info. Make sure the document is accessible (shared with the connector account).`);
         }
 
         const metaData = await metaRes.json();
@@ -161,8 +163,16 @@ ${JSON.stringify(uniqueNames)}
 Official Catalog:
 ${JSON.stringify(catalogList)}`;
 
+                // Add detailed context from the actual user prompt for better matching
+                const hebrewInstructions = `
+You must process these names VERY carefully. 
+Ignore spaces, plus signs (+), or weird prefixes like "40-30-4.5 ".
+For example, if the extracted name is "תחתית קרטון מכסה שקוף + פנימיות" or "40-30-4.5 תחתית קרטון מכסה שקוף+פנימיות שחור", it MUST match "תחתית מכסה שקוף" or whatever is closest in the catalog.
+Please output your best mappings.
+`;
+
                 const geminiRes = await base44.asServiceRole.integrations.Core.InvokeLLM({
-                    prompt,
+                    prompt: prompt + "\n" + hebrewInstructions,
                     model: "gemini_3_1_pro",
                     response_json_schema: {
                         type: "object",
