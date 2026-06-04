@@ -591,7 +591,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
           const dateChosen = resp.invoice_date || formData.received_date;
           const dup = supplierId ? await checkDuplicateInvoice(inv, supplierId, receipt?.id) : false;
           const isZeroVat = vat === 0 && excl === incl && incl > 0;
-          return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, is_zero_vat: isZeroVat, duplicate: dup, document_type: 'invoice' };
+          return { file_url: url, invoice_number: inv, invoice_date: dateChosen, invoice_total: total, is_refund: isRefund, is_zero_vat: isZeroVat, duplicate: dup, document_type: resp.document_type || 'invoice' };
         })
       );
         setScannedDocs(results);
@@ -619,6 +619,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       console.log('Scanned invoice header and items data:', data);
 
       const responseIsRefund = Boolean(response.is_refund);
+      const docType = response.document_type || 'invoice';
       const incl = Number(response.total_incl_vat);
       const excl = Number(response.total_excl_vat);
       const vat = Number(response.vat_amount);
@@ -664,6 +665,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
         setFormData(prev => ({
           ...prev,
+          document_type: docType,
           invoice_number: invoiceNum,
           invoice_date: chosenDate,
           invoice_total: adjustedInvoiceTotal,
@@ -716,6 +718,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
         setFormData(prev => ({
           ...prev,
+          document_type: docType,
           invoice_number: invoiceNum,
           invoice_date: chosenDate,
           invoice_total: invoiceTotal,

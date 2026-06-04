@@ -36,7 +36,12 @@ CRITICAL EXTRACTION RULES:
    - Look for "סכום מע"מ", "מע"מ 17%", "מע"מ".
 6. is_refund:
    - Set to true ONLY if the document says "חשבונית זיכוי", "זיכוי", "החזר", or if the total is explicitly negative.
-7. items:
+7. document_type:
+   - "invoice" for "חשבונית מס" or "חשבונית"
+   - "delivery_note" for "תעודת משלוח"
+   - "summary_invoice" for "חשבונית מס מרכזת" or "חשבונית מרכזת"
+   - CRITICAL: If the document explicitly says "תעודת משלוח" (like in "עלה עלה" documents), it must be "delivery_note" even if it contains pricing and totals.
+8. items:
    - Extract the list of ALL items exactly as they appear in the invoice (the "תיאור" / Description column).
    - Look for the item name, quantity ("כמות", "כמויות"), price per unit ("מחיר יחידה", "מחיר"), and total line price ("סה"כ", "סכום").
 
@@ -51,6 +56,7 @@ Extract these values precisely. If a value is missing, return 0 for amounts or e
           vat_amount: { type: 'number' },
           total_incl_vat: { type: 'number' },
           is_refund: { type: 'boolean' },
+          document_type: { type: 'string', enum: ['invoice', 'delivery_note', 'summary_invoice'] },
           items: {
             type: 'array',
             items: {
@@ -76,7 +82,8 @@ Extract these values precisely. If a value is missing, return 0 for amounts or e
         total_excl_vat: llm.total_excl_vat,
         vat_amount: llm.vat_amount,
         total_incl_vat: llm.total_incl_vat,
-        is_refund: llm.is_refund
+        is_refund: llm.is_refund,
+        document_type: llm.document_type || 'invoice'
       },
       items: llm.items || [] 
     });
