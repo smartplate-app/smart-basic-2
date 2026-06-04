@@ -36,21 +36,32 @@ export default function DailySummaryTab() {
   };
 
   useEffect(() => {
+    let mounted = true;
     (async () => {
-      const wh = await base44.entities.Warehouse.list();
-      setWarehouses(wh);
-      if (!warehouseId && wh[0]) setWarehouseId(wh[0].id);
+      try {
+        const wh = await base44.entities.Warehouse.list();
+        if (mounted) {
+          setWarehouses(wh);
+          setWarehouseId(prev => (!prev && wh[0]) ? wh[0].id : prev);
+        }
+      } catch (err) {
+        console.error(err);
+      }
     })();
+    return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
-    if (!warehouseId) return;
+    if (!warehouseId || !date) return;
+    let mounted = true;
     (async () => {
-      const [c, w, eod] = await Promise.all([
-        base44.entities.InventoryCount.filter({ warehouse_id: warehouseId, count_date: date, count_type: 'daily' }),
-        base44.entities.WasteReport.filter({ warehouse_id: warehouseId, report_date: date }),
-        base44.entities.WasteReport.filter({ warehouse_id: warehouseId, report_date: date, report_kind: 'end_of_day' })
-      ]);
+      try {
+        const [c, w, eod] = await Promise.all([
+          base44.entities.InventoryCount.filter({ warehouse_id: warehouseId, count_date: date, count_type: 'daily' }),
+          base44.entities.WasteReport.filter({ warehouse_id: warehouseId, report_date: date }),
+          base44.entities.WasteReport.filter({ warehouse_id: warehouseId, report_date: date, report_kind: 'end_of_day' })
+        ]);
+        if (!mounted) return;
       setCounts(c || []);
       setWastes(w || []);
       const eodRec = (eod || [])[0] || null;
@@ -72,34 +83,47 @@ export default function DailySummaryTab() {
         };
       });
       setEodItems(seeded);
+      } catch (err) {
+        console.error(err);
+      }
     })();
+    return () => { mounted = false; };
   }, [warehouseId, date]);
 
   useEffect(() => {
     if (!warehouseId || !date) return;
+    let mounted = true;
     (async () => {
-      const month = date.slice(0,7);
-      const allCounts = await base44.entities.InventoryCount.list();
-      const allWaste = await base44.entities.WasteReport.list();
-      const monthCounts = (allCounts||[]).filter(x => x.warehouse_id === warehouseId && x.count_type === 'daily' && (x.count_date||'').startsWith(month));
-      const byDate = monthCounts.reduce((acc,c)=>{
-        const d=c.count_date; (acc[d]=acc[d]||[]).push(c); return acc;
-      },{});
-      let usage=0;
-      Object.values(byDate).forEach((arr)=>{
-        const begin = (arr).find(x=>x.status==='in_progress');
-        const end = (arr).find(x=>x.status==='completed');
-        if (!begin || !end) return;
-        const map = new Map();
-        (begin.items||[]).forEach(it=>{ map.set(it.item_id||it.item_name,{b:Number(it.counted_quantity||0),e:0}); });
-        (end.items||[]).forEach(it=>{ const k=it.item_id||it.item_name; const ent=map.get(k)||{b:0,e:0}; ent.e+=Number(it.counted_quantity||0); map.set(k,ent); });
-        map.forEach(v=>{ usage += Math.max(0, v.b - v.e); });
-      });
-      const monthWaste = (allWaste||[]).filter(x => x.warehouse_id === warehouseId && (x.report_date||'').startsWith(month) && x.report_kind !== 'end_of_day');
-      let wasteQty = 0;
-      monthWaste.forEach(r => (r.items||[]).forEach(it => { wasteQty += Number(it.quantity||0); }));
-      setMonthStats({ usage, waste: wasteQty });
+      try {
+        const month = date.slice(0,7);
+        const [allCounts, allWaste] = await Promise.all([
+          base44.entities.InventoryCount.filter({ warehouse_id: warehouseId, count_type: 'daily' }, "-created_date", 200),
+          base44.entities.WasteReport.filter({ warehouse_id: warehouseId }, "-created_date", 200)
+        ]);
+        if (!mounted) return;
+        const monthCounts = (allCounts||[]).filter(x => (x.count_date||'').startsWith(month));
+        const byDate = monthCounts.reduce((acc,c)=>{
+          const d=c.count_date; (acc[d]=acc[d]||[]).push(c); return acc;
+        },{});
+        let usage=0;
+        Object.values(byDate).forEach((arr)=>{
+          const begin = (arr).find(x=>x.status==='in_progress');
+          const end = (arr).find(x=>x.status==='completed');
+          if (!begin || !end) return;
+          const map = new Map();
+          (begin.items||[]).forEach(it=>{ map.set(it.item_id||it.item_name,{b:Number(it.counted_quantity||0),e:0}); });
+          (end.items||[]).forEach(it=>{ const k=it.item_id||it.item_name; const ent=map.get(k)||{b:0,e:0}; ent.e+=Number(it.counted_quantity||0); map.set(k,ent); });
+          map.forEach(v=>{ usage += Math.max(0, v.b - v.e); });
+        });
+        const monthWaste = (allWaste||[]).filter(x => (x.report_date||'').startsWith(month) && x.report_kind !== 'end_of_day');
+        let wasteQty = 0;
+        monthWaste.forEach(r => (r.items||[]).forEach(it => { wasteQty += Number(it.quantity||0); }));
+        setMonthStats({ usage, waste: wasteQty });
+      } catch (err) {
+        console.error(err);
+      }
     })();
+    return () => { mounted = false; };
   }, [warehouseId, date]);
 
   const beginCount = useMemo(() => (counts || []).find(x => x.status === 'in_progress') || null, [counts]);
