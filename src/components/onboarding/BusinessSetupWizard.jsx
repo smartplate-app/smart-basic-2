@@ -38,7 +38,9 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
 
     if (isOwner) {
       // Auto-setup the demo account if it logs in for the first time
-      if (user.email === 'office@smartplate.biz' && !user.business_name) {
+      if (user.email?.toLowerCase().trim() === 'office@smartplate.biz' && !user.business_name) {
+        setOpen(false);
+        setShowAccessDenied(false);
         base44.auth.updateMe({
           business_name: 'Smart Plate Demo',
           business_address: 'Demo Address, Tel Aviv',
