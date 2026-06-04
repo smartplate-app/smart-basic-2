@@ -47,7 +47,9 @@ export default function MenuEngineeringPage() {
               data = (res.data.data.recipes || []).filter(r => r.type === 'sale_item');
           }
       } else {
-          data = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date");
+          const dataCreated = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date");
+          const dataOwned = await base44.entities.Recipe.filter({ type: 'sale_item', store_owner_email: workingEmail }, "-created_date");
+          data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       }
       setRecipes(data);
     } catch (e) {
@@ -59,13 +61,17 @@ export default function MenuEngineeringPage() {
   const handleSaveItem = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const user = await base44.auth.me();
+    const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+
     const data = {
       name: formData.get('name'),
       menu_category: formData.get('menu_category'),
       sold_count: Number(formData.get('sold_count')),
       sale_price: Number(formData.get('sale_price')),
       total_cost: Number(formData.get('total_cost')),
-      type: 'sale_item'
+      type: 'sale_item',
+      store_owner_email: workingEmail
     };
 
     try {

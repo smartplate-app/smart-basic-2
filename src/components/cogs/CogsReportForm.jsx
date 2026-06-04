@@ -161,10 +161,15 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
     e.preventDefault();
     setLoading(true);
     try {
+      const user = await base44.auth.me();
+      const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+      
+      const submitData = { ...formData, store_owner_email: workingEmail };
+
       if (report?.id) {
-        await base44.entities.CogsReport.update(report.id, formData);
+        await base44.entities.CogsReport.update(report.id, submitData);
       } else {
-        await base44.entities.CogsReport.create(formData);
+        await base44.entities.CogsReport.create(submitData);
       }
       onSave();
     } catch (error) {

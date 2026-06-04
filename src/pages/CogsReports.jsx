@@ -62,11 +62,14 @@ export default function CogsReportsPage() {
               data = adminData.data.cogsReports;
           }
       } else {
-          data = await base44.entities.CogsReport.filter({ created_by: targetEmail }, "-created_date");
+          const dataCreated = await base44.entities.CogsReport.filter({ created_by: targetEmail }, "-created_date");
+          const dataOwned = await base44.entities.CogsReport.filter({ store_owner_email: targetEmail }, "-created_date");
+          data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           
           if (targetEmail !== currentUser.email) {
             const myData = await base44.entities.CogsReport.filter({ created_by: currentUser.email }, "-created_date");
-            data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+            const myDataOwned = await base44.entities.CogsReport.filter({ store_owner_email: currentUser.email }, "-created_date");
+            data = [...data, ...myData, ...myDataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           }
 
           if (currentUser.chain_id && !currentUser.is_chain_head) {
