@@ -18,35 +18,20 @@ Deno.serve(async (req) => {
         }
 
         if (action === 'getUserData' && userEmail) {
-            const [
-                orders,
-                receipts,
-                items,
-                suppliers,
-                inventory,
-                workers,
-                schedules,
-                recipes,
-                warehouses,
-                cogsReports,
-                priceChanges,
-                wasteReports,
-                monthlyDashboardData
-            ] = await Promise.all([
-                base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Item.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Supplier.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.InventoryCount.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Worker.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.WeeklySchedule.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-week_start_date', 10000),
-                base44.asServiceRole.entities.Recipe.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Warehouse.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.CogsReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.PriceChangeLog.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.WasteReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.MonthlyDashboardData.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-month', 10000)
-            ]);
+            const q = { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
+            const orders = await base44.asServiceRole.entities.Order.filter(q, '-created_date', 10000);
+            const receipts = await base44.asServiceRole.entities.SupplyReceipt.filter(q, '-created_date', 10000);
+            const items = await base44.asServiceRole.entities.Item.filter(q, '-created_date', 10000);
+            const suppliers = await base44.asServiceRole.entities.Supplier.filter(q, '-created_date', 10000);
+            const inventory = await base44.asServiceRole.entities.InventoryCount.filter(q, '-created_date', 10000);
+            const workers = await base44.asServiceRole.entities.Worker.filter(q, '-created_date', 10000);
+            const schedules = await base44.asServiceRole.entities.WeeklySchedule.filter(q, '-week_start_date', 10000);
+            const recipes = await base44.asServiceRole.entities.Recipe.filter(q, '-created_date', 10000);
+            const warehouses = await base44.asServiceRole.entities.Warehouse.filter(q, '-created_date', 10000);
+            const cogsReports = await base44.asServiceRole.entities.CogsReport.filter(q, '-created_date', 10000);
+            const priceChanges = await base44.asServiceRole.entities.PriceChangeLog.filter(q, '-created_date', 10000);
+            const wasteReports = await base44.asServiceRole.entities.WasteReport.filter(q, '-created_date', 10000);
+            const monthlyDashboardData = await base44.asServiceRole.entities.MonthlyDashboardData.filter(q, '-month', 10000);
 
             return Response.json({
                 success: true,
@@ -69,37 +54,21 @@ Deno.serve(async (req) => {
         }
 
         if (action === 'getFullUserData' && userEmail) {
-            const [
-                orders,
-                receipts,
-                items,
-                suppliers,
-                inventory,
-                workers,
-                schedules,
-                dashboardData,
-                positions,
-                recipes,
-                warehouses,
-                cogsReports,
-                wasteReports,
-                priceChanges
-            ] = await Promise.all([
-                base44.asServiceRole.entities.Order.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.SupplyReceipt.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Item.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Supplier.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.InventoryCount.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Worker.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.WeeklySchedule.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-week_start_date', 10000),
-                base44.asServiceRole.entities.MonthlyDashboardData.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-month', 10000),
-                base44.asServiceRole.entities.JobPosition.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Recipe.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.Warehouse.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.CogsReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.WasteReport.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000),
-                base44.asServiceRole.entities.PriceChangeLog.filter({ $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] }, '-created_date', 10000)
-            ]);
+            const q = { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
+            const orders = await base44.asServiceRole.entities.Order.filter(q, '-created_date', 10000);
+            const receipts = await base44.asServiceRole.entities.SupplyReceipt.filter(q, '-created_date', 10000);
+            const items = await base44.asServiceRole.entities.Item.filter(q, '-created_date', 10000);
+            const suppliers = await base44.asServiceRole.entities.Supplier.filter(q, '-created_date', 10000);
+            const inventory = await base44.asServiceRole.entities.InventoryCount.filter(q, '-created_date', 10000);
+            const workers = await base44.asServiceRole.entities.Worker.filter(q, '-created_date', 10000);
+            const schedules = await base44.asServiceRole.entities.WeeklySchedule.filter(q, '-week_start_date', 10000);
+            const dashboardData = await base44.asServiceRole.entities.MonthlyDashboardData.filter(q, '-month', 10000);
+            const positions = await base44.asServiceRole.entities.JobPosition.filter(q, '-created_date', 10000);
+            const recipes = await base44.asServiceRole.entities.Recipe.filter(q, '-created_date', 10000);
+            const warehouses = await base44.asServiceRole.entities.Warehouse.filter(q, '-created_date', 10000);
+            const cogsReports = await base44.asServiceRole.entities.CogsReport.filter(q, '-created_date', 10000);
+            const wasteReports = await base44.asServiceRole.entities.WasteReport.filter(q, '-created_date', 10000);
+            const priceChanges = await base44.asServiceRole.entities.PriceChangeLog.filter(q, '-created_date', 10000);
 
             return Response.json({
                 success: true,
