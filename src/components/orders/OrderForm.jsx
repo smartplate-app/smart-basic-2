@@ -246,6 +246,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!currentOrder.restaurant_name) {
+      alert(safeT('business_name_required', 'שם העסק חובה', 'Business name is required'));
+      return;
+    }
+
     if (!currentOrder.supplier_id) {
       alert(t('supplier_and_item_required'));
       return;
@@ -373,7 +378,6 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               onChange={(e) => setCurrentOrder({...currentOrder, restaurant_name: e.target.value})}
               placeholder={t('business_name')}
               className="h-9 sm:h-10 text-base sm:text-sm"
-              required
             />
           </div>
 
@@ -610,6 +614,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   <Button
                     type="button"
                     onClick={() => {
+                      if (!currentOrder.restaurant_name) { alert(safeT('business_name_required', 'שם העסק חובה', 'Business name is required')); return; }
                       if (!currentOrder.supplier_id) { alert(t('supplier_and_item_required')); return; }
                       const orderItems = [];
                       Object.keys(itemQuantities).forEach(itemId => {
