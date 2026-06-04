@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
                 continue;
             }
 
-            const valRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(sheetName)}'!A1:G1000`, {
+            const valRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/'${encodeURIComponent(sheetName)}'!A1:J1000`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json',
@@ -59,20 +59,54 @@ Deno.serve(async (req) => {
             const valData = await valRes.json();
             const rows = valData.values || [];
 
-            // Find header row to know indexes, usually row 1 (index 1 since row 0 is title)
+            // Find header row to know indexes
             if (rows.length < 2) continue;
 
-            // Simple heuristic: starting from row 2 (index 2)
-            for (let i = 2; i < rows.length; i++) {
+            // Detect format based on headers (row 0 or 1)
+            let itemIdx = 0;
+            let casesIdx = 1;
+            let unitsIdx = 2;
+            let notesIdx = 6;
+            let whIdx = -1;
+
+            const headerRow = rows[0].join('').includes('שם פריט') || rows[0].join('').includes('Item Name') || rows[0].join('').includes('item_name') ? rows[0] : rows[1];
+            
+            if (headerRow) {
+                const h = headerRow.map(c => String(c).toLowerCase().trim());
+                if (h.includes('supplier_name') || h.includes('שם ספק')) {
+                    // This is the generated template format (generateInventoryCountSheet)
+                    itemIdx = h.indexOf('item_name') > -1 ? h.indexOf('item_name') : h.indexOf('שם פריט');
+                    casesIdx = h.indexOf('counted_cases') > -1 ? h.indexOf('counted_cases') : h.indexOf('ארגזים שנספרו');
+                    unitsIdx = h.indexOf('counted_units') > -1 ? h.indexOf('counted_units') : h.indexOf('יחידות שנספרו');
+                    notesIdx = h.indexOf('notes') > -1 ? h.indexOf('notes') : h.indexOf('הערות');
+                    whIdx = h.indexOf('warehouse_name') > -1 ? h.indexOf('warehouse_name') : h.indexOf('שם מחסן');
+                } else {
+                    // This is the exported format (exportSingleCountToSheets)
+                    itemIdx = h.indexOf('item name') > -1 ? h.indexOf('item name') : h.indexOf('שם פריט');
+                    casesIdx = h.indexOf('counted cases') > -1 ? h.indexOf('counted cases') : h.indexOf('ארגזים שנספרו');
+                    unitsIdx = h.indexOf('counted units') > -1 ? h.indexOf('counted units') : h.indexOf('יחידות שנספרו');
+                    notesIdx = h.indexOf('notes') > -1 ? h.indexOf('notes') : h.indexOf('הערות');
+                    
+                    if (itemIdx === -1) itemIdx = 0;
+                    if (casesIdx === -1) casesIdx = 1;
+                    if (unitsIdx === -1) unitsIdx = 2;
+                    if (notesIdx === -1) notesIdx = 6;
+                }
+            }
+
+            // Simple heuristic: starting from row 2 (index 2) or row 1 if header is at 0
+            const startIndex = rows[0].join('').includes('שם פריט') || rows[0].join('').includes('Item Name') || rows[0].join('').includes('item_name') ? 1 : 2;
+            for (let i = startIndex; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row || row.length === 0) continue;
                 
-                const itemName = row[0];
+                const itemName = row[itemIdx];
                 if (!itemName || itemName.includes('Total') || itemName.includes('סה"כ')) continue;
 
-                const casesStr = String(row[1] ?? '').trim();
-                const unitsStr = String(row[2] ?? '').trim();
-                const notes = String(row[6] ?? '').trim();
+                const casesStr = String(row[casesIdx] ?? '').trim();
+                const unitsStr = String(row[unitsIdx] ?? '').trim();
+                const notes = String(row[notesIdx] ?? '').trim();
+                const specificWh = String(row[whIdx] ?? '').trim();
                 
                 let parsedCases = casesStr === '' || casesStr.toUpperCase() === 'N/A' ? '' : Number(casesStr.replace(/,/g, ''));
                 let parsedUnits = unitsStr === '' ? '' : Number(unitsStr.replace(/,/g, ''));
@@ -84,7 +118,7 @@ Deno.serve(async (req) => {
                 if (casesStr === '' && unitsStr === '') continue;
                 
                 updates.push({
-                    warehouse_name: sheetName,
+                    warehouse_name: whIdx > -1 ? specificWh : sheetName,
                     item_name: itemName,
                     cases: parsedCases === '' ? null : parsedCases,
                     units: parsedUnits === '' ? null : parsedUnits,

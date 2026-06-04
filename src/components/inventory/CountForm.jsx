@@ -221,13 +221,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           let updatedCount = 0;
           
           for (const update of data.updates) {
-            const wh = warehouseOptions.find(w => w.name === update.warehouse_name);
+            const wh = warehouseOptions.find(w => w.name === update.warehouse_name || w.name.substring(0, 100) === update.warehouse_name);
             const targetWarehouseId = wh ? wh.id : null;
 
             // Find the item
             const itemIndex = newItems.findIndex(i => 
               (i.item_name === update.item_name || i.item_name === update.item_name.replace(' (Summary)', '') || i.item_name === update.item_name.replace(' (סיכום)', '')) && 
-              (i.warehouse_id === targetWarehouseId || update.warehouse_name === 'Summary' || update.warehouse_name === 'סיכום')
+              (i.warehouse_id === targetWarehouseId || i.warehouse_name === update.warehouse_name || update.warehouse_name === 'Summary' || update.warehouse_name === 'סיכום')
             );
             
             if (itemIndex >= 0) {
