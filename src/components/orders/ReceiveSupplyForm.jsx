@@ -1829,18 +1829,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               }
 
                               const executeMultiSubmit = async () => {
-                                const baseData = {
-                                supplier_id: formData.supplier_id,
-                                supplier_name: formData.supplier_name,
-                                supplier_email: formData.supplier_email,
-                                received_date: formData.received_date,
-                                verified_items: [],
-                                price_changes_summary: [],
-                                has_price_changes: false,
-                                notes: formData.notes || "",
-                                needs_review: !!formData.needs_review,
-                                review_note: formData.review_note || ""
-                              };
+                                const wEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+                                const baseData = { supplier_id: formData.supplier_id, supplier_name: formData.supplier_name, supplier_email: formData.supplier_email, received_date: formData.received_date, store_owner_email: wEmail, created_by: user?.email, verified_items: [], price_changes_summary: [], has_price_changes: false, notes: formData.notes || "", needs_review: !!formData.needs_review, review_note: formData.review_note || "" };
                               // Create missing items from the first doc's items (since multiple docs just copy baseData)
                               const itemsWithIssues = baseData.verified_items?.filter(item => !item.item_id && item.item_name) || [];
                               if (itemsWithIssues.length > 0) {

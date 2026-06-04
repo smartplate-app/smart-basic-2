@@ -178,21 +178,30 @@ export default function OrdersPage() {
           console.error("Error loading admin data:", e);
         }
       } else if (isStoreUser && storeOwnerEmail) {
-        // Store user - show owner's orders + this user's orders (drafts etc.)
-        const [ownerSuppliers, ownerStoreSuppliers, ownerOrders, myOrders] = await Promise.all([
-          base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name"),
-          base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, "name"),
-          base44.entities.Order.filter({ $or: [{ created_by: storeOwnerEmail }, { store_owner_email: storeOwnerEmail }] }, "-created_date"),
-          base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date")
-        ]);
-        suppliersData = [...ownerSuppliers, ...ownerStoreSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-        const merged = [...ownerOrders, ...myOrders];
-        const seen = new Set();
-        ordersData = merged.filter(o => {
-          if (!o?.id || seen.has(o.id)) return false;
-          seen.add(o.id);
-          return true;
-        });
+        // Store user - fetch owner's data via backend to bypass RLS read restrictions
+        try {
+          const [suppliersRes, ordersRes, myOrders] = await Promise.all([
+            base44.functions.invoke('getStoreData', { action: 'getSuppliers', ownerEmail: storeOwnerEmail }),
+            base44.functions.invoke('getStoreData', { action: 'getOrders', ownerEmail: storeOwnerEmail }),
+            base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date")
+          ]);
+          
+          const ownerSuppliers = suppliersRes?.data?.success ? suppliersRes.data.suppliers : [];
+          const ownerOrders = ordersRes?.data?.success ? ordersRes.data.orders : [];
+          
+          suppliersData = ownerSuppliers;
+          const merged = [...ownerOrders, ...myOrders];
+          const seen = new Set();
+          ordersData = merged.filter(o => {
+            if (!o?.id || seen.has(o.id)) return false;
+            seen.add(o.id);
+            return true;
+          });
+        } catch (err) {
+          console.error('[Orders] Failed to fetch store data via backend', err);
+          suppliersData = [];
+          ordersData = [];
+        }
       } else if (currentUser.chain_id && !currentUser.is_chain_head) {
         // Branch store in chain
         const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
@@ -620,8 +629,11 @@ export default function OrdersPage() {
 
   const handleReceiveSubmit = async (receiptData) => {
     try {
+      const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
       const cleanData = {
         ...receiptData,
+        store_owner_email: workingEmail,
+        created_by: user?.email,
         order_id: receiveOrder?.id || receiptData.order_id || null,
         order_number: receiveOrder?.order_number || receiptData.order_number || `INV-${Date.now()}`,
         supplier_name: receiveOrder?.supplier_name || receiptData.supplier_name || "Unknown",
