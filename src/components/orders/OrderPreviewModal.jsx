@@ -94,6 +94,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           order.order_number = ensuredNumber;
         }
       } catch (_) {}
+      
+      const itemsText = (order.items || []).map(it => `• ${it.item_name || it.name || ''} - ${it.quantity} ${getUnitLabel(it.unit)}`).join('\n');
+      const shareText = language === 'he' 
+        ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}\n\nפריטים:\n${itemsText}\n\nלצפייה בהזמנה המלאה:\n${orderUrl}`
+        : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}\n\nItems:\n${itemsText}\n\nView full order:\n${orderUrl}`;
 
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
@@ -224,7 +229,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         try {
           await navigator.share({ 
             files: [file], 
-            title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order'
+            title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
+            text: shareText
           });
           shareSucceeded = true;
         } catch(e) {
@@ -245,21 +251,23 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             
             await navigator.clipboard.write([
               new ClipboardItem({
-                'image/png': pngBlob
+                'image/png': pngBlob,
+                'text/plain': new Blob([shareText], { type: 'text/plain' })
               })
             ]);
-            toast.success(language === 'he' ? 'התמונה הועתקה! פתח וואטסאפ והדבק' : 'Image copied! Open WhatsApp and paste');
+            toast.success(language === 'he' ? 'התמונה והטקסט הועתקו! פתח וואטסאפ והדבק' : 'Image and text copied! Open WhatsApp and paste');
           } else {
              // Fallback text if copying image isn't supported
-             const itemsText = (order.items || []).map(it => `• ${it.item_name || it.name || ''} - ${it.quantity} ${getUnitLabel(it.unit)}`).join('\n');
-             const shareText = language === 'he' 
-              ? `הזמנה ממסעדת ${order.restaurant_name || ''}\nמספר הזמנה: ${ensuredNumber}\n\nפריטים:\n${itemsText}\n\nלצפייה בהזמנה המלאה:\n${orderUrl}`
-              : `Order from ${order.restaurant_name || ''}\nOrder #: ${ensuredNumber}\n\nItems:\n${itemsText}\n\nView full order:\n${orderUrl}`;
              await navigator.clipboard.writeText(shareText);
              toast.success(language === 'he' ? 'טקסט ההזמנה הועתק! התמונה לא נתמכת במכשיר זה.' : 'Order text copied! Image copying unsupported on this device.');
           }
         } catch (copyErr) {
           console.error('Clipboard copy failed', copyErr);
+          // Ultimate fallback for just text
+          try {
+             await navigator.clipboard.writeText(shareText);
+             toast.success(language === 'he' ? 'טקסט ההזמנה הועתק!' : 'Order text copied!');
+          } catch (e) {}
         }
       }
 
