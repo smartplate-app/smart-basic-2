@@ -1297,6 +1297,86 @@ export default function OrdersPage() {
             <div className="text-center py-12 text-gray-500">
               {t('no_orders_to_display')}
             </div>
+          ) : statusFilter === 'history' ? (
+            <div className="mb-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                {sortedOrders.map((order) => {
+                  const statusColors = {
+                    sent: "bg-white text-gray-900 border-gray-200 shadow-sm",
+                    draft: "bg-yellow-50 text-yellow-700 border-yellow-200",
+                    delivered: "bg-green-50 text-green-700 border-green-200 shadow-sm"
+                  };
+
+                  const statusLabels = {
+                    sent: t('status_sent'),
+                    draft: t('status_draft'),
+                    delivered: safeT('status_delivered', 'סופק', 'Delivered')
+                  };
+
+                  return (
+                    <div 
+                      key={order.id} 
+                      className="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => { if (!isViewer && order.status === 'draft') handleEdit(order); else handleOpenPreview(order); }}
+                    >
+                      {/* Right side (RTL) - Supplier & Cost */}
+                      <div className="flex flex-col flex-1 min-w-0 pr-1">
+                        <span className="font-bold text-gray-900 text-sm truncate">{order.supplier_name}</span>
+                        <span className="text-sm font-bold text-green-600 mt-0.5">₪{(order.total_cost || 0).toFixed(2)}</span>
+                      </div>
+
+                      {/* Center - Status/Action */}
+                      <div className="flex flex-col items-center flex-shrink-0 px-2">
+                        {!isViewer && order.status === 'sent' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                            className="text-green-700 border-green-200 bg-green-50 hover:bg-green-100 rounded-full h-8 px-3 text-xs shadow-none"
+                          >
+                            <PackageCheck className="w-3 h-3 rtl:ml-1 ltr:mr-1" />
+                            {safeT('receive_scan', 'קלוט', 'Receive')}
+                          </Button>
+                        ) : (
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${statusColors[order.status]}`}>
+                            {statusLabels[order.status] || order.status}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Left side (RTL) - Date & Actions */}
+                      <div className="flex flex-col items-end flex-shrink-0 min-w-[70px]">
+                        <span className="text-xs text-gray-500 mb-1 font-medium">
+                          {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'2-digit'}) : '-'}
+                        </span>
+                        <div className="flex items-center -mr-2 rtl:-ml-2 rtl:mr-0">
+                          {!isViewer && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => { e.stopPropagation(); handleResend(order); }}
+                              className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full"
+                            >
+                              <Send className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {!isViewer && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
+                              className="h-8 w-8 text-gray-400 hover:text-red-600 rounded-full"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           ) : (
             ['today', 'future', 'past', 'draft'].map(section => {
               const todayStr = new Date().toISOString().split('T')[0];
@@ -1521,6 +1601,89 @@ export default function OrdersPage() {
                         <p className="text-gray-600">{t('loading')}</p>
                       </td>
                     </tr>
+                  ) : statusFilter === 'history' ? (
+                    <React.Fragment>
+                      {sortedOrders.map((order) => {
+                        const statusColors = {
+                          sent: "bg-blue-50 text-blue-600",
+                          draft: "bg-gray-100 text-gray-600"
+                        };
+    
+                        const statusLabels = {
+                          sent: t('status_sent'),
+                          draft: t('status_draft'),
+                          delivered: safeT('status_delivered', 'סופק', 'Delivered')
+                        };
+
+                        return (
+                          <tr
+                            key={order.id}
+                            className="hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => { if (!isViewer && order.status === 'draft') handleEdit(order); else handleOpenPreview(order); }}
+                          >
+                      <td className="px-6 py-5 text-left rtl:text-right align-middle">
+                        <div className="flex items-center gap-2">
+                          <div className="text-base font-bold text-gray-900">{order.supplier_name}</div>
+                          {!isViewer && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => { e.stopPropagation(); handleResend(order); }}
+                              className="h-8 w-8 text-gray-400 hover:text-gray-900 rounded-full"
+                              title={safeT('send','שלח','Send')}
+                            >
+                              <Send className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                        {order.restaurant_name && (
+                          <div className="text-sm text-gray-400 mt-1">{order.restaurant_name}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-5 text-left rtl:text-right text-base text-gray-600 align-middle">
+                        {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('he-IL') : '-'}
+                      </td>
+                      <td className="px-6 py-5 text-left rtl:text-right text-base font-bold text-gray-900 align-middle">
+                        ₪{(order.total_cost || 0).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-5 text-left rtl:text-right align-middle">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border border-gray-200 shadow-sm ${order.status === 'sent' ? 'text-gray-900 bg-white' : order.status === 'delivered' ? 'text-green-700 bg-green-50 border-green-200' : 'text-gray-700 bg-white'}`}>
+                            {statusLabels[order.status] || order.status}
+                            {order.status === 'draft' && <span className="ml-2 rtl:mr-2 rtl:ml-0">✓</span>}
+                          </span>
+                          {!isViewer && order.status === 'sent' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); setReceiveOrder(order); setShowReceiveForm(true); }}
+                              className="h-8 px-4 text-sm bg-green-50/50 border-green-200 text-green-700 hover:bg-green-100 rounded-full shadow-sm"
+                            >
+                              <PackageCheck className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                              {safeT('receive_scan', 'קלוט סחורה', 'Receive/Scan')}
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-right rtl:text-left align-middle">
+                        <div className="flex items-center justify-end gap-2 pointer-events-auto">
+                          {!isViewer && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => { e.stopPropagation(); handleDelete(order); }}
+                                className="h-9 w-9 text-gray-400 hover:text-red-600 rounded-xl"
+                                title={safeT('delete','מחק','Delete')}
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                        );
+                      })}
+                    </React.Fragment>
                   ) : ['today', 'future', 'past', 'draft'].map(section => {
                     const todayStr = new Date().toISOString().split('T')[0];
                     const sectionOrders = sortedOrders.filter(o => {
