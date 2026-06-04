@@ -16,11 +16,11 @@ Deno.serve(async (req) => {
     if (!order) return Response.json({ error: 'Order not found' }, { status: 404 });
 
     // Permission: owner, admin, or active StoreUser linked to owner
-    let allowed = (order.created_by === user.email) || (user.role === 'admin');
+    let allowed = (order.created_by === user.email) || (order.store_owner_email === user.email) || (user.role === 'admin');
     if (!allowed) {
       try {
         const links = await base44.entities.StoreUser.filter({ user_email: user.email, is_active: true });
-        allowed = links.some((r) => r.owner_email === order.created_by);
+        allowed = links.some((r) => r.owner_email === order.created_by || r.owner_email === order.store_owner_email);
       } catch (_) {
         // ignore
       }

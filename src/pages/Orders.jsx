@@ -525,10 +525,13 @@ export default function OrdersPage() {
       return;
     }
 
+    const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+    const enrichedOrderData = { ...orderData, store_owner_email: workingEmail };
+
     // Offline: queue and update UI optimistically
     if (!navigator.onLine) {
       const clientId = 'temp-' + Date.now();
-      const draftData = { ...orderData, status: editingOrder?.status || 'draft' };
+      const draftData = { ...enrichedOrderData, status: editingOrder?.status || 'draft' };
       offlineQueue.enqueue('orders', { action: 'create_or_update_order', payload: { orderData: draftData, editingOrderId: editingOrder?.id }, clientId });
       setShowForm(false);
       setEditingOrder(null);
@@ -545,10 +548,10 @@ export default function OrdersPage() {
     try {
       let savedOrder;
       if (editingOrder) {
-        await base44.entities.Order.update(editingOrder.id, { ...orderData, status: editingOrder.status || 'draft' });
-        savedOrder = { ...editingOrder, ...orderData, status: editingOrder.status || 'draft', id: editingOrder.id };
+        await base44.entities.Order.update(editingOrder.id, { ...enrichedOrderData, status: editingOrder.status || 'draft' });
+        savedOrder = { ...editingOrder, ...enrichedOrderData, status: editingOrder.status || 'draft', id: editingOrder.id };
       } else {
-        const draftData = { ...orderData, status: 'draft' };
+        const draftData = { ...enrichedOrderData, status: 'draft' };
         savedOrder = await base44.entities.Order.create(draftData);
       }
 
@@ -568,10 +571,13 @@ export default function OrdersPage() {
 
   const handleSaveDraft = async (orderData) => {
     if (isViewer) { return; }
+    const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+    const enrichedOrderData = { ...orderData, store_owner_email: workingEmail };
+
     // Offline: queue draft save
     if (!navigator.onLine) {
       const clientId = 'temp-' + Date.now();
-      const draft = { ...orderData, status: 'draft' };
+      const draft = { ...enrichedOrderData, status: 'draft' };
       offlineQueue.enqueue('orders', { action: 'create_or_update_order', payload: { orderData: draft, editingOrderId: editingOrder?.id }, clientId });
       setShowForm(false);
       setEditingOrder(null);
@@ -586,10 +592,10 @@ export default function OrdersPage() {
     try {
       let savedOrder;
       if (editingOrder) {
-        await base44.entities.Order.update(editingOrder.id, { ...orderData, status: 'draft' });
-        savedOrder = { ...editingOrder, ...orderData, status: 'draft', id: editingOrder.id };
+        await base44.entities.Order.update(editingOrder.id, { ...enrichedOrderData, status: 'draft' });
+        savedOrder = { ...editingOrder, ...enrichedOrderData, status: 'draft', id: editingOrder.id };
       } else {
-        savedOrder = await base44.entities.Order.create({ ...orderData, status: 'draft' });
+        savedOrder = await base44.entities.Order.create({ ...enrichedOrderData, status: 'draft' });
       }
       setShowForm(false);
       setEditingOrder(null);
