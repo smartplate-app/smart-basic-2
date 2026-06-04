@@ -742,7 +742,11 @@ export default function OrdersPage() {
   // CRITICAL: DO NOT MODIFY THIS SHARE SHEET TEMPLATE WITHOUT EXPLICIT USER PERMISSION (CODE 2233)
   const sendOrderToWhatsApp = async (order, opts = {}) => {
     const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-    const intro = language === 'he' ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"` : `You have received a new order from "${order.restaurant_name || ''}"`;
+    
+    const intro = language === 'he' 
+      ? `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}` : ''}` 
+      : `You have received a new order from "${order.restaurant_name || ''}"\n${order.restaurant_address ? `Address: ${order.restaurant_address}` : ''}`;
+      
   const numLbl = safeT('order_number', 'מספר הזמנה', 'Order');
   
   // Format items for text
