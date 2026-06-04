@@ -558,8 +558,15 @@ export default function OrdersPage() {
       setShowForm(false);
       setEditingOrder(null);
       
-      // Reload orders
-      await loadData(user);
+      // Optimistic update so it's instantly available
+      setOrders(prev => {
+        const exists = prev.some(o => o.id === savedOrder.id);
+        if (exists) return prev.map(o => o.id === savedOrder.id ? savedOrder : o);
+        return [savedOrder, ...prev];
+      });
+      
+      // Reload orders in background
+      loadData(user, 0, true);
       
       setPreviewOrder(savedOrder);
 
@@ -599,7 +606,12 @@ export default function OrdersPage() {
       }
       setShowForm(false);
       setEditingOrder(null);
-      await loadData(user);
+      setOrders(prev => {
+        const exists = prev.some(o => o.id === savedOrder.id);
+        if (exists) return prev.map(o => o.id === savedOrder.id ? savedOrder : o);
+        return [savedOrder, ...prev];
+      });
+      loadData(user, 0, true);
     } catch (error) {
       console.error("Error saving draft:", error);
       alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
@@ -661,10 +673,11 @@ export default function OrdersPage() {
   const doEmailSend = async (order) => {
     try {
       if (!order) return;
+      const num = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
       // Mark as sent via service-role so sub-users can update owner orders
       const { data } = await base44.functions.invoke('markOrderSent', {
         orderId: order.id,
-        orderNumber: order.order_number
+        orderNumber: num
       });
       const updated = data?.order || {};
 

@@ -103,14 +103,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         }
       } catch (_) {}
 
-      // Notify parent to ensure list refresh and service-role update for sub-users
-      if (onSend) {
-        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
-      }
-
-      // Removed early link-sharing on mobile; always generate image first and share the JPG file instead
-
-
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
@@ -285,6 +277,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           setTimeout(() => window.URL.revokeObjectURL(imageUrl), 1000);
           toast.success(language === 'he' ? 'התמונה הורדה — שלח אותה ידנית' : 'Image downloaded - please send manually');
         }
+      }
+
+      // Notify parent AFTER sharing so the modal doesn't close prematurely and break the user gesture chain
+      if (onSend) {
+        try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {}
       }
 
     } catch (err) {
