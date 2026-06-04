@@ -84,10 +84,15 @@ const AuthenticatedApp = () => {
     '/pages/AuthKick'
     ];
 
-    const isPublicRoute = publicRoutes.some(route => 
-    location.pathname.toLowerCase() === route.toLowerCase() || 
-    location.pathname.toLowerCase().startsWith(route.toLowerCase() + '/')
-    );
+    let pathToUse = location.pathname;
+  if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
+    pathToUse = location.hash.substring(1);
+  }
+
+  const isPublicRoute = publicRoutes.some(route => 
+    pathToUse.toLowerCase() === route.toLowerCase() || 
+    pathToUse.toLowerCase().startsWith(route.toLowerCase() + '/')
+  );
 
   let hasUserCache = false;
   try { hasUserCache = !!localStorage.getItem('b44_user_cache') && !sessionStorage.getItem('b44_logout_in_progress'); } catch {}

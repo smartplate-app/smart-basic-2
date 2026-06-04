@@ -497,15 +497,26 @@ const [authLoading, setAuthLoading] = useState(() => {
       // Redirect unauthenticated users
       const unauthorized = err?.response?.status === 401 || String(err?.message || '').toLowerCase().includes('unauthorized') || err?.code === 'AUTH_REQUIRED' || err?.response?.status === 403 || String(err?.message || '').toLowerCase().includes('logged in');
       if (unauthorized) {
-              if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
-                setAuthLoading(false);
-                try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
-                const cleanUrl = new URL(window.location.href);
-                cleanUrl.searchParams.delete('code');
-                cleanUrl.searchParams.delete('state');
-                base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
-                return;
-              }
+        // If it's a public route, don't redirect
+        const isPublic = [
+          'OrderDetails', 'WorkerPortal', 'Register', 'RestaurantInvite',
+          'PublicOrder', 'OAuthCallback', 'Diagnostics', 'LoginHelper', 'AuthKick'
+        ].includes(currentPageName);
+        
+        if (isPublic) {
+          setAuthLoading(false);
+          return;
+        }
+
+        if (sessionStorage.getItem('b44_logout_in_progress') === '1') {
+          setAuthLoading(false);
+          try { sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000)); } catch {}
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete('code');
+          cleanUrl.searchParams.delete('state');
+          base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+          return;
+        }
         if (!user) setAuthLoading(false);
         let cooldownUntil = 0;
         try { cooldownUntil = Number(sessionStorage.getItem('b44_login_cooldown_until') || localStorage.getItem('b44_login_cooldown_until') || '0'); } catch {}
