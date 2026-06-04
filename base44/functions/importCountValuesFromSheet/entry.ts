@@ -138,6 +138,65 @@ Deno.serve(async (req) => {
             }
         }
 
+        if (updates.length > 0) {
+            try {
+                const workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+                const catalogItems = await base44.asServiceRole.entities.Item.filter({
+                    $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }]
+                }, "name", 10000);
+
+                const catalogList = catalogItems.map(i => ({ id: i.id, name: i.name, nickname: i.nickname }));
+                const uniqueNames = [...new Set(updates.map(u => u.item_name))];
+
+                const prompt = `You are an expert data matching assistant.
+I have a list of extracted item names from an inventory spreadsheet. 
+I also have my official catalog of items.
+Map each extracted item name to the correct catalog item ID. 
+Some extracted names might have extra prefixes (like "40-30-4.5 "), typos, missing spaces, or minor differences compared to the official catalog.
+Only map if you are confident they are the same item. If not found, set catalog_id to "" (empty string).
+
+Extracted Names:
+${JSON.stringify(uniqueNames)}
+
+Official Catalog:
+${JSON.stringify(catalogList)}`;
+
+                const geminiRes = await base44.asServiceRole.integrations.Core.InvokeLLM({
+                    prompt,
+                    model: "gemini_3_1_pro",
+                    response_json_schema: {
+                        type: "object",
+                        properties: {
+                            mappings: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        extracted_name: { type: "string" },
+                                        catalog_id: { type: "string" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                if (geminiRes && geminiRes.mappings) {
+                    const mapDict = {};
+                    for (const m of geminiRes.mappings) {
+                        mapDict[m.extracted_name] = m.catalog_id;
+                    }
+                    for (const u of updates) {
+                        if (mapDict[u.item_name]) {
+                            u.catalog_id = mapDict[u.item_name];
+                        }
+                    }
+                }
+            } catch (llmError) {
+                console.error("LLM matching failed, proceeding with original updates", llmError);
+            }
+        }
+
         return Response.json({ success: true, updates });
     } catch (error) {
         return Response.json({ success: false, error: error.message }, { status: 500 });

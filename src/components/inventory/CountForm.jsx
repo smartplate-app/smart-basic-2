@@ -228,10 +228,26 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             const normalizeStr = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/\s*\+\s*/g, '+');
             const cleanUpdateName = normalizeStr(update.item_name);
             
-            const itemIndex = newItems.findIndex(i => 
-              (normalizeStr(i.item_name) === cleanUpdateName || normalizeStr(i.item_name) === normalizeStr(update.item_name.replace(' (Summary)', '')) || normalizeStr(i.item_name) === normalizeStr(update.item_name.replace(' (סיכום)', ''))) && 
-              (i.warehouse_id === targetWarehouseId || i.warehouse_name === update.warehouse_name || update.warehouse_name === 'Summary' || update.warehouse_name === 'סיכום')
-            );
+            // Default target warehouse (to support explicit overrides for imported items missing from catalog)
+            let actualWhId = targetWarehouseId;
+            let actualWhName = targetWarehouseId ? update.warehouse_name : "";
+            
+            if (!actualWhId && currentWarehouseTab && currentWarehouseTab !== "all_summary" && currentWarehouseTab !== "multi") {
+              actualWhId = currentWarehouseTab;
+              const wh = warehouseOptions.find(w => w.id === currentWarehouseTab);
+              actualWhName = wh ? wh.name : "";
+            }
+            
+            const isMatch = (i) => {
+              if (update.catalog_id) return i.item_id === update.catalog_id;
+              return normalizeStr(i.item_name) === cleanUpdateName || 
+                     normalizeStr(i.item_name) === normalizeStr(update.item_name.replace(' (Summary)', '')) || 
+                     normalizeStr(i.item_name) === normalizeStr(update.item_name.replace(' (סיכום)', ''));
+            };
+
+            const isWhMatch = (i) => i.warehouse_id === actualWhId || i.warehouse_name === update.warehouse_name || update.warehouse_name === 'Summary' || update.warehouse_name === 'סיכום';
+
+            const itemIndex = newItems.findIndex(i => isMatch(i) && isWhMatch(i));
             
             if (itemIndex >= 0) {
               const current = newItems[itemIndex];
@@ -269,6 +285,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             } else {
               // Add missing item if not found in current count
               const originalItem = items.find(i => 
+                (update.catalog_id && i.id === update.catalog_id) ||
                 normalizeStr(i.name) === cleanUpdateName || 
                 normalizeStr(i.nickname) === cleanUpdateName || 
                 normalizeStr(i.name) === normalizeStr(update.item_name.replace(' (Summary)', '')) || 
@@ -292,10 +309,11 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                 }
 
                 if (totalQty !== '') {
-                  const actualWhId = targetWarehouseId || originalItem.warehouse_id || "multi";
-                  const actualWhName = update.warehouse_name && !update.warehouse_name.includes('Summary') && !update.warehouse_name.includes('סיכום') 
-                    ? update.warehouse_name 
-                    : (originalItem.warehouse_name || "");
+                  // If we didn't resolve an actualWhId, fall back to item's default
+                  if (!actualWhId) {
+                    actualWhId = originalItem.warehouse_id || "multi";
+                    actualWhName = originalItem.warehouse_name || "";
+                  }
                     
                   const q = parseFloat(totalQty) || 0;
                   const price = Number(originalItem.price || 0) * (1 - (Number(originalItem.discount || 0) / 100));
