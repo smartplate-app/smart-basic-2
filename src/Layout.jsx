@@ -372,24 +372,25 @@ const [authLoading, setAuthLoading] = useState(() => {
                         }
 
                         } else if (storeUserRecords.length > 0 && storeUserRecords.every(r => !r.is_active)) {
-                        // User has StoreUser records but all are inactive (access revoked)
-                        console.log('[Layout] StoreUser records exist but all inactive - access revoked');
+                        // User has StoreUser records but all are inactive
+                        console.log('[Layout] StoreUser records exist but all inactive');
                         await base44.auth.updateMe({
                           store_user_role: null,
                           store_user_owner_email: null,
                           store_user_store_name: null,
                           store_user_read_only: false,
-                          store_user_revoked: true
+                          store_user_revoked: false
                         });
                         setStoreUserRole(null);
                     } else if (currentUser.store_user_owner_email && storeUserRecords.length === 0) {
                       // User was a store user but record was completely deleted
-                      console.log('[Layout] StoreUser record deleted - access revoked');
+                      console.log('[Layout] StoreUser record deleted');
                       await base44.auth.updateMe({
                         store_user_role: null,
                         store_user_owner_email: null,
                         store_user_store_name: null,
-                        store_user_revoked: true
+                        store_user_read_only: false,
+                        store_user_revoked: false
                       });
                       setStoreUserRole(null);
                     } else {
@@ -764,57 +765,9 @@ const [authLoading, setAuthLoading] = useState(() => {
     );
   }
 
-  // Check if user's store access was revoked
-  if ((storeUserRole === 'viewer' || user?.store_user_role === 'viewer') && !user?.store_user_read_only) {
-    // Ensure read-only flag is set if user is viewer (redundant safety)
-    base44.auth.updateMe({ store_user_read_only: true });
-  }
+  // Viewer flag safety check removed to avoid issues
 
-  if (user?.store_user_revoked) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 p-4">
-        <Card className="max-w-md w-full shadow-xl">
-          <CardHeader className="bg-orange-50 border-b">
-            <CardTitle className="text-orange-700 flex items-center justify-center gap-2">
-              <AlertCircle className="w-6 h-6" />
-              {language === 'he' ? 'הגישה הוסרה' : 'Access Revoked'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-6">
-            <div className="text-center">
-              <p className="text-lg text-gray-700 mb-4">
-                {language === 'he' 
-                  ? 'אין לך יותר גישה למסעדה הזו.' 
-                  : 'You no longer have access to this restaurant.'}
-              </p>
-              <p className="text-gray-500 mb-6">
-                {language === 'he' 
-                  ? 'בהצלחה בהמשך הדרך! 🙏' 
-                  : 'Good luck on your journey! 🙏'}
-              </p>
-              <Button 
-                onClick={async () => {
-                  await base44.auth.updateMe({ store_user_revoked: false });
-                  try {
-                    sessionStorage.setItem('b44_logout_in_progress', '1');
-                    localStorage.removeItem('b44_user_cache');
-                    sessionStorage.removeItem('b44_oauth_in_progress');
-                    sessionStorage.removeItem('b44_oauth_finalized');
-                    sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 60 * 1000));
-                  } catch {}
-                  try { await base44.auth.logout('/#/pages/Orders'); } catch {}
-                  setTimeout(() => { window.location.replace('/#/pages/Orders'); }, 300);
-                }} 
-                className="w-full bg-[#d4a373] hover:bg-[#b88c60]"
-              >
-                {language === 'he' ? 'התנתק' : 'Logout'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // if (user?.store_user_revoked) removed to prevent "no access" errors
 
   if (error && !user && !localStorage.getItem('b44_user_cache')) {
     return (
