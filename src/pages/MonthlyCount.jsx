@@ -43,6 +43,7 @@ export default function MonthlyCountPage() {
   const [exporting, setExporting] = useState(false);
   const [generatingSheet, setGeneratingSheet] = useState(false);
   const [importingSheet, setImportingSheet] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [selectedCountsForMerge, setSelectedCountsForMerge] = useState([]);
   const [isViewer, setIsViewer] = useState(false);
@@ -427,11 +428,22 @@ export default function MonthlyCountPage() {
   const handleExportToSheets = async () => {
     try {
       setExporting(true);
+      setExportProgress(10);
+      
+      const progressInterval = setInterval(() => {
+        setExportProgress(p => p < 90 ? p + 10 : p);
+      }, 500);
+
       const { data } = await base44.functions.invoke('exportCountsToSheets', {
         start_date: exportStartDate,
         end_date: exportEndDate
       });
+      
+      clearInterval(progressInterval);
+      setExportProgress(100);
+
       if (data?.success && data?.spreadsheetUrl) {
+         alert(language === 'he' ? 'הספירות יוצאו בהצלחה ל-Google Drive שלך!' : 'Counts exported successfully to your Google Drive!');
          const url = data.spreadsheetUrl;
          const a = document.createElement('a');
          a.href = url;
@@ -454,7 +466,10 @@ export default function MonthlyCountPage() {
       console.error('Export error:', e);
       alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
     } finally {
-      setExporting(false);
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+      }, 1000);
     }
   };
 
@@ -940,11 +955,16 @@ export default function MonthlyCountPage() {
                 </div>
               )}
             </div>
+            {exporting && exportProgress > 0 && (
+              <div className="w-full bg-gray-200 rounded-full h-2.5 my-4">
+                <div className="bg-[#d4a373] h-2.5 rounded-full transition-all duration-300" style={{ width: `${exportProgress}%` }}></div>
+              </div>
+            )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowExportDialog(false)}>{t('cancel') || 'Cancel'}</Button>
-              <Button onClick={() => { setShowExportDialog(false); handleExportToSheets(); }} disabled={exporting || filteredCounts.length === 0} className="bg-[#d4a373] hover:bg-[#b88c60] text-white">
-                {exporting ? <Loader className="w-4 h-4 animate-spin rtl:ml-2 ltr:mr-2" /> : <FileSpreadsheet className="w-4 h-4 rtl:ml-2 ltr:mr-2" />}
-                {t('save_to_google_sheets') || 'Save to Google Sheets'}
+              <Button onClick={() => { handleExportToSheets(); }} disabled={exporting || filteredCounts.length === 0} className="bg-[#d4a373] hover:bg-[#b88c60] text-white relative overflow-hidden">
+                {exporting ? <Loader className="w-4 h-4 animate-spin rtl:ml-2 ltr:mr-2 z-10" /> : <FileSpreadsheet className="w-4 h-4 rtl:ml-2 ltr:mr-2 z-10" />}
+                <span className="z-10">{t('save_to_google_sheets') || 'Save to Google Sheets'}</span>
               </Button>
             </DialogFooter>
           </DialogContent>

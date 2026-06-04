@@ -56,6 +56,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [availableSearch, setAvailableSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [exportingSheets, setExportingSheets] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [tableSearchTerm, setTableSearchTerm] = useState("");
   const [showCustomItemForm, setShowCustomItemForm] = useState(false);
@@ -113,8 +114,14 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   }, [formData]);
 
   const handleExportToSheets = async () => {
+    let progressInterval;
     try {
       setExportingSheets(true);
+      setExportProgress(10);
+      
+      progressInterval = setInterval(() => {
+        setExportProgress(p => p < 90 ? p + 10 : p);
+      }, 500);
       
       const title = formData.name || formData.warehouse_name || (language === 'he' ? 'ספירת מלאי' : 'Inventory Count');
       
@@ -177,16 +184,24 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         language
       });
       
+      clearInterval(progressInterval);
+      setExportProgress(100);
+
       if (data?.success && data?.spreadsheetUrl) {
+        alert(language === 'he' ? 'הקובץ הועלה בהצלחה ל-Google Drive שלך!' : 'File was successfully uploaded to your Google Drive!');
         window.open(data.spreadsheetUrl, '_blank');
       } else {
         alert(t('error_saving') || 'Export failed');
       }
     } catch (e) {
+      clearInterval(progressInterval);
       console.error('Export error:', e);
       alert((t('error_saving') || 'Error') + ': ' + (e?.message || ''));
     } finally {
-      setExportingSheets(false);
+      setTimeout(() => {
+        setExportingSheets(false);
+        setExportProgress(0);
+      }, 1000);
     }
   };
 
@@ -793,9 +808,15 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             {count ? t('edit_count') : t('new_count')}
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={handleExportToSheets} disabled={exportingSheets || formData.items.length === 0} className="hidden md:flex border-green-600 text-green-600 hover:bg-green-50">
-              {exportingSheets ? <Loader className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
-              {language === 'he' ? 'ייצא פירוט ל-Sheets' : 'Export items to Sheets'}
+            <Button type="button" variant="outline" size="sm" onClick={handleExportToSheets} disabled={exportingSheets || formData.items.length === 0} className="flex border-green-600 text-green-600 hover:bg-green-50 relative overflow-hidden">
+              {exportingSheets ? <Loader className="w-4 h-4 mr-2 animate-spin relative z-10" /> : <FileSpreadsheet className="w-4 h-4 mr-2 relative z-10" />}
+              <span className="relative z-10">{language === 'he' ? 'ייצא פירוט ל-Sheets' : 'Export items to Sheets'}</span>
+              {exportingSheets && exportProgress > 0 && (
+                <div 
+                  className="absolute left-0 top-0 bottom-0 bg-green-100 transition-all duration-300 z-0" 
+                  style={{ width: `${exportProgress}%`, opacity: 0.5 }}
+                />
+              )}
             </Button>
             {isOffline && (
               <span className="flex items-center gap-1 text-orange-600 text-sm font-medium animate-pulse">
