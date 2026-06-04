@@ -526,7 +526,7 @@ export default function OrdersPage() {
     }
 
     const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-    const enrichedOrderData = { ...orderData, store_owner_email: workingEmail };
+    const enrichedOrderData = { ...orderData, store_owner_email: workingEmail, created_by: user?.email };
 
     // Offline: queue and update UI optimistically
     if (!navigator.onLine) {
@@ -579,7 +579,7 @@ export default function OrdersPage() {
   const handleSaveDraft = async (orderData) => {
     if (isViewer) { return; }
     const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-    const enrichedOrderData = { ...orderData, store_owner_email: workingEmail };
+    const enrichedOrderData = { ...orderData, store_owner_email: workingEmail, created_by: user?.email };
 
     // Offline: queue draft save
     if (!navigator.onLine) {
