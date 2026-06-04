@@ -60,13 +60,23 @@ export default function WarehouseManagement({ warehouses, onClose }) {
     }
 
     try {
+      const user = await base44.auth.me();
+      let workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+      if (user.role === 'admin' && user.acting_as_user_email) {
+          workingEmail = user.acting_as_user_email;
+      }
+
       if (editingWarehouse) {
         await Warehouse.update(editingWarehouse.id, formData);
       } else {
-        await Warehouse.create(formData);
+        await Warehouse.create({
+            ...formData,
+            created_by: workingEmail,
+            store_owner_email: workingEmail
+        });
       }
       
-      const updatedWarehouses = await Warehouse.list();
+      const updatedWarehouses = await Warehouse.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }, "name", 10000);
       setLocalWarehouses(updatedWarehouses);
       setShowForm(false);
       setEditingWarehouse(null);
@@ -126,6 +136,12 @@ export default function WarehouseManagement({ warehouses, onClose }) {
 
   const saveCatalogItems = async () => {
     try {
+      const user = await base44.auth.me();
+      let workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+      if (user.role === 'admin' && user.acting_as_user_email) {
+          workingEmail = user.acting_as_user_email;
+      }
+
       const payload = { ...showItemSelection };
       if (itemSelectionMode === 'daily') {
         payload.daily_count_items = formData.daily_count_items;
@@ -133,7 +149,7 @@ export default function WarehouseManagement({ warehouses, onClose }) {
         payload.catalog_items = formData.catalog_items;
       }
       await Warehouse.update(showItemSelection.id, payload);
-      const updatedWarehouses = await Warehouse.list();
+      const updatedWarehouses = await Warehouse.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }, "name", 10000);
       setLocalWarehouses(updatedWarehouses);
       setShowItemSelection(null);
       alert('Saved ✓');
@@ -263,9 +279,15 @@ export default function WarehouseManagement({ warehouses, onClose }) {
                               onClick={async () => {
                                 if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
                                 try {
+                                  const user = await base44.auth.me();
+                                  let workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
+                                  if (user.role === 'admin' && user.acting_as_user_email) {
+                                      workingEmail = user.acting_as_user_email;
+                                  }
+
                                   const { data } = await base44.functions.invoke('deleteWarehouse', { warehouseId: warehouse.id });
                                   if (!data?.success) throw new Error(data?.error || 'Failed to delete warehouse');
-                                  const updated = await Warehouse.list();
+                                  const updated = await Warehouse.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }, "name", 10000);
                                   setLocalWarehouses(updated);
                                   if (showItemSelection?.id === warehouse.id) setShowItemSelection(null);
                                   if (editingWarehouse?.id === warehouse.id) { setEditingWarehouse(null); setShowForm(false); }

@@ -50,7 +50,7 @@ export default function WarehousesPage() {
           data = adminData.data.warehouses;
         }
       } else {
-        data = await Warehouse.filter({ created_by: targetEmail }, "name");
+        data = await Warehouse.filter({ $or: [{ created_by: targetEmail }, { store_owner_email: targetEmail }] }, "name", 10000);
       }
       setWarehouses(data);
       setCache('warehouses_v1', { warehouses: data });
@@ -100,7 +100,8 @@ export default function WarehousesPage() {
       setShowForm(false);
       setEditingWarehouse(null);
       setFormData({ name: "", location: "", description: "", is_active: true });
-      loadWarehouses(user.email);
+      const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+      loadWarehouses(targetEmail, user);
     } catch (error) {
       console.error("Error saving warehouse:", error);
       alert(t('error_saving'));
