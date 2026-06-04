@@ -225,8 +225,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       await new Promise(resolve => setTimeout(resolve, 50));
 
       let shareSucceeded = false;
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      
+      if (navigator.share) {
         try {
+          // Attempt to share the file + text natively
           await navigator.share({ 
             files: [file], 
             title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
@@ -234,15 +236,28 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           });
           shareSucceeded = true;
         } catch(e) {
-          console.error('Share failed', e);
+          console.error('Share failed with file, trying text only', e);
           if (e.name === 'AbortError' || (e.message && e.message.includes('abort'))) {
-             return; // User cancelled
+             return; // User cancelled the share sheet intentionally
+          }
+          // If file sharing fails (unsupported on this specific OS version), fallback to sharing just the text
+          try {
+            await navigator.share({ 
+              title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
+              text: shareText
+            });
+            shareSucceeded = true;
+          } catch (textShareErr) {
+            console.error('Text share fallback failed', textShareErr);
+            if (textShareErr.name === 'AbortError' || (textShareErr.message && textShareErr.message.includes('abort'))) {
+               return; // User cancelled
+            }
           }
         }
       } 
       
       if (!shareSucceeded) {
-        // Fallback for Android APK / when share fails: Try to copy to clipboard so they can paste it
+        // Fallback for desktop or when share is completely missing: Try to copy to clipboard so they can paste it
         try {
           if (navigator.clipboard && navigator.clipboard.write) {
             const pngDataUrl = canvas.toDataURL('image/png');
@@ -257,13 +272,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             ]);
             toast.success(language === 'he' ? 'התמונה והטקסט הועתקו! פתח וואטסאפ והדבק' : 'Image and text copied! Open WhatsApp and paste');
           } else {
-             // Fallback text if copying image isn't supported
              await navigator.clipboard.writeText(shareText);
              toast.success(language === 'he' ? 'טקסט ההזמנה הועתק! התמונה לא נתמכת במכשיר זה.' : 'Order text copied! Image copying unsupported on this device.');
           }
         } catch (copyErr) {
           console.error('Clipboard copy failed', copyErr);
-          // Ultimate fallback for just text
           try {
              await navigator.clipboard.writeText(shareText);
              toast.success(language === 'he' ? 'טקסט ההזמנה הועתק!' : 'Order text copied!');
