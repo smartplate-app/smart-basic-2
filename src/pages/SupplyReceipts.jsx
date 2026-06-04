@@ -251,8 +251,11 @@ export default function SupplyReceiptsPage() {
 
   const handleReceiptSubmit = async (receiptData) => {
     try {
+      const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
       const cleanData = {
         ...receiptData,
+        store_owner_email: workingEmail,
+        created_by: user?.email,
         order_id: receiptData.order_id || null,
         order_number: receiptData.order_number || `INV-${Date.now()}`,
         supplier_name: receiptData.supplier_name || "Unknown",
