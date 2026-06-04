@@ -50,6 +50,8 @@ export default function StoreLogin() {
               <img src="https://www.svgrepo.com/show/511330/apple-173.svg" className="w-5 h-5 invert" alt="Apple" />
               {language === 'he' ? 'המשך עם אפל' : 'Continue with Apple'}
             </Button>
+
+
           </div>
         </CardContent>
       </Card>
