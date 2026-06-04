@@ -446,11 +446,6 @@ export default function SupplyReceiptsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <img
-            src="https://smartplate.org/logo.png"
-            alt="Smart Plate"
-            className="h-20 object-contain animate-pulse"
-          />
           <Loader className="w-12 h-12 animate-spin text-gray-600" />
           <p className="text-lg text-gray-700">{tt('loading','טוען...','Loading')}</p>
         </div>

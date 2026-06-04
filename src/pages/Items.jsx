@@ -693,11 +693,6 @@ const handleCleanOrphans = async (ownerEmail) => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <img 
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
-            alt="Smart Plate"
-            className="h-20 object-contain animate-pulse"
-          />
           <Loader className="w-12 h-12 animate-spin text-gray-600" />
           <p className="text-lg text-gray-700">{t('loading')}</p>
         </div>
