@@ -81,9 +81,9 @@ export default function OrdersPage() {
 
   // No pre-generated file anymore
 
-  const loadData = async (currentUser, retryAttempt = 0) => {
+  const loadData = async (currentUser, retryAttempt = 0, background = false) => {
     try {
-      setLoading(true);
+      if (!background) setLoading(true);
       setError(null);
 
       console.log(`[Orders] Loading data (attempt ${retryAttempt + 1})...`);
@@ -360,6 +360,9 @@ export default function OrdersPage() {
           const stale = isStale(c, 180000);
           if (stale) {
             await loadData(currentUser);
+          } else {
+            // Background refresh to catch status changes (e.g. from SupplyReceipt automations)
+            loadData(currentUser, 0, true);
           }
         }
         

@@ -280,6 +280,14 @@ export default function SupplyReceiptsPage() {
         const linkedOrderIds = [cleanData.order_id, ...(cleanData.linked_order_ids || [])].filter(Boolean);
         if (linkedOrderIds.length > 0) {
           await base44.functions.invoke('markOrdersDelivered', { orderIds: linkedOrderIds }).catch(() => {});
+          // Also update orders_v1 cache so Orders.js sees it immediately
+          try {
+            const c = getCache('orders_v1');
+            if (c && c.data && c.data.orders) {
+              const updatedCacheOrders = c.data.orders.map(o => linkedOrderIds.includes(o.id) ? { ...o, status: 'delivered' } : o);
+              setCache('orders_v1', { ...c.data, orders: updatedCacheOrders });
+            }
+          } catch (err) {}
         }
       }
 
