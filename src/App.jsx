@@ -31,7 +31,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 const AppLayoutRoute = () => {
 const location = useLocation();
 let pathToUse = location.pathname;
-if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
+if (location.hash && location.hash.startsWith('#/')) {
   pathToUse = location.hash.substring(1);
 }
 if (pathToUse.includes('?')) {
@@ -88,7 +88,7 @@ const AuthenticatedApp = () => {
     ];
 
     let pathToUse = location.pathname;
-  if (pathToUse === '/' && location.hash && location.hash.startsWith('#/')) {
+  if (location.hash && location.hash.startsWith('#/')) {
     pathToUse = location.hash.substring(1);
   }
   if (pathToUse.includes('?')) {
