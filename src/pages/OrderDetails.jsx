@@ -173,19 +173,11 @@ export default function OrderDetailsPage() {
 
                 console.log('[OrderDetails] Fetching order via public function:', orderId);
 
-                const appId = 'smartplatebasic';
-                const functionUrl = `https://app.base44.com/api/apps/${appId}/functions/getPublicOrder`;
-                const response = await fetch(functionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ orderId })
-                });
+                const { base44 } = await import('@/api/base44Client');
+                const response = await base44.functions.invoke('getPublicOrder', { orderId });
+                const data = response.data;
 
-                const data = await response.json();
-
-                if (!response.ok || !data.order) {
+                if (!data || !data.order) {
                     setErrorType('orderNotAccessible');
                     setLoading(false);
                     return;

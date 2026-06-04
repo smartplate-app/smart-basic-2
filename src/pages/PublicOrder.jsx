@@ -32,13 +32,10 @@ export default function PublicOrderPage() {
                         // If inline payload has no money total, try fetching by id for authoritative data
                         if (maybeId && !(Number(parsed.m) > 0)) {
                             try {
-                                const res2 = await fetch('/functions/getPublicOrder', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ orderId: maybeId })
-                                });
-                                const json2 = await res2.json();
-                                if (res2.ok && json2?.order) {
+                                const { base44 } = await import('@/api/base44Client');
+                                const res2 = await base44.functions.invoke('getPublicOrder', { orderId: maybeId });
+                                const json2 = res2.data;
+                                if (json2 && json2.order) {
                                     setOrder(json2.order);
                                     return;
                                 }
@@ -55,13 +52,10 @@ export default function PublicOrderPage() {
 
                 // 2) Otherwise, fetch by id
                 if (id) {
-                    const res = await fetch('/functions/getPublicOrder', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId: id })
-                    });
-                    const json = await res.json();
-                    if (res.ok && json?.order) {
+                    const { base44 } = await import('@/api/base44Client');
+                    const res = await base44.functions.invoke('getPublicOrder', { orderId: id });
+                    const json = res.data;
+                    if (json && json.order) {
                         setOrder(json.order);
                         return;
                     }
