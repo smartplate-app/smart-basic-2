@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -63,6 +64,9 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [customItemData, setCustomItemData] = useState({ name: '', price: '' });
   const [creatingCustom, setCreatingCustom] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showImportSheetModal, setShowImportSheetModal] = useState(false);
+  const [importSheetUrl, setImportSheetUrl] = useState("");
+  const [importingFromSheet, setImportingFromSheet] = useState(false);
   const isSavingRef = React.useRef(false);
   const isSubmittedRef = React.useRef(false);
   const formDataRef = React.useRef(formData);
@@ -202,6 +206,82 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         setExportingSheets(false);
         setExportProgress(0);
       }, 1000);
+    }
+  };
+
+  const handleImportValuesFromSheet = async () => {
+    if (!importSheetUrl) return;
+    try {
+      setImportingFromSheet(true);
+      const { data } = await base44.functions.invoke('importCountValuesFromSheet', { sheet_url: importSheetUrl });
+      
+      if (data?.success && data.updates) {
+        setFormData(prev => {
+          const newItems = [...prev.items];
+          let updatedCount = 0;
+          
+          for (const update of data.updates) {
+            // Find the item
+            const itemIndex = newItems.findIndex(i => 
+              (i.item_name === update.item_name || i.item_name === update.item_name.replace(' (Summary)', '') || i.item_name === update.item_name.replace(' (סיכום)', '')) && 
+              (i.warehouse_name === update.warehouse_name || update.warehouse_name === 'Summary')
+            );
+            
+            if (itemIndex >= 0) {
+              const current = newItems[itemIndex];
+              const originalItem = items.find(i => i.id === current.item_id);
+              
+              if (originalItem?.unit === 'case' || current.unit === 'case') {
+                const cases = update.cases !== null ? update.cases : '';
+                const units = update.units !== null ? update.units : '';
+                const c = parseFloat(cases) || 0;
+                const u = parseFloat(units) || 0;
+                const upp = originalItem?.units_per_package || 1;
+                const totalQty = c + (u / upp);
+                
+                newItems[itemIndex] = {
+                  ...current,
+                  counted_cases: cases,
+                  counted_units: units,
+                  counted_quantity: (cases === '' && units === '') ? '' : totalQty,
+                  total_cost: totalQty * (parseFloat(current.price_per_unit) || 0),
+                  notes: update.notes || current.notes,
+                  last_updated_at: Date.now()
+                };
+              } else {
+                const qty = update.units !== null ? update.units : (update.cases !== null ? update.cases : '');
+                const q = parseFloat(qty) || 0;
+                newItems[itemIndex] = {
+                  ...current,
+                  counted_quantity: qty,
+                  total_cost: q * (parseFloat(current.price_per_unit) || 0),
+                  notes: update.notes || current.notes,
+                  last_updated_at: Date.now()
+                };
+              }
+              updatedCount++;
+            }
+          }
+          
+          newItems.forEach(i => dirtyItemsRef.current.set(`${i.item_id}_${i.warehouse_id}`, i));
+          
+          setTimeout(() => {
+            alert(language === 'he' ? `עודכנו בהצלחה ${updatedCount} פריטים מהגיליון!` : `Successfully updated ${updatedCount} items from the sheet!`);
+          }, 500);
+          
+          return { ...prev, items: newItems };
+        });
+        
+        setShowImportSheetModal(false);
+        setImportSheetUrl("");
+      } else {
+        alert(data?.error || t('error_saving'));
+      }
+    } catch (error) {
+      console.error(error);
+      alert((t('error_saving') || 'Error') + ': ' + (error.message || 'Unknown error'));
+    } finally {
+      setImportingFromSheet(false);
     }
   };
 
@@ -808,6 +888,10 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             {count ? t('edit_count') : t('new_count')}
           </CardTitle>
           <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowImportSheetModal(true)} disabled={isCompleted} className="flex border-blue-600 text-blue-600 hover:bg-blue-50 relative overflow-hidden">
+              <Upload className="w-4 h-4 rtl:ml-2 ltr:mr-2 relative z-10" />
+              <span className="relative z-10">{language === 'he' ? 'קלוט נתונים מ-Sheets' : 'Import from Sheets'}</span>
+            </Button>
             <Button type="button" variant="outline" size="sm" onClick={handleExportToSheets} disabled={exportingSheets || formData.items.length === 0} className="flex border-green-600 text-green-600 hover:bg-green-50 relative overflow-hidden">
               {exportingSheets ? <Loader className="w-4 h-4 mr-2 animate-spin relative z-10" /> : <FileSpreadsheet className="w-4 h-4 mr-2 relative z-10" />}
               <span className="relative z-10">{language === 'he' ? 'ייצא פירוט ל-Sheets' : 'Export items to Sheets'}</span>
@@ -1444,6 +1528,39 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           </form>
         </CardContent>
       </Card>
+
+      <Dialog open={showImportSheetModal} onOpenChange={setShowImportSheetModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{language === 'he' ? 'קלוט נתונים מ-Sheets' : 'Import from Sheets'}</DialogTitle>
+            <DialogDescription>
+              {language === 'he' 
+                ? 'הדבק את הקישור לגיליון של גוגל (Google Sheets) המכיל את נתוני הספירה שלך. המערכת תעדכן את הכמויות באופן אוטומטי.' 
+                : 'Paste the Google Sheets link containing your count data. The system will automatically update the quantities.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="sheetUrl" className="mb-2 block">{language === 'he' ? 'קישור לגיליון' : 'Sheet URL'}</Label>
+            <Input 
+              id="sheetUrl" 
+              placeholder="https://docs.google.com/spreadsheets/d/..." 
+              value={importSheetUrl}
+              onChange={(e) => setImportSheetUrl(e.target.value)}
+              dir="ltr"
+              className="text-left"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowImportSheetModal(false); setImportSheetUrl(""); }}>
+              {t('cancel') || 'Cancel'}
+            </Button>
+            <Button onClick={handleImportValuesFromSheet} disabled={!importSheetUrl || importingFromSheet} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {importingFromSheet && <Loader className="w-4 h-4 mr-2 animate-spin" />}
+              {language === 'he' ? 'קלוט נתונים' : 'Import Data'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
