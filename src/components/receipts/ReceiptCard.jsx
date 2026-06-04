@@ -61,6 +61,12 @@ export default function ReceiptCard({ receipt, onEdit }) {
                 {receipt.needs_review && (
                   <Badge className="bg-amber-50 text-amber-700 border-none">{t('needs_review') || 'Review'}</Badge>
                 )}
+                {receipt.awaiting_credit && (
+                  <Badge className="bg-orange-50 text-orange-700 border-none">{t('awaiting_credit') || 'Awaiting credit'}</Badge>
+                )}
+                {receipt.refund_received && (
+                  <Badge className="bg-green-50 text-green-700 border-none">{t('credit_handled') || 'Credit handled'}</Badge>
+                )}
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-gray-600">

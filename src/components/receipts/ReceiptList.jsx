@@ -267,6 +267,9 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                       {r.awaiting_credit && (
                         <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
                       )}
+                      {r.refund_received && (
+                        <Badge className="bg-green-50 text-green-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'הזיכוי טופל' : 'Credit handled'}</Badge>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
@@ -375,6 +378,9 @@ export default function ReceiptList({ receipts = [], onEdit, onDelete, onQuickUp
                   )}
                   {r.awaiting_credit && (
                     <Badge className="bg-orange-50 text-orange-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'ממתין לזיכוי' : 'Awaiting credit'}</Badge>
+                  )}
+                  {r.refund_received && (
+                    <Badge className="bg-green-50 text-green-700 border-none font-medium text-[10px] px-1.5 py-0.5 h-auto leading-none">{language === 'he' ? 'הזיכוי טופל' : 'Credit handled'}</Badge>
                   )}
                 </div>
                 

@@ -298,7 +298,9 @@ export default function SupplyReceiptsPage() {
       if (cleanData.linked_receipt_id && cleanData.is_refund) {
         await base44.entities.SupplyReceipt.update(cleanData.linked_receipt_id, {
           awaiting_credit: false,
-          refund_received: true
+          refund_received: true,
+          reviewed: true,
+          needs_review: false
         }).catch(() => {});
       }
 
@@ -309,7 +311,7 @@ export default function SupplyReceiptsPage() {
       setSelectedOrder(null);
       setEditingReceipt(null);
       alert(t('receipt_saved_successfully'));
-      await loadData(user.email);
+      // We also trigger onSuccess which calls loadData as well for redundancy
     } catch (error) {
       console.error("Full error saving receipt:", error);
       const errorMsg = error?.response?.data?.message || error?.message || error.toString();
@@ -526,6 +528,7 @@ export default function SupplyReceiptsPage() {
                    noOrderMode={false}
                    user={user}
                    onSubmit={handleReceiptSubmit}
+                   onSuccess={async () => { setShowForm(false); setSelectedOrder(null); await loadData(user?.email, storeOwnerEmailState); }}
                    onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
                  />
                )}
@@ -596,6 +599,7 @@ export default function SupplyReceiptsPage() {
                   noOrderMode={true}
                   user={user}
                   onSubmit={handleReceiptSubmit}
+                  onSuccess={async () => { setShowForm(false); setEditingReceipt(null); await loadData(user?.email, storeOwnerEmailState); }}
                   onCancel={() => {
                     setShowForm(false);
                     setEditingReceipt(null);
@@ -615,6 +619,7 @@ export default function SupplyReceiptsPage() {
                   noOrderMode={true}
                   user={user}
                   onSubmit={handleReceiptSubmit}
+                  onSuccess={async () => { setShowNoOrderForm(false); await loadData(user?.email, storeOwnerEmailState); }}
                   onCancel={() => {
                     setShowNoOrderForm(false);
                   }}

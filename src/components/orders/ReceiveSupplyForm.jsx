@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 import OrderPreviewModal from "@/components/orders/OrderPreviewModal";
 
-export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user }) {
+export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user }) {
   const [previewOrder, setPreviewOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
@@ -967,7 +967,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       finalData.order_number = selectedOrdersObj.map(o => o.order_number).join(', ');
     }
 
-    onSubmit(finalData);
+    await onSubmit(finalData);
+    if (onSuccess) onSuccess();
     };
 
     executeSubmit();
@@ -1877,9 +1878,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               try {
                                 if (base44.entities.SupplyReceipt.bulkCreate) await base44.entities.SupplyReceipt.bulkCreate(payloads);
                                 else await Promise.all(payloads.map(p => base44.entities.SupplyReceipt.create(p)));
-                                if (formData.linked_receipt_id && payloads.some(p => p.is_refund)) await base44.entities.SupplyReceipt.update(formData.linked_receipt_id, {awaiting_credit: false, refund_received: true}).catch(()=>{});
+                                if (formData.linked_receipt_id && payloads.some(p => p.is_refund)) await base44.entities.SupplyReceipt.update(formData.linked_receipt_id, {awaiting_credit: false, refund_received: true, reviewed: true, needs_review: false}).catch(()=>{});
                                 alert(language === 'he' ? 'נשמרו כל החשבוניות' : 'All invoices saved');
-                                onCancel && onCancel();
+                                if (onSuccess) onSuccess(); else if (onCancel) onCancel();
                               } catch (e) {
                                 alert((language === 'he' ? 'שמירה נכשלה' : 'Save failed') + ': ' + (e?.message || e));
                               }
