@@ -112,32 +112,17 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         ownerEmail = user.store_user_owner_email;
       }
 
-      let merged = [];
-      
+      // Build queries to include all relevant sources and merge
+      const queries = [];
+
+      // Always include items tagged by store owner for the working (controlled) user
+      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: workingEmail }, 'name'));
+
       if (ownerEmail) {
-        // Worker fetching owner items -> use backend to bypass RLS restrictions
-        try {
-          const { data } = await base44.functions.invoke('getStoreData', { action: 'getItems', ownerEmail, supplierId });
-          if (data?.success) {
-            merged = data.items || [];
-          }
-        } catch (err) {
-          console.error('[OrderForm] Failed to fetch store items via backend', err);
-        }
-        
-        // Add worker's own items just in case
-        try {
-          const myItems = await base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name');
-          merged = [...merged, ...myItems];
-        } catch (e) {}
-        
+        // Controlled user is a store user → include owner's items as well
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, 'name'));
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: ownerEmail }, 'name'));
       } else {
-        // Build queries to include all relevant sources and merge
-        const queries = [];
-
-        // Always include items tagged by store owner for the working (controlled) user
-        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: workingEmail }, 'name'));
-
         // Detect chain head for the controlled user via ChainStore
         let headEmail = null;
         try {
@@ -151,21 +136,21 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         if (headEmail) {
           queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: headEmail }, 'name'));
         }
+      }
 
-        // Always include working user's own items
-        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
+      // Always include working user's own items
+      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
 
-        // Use a mobile-safe Promise.all with per-promise fallbacks (older mobile Safari lacks allSettled)
-        const safeQueries = queries.map(p => p.then(res => res).catch(() => []));
-        const results = await Promise.all(safeQueries);
-        
-        for (const arr of results) {
-          if (Array.isArray(arr)) {
-            for (const item of arr) merged.push(item);
-          }
+      // Use a mobile-safe Promise.all with per-promise fallbacks (older mobile Safari lacks allSettled)
+      const safeQueries = queries.map(p => p.then(res => res).catch(() => []));
+      const results = await Promise.all(safeQueries);
+      // Merge arrays safely without flatMap
+      const merged = [];
+      for (const arr of results) {
+        if (Array.isArray(arr)) {
+          for (const item of arr) merged.push(item);
         }
       }
-      
       // De-duplicate by id
       const seen = new Set();
       const deduped = [];
