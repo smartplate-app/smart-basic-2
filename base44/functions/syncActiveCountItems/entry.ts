@@ -19,11 +19,20 @@ Deno.serve(async (req) => {
 
         // Fetch all in-progress counts
         const allInProgress = await base44.asServiceRole.entities.InventoryCount.filter({
-            created_by: workingEmail,
+            $or: [{created_by: workingEmail}, {store_owner_email: workingEmail}],
             status: 'in_progress'
         });
+        
+        // Ensure currentCountId is in the list even if it was marked completed
+        let countsToUpdate = [...allInProgress];
+        if (currentCountId && !countsToUpdate.find(c => c.id === currentCountId)) {
+            const currentCount = await base44.asServiceRole.entities.InventoryCount.get(currentCountId);
+            if (currentCount) {
+                countsToUpdate.push(currentCount);
+            }
+        }
 
-        const updatePromises = allInProgress.map(async (count) => {
+        const updatePromises = countsToUpdate.map(async (count) => {
             // Re-fetch the count immediately before applying changes to minimize race conditions
             // between multiple users counting simultaneously.
             const freshCount = await base44.asServiceRole.entities.InventoryCount.get(count.id);

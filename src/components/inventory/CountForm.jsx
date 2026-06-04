@@ -1372,7 +1372,36 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     </>
                   )}
                 </div>
-                <Button type="button" onClick={onCancel} className="bg-gray-800 hover:bg-gray-900 w-1/2 md:w-1/3 lg:w-1/4 text-white text-base h-12 rounded-xl font-bold shadow-md">
+                <Button type="button" onClick={() => {
+                  const currentData = formDataRef.current;
+                  if (currentData?.id) {
+                    const dirtyItems = Array.from(dirtyItemsRef.current.values());
+                    const hasDirtyMetadata = dirtyMetadataRef.current;
+                    if (dirtyItems.length > 0 || hasDirtyMetadata) {
+                      const cleanedDirtyItems = dirtyItems.map(item => ({
+                        ...item,
+                        counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+                        price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+                        total_cost: Number(item.total_cost) || 0
+                      }));
+                      const metadata = hasDirtyMetadata ? {
+                        name: currentData.name,
+                        count_date: currentData.count_date,
+                        count_type: currentData.count_type,
+                        warehouse_id: currentData.warehouse_id,
+                        warehouse_name: currentData.warehouse_name,
+                        status: currentData.status,
+                        notes: currentData.notes
+                      } : null;
+                      base44.functions.invoke('syncActiveCountItems', {
+                        currentCountId: currentData.id,
+                        updatedItems: cleanedDirtyItems,
+                        metadata
+                      }).catch(console.error);
+                    }
+                  }
+                  onCancel();
+                }} className="bg-gray-800 hover:bg-gray-900 w-1/2 md:w-1/3 lg:w-1/4 text-white text-base h-12 rounded-xl font-bold shadow-md">
                   {language === 'he' ? 'סיום / סגור' : 'Done / Close'}
                 </Button>
               </div>
