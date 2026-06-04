@@ -104,6 +104,9 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
     try {
       setUploading(true);
       
+      const user = await base44.auth.me();
+      const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email;
+
       // Get existing items for this supplier
       const existingItems = await base44.entities.Item.filter({ supplier_id: supplier.id });
       
@@ -146,7 +149,7 @@ export default function InvoiceScanner({ supplier, onImportComplete }) {
           updatedCount++;
         } else {
           // CREATE new item
-          await base44.entities.Item.create(itemData);
+          await base44.entities.Item.create({ ...itemData, created_by: targetEmail || user.email });
           createdCount++;
         }
       }

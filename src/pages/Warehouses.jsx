@@ -94,7 +94,8 @@ export default function WarehousesPage() {
       if (editingWarehouse) {
         await Warehouse.update(editingWarehouse.id, formData);
       } else {
-        await Warehouse.create(formData);
+        const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+        await Warehouse.create({ ...formData, created_by: targetEmail, store_owner_email: targetEmail });
       }
       setShowForm(false);
       setEditingWarehouse(null);

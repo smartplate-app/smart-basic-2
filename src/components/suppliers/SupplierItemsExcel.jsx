@@ -135,7 +135,10 @@ export default function SupplierItemsExcel({ suppliers, items, onItemsAdded, onC
         }
 
         if (itemsToCreate.length > 0) {
-          await base44.entities.Item.bulkCreate(itemsToCreate);
+          const user = await base44.auth.me();
+          const effectiveEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+          const itemsWithAuth = itemsToCreate.map(i => ({ ...i, created_by: user?.email, store_owner_email: effectiveEmail }));
+          await base44.entities.Item.bulkCreate(itemsWithAuth);
           setResult({ success: true, count: itemsToCreate.length });
           if (onItemsAdded) onItemsAdded();
         } else {

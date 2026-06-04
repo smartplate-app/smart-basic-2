@@ -374,7 +374,7 @@ export default function SuppliersPage() {
               });
               newSupplierId = data?.supplier?.id || data?.created?.id || data?.supplier_id || data?.id || null;
             } else {
-              const created = await base44.entities.Supplier.create(supplierData);
+              const created = await base44.entities.Supplier.create({ ...supplierData, created_by: user.email });
               newSupplierId = created?.id || null;
             }
 

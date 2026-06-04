@@ -389,7 +389,7 @@ export default function ItemsPage() {
         });
         if (!data?.success) throw new Error(data?.error || 'Failed to create item');
       } else {
-        await base44.entities.Item.create(cleanData);
+        await base44.entities.Item.create({ ...cleanData, created_by: user.email });
       }
       setShowForm(false);
     } catch (e) {

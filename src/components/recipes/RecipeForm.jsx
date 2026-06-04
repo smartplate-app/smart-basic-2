@@ -335,7 +335,9 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       if (recipe?.id) {
         await base44.entities.Recipe.update(recipe.id, formData);
       } else {
-        await base44.entities.Recipe.create(formData);
+        const currentUser = await base44.auth.me();
+        const targetEmail = currentUser?.acting_as_store_email || currentUser?.acting_as_user_email || currentUser?.store_user_owner_email || currentUser?.email;
+        await base44.entities.Recipe.create({ ...formData, created_by: currentUser?.email, store_owner_email: targetEmail });
       }
       onSave();
     } catch (error) {
@@ -362,7 +364,9 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       if (!isNew) {
         await base44.entities.Item.update(updatedItem.id, updatedItem);
       } else {
-        const newItem = await base44.entities.Item.create(updatedItem);
+        const currentUser = await base44.auth.me();
+        const targetEmail = currentUser?.acting_as_store_email || currentUser?.acting_as_user_email || currentUser?.store_user_owner_email || currentUser?.email;
+        const newItem = await base44.entities.Item.create({ ...updatedItem, created_by: currentUser?.email, store_owner_email: targetEmail });
         updatedItem = newItem;
       }
       
