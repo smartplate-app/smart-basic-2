@@ -11,7 +11,7 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as Recharts
 export default function MenuEngineeringPage() {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('menu_eng_auth') === 'true');
   const [passcode, setPasscode] = useState("");
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,11 +23,17 @@ export default function MenuEngineeringPage() {
   const [editingItem, setEditingItem] = useState(null);
   const [showGuideModal, setShowGuideModal] = useState(false);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadRecipes();
+    }
+  }, [isAuthenticated]);
+
   const handleAuth = (e) => {
     e.preventDefault();
     if (passcode === "2233") {
+      sessionStorage.setItem('menu_eng_auth', 'true');
       setIsAuthenticated(true);
-      loadRecipes();
     } else {
       alert(language === 'he' ? 'קוד שגוי' : 'Invalid code');
     }

@@ -11,7 +11,7 @@ import ImportPosReportModal from "../components/cogs/ImportPosReportModal";
 export default function CogsReportsPage() {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('cogs_auth') === 'true');
   const [passcode, setPasscode] = useState("");
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,11 +21,17 @@ export default function CogsReportsPage() {
   const [editingReport, setEditingReport] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadReports();
+    }
+  }, [isAuthenticated]);
+
   const handleAuth = (e) => {
     e.preventDefault();
     if (passcode === "2233") {
+      sessionStorage.setItem('cogs_auth', 'true');
       setIsAuthenticated(true);
-      loadReports();
     } else {
       alert(language === 'he' ? 'קוד שגוי' : 'Invalid code');
     }
