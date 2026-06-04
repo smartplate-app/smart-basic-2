@@ -37,6 +37,16 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
     const isOwner = !user.store_user_owner_email && !user.acting_as_store_email;
 
     if (isOwner) {
+      // Auto-setup the demo account if it logs in for the first time
+      if (user.email === 'office@smartplate.biz' && !user.business_name) {
+        base44.auth.updateMe({
+          business_name: 'Smart Plate Demo',
+          business_address: 'Demo Address, Tel Aviv',
+          vat_percent: 18
+        }).then(() => window.location.reload());
+        return;
+      }
+
       if (!user.business_name) {
         setShowAccessDenied(true);
         setOpen(true);
