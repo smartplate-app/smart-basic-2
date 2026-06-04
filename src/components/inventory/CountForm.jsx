@@ -225,8 +225,11 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             const targetWarehouseId = wh ? wh.id : null;
 
             // Find the item
+            const normalizeStr = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/\s*\+\s*/g, '+');
+            const cleanUpdateName = normalizeStr(update.item_name);
+            
             const itemIndex = newItems.findIndex(i => 
-              (i.item_name === update.item_name || i.item_name === update.item_name.replace(' (Summary)', '') || i.item_name === update.item_name.replace(' (סיכום)', '')) && 
+              (normalizeStr(i.item_name) === cleanUpdateName || normalizeStr(i.item_name) === normalizeStr(update.item_name.replace(' (Summary)', '')) || normalizeStr(i.item_name) === normalizeStr(update.item_name.replace(' (סיכום)', ''))) && 
               (i.warehouse_id === targetWarehouseId || i.warehouse_name === update.warehouse_name || update.warehouse_name === 'Summary' || update.warehouse_name === 'סיכום')
             );
             
@@ -265,12 +268,11 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               updatedCount++;
             } else {
               // Add missing item if not found in current count
-              const cleanUpdateName = String(update.item_name || '').trim();
               const originalItem = items.find(i => 
-                String(i.name || '').trim() === cleanUpdateName || 
-                String(i.nickname || '').trim() === cleanUpdateName || 
-                String(i.name || '').trim() === cleanUpdateName.replace(' (Summary)', '') || 
-                String(i.name || '').trim() === cleanUpdateName.replace(' (סיכום)', '')
+                normalizeStr(i.name) === cleanUpdateName || 
+                normalizeStr(i.nickname) === cleanUpdateName || 
+                normalizeStr(i.name) === normalizeStr(update.item_name.replace(' (Summary)', '')) || 
+                normalizeStr(i.name) === normalizeStr(update.item_name.replace(' (סיכום)', ''))
               );
               
               if (originalItem) {

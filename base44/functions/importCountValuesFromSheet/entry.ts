@@ -42,8 +42,8 @@ Deno.serve(async (req) => {
 
         // 2. Fetch values from each sheet
         for (const sheetName of sheetNames) {
-            // Skip the Summary sheet to avoid double counting if we rely on warehouse sheets
-            if (sheetName.toLowerCase().includes('summary') || sheetName.includes('סיכום')) {
+            // Skip the Summary sheet ONLY if there are multiple sheets to avoid double counting
+            if (sheetNames.length > 1 && (sheetName.toLowerCase().includes('summary') || sheetName.includes('סיכום'))) {
                 continue;
             }
 
@@ -62,40 +62,51 @@ Deno.serve(async (req) => {
             // Find header row to know indexes
             if (rows.length < 2) continue;
 
-            // Detect format based on headers (row 0 or 1)
-            let itemIdx = 0;
-            let casesIdx = 1;
-            let unitsIdx = 2;
-            let notesIdx = 6;
+            let itemIdx = -1;
+            let casesIdx = -1;
+            let unitsIdx = -1;
+            let notesIdx = -1;
             let whIdx = -1;
 
-            const headerRow = rows[0].join('').includes('שם פריט') || rows[0].join('').includes('Item Name') || rows[0].join('').includes('item_name') ? rows[0] : rows[1];
+            const h0 = rows[0] ? rows[0].join('').toLowerCase() : '';
+            const h1 = rows[1] ? rows[1].join('').toLowerCase() : '';
             
-            if (headerRow) {
-                const h = headerRow.map(c => String(c).toLowerCase().trim());
-                if (h.includes('supplier_name') || h.includes('שם ספק')) {
-                    // This is the generated template format (generateInventoryCountSheet)
-                    itemIdx = h.indexOf('item_name') > -1 ? h.indexOf('item_name') : h.indexOf('שם פריט');
-                    casesIdx = h.indexOf('counted_cases') > -1 ? h.indexOf('counted_cases') : h.indexOf('ארגזים שנספרו');
-                    unitsIdx = h.indexOf('counted_units') > -1 ? h.indexOf('counted_units') : h.indexOf('יחידות שנספרו');
-                    notesIdx = h.indexOf('notes') > -1 ? h.indexOf('notes') : h.indexOf('הערות');
-                    whIdx = h.indexOf('warehouse_name') > -1 ? h.indexOf('warehouse_name') : h.indexOf('שם מחסן');
-                } else {
-                    // This is the exported format (exportSingleCountToSheets)
-                    itemIdx = h.indexOf('item name') > -1 ? h.indexOf('item name') : h.indexOf('שם פריט');
-                    casesIdx = h.indexOf('counted cases') > -1 ? h.indexOf('counted cases') : h.indexOf('ארגזים שנספרו');
-                    unitsIdx = h.indexOf('counted units') > -1 ? h.indexOf('counted units') : h.indexOf('יחידות שנספרו');
-                    notesIdx = h.indexOf('notes') > -1 ? h.indexOf('notes') : h.indexOf('הערות');
-                    
-                    if (itemIdx === -1) itemIdx = 0;
-                    if (casesIdx === -1) casesIdx = 1;
-                    if (unitsIdx === -1) unitsIdx = 2;
-                    if (notesIdx === -1) notesIdx = 6;
-                }
+            let headerRowIndex = -1;
+            if (h0.includes('פריט') || h0.includes('item') || h0.includes('מוצר') || h0.includes('שם')) headerRowIndex = 0;
+            else if (h1.includes('פריט') || h1.includes('item') || h1.includes('מוצר') || h1.includes('שם')) headerRowIndex = 1;
+
+            if (headerRowIndex > -1) {
+                const h = rows[headerRowIndex].map(c => String(c).toLowerCase().trim());
+                itemIdx = h.findIndex(c => c.includes('פריט') || c.includes('מוצר') || c.includes('item name') || c.includes('item_name') || c === 'שם');
+                casesIdx = h.findIndex(c => c.includes('ארגז') || c.includes('case') || c.includes('carton'));
+                unitsIdx = h.findIndex(c => c.includes('יחיד') || c.includes('unit') || c === 'כמות' || c === 'qty');
+                notesIdx = h.findIndex(c => c.includes('הערות') || c.includes('note'));
+                whIdx = h.findIndex(c => c.includes('מחסן') || c.includes('warehouse'));
             }
 
-            // Simple heuristic: starting from row 2 (index 2) or row 1 if header is at 0
-            const startIndex = rows[0].join('').includes('שם פריט') || rows[0].join('').includes('Item Name') || rows[0].join('').includes('item_name') ? 1 : 2;
+            // Fallback heuristics if header detection failed or was incomplete
+            if (itemIdx === -1 || casesIdx === -1 || unitsIdx === -1) {
+                const dataRow = rows[headerRowIndex > -1 ? headerRowIndex + 1 : 0] || [];
+                for (let c = 0; c < dataRow.length; c++) {
+                    const val = String(dataRow[c]).trim();
+                    if (val === '') continue;
+                    const isNum = !isNaN(Number(val.replace(/,/g, '')));
+                    
+                    if (!isNum && itemIdx === -1 && val.length > 2 && val.toUpperCase() !== 'N/A') {
+                        itemIdx = c;
+                    } else if (isNum || val.toUpperCase() === 'N/A') {
+                        if (casesIdx === -1) casesIdx = c;
+                        else if (unitsIdx === -1) unitsIdx = c;
+                    }
+                }
+                
+                if (itemIdx === -1) itemIdx = 0;
+                if (casesIdx === -1) casesIdx = 1;
+                if (unitsIdx === -1) unitsIdx = 2;
+                if (notesIdx === -1) notesIdx = 6;
+            }
+
+            const startIndex = headerRowIndex > -1 ? headerRowIndex + 1 : 0;
             for (let i = startIndex; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row || row.length === 0) continue;
