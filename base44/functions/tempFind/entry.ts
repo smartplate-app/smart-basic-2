@@ -1,35 +1,25 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    
-    const entitiesToFix = [
-      'Item', 'Supplier', 'Order', 'SupplyReceipt', 
-      'Recipe', 'InventoryCount', 'CogsReport', 'Warehouse'
-    ];
-    
-    const usersToFix = new Set();
-    
-    for (const entityName of entitiesToFix) {
-      const records = await base44.asServiceRole.entities[entityName].filter({
-        store_owner_email: 'office@smartplate.biz'
-      });
-      
-      for (const record of records) {
-        const creator = record.created_by;
-        if (creator && 
-            creator !== 'office@smartplate.biz' && 
-            creator !== 'admin@smartplate.org' && 
-            !creator.startsWith('service+') &&
-            creator !== 'studioaka55@gmail.com') {
-            usersToFix.add(creator);
+    try {
+        const base44 = createClientFromRequest(req);
+        const counts = await base44.asServiceRole.entities.InventoryCount.filter({});
+        const matches = [];
+
+        for (const count of counts) {
+            const str = JSON.stringify(count);
+            if (str.includes('אורח') || str.includes('guest')) {
+                matches.push({
+                    id: count.id,
+                    name: count.name,
+                    warehouse_name: count.warehouse_name,
+                    date: count.count_date
+                });
+            }
         }
-      }
+        
+        return Response.json({ matches });
+    } catch (error) {
+        return Response.json({ error: error.message }, { status: 500 });
     }
-    
-    return Response.json({ users: Array.from(usersToFix) });
-  } catch (e) {
-    return Response.json({ error: e.message });
-  }
 });
