@@ -502,7 +502,9 @@ export default function DashboardPage() {
       let konaWoltVat = 0;
       let konaLaborCost = Math.round(mtdLabor);
 
-      if (workingEmail === 'konaburgerltd@gmail.com') {
+      const isCurrentMonth = selectedMonth === moment().format('YYYY-MM');
+
+      if (workingEmail === 'konaburgerltd@gmail.com' && isCurrentMonth) {
         try {
           const res = await fetch('https://rosa-6d8ebb9e.base44.app/api/functions/konaSync', {
             method: 'POST',
