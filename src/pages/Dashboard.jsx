@@ -159,13 +159,8 @@ export default function DashboardPage() {
   }, [selectedMonth]);
 
   useEffect(() => {
-    const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-    if (targetEmail === 'konaburgerltd@gmail.com') {
-      setActualSales(Number(restaurantSales) || 0);
-    } else {
-      setActualSales((Number(restaurantSales)||0) + (Number(deliverySales)||0));
-    }
-  }, [restaurantSales, deliverySales, user]);
+    setActualSales((Number(restaurantSales)||0) + (Number(deliverySales)||0));
+  }, [restaurantSales, deliverySales]);
 
   // Setup PWA install prompt listeners
   useEffect(() => {
@@ -519,7 +514,7 @@ export default function DashboardPage() {
              konaSalesVat = json.total_sales_vat || 0;
              konaWoltVat = json.wolt_vat || 0;
              konaLaborCost = json.labor_cost || 0;
-             setRestaurantSales(konaSalesVat);
+             setRestaurantSales(Math.max(0, konaSalesVat - konaWoltVat));
              setDeliverySales(konaWoltVat);
              setCalculatedLaborCost(konaLaborCost);
           }
@@ -588,8 +583,7 @@ export default function DashboardPage() {
     try {
       setSaving(true);
       
-      const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-      const totalSalesToSave = targetEmail === 'konaburgerltd@gmail.com' ? (Number(restaurantSales) || 0) : ((Number(restaurantSales) || 0) + (Number(deliverySales) || 0));
+      const totalSalesToSave = (Number(restaurantSales) || 0) + (Number(deliverySales) || 0);
 
       const dataToSave = {
         month: selectedMonth,
@@ -630,8 +624,7 @@ export default function DashboardPage() {
     autoSaveTimerRef.current = setTimeout(async () => {
       try {
         const now = new Date().toISOString();
-        const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-        const totalSalesToSave = targetEmail === 'konaburgerltd@gmail.com' ? (Number(restaurantSales) || 0) : ((Number(restaurantSales) || 0) + (Number(deliverySales) || 0));
+        const totalSalesToSave = (Number(restaurantSales) || 0) + (Number(deliverySales) || 0);
 
         const dataToSave = {
           month: selectedMonth,
@@ -1194,7 +1187,6 @@ export default function DashboardPage() {
                 )
               )
             )}
-
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
