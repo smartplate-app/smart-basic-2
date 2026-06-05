@@ -395,22 +395,11 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   };
 
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction = 'desc';
+    if (sortConfig.key === key) {
+      direction = sortConfig.direction === 'desc' ? 'asc' : 'desc';
     }
     setSortConfig({ key, direction });
-    
-    const sortedItems = [...formData.items].sort((a, b) => {
-      if (key === 'total_cost') {
-        const costA = Number(a.total_cost) || 0;
-        const costB = Number(b.total_cost) || 0;
-        return direction === 'asc' ? (costA - costB) : (costB - costA);
-      }
-      return 0;
-    });
-    
-    setFormData(prev => ({ ...prev, items: sortedItems }));
   };
 
   // Monitor online/offline status (Disabled to prevent Android WebView issues)
@@ -978,11 +967,28 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     displayedItems = formData.items.filter(item => item.warehouse_id === currentWarehouseTab);
   }
   
-  if (sortConfig.key === 'total_cost') {
+  if (sortConfig.key) {
     displayedItems.sort((a, b) => {
-      const costA = Number(a.total_cost) || 0;
-      const costB = Number(b.total_cost) || 0;
-      return sortConfig.direction === 'asc' ? (costA - costB) : (costB - costA);
+      let valA, valB;
+      if (sortConfig.key === 'total_cost') {
+        valA = Number(a.total_cost) || 0;
+        valB = Number(b.total_cost) || 0;
+      } else if (sortConfig.key === 'price_per_unit') {
+        valA = Number(a.price_per_unit) || 0;
+        valB = Number(b.price_per_unit) || 0;
+      } else if (sortConfig.key === 'name') {
+        const originalA = items.find(i => i.id === a.item_id);
+        const originalB = items.find(i => i.id === b.item_id);
+        valA = String(originalA?.nickname || a.item_name || '').toLowerCase();
+        valB = String(originalB?.nickname || b.item_name || '').toLowerCase();
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      }
+      if (typeof valA === 'number') {
+        return sortConfig.direction === 'asc' ? (valA - valB) : (valB - valA);
+      }
+      return 0;
     });
   }
 
@@ -1439,14 +1445,38 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     </div>
 
                     {/* Desktop View - Table */}
-                    <div className="hidden md:block border rounded-lg overflow-x-auto overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    <div className="hidden md:block border rounded-lg overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-white shadow-sm">
                       <Table>
-                        <TableHeader className="sticky top-0 bg-white z-10 shadow-sm border-b">
+                        <TableHeader className="sticky top-0 bg-white z-20 shadow-sm border-b">
                           <TableRow>
-                            <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap min-w-[120px]">{t('item_name')}</TableHead>
+                            <TableHead 
+                              className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap min-w-[120px] cursor-pointer hover:bg-gray-50 transition-colors select-none group"
+                              onClick={() => handleSort('name')}
+                            >
+                              <div className="flex items-center gap-1">
+                                {t('item_name')}
+                                {sortConfig.key === 'name' ? (
+                                  sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                ) : (
+                                  <ArrowUpDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                                )}
+                              </div>
+                            </TableHead>
                             <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('counted_quantity')}</TableHead>
                             <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('unit')}</TableHead>
-                            <TableHead className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap">{t('price_per_unit')}</TableHead>
+                            <TableHead 
+                              className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap cursor-pointer hover:bg-gray-50 transition-colors select-none group"
+                              onClick={() => handleSort('price_per_unit')}
+                            >
+                              <div className="flex items-center gap-1">
+                                {t('price_per_unit')}
+                                {sortConfig.key === 'price_per_unit' ? (
+                                  sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
+                                ) : (
+                                  <ArrowUpDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                                )}
+                              </div>
+                            </TableHead>
                             <TableHead 
                               className="px-2 py-3 md:px-4 md:py-4 text-xs md:text-sm whitespace-nowrap cursor-pointer hover:bg-gray-50 transition-colors select-none group" 
                               onClick={() => handleSort('total_cost')}
