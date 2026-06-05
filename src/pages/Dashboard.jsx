@@ -510,7 +510,7 @@ export default function DashboardPage() {
             body: JSON.stringify({ month: selectedMonth })
           });
           const json = await res.json();
-          if (json.ok) {
+          if (json.ok && json.total_sales_vat > 0) {
              konaSalesVat = json.total_sales_vat || 0;
              konaWoltVat = json.wolt_vat || 0;
              konaLaborCost = json.labor_cost || 0;
