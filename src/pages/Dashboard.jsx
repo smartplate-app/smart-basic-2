@@ -159,8 +159,13 @@ export default function DashboardPage() {
   }, [selectedMonth]);
 
   useEffect(() => {
-    setActualSales((Number(restaurantSales)||0) + (Number(deliverySales)||0));
-  }, [restaurantSales, deliverySales]);
+    const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+    if (targetEmail === 'konaburgerltd@gmail.com') {
+      setActualSales(Number(restaurantSales) || 0);
+    } else {
+      setActualSales((Number(restaurantSales)||0) + (Number(deliverySales)||0));
+    }
+  }, [restaurantSales, deliverySales, user]);
 
   // Setup PWA install prompt listeners
   useEffect(() => {
@@ -498,8 +503,41 @@ export default function DashboardPage() {
       });
       setMonthOrders(filteredOrders);
 
+      let konaSalesVat = 0;
+      let konaWoltVat = 0;
+      let konaLaborCost = Math.round(mtdLabor);
+
+      if (workingEmail === 'konaburgerltd@gmail.com') {
+        try {
+          const res = await fetch('https://rosa-6d8ebb9e.base44.app/api/functions/konaSync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ month: selectedMonth })
+          });
+          const json = await res.json();
+          if (json.ok) {
+             konaSalesVat = json.total_sales_vat || 0;
+             konaWoltVat = json.wolt_vat || 0;
+             konaLaborCost = json.labor_cost || 0;
+             setRestaurantSales(konaSalesVat);
+             setDeliverySales(konaWoltVat);
+             setCalculatedLaborCost(konaLaborCost);
+          }
+        } catch (e) {
+          console.error("Failed to fetch Kona Github dashboard data:", e);
+        }
+      }
+
       // Save lightweight cache snapshot for fast next startup
       try {
+        let finalActualSales = existingData ? ((Number(existingData.restaurant_sales || 0) + Number(existingData.delivery_takeaway_sales || 0)) || (existingData.total_sales || 0)) : 0;
+        let finalLaborCost = Math.round(mtdLabor);
+        
+        if (workingEmail === 'konaburgerltd@gmail.com' && konaSalesVat > 0) {
+            finalActualSales = konaSalesVat;
+            finalLaborCost = konaLaborCost;
+        }
+
         const snapshot = {
           dashboardData: existingData || null,
           predictedSales: existingData ? (existingData.predicted_sales || existingData.total_sales || 0) : 0,
@@ -507,13 +545,13 @@ export default function DashboardPage() {
           foodGoalPercent: existingData ? (existingData.food_goal_percent || 30) : 30,
           managementSalary: existingData ? (existingData.management_salary || 0) : 0,
           monthlyRent: existingData ? (existingData.monthly_rent_incl_vat || 0) : 0,
-          actualSales: existingData ? ((Number(existingData.restaurant_sales || 0) + Number(existingData.delivery_takeaway_sales || 0)) || (existingData.total_sales || 0)) : 0,
+          actualSales: finalActualSales,
           totalTips: existingData ? (existingData.total_tips || 0) : 0,
           manualLaborCost: existingData ? Number(existingData.manual_labor_cost || 0) : 0,
           useManualLabor: existingData ? Boolean(existingData.use_manual_labor) : false,
           manualFoodCost: existingData ? Number(existingData.manual_food_cost || 0) : 0,
           useManualFood: existingData ? Boolean(existingData.use_manual_food) : false,
-          calculatedLaborCost: Math.round(mtdLabor),
+          calculatedLaborCost: finalLaborCost,
           calculatedFoodCost: adjustedFoodCost,
           predictedLaborToDate,
           predictedSalesToDate,
@@ -550,13 +588,16 @@ export default function DashboardPage() {
     try {
       setSaving(true);
       
+      const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+      const totalSalesToSave = targetEmail === 'konaburgerltd@gmail.com' ? (Number(restaurantSales) || 0) : ((Number(restaurantSales) || 0) + (Number(deliverySales) || 0));
+
       const dataToSave = {
         month: selectedMonth,
         predicted_sales: parseFloat(predictedSales) || 0,
         labor_goal_percent: parseFloat(laborGoalPercent) || 25,
         food_goal_percent: parseFloat(foodGoalPercent) || 30,
         management_salary: parseFloat(managementSalary) || 0,
-        total_sales: (Number(restaurantSales) || 0) + (Number(deliverySales) || 0),
+        total_sales: totalSalesToSave,
         restaurant_sales: Number(restaurantSales) || 0,
         delivery_takeaway_sales: Number(deliverySales) || 0,
         total_tips: 0,
@@ -589,13 +630,16 @@ export default function DashboardPage() {
     autoSaveTimerRef.current = setTimeout(async () => {
       try {
         const now = new Date().toISOString();
+        const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+        const totalSalesToSave = targetEmail === 'konaburgerltd@gmail.com' ? (Number(restaurantSales) || 0) : ((Number(restaurantSales) || 0) + (Number(deliverySales) || 0));
+
         const dataToSave = {
           month: selectedMonth,
           predicted_sales: parseFloat(predictedSales) || 0,
           labor_goal_percent: parseFloat(laborGoalPercent) || 25,
           food_goal_percent: parseFloat(foodGoalPercent) || 30,
           management_salary: parseFloat(managementSalary) || 0,
-          total_sales: (Number(restaurantSales) || 0) + (Number(deliverySales) || 0),
+          total_sales: totalSalesToSave,
           restaurant_sales: Number(restaurantSales) || 0,
           delivery_takeaway_sales: Number(deliverySales) || 0,
           total_tips: 0,
