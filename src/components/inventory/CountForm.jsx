@@ -130,11 +130,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       
       const title = formData.name || formData.warehouse_name || (language === 'he' ? 'ספירת מלאי' : 'Inventory Count');
       
-      // Export ALL warehouses and their catalog items, merged with actual counts
+      // Export ONLY the currently selected warehouse (or all if all_summary)
       const itemsToExport = [];
       const processedCountedIds = new Set();
       
-      warehouseOptions.forEach(wh => {
+      const targetWarehouses = currentWarehouseTab === "all_summary" ? warehouseOptions : warehouseOptions.filter(w => w.id === currentWarehouseTab);
+      
+      targetWarehouses.forEach(wh => {
         const catalogItems = items.filter(item => 
           (wh.catalog_items && wh.catalog_items.includes(item.id)) ||
           item.warehouse_id === wh.id ||
@@ -171,8 +173,12 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
         itemsToExport.push(...Array.from(mergedItemsMap.values()));
       });
       
-      // Add any counted items that didn't match a warehouse or weren't processed
+      // Add any counted items that didn't match a warehouse or weren't processed (only if we're in all_summary or they belong to current tab)
       formData.items.forEach(countedItem => {
+        if (currentWarehouseTab !== "all_summary" && countedItem.warehouse_id !== currentWarehouseTab) {
+            return; // Skip items from other warehouses
+        }
+        
         if (!processedCountedIds.has(`${countedItem.item_id}_${countedItem.warehouse_id}`)) {
           const wh = warehouseOptions.find(w => w.id === countedItem.warehouse_id);
           itemsToExport.push({
@@ -239,22 +245,28 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           let updatedCount = 0;
           
           for (const update of data.updates) {
-            const wh = warehouseOptions.find(w => w.name === update.warehouse_name || w.name.substring(0, 100) === update.warehouse_name);
-            const targetWarehouseId = wh ? wh.id : null;
+            const matchedWh = warehouseOptions.find(w => w.name === update.warehouse_name || w.name.substring(0, 100) === update.warehouse_name);
+            let targetWarehouseId = matchedWh ? matchedWh.id : null;
+            let actualWhId = targetWarehouseId;
+            let actualWhName = targetWarehouseId ? update.warehouse_name : "";
+            
+            // If user is in a specific warehouse tab, force updates to that warehouse ONLY.
+            if (currentWarehouseTab && currentWarehouseTab !== "all_summary" && currentWarehouseTab !== "multi") {
+              const currentWh = warehouseOptions.find(w => w.id === currentWarehouseTab);
+              actualWhId = currentWarehouseTab;
+              actualWhName = currentWh ? currentWh.name : "";
+              
+              // Skip updates from other warehouse tabs in the sheet
+              if (update.warehouse_name && update.warehouse_name !== "Summary" && update.warehouse_name !== "סיכום") {
+                  if (currentWh && update.warehouse_name !== currentWh.name && !currentWh.name.includes(update.warehouse_name) && !update.warehouse_name.includes(currentWh.name)) {
+                      continue; 
+                  }
+              }
+            }
 
             // Find the item
             const normalizeStr = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/\s*\+\s*/g, '+');
             const cleanUpdateName = normalizeStr(update.item_name);
-            
-            // Default target warehouse (to support explicit overrides for imported items missing from catalog)
-            let actualWhId = targetWarehouseId;
-            let actualWhName = targetWarehouseId ? update.warehouse_name : "";
-            
-            if (!actualWhId && currentWarehouseTab && currentWarehouseTab !== "all_summary" && currentWarehouseTab !== "multi") {
-              actualWhId = currentWarehouseTab;
-              const wh = warehouseOptions.find(w => w.id === currentWarehouseTab);
-              actualWhName = wh ? wh.name : "";
-            }
             
             const isMatch = (i) => {
               if (update.catalog_id) return i.item_id === update.catalog_id;
@@ -263,7 +275,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                      normalizeStr(i.item_name) === normalizeStr(update.item_name.replace(' (סיכום)', ''));
             };
 
-            const isWhMatch = (i) => i.warehouse_id === actualWhId || i.warehouse_name === update.warehouse_name || update.warehouse_name === 'Summary' || update.warehouse_name === 'סיכום';
+            const isWhMatch = (i) => i.warehouse_id === actualWhId || i.warehouse_name === update.warehouse_name || update.warehouse_name === 'Summary' || update.warehouse_name === 'סיכום' || actualWhId === currentWarehouseTab;
 
             const itemIndex = newItems.findIndex(i => isMatch(i) && isWhMatch(i));
             
@@ -990,18 +1002,23 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
       className="mb-8"
     >
       <Card className="shadow-lg border-0">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <CardTitle className="text-xl font-bold">
-            {count ? t('edit_count') : t('new_count')}
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setShowImportSheetModal(true)} disabled={isCompleted} className="flex border-blue-600 text-blue-600 hover:bg-blue-50 relative overflow-hidden">
-              <Upload className="w-4 h-4 rtl:ml-2 ltr:mr-2 relative z-10" />
-              <span className="relative z-10">{language === 'he' ? 'קלוט נתונים מ-Sheets' : 'Import from Sheets'}</span>
+        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between pb-4 gap-4">
+          <div className="flex items-center justify-between w-full md:w-auto">
+            <CardTitle className="text-xl font-bold">
+              {count ? t('edit_count') : t('new_count')}
+            </CardTitle>
+            <Button variant="ghost" size="icon" onClick={onCancel} className="md:hidden">
+              <X className="w-4 h-4" />
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={handleExportToSheets} disabled={exportingSheets || formData.items.length === 0} className="flex border-green-600 text-green-600 hover:bg-green-50 relative overflow-hidden">
-              {exportingSheets ? <Loader className="w-4 h-4 mr-2 animate-spin relative z-10" /> : <FileSpreadsheet className="w-4 h-4 mr-2 relative z-10" />}
-              <span className="relative z-10">{language === 'he' ? 'ייצא פירוט ל-Sheets' : 'Export items to Sheets'}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <Button type="button" variant="outline" size="sm" onClick={() => setShowImportSheetModal(true)} disabled={isCompleted} className="flex-1 md:flex-none border-blue-600 text-blue-600 hover:bg-blue-50 relative overflow-hidden px-2">
+              <Upload className="w-4 h-4 rtl:ml-1 ltr:mr-1 relative z-10 shrink-0" />
+              <span className="relative z-10 whitespace-nowrap text-xs md:text-sm">{language === 'he' ? 'קלוט נתונים' : 'Import'}</span>
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleExportToSheets} disabled={exportingSheets || formData.items.length === 0} className="flex-1 md:flex-none border-green-600 text-green-600 hover:bg-green-50 relative overflow-hidden px-2">
+              {exportingSheets ? <Loader className="w-4 h-4 rtl:ml-1 ltr:mr-1 animate-spin relative z-10 shrink-0" /> : <FileSpreadsheet className="w-4 h-4 rtl:ml-1 ltr:mr-1 relative z-10 shrink-0" />}
+              <span className="relative z-10 whitespace-nowrap text-xs md:text-sm">{language === 'he' ? 'ייצא פירוט' : 'Export'}</span>
               {exportingSheets && exportProgress > 0 && (
                 <div 
                   className="absolute left-0 top-0 bottom-0 bg-green-100 transition-all duration-300 z-0" 
@@ -1010,12 +1027,12 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
               )}
             </Button>
             {isOffline && (
-              <span className="flex items-center gap-1 text-orange-600 text-sm font-medium animate-pulse">
+              <span className="flex items-center gap-1 text-orange-600 text-sm font-medium animate-pulse shrink-0">
                 <WifiOff className="w-4 h-4" />
                 {language === 'he' ? 'אופליין' : 'Offline'}
               </span>
             )}
-            <Button variant="ghost" size="icon" onClick={onCancel}>
+            <Button variant="ghost" size="icon" onClick={onCancel} className="hidden md:flex shrink-0">
               <X className="w-4 h-4" />
             </Button>
           </div>
@@ -1660,11 +1677,19 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <div className="flex-1 w-full mt-2 sm:mt-0 order-first sm:order-none mr-auto">
               {importingFromSheet && importProgress > 0 && (
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mt-3">
-                  <div 
-                    className="h-full bg-blue-600 transition-all duration-300 ease-out" 
-                    style={{ width: `${importProgress}%` }}
-                  />
+                <div className="w-full mt-1">
+                  <div className="flex justify-between text-xs text-blue-600 mb-1">
+                    <span>{language === 'he' ? 'מעבד נתונים...' : 'Processing...'}</span>
+                    <span>{importProgress}%</span>
+                  </div>
+                  <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-600 transition-all duration-300 ease-out relative" 
+                      style={{ width: `${importProgress}%` }}
+                    >
+                      <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
