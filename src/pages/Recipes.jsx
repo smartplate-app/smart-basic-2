@@ -45,20 +45,17 @@ export default function RecipesPage() {
         return;
       }
 
-      let targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
-      
-      // If user is not impersonating, check if they are a StoreUser for someone else
-      if (!currentUser.acting_as_store_email && !currentUser.acting_as_user_email && !currentUser.store_user_owner_email) {
-        try {
-          const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
-          if (recs.length > 0) targetEmail = recs[0].owner_email;
-        } catch(e){}
-      }
-
-      const isAdminControlling = currentUser?.role === 'admin' && targetEmail !== currentUser.email;
+      const ownerEmail = currentUser.acting_as_store_email || currentUser.store_user_owner_email || null;
+      const isManager = !!ownerEmail && currentUser.role !== 'admin';
+      const isAdminControlling = currentUser?.role === 'admin' && (currentUser.acting_as_user_email || currentUser.acting_as_store_email);
+      const targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
 
       let data = [];
-      if (isAdminControlling) {
+      if (isManager) {
+        // Manager: use service-role function to bypass RLS
+        const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail, entities: ['recipes'] });
+        data = mgData?.data?.recipes || [];
+      } else if (isAdminControlling) {
         const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
         if (adminData?.success && adminData?.data?.recipes) {
           data = adminData.data.recipes;
@@ -67,13 +64,6 @@ export default function RecipesPage() {
         let data1 = await base44.entities.Recipe.filter({ created_by: targetEmail }, "-created_date", 10000);
         let data2 = await base44.entities.Recipe.filter({ store_owner_email: targetEmail }, "-created_date", 10000);
         data = [...data1, ...data2];
-        
-        if (targetEmail !== currentUser.email) {
-          const myData1 = await base44.entities.Recipe.filter({ created_by: currentUser.email }, "-created_date", 10000);
-          const myData2 = await base44.entities.Recipe.filter({ store_owner_email: currentUser.email }, "-created_date", 10000);
-          const myData = [...myData1, ...myData2];
-          data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-        }
 
         if (currentUser.chain_id && !currentUser.is_chain_head) {
           try {
@@ -82,8 +72,7 @@ export default function RecipesPage() {
               const headEmail = chain[0].head_store_user_email;
               const headData1 = await base44.entities.Recipe.filter({ created_by: headEmail }, "-created_date", 10000);
               const headData2 = await base44.entities.Recipe.filter({ store_owner_email: headEmail }, "-created_date", 10000);
-              const headData = [...headData1, ...headData2];
-              data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+              data = [...headData1, ...headData2, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
             }
           } catch(e){}
         }
@@ -110,7 +99,7 @@ export default function RecipesPage() {
       let currentUser;
       try { currentUser = await base44.auth.me(); } catch(e){}
       const stale = isStale(c, 180000);
-      const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
+      const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email || currentUser?.store_user_owner_email;
       if (stale || isImpersonating) {
         loadRecipes();
       }

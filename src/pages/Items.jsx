@@ -121,34 +121,12 @@ export default function ItemsPage() {
           throw new Error('Failed to load admin data');
         }
       } else if (isStoreUser && storeOwnerEmail) {
-        // Store user - load data from the store owner
-        console.log('[Items] Loading as STORE USER from owner:', storeOwnerEmail);
-        const [ownerItems, ownItemsByStoreOwner, managerCreated, ownerSuppliers, managerSuppliers, ownerWarehouses, myWarehouses] = await Promise.all([
-          base44.entities.Item.filter({ created_by: storeOwnerEmail }, "-created_date", 10000),
-          base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }, "-created_date", 10000),
-          base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date", 10000),
-          base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, "name", 10000),
-          base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name", 10000),
-          base44.entities.Warehouse.filter({ created_by: storeOwnerEmail }, "name", 10000),
-          base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name", 10000)
-        ]);
-        console.log('[Items] Loaded from owner:', {
-          ownerItems: ownerItems.length,
-          ownItemsByStoreOwner: ownItemsByStoreOwner.length,
-          managerCreated: managerCreated.length,
-          suppliers: ownerSuppliers.length,
-          warehouses: ownerWarehouses.length
-        });
-        // Combine items created by owner, items attributed to owner, and items the manager just created
-        const allItems = [...ownerItems, ...ownItemsByStoreOwner, ...managerCreated];
-        // Remove duplicates by id and sort by created_date descending (newest first)
-        itemsData = Array.from(new Map(allItems.map(item => [item.id, item])).values())
-          .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-        
-        const allSuppliers = [...ownerSuppliers, ...managerSuppliers];
-        suppliersData = Array.from(new Map(allSuppliers.map(s => [s.id, s])).values());
-        
-        warehousesData = [...ownerWarehouses, ...myWarehouses];
+        // Manager: use service-role function to bypass RLS
+        console.log('[Items] Loading as MANAGER for owner:', storeOwnerEmail);
+        const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['items', 'suppliers', 'warehouses'] });
+        itemsData = mgData?.data?.items || [];
+        suppliersData = mgData?.data?.suppliers || [];
+        warehousesData = mgData?.data?.warehouses || [];
       } else if (currentUser.chain_id && !currentUser.is_chain_head) {
         // Branch store in chain (with fallbacks)
         let effectiveChainId = currentUser.chain_id;

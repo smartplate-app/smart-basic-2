@@ -178,27 +178,13 @@ export default function OrdersPage() {
           console.error("Error loading admin data:", e);
         }
       } else if (isStoreUser && storeOwnerEmail) {
-        // Store user - fetch owner's data via backend to bypass RLS read restrictions
+        // Manager: use service-role function to bypass RLS
         try {
-          const [suppliersRes, ordersRes, myOrders] = await Promise.all([
-            base44.functions.invoke('getStoreData', { action: 'getSuppliers', ownerEmail: storeOwnerEmail }),
-            base44.functions.invoke('getStoreData', { action: 'getOrders', ownerEmail: storeOwnerEmail }),
-            base44.entities.Order.filter({ $or: [{ created_by: currentUser.email }, { store_owner_email: currentUser.email }] }, "-created_date")
-          ]);
-          
-          const ownerSuppliers = suppliersRes?.data?.success ? suppliersRes.data.suppliers : [];
-          const ownerOrders = ordersRes?.data?.success ? ordersRes.data.orders : [];
-          
-          suppliersData = ownerSuppliers;
-          const merged = [...ownerOrders, ...myOrders];
-          const seen = new Set();
-          ordersData = merged.filter(o => {
-            if (!o?.id || seen.has(o.id)) return false;
-            seen.add(o.id);
-            return true;
-          });
+          const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['suppliers', 'orders'] });
+          suppliersData = mgData?.data?.suppliers || [];
+          ordersData = mgData?.data?.orders || [];
         } catch (err) {
-          console.error('[Orders] Failed to fetch store data via backend', err);
+          console.error('[Orders] Failed to fetch manager data', err);
           suppliersData = [];
           ordersData = [];
         }

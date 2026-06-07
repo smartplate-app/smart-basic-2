@@ -104,67 +104,11 @@ export default function SuppliersPage() {
                         console.error("Admin data fetch error:", e);
                     }
                   } else if (isStoreUser && storeOwnerEmail) {
-                    // Store user - load suppliers from the store owner + chain head (if any)
-                    let headEmail = null;
-                    try {
-                      const ownerStores = await base44.entities.ChainStore.filter({ user_email: storeOwnerEmail });
-                      const effChainId = ownerStores?.[0]?.chain_id || null;
-                      if (effChainId) {
-                        const chainRec = await base44.entities.Chain.filter({ id: effChainId });
-                        headEmail = chainRec?.[0]?.head_store_user_email || null;
-                        if (!headEmail) {
-                          const storesInChain = await base44.entities.ChainStore.filter({ chain_id: effChainId });
-                          const headStore = storesInChain?.find(s => s.is_head_store);
-                          headEmail = headStore?.user_email || null;
-                        }
-                      }
-                    } catch {}
-
-                    const promises = [
-                      base44.entities.Supplier.filter({ created_by: storeOwnerEmail }, '-created_date'),
-                      base44.entities.Supplier.filter({ store_owner_email: storeOwnerEmail }, '-created_date'),
-                      base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
-                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
-                      base44.entities.Item.filter({ created_by: storeOwnerEmail }),
-                      base44.entities.Item.filter({ store_owner_email: storeOwnerEmail }),
-                      base44.entities.Item.filter({ created_by: workingEmail }),
-                      base44.entities.Item.filter({ store_owner_email: workingEmail })
-                    ];
-                    if (headEmail) {
-                      promises.push(
-                        base44.entities.Supplier.filter({ created_by: headEmail }, '-created_date'),
-                        base44.entities.Item.filter({ created_by: headEmail })
-                      );
-                    }
-                    const results = await Promise.all(promises);
-                    const ownerSuppliers = results[0] || [];
-                    const storeSuppliers = results[1] || [];
-                    const mySuppliers1 = results[2] || [];
-                    const mySuppliers2 = results[3] || [];
-                    const ownerItems = results[4] || [];
-                    const storeItems = results[5] || [];
-                    const myItems1 = results[6] || [];
-                    const myItems2 = results[7] || [];
-                    const headSuppliers = headEmail ? (results[8] || []) : [];
-                    const headItems = headEmail ? (results[9] || []) : [];
-
-                    const allSuppliers = [...ownerSuppliers, ...storeSuppliers, ...mySuppliers1, ...mySuppliers2, ...headSuppliers];
-                    suppliersData = allSuppliers.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-                    const allItems = [...ownerItems, ...storeItems, ...myItems1, ...myItems2, ...headItems];
-                    itemsData = allItems.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
-                  } else if (isActingAsStore && currentUser.role !== 'admin') {
-                    // Manager acting as store owner — load owner's suppliers/items directly
-                    const [ownSuppliers, ownItems1, storeSuppliers, ownItems2] = await Promise.all([
-                      base44.entities.Supplier.filter({ created_by: workingEmail }, '-created_date'),
-                      base44.entities.Item.filter({ created_by: workingEmail }),
-                      base44.entities.Supplier.filter({ store_owner_email: workingEmail }, '-created_date'),
-                      base44.entities.Item.filter({ store_owner_email: workingEmail })
-                    ]);
-                    const allSuppliersCombined = [...ownSuppliers, ...storeSuppliers];
-                    suppliersData = allSuppliersCombined.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-                    const allItemsCombined = [...ownItems1, ...ownItems2];
-                    itemsData = allItemsCombined.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
-                  } else if ((currentUser.chain_id && !currentUser.is_chain_head) || (isActingAsStore && currentUser.role === 'admin')) {
+                    // Manager: use service-role function to bypass RLS
+                    const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['suppliers', 'items'] });
+                    suppliersData = mgData?.data?.suppliers || [];
+                    itemsData = mgData?.data?.items || [];
+                  } else if ((currentUser.chain_id && !currentUser.is_chain_head) || isActingAsStore) {
                     // Branch store - get suppliers from chain head + own (with fallbacks)
                     // Derive chain by TARGET email first; only fallback to current user's chain when not controlling
                     let effectiveChainId = null;

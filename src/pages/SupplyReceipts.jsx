@@ -121,8 +121,19 @@ export default function SupplyReceiptsPage() {
       let mergedSuppliers = [];
       
       const currentUserReq = await base44.auth.me();
-      const isAdminControlling = userEmail !== currentUserReq.email;
-      if (isAdminControlling) {
+      const isManagerMode = !!(storeOwnerEmail && currentUserReq.role !== 'admin');
+      const isAdminControlling = !isManagerMode && userEmail !== currentUserReq.email;
+      if (isManagerMode) {
+        // Manager: use service-role function to bypass RLS
+        try {
+          const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['receipts', 'orders', 'suppliers'] });
+          receiptsData = mgData?.data?.receipts || [];
+          ordersData = mgData?.data?.orders || [];
+          mergedSuppliers = mgData?.data?.suppliers || [];
+        } catch(e) {
+          console.error("Manager data fetch error:", e);
+        }
+      } else if (isAdminControlling) {
          try {
              const targetEmail = storeOwnerEmail || userEmail;
              const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
@@ -216,7 +227,7 @@ export default function SupplyReceiptsPage() {
           
           const c = getCache('receipts_v1');
           const stale = isStale(c, 180000);
-          const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
+          const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email || storeOwnerEmail;
           if (stale || isImpersonating) {
             await loadData(workingEmail, storeOwnerEmail);
           }
