@@ -19,6 +19,10 @@ import InstagramStoryGreek from './pages/InstagramStoryGreek';
 import POSSettings from './pages/POSSettings';
 import PriceChangesPage from './pages/PriceChanges';
 import StoreLogin from './pages/StoreLogin';
+import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -112,35 +116,37 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
+  // Handle authentication errors (user_not_registered is a special case shown inline)
   if (authError) {
-    if (!isPublicRoute) {
-      if (authError.type === 'user_not_registered') {
-        return <UserNotRegisteredError />;
-      } else if (authError.type === 'auth_required') {
-        // Redirect to login automatically
-        navigateToLogin();
-        return null;
-      }
+    if (!isPublicRoute && authError.type === 'user_not_registered') {
+      return <UserNotRegisteredError />;
     }
   }
 
   // Render the main app
   return (
     <Routes>
+      {/* Public auth routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/StoreLogin" element={<StoreLogin />} />
-      <Route element={<AppLayoutRoute />}>
-        <Route path="/" element={<MainPage />} />
-        {Object.entries(Pages).map(([path, Page]) => (
-          <Route key={path} path={`/${path}`} element={<Page />} />
-        ))}
-        <Route path="/Recipes" element={<RecipesPage />} />
-        <Route path="/CogsReports" element={<CogsReportsPage />} />
-        <Route path="/MenuEngineering" element={<MenuEngineeringPage />} />
-        <Route path="/InstagramStoryGreek" element={<InstagramStoryGreek />} />
-        <Route path="/pos-settings" element={<POSSettings />} />
-        <Route path="/PriceChanges" element={<PriceChangesPage />} />
-        <Route path="*" element={<PageNotFound />} />
+
+      {/* All app routes are protected */}
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route element={<AppLayoutRoute />}>
+          <Route path="/" element={<MainPage />} />
+          {Object.entries(Pages).map(([path, Page]) => (
+            <Route key={path} path={`/${path}`} element={<Page />} />
+          ))}
+          <Route path="/Recipes" element={<RecipesPage />} />
+          <Route path="/CogsReports" element={<CogsReportsPage />} />
+          <Route path="/MenuEngineering" element={<MenuEngineeringPage />} />
+          <Route path="/InstagramStoryGreek" element={<InstagramStoryGreek />} />
+          <Route path="/pos-settings" element={<POSSettings />} />
+          <Route path="/PriceChanges" element={<PriceChangesPage />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Route>
       </Route>
     </Routes>
   );
