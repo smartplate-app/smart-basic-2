@@ -63,6 +63,17 @@ export default function WorkerLogin() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4`} dir="rtl">
+      {/* Smart Plate Branding */}
+      <div className="flex flex-col items-center mb-6">
+        <img
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
+          alt="Smart Plate"
+          className="h-14 object-contain mb-1"
+        />
+        <span className="text-base font-bold text-black tracking-wide">SMART PLATE BASIC</span>
+        <span className="text-xs text-gray-500 tracking-wider">food cost app</span>
+      </div>
+
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-8">
           <div className={`w-16 h-16 ${iconBgClass} rounded-2xl flex items-center justify-center mx-auto mb-3`}>
