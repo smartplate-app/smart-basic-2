@@ -92,9 +92,21 @@ export default function ItemsPage() {
       let suppliersData = [];
       let warehousesData = [];
       
-      // Check if user is a store_user (worker/manager invited to someone else's store)
-      const isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
-      const storeOwnerEmail = currentUser.store_user_owner_email;
+      // Check if user is a store_user (worker/manager) - always fetch from StoreUser to catch new invites
+      let storeOwnerEmail = currentUser.store_user_owner_email || currentUser.acting_as_store_email || null;
+      let storeUserRole = currentUser.store_user_role || null;
+      let isStoreUser = !!(storeUserRole && storeOwnerEmail);
+      if (!isStoreUser) {
+        try {
+          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
+          if (storeUserRecords.length > 0) {
+            const record = storeUserRecords[0];
+            isStoreUser = true;
+            storeOwnerEmail = record.owner_email;
+            storeUserRole = record.role;
+          }
+        } catch (e) {}
+      }
 
       console.log('[Items] Loading check:', {
         isStoreUser,
@@ -120,7 +132,7 @@ export default function ItemsPage() {
         } else {
           throw new Error('Failed to load admin data');
         }
-      } else if (isStoreUser && storeOwnerEmail) {
+      } else if (isStoreUser && storeOwnerEmail && storeUserRole === 'manager') {
         // Manager: use service-role function to bypass RLS
         console.log('[Items] Loading as MANAGER for owner:', storeOwnerEmail);
         const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['items', 'suppliers', 'warehouses'] });

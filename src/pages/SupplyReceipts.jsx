@@ -85,7 +85,7 @@ export default function SupplyReceiptsPage() {
     }
   }, []);
 
-  const loadData = async (userEmail, storeOwnerEmail = null, retryCount = 0) => {
+  const loadData = async (userEmail, storeOwnerEmail = null, retryCount = 0, storeUserRole = null) => {
     try {
       setLoading(true);
       setNetworkError(false);
@@ -121,7 +121,7 @@ export default function SupplyReceiptsPage() {
       let mergedSuppliers = [];
       
       const currentUserReq = await base44.auth.me();
-      const isManagerMode = !!(storeOwnerEmail && currentUserReq.role !== 'admin');
+      const isManagerMode = !!(storeOwnerEmail && storeUserRole === 'manager' && currentUserReq?.role !== 'admin');
       const isAdminControlling = !isManagerMode && userEmail !== currentUserReq.email;
       if (isManagerMode) {
         // Manager: use service-role function to bypass RLS
@@ -176,7 +176,7 @@ export default function SupplyReceiptsPage() {
       if ((error.message === 'Network Error' || error.code === 'ERR_NETWORK') && retryCount < 3) {
         console.log(`Retrying data load... attempt ${retryCount + 1}`);
         await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1))); // Exponential backoff
-        return loadData(userEmail, storeOwnerEmail, retryCount + 1);
+        return loadData(userEmail, storeOwnerEmail, retryCount + 1, storeUserRole);
       }
 
       setNetworkError(true);
@@ -208,14 +208,16 @@ export default function SupplyReceiptsPage() {
           // Determine the working email based on user type
           let workingEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
           
-          // Check if user is a store user (worker/manager)
-          let storeOwnerEmail = currentUser.store_user_owner_email;
+          // Always check StoreUser to catch newly invited managers before Layout sets context
+          let storeOwnerEmail = currentUser.store_user_owner_email || currentUser.acting_as_store_email || null;
+          let storeUserRole = currentUser.store_user_role || null;
           if (!storeOwnerEmail) {
             try {
-              const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email });
+              const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
               if (Array.isArray(storeUserRecords) && storeUserRecords.length > 0) {
                 const activeRec = storeUserRecords.find(r => r.is_active !== false) || storeUserRecords[0];
                 storeOwnerEmail = activeRec?.owner_email || null;
+                storeUserRole = activeRec?.role || null;
               }
             } catch (e) {
               console.log("Could not fetch store user records");
@@ -229,7 +231,7 @@ export default function SupplyReceiptsPage() {
           const stale = isStale(c, 180000);
           const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email || storeOwnerEmail;
           if (stale || isImpersonating) {
-            await loadData(workingEmail, storeOwnerEmail);
+            await loadData(workingEmail, storeOwnerEmail, 0, storeUserRole);
           }
         }
       } catch (error) {
@@ -484,7 +486,7 @@ export default function SupplyReceiptsPage() {
       className="min-h-screen bg-[#f8f9fa] p-4 md:p-8"
       onTouchStart={(e) => { if (window.scrollY <= 0) { startYRef.current = e.touches[0].clientY; setPullDist(0); } }}
       onTouchMove={(e) => { if (window.scrollY <= 0 && startYRef.current) { const d = e.touches[0].clientY - startYRef.current; setPullDist(d > 0 ? Math.min(d, 120) : 0); } }}
-      onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); const u = user || await base44.auth.me(); await loadData(u.email, storeOwnerEmailState); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
+      onTouchEnd={async () => { if (pullDist > 70 && !refreshing) { setRefreshing(true); const u = user || await base44.auth.me(); await loadData(u.acting_as_store_email || u.email, storeOwnerEmailState, 0, u.store_user_role); setTimeout(()=>{ setRefreshing(false); setPullDist(0); }, 300); } else { setPullDist(0); } startYRef.current = 0; }}
     >
       <div className="w-full">
         {/* Native-style Pull to Refresh Indicator */}
@@ -540,7 +542,7 @@ export default function SupplyReceiptsPage() {
                    noOrderMode={false}
                    user={user}
                    onSubmit={handleReceiptSubmit}
-                   onSuccess={async () => { setShowForm(false); setSelectedOrder(null); await loadData(user?.email, storeOwnerEmailState); }}
+                   onSuccess={async () => { setShowForm(false); setSelectedOrder(null); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
                    onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
                  />
                )}
@@ -611,7 +613,7 @@ export default function SupplyReceiptsPage() {
                   noOrderMode={true}
                   user={user}
                   onSubmit={handleReceiptSubmit}
-                  onSuccess={async () => { setShowForm(false); setEditingReceipt(null); await loadData(user?.email, storeOwnerEmailState); }}
+                  onSuccess={async () => { setShowForm(false); setEditingReceipt(null); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
                   onCancel={() => {
                     setShowForm(false);
                     setEditingReceipt(null);
@@ -631,7 +633,7 @@ export default function SupplyReceiptsPage() {
                   noOrderMode={true}
                   user={user}
                   onSubmit={handleReceiptSubmit}
-                  onSuccess={async () => { setShowNoOrderForm(false); await loadData(user?.email, storeOwnerEmailState); }}
+                  onSuccess={async () => { setShowNoOrderForm(false); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
                   onCancel={() => {
                     setShowNoOrderForm(false);
                   }}

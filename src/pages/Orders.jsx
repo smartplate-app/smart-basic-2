@@ -108,18 +108,20 @@ export default function OrdersPage() {
       const isAdminControlling = currentUser?.role === 'admin' && workingEmail !== currentUser.email;
 
       // Check if user is a store_user (worker/manager invited to someone else's store)
-      // First check if saved on user object (set by layout auth check), then try to fetch from StoreUser entity
-      let storeOwnerEmail = currentUser.store_user_owner_email || null;
-      let isStoreUser = !!(currentUser.store_user_role && storeOwnerEmail);
+      // Always fetch from StoreUser entity to catch newly invited managers before Layout sets context
+      let storeOwnerEmail = currentUser.store_user_owner_email || currentUser.acting_as_store_email || null;
+      let storeUserRole = currentUser.store_user_role || null;
+      let isStoreUser = !!(storeUserRole && storeOwnerEmail);
       
       if (!isStoreUser) {
-        // Check StoreUser entity for this user
+        // Check StoreUser entity for this user - catches new invites before layout sets context
         try {
           const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
           if (storeUserRecords.length > 0) {
             const record = storeUserRecords[0];
             isStoreUser = true;
             storeOwnerEmail = record.owner_email;
+            storeUserRole = record.role;
           }
         } catch (e) {
           console.log("Could not fetch store user records");
@@ -177,7 +179,7 @@ export default function OrdersPage() {
         } catch (e) {
           console.error("Error loading admin data:", e);
         }
-      } else if (isStoreUser && storeOwnerEmail) {
+      } else if (isStoreUser && storeOwnerEmail && storeUserRole === 'manager') {
         // Manager: use service-role function to bypass RLS
         try {
           const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['suppliers', 'orders'] });
@@ -185,6 +187,20 @@ export default function OrdersPage() {
           ordersData = mgData?.data?.orders || [];
         } catch (err) {
           console.error('[Orders] Failed to fetch manager data', err);
+          suppliersData = [];
+          ordersData = [];
+        }
+      } else if (isStoreUser && storeOwnerEmail) {
+        // Worker: fetch via getStoreData
+        try {
+          const [suppliersRes, ordersRes] = await Promise.all([
+            base44.functions.invoke('getStoreData', { action: 'getSuppliers', ownerEmail: storeOwnerEmail }),
+            base44.functions.invoke('getStoreData', { action: 'getOrders', ownerEmail: storeOwnerEmail }),
+          ]);
+          suppliersData = suppliersRes?.data?.success ? suppliersRes.data.suppliers : [];
+          ordersData = ordersRes?.data?.success ? ordersRes.data.orders : [];
+        } catch (err) {
+          console.error('[Orders] Failed to fetch store data via backend', err);
           suppliersData = [];
           ordersData = [];
         }
