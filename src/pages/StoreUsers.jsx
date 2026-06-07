@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Edit } from "lucide-react";
+import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Edit, ExternalLink } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function StoreUsersPage() {
@@ -194,11 +194,20 @@ export default function StoreUsersPage() {
                 <div className="space-y-4 mt-4">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
                     <p className="text-green-800 font-semibold text-lg mb-2">✅ {language === 'he' ? 'המשתמש נוצר!' : 'User Created!'}</p>
-                    <p className="text-green-700 text-sm">
+                    <p className="text-green-700 text-sm mb-3">
                       {language === 'he'
-                        ? `${successMsg} נוסף בהצלחה. כעת ניתן להיכנס דרך עמוד כניסת עובדים עם שם המשתמש והסיסמה.`
-                        : `${successMsg} was added. They can now log in via the Worker Login page with their username and password.`}
+                        ? `${successMsg} נוסף בהצלחה. שלח לעובד את הקישור הבא:`
+                        : `${successMsg} was added. Share this link with them:`}
                     </p>
+                    <a
+                      href="/WorkerLogin"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      {language === 'he' ? 'כניסת עובדים' : 'Worker Login'}
+                    </a>
                   </div>
                   <Button className="w-full" variant="outline" onClick={() => { setShowAddUser(false); resetForm(); }}>
                     {language === 'he' ? 'סגור' : 'Close'}
@@ -273,6 +282,23 @@ export default function StoreUsersPage() {
               )}
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* Worker Login Link Banner */}
+        <div className={`flex items-center justify-between bg-gray-900 text-white rounded-xl px-5 py-4 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={isRTL ? 'text-right' : ''}>
+            <p className="font-semibold text-base">{language === 'he' ? 'כניסת עובדים' : 'Worker Login'}</p>
+            <p className="text-gray-400 text-sm">{language === 'he' ? 'שלח לעובדים את הקישור הזה להתחברות' : 'Share this link with your workers to log in'}</p>
+          </div>
+          <a
+            href="/WorkerLogin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-100 whitespace-nowrap"
+          >
+            <ExternalLink className="w-4 h-4" />
+            {language === 'he' ? 'פתח קישור' : 'Open Link'}
+          </a>
         </div>
 
         {/* Role Explanation Cards */}
