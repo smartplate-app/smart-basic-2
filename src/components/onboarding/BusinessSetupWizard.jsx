@@ -33,8 +33,14 @@ export default function BusinessSetupWizard({ user, onComplete, forceShow = fals
 
     if (!user) return;
 
+    // Don't show wizard immediately after OAuth/login redirect — layout hasn't finished
+    // its StoreUser check yet, so we might incorrectly treat a store-user as a new owner
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('is_new_user') === 'true') return;
+
     // Only show to head users (owners) who haven't completed this info
-    const isOwner = !user.store_user_owner_email && !user.acting_as_store_email;
+    // Also skip if store_user_role is set (they're a worker/manager for another store)
+    const isOwner = !user.store_user_owner_email && !user.acting_as_store_email && !user.store_user_role;
 
     if (isOwner) {
       // Auto-setup the demo account if it logs in for the first time
