@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { UserCog, Plus, Loader, Trash2, Mail, CheckCircle, Clock, Users } from 'lucide-react';
+import { UserCog, Plus, Loader, Trash2, Mail, CheckCircle, Users } from 'lucide-react';
 import { useLanguage } from '../components/LanguageProvider';
 
 export default function ManagersSection() {
@@ -48,7 +48,7 @@ export default function ManagersSection() {
       const ownerEmail = user.acting_as_store_email || user.email;
       const storeName = user.acting_as_store_name || user.business_name || user.full_name || 'המסעדה';
 
-      // 1. Create StoreUser record as manager (pending = not yet confirmed)
+      // 1. Create StoreUser record as manager (active immediately — owner approved by creating it)
       await base44.entities.StoreUser.create({
         store_id: user.id,
         store_name: storeName,
@@ -56,8 +56,8 @@ export default function ManagersSection() {
         user_name: name.trim(),
         role: 'manager',
         owner_email: ownerEmail,
-        is_active: false, // pending admin confirmation
-        description: 'pending_invite'
+        is_active: true,
+        description: ''
       });
 
       // 2. Send Base44 invite so they can sign up / login with Google
@@ -71,15 +71,6 @@ export default function ManagersSection() {
       alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + (err.message || 'Unknown error'));
     } finally {
       setInviting(false);
-    }
-  };
-
-  const handleActivate = async (mgr) => {
-    try {
-      await base44.entities.StoreUser.update(mgr.id, { is_active: true, description: '' });
-      await loadData();
-    } catch (err) {
-      alert('Error: ' + err.message);
     }
   };
 
@@ -103,7 +94,6 @@ export default function ManagersSection() {
   }
 
   const activeManagers = managers.filter(m => m.is_active);
-  const pendingManagers = managers.filter(m => !m.is_active);
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -158,8 +148,8 @@ export default function ManagersSection() {
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
                 {language === 'he'
-                  ? '📧 המנהל יקבל הזמנה להתחבר למערכת עם Google. לאחר אישור המנהל על ידי צוות SmartPlate, תפתח לו גישה מלאה.'
-                  : '📧 The manager will receive an invite to login with Google. After SmartPlate admin confirms, they get full access.'}
+                  ? '📧 המנהל יקבל הזמנה להירשם למערכת עם Google. לאחר ההרשמה תפתח לו גישה מלאה למסעדה.'
+                  : '📧 The manager will receive an invite to register with Google. Once they sign up, they get full access to your restaurant.'}
               </div>
 
               <Button type="submit" disabled={inviting} className="bg-blue-600 hover:bg-blue-700">
@@ -172,58 +162,13 @@ export default function ManagersSection() {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-800 text-sm flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 shrink-0" />
                   {language === 'he'
-                    ? `✅ ההזמנה נשלחה ל${successMsg}! ממתין לאישור מנהל המערכת.`
-                    : `✅ Invite sent to ${successMsg}! Waiting for admin confirmation.`}
+                    ? `✅ ההזמנה נשלחה ל${successMsg}! ברגע שיתחבר לראשונה יהיה לו גישה מלאה.`
+                    : `✅ Invite sent to ${successMsg}! Once they log in for the first time, they'll have full access.`}
                 </div>
               )}
             </form>
           </CardContent>
         </Card>
-
-        {/* Pending Managers */}
-        {pendingManagers.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Clock className="w-5 h-5 text-orange-500" />
-                {language === 'he' ? 'ממתינים לאישור' : 'Pending Approval'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {pendingManagers.map(mgr => (
-                <div key={mgr.id} className={`flex items-center justify-between p-4 bg-orange-50 border border-orange-100 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <UserCog className="w-5 h-5 text-orange-500" />
-                    <div className={isRTL ? 'text-right' : ''}>
-                      <p className="font-semibold text-gray-800">{mgr.user_name}</p>
-                      <p className="text-sm text-gray-500">{mgr.user_email}</p>
-                    </div>
-                    <Badge className="bg-orange-100 text-orange-700 border-orange-200">
-                      {language === 'he' ? 'ממתין' : 'Pending'}
-                    </Badge>
-                  </div>
-                  <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    {/* Admin can activate directly */}
-                    {user?.role === 'admin' && (
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleActivate(mgr)}>
-                        {language === 'he' ? 'אשר' : 'Approve'}
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(mgr)}
-                      disabled={deletingId === mgr.id}
-                      className="text-red-500 hover:bg-red-50"
-                    >
-                      {deletingId === mgr.id ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
 
         {/* Active Managers */}
         <Card>

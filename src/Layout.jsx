@@ -343,33 +343,43 @@ const [authLoading, setAuthLoading] = useState(() => {
                     const activeRecords = storeUserRecords.filter(r => r.is_active === true);
 
                     if (activeRecords.length > 0) {
-                        // Prefer the lowest privilege if multiple records exist: viewer < worker < manager
-                        const effectiveRecord =
-                          activeRecords.find(r => r.role === 'viewer') ||
-                          activeRecords.find(r => r.role === 'worker') ||
-                          activeRecords[0];
+                    // Prefer the lowest privilege if multiple records exist: viewer < worker < manager
+                    const effectiveRecord =
+                      activeRecords.find(r => r.role === 'viewer') ||
+                      activeRecords.find(r => r.role === 'worker') ||
+                      activeRecords[0];
 
-                        console.log('[Layout] Effective StoreUser record:', { role: effectiveRecord.role, owner: effectiveRecord.owner_email });
-                        setStoreUserRole(effectiveRecord.role);
-                        // Save store info to user context
-                        await base44.auth.updateMe({
-                          store_user_role: effectiveRecord.role,
-                          store_user_owner_email: effectiveRecord.owner_email,
-                          store_user_store_name: effectiveRecord.store_name,
-                          store_user_read_only: effectiveRecord.role === 'viewer',
-                          store_user_revoked: false
-                        });
-                        // Refresh local copy immediately so subsequent logic sees store-user context
+                    console.log('[Layout] Effective StoreUser record:', { role: effectiveRecord.role, owner: effectiveRecord.owner_email });
+                    setStoreUserRole(effectiveRecord.role);
+
+                    // For managers: set acting_as_store_email so all entity queries transparently
+                    // scope to the owner's data (same mechanism as admin impersonation)
+                    const isManagerRole = effectiveRecord.role === 'manager';
+                    const updatePayload = {
+                      store_user_role: effectiveRecord.role,
+                      store_user_owner_email: effectiveRecord.owner_email,
+                      store_user_store_name: effectiveRecord.store_name,
+                      store_user_read_only: effectiveRecord.role === 'viewer',
+                      store_user_revoked: false,
+                    };
+                    if (isManagerRole) {
+                      updatePayload.acting_as_store_email = effectiveRecord.owner_email;
+                      updatePayload.acting_as_store_name = effectiveRecord.store_name || '';
+                    }
+
+                    // Save store info to user context
+                    await base44.auth.updateMe(updatePayload);
+                    // Refresh local copy immediately so subsequent logic sees store-user context
+                    currentUser = await base44.auth.me();
+                    setUser(currentUser);
+                    // For viewer/worker, ensure no standalone business context is set accidentally
+                    if (effectiveRecord.role !== 'manager') {
+                      if (currentUser.business_name || currentUser.chain_id) {
+                        await base44.auth.updateMe({ business_name: null, chain_id: null, is_chain_head: false });
                         currentUser = await base44.auth.me();
                         setUser(currentUser);
-                        // For viewer/worker, ensure no standalone business context is set accidentally
-                        if (effectiveRecord.role !== 'manager') {
-                          if (currentUser.business_name || currentUser.chain_id) {
-                            await base44.auth.updateMe({ business_name: null, chain_id: null, is_chain_head: false });
-                            currentUser = await base44.auth.me();
-                            setUser(currentUser);
-                          }
-                        }
+                      }
+                    }
 
                         } else if (storeUserRecords.length > 0 && storeUserRecords.every(r => !r.is_active)) {
                         // User has StoreUser records but all are inactive (access revoked)
