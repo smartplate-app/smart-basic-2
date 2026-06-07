@@ -29,6 +29,11 @@ export default function WorkerLogin() {
       });
       const data = res.data;
       if (data?.success) {
+        // Store business name so WorkerPortal can display it immediately
+        try {
+          sessionStorage.setItem('wp_business_name', data.business_name || '');
+          sessionStorage.setItem('wp_owner_email', data.owner_email || '');
+        } catch {}
         // Redirect directly to the public WorkerPortal — no login needed
         window.location.href = "/WorkerPortal?owner=" + data.store_id;
       } else {

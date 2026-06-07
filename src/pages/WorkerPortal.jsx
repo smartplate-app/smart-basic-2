@@ -27,6 +27,14 @@ export default function WorkerPortal() {
       setLoading(false);
       return;
     }
+
+    // Read branding stored right after PIN verification
+    try {
+      const storedName = sessionStorage.getItem('wp_business_name');
+      const storedEmail = sessionStorage.getItem('wp_owner_email');
+      if (storedName) setBusinessName(storedName);
+      if (storedEmail) setOwnerEmail(storedEmail);
+    } catch {}
     
     setOwnerId(ownerParam);
     loadData(ownerParam);
@@ -54,8 +62,8 @@ export default function WorkerPortal() {
       
       setSuppliers(response.data.suppliers || []);
       setOrders(response.data.orders || []);
-      setOwnerEmail(response.data.ownerEmail);
-      setBusinessName(response.data.businessName || null);
+      if (response.data.ownerEmail) setOwnerEmail(response.data.ownerEmail);
+      if (response.data.businessName) setBusinessName(response.data.businessName);
       
       console.log('Loaded suppliers:', response.data.suppliers?.length);
       
