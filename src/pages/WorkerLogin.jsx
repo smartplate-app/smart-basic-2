@@ -1,15 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
 export default function WorkerLogin() {
   const urlParams = new URLSearchParams(window.location.search);
   const storeId = urlParams.get("store");
-  const role = urlParams.get("role") || "worker"; // "worker" or "manager"
+  const role = urlParams.get("role") || "worker";
   const isManager = role === "manager";
 
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [businessName, setBusinessName] = useState("");
+
+  useEffect(() => {
+    if (!storeId) return;
+    // Fetch the restaurant name for this store link
+    base44.functions.invoke("workerPortalData", { ownerId: storeId, action: "load" })
+      .then(res => {
+        if (res.data?.businessName) {
+          setBusinessName(res.data.businessName);
+          try { sessionStorage.setItem('wp_business_name', res.data.businessName); } catch {}
+        }
+        if (res.data?.ownerEmail) {
+          try { sessionStorage.setItem('wp_owner_email', res.data.ownerEmail); } catch {}
+        }
+      })
+      .catch(() => {});
+  }, [storeId]);
 
   const hasStoreLink = !!storeId;
 
@@ -72,6 +89,11 @@ export default function WorkerLogin() {
         />
         <span className="text-base font-bold text-black tracking-wide">SMART PLATE BASIC</span>
         <span className="text-xs text-gray-500 tracking-wider">food cost app</span>
+        {businessName && (
+          <div className="mt-3 bg-amber-100 border border-amber-300 text-amber-900 px-6 py-2 rounded-full text-base font-bold">
+            🏪 {businessName}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
