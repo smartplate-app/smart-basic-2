@@ -80,38 +80,32 @@ export default function StoreUsersPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [workerPin, setWorkerPin] = useState("");
   const [workerLink, setWorkerLink] = useState("");
-  const [managerPin, setManagerPin] = useState("");
-  const [managerLink, setManagerLink] = useState("");
   const [generatingWorker, setGeneratingWorker] = useState(false);
-  const [generatingManager, setGeneratingManager] = useState(false);
   const [copiedWorker, setCopiedWorker] = useState(false);
-  const [copiedManager, setCopiedManager] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
-  const generateLink = async (role) => {
-    const isManager = role === 'manager';
-    if (isManager) setGeneratingManager(true); else setGeneratingWorker(true);
+  const generateLink = async () => {
+    setGeneratingWorker(true);
     try {
       const currentUser = user || await base44.auth.me();
       const pin = Math.floor(10000000 + Math.random() * 90000000).toString();
-      const field = isManager ? 'manager_access_pin' : 'worker_access_pin';
-      await base44.auth.updateMe({ [field]: pin });
+      await base44.auth.updateMe({ worker_access_pin: pin });
       const baseUrl = window.location.origin;
-      const link = `${baseUrl}/WorkerLogin?store=${currentUser.id}&role=${role}`;
-      if (isManager) { setManagerPin(pin); setManagerLink(link); }
-      else { setWorkerPin(pin); setWorkerLink(link); }
+      const link = `${baseUrl}/WorkerLogin?store=${currentUser.id}&role=worker`;
+      setWorkerPin(pin);
+      setWorkerLink(link);
     } catch (err) {
       alert(language === 'he' ? 'שגיאה ביצירת קישור' : 'Error generating link');
     } finally {
-      if (isManager) setGeneratingManager(false); else setGeneratingWorker(false);
+      setGeneratingWorker(false);
     }
   };
 
-  const copyLink = (link, role) => {
+  const copyLink = (link) => {
     navigator.clipboard.writeText(link);
-    if (role === 'manager') { setCopiedManager(true); setTimeout(() => setCopiedManager(false), 2000); }
-    else { setCopiedWorker(true); setTimeout(() => setCopiedWorker(false), 2000); }
+    setCopiedWorker(true);
+    setTimeout(() => setCopiedWorker(false), 2000);
   };
 
   const loadData = async () => {
@@ -123,10 +117,6 @@ export default function StoreUsersPage() {
       if (currentUser.worker_access_pin) {
         setWorkerPin(currentUser.worker_access_pin);
         setWorkerLink(`${baseUrl}/WorkerLogin?store=${currentUser.id}&role=worker`);
-      }
-      if (currentUser.manager_access_pin) {
-        setManagerPin(currentUser.manager_access_pin);
-        setManagerLink(`${baseUrl}/WorkerLogin?store=${currentUser.id}&role=manager`);
       }
       const ownerEmail = currentUser.acting_as_store_email || currentUser.email;
       const users = await base44.entities.StoreUser.filter({ owner_email: ownerEmail });
@@ -378,9 +368,8 @@ export default function StoreUsersPage() {
           </Dialog>
         </div>
 
-        {/* Access Links - Worker & Manager */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Worker Link */}
+        {/* Access Link - Worker Portal */}
+        <div className="mb-6">
           <AccessLinkCard
             role="worker"
             title={language === 'he' ? 'פורטל עובדים' : 'Worker Portal'}
@@ -389,53 +378,12 @@ export default function StoreUsersPage() {
             link={workerLink}
             generating={generatingWorker}
             copied={copiedWorker}
-            onGenerate={() => generateLink('worker')}
-            onCopy={() => copyLink(workerLink, 'worker')}
+            onGenerate={() => generateLink()}
+            onCopy={() => copyLink(workerLink)}
             accentClass="amber"
             language={language}
             isRTL={isRTL}
           />
-          {/* Manager Link */}
-          <AccessLinkCard
-            role="manager"
-            title={language === 'he' ? 'פורטל מנהלים' : 'Manager Portal'}
-            subtitle={language === 'he' ? 'קוד גישה למנהלים בלבד' : 'PIN for managers only'}
-            pin={managerPin}
-            link={managerLink}
-            generating={generatingManager}
-            copied={copiedManager}
-            onGenerate={() => generateLink('manager')}
-            onCopy={() => copyLink(managerLink, 'manager')}
-            accentClass="blue"
-            language={language}
-            isRTL={isRTL}
-          />
-        </div>
-
-        {/* Role Explanation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4">
-              <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                <UserCog className="w-8 h-8 text-blue-600" />
-                <div>
-                  <h3 className="font-bold text-blue-900">{language === 'he' ? 'מנהל' : 'Manager'}</h3>
-                  <p className="text-sm text-blue-700">{language === 'he' ? 'רואה הכל ומנהל את המסעדה' : 'Can see everything and manage restaurant'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-4">
-              <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                <UserCheck className="w-8 h-8 text-green-600" />
-                <div>
-                  <h3 className="font-bold text-green-900">{language === 'he' ? 'עובד' : 'Worker'}</h3>
-                  <p className="text-sm text-green-700">{language === 'he' ? 'יוצר הזמנות, מקבל אספקה ועושה ספירות' : 'Creates orders, receives supplies, does counts'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Users List */}
