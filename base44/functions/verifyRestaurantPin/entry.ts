@@ -9,12 +9,11 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Missing store_id or pin' }, { status: 400 });
     }
 
-    const users = await base44.asServiceRole.entities.User.filter({ id: store_id });
-    if (!users || users.length === 0) {
+    const allUsers = await base44.asServiceRole.entities.User.list();
+    const owner = allUsers?.find(u => u.id === store_id);
+    if (!owner) {
       return Response.json({ success: false, error: 'Invalid link' });
     }
-
-    const owner = users[0];
 
     // Use role-specific PIN: manager_access_pin or worker_access_pin
     const pinField = role === 'manager' ? 'manager_access_pin' : 'worker_access_pin';

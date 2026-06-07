@@ -12,9 +12,10 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Owner ID required' }, { status: 400 });
         }
 
-        // Get owner's user record
-        const allUsers = await base44.asServiceRole.entities.User.filter({ id: ownerId });
-        const owner = allUsers?.[0];
+        // Get owner's user record by ID
+        // User.filter by id doesn't work reliably — use list and find
+        const allUsers = await base44.asServiceRole.entities.User.list();
+        const owner = allUsers?.find(u => u.id === ownerId);
         
         if (!owner) {
             return Response.json({ error: 'Owner not found' }, { status: 404 });
