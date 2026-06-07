@@ -1,0 +1,62 @@
+{
+  "name": "WorkerSession",
+  "type": "object",
+  "properties": {
+    "owner_id": {
+      "type": "string",
+      "description": "ID of the store owner"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the store owner"
+    },
+    "worker_name": {
+      "type": "string",
+      "description": "Name of the worker"
+    },
+    "worker_user_id": {
+      "type": "string",
+      "description": "User ID of the worker"
+    },
+    "login_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session started"
+    },
+    "logout_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session ended"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 0,
+      "description": "Session duration in minutes"
+    },
+    "actions": {
+      "type": "array",
+      "description": "Actions performed during the session",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "actions_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "owner_id"
+  ]
+}

@@ -20,6 +20,7 @@ export default function WorkerPortal() {
   const [businessName, setBusinessName] = useState(null);
   const [role, setRole] = useState('worker');
   const [error, setError] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -46,10 +47,27 @@ export default function WorkerPortal() {
     } catch {}
 
     setOwnerId(ownerParam);
-    loadData(ownerParam);
+    loadData(ownerParam, roleParam);
   }, []);
 
-  const loadData = async (ownerId) => {
+  // End session on page unload
+  useEffect(() => {
+    const endSession = () => {
+      const sid = sessionId;
+      if (!sid || !ownerId) return;
+      navigator.sendBeacon && navigator.sendBeacon('/api/functions/workerPortalData',
+        JSON.stringify({ ownerId, action: 'endSession', sessionId: sid }));
+    };
+    window.addEventListener('beforeunload', endSession);
+    return () => window.removeEventListener('beforeunload', endSession);
+  }, [sessionId, ownerId]);
+
+  const logAction = async (actionName, subject) => {
+    if (!sessionId || !ownerId) return;
+    base44.functions.invoke('workerPortalData', { ownerId, action: 'logAction', sessionId, actionName, subject }).catch(() => {});
+  };
+
+  const loadData = async (ownerId, roleParam) => {
     try {
       setLoading(true);
       setError(null);
@@ -66,6 +84,14 @@ export default function WorkerPortal() {
       setItems(response.data.items || []);
       if (response.data.ownerEmail) setOwnerEmail(response.data.ownerEmail);
       if (response.data.businessName) setBusinessName(response.data.businessName);
+
+      // Start a session
+      let workerName = 'עובד';
+      try { const n = sessionStorage.getItem('wp_worker_name'); if (n) workerName = n; } catch {}
+      const sessionRes = await base44.functions.invoke('workerPortalData', {
+        ownerId, action: 'startSession', workerName, role: roleParam || 'worker'
+      });
+      if (sessionRes.data?.sessionId) setSessionId(sessionRes.data.sessionId);
     } catch (error) {
       setError('Error loading data: ' + (error.message || 'Unknown error'));
     } finally {
@@ -81,6 +107,7 @@ export default function WorkerPortal() {
         ...orderData
       });
       if (response.data.error) { alert(response.data.error); return; }
+      logAction('שמירה', 'הזמנה');
       alert(t('order_saved_successfully') || 'ההזמנה נשמרה!');
       setView('menu');
       await loadData(ownerId);
@@ -97,6 +124,7 @@ export default function WorkerPortal() {
         ...receiptData
       });
       if (response.data.error) { alert(response.data.error); return; }
+      logAction('שמירה', 'קבלת אספקה');
       alert(t('receipt_saved_successfully') || 'הקבלה נשמרה!');
       setView('menu');
       await loadData(ownerId);
@@ -112,6 +140,7 @@ export default function WorkerPortal() {
       ...countData
     });
     if (response.data.error) throw new Error(response.data.error);
+    logAction('שמירה', 'ספירת מלאי');
   };
 
   const handleWasteSubmit = async (wasteData) => {
@@ -121,6 +150,7 @@ export default function WorkerPortal() {
       ...wasteData
     });
     if (response.data.error) throw new Error(response.data.error);
+    logAction('שמירה', 'דיווח פחת');
   };
 
   if (loading) {
@@ -251,7 +281,7 @@ export default function WorkerPortal() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4" dir="rtl">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView('order')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { setView('order'); logAction('פתיחה', 'הזמנה'); }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-blue-100 rounded-lg">
@@ -265,7 +295,7 @@ export default function WorkerPortal() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView('receive')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { setView('receive'); logAction('פתיחה', 'קבלת אספקה'); }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-green-100 rounded-lg">
@@ -279,7 +309,7 @@ export default function WorkerPortal() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView('count')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { setView('count'); logAction('פתיחה', 'ספירת מלאי'); }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-amber-100 rounded-lg">
@@ -293,7 +323,7 @@ export default function WorkerPortal() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView('waste')}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { setView('waste'); logAction('פתיחה', 'דיווח פחת'); }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-red-100 rounded-lg">

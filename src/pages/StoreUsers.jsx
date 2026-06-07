@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Edit, ExternalLink, RefreshCw, Copy, Check, Link } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
+import WorkerActivityStats from "../components/worker/WorkerActivityStats";
 
 function AccessLinkCard({ role, title, subtitle, pin, link, generating, copied, onGenerate, onCopy, accentClass, language, isRTL }) {
   const isAmber = accentClass === 'amber';
@@ -401,6 +402,9 @@ export default function StoreUsersPage() {
             isRTL={isRTL}
           />
         </div>
+
+        {/* Worker Activity Stats */}
+        {user && <div className="mb-6"><WorkerActivityStats ownerId={user.id} language={language} /></div>}
 
         {/* Users List */}
         <Card>

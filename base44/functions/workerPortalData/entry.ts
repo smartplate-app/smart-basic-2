@@ -116,6 +116,56 @@ Deno.serve(async (req) => {
             return Response.json({ warehouses });
         }
 
+        if (action === 'startSession') {
+            const { workerName, workerUserId } = body;
+            const session = await base44.asServiceRole.entities.WorkerSession.create({
+                owner_id: ownerId,
+                owner_email: owner.email,
+                worker_name: workerName || 'עובד',
+                worker_user_id: workerUserId || '',
+                login_at: new Date().toISOString(),
+                actions: [],
+                actions_count: 0
+            });
+            return Response.json({ success: true, sessionId: session.id });
+        }
+
+        if (action === 'logAction') {
+            const { sessionId, actionName, subject } = body;
+            if (!sessionId) return Response.json({ error: 'sessionId required' }, { status: 400 });
+            const session = await base44.asServiceRole.entities.WorkerSession.get(sessionId);
+            if (!session) return Response.json({ error: 'Session not found' }, { status: 404 });
+            const actions = session.actions || [];
+            actions.push({ action: actionName, subject, timestamp: new Date().toISOString() });
+            await base44.asServiceRole.entities.WorkerSession.update(sessionId, {
+                actions,
+                actions_count: actions.length
+            });
+            return Response.json({ success: true });
+        }
+
+        if (action === 'endSession') {
+            const { sessionId } = body;
+            if (!sessionId) return Response.json({ success: true });
+            const session = await base44.asServiceRole.entities.WorkerSession.get(sessionId);
+            if (!session) return Response.json({ success: true });
+            const loginAt = new Date(session.login_at);
+            const now = new Date();
+            const duration_minutes = Math.round((now - loginAt) / 60000);
+            await base44.asServiceRole.entities.WorkerSession.update(sessionId, {
+                logout_at: now.toISOString(),
+                duration_minutes
+            });
+            return Response.json({ success: true });
+        }
+
+        if (action === 'loadSessions') {
+            const sessions = await base44.asServiceRole.entities.WorkerSession.filter(
+                { owner_id: ownerId }, '-login_at', 100
+            );
+            return Response.json({ sessions });
+        }
+
         if (action === 'createWaste') {
             const { warehouse_id, warehouse_name, report_date, shift, items: wasteItems, total_waste_value, notes } = body;
             const report = await base44.asServiceRole.entities.WasteReport.create({
