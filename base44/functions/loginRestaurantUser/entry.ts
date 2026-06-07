@@ -63,13 +63,17 @@ Deno.serve(async (req) => {
       last_login: new Date().toISOString()
     });
     
-    console.log('[loginRestaurantUser] Login successful');
+    console.log('[loginRestaurantUser] Login successful, creating login token for:', user.email);
+
+    // Create a real Base44 login token so the worker gets an actual session
+    const loginToken = await base44.asServiceRole.auth.createLoginToken(user.email);
     
     return Response.json({ 
       success: true,
+      login_token: loginToken,
       user: {
         id: user.id,
-        email: user.email, // This is the important part: returning the constructed email
+        email: user.email,
         full_name: user.full_name,
         role: user.role,
         store_id: user.store_id,

@@ -8,13 +8,6 @@ export default function WorkerLogin() {
   const [error, setError] = useState("");
   const [loggedInUser, setLoggedInUser] = useState(null);
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("worker_session");
-      if (saved) setLoggedInUser(JSON.parse(saved));
-    } catch {}
-  }, []);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -25,9 +18,9 @@ export default function WorkerLogin() {
         password,
       });
       const data = res.data;
-      if (data?.success && data?.user) {
-        localStorage.setItem("worker_session", JSON.stringify(data.user));
-        setLoggedInUser(data.user);
+      if (data?.success && data?.login_token) {
+        // Use the real login token to create a Base44 session and redirect to Orders
+        await base44.auth.loginWithToken(data.login_token, "/Orders");
       } else {
         setError(data?.error || "שם משתמש או סיסמה שגויים");
       }
@@ -37,52 +30,6 @@ export default function WorkerLogin() {
       setLoading(false);
     }
   };
-
-  const handleLogout = () => {
-    localStorage.removeItem("worker_session");
-    setLoggedInUser(null);
-    setUsername("");
-    setPassword("");
-  };
-
-  if (loggedInUser) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4" dir="rtl">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">✅</span>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-1">שלום, {loggedInUser.full_name}!</h2>
-          <p className="text-gray-500 mb-2 text-sm">
-            {loggedInUser.role === "manager" ? "מנהל" : "עובד"}
-          </p>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-            <p className="text-xs text-amber-600 font-medium mb-1">המסעדה שלך</p>
-            <p className="text-xl font-bold text-amber-800">{loggedInUser.store_name}</p>
-          </div>
-
-          <div className="text-right space-y-2 mb-6 text-sm text-gray-600">
-            <div className="flex justify-between">
-              <span className="text-gray-400">{loggedInUser.email}</span>
-              <span className="font-medium">שם משתמש</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">{loggedInUser.role === "manager" ? "מנהל" : "עובד"}</span>
-              <span className="font-medium">תפקיד</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition text-sm font-medium"
-          >
-            התנתק
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4" dir="rtl">

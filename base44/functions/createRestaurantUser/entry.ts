@@ -72,6 +72,15 @@ Deno.serve(async (req) => {
     }
     
     console.log('[createRestaurantUser] User created successfully:', newUser.id);
+
+    // Ensure this email exists as a real Base44 auth user so login tokens work
+    try {
+      await base44.asServiceRole.users.inviteUser(email.toLowerCase(), 'user');
+      console.log('[createRestaurantUser] Invited as Base44 user:', email.toLowerCase());
+    } catch (inviteErr) {
+      // Already exists — that's fine
+      console.log('[createRestaurantUser] User already exists in Base44 auth (ok):', inviteErr?.message);
+    }
     
     // Check if StoreUser record already exists
     const existingStoreUsers = await base44.asServiceRole.entities.StoreUser.filter({ 
