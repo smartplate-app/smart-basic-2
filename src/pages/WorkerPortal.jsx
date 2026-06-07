@@ -121,11 +121,20 @@ export default function WorkerPortal() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader className="w-12 h-12 animate-spin text-green-600" />
-          <p className="text-lg text-gray-700">{t('loading')}</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-amber-50 p-6">
+        <img 
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+          alt="Smart Plate"
+          className="h-16 object-contain mb-2"
+        />
+        <span className="text-lg font-bold text-black tracking-wide">SMART PLATE BASIC</span>
+        <span className="text-xs text-gray-500 tracking-wider mb-4">food cost app</span>
+        {(businessName || ownerEmail) && (
+          <div className="bg-amber-100 text-amber-800 border border-amber-200 px-5 py-2 rounded-full text-sm font-bold mb-4">
+            🏪 {businessName || ownerEmail}
+          </div>
+        )}
+        <Loader className="w-8 h-8 animate-spin text-amber-600" />
       </div>
     );
   }

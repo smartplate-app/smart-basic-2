@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
     try {
@@ -12,9 +12,9 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Owner ID required' }, { status: 400 });
         }
 
-        // Get owner's email
-        const allUsers = await base44.asServiceRole.entities.User.list();
-        const owner = allUsers.find(u => u.id === ownerId);
+        // Get owner's user record
+        const allUsers = await base44.asServiceRole.entities.User.filter({ id: ownerId });
+        const owner = allUsers?.[0];
         
         if (!owner) {
             return Response.json({ error: 'Owner not found' }, { status: 404 });
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
                 suppliers, 
                 orders,
                 ownerEmail: owner.email,
-                businessName: owner.business_name || owner.full_name || ''
+                businessName: owner.business_name || owner.full_name || owner.email || ''
             });
         }
 
