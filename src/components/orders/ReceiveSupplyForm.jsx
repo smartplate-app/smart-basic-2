@@ -57,16 +57,35 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       manual_entry_mode: true // Already has data, show edit mode
       };
     }
-    // New receipt
+    // New receipt — pre-populate items from order if provided so הוזמן column is filled before scan
+    const initialOrderItems = order ? (order.items || []).map(oi => ({
+      item_id: oi.item_id || "",
+      item_name: oi.item_name || oi.name || "",
+      ordered_quantity: Number(oi.quantity || 0),
+      certificate_quantity: 0,
+      received_quantity: 0,
+      unit: oi.unit || 'unit',
+      catalog_price: Number(oi.price || 0),
+      actual_price: Number(oi.price || 0),
+      catalog_discount: Number(oi.discount || 0),
+      actual_discount: Number(oi.discount || 0),
+      price_changed: false,
+      discount_changed: false,
+      has_issue: false,
+      issue_note: "",
+      units_per_package: 1,
+      request_credit_quantity: false,
+      request_credit_price: false
+    })) : [];
     return {
-      order_id: "",
-      order_number: "",
-      supplier_name: "",
-      supplier_id: "",
-      supplier_email: "",
+      order_id: order?.id || "",
+      order_number: order?.order_number || "",
+      supplier_name: order?.supplier_name || "",
+      supplier_id: order?.supplier_id || "",
+      supplier_email: order?.supplier_email || "",
       received_date: new Date().toISOString().split('T')[0],
       receipt_images: [],
-      verified_items: [],
+      verified_items: initialOrderItems,
       price_changes_summary: [],
       has_price_changes: false,
       invoice_number: "",
@@ -85,7 +104,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       summarized_delivery_note_ids: [],
       document_type: "invoice",
       is_zero_vat: false,
-      manual_entry_mode: false
+      manual_entry_mode: initialOrderItems.length > 0 // show items table immediately if order items exist
     };
   });
 
@@ -221,7 +240,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
      }
   };
   const [scanning, setScanning] = useState(false); const [scanProgress, setScanProgress] = useState(0);
-  const [matching, setMatching] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   useEffect(() => { let interval; if (scanning) { setScanProgress(0); interval = setInterval(() => { setScanProgress(p => p >= 90 ? 90 : p + Math.max(1, (90 - p) * 0.15)); }, 500); } else { setScanProgress(100); const t = setTimeout(() => setScanProgress(0), 500); return () => clearTimeout(t); } return () => clearInterval(interval); }, [scanning]);
   const [duplicateExists, setDuplicateExists] = useState(false);
@@ -853,14 +871,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
     });
   };
 
-  const removeItem = (index) => {
-    setFormData(prev => {
-      const remainingItems = prev.verified_items.filter((_, i) => i !== index);
-      const { calculatedTotal, totalsMatch } = recalculateTotals(remainingItems, prev.invoice_total);
-      return { ...prev, verified_items: remainingItems, calculated_total: calculatedTotal, totals_match: totalsMatch };
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -982,22 +992,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       ...prev,
       receipt_images: prev.receipt_images.filter((_, i) => i !== index)
     }));
-  };
-
-  const getChangeIcon = (changeType) => {
-    if (changeType?.includes('increase')) {
-      return <TrendingUp className="w-4 h-4 text-red-600" />;
-    }
-    if (changeType?.includes('decrease')) {
-      return <TrendingDown className="w-4 h-4 text-green-600" />;
-    }
-    return <AlertTriangle className="w-4 h-4 text-orange-600" />;
-  };
-
-  const getChangeBadgeColor = (changeType) => {
-    if (changeType?.includes('increase')) return "bg-red-100 text-red-800";
-    if (changeType?.includes('decrease')) return "bg-green-100 text-green-800";
-    return "bg-orange-100 text-orange-800";
   };
 
   return (
