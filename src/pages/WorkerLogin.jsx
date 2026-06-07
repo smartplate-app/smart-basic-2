@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 
 export default function WorkerLogin() {
   const urlParams = new URLSearchParams(window.location.search);
   const storeId = urlParams.get("store");
+  const role = urlParams.get("role") || "worker"; // "worker" or "manager"
+  const isManager = role === "manager";
 
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [businessName, setBusinessName] = useState("");
 
-  // If no store param → show generic message
   const hasStoreLink = !!storeId;
 
   const handlePinLogin = async (e) => {
@@ -25,19 +25,16 @@ export default function WorkerLogin() {
       const res = await base44.functions.invoke("verifyRestaurantPin", {
         store_id: storeId,
         pin: pin.trim(),
+        role: role,
       });
       const data = res.data;
       if (data?.success) {
-        // Store owner context in session so the app knows whose data to show
-        // Redirect to standard login so they get a real session
-        // We pass owner context in sessionStorage then redirect to StoreLogin
         sessionStorage.setItem("worker_owner_email", data.owner_email);
         sessionStorage.setItem("worker_owner_name", data.owner_name);
         sessionStorage.setItem("worker_business_name", data.business_name);
         sessionStorage.setItem("worker_store_id", data.store_id);
-
-        // Redirect to the standard Store login page which will handle auth
-        window.location.href = "/StoreLogin?worker=1&store=" + storeId;
+        sessionStorage.setItem("worker_role", data.role);
+        window.location.href = "/StoreLogin?worker=1&store=" + storeId + "&role=" + role;
       } else {
         setError(data?.error || "קוד גישה שגוי");
       }
@@ -48,26 +45,46 @@ export default function WorkerLogin() {
     }
   };
 
+  const accentColor = isManager ? "blue" : "amber";
+  const gradientClass = isManager
+    ? "from-blue-50 to-indigo-50"
+    : "from-amber-50 to-orange-50";
+  const iconBgClass = isManager ? "bg-blue-100" : "bg-amber-100";
+  const btnClass = isManager
+    ? "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300"
+    : "bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300";
+  const borderClass = isManager
+    ? "focus:border-blue-400"
+    : "focus:border-amber-400";
+  const noLinkBgClass = isManager
+    ? "bg-blue-50 border-blue-200 text-blue-700"
+    : "bg-amber-50 border-amber-200 text-amber-700";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4" dir="rtl">
+    <div className={`min-h-screen bg-gradient-to-br ${gradientClass} flex flex-col items-center justify-center p-4`} dir="rtl">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <span className="text-3xl">🍽️</span>
+          <div className={`w-16 h-16 ${iconBgClass} rounded-2xl flex items-center justify-center mx-auto mb-3`}>
+            <span className="text-3xl">{isManager ? "🗂️" : "🍽️"}</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">כניסת עובדים</h1>
-          {businessName && <p className="text-amber-600 font-semibold mt-1">{businessName}</p>}
+          <h1 className="text-2xl font-bold text-gray-800">
+            {isManager ? "כניסת מנהלים" : "כניסת עובדים"}
+          </h1>
           {hasStoreLink ? (
-            <p className="text-gray-500 text-sm mt-1">הכנס את קוד הגישה של המסעדה</p>
+            <p className="text-gray-500 text-sm mt-1">
+              הכנס את קוד הגישה של {isManager ? "המנהל" : "העובד"}
+            </p>
           ) : (
-            <p className="text-gray-500 text-sm mt-1">השתמש בקישור שקיבלת מהמנהל</p>
+            <p className="text-gray-500 text-sm mt-1">השתמש בקישור שקיבלת</p>
           )}
         </div>
 
         {hasStoreLink ? (
           <form onSubmit={handlePinLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">קוד גישה (8 ספרות)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                קוד גישה (8 ספרות)
+              </label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -75,7 +92,7 @@ export default function WorkerLogin() {
                 maxLength={8}
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-center text-3xl font-bold tracking-widest focus:outline-none focus:border-amber-400 bg-gray-50"
+                className={`w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-center text-3xl font-bold tracking-widest focus:outline-none ${borderClass} bg-gray-50`}
                 placeholder="• • • • • • • •"
                 required
                 autoFocus
@@ -91,14 +108,14 @@ export default function WorkerLogin() {
             <button
               type="submit"
               disabled={loading || pin.length !== 8}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-bold rounded-xl transition text-base"
+              className={`w-full py-3 ${btnClass} text-white font-bold rounded-xl transition text-base`}
             >
               {loading ? "מאמת..." : "כניסה"}
             </button>
           </form>
         ) : (
           <div className="text-center py-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-700 text-sm">
+            <div className={`border rounded-xl p-4 text-sm ${noLinkBgClass}`}>
               בקש מהמנהל לשלוח לך קישור גישה
             </div>
           </div>

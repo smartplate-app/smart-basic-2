@@ -9,6 +9,58 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Edit, ExternalLink, RefreshCw, Copy, Check, Link } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
+function AccessLinkCard({ role, title, subtitle, pin, link, generating, copied, onGenerate, onCopy, accentClass, language, isRTL }) {
+  const isAmber = accentClass === 'amber';
+  const bgCard = isAmber ? 'bg-amber-900' : 'bg-blue-900';
+  const btnBg = isAmber ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-500 hover:bg-blue-600';
+  const pinColor = isAmber ? 'text-amber-300' : 'text-blue-300';
+  const icon = isAmber ? '🍽️' : '🗂️';
+
+  return (
+    <div className={`${bgCard} text-white rounded-xl px-5 py-5`}>
+      <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={isRTL ? 'text-right' : ''}>
+          <p className="font-semibold text-base flex items-center gap-2">{icon} {title}</p>
+          <p className="text-white/60 text-xs mt-0.5">{subtitle}</p>
+        </div>
+        <button
+          onClick={onGenerate}
+          disabled={generating}
+          className={`flex items-center gap-2 ${btnBg} disabled:opacity-50 text-white px-3 py-1.5 rounded-lg text-sm font-bold whitespace-nowrap transition`}
+        >
+          {generating ? <Loader className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+          {language === 'he' ? 'צור / חדש' : 'Generate'}
+        </button>
+      </div>
+
+      {link ? (
+        <div className="bg-white/10 rounded-xl p-3 space-y-2">
+          <div className="text-center">
+            <p className="text-white/50 text-xs mb-0.5">{language === 'he' ? 'קוד גישה' : 'Access PIN'}</p>
+            <p className={`text-3xl font-bold tracking-widest ${pinColor}`}>{pin}</p>
+          </div>
+          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex-1 bg-white/10 rounded-lg px-2 py-1.5 text-xs text-white/80 truncate font-mono">
+              {link}
+            </div>
+            <button onClick={onCopy} className="flex items-center gap-1 bg-white text-gray-900 px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-100 whitespace-nowrap transition">
+              {copied ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+              {copied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק' : 'Copy')}
+            </button>
+            <a href={link} target="_blank" rel="noopener noreferrer" className="flex items-center bg-white/20 hover:bg-white/30 text-white px-2 py-1.5 rounded-lg transition">
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      ) : (
+        <p className="text-white/40 text-xs text-center py-2">
+          {language === 'he' ? 'לחץ "צור / חדש" ליצירת קישור וקוד גישה' : 'Click "Generate" to create a link & PIN'}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function StoreUsersPage() {
   const { language } = useLanguage();
   const isRTL = language === 'he';
@@ -26,34 +78,40 @@ export default function StoreUsersPage() {
   const [userRole, setUserRole] = useState("worker");
   const [editingUser, setEditingUser] = useState(null);
   const [successMsg, setSuccessMsg] = useState("");
-  const [accessPin, setAccessPin] = useState("");
-  const [accessLink, setAccessLink] = useState("");
-  const [generatingPin, setGeneratingPin] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [workerPin, setWorkerPin] = useState("");
+  const [workerLink, setWorkerLink] = useState("");
+  const [managerPin, setManagerPin] = useState("");
+  const [managerLink, setManagerLink] = useState("");
+  const [generatingWorker, setGeneratingWorker] = useState(false);
+  const [generatingManager, setGeneratingManager] = useState(false);
+  const [copiedWorker, setCopiedWorker] = useState(false);
+  const [copiedManager, setCopiedManager] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
-  const generateAccessLink = async () => {
-    setGeneratingPin(true);
+  const generateLink = async (role) => {
+    const isManager = role === 'manager';
+    if (isManager) setGeneratingManager(true); else setGeneratingWorker(true);
     try {
       const currentUser = user || await base44.auth.me();
       const pin = Math.floor(10000000 + Math.random() * 90000000).toString();
-      await base44.auth.updateMe({ restaurant_access_pin: pin });
-      setAccessPin(pin);
+      const field = isManager ? 'manager_access_pin' : 'worker_access_pin';
+      await base44.auth.updateMe({ [field]: pin });
       const baseUrl = window.location.origin;
-      const link = `${baseUrl}/WorkerLogin?store=${currentUser.id}`;
-      setAccessLink(link);
+      const link = `${baseUrl}/WorkerLogin?store=${currentUser.id}&role=${role}`;
+      if (isManager) { setManagerPin(pin); setManagerLink(link); }
+      else { setWorkerPin(pin); setWorkerLink(link); }
     } catch (err) {
       alert(language === 'he' ? 'שגיאה ביצירת קישור' : 'Error generating link');
     } finally {
-      setGeneratingPin(false);
+      if (isManager) setGeneratingManager(false); else setGeneratingWorker(false);
     }
   };
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(accessLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyLink = (link, role) => {
+    navigator.clipboard.writeText(link);
+    if (role === 'manager') { setCopiedManager(true); setTimeout(() => setCopiedManager(false), 2000); }
+    else { setCopiedWorker(true); setTimeout(() => setCopiedWorker(false), 2000); }
   };
 
   const loadData = async () => {
@@ -61,6 +119,15 @@ export default function StoreUsersPage() {
       setLoading(true);
       const currentUser = await base44.auth.me();
       setUser(currentUser);
+      const baseUrl = window.location.origin;
+      if (currentUser.worker_access_pin) {
+        setWorkerPin(currentUser.worker_access_pin);
+        setWorkerLink(`${baseUrl}/WorkerLogin?store=${currentUser.id}&role=worker`);
+      }
+      if (currentUser.manager_access_pin) {
+        setManagerPin(currentUser.manager_access_pin);
+        setManagerLink(`${baseUrl}/WorkerLogin?store=${currentUser.id}&role=manager`);
+      }
       const ownerEmail = currentUser.acting_as_store_email || currentUser.email;
       const users = await base44.entities.StoreUser.filter({ owner_email: ownerEmail });
       setStoreUsers(users);
@@ -311,60 +378,38 @@ export default function StoreUsersPage() {
           </Dialog>
         </div>
 
-        {/* Access Link Generator */}
-        <div className="bg-gray-900 text-white rounded-xl px-5 py-5 mb-6">
-          <div className={`flex items-center justify-between mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <div className={isRTL ? 'text-right' : ''}>
-              <p className="font-semibold text-base">{language === 'he' ? 'קישור גישה לעובדים' : 'Worker Access Link'}</p>
-              <p className="text-gray-400 text-sm">{language === 'he' ? 'צור קישור עם קוד גישה של 8 ספרות ושלח לעובדים' : 'Generate a link with 8-digit PIN and share with workers'}</p>
-            </div>
-            <button
-              onClick={generateAccessLink}
-              disabled={generatingPin}
-              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-400 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition"
-            >
-              {generatingPin ? <Loader className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              {language === 'he' ? 'צור קישור' : 'Generate Link'}
-            </button>
-          </div>
-
-          {accessLink && (
-            <div className="bg-white/10 rounded-xl p-4 space-y-3">
-              {/* PIN display */}
-              <div className="text-center">
-                <p className="text-gray-300 text-xs mb-1">{language === 'he' ? 'קוד גישה' : 'Access PIN'}</p>
-                <p className="text-4xl font-bold tracking-widest text-amber-400">{accessPin}</p>
-              </div>
-
-              {/* Link + copy */}
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className="flex-1 bg-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 truncate font-mono">
-                  {accessLink}
-                </div>
-                <button
-                  onClick={copyLink}
-                  className="flex items-center gap-1 bg-white text-gray-900 px-3 py-2 rounded-lg text-sm font-bold hover:bg-gray-100 whitespace-nowrap transition"
-                >
-                  {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                  {copied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק' : 'Copy')}
-                </button>
-                <a
-                  href={accessLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </div>
-
-              <p className="text-gray-400 text-xs text-center">
-                {language === 'he'
-                  ? 'שלח את הקישור לעובד. הוא יצטרך להזין את קוד הגישה.'
-                  : 'Send the link to the worker. They will enter the PIN to access.'}
-              </p>
-            </div>
-          )}
+        {/* Access Links - Worker & Manager */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Worker Link */}
+          <AccessLinkCard
+            role="worker"
+            title={language === 'he' ? 'פורטל עובדים' : 'Worker Portal'}
+            subtitle={language === 'he' ? 'קוד גישה לעובדים בלבד' : 'PIN for workers only'}
+            pin={workerPin}
+            link={workerLink}
+            generating={generatingWorker}
+            copied={copiedWorker}
+            onGenerate={() => generateLink('worker')}
+            onCopy={() => copyLink(workerLink, 'worker')}
+            accentClass="amber"
+            language={language}
+            isRTL={isRTL}
+          />
+          {/* Manager Link */}
+          <AccessLinkCard
+            role="manager"
+            title={language === 'he' ? 'פורטל מנהלים' : 'Manager Portal'}
+            subtitle={language === 'he' ? 'קוד גישה למנהלים בלבד' : 'PIN for managers only'}
+            pin={managerPin}
+            link={managerLink}
+            generating={generatingManager}
+            copied={copiedManager}
+            onGenerate={() => generateLink('manager')}
+            onCopy={() => copyLink(managerLink, 'manager')}
+            accentClass="blue"
+            language={language}
+            isRTL={isRTL}
+          />
         </div>
 
         {/* Role Explanation Cards */}
