@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { createPageUrl } from "@/utils";
-import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Video, Share, Sun, Moon, ChefHat, BarChart3, Calculator } from "lucide-react";
+import { Users, Package, ShoppingCart, Warehouse, Menu, BarChart2, TrendingDown, UserCircle, PackageCheck, Shield, AlertCircle, MessageCircle, TrendingUp, DollarSign, Search, X, ChevronLeft, ChevronRight, ArrowLeftRight, Video, Share, Sun, Moon, ChefHat, BarChart3, Calculator, UserCog } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import UserSwitcher from "./components/UserSwitcher";
 import { LanguageProvider, useLanguage } from "./components/LanguageProvider";
@@ -183,7 +183,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           // Hidden diagnostics (not shown in nav), access via /#/pages/Diagnostics
           { title: language === 'he' ? 'תמיכה' : 'Support', url: createPageUrl("Support"), icon: MessageCircle, adminOnly: false, workerHidden: false },
           { title: language === 'he' ? 'מדיה לתמיכה' : 'KB Media', url: createPageUrl("KBMedia"), icon: Video, adminOnly: true, workerHidden: true },
-          { title: (language === 'he' ? 'ניהול רשת' : 'Chain'), url: createPageUrl("ChainManagement"), icon: Warehouse, adminOnly: false, workerHidden: true },
+          { title: (language === 'he' ? 'מנהלים' : 'Managers'), url: createPageUrl("ManagersSection"), icon: UserCog, adminOnly: false, workerHidden: true },
           { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'בודק קישורים' : 'Link Checker', url: createPageUrl("LinkChecker"), icon: Shield, adminOnly: true, workerHidden: true },

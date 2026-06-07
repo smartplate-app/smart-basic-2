@@ -25,6 +25,7 @@ import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import WorkerLogin from './pages/WorkerLogin';
 import WorkerPortal from './pages/WorkerPortal';
+import ManagersSection from './pages/ManagersSection';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -151,6 +152,7 @@ const AuthenticatedApp = () => {
           <Route path="/InstagramStoryGreek" element={<InstagramStoryGreek />} />
           <Route path="/pos-settings" element={<POSSettings />} />
           <Route path="/PriceChanges" element={<PriceChangesPage />} />
+          <Route path="/ManagersSection" element={<ManagersSection />} />
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Route>
