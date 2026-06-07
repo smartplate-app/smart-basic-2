@@ -221,10 +221,11 @@ export default function MonthlyCountPage() {
           
           const c = getCache('monthly_count_v1');
           const stale = isStale(c, 180000);
+          const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
           
           // Always fetch in background to ensure we see newly auto-saved drafts
           const hasCachedCounts = c?.data?.counts?.length > 0;
-          if (c?.data && hasCachedCounts) {
+          if (c?.data && hasCachedCounts && !isImpersonating && !stale) {
             loadData(workingEmail, 0, true).catch(console.error);
           } else {
             await loadData(workingEmail);

@@ -249,9 +249,13 @@ export default function SuppliersPage() {
                     }
                   } catch {}
 
+                  console.log("SuppliersData BEFORE filter:", suppliersData.length, suppliersData);
                   suppliersData = suppliersData.filter((s) =>
                     allowedEmails.has(s.created_by) || (s.store_owner_email && allowedEmails.has(s.store_owner_email))
                   );
+                  console.log("SuppliersData AFTER filter:", suppliersData.length);
+                  console.log("allowedEmails:", Array.from(allowedEmails));
+                  
                   itemsData = itemsData.filter((it) =>
                     allowedEmails.has(it.created_by) || (it.store_owner_email && allowedEmails.has(it.store_owner_email))
                   );
@@ -308,7 +312,9 @@ export default function SuppliersPage() {
                           setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
                           const c = getCache('suppliers_v1');
                           const stale = isStale(c, 180000);
-                          if (stale) {
+                          // Force reload if impersonating or cache is stale
+                          const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
+                          if (stale || isImpersonating) {
                             await loadData(currentUser);
                           }
                         }

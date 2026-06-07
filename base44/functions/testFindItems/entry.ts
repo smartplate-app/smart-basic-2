@@ -4,37 +4,20 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        const q = { created_by: "konaburgerltd@gmail.com" };
-        const items = await base44.asServiceRole.entities.Item.filter(q, '-created_date', 10000);
-        
-        // group by name + supplier
-        const map = new Map();
-        for (const item of items) {
-            const key = `${item.name?.trim() || ''}|${item.supplier_name?.trim() || ''}`;
-            if (!map.has(key)) {
-                map.set(key, []);
-            }
-            map.get(key).push(item);
-        }
+        const q = { $or: [{ created_by: "konaburgerltd@gmail.com" }, { store_owner_email: "konaburgerltd@gmail.com" }] };
+        let suppliersData = await base44.asServiceRole.entities.Supplier.filter(q, '-created_date', 10000);
 
-        let deletedCount = 0;
-        const deletedIds = [];
-        
-        for (const [key, group] of map.entries()) {
-            if (group.length > 1) {
-                // sort by updated_date desc, keep first
-                group.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-                const toDelete = group.slice(1); // keep the newest
-                
-                for (const item of toDelete) {
-                    await base44.asServiceRole.entities.Item.delete(item.id);
-                    deletedCount++;
-                    deletedIds.push(item.id);
-                }
-            }
-        }
+        const allowedEmails = new Set(["konaburgerltd@gmail.com"]);
 
-        return Response.json({ success: true, deletedCount, deletedIds });
+        const bFilter = suppliersData.length;
+
+        suppliersData = suppliersData.filter((s) =>
+            allowedEmails.has(s.created_by) || (s.store_owner_email && allowedEmails.has(s.store_owner_email))
+        );
+
+        const aFilter = suppliersData.length;
+
+        return Response.json({ success: true, bFilter, aFilter });
     } catch (error) {
         return Response.json({ error: error.message }, { status: 500 });
     }

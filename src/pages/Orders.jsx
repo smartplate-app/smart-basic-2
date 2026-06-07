@@ -367,7 +367,8 @@ export default function OrdersPage() {
         if (mounted) {
           const c = getCache('orders_v1');
           const stale = isStale(c, 180000);
-          if (stale) {
+          const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
+          if (stale || isImpersonating) {
             await loadData(currentUser);
           } else {
             // Background refresh to catch status changes (e.g. from SupplyReceipt automations)

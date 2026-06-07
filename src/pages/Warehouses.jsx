@@ -73,8 +73,17 @@ export default function WarehousesPage() {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
+        
         const targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
-        await loadWarehouses(targetEmail, currentUser);
+        
+        const c = getCache('warehouses_v1');
+        const stale = isStale(c, 180000);
+        const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
+        if (stale || isImpersonating) {
+          await loadWarehouses(targetEmail, currentUser);
+        } else {
+          setLoading(false);
+        }
       } catch (error) {
         console.error("Authentication failed:", error);
         await base44.auth.redirectToLogin();

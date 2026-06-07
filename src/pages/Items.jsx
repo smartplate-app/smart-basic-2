@@ -329,7 +329,8 @@ export default function ItemsPage() {
         if (mounted) {
           const c = getCache('items_v1');
           const stale = isStale(c, 180000);
-          if (stale) {
+          const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
+          if (stale || isImpersonating) {
             await loadData(currentUser);
           }
         }
