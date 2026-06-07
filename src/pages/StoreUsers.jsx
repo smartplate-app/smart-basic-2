@@ -22,6 +22,7 @@ export default function StoreUsersPage() {
   // Form states
   const [userName, setUserName] = useState("");
   const [userUsername, setUserUsername] = useState(""); // Replaced userEmail with username
+  const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState("worker");
   const [generatedLink, setGeneratedLink] = useState("");
   const [generatedCredentials, setGeneratedCredentials] = useState(null);
@@ -126,8 +127,15 @@ export default function StoreUsersPage() {
             return;
           }
 
+          if (!editingUser && userPassword && userPassword.length < 6) {
+            alert(language === 'he' ? 'הסיסמה חייבת להכיל לפחות 6 תווים' : 'Password must be at least 6 characters long');
+            setSaving(false);
+            return;
+          }
+
           const createResponse = await base44.functions.invoke('createSimpleUserAccount', {
             email: generatedInternalEmail,
+            password: userPassword || undefined,
             full_name: userName,
             restaurant_name: storeName,
             role: userRole,
@@ -149,6 +157,7 @@ export default function StoreUsersPage() {
         // Show success message
         setGeneratedCredentials({
           username: generatedInternalEmail,
+          password: userPassword,
           loginUrl: `${window.location.origin}/StoreLogin`
         });
         setGeneratedLink(generatedInternalEmail);
@@ -307,6 +316,23 @@ export default function StoreUsersPage() {
                   />
                   {editingUser && <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'לא ניתן לשנות שם משתמש קיים' : 'Cannot change existing username'}</p>}
                 </div>
+                {!editingUser && (
+                  <div>
+                    <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'סיסמה' : 'Password'}</Label>
+                    <Input 
+                      type="text"
+                      value={userPassword} 
+                      onChange={(e) => setUserPassword(e.target.value)}
+                      placeholder={language === 'he' ? 'הכנס סיסמה למשתמש החדש...' : 'Enter a password for the new user...'}
+                      className={isRTL ? 'text-right' : ''}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {language === 'he' 
+                        ? 'אם תושאר ריק, המשתמש יוכל להתחבר רק דרך גוגל/אפל. כדי לאפשר התחברות עם אימייל וסיסמה, יש למלא שדה זה (לפחות 6 תווים).' 
+                        : 'If left empty, user can only login via Google/Apple. To allow email & password login, fill this field (min 6 chars).'}
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <Label className={isRTL ? 'text-right block' : ''}>{t.role}</Label>
@@ -374,7 +400,16 @@ export default function StoreUsersPage() {
                             </p>
                             <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
                               <li>{language === 'he' ? 'המשתמש נכנס לקישור הבא:' : 'User goes to the following link:'} <br/><a href={generatedCredentials.loginUrl} target="_blank" className="underline break-all">{generatedCredentials.loginUrl}</a></li>
-                              <li>{language === 'he' ? 'לוחץ על ״המשך עם גוגל/אפל״ ובוחר בחשבון עם המייל הזה.' : 'Clicks "Continue with Google/Apple" and uses this email address.'}</li>
+                              {generatedCredentials.password ? (
+                                <li>
+                                  {language === 'he' 
+                                    ? `מזין את האימייל והסיסמה: ` 
+                                    : `Enters the email and password: `}
+                                  <strong>{generatedCredentials.password}</strong>
+                                </li>
+                              ) : (
+                                <li>{language === 'he' ? 'לוחץ על ״המשך עם גוגל/אפל״ ובוחר בחשבון עם המייל הזה.' : 'Clicks "Continue with Google/Apple" and uses this email address.'}</li>
+                              )}
                               <li>{language === 'he' ? 'מקבל גישה ישירה למסעדה שלך בהתאם להרשאות.' : 'Gets direct access to your restaurant based on their role.'}</li>
                             </ul>
                           </div>
@@ -386,7 +421,11 @@ export default function StoreUsersPage() {
                         onClick={() => {
                           const loginLink = generatedCredentials?.loginUrl;
                           const uname = generatedCredentials?.username;
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} ${user.business_name || user.full_name}.\n\n${language === 'he' ? '💡 כל מה שצריך לעשות זה להיכנס לקישור ולהתחבר דרך גוגל/אפל עם המייל הזה:' : '💡 All you need to do is go to this link and login via Google/Apple using this email:'}\n${uname}\n\n${language === 'he' ? 'קישור:' : 'Link:'} ${loginLink}`;
+                          const passInfo = generatedCredentials?.password ? `\n${language === 'he' ? 'סיסמה:' : 'Password:'} ${generatedCredentials.password}` : '';
+                          const instructions = generatedCredentials?.password 
+                            ? (language === 'he' ? '💡 כל מה שצריך לעשות זה להיכנס לקישור ולהתחבר עם המייל והסיסמה:' : '💡 All you need to do is go to this link and login with the email and password:')
+                            : (language === 'he' ? '💡 כל מה שצריך לעשות זה להיכנס לקישור ולהתחבר דרך גוגל/אפל עם המייל הזה:' : '💡 All you need to do is go to this link and login via Google/Apple using this email:');
+                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} ${user.business_name || user.full_name}.\n\n${instructions}\n${language === 'he' ? 'מייל:' : 'Email:'} ${uname}${passInfo}\n\n${language === 'he' ? 'קישור:' : 'Link:'} ${loginLink}`;
                           const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
                           window.open(whatsappUrl, '_blank');
                         }}
@@ -404,13 +443,18 @@ export default function StoreUsersPage() {
                         onClick={async () => {
                           const loginLink = generatedCredentials?.loginUrl;
                           const uname = generatedCredentials?.username;
+                          const htmlPassInfo = generatedCredentials?.password ? `<li><strong>${language === 'he' ? 'סיסמה:' : 'Password:'}</strong> ${generatedCredentials.password}</li>` : '';
+                          const htmlInstructions = generatedCredentials?.password 
+                            ? (language === 'he' ? '💡 כל מה שצריך לעשות זה להיכנס לקישור ולהתחבר עם המייל והסיסמה:' : '💡 All you need to do is go to this link and login with the email and password:')
+                            : (language === 'he' ? '💡 כל מה שצריך לעשות זה להיכנס לקישור ולהתחבר דרך גוגל/אפל עם המייל הזה:' : '💡 All you need to do is go to this link and login via Google/Apple using this email:');
                           const htmlContent = `
                             <div style="font-family: Arial, sans-serif; direction: ${isRTL ? 'rtl' : 'ltr'};">
                               <p>${language === 'he' ? 'היי' : 'Hi'} ${userName}!</p>
                               <p>${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} <strong>${user.business_name || user.full_name}</strong>.</p>
-                              <p><strong>${language === 'he' ? '💡 כל מה שצריך לעשות זה להיכנס לקישור ולהתחבר דרך גוגל/אפל עם המייל הזה:' : '💡 All you need to do is go to this link and login via Google/Apple using this email:'}</strong></p>
+                              <p><strong>${htmlInstructions}</strong></p>
                               <ul>
                                 <li><strong>${language === 'he' ? 'מייל:' : 'Email:'}</strong> ${uname}</li>
+                                ${htmlPassInfo}
                                 <li><strong>${language === 'he' ? 'קישור:' : 'Link:'}</strong> <a href="${loginLink}">${loginLink}</a></li>
                               </ul>
                             </div>

@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
 
     console.log('[createSimpleUserAccount] ✓ Requester:', requester.email);
 
-    const { email, full_name, restaurant_name, role, owner_email, update_existing, store_id } = await req.json();
+    const { email, password, full_name, restaurant_name, role, owner_email, update_existing, store_id } = await req.json();
     
     console.log('[createSimpleUserAccount] Request data:', {
       email,
@@ -29,7 +29,8 @@ Deno.serve(async (req) => {
       role,
       owner_email,
       store_id,
-      update_existing
+      update_existing,
+      has_password: !!password
     });
 
     if (!email || !full_name) {
@@ -64,10 +65,22 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Note: We don't create User account here anymore
-      // Users will be created automatically when they login via Google/Facebook
-      // The StoreUser record will link their Google/Facebook account to this restaurant
-      console.log('[createSimpleUserAccount] Skipping User entity creation - will be done via Google/Facebook login');
+      if (password) {
+        try {
+          console.log('[createSimpleUserAccount] Registering user with email and password...');
+          await base44.auth.register({
+            email: email,
+            password: password,
+            full_name: full_name
+          });
+          console.log('[createSimpleUserAccount] User registered successfully');
+        } catch (regError) {
+          console.log('[createSimpleUserAccount] User might already exist or registration failed:', regError.message);
+          // Don't fail the whole process if registration fails (e.g. user already exists)
+        }
+      } else {
+        console.log('[createSimpleUserAccount] No password provided, skipping Base44 user registration');
+      }
 
       // Create or update StoreUser record
       if (existingStoreUsers.length > 0) {

@@ -132,11 +132,17 @@ export default function LaborCostPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const c = getCache('labor_v1');
-      const stale = isStale(c, 180000);
-      if (stale || !c?.data) {
-        loadData();
-      }
+      const load = async () => {
+        let currentUser;
+        try { currentUser = await base44.auth.me(); } catch(e){}
+        const c = getCache('labor_v1');
+        const stale = isStale(c, 180000);
+        const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
+        if (stale || !c?.data || isImpersonating) {
+          loadData();
+        }
+      };
+      load();
     }
   }, [isAuthenticated]);
 
