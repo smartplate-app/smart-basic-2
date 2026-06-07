@@ -925,7 +925,7 @@ const [authLoading, setAuthLoading] = useState(() => {
                                 className="h-10 object-contain rounded-lg"
                               />
                             ) : (
-                              <div className="text-lg font-bold text-black dark:text-white tracking-wide">{user?.business_name || 'System'}</div>
+                              <div className="text-lg font-bold text-black dark:text-white tracking-wide">{user?.business_name || user?.store_user_store_name || 'System'}</div>
                             )}
                           </div>
                         </div>
@@ -965,7 +965,7 @@ const [authLoading, setAuthLoading] = useState(() => {
                                     className="h-14 object-contain rounded-lg"
                                   />
                                 ) : (
-                                  <span className="text-xl font-bold text-black dark:text-white tracking-wide">{user?.business_name || 'System'}</span>
+                                  <span className="text-xl font-bold text-black dark:text-white tracking-wide">{user?.business_name || user?.store_user_store_name || 'System'}</span>
                                 )}
                               </div>
                             </div>
