@@ -105,6 +105,33 @@ Deno.serve(async (req) => {
             return Response.json({ success: true, count });
         }
 
+        if (action === 'loadWarehouses') {
+            const [byCreated, byOwner] = await Promise.all([
+                base44.asServiceRole.entities.Warehouse.filter({ created_by: owner.email }),
+                base44.asServiceRole.entities.Warehouse.filter({ store_owner_email: owner.email })
+            ]);
+            const all = [...byCreated, ...byOwner];
+            const seen = new Set();
+            const warehouses = all.filter(w => { if (seen.has(w.id)) return false; seen.add(w.id); return true; });
+            return Response.json({ warehouses });
+        }
+
+        if (action === 'createWaste') {
+            const { warehouse_id, warehouse_name, report_date, shift, items: wasteItems, total_waste_value, notes } = body;
+            const report = await base44.asServiceRole.entities.WasteReport.create({
+                warehouse_id: warehouse_id || '',
+                warehouse_name: warehouse_name || '',
+                report_date: report_date || new Date().toISOString().split('T')[0],
+                shift: shift || 'daily',
+                items: wasteItems || [],
+                total_waste_value: total_waste_value || 0,
+                notes: notes || '',
+                created_by: owner.email,
+                store_owner_email: owner.email
+            });
+            return Response.json({ success: true, report });
+        }
+
         return Response.json({ error: 'Invalid action' }, { status: 400 });
 
     } catch (error) {

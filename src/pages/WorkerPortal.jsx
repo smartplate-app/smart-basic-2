@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart, PackageCheck, Loader, ArrowLeft, AlertCircle, ClipboardList } from "lucide-react";
+import { ShoppingCart, PackageCheck, Loader, ArrowLeft, AlertCircle, ClipboardList, Trash2 } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import OrderForm from "../components/orders/OrderForm";
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
 import WorkerInventoryCount from "../components/worker/WorkerInventoryCount";
+import WorkerWasteForm from "../components/worker/WorkerWasteForm";
 
 export default function WorkerPortal() {
   const [view, setView] = useState('menu');
@@ -109,6 +110,15 @@ export default function WorkerPortal() {
       ownerId,
       action: 'createCount',
       ...countData
+    });
+    if (response.data.error) throw new Error(response.data.error);
+  };
+
+  const handleWasteSubmit = async (wasteData) => {
+    const response = await base44.functions.invoke('workerPortalData', {
+      ownerId,
+      action: 'createWaste',
+      ...wasteData
     });
     if (response.data.error) throw new Error(response.data.error);
   };
@@ -224,6 +234,22 @@ export default function WorkerPortal() {
     );
   }
 
+  if (view === 'waste') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-red-50 p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
+          <Header />
+          <WorkerWasteForm
+            items={items}
+            ownerId={ownerId}
+            onBack={() => setView('menu')}
+            onSubmit={handleWasteSubmit}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
@@ -236,7 +262,7 @@ export default function WorkerPortal() {
           )}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3" dir="rtl">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4" dir="rtl">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView('order')}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
@@ -276,6 +302,20 @@ export default function WorkerPortal() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">ספירה שבועית / חודשית של פריטים</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView('waste')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-3 bg-red-100 rounded-lg">
+                  <Trash2 className="w-8 h-8 text-red-500" />
+                </div>
+                <span>דיווח פחת</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">דווח על פריטים שנזרקו או פגו</p>
             </CardContent>
           </Card>
         </div>
