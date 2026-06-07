@@ -47,6 +47,22 @@ function AccessLinkCard({ role, title, subtitle, pin, link, generating, copied, 
               {copied ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
               {copied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק' : 'Copy')}
             </button>
+            <button
+              onClick={() => {
+                const msg = language === 'he'
+                  ? `שלום! הנה הקישור לפורטל העובדים:\n${link}\n\nקוד גישה: ${pin}`
+                  : `Hi! Here is your worker portal link:\n${link}\n\nAccess PIN: ${pin}`;
+                if (navigator.share) {
+                  navigator.share({ text: msg });
+                } else {
+                  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                }
+              }}
+              className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition"
+            >
+              <span>📤</span>
+              {language === 'he' ? 'שתף' : 'Share'}
+            </button>
             <a href={link} target="_blank" rel="noopener noreferrer" className="flex items-center bg-white/20 hover:bg-white/30 text-white px-2 py-1.5 rounded-lg transition">
               <ExternalLink className="w-3 h-3" />
             </a>
