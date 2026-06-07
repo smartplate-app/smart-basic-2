@@ -25,6 +25,7 @@ import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import WorkerLogin from './pages/WorkerLogin';
 import WorkerPortal from './pages/WorkerPortal';
+import ManagerPortal from './pages/ManagerPortal';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -81,6 +82,8 @@ const AuthenticatedApp = () => {
     '/pages/StoreLogin',
     '/WorkerPortal',
     '/pages/WorkerPortal',
+    '/ManagerPortal',
+    '/pages/ManagerPortal',
     '/OrderDetails',
     '/pages/OrderDetails',
     '/RestaurantInvite',
@@ -131,6 +134,7 @@ const AuthenticatedApp = () => {
       {/* Public auth routes */}
       <Route path="/WorkerLogin" element={<WorkerLogin />} />
       <Route path="/WorkerPortal" element={<WorkerPortal />} />
+      <Route path="/ManagerPortal" element={<ManagerPortal />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

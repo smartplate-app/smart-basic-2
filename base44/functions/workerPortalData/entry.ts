@@ -68,6 +68,28 @@ Deno.serve(async (req) => {
             return Response.json({ success: true, receipt });
         }
 
+        if (action === 'loadReceipts') {
+            const [byCreated, byOwner] = await Promise.all([
+                base44.asServiceRole.entities.SupplyReceipt.filter({ created_by: owner.email }, "-created_date"),
+                base44.asServiceRole.entities.SupplyReceipt.filter({ store_owner_email: owner.email }, "-created_date")
+            ]);
+            const all = [...byCreated, ...byOwner];
+            const seen = new Set();
+            const receipts = all.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+            return Response.json({ receipts });
+        }
+
+        if (action === 'loadCounts') {
+            const [byCreated, byOwner] = await Promise.all([
+                base44.asServiceRole.entities.InventoryCount.filter({ created_by: owner.email }, "-created_date"),
+                base44.asServiceRole.entities.InventoryCount.filter({ store_owner_email: owner.email }, "-created_date")
+            ]);
+            const all = [...byCreated, ...byOwner];
+            const seen = new Set();
+            const counts = all.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
+            return Response.json({ counts });
+        }
+
         if (action === 'createCount') {
             const { warehouse_name, count_date, count_type, items: countItems, total_inventory_value } = body;
             const count = await base44.asServiceRole.entities.InventoryCount.create({

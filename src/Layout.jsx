@@ -714,8 +714,9 @@ const [authLoading, setAuthLoading] = useState(() => {
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
   if (
-    currentPageName === 'WorkerPortal' ||
-    currentPageName === 'OrderDetails' ||
+  currentPageName === 'WorkerPortal' ||
+  currentPageName === 'ManagerPortal' ||
+  currentPageName === 'OrderDetails' ||
     currentPageName === 'Register' ||
     currentPageName === 'RestaurantInvite' ||
     currentPageName === 'PublicOrder' ||

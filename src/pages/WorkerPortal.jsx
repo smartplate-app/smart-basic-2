@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart, PackageCheck, Loader, ArrowLeft, AlertCircle, ClipboardList, LogIn } from "lucide-react";
+import { ShoppingCart, PackageCheck, Loader, ArrowLeft, AlertCircle, ClipboardList } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import OrderForm from "../components/orders/OrderForm";
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
@@ -151,37 +151,14 @@ export default function WorkerPortal() {
     );
   }
 
-  // Manager portal — redirect to full app login
+  // Manager portal — redirect to ManagerPortal
   if (role === 'manager') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ownerParam = urlParams.get('owner');
+    window.location.replace('/ManagerPortal?owner=' + ownerParam);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center justify-center p-6" dir="rtl">
-        <img
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
-          alt="Smart Plate"
-          className="h-16 object-contain mb-2"
-        />
-        <span className="text-lg font-bold text-black tracking-wide mb-1">SMART PLATE BASIC</span>
-        {businessName && (
-          <div className="bg-blue-100 text-blue-800 border border-blue-200 px-5 py-2 rounded-full text-sm font-bold mb-6">
-            🏪 {businessName}
-          </div>
-        )}
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">🗂️</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">כניסת מנהלים</h1>
-          <p className="text-gray-500 text-sm mb-6">
-            מנהלים נכנסים דרך האפליקציה הראשית עם אימייל וסיסמה — כדי לגשת לכל הפיצ'רים.
-          </p>
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-base py-3"
-            onClick={() => window.location.href = '/login'}
-          >
-            <LogIn className="w-4 h-4 ml-2" />
-            כניסה לאפליקציה המלאה
-          </Button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
