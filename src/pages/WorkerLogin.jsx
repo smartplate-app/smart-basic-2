@@ -29,12 +29,8 @@ export default function WorkerLogin() {
       });
       const data = res.data;
       if (data?.success) {
-        sessionStorage.setItem("worker_owner_email", data.owner_email);
-        sessionStorage.setItem("worker_owner_name", data.owner_name);
-        sessionStorage.setItem("worker_business_name", data.business_name);
-        sessionStorage.setItem("worker_store_id", data.store_id);
-        sessionStorage.setItem("worker_role", data.role);
-        window.location.href = "/StoreLogin?worker=1&store=" + storeId + "&role=" + role;
+        // Redirect directly to the public WorkerPortal — no login needed
+        window.location.href = "/WorkerPortal?owner=" + data.store_id;
       } else {
         setError(data?.error || "קוד גישה שגוי");
       }
