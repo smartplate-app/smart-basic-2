@@ -14,6 +14,7 @@ export default function WorkerPortal() {
   const [orders, setOrders] = useState([]);
   const [ownerId, setOwnerId] = useState(null);
   const [ownerEmail, setOwnerEmail] = useState(null);
+  const [businessName, setBusinessName] = useState(null);
   const [error, setError] = useState(null);
   const { t } = useLanguage();
 
@@ -54,6 +55,7 @@ export default function WorkerPortal() {
       setSuppliers(response.data.suppliers || []);
       setOrders(response.data.orders || []);
       setOwnerEmail(response.data.ownerEmail);
+      setBusinessName(response.data.businessName || null);
       
       console.log('Loaded suppliers:', response.data.suppliers?.length);
       
@@ -206,6 +208,11 @@ export default function WorkerPortal() {
           </div>
         </div>
         <div className="text-center mb-8">
+          {businessName && (
+            <div className="inline-block bg-green-100 text-green-800 px-4 py-1.5 rounded-full text-sm font-semibold mb-3">
+              🏪 {businessName}
+            </div>
+          )}
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('worker_portal')}</h1>
           <p className="text-gray-600">{t('worker_portal_note')}</p>
           {suppliers.length > 0 && (

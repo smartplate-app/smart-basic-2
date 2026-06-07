@@ -21,23 +21,30 @@ Deno.serve(async (req) => {
         }
 
         if (action === 'load') {
-            // Load suppliers and orders
-            const [suppliers, orders] = await Promise.all([
+            // Also try store_owner_email for chain sub-stores
+            const [suppliersByCreated, suppliersByOwner, orders] = await Promise.all([
                 base44.asServiceRole.entities.Supplier.filter({ created_by: owner.email }),
-                base44.asServiceRole.entities.Order.filter({ created_by: owner.email }, "-created_date")
+                base44.asServiceRole.entities.Supplier.filter({ store_owner_email: owner.email }),
+                base44.asServiceRole.entities.Order.filter({ store_owner_email: owner.email }, "-created_date")
             ]);
+            // Merge and deduplicate suppliers
+            const allSuppliers = [...suppliersByCreated, ...suppliersByOwner];
+            const seen = new Set();
+            const suppliers = allSuppliers.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
             
             return Response.json({ 
                 suppliers, 
                 orders,
-                ownerEmail: owner.email 
+                ownerEmail: owner.email,
+                businessName: owner.business_name || owner.full_name || ''
             });
         }
 
         if (action === 'createOrder') {
             const order = await base44.asServiceRole.entities.Order.create({
                 ...body,
-                created_by: owner.email
+                created_by: owner.email,
+                store_owner_email: owner.email
             });
             return Response.json({ success: true, order });
         }
@@ -45,7 +52,8 @@ Deno.serve(async (req) => {
         if (action === 'createReceipt') {
             const receipt = await base44.asServiceRole.entities.SupplyReceipt.create({
                 ...body,
-                created_by: owner.email
+                created_by: owner.email,
+                store_owner_email: owner.email
             });
             return Response.json({ success: true, receipt });
         }
