@@ -574,14 +574,10 @@ const [authLoading, setAuthLoading] = useState(() => {
       currentPageName === 'Items' ||
       currentPageName === 'Warehouses';
 
-    // A worker is restricted to view-only unless they are on one of the allowed pages
-    const isWorkerAndRestricted = isWorker && !isWorkerAllowedPage;
-
+    // Only the explicit 'viewer' role is read-only — workers and managers can do everything
     const isViewer = (!user?.is_chain_head) && (
       storeUserRole === 'viewer' || 
-      user?.store_user_role === 'viewer' || 
-      user?.store_user_read_only === true ||
-      isWorkerAndRestricted
+      user?.store_user_role === 'viewer'
     );
 
     useEffect(() => {
