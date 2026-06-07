@@ -135,7 +135,7 @@ export default function StoreUsersPage() {
 
           const createResponse = await base44.functions.invoke('createSimpleUserAccount', {
             email: generatedInternalEmail,
-            password: undefined,
+            password: userPassword,
             full_name: userName,
             restaurant_name: storeName,
             role: userRole,
@@ -322,6 +322,19 @@ export default function StoreUsersPage() {
                   {editingUser && <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'לא ניתן לשנות שם משתמש קיים' : 'Cannot change existing username'}</p>}
                 </div>
 
+                {!editingUser && (
+                  <div>
+                    <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'סיסמה' : 'Password'}</Label>
+                    <Input 
+                      type="text"
+                      value={userPassword} 
+                      onChange={(e) => setUserPassword(e.target.value)}
+                      placeholder={language === 'he' ? 'לפחות 6 תווים' : 'At least 6 characters'}
+                      className={isRTL ? 'text-right' : ''}
+                    />
+                  </div>
+                )}
+
 
                 <div>
                   <Label className={isRTL ? 'text-right block' : ''}>{t.role}</Label>
@@ -384,16 +397,14 @@ export default function StoreUsersPage() {
                             <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
                               <strong>{language === 'he' ? '👤 משתמש:' : '👤 User:'}</strong> {generatedCredentials.username}
                             </p>
-                            <p className={`text-sm text-blue-700 mt-3 ${isRTL ? 'text-right' : ''}`}>
-                              <strong>{language === 'he' ? '💡 איך מתחברים:' : '💡 How to login:'}</strong>
+                            <p className={`text-sm text-blue-800 mt-2 ${isRTL ? 'text-right' : ''}`}>
+                              <strong>{language === 'he' ? '🔑 סיסמה:' : '🔑 Password:'}</strong> {generatedCredentials.password}
                             </p>
-                            <ul className={`text-sm text-blue-700 mt-2 space-y-1 ${isRTL ? 'list-inside mr-4' : 'list-inside ml-4'}`}>
-                            <li>{language === 'he' ? 'נשלח מייל הזמנה לכתובת המייל שלו.' : 'An invitation email was sent to their email address.'}</li>
-                            <li>{language === 'he' ? 'הוא צריך ללחוץ על הקישור במייל ולקבוע סיסמה בעצמו.' : 'They need to click the link in the email and set their own password.'}</li>
-                            <li>{language === 'he' ? 'לאחר מכן יוכל להתחבר בכתובת הרגילה:' : 'Then they can log in at the regular address:'} <br/><a href={generatedCredentials.loginUrl} target="_blank" className="underline break-all">{generatedCredentials.loginUrl}</a></li>
-                            </ul>
-                            </div>
-                            )}
+                            <p className={`text-sm text-blue-700 mt-3 ${isRTL ? 'text-right' : ''}`}>
+                              <strong>{language === 'he' ? '🔗 קישור התחברות:' : '🔗 Login link:'}</strong> <br/><a href={generatedCredentials.loginUrl} target="_blank" className="underline break-all">{generatedCredentials.loginUrl}</a>
+                            </p>
+                          </div>
+                        )}
                             </div>
 
                             {/* WhatsApp Quick Share Button */}
@@ -420,14 +431,14 @@ export default function StoreUsersPage() {
                         onClick={async () => {
                           const loginLink = generatedCredentials?.loginUrl;
                           const uname = generatedCredentials?.username;
-                          const htmlInstructions = language === 'he' ? '💡 נשלח לך מייל הזמנה רשמי! לחץ על הקישור שם לקביעת סיסמה, ולאחר מכן תוכל להתחבר בקישור הרגיל:' : '💡 An official invite email was sent to you! Click the link there to set a password, then you can log in at the regular link:';
+                          const pwd = generatedCredentials?.password;
                           const htmlContent = `
                             <div style="font-family: Arial, sans-serif; direction: ${isRTL ? 'rtl' : 'ltr'};">
                               <p>${language === 'he' ? 'היי' : 'Hi'} ${userName}!</p>
                               <p>${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} <strong>${user.business_name || user.full_name}</strong>.</p>
-                              <p><strong>${htmlInstructions}</strong></p>
                               <ul>
                                 <li><strong>${language === 'he' ? 'מייל:' : 'Email:'}</strong> ${uname}</li>
+                                <li><strong>${language === 'he' ? 'סיסמה:' : 'Password:'}</strong> ${pwd}</li>
                                 <li><strong>${language === 'he' ? 'קישור רגיל:' : 'Regular Link:'}</strong> <a href="${loginLink}">${loginLink}</a></li>
                               </ul>
                             </div>
