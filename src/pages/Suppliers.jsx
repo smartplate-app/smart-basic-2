@@ -68,12 +68,13 @@ export default function SuppliersPage() {
                   const isActingAsStore = !!currentUser.acting_as_store_email;
                   
                   // Resolve if TARGET user is a store user (when admin controls someone, use their records)
-                  let storeOwnerEmail = null;
+                  // Also use store_user_owner_email from the user object (set by layout auth check) as fallback
+                  let storeOwnerEmail = currentUser.store_user_owner_email || null;
                   try {
                     const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: targetEmail });
                     if (Array.isArray(storeUserRecords) && storeUserRecords.length > 0) {
                       const activeRec = storeUserRecords.find(r => r.is_active !== false) || storeUserRecords[0];
-                      storeOwnerEmail = activeRec?.owner_email || null;
+                      storeOwnerEmail = activeRec?.owner_email || storeOwnerEmail;
                     }
                   } catch {}
                   const isStoreUser = !!storeOwnerEmail;

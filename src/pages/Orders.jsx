@@ -108,9 +108,9 @@ export default function OrdersPage() {
       const isAdminControlling = currentUser?.role === 'admin' && workingEmail !== currentUser.email;
 
       // Check if user is a store_user (worker/manager invited to someone else's store)
-      // First check if saved on user object, then try to fetch from StoreUser entity
-      let isStoreUser = currentUser.store_user_role && currentUser.store_user_owner_email;
-      let storeOwnerEmail = currentUser.store_user_owner_email;
+      // First check if saved on user object (set by layout auth check), then try to fetch from StoreUser entity
+      let storeOwnerEmail = currentUser.store_user_owner_email || null;
+      let isStoreUser = !!(currentUser.store_user_role && storeOwnerEmail);
       
       if (!isStoreUser) {
         // Check StoreUser entity for this user
