@@ -161,18 +161,6 @@ export default function WorkerPortal() {
     );
   }
 
-  // Manager portal — redirect to ManagerPortal
-  if (role === 'manager') {
-    const urlParams = new URLSearchParams(window.location.search);
-    const ownerParam = urlParams.get('owner');
-    window.location.replace('/ManagerPortal?owner=' + ownerParam);
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
-
   const Header = () => (
     <div className="flex flex-col items-center gap-1 mb-6">
       <img
