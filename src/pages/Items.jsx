@@ -181,10 +181,11 @@ export default function ItemsPage() {
               base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name", 10000),
               base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name", 10000)
             ]);
-            itemsData = [...headItems, ...ownItems]
+            const allItems = [...headItems, ...ownItems];
+            itemsData = Array.from(new Map(allItems.map(i => [i.id, i])).values())
               .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-            suppliersData = [...headSuppliers, ...ownSuppliers];
-            warehousesData = [...headWarehouses, ...ownWarehouses];
+            suppliersData = [...headSuppliers, ...ownSuppliers].filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+            warehousesData = [...headWarehouses, ...ownWarehouses].filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
           } else {
             const [ownCreated, ownedByStore, suppliers, storeSuppliers, warehouses1, warehouses2] = await Promise.all([
               base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date", 10000),
