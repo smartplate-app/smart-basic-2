@@ -23,11 +23,10 @@
       "type": "string",
       "enum": [
         "manager",
-        "worker",
-        "viewer"
+        "worker"
       ],
       "default": "worker",
-      "description": "Role: manager (full access), worker (limited actions), or viewer (read-only)"
+      "description": "Role: manager (full access) or worker (limited actions)"
     },
     "owner_email": {
       "type": "string",
