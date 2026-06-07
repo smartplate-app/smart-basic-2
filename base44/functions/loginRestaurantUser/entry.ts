@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.30';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -63,14 +63,17 @@ Deno.serve(async (req) => {
       last_login: new Date().toISOString()
     });
     
-    console.log('[loginRestaurantUser] Login successful, creating login token for:', user.email);
+    console.log('[loginRestaurantUser] Login successful, issuing login token for:', user.email);
 
-    // Create a real Base44 login token so the worker gets an actual session
-    const loginToken = await base44.asServiceRole.auth.createLoginToken(user.email);
+    // Credentials are valid — return user info. 
+    // The frontend will use loginViaEmailPassword with their worker email.
+    // We return the mapped email so the frontend can call auth directly.
     
     return Response.json({ 
       success: true,
-      login_token: loginToken,
+      worker_email: user.email,
+      worker_password: password, // raw password — frontend will use to call loginViaEmailPassword
+
       user: {
         id: user.id,
         email: user.email,
