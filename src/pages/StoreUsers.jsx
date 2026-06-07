@@ -162,7 +162,7 @@ export default function StoreUsersPage() {
         // Show success message
         setGeneratedCredentials({
           username: generatedInternalEmail,
-          password: "",
+          password: userPassword,
           loginUrl: window.location.origin
         });
         setGeneratedLink(generatedInternalEmail);
