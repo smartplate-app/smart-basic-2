@@ -50,9 +50,10 @@ export default function WorkerLogin() {
         try {
           sessionStorage.setItem('wp_business_name', data.business_name || '');
           sessionStorage.setItem('wp_owner_email', data.owner_email || '');
+          sessionStorage.setItem('wp_role', data.role || 'worker');
         } catch {}
         // Redirect directly to the public WorkerPortal — no login needed
-        window.location.href = "/WorkerPortal?owner=" + data.store_id;
+        window.location.href = "/WorkerPortal?owner=" + data.store_id + "&role=" + (data.role || 'worker');
       } else {
         setError(data?.error || "קוד גישה שגוי");
       }

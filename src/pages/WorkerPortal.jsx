@@ -2,40 +2,48 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart, PackageCheck, Loader, ArrowLeft, AlertCircle } from "lucide-react";
+import { ShoppingCart, PackageCheck, Loader, ArrowLeft, AlertCircle, ClipboardList, LogIn } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import OrderForm from "../components/orders/OrderForm";
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
+import WorkerInventoryCount from "../components/worker/WorkerInventoryCount";
 
 export default function WorkerPortal() {
   const [view, setView] = useState('menu');
   const [loading, setLoading] = useState(true);
   const [suppliers, setSuppliers] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [items, setItems] = useState([]);
   const [ownerId, setOwnerId] = useState(null);
   const [ownerEmail, setOwnerEmail] = useState(null);
   const [businessName, setBusinessName] = useState(null);
+  const [role, setRole] = useState('worker');
   const [error, setError] = useState(null);
   const { t } = useLanguage();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const ownerParam = urlParams.get('owner');
-    
+    const roleParam = urlParams.get('role') || 'worker';
+
     if (!ownerParam) {
       setError('Invalid access link - missing owner parameter');
       setLoading(false);
       return;
     }
 
+    setRole(roleParam);
+
     // Read branding stored right after PIN verification
     try {
       const storedName = sessionStorage.getItem('wp_business_name');
       const storedEmail = sessionStorage.getItem('wp_owner_email');
+      const storedRole = sessionStorage.getItem('wp_role');
       if (storedName) setBusinessName(storedName);
       if (storedEmail) setOwnerEmail(storedEmail);
+      if (storedRole && storedRole !== roleParam) setRole(storedRole);
     } catch {}
-    
+
     setOwnerId(ownerParam);
     loadData(ownerParam);
   }, []);
@@ -44,31 +52,20 @@ export default function WorkerPortal() {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Loading data for owner:', ownerId);
-      
-      // Call backend function
       const response = await base44.functions.invoke('workerPortalData', {
         ownerId: ownerId,
         action: 'load'
       });
-      
-      console.log('Response:', response.data);
-      
       if (response.data.error) {
         setError(response.data.error);
         return;
       }
-      
       setSuppliers(response.data.suppliers || []);
       setOrders(response.data.orders || []);
+      setItems(response.data.items || []);
       if (response.data.ownerEmail) setOwnerEmail(response.data.ownerEmail);
       if (response.data.businessName) setBusinessName(response.data.businessName);
-      
-      console.log('Loaded suppliers:', response.data.suppliers?.length);
-      
     } catch (error) {
-      console.error("Error loading data:", error);
       setError('Error loading data: ' + (error.message || 'Unknown error'));
     } finally {
       setLoading(false);
@@ -78,52 +75,49 @@ export default function WorkerPortal() {
   const handleOrderSubmit = async (orderData) => {
     try {
       const response = await base44.functions.invoke('workerPortalData', {
-        ownerId: ownerId,
+        ownerId,
         action: 'createOrder',
         ...orderData
       });
-      
-      if (response.data.error) {
-        alert(response.data.error);
-        return;
-      }
-      
-      alert(t('order_saved_successfully') || 'Order saved successfully');
+      if (response.data.error) { alert(response.data.error); return; }
+      alert(t('order_saved_successfully') || 'ההזמנה נשמרה!');
       setView('menu');
       await loadData(ownerId);
     } catch (error) {
-      console.error("Error saving order:", error);
-      alert(t('error_saving') || 'Error saving: ' + error.message);
+      alert(t('error_saving') || 'שגיאה: ' + error.message);
     }
   };
 
   const handleReceiptSubmit = async (receiptData) => {
     try {
       const response = await base44.functions.invoke('workerPortalData', {
-        ownerId: ownerId,
+        ownerId,
         action: 'createReceipt',
         ...receiptData
       });
-      
-      if (response.data.error) {
-        alert(response.data.error);
-        return;
-      }
-      
-      alert(t('receipt_saved_successfully') || 'Receipt saved successfully');
+      if (response.data.error) { alert(response.data.error); return; }
+      alert(t('receipt_saved_successfully') || 'הקבלה נשמרה!');
       setView('menu');
       await loadData(ownerId);
     } catch (error) {
-      console.error("Error saving receipt:", error);
-      alert(t('error_saving') || 'Error saving: ' + error.message);
+      alert(t('error_saving') || 'שגיאה: ' + error.message);
     }
+  };
+
+  const handleCountSubmit = async (countData) => {
+    const response = await base44.functions.invoke('workerPortalData', {
+      ownerId,
+      action: 'createCount',
+      ...countData
+    });
+    if (response.data.error) throw new Error(response.data.error);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-amber-50 p-6">
-        <img 
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+        <img
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
           alt="Smart Plate"
           className="h-16 object-contain mb-2"
         />
@@ -145,28 +139,57 @@ export default function WorkerPortal() {
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle className="text-red-600 flex items-center gap-2">
-              <AlertCircle className="w-6 h-6" />
-              Error
+              <AlertCircle className="w-6 h-6" /> Error
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-700">{error}</p>
-            <Button 
-              onClick={() => loadData(ownerId)} 
-              className="mt-4 w-full"
-            >
-              Try Again
-            </Button>
+            <Button onClick={() => loadData(ownerId)} className="mt-4 w-full">Try Again</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  // Manager portal — redirect to full app login
+  if (role === 'manager') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center justify-center p-6" dir="rtl">
+        <img
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
+          alt="Smart Plate"
+          className="h-16 object-contain mb-2"
+        />
+        <span className="text-lg font-bold text-black tracking-wide mb-1">SMART PLATE BASIC</span>
+        {businessName && (
+          <div className="bg-blue-100 text-blue-800 border border-blue-200 px-5 py-2 rounded-full text-sm font-bold mb-6">
+            🏪 {businessName}
+          </div>
+        )}
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm text-center">
+          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">🗂️</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">כניסת מנהלים</h1>
+          <p className="text-gray-500 text-sm mb-6">
+            מנהלים נכנסים דרך האפליקציה הראשית עם אימייל וסיסמה — כדי לגשת לכל הפיצ'רים.
+          </p>
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-base py-3"
+            onClick={() => window.location.href = '/login'}
+          >
+            <LogIn className="w-4 h-4 ml-2" />
+            כניסה לאפליקציה המלאה
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const Header = () => (
     <div className="flex flex-col items-center gap-1 mb-6">
-      <img 
-        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg" 
+      <img
+        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg"
         alt="Smart Plate"
         className="h-14 object-contain"
       />
@@ -185,20 +208,10 @@ export default function WorkerPortal() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <Header />
-          <Button 
-            onClick={() => setView('menu')}
-            variant="outline"
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('cancel')}
+          <Button onClick={() => setView('menu')} variant="outline" className="mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" /> {t('cancel')}
           </Button>
-          <OrderForm
-            order={null}
-            suppliers={suppliers}
-            onSubmit={handleOrderSubmit}
-            onCancel={() => setView('menu')}
-          />
+          <OrderForm order={null} suppliers={suppliers} onSubmit={handleOrderSubmit} onCancel={() => setView('menu')} />
         </div>
       </div>
     );
@@ -209,20 +222,25 @@ export default function WorkerPortal() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
           <Header />
-          <Button 
-            onClick={() => setView('menu')}
-            variant="outline"
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('cancel')}
+          <Button onClick={() => setView('menu')} variant="outline" className="mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" /> {t('cancel')}
           </Button>
-          <ReceiveSupplyForm
-            order={null}
-            receipt={null}
-            suppliers={suppliers}
-            onSubmit={handleReceiptSubmit}
-            onCancel={() => setView('menu')}
+          <ReceiveSupplyForm order={null} receipt={null} suppliers={suppliers} onSubmit={handleReceiptSubmit} onCancel={() => setView('menu')} />
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'count') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
+          <Header />
+          <WorkerInventoryCount
+            items={items}
+            ownerId={ownerId}
+            onBack={() => setView('menu')}
+            onSubmit={handleCountSubmit}
           />
         </div>
       </div>
@@ -233,28 +251,26 @@ export default function WorkerPortal() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <Header />
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('worker_portal')}</h1>
-          <p className="text-gray-600">{t('worker_portal_note')}</p>
+        <div className="text-center mb-8" dir="rtl">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">פורטל עובדים</h1>
+          <p className="text-gray-600">יש לך גישה ליצירת הזמנות, קליטת אספקה וספירת מלאי.</p>
           {suppliers.length > 0 && (
-            <p className="text-sm text-green-600 mt-2">
-              ✓ {suppliers.length} {t('suppliers')} {t('available')}
-            </p>
+            <p className="text-sm text-green-600 mt-2">✓ {suppliers.length} ספקים זמינים</p>
           )}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-3" dir="rtl">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView('order')}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-blue-100 rounded-lg">
                   <ShoppingCart className="w-8 h-8 text-blue-600" />
                 </div>
-                <span>{t('create_order')}</span>
+                <span>צור הזמנה</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">{t('worker_create_order_desc')}</p>
+              <p className="text-gray-600">צור הזמנות חדשות לספקים</p>
             </CardContent>
           </Card>
 
@@ -264,11 +280,25 @@ export default function WorkerPortal() {
                 <div className="p-3 bg-green-100 rounded-lg">
                   <PackageCheck className="w-8 h-8 text-green-600" />
                 </div>
-                <span>{t('receive_supply')}</span>
+                <span>קבלה מהזמנה</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">{t('worker_receive_supply_desc')}</p>
+              <p className="text-gray-600">קלוט אספקה שהתקבלה</p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setView('count')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-3 bg-amber-100 rounded-lg">
+                  <ClipboardList className="w-8 h-8 text-amber-600" />
+                </div>
+                <span>ספירת מלאי</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">ספירה שבועית / חודשית של פריטים</p>
             </CardContent>
           </Card>
         </div>
