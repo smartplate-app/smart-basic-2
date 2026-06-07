@@ -11,8 +11,7 @@ Deno.serve(async (req) => {
             password: password,
             business_name: "Test Business",
             business_address: "Test Address",
-            email_confirm: true,
-            email_confirmed_at: new Date().toISOString()
+            is_verified: true
         });
         
         return Response.json({ success: true, newUser });
