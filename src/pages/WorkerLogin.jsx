@@ -1,33 +1,48 @@
 import { useState, useEffect } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 export default function WorkerLogin() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const urlParams = new URLSearchParams(window.location.search);
+  const storeId = urlParams.get("store");
+
+  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [businessName, setBusinessName] = useState("");
 
-  const handleLogin = async (e) => {
+  // If no store param → show generic message
+  const hasStoreLink = !!storeId;
+
+  const handlePinLogin = async (e) => {
     e.preventDefault();
+    if (pin.length !== 8) {
+      setError("יש להזין קוד גישה של 8 ספרות");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
-      const res = await base44.functions.invoke("loginRestaurantUser", {
-        username: username.trim(),
-        password,
+      const res = await base44.functions.invoke("verifyRestaurantPin", {
+        store_id: storeId,
+        pin: pin.trim(),
       });
       const data = res.data;
-      if (data?.success && data?.login_token) {
-        // Use the real login token to create a Base44 session and redirect to Orders
-        await base44.auth.loginWithToken(data.login_token, "/Orders");
+      if (data?.success) {
+        // Store owner context in session so the app knows whose data to show
+        // Redirect to standard login so they get a real session
+        // We pass owner context in sessionStorage then redirect to StoreLogin
+        sessionStorage.setItem("worker_owner_email", data.owner_email);
+        sessionStorage.setItem("worker_owner_name", data.owner_name);
+        sessionStorage.setItem("worker_business_name", data.business_name);
+        sessionStorage.setItem("worker_store_id", data.store_id);
+
+        // Redirect to the standard Store login page which will handle auth
+        window.location.href = "/StoreLogin?worker=1&store=" + storeId;
       } else {
-        setError(data?.error || "שם משתמש או סיסמה שגויים");
+        setError(data?.error || "קוד גישה שגוי");
       }
     } catch (err) {
-      setError("שגיאת התחברות - נסה שוב");
+      setError("שגיאה - נסה שוב");
     } finally {
       setLoading(false);
     }
@@ -41,59 +56,53 @@ export default function WorkerLogin() {
             <span className="text-3xl">🍽️</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-800">כניסת עובדים</h1>
-          <p className="text-gray-500 text-sm mt-1">הכנס שם משתמש וסיסמה</p>
+          {businessName && <p className="text-amber-600 font-semibold mt-1">{businessName}</p>}
+          {hasStoreLink ? (
+            <p className="text-gray-500 text-sm mt-1">הכנס את קוד הגישה של המסעדה</p>
+          ) : (
+            <p className="text-gray-500 text-sm mt-1">השתמש בקישור שקיבלת מהמנהל</p>
+          )}
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">שם משתמש</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-amber-400 bg-gray-50"
-              placeholder="הכנס שם משתמש"
-              required
-              autoComplete="username"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה</label>
-            <div className="relative">
+        {hasStoreLink ? (
+          <form onSubmit={handlePinLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">קוד גישה (8 ספרות)</label>
               <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pl-10 border border-gray-200 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-amber-400 bg-gray-50"
-                placeholder="הכנס סיסמה"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={8}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl text-center text-3xl font-bold tracking-widest focus:outline-none focus:border-amber-400 bg-gray-50"
+                placeholder="• • • • • • • •"
                 required
-                autoComplete="current-password"
+                autoFocus
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-600 text-sm text-center">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || pin.length !== 8}
+              className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-bold rounded-xl transition text-base"
+            >
+              {loading ? "מאמת..." : "כניסה"}
+            </button>
+          </form>
+        ) : (
+          <div className="text-center py-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-700 text-sm">
+              בקש מהמנהל לשלוח לך קישור גישה
             </div>
           </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-600 text-sm text-center">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-bold rounded-xl transition text-base"
-          >
-            {loading ? "מתחבר..." : "כניסה"}
-          </button>
-        </form>
+        )}
       </div>
     </div>
   );

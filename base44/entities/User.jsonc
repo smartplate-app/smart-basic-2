@@ -19,6 +19,10 @@
       "type": "boolean",
       "default": false,
       "description": "Partner read-only access: can view all app data but cannot modify it"
+    },
+    "restaurant_access_pin": {
+      "type": "string",
+      "description": "8-digit PIN for worker access link"
     }
   },
   "required": [
