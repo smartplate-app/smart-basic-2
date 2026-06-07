@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Warehouse } from "@/entities/Warehouse";
-import { User } from "@/entities/User";
+
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Loader, Edit, MapPin, Trash2, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -50,7 +49,12 @@ export default function WarehousesPage() {
           data = adminData.data.warehouses;
         }
       } else {
-        data = await Warehouse.filter({ $or: [{ created_by: targetEmail }, { store_owner_email: targetEmail }] }, "name", 10000);
+        const [byCreator, byOwner] = await Promise.all([
+          base44.entities.Warehouse.filter({ created_by: targetEmail }, "name", 10000),
+          base44.entities.Warehouse.filter({ store_owner_email: targetEmail }, "name", 10000)
+        ]);
+        const merged = [...byCreator, ...byOwner];
+        data = merged.filter((w, i, self) => i === self.findIndex((t) => t.id === w.id));
       }
       setWarehouses(data);
       setCache('warehouses_v1', { warehouses: data });
@@ -66,14 +70,14 @@ export default function WarehousesPage() {
     const checkAuthAndLoadData = async () => {
       try {
         setAuthLoading(true);
-        const currentUser = await User.me();
+        const currentUser = await base44.auth.me();
         setUser(currentUser);
         setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
         const targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
         await loadWarehouses(targetEmail, currentUser);
       } catch (error) {
         console.error("Authentication failed:", error);
-        await User.login();
+        await base44.auth.redirectToLogin();
       } finally {
         setAuthLoading(false);
       }
@@ -92,10 +96,10 @@ export default function WarehousesPage() {
 
     try {
       if (editingWarehouse) {
-        await Warehouse.update(editingWarehouse.id, formData);
+        await base44.entities.Warehouse.update(editingWarehouse.id, formData);
       } else {
         const targetEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-        await Warehouse.create({ ...formData, created_by: targetEmail, store_owner_email: targetEmail });
+        await base44.entities.Warehouse.create({ ...formData, created_by: targetEmail, store_owner_email: targetEmail });
       }
       setShowForm(false);
       setEditingWarehouse(null);
@@ -299,7 +303,7 @@ export default function WarehousesPage() {
                               onClick={async () => {
                                 if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
                                 try {
-                                  await Warehouse.delete(warehouse.id);
+                                  await base44.entities.Warehouse.delete(warehouse.id);
                                   setWarehouses(prev => prev.filter(w => w.id !== warehouse.id));
                                 } catch (e) {
                                   alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
