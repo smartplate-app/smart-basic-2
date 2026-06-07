@@ -63,6 +63,19 @@ export default function ManagersSection() {
       // 2. Send Base44 invite so they can sign up / login with Google
       await base44.users.inviteUser(email.trim().toLowerCase(), 'user');
 
+      // 3. Send custom email mentioning the restaurant name
+      try {
+        await base44.functions.invoke('sendStoreUserInvite', {
+          userEmail: email.trim().toLowerCase(),
+          userName: name.trim(),
+          storeName,
+          role: 'manager',
+          language
+        });
+      } catch (emailErr) {
+        console.warn('Custom invite email failed (non-blocking):', emailErr?.message);
+      }
+
       setSuccessMsg(name.trim());
       setEmail('');
       setName('');
