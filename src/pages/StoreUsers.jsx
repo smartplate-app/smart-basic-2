@@ -21,10 +21,11 @@ export default function StoreUsersPage() {
 
   // Form states
   const [userName, setUserName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [userUsername, setUserUsername] = useState("");
+  const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState("worker");
   const [editingUser, setEditingUser] = useState(null);
-  const [successEmail, setSuccessEmail] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => { loadData(); }, []);
 
@@ -45,19 +46,24 @@ export default function StoreUsersPage() {
 
   const resetForm = () => {
     setUserName("");
-    setUserEmail("");
+    setUserUsername("");
+    setUserPassword("");
     setUserRole("worker");
     setEditingUser(null);
-    setSuccessEmail("");
+    setSuccessMsg("");
   };
 
   const handleAddUser = async () => {
-    if (!userName.trim() || !userEmail.trim()) {
-      alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
+    if (!userName.trim() || !userUsername.trim()) {
+      alert(language === 'he' ? 'נא למלא שם מלא ושם משתמש' : 'Please fill in full name and username');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail.trim())) {
-      alert(language === 'he' ? 'נא להזין אימייל תקין' : 'Please enter a valid email');
+    if (!editingUser && !userPassword.trim()) {
+      alert(language === 'he' ? 'נא להזין סיסמה' : 'Please enter a password');
+      return;
+    }
+    if (!editingUser && userPassword.trim().length < 6) {
+      alert(language === 'he' ? 'הסיסמה חייבת להיות לפחות 6 תווים' : 'Password must be at least 6 characters');
       return;
     }
 
@@ -65,38 +71,41 @@ export default function StoreUsersPage() {
       setSaving(true);
       const ownerEmail = user.acting_as_store_email || user.email;
       const storeName = user.acting_as_store_name || user.business_name || user.full_name;
-      const email = userEmail.toLowerCase().trim();
+      // Build a fake-email from the username so backend stays unchanged
+      const uname = userUsername.toLowerCase().trim().replace(/\s+/g, '.');
+      const fakeEmail = `${uname}@smartplate.worker`;
 
       if (editingUser) {
-        // Update existing StoreUser record
+        // Update name/role on StoreUser
         await base44.entities.StoreUser.update(editingUser.id, {
           user_name: userName,
           role: userRole,
           is_active: true
         });
-      } else {
-        // Create StoreUser record
-        const existing = await base44.entities.StoreUser.filter({ user_email: email, owner_email: ownerEmail });
-        if (existing.length > 0) {
-          await base44.entities.StoreUser.update(existing[0].id, {
-            user_name: userName,
+        // Update password if provided
+        if (userPassword.trim()) {
+          await base44.functions.invoke("createRestaurantUser", {
+            email: fakeEmail,
+            password: userPassword.trim(),
+            full_name: userName,
             role: userRole,
-            is_active: true
-          });
-        } else {
-          await base44.entities.StoreUser.create({
-            store_id: ownerEmail,
             store_name: storeName,
-            user_email: email,
-            user_name: userName,
-            role: userRole,
-            owner_email: ownerEmail,
-            is_active: true
+            owner_email: ownerEmail
           });
         }
-        // Send official invite email
-        await base44.users.inviteUser(email, 'user');
-        setSuccessEmail(email);
+      } else {
+        const res = await base44.functions.invoke("createRestaurantUser", {
+          email: fakeEmail,
+          password: userPassword.trim(),
+          full_name: userName,
+          role: userRole,
+          store_name: storeName,
+          owner_email: ownerEmail
+        });
+        if (!res.data?.success) {
+          throw new Error(res.data?.error || 'Failed to create user');
+        }
+        setSuccessMsg(userName);
       }
 
       await loadData();
@@ -125,10 +134,12 @@ export default function StoreUsersPage() {
 
   const handleEditUser = (storeUser) => {
     setEditingUser(storeUser);
-    setUserName(storeUser.user_name);
-    setUserEmail(storeUser.user_email);
+    setUserName(storeUser.user_name || "");
+    // Extract username from fake email
+    setUserUsername((storeUser.user_email || "").replace('@smartplate.worker', '').replace(/\./g, ' '));
+    setUserPassword("");
     setUserRole(storeUser.role);
-    setSuccessEmail("");
+    setSuccessMsg("");
     setShowAddUser(true);
   };
 
@@ -179,14 +190,14 @@ export default function StoreUsersPage() {
                 </DialogTitle>
               </DialogHeader>
 
-              {successEmail ? (
+              {successMsg ? (
                 <div className="space-y-4 mt-4">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                    <p className="text-green-800 font-semibold text-lg mb-2">✅ {language === 'he' ? 'הזמנה נשלחה!' : 'Invite Sent!'}</p>
+                    <p className="text-green-800 font-semibold text-lg mb-2">✅ {language === 'he' ? 'המשתמש נוצר!' : 'User Created!'}</p>
                     <p className="text-green-700 text-sm">
                       {language === 'he'
-                        ? `נשלח מייל הזמנה ל-${successEmail}. המשתמש יוכל להתחבר עם חשבון גוגל שלו.`
-                        : `An invite email was sent to ${successEmail}. They can sign in with their Google account.`}
+                        ? `${successMsg} נוסף בהצלחה. כעת ניתן להיכנס דרך עמוד כניסת עובדים עם שם המשתמש והסיסמה.`
+                        : `${successMsg} was added. They can now log in via the Worker Login page with their username and password.`}
                     </p>
                   </div>
                   <Button className="w-full" variant="outline" onClick={() => { setShowAddUser(false); resetForm(); }}>
@@ -205,22 +216,28 @@ export default function StoreUsersPage() {
                     />
                   </div>
                   <div>
-                    <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'אימייל (Gmail)' : 'Email (Gmail)'}</Label>
+                    <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'שם משתמש' : 'Username'}</Label>
                     <Input
-                      type="email"
-                      value={userEmail}
-                      onChange={(e) => setUserEmail(e.target.value)}
-                      placeholder="user@gmail.com"
+                      value={userUsername}
+                      onChange={(e) => setUserUsername(e.target.value)}
+                      placeholder={language === 'he' ? 'לדוגמה: nitsan123' : 'e.g. nitsan123'}
                       className={isRTL ? 'text-right' : ''}
                       disabled={!!editingUser}
                     />
-                    {!editingUser && (
-                      <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : ''}`}>
-                        {language === 'he'
-                          ? 'המשתמש יקבל הזמנה במייל ויתחבר עם חשבון הגוגל שלו'
-                          : 'The user will receive an invite email and log in with their Google account'}
-                      </p>
-                    )}
+                  </div>
+                  <div>
+                    <Label className={isRTL ? 'text-right block' : ''}>
+                      {editingUser
+                        ? (language === 'he' ? 'סיסמה חדשה (השאר ריק לאי שינוי)' : 'New Password (leave blank to keep)')
+                        : (language === 'he' ? 'סיסמה' : 'Password')}
+                    </Label>
+                    <Input
+                      type="password"
+                      value={userPassword}
+                      onChange={(e) => setUserPassword(e.target.value)}
+                      placeholder={language === 'he' ? 'לפחות 6 תווים' : 'At least 6 characters'}
+                      className={isRTL ? 'text-right' : ''}
+                    />
                   </div>
                   <div>
                     <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'תפקיד' : 'Role'}</Label>
@@ -246,7 +263,7 @@ export default function StoreUsersPage() {
                   </div>
                   <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Button onClick={handleAddUser} disabled={saving} className="bg-gray-900 hover:bg-gray-800">
-                      {saving ? <Loader className="w-4 h-4 animate-spin" /> : (editingUser ? (language === 'he' ? 'עדכן' : 'Update') : (language === 'he' ? 'שלח הזמנה' : 'Send Invite'))}
+                      {saving ? <Loader className="w-4 h-4 animate-spin" /> : (editingUser ? (language === 'he' ? 'עדכן' : 'Update') : (language === 'he' ? 'צור משתמש' : 'Create User'))}
                     </Button>
                     <Button variant="outline" onClick={() => { setShowAddUser(false); resetForm(); }}>
                       {language === 'he' ? 'ביטול' : 'Cancel'}
@@ -307,7 +324,11 @@ export default function StoreUsersPage() {
                       )}
                       <div>
                         <p className="font-semibold">{storeUser.user_name}</p>
-                        <p className="text-sm text-gray-500">{storeUser.user_email}</p>
+                        <p className="text-sm text-gray-500">
+                          {(storeUser.user_email || '').includes('@smartplate.worker')
+                            ? `@${(storeUser.user_email || '').replace('@smartplate.worker', '')}`
+                            : storeUser.user_email}
+                        </p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded ${
                         storeUser.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
