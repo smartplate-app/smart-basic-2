@@ -6,95 +6,33 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Copy, Check, Edit } from "lucide-react";
+import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Edit } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 export default function StoreUsersPage() {
   const { language } = useLanguage();
   const isRTL = language === 'he';
-  
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [storeUsers, setStoreUsers] = useState([]);
   const [showAddUser, setShowAddUser] = useState(false);
   const [saving, setSaving] = useState(false);
-  
+
   // Form states
   const [userName, setUserName] = useState("");
-  const [userUsername, setUserUsername] = useState(""); // Replaced userEmail with username
-  const [userPassword, setUserPassword] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState("worker");
-  const [generatedLink, setGeneratedLink] = useState("");
-  const [generatedCredentials, setGeneratedCredentials] = useState(null);
-  const [linkCopied, setLinkCopied] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [migrating, setMigrating] = useState(false);
-  const [migrationResults, setMigrationResults] = useState(null);
+  const [successEmail, setSuccessEmail] = useState("");
 
-  const t = {
-    he: {
-      title: "משתמשי המסעדה",
-      addUser: "הוסף משתמש",
-      userName: "שם מלא",
-      userEmail: "אימייל",
-      role: "תפקיד",
-      manager: "מנהל - גישה מלאה",
-      worker: "עובד - הזמנות, קבלות וספירות בלבד",
-      save: "שמור",
-      cancel: "ביטול",
-      loading: "טוען...",
-      noUsers: "אין משתמשים עדיין",
-      delete: "מחק",
-      inviteSent: "המשתמש נוסף בהצלחה!",
-      inviteFailed: "המשתמש נוסף! לא ניתן לשלוח מייל אוטומטית.",
-      copyLink: "העתק הזמנה",
-      copied: "הועתק!",
-      shareLink: "שתף את הקישור הזה עם המשתמש:",
-      currentRestaurant: "המסעדה הנוכחית שלך",
-      managerDesc: "יכול לראות הכל ולנהל את המסעדה",
-      workerDesc: "יכול ליצור הזמנות, לקבל אספקה ולבצע ספירות",
-      personalMessage: "הודעה אישית (אופציונלי)",
-      personalMessagePlaceholder: "הוסף הודעה אישית...",
-      userAdded: "המשתמש נוסף בהצלחה!"
-    },
-    en: {
-      title: "Restaurant Users",
-      addUser: "Add User",
-      userName: "Full Name",
-      userEmail: "Email",
-      role: "Role",
-      manager: "Manager - Full Access",
-      worker: "Worker - Orders, Receipts & Counts Only",
-      save: "Save",
-      cancel: "Cancel",
-      loading: "Loading...",
-      noUsers: "No users yet",
-      delete: "Delete",
-      inviteSent: "User added successfully!",
-      inviteFailed: "User added! Email couldn't be sent automatically.",
-      copyLink: "Copy Invitation",
-      copied: "Copied!",
-      shareLink: "Share this link with the user:",
-      currentRestaurant: "Your Current Restaurant",
-      managerDesc: "Can see everything and manage the restaurant",
-      workerDesc: "Can create orders, receive supplies and do counts",
-      personalMessage: "Personal Message (Optional)",
-      personalMessagePlaceholder: "Add a personal message...",
-      userAdded: "User added successfully!"
-    }
-  }[language] || {};
-
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
       const currentUser = await base44.auth.me();
       setUser(currentUser);
-
-      // Load store users created by this user (or for acting store)
       const ownerEmail = currentUser.acting_as_store_email || currentUser.email;
       const users = await base44.entities.StoreUser.filter({ owner_email: ownerEmail });
       setStoreUsers(users);
@@ -105,96 +43,78 @@ export default function StoreUsersPage() {
     }
   };
 
+  const resetForm = () => {
+    setUserName("");
+    setUserEmail("");
+    setUserRole("worker");
+    setEditingUser(null);
+    setSuccessEmail("");
+  };
+
   const handleAddUser = async () => {
-      if (!userName.trim() || !userUsername.trim()) {
-        alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
-        return;
-      }
+    if (!userName.trim() || !userEmail.trim()) {
+      alert(language === 'he' ? 'נא למלא את כל השדות' : 'Please fill in all fields');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail.trim())) {
+      alert(language === 'he' ? 'נא להזין אימייל תקין' : 'Please enter a valid email');
+      return;
+    }
 
-      try {
-          setSaving(true);
-          console.log('[StoreUsers] Starting user creation/update...');
+    try {
+      setSaving(true);
+      const ownerEmail = user.acting_as_store_email || user.email;
+      const storeName = user.acting_as_store_name || user.business_name || user.full_name;
+      const email = userEmail.toLowerCase().trim();
 
-          const ownerEmail = user.acting_as_store_email || user.email;
-          const storeName = user.acting_as_store_name || user.business_name || user.full_name + (language === 'he' ? " - חנות" : " - Store");
-          
-          // The username is now required to be an email address
-          const generatedInternalEmail = userUsername.toLowerCase().trim();
-          
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(generatedInternalEmail)) {
-            alert(language === 'he' ? 'שם המשתמש חייב להיות אימייל' : 'Username must be an email address');
-            setSaving(false);
-            return;
-          }
-
-          if (!editingUser && userPassword && userPassword.length < 6) {
-            alert(language === 'he' ? 'הסיסמה חייבת להכיל לפחות 6 תווים' : 'Password must be at least 6 characters long');
-            setSaving(false);
-            return;
-          }
-
-          const createResponse = await base44.functions.invoke('createSimpleUserAccount', {
-            email: generatedInternalEmail,
-            password: userPassword,
-            full_name: userName,
-            restaurant_name: storeName,
+      if (editingUser) {
+        // Update existing StoreUser record
+        await base44.entities.StoreUser.update(editingUser.id, {
+          user_name: userName,
+          role: userRole,
+          is_active: true
+        });
+      } else {
+        // Create StoreUser record
+        const existing = await base44.entities.StoreUser.filter({ user_email: email, owner_email: ownerEmail });
+        if (existing.length > 0) {
+          await base44.entities.StoreUser.update(existing[0].id, {
+            user_name: userName,
+            role: userRole,
+            is_active: true
+          });
+        } else {
+          await base44.entities.StoreUser.create({
+            store_id: ownerEmail,
+            store_name: storeName,
+            user_email: email,
+            user_name: userName,
             role: userRole,
             owner_email: ownerEmail,
-            update_existing: !!editingUser
+            is_active: true
           });
-
-          if (!createResponse.data.success) {
-            throw new Error(createResponse.data.error || 'Failed to create user');
-          }
-
-          console.log('[StoreUsers] User created successfully');
-
-        // Reload the user list
-        console.log('[StoreUsers] Loading updated data...');
-        await loadData();
-        console.log('[StoreUsers] User list updated!');
-
-        // Instead of showing passwords, we now send an official invite link
-        if (!editingUser) {
-          await base44.users.inviteUser(generatedInternalEmail, 'user');
         }
-
-        // Show success message
-        setGeneratedCredentials({
-          username: generatedInternalEmail,
-          password: userPassword,
-          loginUrl: window.location.origin
-        });
-        setGeneratedLink(generatedInternalEmail);
-        setLinkCopied(false);
-
-        console.log('[StoreUsers] All done!');
-        } catch (error) {
-        console.error("[StoreUsers] Error adding/updating user:", error);
-
-        let errorMessage = error?.response?.data?.error || error.message || 'Unknown error occurred';
-
-        if (language === 'he') {
-          if (errorMessage.includes('6 characters')) {
-            errorMessage = 'הסיסמה חייבת להכיל לפחות 6 תווים';
-          } else if (errorMessage.includes('Email already exists')) {
-            errorMessage = '❌ האימייל כבר קיים במערכת';
-          } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('permission')) {
-            errorMessage = 'אין הרשאה לבצע פעולה זו';
-          } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-            errorMessage = 'שגיאת רשת - בדוק את החיבור לאינטרנט';
-          }
-        }
-
-        alert((language === 'he' ? '❌ שגיאה: ' : '❌ Error: ') + errorMessage);
-      } finally {
-        setSaving(false);
+        // Send official invite email
+        await base44.users.inviteUser(email, 'user');
+        setSuccessEmail(email);
       }
-    };
+
+      await loadData();
+
+      if (editingUser) {
+        setShowAddUser(false);
+        resetForm();
+      }
+    } catch (error) {
+      console.error("Error adding/updating user:", error);
+      alert((language === 'he' ? '❌ שגיאה: ' : '❌ Error: ') + (error.message || 'Unknown error'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleDeleteUser = async (userId) => {
     if (!confirm(language === 'he' ? 'למחוק משתמש זה?' : 'Delete this user?')) return;
-    
     try {
       await base44.entities.StoreUser.delete(userId);
       await loadData();
@@ -204,38 +124,12 @@ export default function StoreUsersPage() {
   };
 
   const handleEditUser = (storeUser) => {
-      setEditingUser(storeUser);
-      setUserName(storeUser.user_name);
-      // For older users it might have a .local domain, for new it's an email
-      const isLocal = storeUser.user_email.endsWith('.local');
-      setUserUsername(isLocal ? storeUser.user_email.split('@')[0] : storeUser.user_email);
-      setUserRole(storeUser.role);
-      setShowAddUser(true);
-    };
-
-  const handleMigration = async () => {
-    if (!confirm(language === 'he' ? 'להעביר משתמשים קיימים למערכת החדשה?' : 'Migrate existing users to new system?')) {
-      return;
-    }
-
-    try {
-      setMigrating(true);
-      const response = await base44.functions.invoke('migrateStoreUsers', {});
-      
-      if (response.data.success) {
-        setMigrationResults(response.data);
-        await loadData();
-        alert((language === 'he' ? 'הועברו בהצלחה: ' : 'Migrated: ') + response.data.migrated + '\n\n' +
-              (language === 'he' ? 'שלח סיסמאות זמניות למשתמשים' : 'Send temporary passwords to users'));
-      } else {
-        alert((language === 'he' ? 'שגיאה: ' : 'Error: ') + response.data.error);
-      }
-    } catch (error) {
-      console.error("Migration error:", error);
-      alert((language === 'he' ? 'שגיאה בהעברה' : 'Migration error'));
-    } finally {
-      setMigrating(false);
-    }
+    setEditingUser(storeUser);
+    setUserName(storeUser.user_name);
+    setUserEmail(storeUser.user_email);
+    setUserRole(storeUser.role);
+    setSuccessEmail("");
+    setShowAddUser(true);
   };
 
   if (loading) {
@@ -254,7 +148,9 @@ export default function StoreUsersPage() {
           <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Users className="w-8 h-8 text-gray-700" />
             <div>
-              <h1 className={`text-3xl font-bold text-gray-900 ${isRTL ? 'text-right' : ''}`}>{t.title}</h1>
+              <h1 className={`text-3xl font-bold text-gray-900 ${isRTL ? 'text-right' : ''}`}>
+                {language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users'}
+              </h1>
               {user?.acting_as_store_name && (
                 <p className={`text-gray-500 ${isRTL ? 'text-right' : ''}`}>
                   <Store className="w-4 h-4 inline mr-1" />
@@ -263,221 +159,101 @@ export default function StoreUsersPage() {
               )}
             </div>
           </div>
-          
-          {storeUsers.length > 0 && (
-            <Button 
-              variant="outline" 
-              onClick={handleMigration}
-              disabled={migrating}
-              className="border-purple-500 text-purple-700 hover:bg-purple-50"
-            >
-              {migrating ? <Loader className="w-4 h-4 animate-spin" /> : '🔄 העבר משתמשים'}
-            </Button>
-          )}
+
           <Dialog open={showAddUser} onOpenChange={(open) => {
             setShowAddUser(open);
-            if (!open) {
-              // Reset form when closing
-              setGeneratedLink("");
-              setGeneratedCredentials(null);
-              setUserName("");
-              setUserUsername("");
-              setUserRole("worker");
-              setLinkCopied(false);
-              setEditingUser(null);
-            }
+            if (!open) resetForm();
           }}>
             <DialogTrigger asChild>
               <Button className="bg-gray-900 hover:bg-gray-800">
                 <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {t.addUser}
+                {language === 'he' ? 'הוסף משתמש' : 'Add User'}
               </Button>
             </DialogTrigger>
-            <DialogContent dir={isRTL ? 'rtl' : 'ltr'} key={generatedLink || 'new'}>
+            <DialogContent dir={isRTL ? 'rtl' : 'ltr'}>
               <DialogHeader>
                 <DialogTitle className={isRTL ? 'text-right' : ''}>
-                  {editingUser ? (language === 'he' ? 'עריכת משתמש' : 'Edit User') : t.addUser}
+                  {editingUser
+                    ? (language === 'he' ? 'עריכת משתמש' : 'Edit User')
+                    : (language === 'he' ? 'הוסף משתמש' : 'Add User')}
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>{t.userName}</Label>
-                  <Input 
-                    value={userName} 
-                    onChange={(e) => setUserName(e.target.value)}
-                    className={isRTL ? 'text-right' : ''}
-                    placeholder={language === 'he' ? 'שם מלא' : 'Full Name'}
-                  />
-                </div>
-                <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'שם משתמש להתחברות' : 'Login Username'}</Label>
-                  <Input 
-                    type="text"
-                    value={userUsername} 
-                    onChange={(e) => setUserUsername(e.target.value)}
-                    placeholder={language === 'he' ? 'לדוגמה: user@email.com' : 'e.g. user@email.com'}
-                    className={isRTL ? 'text-right' : ''}
-                    disabled={!!editingUser}
-                  />
-                  {editingUser && <p className="text-xs text-gray-500 mt-1">{language === 'he' ? 'לא ניתן לשנות שם משתמש קיים' : 'Cannot change existing username'}</p>}
-                </div>
 
-                {!editingUser && (
+              {successEmail ? (
+                <div className="space-y-4 mt-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                    <p className="text-green-800 font-semibold text-lg mb-2">✅ {language === 'he' ? 'הזמנה נשלחה!' : 'Invite Sent!'}</p>
+                    <p className="text-green-700 text-sm">
+                      {language === 'he'
+                        ? `נשלח מייל הזמנה ל-${successEmail}. המשתמש יוכל להתחבר עם חשבון גוגל שלו.`
+                        : `An invite email was sent to ${successEmail}. They can sign in with their Google account.`}
+                    </p>
+                  </div>
+                  <Button className="w-full" variant="outline" onClick={() => { setShowAddUser(false); resetForm(); }}>
+                    {language === 'he' ? 'סגור' : 'Close'}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4 mt-4">
                   <div>
-                    <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'סיסמה' : 'Password'}</Label>
-                    <Input 
-                      type="text"
-                      value={userPassword} 
-                      onChange={(e) => setUserPassword(e.target.value)}
-                      placeholder={language === 'he' ? 'לפחות 6 תווים' : 'At least 6 characters'}
+                    <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'שם מלא' : 'Full Name'}</Label>
+                    <Input
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      placeholder={language === 'he' ? 'שם מלא' : 'Full Name'}
                       className={isRTL ? 'text-right' : ''}
                     />
                   </div>
-                )}
-
-
-                <div>
-                  <Label className={isRTL ? 'text-right block' : ''}>{t.role}</Label>
-                  <Select value={userRole} onValueChange={setUserRole}>
-                    <SelectTrigger className={isRTL ? 'text-right' : ''}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manager">
-                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <UserCog className="w-4 h-4 text-blue-600" />
-                          {language === 'he' ? 'מנהל - גישה מלאה' : 'Manager - Full Access'}
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="worker">
-                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <UserCheck className="w-4 h-4 text-green-600" />
-                          {language === 'he' ? 'עובד - הזמנות, קבלות וספירות' : 'Worker - Orders, Receipts & Counts'}
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {userRole === 'manager'
-                      ? (language === 'he' ? 'רואה הכל ומנהל את המסעדה' : 'Can see everything and manage restaurant')
-                      : (language === 'he' ? 'יוצר הזמנות, מקבל אספקה ועושה ספירות' : 'Creates orders, receives supplies, does counts')}
-                  </p>
-                </div>
-                {!generatedLink ? (
+                  <div>
+                    <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'אימייל (Gmail)' : 'Email (Gmail)'}</Label>
+                    <Input
+                      type="email"
+                      value={userEmail}
+                      onChange={(e) => setUserEmail(e.target.value)}
+                      placeholder="user@gmail.com"
+                      className={isRTL ? 'text-right' : ''}
+                      disabled={!!editingUser}
+                    />
+                    {!editingUser && (
+                      <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : ''}`}>
+                        {language === 'he'
+                          ? 'המשתמש יקבל הזמנה במייל ויתחבר עם חשבון הגוגל שלו'
+                          : 'The user will receive an invite email and log in with their Google account'}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className={isRTL ? 'text-right block' : ''}>{language === 'he' ? 'תפקיד' : 'Role'}</Label>
+                    <Select value={userRole} onValueChange={setUserRole}>
+                      <SelectTrigger className={isRTL ? 'text-right' : ''}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manager">
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <UserCog className="w-4 h-4 text-blue-600" />
+                            {language === 'he' ? 'מנהל - גישה מלאה' : 'Manager - Full Access'}
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="worker">
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <UserCheck className="w-4 h-4 text-green-600" />
+                            {language === 'he' ? 'עובד - הזמנות, קבלות וספירות' : 'Worker - Orders, Receipts & Counts'}
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Button onClick={handleAddUser} disabled={saving} className="bg-gray-900 hover:bg-gray-800">
-                      {saving ? <Loader className="w-4 h-4 animate-spin" /> : (editingUser ? (language === 'he' ? 'עדכן' : 'Update') : t.save)}
+                      {saving ? <Loader className="w-4 h-4 animate-spin" /> : (editingUser ? (language === 'he' ? 'עדכן' : 'Update') : (language === 'he' ? 'שלח הזמנה' : 'Send Invite'))}
                     </Button>
-                    <Button variant="outline" onClick={() => setShowAddUser(false)}>
-                      {t.cancel}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <p className={`text-green-800 font-semibold mb-3 ${isRTL ? 'text-right' : ''}`}>
-                        ✅ {t.userAdded}
-                      </p>
-
-                      {/* Display email */}
-                      <div className="bg-white border border-blue-200 rounded-lg p-4 mb-3">
-                        <Label className={`text-sm font-semibold text-gray-700 mb-2 block ${isRTL ? 'text-right' : ''}`}>
-                          {language === 'he' ? '✅ המשתמש נוסף בהצלחה!' : '✅ User added successfully!'}
-                        </Label>
-                        {generatedCredentials && (
-                          <div className="bg-blue-50 rounded-lg p-3">
-                            <p className={`text-sm text-blue-800 ${isRTL ? 'text-right' : ''}`}>
-                              <strong>{language === 'he' ? '👤 משתמש:' : '👤 User:'}</strong> {generatedCredentials.username}
-                            </p>
-                            <p className={`text-sm text-blue-800 mt-2 ${isRTL ? 'text-right' : ''}`}>
-                              <strong>{language === 'he' ? '🔑 סיסמה:' : '🔑 Password:'}</strong> {generatedCredentials.password}
-                            </p>
-                            <p className={`text-sm text-blue-700 mt-3 ${isRTL ? 'text-right' : ''}`}>
-                              <strong>{language === 'he' ? '🔗 קישור התחברות:' : '🔗 Login link:'}</strong> <br/><a href={generatedCredentials.loginUrl} target="_blank" className="underline break-all">{generatedCredentials.loginUrl}</a>
-                            </p>
-                          </div>
-                        )}
-                            </div>
-
-                            {/* WhatsApp Quick Share Button */}
-                            <Button
-                        onClick={() => {
-                          const loginLink = generatedCredentials?.loginUrl;
-                          const uname = generatedCredentials?.username;
-                          const instructions = language === 'he' ? '💡 נשלח לך מייל הזמנה רשמי! לחץ על הקישור שם לקביעת סיסמה, ולאחר מכן תוכל להתחבר בקישור הרגיל:' : '💡 An official invite email was sent to you! Click the link there to set a password, then you can log in at the regular link:';
-                          const message = `${language === 'he' ? 'היי' : 'Hi'} ${userName}! ${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} ${user.business_name || user.full_name}.\n\n${instructions}\n${language === 'he' ? 'מייל:' : 'Email:'} ${uname}\n\n${language === 'he' ? 'קישור רגיל:' : 'Regular Link:'} ${loginLink}`;
-                          const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-                          window.open(whatsappUrl, '_blank');
-                        }}
-                        className="w-full mb-2"
-                        style={{ backgroundColor: '#25D366' }}
-                      >
-                        <svg className="w-5 h-5 ml-2" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                        </svg>
-                        {language === 'he' ? 'שלח בווצאפ' : 'Send via WhatsApp'}
-                      </Button>
-
-                      {/* HTML Email Copy Button */}
-                      <Button
-                        onClick={async () => {
-                          const loginLink = generatedCredentials?.loginUrl;
-                          const uname = generatedCredentials?.username;
-                          const pwd = generatedCredentials?.password;
-                          const htmlContent = `
-                            <div style="font-family: Arial, sans-serif; direction: ${isRTL ? 'rtl' : 'ltr'};">
-                              <p>${language === 'he' ? 'היי' : 'Hi'} ${userName}!</p>
-                              <p>${language === 'he' ? 'נוצר עבורך חשבון למסעדה' : 'An account was created for you at'} <strong>${user.business_name || user.full_name}</strong>.</p>
-                              <ul>
-                                <li><strong>${language === 'he' ? 'מייל:' : 'Email:'}</strong> ${uname}</li>
-                                <li><strong>${language === 'he' ? 'סיסמה:' : 'Password:'}</strong> ${pwd}</li>
-                                <li><strong>${language === 'he' ? 'קישור רגיל:' : 'Regular Link:'}</strong> <a href="${loginLink}">${loginLink}</a></li>
-                              </ul>
-                            </div>
-                          `;
-                          try {
-                            const blobHtml = new Blob([htmlContent], { type: 'text/html' });
-                            const blobText = new Blob([htmlContent.replace(/<[^>]+>/g, '')], { type: 'text/plain' });
-                            const data = new ClipboardItem({
-                              'text/html': blobHtml,
-                              'text/plain': blobText,
-                            });
-                            await navigator.clipboard.write([data]);
-                            alert(language === 'he' ? "הועתק בהצלחה! ניתן להדביק במייל או בצ'אט" : "Copied successfully! You can paste it into an email or chat.");
-                          } catch (err) {
-                            console.error('Failed to copy html: ', err);
-                            // Fallback to text copy
-                            try {
-                              await navigator.clipboard.writeText(htmlContent.replace(/<[^>]+>/g, ''));
-                              alert(language === 'he' ? 'הועתק כטקסט רגיל!' : 'Copied as plain text!');
-                            } catch (e) {
-                              alert(language === 'he' ? 'שגיאה בהעתקה' : 'Error copying');
-                            }
-                          }
-                        }}
-                        variant="outline"
-                        className="w-full mb-2 border-blue-200 text-blue-700 hover:bg-blue-50"
-                      >
-                        <Copy className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {language === 'he' ? 'העתק למייל (HTML)' : 'Copy for Email (HTML)'}
-                      </Button>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => {
-                        setShowAddUser(false);
-                          setGeneratedLink("");
-                          setUserName("");
-                          setUserUsername("");
-                          setUserRole("worker");
-                      }}
-                    >
-                      {language === 'he' ? 'סגור' : 'Close'}
+                    <Button variant="outline" onClick={() => { setShowAddUser(false); resetForm(); }}>
+                      {language === 'he' ? 'ביטול' : 'Cancel'}
                     </Button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </div>
@@ -508,41 +284,19 @@ export default function StoreUsersPage() {
           </Card>
         </div>
 
-        {/* Migration Results */}
-        {migrationResults && (
-          <Card className="mb-6 border-purple-200 bg-purple-50">
-            <CardContent className="p-4">
-              <h3 className="font-bold text-purple-900 mb-2">
-                {language === 'he' ? '✅ הועברו משתמשים' : '✅ Users Migrated'}
-              </h3>
-              <div className="space-y-2">
-                {migrationResults.users.map((u, i) => (
-                  <div key={i} className="bg-white p-2 rounded text-sm">
-                    <div className="font-medium">{u.email}</div>
-                    <div className="text-gray-600">
-                      {language === 'he' ? 'סיסמה זמנית: ' : 'Temp password: '}
-                      <code className="bg-gray-100 px-2 py-1 rounded">{u.temp_password}</code>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Users List */}
         <Card>
           <CardHeader>
-            <CardTitle className={isRTL ? 'text-right' : ''}>{t.title}</CardTitle>
+            <CardTitle className={isRTL ? 'text-right' : ''}>{language === 'he' ? 'משתמשים' : 'Users'}</CardTitle>
           </CardHeader>
           <CardContent>
             {storeUsers.length === 0 ? (
-              <p className={`text-gray-500 text-center py-8 ${isRTL ? 'text-right' : ''}`}>{t.noUsers}</p>
+              <p className={`text-gray-500 text-center py-8`}>{language === 'he' ? 'אין משתמשים עדיין' : 'No users yet'}</p>
             ) : (
               <div className="space-y-3">
                 {storeUsers.map((storeUser) => (
-                  <div 
-                    key={storeUser.id} 
+                  <div
+                    key={storeUser.id}
                     className={`flex items-center justify-between p-4 bg-gray-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}
                   >
                     <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
@@ -556,33 +310,31 @@ export default function StoreUsersPage() {
                         <p className="text-sm text-gray-500">{storeUser.user_email}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded ${
-                        storeUser.role === 'manager'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-green-100 text-green-800'
+                        storeUser.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                       }`}>
                         {storeUser.role === 'manager'
                           ? (language === 'he' ? 'מנהל' : 'Manager')
                           : (language === 'he' ? 'עובד' : 'Worker')}
                       </span>
-                      </div>
-                      <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Button 
-                        variant="ghost" 
+                    </div>
+                    <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Button
+                        variant="ghost"
                         size="icon"
                         onClick={() => handleEditUser(storeUser)}
                         className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="icon"
                         onClick={() => handleDeleteUser(storeUser.id)}
                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
