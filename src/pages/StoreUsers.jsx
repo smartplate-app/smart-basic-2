@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Edit, ExternalLink, RefreshCw, Copy, Check, Link } from "lucide-react";
+import { Users, Plus, Loader, Trash2, UserCheck, UserCog, Store, Edit, ExternalLink, RefreshCw, Copy, Check, Link, AlertTriangle, Share2 } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 import WorkerActivityStats from "../components/worker/WorkerActivityStats";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 function AccessLinkCard({ role, title, subtitle, pin, link, generating, copied, onGenerate, onCopy, accentClass, language, isRTL }) {
   const isAmber = accentClass === 'amber';
@@ -105,10 +106,23 @@ export default function StoreUsersPage() {
   const [workerLink, setWorkerLink] = useState("");
   const [generatingWorker, setGeneratingWorker] = useState(false);
   const [copiedWorker, setCopiedWorker] = useState(false);
+  const [showRegenerateWarning, setShowRegenerateWarning] = useState(false);
+  const [showShareNewCode, setShowShareNewCode] = useState(false);
+  const [pendingNewPin, setPendingNewPin] = useState(null);
+  const [pendingNewLink, setPendingNewLink] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
-  const generateLink = async () => {
+  const generateLink = () => {
+    // If there's already a PIN, warn the manager before regenerating
+    if (workerPin) {
+      setShowRegenerateWarning(true);
+    } else {
+      doGenerateLink();
+    }
+  };
+
+  const doGenerateLink = async () => {
     setGeneratingWorker(true);
     try {
       const currentUser = user || await base44.auth.me();
@@ -118,10 +132,30 @@ export default function StoreUsersPage() {
       const link = `${baseUrl}/WorkerLogin?store=${currentUser.id}&role=worker`;
       setWorkerPin(pin);
       setWorkerLink(link);
+      setPendingNewPin(pin);
+      setPendingNewLink(link);
+      setShowShareNewCode(true);
     } catch (err) {
       alert(language === 'he' ? 'שגיאה ביצירת קישור' : 'Error generating link');
     } finally {
       setGeneratingWorker(false);
+    }
+  };
+
+  const shareNewCode = async (pin, link) => {
+    const msg = language === 'he'
+      ? `שלום! הקוד החדש לפורטל העובדים:\n${link}\n\nקוד גישה: ${pin}`
+      : `Hi! New worker portal code:\n${link}\n\nAccess PIN: ${pin}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: msg });
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+      }
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     }
   };
 
@@ -408,6 +442,66 @@ export default function StoreUsersPage() {
             isRTL={isRTL}
           />
         </div>
+
+        {/* Regenerate warning dialog */}
+        <AlertDialog open={showRegenerateWarning} onOpenChange={setShowRegenerateWarning}>
+          <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <AlertTriangle className="w-5 h-5 text-orange-500" />
+                {language === 'he' ? 'שים לב — הקוד הישן יחסם!' : 'Warning — Old code will be blocked!'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className={isRTL ? 'text-right' : ''}>
+                {language === 'he'
+                  ? 'כל עובד שמחזיק את הקוד הישן לא יוכל להתחבר יותר. לאחר היצירה תוכל לשלוח להם את הקוד החדש.'
+                  : 'Any worker using the old code will be locked out. After generating, you can send them the new code.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+              <AlertDialogCancel>{language === 'he' ? 'ביטול' : 'Cancel'}</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                onClick={() => { setShowRegenerateWarning(false); doGenerateLink(); }}
+              >
+                {language === 'he' ? 'צור קוד חדש ושלח לעובדים' : 'Generate & Send to Workers'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Share new code dialog */}
+        <AlertDialog open={showShareNewCode} onOpenChange={setShowShareNewCode}>
+          <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className={isRTL ? 'text-right' : ''}>
+                {language === 'he' ? '✅ קוד חדש נוצר — שלח לעובדים' : '✅ New code generated — Send to workers'}
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className={`space-y-3 ${isRTL ? 'text-right' : ''}`}>
+                  <p className="text-sm text-gray-600">
+                    {language === 'he'
+                      ? 'הקוד החדש מוכן. שלח אותו לעובדים שלך כדי שיוכלו להתחבר.'
+                      : 'The new code is ready. Share it with your workers so they can log in.'}
+                  </p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                    <p className="text-xs text-amber-600 mb-1">{language === 'he' ? 'קוד גישה חדש' : 'New Access PIN'}</p>
+                    <p className="text-3xl font-bold tracking-widest text-amber-700">{pendingNewPin}</p>
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className={`flex-col gap-2 ${isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row'}`}>
+              <AlertDialogCancel className="sm:mt-0">{language === 'he' ? 'סגור' : 'Close'}</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2"
+                onClick={() => shareNewCode(pendingNewPin, pendingNewLink)}
+              >
+                <Share2 className="w-4 h-4" />
+                {language === 'he' ? 'שתף עם העובדים' : 'Share with Workers'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Worker Activity Stats */}
         {user && <div className="mb-6"><WorkerActivityStats ownerId={user.id} language={language} /></div>}
