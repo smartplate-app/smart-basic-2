@@ -634,38 +634,35 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 {safeT('send_email', 'במייל', 'Email')}
               </Button>
 
-              <button
+              <Button
                 onClick={async () => {
                   if (downloading || sending) return;
-                  await handleDownloadImage({ shareOnly: true });
+                  const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+                  const shareText = language === 'he'
+                    ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
+                    : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
+
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText });
+                      if (onSend) onSend({ ...order, order_number: ensuredNumber, status: 'sent' });
+                    } catch (e) {
+                      if (e.name !== 'AbortError') {
+                        try { await navigator.clipboard.writeText(shareText); toast.success(language === 'he' ? 'הועתק!' : 'Copied!'); } catch (_) {}
+                      }
+                    }
+                  } else {
+                    try { await navigator.clipboard.writeText(shareText); toast.success(language === 'he' ? 'הועתק!' : 'Copied!'); } catch (_) {}
+                  }
                 }}
+                className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm text-[15px]"
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
-                style={{
-                  flex: '1.5',
-                  height: '48px',
-                  backgroundColor: downloading || sending ? '#e8c9a0' : '#d4a373',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                  fontWeight: '500',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  cursor: downloading || sending ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'rgba(0,0,0,0)',
-                  touchAction: 'manipulation',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  outline: 'none',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-                }}
+                style={{ touchAction: 'manipulation' }}
               >
-                {downloading || sending ? <Loader className="w-5 h-5 animate-spin" /> : <Share className="w-5 h-5" />}
+                <Share className="w-5 h-5 ml-1.5" />
                 {safeT('share_order', 'שתף', 'Share')}
-              </button>
+              </Button>
             </div>
           )}
           
