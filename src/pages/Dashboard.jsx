@@ -272,6 +272,9 @@ export default function DashboardPage() {
       let allWeeklySales = [];
 
       const isAdminControlling = workingEmail !== currentUser.email;
+      // Check if manager/worker (store user) - needs service-role queries
+      const storeOwnerEmail = currentUser.store_user_owner_email || null;
+      const isStoreUser = !!storeOwnerEmail;
 
       if (isAdminControlling) {
           try {
@@ -284,7 +287,6 @@ export default function DashboardPage() {
                   allOrders = d.orders || [];
                   allCounts = d.inventory || [];
                   
-                  // Wrap with try-catch so it doesn't fail if asServiceRole is restricted on the client side
                   try {
                     const [incT, outT, ws] = await Promise.all([
                       base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, to_store_email: workingEmail, status: 'completed' }) || [],
@@ -299,6 +301,33 @@ export default function DashboardPage() {
                   }
               }
           } catch(e) { console.error("Admin data fetch error:", e); }
+      } else if (isStoreUser) {
+          // Manager/Worker: use service-role via getManagerData to bypass RLS, scoped to owner
+          try {
+              const { data: mgData } = await base44.functions.invoke('getManagerData', {
+                ownerEmail: storeOwnerEmail,
+                entities: ['receipts', 'orders', 'inventoryCounts', 'dashboardData', 'schedules']
+              });
+              if (mgData?.data) {
+                const d = mgData.data;
+                allDashboardData = (d.dashboardData || []).filter(x => x.month === selectedMonth);
+                allSchedules = d.schedules || [];
+                allReceipts = d.receipts || [];
+                allOrders = d.orders || [];
+                allCounts = d.inventoryCounts || [];
+                // Transfers use service role since manager can't query them directly
+                try {
+                  const [incT, outT, ws] = await Promise.all([
+                    base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, to_store_email: storeOwnerEmail, status: 'completed' }) || [],
+                    base44.asServiceRole?.entities?.InventoryTransfer?.filter({ month: selectedMonth, from_store_email: storeOwnerEmail, status: 'completed' }) || [],
+                    base44.asServiceRole?.entities?.WeeklySalesRecord?.filter({ created_by: storeOwnerEmail }, "-week_start_date") || []
+                  ]);
+                  incomingTransfers = incT;
+                  outgoingTransfers = outT;
+                  allWeeklySales = ws;
+                } catch (e) { console.error("Store user transfer fetch error:", e); }
+              }
+          } catch(e) { console.error("Store user dashboard data fetch error:", e); }
       } else {
           const res = await Promise.all([
             base44.entities.MonthlyDashboardData.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }], month: selectedMonth }),

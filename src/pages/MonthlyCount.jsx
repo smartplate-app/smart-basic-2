@@ -326,8 +326,9 @@ export default function MonthlyCountPage() {
       setShowCountForm(false);
       setEditingCount(null);
       
+      const reloadEmail = user.store_user_owner_email || user.acting_as_store_email || user.email;
       console.log('[MonthlyCount] Reloading data...');
-      await loadData(user.email);
+      await loadData(reloadEmail);
       console.log('[MonthlyCount] Data reloaded successfully');
       
     } catch (error) {
@@ -384,7 +385,8 @@ export default function MonthlyCountPage() {
     try {
       const { data } = await base44.functions.invoke('deleteInventoryCount', { countId: id });
       if (!data?.success) throw new Error(data?.error || 'Failed to delete count');
-      await loadData(user.email);
+      const reloadEmail = user.store_user_owner_email || user.acting_as_store_email || user.email;
+      await loadData(reloadEmail);
     } catch (error) {
       console.error('Error deleting count:', error);
       alert((t('error_saving') || 'Error') + ': ' + (error.message || 'Unknown'));
@@ -517,7 +519,8 @@ export default function MonthlyCountPage() {
       const { data } = await base44.functions.invoke('importInventoryCountFromSheet', { sheet_url: url, count_name: name, count_date: date });
       if (data?.success) {
         alert(t('import_completed') || 'Import completed');
-        await loadData(user.email);
+        const reloadEmail = user.store_user_owner_email || user.acting_as_store_email || user.email;
+        await loadData(reloadEmail);
         if (data?.count) {
           setEditingCount(data.count);
           setShowCountForm(true);
@@ -787,7 +790,8 @@ export default function MonthlyCountPage() {
               warehouses={warehouses}
               onClose={() => {
                 setShowWarehouseManagement(false);
-                loadData(user.email);
+                const reloadEmail = user.store_user_owner_email || user.acting_as_store_email || user.email;
+                loadData(reloadEmail);
               }}
             />
           )}
@@ -817,9 +821,10 @@ export default function MonthlyCountPage() {
               onCancel={() => {
                 setShowCountForm(false);
                 setEditingCount(null);
-                loadData(user.email); // Reload to show any auto-saved drafts
+                const reloadEmail = user.store_user_owner_email || user.acting_as_store_email || user.email;
+                loadData(reloadEmail); // Reload to show any auto-saved drafts
               }}
-              onWarehouseCatalogSaved={() => loadData(user.email)}
+              onWarehouseCatalogSaved={() => { const reloadEmail = user.store_user_owner_email || user.acting_as_store_email || user.email; loadData(reloadEmail); }}
             />
           )}
         </AnimatePresence>
@@ -1048,8 +1053,8 @@ export default function MonthlyCountPage() {
                     
                     setSelectedCountsForMerge([]);
                     alert(language === 'he' ? 'הספירות מוזגו בהצלחה' : 'Counts merged successfully');
-                    const targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.email;
-                    await loadData(targetEmail);
+                    const targetEmail = user.store_user_owner_email || user.acting_as_store_email || user.acting_as_user_email || user.email;
+                     await loadData(targetEmail);
                   } catch (error) {
                     console.error(error);
                     alert("Error merging counts: " + error.message);

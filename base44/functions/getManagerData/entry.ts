@@ -21,23 +21,22 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'ownerEmail is required' }, { status: 400 });
     }
 
-    // Verify this user is actually a manager for the given owner
+    // Verify this user is actually a store user (manager or worker) for the given owner
     const storeUserRecords = await base44.asServiceRole.entities.StoreUser.filter({
       user_email: user.email,
       owner_email: ownerEmail,
-      role: 'manager',
       is_active: true
     });
 
     if (storeUserRecords.length === 0) {
       // Also allow admin
       if (user.role !== 'admin') {
-        return Response.json({ error: 'Forbidden: not a manager for this owner' }, { status: 403 });
+        return Response.json({ error: 'Forbidden: not a store user for this owner' }, { status: 403 });
       }
     }
 
     const result = {};
-    const entitiesToFetch = requestedEntities || ['suppliers', 'items', 'orders', 'receipts', 'warehouses', 'recipes', 'inventoryCounts', 'wasteReports'];
+    const entitiesToFetch = requestedEntities || ['suppliers', 'items', 'orders', 'receipts', 'warehouses', 'recipes', 'inventoryCounts', 'wasteReports', 'dashboardData', 'schedules'];
 
     const filters = [
       { created_by: ownerEmail },
@@ -62,6 +61,8 @@ Deno.serve(async (req) => {
       entitiesToFetch.includes('recipes') && fetchBoth('Recipe').then(d => result.recipes = d),
       entitiesToFetch.includes('inventoryCounts') && fetchBoth('InventoryCount').then(d => result.inventoryCounts = d),
       entitiesToFetch.includes('wasteReports') && fetchBoth('WasteReport').then(d => result.wasteReports = d),
+      entitiesToFetch.includes('dashboardData') && fetchBoth('MonthlyDashboardData').then(d => result.dashboardData = d),
+      entitiesToFetch.includes('schedules') && fetchBoth('WeeklySchedule').then(d => result.schedules = d),
     ].filter(Boolean));
 
     return Response.json({ success: true, data: result });
