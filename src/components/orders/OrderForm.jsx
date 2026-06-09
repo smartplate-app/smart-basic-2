@@ -105,14 +105,21 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
       const workingEmail = user.acting_as_store_email || user.email;
       let ownerEmail = null;
 
+      // If the user is a manager acting as a store, the acting_as_store_email IS the owner
+      if (user.acting_as_store_email) {
+        ownerEmail = user.acting_as_store_email;
+      }
+
       // Prefer explicit lookup by the working (controlled) user
-      try {
-        const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
-        if (storeUserRecords.length > 0) {
-          ownerEmail = storeUserRecords[0].owner_email;
+      if (!ownerEmail) {
+        try {
+          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+          if (storeUserRecords.length > 0) {
+            ownerEmail = storeUserRecords[0].owner_email;
+          }
+        } catch (e) {
+          console.log("Could not fetch store user records for working user");
         }
-      } catch (e) {
-        console.log("Could not fetch store user records for working user");
       }
 
       // Fallback to user context flag (when actually logged in as a store user)
