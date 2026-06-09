@@ -634,8 +634,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 {safeT('send_email', 'במייל', 'Email')}
               </Button>
 
-              <Button
-                onClick={async () => {
+              <button
+                onClick={(e) => {
                   if (downloading || sending) return;
                   const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
                   const shareText = language === 'he'
@@ -643,26 +643,33 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                     : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
 
                   if (navigator.share) {
-                    try {
-                      await navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText });
-                      if (onSend) onSend({ ...order, order_number: ensuredNumber, status: 'sent' });
-                    } catch (e) {
-                      if (e.name !== 'AbortError') {
-                        try { await navigator.clipboard.writeText(shareText); toast.success(language === 'he' ? 'הועתק!' : 'Copied!'); } catch (_) {}
+                    // Synchronous call — no await before this, required for Android gesture chain
+                    navigator.share({
+                      title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
+                      text: shareText,
+                      url: orderUrl,
+                    }).then(() => {
+                      if (!order.order_number && order.id) {
+                        base44.entities.Order.update(order.id, { order_number: ensuredNumber, status: order.status === 'draft' ? 'sent' : (order.status || 'sent') }).catch(() => {});
                       }
-                    }
+                      if (onSend) onSend({ ...order, order_number: ensuredNumber, status: 'sent' });
+                    }).catch((err) => {
+                      if (err.name !== 'AbortError') {
+                        navigator.clipboard.writeText(shareText).then(() => toast.success(language === 'he' ? 'הועתק!' : 'Copied!')).catch(() => {});
+                      }
+                    });
                   } else {
-                    try { await navigator.clipboard.writeText(shareText); toast.success(language === 'he' ? 'הועתק!' : 'Copied!'); } catch (_) {}
+                    navigator.clipboard.writeText(shareText + '\n' + orderUrl).then(() => toast.success(language === 'he' ? 'הועתק!' : 'Copied!')).catch(() => {});
                   }
                 }}
-                className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm text-[15px]"
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
-                style={{ touchAction: 'manipulation' }}
+                className="flex-[1.5] h-12 rounded-md bg-[#d4a373] text-white font-medium text-[15px] flex items-center justify-center gap-1.5"
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', border: 'none', cursor: 'pointer' }}
               >
-                <Share className="w-5 h-5 ml-1.5" />
+                <Share className="w-5 h-5" />
                 {safeT('share_order', 'שתף', 'Share')}
-              </Button>
+              </button>
             </div>
           )}
           
