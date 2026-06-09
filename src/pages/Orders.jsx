@@ -56,7 +56,6 @@ export default function OrdersPage() {
 
 
   const [isViewer, setIsViewer] = useState(false);
-  const [managerItems, setManagerItems] = useState([]);
   const [itemSearch, setItemSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const startYRef = useRef(0);
@@ -113,13 +112,6 @@ export default function OrdersPage() {
       let storeOwnerEmail = currentUser.store_user_owner_email || currentUser.acting_as_store_email || null;
       let storeUserRole = currentUser.store_user_role || null;
       let isStoreUser = !!(storeUserRole && storeOwnerEmail);
-
-      // If user has acting_as_store_email and is NOT an admin impersonating, treat as manager
-      if (!isStoreUser && currentUser.acting_as_store_email && currentUser.role !== 'admin') {
-        isStoreUser = true;
-        storeOwnerEmail = currentUser.acting_as_store_email;
-        storeUserRole = 'manager';
-      }
       
       if (!isStoreUser) {
         // Check StoreUser entity for this user - catches new invites before layout sets context
@@ -190,11 +182,9 @@ export default function OrdersPage() {
       } else if (isStoreUser && storeOwnerEmail && storeUserRole === 'manager') {
         // Manager: use service-role function to bypass RLS
         try {
-          const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['suppliers', 'orders', 'items'] });
+          const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['suppliers', 'orders'] });
           suppliersData = mgData?.data?.suppliers || [];
           ordersData = mgData?.data?.orders || [];
-          // Store items for use in OrderForm (managers can't read owner's items via RLS)
-          setManagerItems(mgData?.data?.items || []);
         } catch (err) {
           console.error('[Orders] Failed to fetch manager data', err);
           suppliersData = [];
@@ -505,22 +495,6 @@ export default function OrdersPage() {
   // useEffect(() => {
   //   // Intentionally disabled to avoid showing blocking alerts
   // }, [orders, user, language]);
-
-  const testNativeShare = async () => {
-    if (!navigator.share) {
-      alert('navigator.share not available on this device/browser');
-      return;
-    }
-    try {
-      await navigator.share({
-        title: 'Test Share',
-        text: 'Testing native share sheet from SmartPlate',
-        url: window.location.href
-      });
-    } catch (e) {
-      if (e.name !== 'AbortError') alert('Share error: ' + e.message);
-    }
-  };
 
   const verifyDraftsNow = async () => {
     try {
@@ -1074,17 +1048,6 @@ export default function OrdersPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {user?.admin_original_email && (
-              <Button
-                onClick={testNativeShare}
-                variant="outline"
-                size="sm"
-                className="border-purple-300 text-purple-700 hover:bg-purple-50 text-xs"
-                title="Test native share sheet (admin only)"
-              >
-                📤 {language === 'he' ? 'בדוק Share Sheet' : 'Test Share Sheet'}
-              </Button>
-            )}
             {!isViewer && (
               <>
                 <Button
@@ -1159,8 +1122,6 @@ export default function OrdersPage() {
               <OrderForm
               order={editingOrder}
               suppliers={suppliers}
-              externalItems={managerItems.length > 0 ? managerItems : undefined}
-              defaultRestaurantName={user?.acting_as_store_name || user?.store_user_store_name || user?.business_name || ""}
               onSubmit={handleSubmit}
               onSaveDraft={handleSaveDraft}
               onCancel={() => {

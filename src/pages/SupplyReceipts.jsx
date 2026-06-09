@@ -209,17 +209,8 @@ export default function SupplyReceiptsPage() {
           let workingEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.email;
           
           // Always check StoreUser to catch newly invited managers before Layout sets context
-          let storeOwnerEmail = currentUser.store_user_owner_email || null;
+          let storeOwnerEmail = currentUser.store_user_owner_email || currentUser.acting_as_store_email || null;
           let storeUserRole = currentUser.store_user_role || null;
-
-          // If user has acting_as_store_email and is NOT an admin, treat directly as manager
-          if (!storeOwnerEmail && currentUser.acting_as_store_email && currentUser.role !== 'admin') {
-            storeOwnerEmail = currentUser.acting_as_store_email;
-            storeUserRole = storeUserRole || 'manager';
-          } else if (!storeOwnerEmail) {
-            storeOwnerEmail = currentUser.acting_as_store_email || null;
-          }
-
           if (!storeOwnerEmail) {
             try {
               const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });

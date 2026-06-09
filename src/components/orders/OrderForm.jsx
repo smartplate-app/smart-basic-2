@@ -62,11 +62,10 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     const loadUser = async () => {
       try {
         const user = await base44.auth.me();
-        const restaurantName = user.acting_as_store_name || user.store_user_store_name || user.business_name;
-        if (restaurantName && !currentOrder.restaurant_name) {
+        if (user.business_name && !currentOrder.restaurant_name) {
           setCurrentOrder(prev => ({
             ...prev,
-            restaurant_name: restaurantName,
+            restaurant_name: user.business_name,
             restaurant_address: user.business_address || ""
           }));
         }
@@ -104,27 +103,42 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     try {
       const user = await base44.auth.me();
       const workingEmail = user.acting_as_store_email || user.email;
-      const ownerEmail = user.acting_as_store_email || user.store_user_owner_email || null;
-      const isManager = !!(ownerEmail && user.role !== 'admin');
+      let ownerEmail = null;
 
-      let deduped = [];
+      // If the user is a manager acting as a store, the acting_as_store_email IS the owner
+      if (user.acting_as_store_email) {
+        ownerEmail = user.acting_as_store_email;
+      }
 
-      if (isManager) {
-        // Manager: use service-role backend to bypass RLS
-        const { data: mgData } = await base44.functions.invoke('getManagerData', {
-          ownerEmail,
-          entities: ['items']
-        });
-        const allItems = mgData?.data?.items || [];
-        deduped = allItems.filter(i => i.supplier_id === supplierId);
+      // Prefer explicit lookup by the working (controlled) user
+      if (!ownerEmail) {
+        try {
+          const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+          if (storeUserRecords.length > 0) {
+            ownerEmail = storeUserRecords[0].owner_email;
+          }
+        } catch (e) {
+          console.log("Could not fetch store user records for working user");
+        }
+      }
+
+      // Fallback to user context flag (when actually logged in as a store user)
+      if (!ownerEmail && user.store_user_owner_email) {
+        ownerEmail = user.store_user_owner_email;
+      }
+
+      // Build queries to include all relevant sources and merge
+      const queries = [];
+
+      // Always include items tagged by store owner for the working (controlled) user
+      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: workingEmail }, 'name'));
+
+      if (ownerEmail) {
+        // Controlled user is a store user → include owner's items as well
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: ownerEmail }, 'name'));
+        queries.push(base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: ownerEmail }, 'name'));
       } else {
-        // Owner or admin: query directly
-        const queries = [
-          base44.entities.Item.filter({ supplier_id: supplierId, store_owner_email: workingEmail }, 'name'),
-          base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'),
-        ];
-
-        // Chain head lookup
+        // Detect chain head for the controlled user via ChainStore
         let headEmail = null;
         try {
           const myStores = await base44.entities.ChainStore.filter({ user_email: workingEmail });
@@ -137,15 +151,28 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
         if (headEmail) {
           queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: headEmail }, 'name'));
         }
+      }
 
-        const results = await Promise.all(queries.map(p => p.catch(() => [])));
-        const merged = [];
-        for (const arr of results) {
-          if (Array.isArray(arr)) for (const item of arr) merged.push(item);
+      // Always include working user's own items
+      queries.push(base44.entities.Item.filter({ supplier_id: supplierId, created_by: workingEmail }, 'name'));
+
+      // Use a mobile-safe Promise.all with per-promise fallbacks (older mobile Safari lacks allSettled)
+      const safeQueries = queries.map(p => p.then(res => res).catch(() => []));
+      const results = await Promise.all(safeQueries);
+      // Merge arrays safely without flatMap
+      const merged = [];
+      for (const arr of results) {
+        if (Array.isArray(arr)) {
+          for (const item of arr) merged.push(item);
         }
-        const seen = new Set();
-        for (const it of merged) {
-          if (it && !seen.has(it.id)) { seen.add(it.id); deduped.push(it); }
+      }
+      // De-duplicate by id
+      const seen = new Set();
+      const deduped = [];
+      for (const it of merged) {
+        if (it && !seen.has(it.id)) {
+          seen.add(it.id);
+          deduped.push(it);
         }
       }
 
