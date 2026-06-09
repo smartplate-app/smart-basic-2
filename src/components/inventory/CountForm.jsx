@@ -53,7 +53,19 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [filteredAvailableItems, setFilteredAvailableItems] = useState([]);
   const [hasDraft, setHasDraft] = useState(false);
   const [isOffline, setIsOffline] = useState(false); // Forced false to prevent Android WebView navigator.onLine issues
-  const [warehouseOptions, setWarehouseOptions] = useState(() => (warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i));
+  const dedupeWarehouses = (list) => {
+    const seenIds = new Set();
+    const seenNames = new Set();
+    return (list || []).filter(w => {
+      if (seenIds.has(w.id)) return false;
+      const nameLower = (w.name || '').toLowerCase().trim();
+      if (seenNames.has(nameLower)) return false;
+      seenIds.add(w.id);
+      seenNames.add(nameLower);
+      return true;
+    });
+  };
+  const [warehouseOptions, setWarehouseOptions] = useState(() => dedupeWarehouses(warehouses));
   const [availableSearch, setAvailableSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [exportingSheets, setExportingSheets] = useState(false);
@@ -415,10 +427,9 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     }
   }, []);
 
-  // Keep local warehouse options in sync with props (deduplicated, strictly replace — never accumulate)
+  // Keep local warehouse options in sync with props (deduplicated by id AND name — never accumulate)
   useEffect(() => {
-    const deduped = (warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
-    setWarehouseOptions(deduped);
+    setWarehouseOptions(dedupeWarehouses(warehouses));
   }, [warehouses]);
 
   useEffect(() => {
