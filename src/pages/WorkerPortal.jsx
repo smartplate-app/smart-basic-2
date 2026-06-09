@@ -17,6 +17,8 @@ export default function WorkerPortal() {
   const [suppliers, setSuppliers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [items, setItems] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
+  const [counts, setCounts] = useState([]);
   const [ownerId, setOwnerId] = useState(null);
   const [ownerEmail, setOwnerEmail] = useState(null);
   const [businessName, setBusinessName] = useState(null);
@@ -85,6 +87,8 @@ export default function WorkerPortal() {
       setSuppliers(response.data.suppliers || []);
       setOrders(response.data.orders || []);
       setItems(response.data.items || []);
+      setWarehouses(response.data.warehouses || []);
+      setCounts(response.data.counts || []);
       if (response.data.ownerEmail) setOwnerEmail(response.data.ownerEmail);
       if (response.data.businessName) setBusinessName(response.data.businessName);
 
@@ -173,14 +177,20 @@ export default function WorkerPortal() {
     }
   };
 
-  const handleCountSubmit = async (countData) => {
+  const handleCountSubmit = async (countData, editingCountId) => {
+    const action = editingCountId ? 'updateCount' : 'createCount';
     const response = await base44.functions.invoke('workerPortalData', {
       ownerId,
-      action: 'createCount',
+      action,
+      countId: editingCountId,
       ...countData
     });
     if (response.data.error) throw new Error(response.data.error);
     logAction('שמירה', 'ספירת מלאי');
+    // Refresh counts list
+    const reloadRes = await base44.functions.invoke('workerPortalData', { ownerId, action: 'load' });
+    if (reloadRes.data?.counts) setCounts(reloadRes.data.counts);
+    if (reloadRes.data?.warehouses) setWarehouses(reloadRes.data.warehouses);
   };
 
   const handleWasteSubmit = async (wasteData) => {
@@ -299,6 +309,8 @@ export default function WorkerPortal() {
           <Header />
           <WorkerInventoryCount
             items={items}
+            warehouses={warehouses}
+            counts={counts}
             ownerId={ownerId}
             onBack={() => setView('menu')}
             onSubmit={handleCountSubmit}

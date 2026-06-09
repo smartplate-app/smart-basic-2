@@ -23,28 +23,40 @@ Deno.serve(async (req) => {
 
         if (action === 'load') {
             // Also try store_owner_email for chain sub-stores
-            const [suppliersByCreated, suppliersByOwner, orders, itemsByCreated, itemsByOwner] = await Promise.all([
+            const [suppliersByCreated, suppliersByOwner, orders, itemsByCreated, itemsByOwner, warehousesByCreated, warehousesByOwner, recentCounts] = await Promise.all([
                 base44.asServiceRole.entities.Supplier.filter({ created_by: owner.email }),
                 base44.asServiceRole.entities.Supplier.filter({ store_owner_email: owner.email }),
                 base44.asServiceRole.entities.Order.filter({ store_owner_email: owner.email }, "-created_date"),
                 base44.asServiceRole.entities.Item.filter({ created_by: owner.email }),
-                base44.asServiceRole.entities.Item.filter({ store_owner_email: owner.email })
+                base44.asServiceRole.entities.Item.filter({ store_owner_email: owner.email }),
+                base44.asServiceRole.entities.Warehouse.filter({ created_by: owner.email, is_active: true }),
+                base44.asServiceRole.entities.Warehouse.filter({ store_owner_email: owner.email, is_active: true }),
+                base44.asServiceRole.entities.InventoryCount.filter({ store_owner_email: owner.email }, "-created_date", 20)
             ]);
             // Merge and deduplicate suppliers
             const allSuppliers = [...suppliersByCreated, ...suppliersByOwner];
             const seenS = new Set();
             const suppliers = allSuppliers.filter(s => { if (seenS.has(s.id)) return false; seenS.add(s.id); return true; });
-            // Merge and deduplicate items (only name, id, unit, supplier_name — no price)
+            // Merge and deduplicate items
             const allItems = [...itemsByCreated, ...itemsByOwner];
             const seenI = new Set();
             const items = allItems
               .filter(i => { if (seenI.has(i.id)) return false; seenI.add(i.id); return true; })
               .map(i => ({ id: i.id, name: i.name, unit: i.unit, supplier_name: i.supplier_name, supplier_id: i.supplier_id || '', price_after_discount: i.price_after_discount || 0, price: i.price || 0, discount: i.discount || 0, catalog_number: i.catalog_number || '', minimum_stock: i.minimum_stock || 0, nickname: i.nickname || '' }));
+            // Merge and deduplicate warehouses
+            const allWarehouses = [...warehousesByCreated, ...warehousesByOwner];
+            const seenW = new Set();
+            const warehouses = allWarehouses.filter(w => { if (seenW.has(w.id)) return false; seenW.add(w.id); return true; });
+            // Deduplicate counts
+            const seenC = new Set();
+            const counts = recentCounts.filter(c => { if (seenC.has(c.id)) return false; seenC.add(c.id); return true; });
             
             return Response.json({ 
                 suppliers, 
                 orders,
                 items,
+                warehouses,
+                counts,
                 ownerEmail: owner.email,
                 businessName: owner.business_name || owner.full_name || owner.email || ''
             });
@@ -102,6 +114,21 @@ Deno.serve(async (req) => {
                 status: 'completed',
                 created_by: owner.email,
                 store_owner_email: owner.email
+            });
+            return Response.json({ success: true, count });
+        }
+
+        if (action === 'updateCount') {
+            const { countId, warehouse_id, warehouse_name, count_date, count_type, items: countItems, total_inventory_value } = body;
+            if (!countId) return Response.json({ error: 'countId required' }, { status: 400 });
+            const count = await base44.asServiceRole.entities.InventoryCount.update(countId, {
+                warehouse_id: warehouse_id || '',
+                warehouse_name: warehouse_name || 'ספירה כללית',
+                count_date: count_date || new Date().toISOString().split('T')[0],
+                count_type: count_type || 'monthly',
+                items: countItems || [],
+                total_inventory_value: total_inventory_value || 0,
+                status: 'completed'
             });
             return Response.json({ success: true, count });
         }

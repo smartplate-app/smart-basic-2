@@ -1,18 +1,122 @@
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, CheckCircle, Loader } from "lucide-react";
+import { ArrowLeft, Search, CheckCircle, Loader, Edit, ChevronRight } from "lucide-react";
 
-export default function WorkerInventoryCount({ items = [], ownerId, onBack, onSubmit }) {
+export default function WorkerInventoryCount({ items = [], warehouses = [], counts = [], ownerId, onBack, onSubmit }) {
+  const [mode, setMode] = useState('list'); // 'list' | 'form'
+  const [editingCount, setEditingCount] = useState(null); // null = new count
+
+  const handleStartNew = () => {
+    setEditingCount(null);
+    setMode('form');
+  };
+
+  const handleEdit = (count) => {
+    setEditingCount(count);
+    setMode('form');
+  };
+
+  const handleFormSave = async (countData, countId) => {
+    await onSubmit(countData, countId);
+    setMode('list');
+  };
+
+  if (mode === 'form') {
+    return (
+      <CountForm
+        items={items}
+        warehouses={warehouses}
+        existingCount={editingCount}
+        onSave={handleFormSave}
+        onBack={() => setMode('list')}
+      />
+    );
+  }
+
+  // List mode
+  return (
+    <div className="w-full" dir="rtl">
+      <div className="flex items-center justify-between mb-6">
+        <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          חזרה
+        </Button>
+        <h2 className="text-xl font-bold text-gray-800">ספירת מלאי</h2>
+        <Button onClick={handleStartNew} className="bg-amber-500 hover:bg-amber-600 text-white text-sm px-4">
+          + ספירה חדשה
+        </Button>
+      </div>
+
+      {counts.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">
+          <p className="text-lg mb-4">אין ספירות עדיין</p>
+          <Button onClick={handleStartNew} className="bg-amber-500 hover:bg-amber-600 text-white">
+            התחל ספירה ראשונה
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {counts.slice(0, 30).map(count => (
+            <div
+              key={count.id}
+              className="bg-white border rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-amber-50 transition"
+              onClick={() => handleEdit(count)}
+            >
+              <div className="flex items-center gap-2 text-amber-600">
+                <Edit className="w-4 h-4" />
+                <span className="text-sm font-medium">עריכה</span>
+              </div>
+              <div className="text-right flex-1 mr-3">
+                <div className="font-semibold text-gray-800 text-sm">
+                  {count.warehouse_name || 'ספירה כללית'}
+                </div>
+                <div className="text-xs text-gray-400">
+                  {count.count_date} · {count.count_type === 'daily' ? 'יומית' : count.count_type === 'weekly' ? 'שבועית' : 'חודשית'} · {(count.items || []).length} פריטים
+                </div>
+                <div className="text-xs font-bold text-amber-700 mt-0.5">
+                  ₪{(count.total_inventory_value || 0).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400 rotate-180" />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CountForm({ items, warehouses, existingCount, onSave, onBack }) {
+  // Pre-fill from existingCount if editing
+  const initialCounts = useMemo(() => {
+    if (!existingCount?.items) return {};
+    const map = {};
+    existingCount.items.forEach(ci => {
+      if (ci.item_id) map[ci.item_id] = ci.counted_quantity?.toString() || '';
+    });
+    return map;
+  }, [existingCount]);
+
   const [search, setSearch] = useState("");
-  const [counts, setCounts] = useState({});
-  const [countType, setCountType] = useState("monthly");
+  const [counts, setCounts] = useState(initialCounts);
+  const [countType, setCountType] = useState(existingCount?.count_type || "monthly");
+  const [warehouseId, setWarehouseId] = useState(existingCount?.warehouse_id || "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const selectedWarehouse = warehouses.find(w => w.id === warehouseId);
+  const warehouseName = selectedWarehouse?.name || (warehouseId ? '' : 'ספירה כללית');
+
+  // Filter items by warehouse catalog if warehouse selected
+  const warehouseItems = useMemo(() => {
+    if (!warehouseId || !selectedWarehouse?.catalog_items?.length) return items;
+    return items.filter(i => selectedWarehouse.catalog_items.includes(i.id));
+  }, [items, warehouseId, selectedWarehouse]);
+
   const filtered = useMemo(() =>
-    items.filter(i => i.name?.toLowerCase().includes(search.toLowerCase())),
-    [items, search]
+    warehouseItems.filter(i => i.name?.toLowerCase().includes(search.toLowerCase())),
+    [warehouseItems, search]
   );
 
   const totalCost = useMemo(() => {
@@ -23,13 +127,13 @@ export default function WorkerInventoryCount({ items = [], ownerId, onBack, onSu
     }, 0);
   }, [counts, items]);
 
-  const countedItems = Object.keys(counts).filter(id => counts[id] > 0).length;
+  const countedItems = Object.keys(counts).filter(id => parseFloat(counts[id]) > 0).length;
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const countItems = Object.entries(counts)
-        .filter(([, qty]) => qty > 0)
+        .filter(([, qty]) => parseFloat(qty) > 0)
         .map(([itemId, qty]) => {
           const item = items.find(i => i.id === itemId);
           return {
@@ -43,13 +147,15 @@ export default function WorkerInventoryCount({ items = [], ownerId, onBack, onSu
           };
         });
 
-      await onSubmit({
-        warehouse_name: 'ספירה כללית',
-        count_date: new Date().toISOString().split('T')[0],
+      await onSave({
+        warehouse_id: warehouseId || '',
+        warehouse_name: warehouseName,
+        count_date: existingCount?.count_date || new Date().toISOString().split('T')[0],
         count_type: countType,
         items: countItems,
         total_inventory_value: totalCost
-      });
+      }, existingCount?.id);
+
       setSaved(true);
     } catch (e) {
       alert("שגיאה בשמירה: " + e.message);
@@ -62,24 +168,51 @@ export default function WorkerInventoryCount({ items = [], ownerId, onBack, onSu
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4" dir="rtl">
         <CheckCircle className="w-16 h-16 text-green-500" />
-        <h2 className="text-2xl font-bold text-gray-800">הספירה נשמרה!</h2>
+        <h2 className="text-2xl font-bold text-gray-800">{existingCount ? 'הספירה עודכנה!' : 'הספירה נשמרה!'}</h2>
         <p className="text-gray-500">סה"כ שווי מלאי: ₪{totalCost.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-        <Button onClick={onBack} className="mt-4 bg-amber-500 hover:bg-amber-600 text-white">חזרה לתפריט</Button>
+        <Button onClick={onBack} className="mt-4 bg-amber-500 hover:bg-amber-600 text-white">חזרה לרשימה</Button>
       </div>
     );
   }
 
   return (
     <div className="w-full" dir="rtl">
-      {/* Top bar */}
       <div className="flex items-center justify-between mb-4">
         <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" />
           חזרה
         </Button>
-        <h2 className="text-xl font-bold text-gray-800">ספירת מלאי</h2>
+        <h2 className="text-xl font-bold text-gray-800">{existingCount ? 'עריכת ספירה' : 'ספירה חדשה'}</h2>
         <div />
       </div>
+
+      {/* Warehouse selector */}
+      {warehouses.length > 0 && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">מחסן</label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setWarehouseId("")}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition ${
+                warehouseId === '' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-gray-600 border-gray-300'
+              }`}
+            >
+              כללי
+            </button>
+            {warehouses.map(w => (
+              <button
+                key={w.id}
+                onClick={() => setWarehouseId(w.id)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition ${
+                  warehouseId === w.id ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-gray-600 border-gray-300'
+                }`}
+              >
+                {w.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Count type */}
       <div className="flex gap-2 mb-4 justify-center">
@@ -92,9 +225,7 @@ export default function WorkerInventoryCount({ items = [], ownerId, onBack, onSu
             key={key}
             onClick={() => setCountType(key)}
             className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-              countType === key
-                ? 'bg-amber-500 text-white border-amber-500'
-                : 'bg-white text-gray-600 border-gray-300'
+              countType === key ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-gray-600 border-gray-300'
             }`}
           >
             {label}
@@ -114,7 +245,7 @@ export default function WorkerInventoryCount({ items = [], ownerId, onBack, onSu
       </div>
 
       {/* Items list */}
-      <div className="space-y-2 mb-6 max-h-[50vh] overflow-y-auto">
+      <div className="space-y-2 mb-6 max-h-[45vh] overflow-y-auto">
         {filtered.map(item => (
           <div key={item.id} className="flex items-center justify-between bg-white border rounded-xl px-4 py-3 gap-3">
             <div className="flex-1 text-right">
@@ -151,7 +282,7 @@ export default function WorkerInventoryCount({ items = [], ownerId, onBack, onSu
           disabled={saving || countedItems === 0}
           className="w-full bg-amber-500 hover:bg-amber-600 text-white text-lg py-3 rounded-xl"
         >
-          {saving ? <Loader className="w-5 h-5 animate-spin" /> : 'שמור ספירה'}
+          {saving ? <Loader className="w-5 h-5 animate-spin" /> : (existingCount ? 'עדכן ספירה' : 'שמור ספירה')}
         </Button>
       </div>
     </div>
