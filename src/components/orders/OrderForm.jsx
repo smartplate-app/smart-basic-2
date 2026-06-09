@@ -62,10 +62,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     const loadUser = async () => {
       try {
         const user = await base44.auth.me();
-        if (user.business_name && !currentOrder.restaurant_name) {
+        const restaurantName = user.acting_as_store_name || user.store_user_store_name || user.business_name;
+        if (restaurantName && !currentOrder.restaurant_name) {
           setCurrentOrder(prev => ({
             ...prev,
-            restaurant_name: user.business_name,
+            restaurant_name: restaurantName,
             restaurant_address: user.business_address || ""
           }));
         }
