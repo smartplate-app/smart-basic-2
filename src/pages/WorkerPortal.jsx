@@ -107,12 +107,23 @@ export default function WorkerPortal() {
         ...orderData
       });
       if (response.data.error) { alert(response.data.error); return; }
+      const savedOrder = response.data.order;
       logAction('שמירה', 'הזמנה');
-      alert(t('order_saved_successfully') || 'ההזמנה נשמרה!');
+
+      // Send the order email to supplier (same as regular Orders page)
+      try {
+        await base44.functions.invoke('markOrderSent', { orderId: savedOrder.id, ownerEmail });
+        await base44.functions.invoke('sendOrderEmail', { orderId: savedOrder.id, ownerEmail });
+        alert('ההזמנה נשלחה לספק בהצלחה! 📧');
+      } catch (sendErr) {
+        // Order was saved — just couldn't send email
+        alert('ההזמנה נשמרה. לא הצלחנו לשלוח אימייל לספק.');
+      }
+
       setView('menu');
       await loadData(ownerId);
     } catch (error) {
-      alert(t('error_saving') || 'שגיאה: ' + error.message);
+      alert('שגיאה: ' + error.message);
     }
   };
 
