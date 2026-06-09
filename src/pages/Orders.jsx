@@ -1880,6 +1880,7 @@ export default function OrdersPage() {
         <OrderPreviewModal
           order={previewOrder}
           isOpen={!!previewOrder}
+          adminUser={user}
           onClose={() => setPreviewOrder(null)}
           onSend={(orderData) => {
             // Updated by the modal when share is successful

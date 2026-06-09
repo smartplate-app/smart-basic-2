@@ -8,7 +8,7 @@ import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
-export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, hideActions = false }) {
+export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, hideActions = false, adminUser = null }) {
   const { t, language } = useLanguage();
   const safeT = (key, he, en) => {
     const v = t(key);
@@ -627,6 +627,21 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             </div>
           )}
           
+          {adminUser?.admin_original_email && (
+            <Button
+              onClick={async () => {
+                if (!navigator.share) { alert('navigator.share not available'); return; }
+                try { await navigator.share({ title: 'Test Share', text: 'Testing native share sheet', url: window.location.href }); }
+                catch (e) { if (e.name !== 'AbortError') alert('Share error: ' + e.message); }
+              }}
+              variant="outline"
+              size="sm"
+              className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 text-xs"
+            >
+              📤 {adminUser?.language === 'he' ? 'בדוק Share Sheet (אדמין)' : 'Test Share Sheet (admin)'}
+            </Button>
+          )}
+
           <Button
             onClick={onClose}
             variant="ghost"
