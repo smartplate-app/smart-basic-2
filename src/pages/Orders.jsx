@@ -1074,7 +1074,7 @@ export default function OrdersPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {(user?.admin_original_email || user?.acting_as_user_email) && (
+            {user?.admin_original_email && (
               <Button
                 onClick={testNativeShare}
                 variant="outline"
@@ -1880,7 +1880,6 @@ export default function OrdersPage() {
         <OrderPreviewModal
           order={previewOrder}
           isOpen={!!previewOrder}
-          adminUser={user}
           onClose={() => setPreviewOrder(null)}
           onSend={(orderData) => {
             // Updated by the modal when share is successful

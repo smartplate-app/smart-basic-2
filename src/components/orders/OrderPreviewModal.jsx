@@ -8,7 +8,7 @@ import html2canvas from 'html2canvas';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
-export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, hideActions = false, adminUser = null }) {
+export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSendEmail, hideActions = false }) {
   const { t, language } = useLanguage();
   const safeT = (key, he, en) => {
     const v = t(key);
@@ -231,26 +231,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
         : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
 
-      // If we already pre-generated the file, use it directly — skip heavy html2canvas
-      if (pregeneratedFile && shareOnly) {
-        let shareSucceeded = false;
-        if (navigator.share) {
-          try {
-            await navigator.share({ files: [pregeneratedFile], title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText });
-            shareSucceeded = true;
-          } catch(e) {
-            if (e.name === 'AbortError') { setDownloading(false); return; }
-            try { await navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText }); shareSucceeded = true; } catch (_) {}
-          }
-        }
-        if (!shareSucceeded) {
-          try { await navigator.clipboard.writeText(shareText); toast.success(language === 'he' ? 'טקסט ההזמנה הועתק!' : 'Order text copied!'); } catch (_) {}
-        }
-        if (onSend) { try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {} }
-        setDownloading(false);
-        return;
-      }
-
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
@@ -437,7 +417,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
     } catch (err) {
       console.error('Failed to process image:', err);
-    } finally {
       setDownloading(false);
     }
   };
@@ -447,17 +426,17 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         // Unused handleDownloadJPG removed.
 
         return (
-          <div className="fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center sm:p-4" style={{ pointerEvents: 'auto' }}>
+          <div className="fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center sm:p-4">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 50 }}
-        className={`bg-white shadow-2xl flex flex-col w-full ${viewMode === 'mobile' ? 'max-w-[430px] rounded-t-2xl sm:rounded-2xl max-h-[95dvh]' : 'max-w-5xl rounded-t-2xl sm:rounded-xl max-h-[92dvh] sm:max-h-[90vh]'}`}
-        style={{ overflow: 'hidden', touchAction: 'auto' }}
+        className={`bg-white shadow-2xl overflow-hidden flex flex-col w-full ${viewMode === 'mobile' ? 'max-w-[430px] rounded-t-2xl sm:rounded-2xl max-h-[95dvh]' : 'max-w-5xl rounded-t-2xl sm:rounded-xl max-h-[92dvh] sm:max-h-[90vh]'}`}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
 
 
-        <div className="flex-1 min-h-0 bg-gray-100 p-2 sm:p-4 overflow-y-auto flex justify-center" style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}>
+        <div className="flex-1 min-h-0 bg-gray-100 p-2 sm:p-4 overflow-y-auto flex justify-center">
           <div className={`order-preview-embed not-prose bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden ${viewMode === 'mobile' ? 'w-full max-w-sm h-fit' : 'w-full h-fit'}`}>
             <div className="w-full relative">
               <div style={{
@@ -615,7 +594,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 p-4 border-t bg-white shrink-0 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)', touchAction: 'manipulation', zIndex: 10, position: 'relative' }}>
+        <div className="flex flex-col gap-2 p-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+24px)] border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
           {!hideActions && (
             <div className="flex gap-2 w-full">
               <Button
@@ -634,70 +613,20 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 {safeT('send_email', 'במייל', 'Email')}
               </Button>
 
-              <button
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (downloading || sending) return;
-                  const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-                  const shareText = language === 'he'
-                    ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
-                    : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
-                  if (navigator.share) {
-                    navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText, url: orderUrl })
-                      .then(() => { if (onSend) onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); })
-                      .catch((err) => { if (err.name !== 'AbortError') navigator.clipboard.writeText(shareText).catch(() => {}); });
-                  } else {
-                    navigator.clipboard.writeText(shareText + '\n' + orderUrl).then(() => toast.success(language === 'he' ? 'הועתק!' : 'Copied!')).catch(() => {});
-                  }
+              <Button
+                onClick={async () => {
+                  await handleDownloadImage({ shareOnly: true });
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (downloading || sending) return;
-                  const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
-                  const shareText = language === 'he'
-                    ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
-                    : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
-                  if (navigator.share) {
-                    navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText, url: orderUrl })
-                      .then(() => { if (onSend) onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); })
-                      .catch((err) => { if (err.name !== 'AbortError') navigator.clipboard.writeText(shareText).catch(() => {}); });
-                  } else {
-                    navigator.clipboard.writeText(shareText + '\n' + orderUrl).then(() => toast.success(language === 'he' ? 'הועתק!' : 'Copied!')).catch(() => {});
-                  }
-                }}
+                className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
-                style={{
-                  flex: '1.5',
-                  height: '48px',
-                  backgroundColor: '#d4a373',
-                  color: 'white',
-                  fontWeight: '500',
-                  fontSize: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  touchAction: 'manipulation',
-                  WebkitTapHighlightColor: 'transparent',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  position: 'relative',
-                  zIndex: 100,
-                }}
               >
-                <Share className="w-5 h-5" />
+                {downloading || sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <Share className="w-5 h-5 ml-1.5" />}
                 {safeT('share_order', 'שתף', 'Share')}
-              </button>
+              </Button>
             </div>
           )}
           
-
-
           <Button
             onClick={onClose}
             variant="ghost"
