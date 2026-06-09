@@ -39,7 +39,16 @@ function AccessLinkCard({ role, title, subtitle, pin, link, generating, copied, 
         <div className="bg-white/10 rounded-xl p-3 space-y-2">
           <div className="text-center">
             <p className="text-white/50 text-xs mb-0.5">{language === 'he' ? 'קוד גישה' : 'Access PIN'}</p>
-            <p className={`text-3xl font-bold tracking-widest ${pinColor}`}>{pin}</p>
+            <div className="flex items-center justify-center gap-2">
+              <p className={`text-3xl font-bold tracking-widest ${pinColor}`}>{pin}</p>
+              <button
+                onClick={() => { navigator.clipboard.writeText(pin); }}
+                className="text-white/50 hover:text-white transition p-1 rounded"
+                title={language === 'he' ? 'העתק קוד' : 'Copy PIN'}
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <div className="flex-1 bg-white/10 rounded-lg px-2 py-1.5 text-xs text-white/80 truncate font-mono">
@@ -429,8 +438,8 @@ export default function StoreUsersPage() {
         <div className="mb-6">
           <div className={`mb-2 px-1 text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
             {language === 'he'
-              ? '🔑 פורטל העובדים מאפשר לעובדים להיכנס למערכת בלי חשבון אישי — רק עם הקישור וקוד הגישה. שתף אותם עם העובדים שלך. כל פעם שתייצר קוד חדש, הקוד הישן יחסם אוטומטית.'
-              : '🔑 The Worker Portal lets staff log in without a personal account — just using the link and access PIN. Share it with your workers. Every time you generate a new code, the old one is automatically blocked.'}
+              ? '🔑 פורטל העובדים מאפשר לעובדים להיכנס בלי חשבון אישי — רק עם הקישור וקוד הגישה. העובדים יכולים: לבצע הזמנות לספקים, לקלוט קבלות וחשבוניות, לבצע ספירות מלאי ולדווח על זריקות. כל פעם שתייצר קוד חדש, הקוד הישן יחסם אוטומטית.'
+              : '🔑 The Worker Portal lets staff log in without a personal account — just the link and PIN. Workers can: place supplier orders, receive invoices & delivery notes, perform inventory counts, and report waste. Every time you generate a new code, the old one is automatically blocked.'}
           </div>
           <AccessLinkCard
             role="worker"
