@@ -427,6 +427,11 @@ export default function StoreUsersPage() {
 
         {/* Access Link - Worker Portal */}
         <div className="mb-6">
+          <div className={`mb-2 px-1 text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+            {language === 'he'
+              ? '🔑 פורטל העובדים מאפשר לעובדים להיכנס למערכת בלי חשבון אישי — רק עם הקישור וקוד הגישה. שתף אותם עם העובדים שלך. כל פעם שתייצר קוד חדש, הקוד הישן יחסם אוטומטית.'
+              : '🔑 The Worker Portal lets staff log in without a personal account — just using the link and access PIN. Share it with your workers. Every time you generate a new code, the old one is automatically blocked.'}
+          </div>
           <AccessLinkCard
             role="worker"
             title={language === 'he' ? 'פורטל עובדים' : 'Worker Portal'}
