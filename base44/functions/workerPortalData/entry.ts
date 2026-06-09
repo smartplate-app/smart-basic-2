@@ -187,6 +187,24 @@ Deno.serve(async (req) => {
             return Response.json({ sessions });
         }
 
+        if (action === 'uploadFile') {
+            // Expects multipart/form-data won't work via JSON body, so we handle base64
+            const { file_base64, file_name, file_type } = body;
+            if (!file_base64) {
+                return Response.json({ error: 'file_base64 required' }, { status: 400 });
+            }
+            // Convert base64 to Uint8Array
+            const byteString = atob(file_base64);
+            const bytes = new Uint8Array(byteString.length);
+            for (let i = 0; i < byteString.length; i++) {
+                bytes[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([bytes], { type: file_type || 'application/octet-stream' });
+            const file = new File([blob], file_name || 'upload', { type: file_type || 'application/octet-stream' });
+            const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+            return Response.json({ success: true, file_url });
+        }
+
         if (action === 'scanReceipt') {
             const { file_urls = [] } = body;
             if (!Array.isArray(file_urls) || file_urls.length === 0) {

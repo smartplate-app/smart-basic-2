@@ -253,33 +253,8 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const [supplierPopoverOpen, setSupplierPopoverOpen] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(!!receipt);
 
-  const checkForAnomalies = () => {
-    const messages = [];
-    const quantityMismatch = formData.verified_items.filter(i => i.received_quantity !== i.certificate_quantity && i.certificate_quantity > 0);
-    const notOrdered = formData.verified_items.filter(i => i.received_quantity > 0 && i.ordered_quantity === 0 && i.item_id);
-    const notRecognized = formData.verified_items.filter(i => !i.item_id && i.item_name);
-
-    if (!noOrderMode && (order || openOrders.length > 0)) {
-      if (quantityMismatch.length > 0) {
-        messages.push(language === 'he' 
-          ? `הכמות שהתקבלה שונה מהכמות שחוייבה בחשבונית עבור ${quantityMismatch.length} פריטים.` 
-          : `The received quantity differs from the billed quantity for ${quantityMismatch.length} items.`);
-      }
-      if (notOrdered.length > 0) {
-        messages.push(language === 'he' 
-          ? `קיבלת ${notOrdered.length} פריטים שלא היו בהזמנה המקורית.` 
-          : `You received ${notOrdered.length} items that were not on the original order.`);
-      }
-    }
-
-    if (notRecognized.length > 0) {
-      messages.push(language === 'he' 
-        ? `ישנם ${notRecognized.length} פריטים שלא קיימים בקטלוג. הם יתווספו אוטומטית למערכת ותוכל לעדכן אותם מאוחר יותר.` 
-        : `There are ${notRecognized.length} items that don't exist in the catalog. They will be added automatically and you can edit them later.`);
-    }
-
-    return messages;
-  };
+  // eslint-disable-next-line no-unused-vars
+  const checkForAnomalies = () => [];
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
   const [previousReceipts, setPreviousReceipts] = useState([]);
   const [deliveryNotes, setDeliveryNotes] = useState([]);
@@ -449,6 +424,19 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
       setUploading(true);
       const uploadedUrls = await Promise.all(files.map(async (file) => {
         try {
+          if (ownerId) {
+            const base64 = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result.split(',')[1]);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            const { data } = await base44.functions.invoke('workerPortalData', {
+              ownerId, action: 'uploadFile',
+              file_base64: base64, file_name: file.name, file_type: file.type,
+            });
+            return data?.file_url || null;
+          }
           const { file_url } = await base44.integrations.Core.UploadFile({ file });
           return file_url;
         } catch (err) {
