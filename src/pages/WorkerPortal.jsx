@@ -8,6 +8,8 @@ import OrderForm from "../components/orders/OrderForm";
 import ReceiveSupplyForm from "../components/orders/ReceiveSupplyForm";
 import WorkerInventoryCount from "../components/worker/WorkerInventoryCount";
 import WorkerWasteForm from "../components/worker/WorkerWasteForm";
+import OrderPreviewModal from "../components/orders/OrderPreviewModal";
+import { toast } from "sonner";
 
 export default function WorkerPortal() {
   const [view, setView] = useState('menu');
@@ -21,7 +23,8 @@ export default function WorkerPortal() {
   const [role, setRole] = useState('worker');
   const [error, setError] = useState(null);
   const [sessionId, setSessionId] = useState(null);
-  const { t } = useLanguage();
+  const [previewOrder, setPreviewOrder] = useState(null);
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -99,6 +102,41 @@ export default function WorkerPortal() {
     }
   };
 
+  const sendOrderToWhatsApp = async (order) => {
+    const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+    const unitLabel = (u) => {
+      if (!u) return '';
+      const map = { unit: 'יחידה', liter: 'ליטר', kg: 'ק״ג', case: 'ארגז', gram: 'גרם', ml: 'מ״ל' };
+      return map[u] || u;
+    };
+    const intro = `הזמנה חדשה ממסעדת "${order.restaurant_name || ''}"\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}` : ''}`;
+    const itemsText = (order.items || []).map(it => `• ${it.item_name || it.name || ''} - ${it.quantity} ${unitLabel(it.unit)}`).join('\n');
+    const sentAtVal = `${new Date().toLocaleDateString('he-IL')} ${new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'})}`;
+    const text = `${intro}\n\n*מספר הזמנה:* ${ensuredNumber}\n*נשלח בתאריך:* ${sentAtVal}\n\n*פריטים:*\n${itemsText}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ text, title: 'הזמנה חדשה' });
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+    const rawPhone = String(order.supplier_phone || '').trim();
+    const phone = (() => {
+      if (!rawPhone) return '';
+      let p = rawPhone.replace(/[^\d+]/g, '');
+      if (p.startsWith('+')) p = p.slice(1);
+      if (p.startsWith('00')) p = p.slice(2);
+      if (p.startsWith('0')) p = '972' + p.slice(1);
+      return p;
+    })();
+    const waWeb = phone
+      ? `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(waWeb, '_blank', 'noopener,noreferrer');
+  };
+
   const handleOrderSubmit = async (orderData) => {
     try {
       const response = await base44.functions.invoke('workerPortalData', {
@@ -109,18 +147,9 @@ export default function WorkerPortal() {
       if (response.data.error) { alert(response.data.error); return; }
       const savedOrder = response.data.order;
       logAction('שמירה', 'הזמנה');
-
-      // Send the order email to supplier (same as regular Orders page)
-      try {
-        await base44.functions.invoke('markOrderSent', { orderId: savedOrder.id, ownerEmail });
-        await base44.functions.invoke('sendOrderEmail', { orderId: savedOrder.id, ownerEmail });
-        alert('ההזמנה נשלחה לספק בהצלחה! 📧');
-      } catch (sendErr) {
-        // Order was saved — just couldn't send email
-        alert('ההזמנה נשמרה. לא הצלחנו לשלוח אימייל לספק.');
-      }
-
       setView('menu');
+      // Open the preview/share modal exactly like the regular Orders page
+      setPreviewOrder(savedOrder);
       await loadData(ownerId);
     } catch (error) {
       alert('שגיאה: ' + error.message);
@@ -297,6 +326,40 @@ export default function WorkerPortal() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-amber-50 p-4 md:p-8">
+      {previewOrder && (
+        <OrderPreviewModal
+          order={previewOrder}
+          isOpen={!!previewOrder}
+          onClose={() => setPreviewOrder(null)}
+          onSend={async (orderData) => {
+            const num = orderData?.order_number || previewOrder.order_number || `ORD-${(previewOrder.id || Date.now()).toString().slice(-8)}`;
+            // Mark as sent
+            base44.functions.invoke('markOrderSent', { orderId: previewOrder.id, orderNumber: num }).catch(() => {});
+            // Send WhatsApp share
+            await sendOrderToWhatsApp({ ...previewOrder, order_number: num });
+            // Send email if supplier has email
+            const supplierWithEmail = suppliers.find(s => s.name === previewOrder.supplier_name || s.id === previewOrder.supplier_id);
+            if (supplierWithEmail?.email?.trim()) {
+              base44.functions.invoke('sendOrderEmail', { orderId: previewOrder.id, language })
+                .then(() => toast.success('ההזמנה נשלחה גם למייל הספק!'))
+                .catch(() => {});
+            }
+            setPreviewOrder(null);
+          }}
+          onSendEmail={async () => {
+            const supplierWithEmail = suppliers.find(s => s.name === previewOrder.supplier_name || s.id === previewOrder.supplier_id);
+            if (!supplierWithEmail?.email?.trim()) {
+              alert('לספק זה לא מוגדרת כתובת אימייל.');
+              return;
+            }
+            const num = previewOrder.order_number || `ORD-${(previewOrder.id || Date.now()).toString().slice(-8)}`;
+            await base44.functions.invoke('markOrderSent', { orderId: previewOrder.id, orderNumber: num });
+            await base44.functions.invoke('sendOrderEmail', { orderId: previewOrder.id, language });
+            toast.success('ההזמנה נשלחה לאימייל הספק בהצלחה!');
+            setPreviewOrder(null);
+          }}
+        />
+      )}
       <div className="max-w-4xl mx-auto">
         <Header />
         <div className="text-center mb-8" dir="rtl">
