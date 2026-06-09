@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
 
         if (action === 'load') {
             // Also try store_owner_email for chain sub-stores
-            const [suppliersByCreated, suppliersByOwner, orders, itemsByCreated, itemsByOwner, warehousesByCreated, warehousesByOwner, countsByCreated, countsByOwner] = await Promise.all([
+            const [suppliersByCreated, suppliersByOwner, orders, itemsByCreated, itemsByOwner, warehousesByCreated, warehousesByOwner, allCountsRaw] = await Promise.all([
                 base44.asServiceRole.entities.Supplier.filter({ created_by: owner.email }),
                 base44.asServiceRole.entities.Supplier.filter({ store_owner_email: owner.email }),
                 base44.asServiceRole.entities.Order.filter({ store_owner_email: owner.email }, "-created_date"),
@@ -31,8 +31,7 @@ Deno.serve(async (req) => {
                 base44.asServiceRole.entities.Item.filter({ store_owner_email: owner.email }),
                 base44.asServiceRole.entities.Warehouse.filter({ created_by: owner.email, is_active: true }),
                 base44.asServiceRole.entities.Warehouse.filter({ store_owner_email: owner.email, is_active: true }),
-                base44.asServiceRole.entities.InventoryCount.filter({ created_by: owner.email }, "-created_date", 30),
-                base44.asServiceRole.entities.InventoryCount.filter({ store_owner_email: owner.email }, "-created_date", 30)
+                base44.asServiceRole.entities.InventoryCount.filter({ store_owner_email: owner.email }, "-created_date", 50)
             ]);
             // Merge and deduplicate suppliers
             const allSuppliers = [...suppliersByCreated, ...suppliersByOwner];
@@ -48,11 +47,7 @@ Deno.serve(async (req) => {
             const allWarehouses = [...warehousesByCreated, ...warehousesByOwner];
             const seenW = new Set();
             const warehouses = allWarehouses.filter(w => { if (seenW.has(w.id)) return false; seenW.add(w.id); return true; });
-            // Deduplicate counts (merge both created_by and store_owner_email)
-            const allCounts = [...countsByCreated, ...countsByOwner];
-            allCounts.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-            const seenC = new Set();
-            const counts = allCounts.filter(c => { if (seenC.has(c.id)) return false; seenC.add(c.id); return true; });
+            const counts = allCountsRaw;
             
             return Response.json({ 
                 suppliers, 
@@ -112,8 +107,8 @@ Deno.serve(async (req) => {
                 warehouse_name: warehouse_name || 'ספירה כללית',
                 count_date: count_date || new Date().toISOString().split('T')[0],
                 count_type: count_type || 'monthly',
-                items: countItems || [],
-                total_inventory_value: total_inventory_value || 0,
+                items: Array.isArray(countItems) ? countItems : [],
+                total_inventory_value: Number(total_inventory_value) || 0,
                 status: 'completed',
                 created_by: owner.email,
                 store_owner_email: owner.email
@@ -129,9 +124,10 @@ Deno.serve(async (req) => {
                 warehouse_name: warehouse_name || 'ספירה כללית',
                 count_date: count_date || new Date().toISOString().split('T')[0],
                 count_type: count_type || 'monthly',
-                items: countItems || [],
-                total_inventory_value: total_inventory_value || 0,
-                status: 'completed'
+                items: Array.isArray(countItems) ? countItems : [],
+                total_inventory_value: Number(total_inventory_value) || 0,
+                status: 'completed',
+                store_owner_email: owner.email
             });
             return Response.json({ success: true, count });
         }
