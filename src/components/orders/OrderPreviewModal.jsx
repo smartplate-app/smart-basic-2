@@ -627,7 +627,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             </div>
           )}
           
-          {adminUser?.admin_original_email && (
+          {(adminUser?.admin_original_email || adminUser?.acting_as_user_email) && (
             <Button
               onClick={async () => {
                 if (!navigator.share) { alert('navigator.share not available'); return; }
