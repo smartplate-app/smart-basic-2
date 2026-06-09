@@ -231,6 +231,26 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
         : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
 
+      // If we already pre-generated the file, use it directly — skip heavy html2canvas
+      if (pregeneratedFile && shareOnly) {
+        let shareSucceeded = false;
+        if (navigator.share) {
+          try {
+            await navigator.share({ files: [pregeneratedFile], title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText });
+            shareSucceeded = true;
+          } catch(e) {
+            if (e.name === 'AbortError') { setDownloading(false); return; }
+            try { await navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText }); shareSucceeded = true; } catch (_) {}
+          }
+        }
+        if (!shareSucceeded) {
+          try { await navigator.clipboard.writeText(shareText); toast.success(language === 'he' ? 'טקסט ההזמנה הועתק!' : 'Order text copied!'); } catch (_) {}
+        }
+        if (onSend) { try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {} }
+        setDownloading(false);
+        return;
+      }
+
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
@@ -417,6 +437,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
     } catch (err) {
       console.error('Failed to process image:', err);
+    } finally {
       setDownloading(false);
     }
   };
@@ -613,32 +634,38 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 {safeT('send_email', 'במייל', 'Email')}
               </Button>
 
-              <Button
-                onPointerDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.97)';
-                  e.currentTarget.style.opacity = '0.85';
-                }}
-                onPointerUp={(e) => {
-                  e.currentTarget.style.transform = '';
-                  e.currentTarget.style.opacity = '';
-                }}
-                onPointerLeave={(e) => {
-                  e.currentTarget.style.transform = '';
-                  e.currentTarget.style.opacity = '';
-                }}
-                onClick={() => {
+              <button
+                onClick={async () => {
                   if (downloading || sending) return;
-                  // Defer the heavy work so the button visually responds immediately
-                  setTimeout(() => handleDownloadImage({ shareOnly: true }), 50);
+                  await handleDownloadImage({ shareOnly: true });
                 }}
-                className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm disabled:opacity-50 text-[15px] active:scale-95 transition-transform touch-manipulation select-none"
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
-                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+                style={{
+                  flex: '1.5',
+                  height: '48px',
+                  backgroundColor: downloading || sending ? '#e8c9a0' : '#d4a373',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '15px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  cursor: downloading || sending ? 'not-allowed' : 'pointer',
+                  WebkitTapHighlightColor: 'rgba(0,0,0,0)',
+                  touchAction: 'manipulation',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  outline: 'none',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                }}
               >
-                {downloading || sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <Share className="w-5 h-5 ml-1.5" />}
+                {downloading || sending ? <Loader className="w-5 h-5 animate-spin" /> : <Share className="w-5 h-5" />}
                 {safeT('share_order', 'שתף', 'Share')}
-              </Button>
+              </button>
             </div>
           )}
           
