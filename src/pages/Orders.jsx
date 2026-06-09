@@ -56,6 +56,7 @@ export default function OrdersPage() {
 
 
   const [isViewer, setIsViewer] = useState(false);
+  const [managerItems, setManagerItems] = useState([]);
   const [itemSearch, setItemSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const startYRef = useRef(0);
@@ -189,9 +190,11 @@ export default function OrdersPage() {
       } else if (isStoreUser && storeOwnerEmail && storeUserRole === 'manager') {
         // Manager: use service-role function to bypass RLS
         try {
-          const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['suppliers', 'orders'] });
+          const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['suppliers', 'orders', 'items'] });
           suppliersData = mgData?.data?.suppliers || [];
           ordersData = mgData?.data?.orders || [];
+          // Store items for use in OrderForm (managers can't read owner's items via RLS)
+          setManagerItems(mgData?.data?.items || []);
         } catch (err) {
           console.error('[Orders] Failed to fetch manager data', err);
           suppliersData = [];
@@ -1129,6 +1132,7 @@ export default function OrdersPage() {
               <OrderForm
               order={editingOrder}
               suppliers={suppliers}
+              externalItems={managerItems.length > 0 ? managerItems : undefined}
               onSubmit={handleSubmit}
               onSaveDraft={handleSaveDraft}
               onCancel={() => {
