@@ -12,7 +12,7 @@ import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 
-export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSaveDraft, externalItems }) {
+export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSaveDraft, externalItems, defaultRestaurantName }) {
   const { t, language } = useLanguage();
   const safeT = (key, he, en) => {
     const v = t(key);
@@ -32,7 +32,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     supplier_name: "",
     supplier_phone: "",
     supplier_email: "",
-    restaurant_name: "",
+    restaurant_name: defaultRestaurantName || "",
     restaurant_address: "",
     items: [],
     notes: "",

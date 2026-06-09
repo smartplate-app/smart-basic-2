@@ -220,6 +220,7 @@ export default function WorkerPortal() {
             order={null}
             suppliers={suppliers}
             externalItems={items}
+            defaultRestaurantName={businessName}
             onSubmit={handleOrderSubmit}
             onCancel={() => setView('menu')}
           />
