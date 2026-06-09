@@ -51,9 +51,11 @@ export default function MonthlyCountPage() {
   const [exportDatePreset, setExportDatePreset] = useState("month");
   const [exportingSingleSheetId, setExportingSingleSheetId] = useState(null);
 
-  // Hydrate from cache for instant UI (v2 key to bust old duplicate-warehouse cache)
+  // Hydrate from cache for instant UI (v3 key to bust all stale caches)
   useEffect(() => {
-    const c = getCache('monthly_count_v2');
+    // Clear old cache keys to prevent stale duplicate data
+    try { localStorage.removeItem('monthly_count_v1'); localStorage.removeItem('monthly_count_v2'); } catch {}
+    const c = getCache('monthly_count_v3');
     if (c?.data) {
       setCounts(c.data.counts || []);
       const cachedWarehouses = (c.data.warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
@@ -139,7 +141,7 @@ export default function MonthlyCountPage() {
       setItems(itemsData);
       console.log(`[MonthlyCount] Successfully loaded ${itemsData.length} items`);
 
-      setCache('monthly_count_v2', { counts: countsData, warehouses: uniqueWarehouses, items: itemsData });
+      setCache('monthly_count_v3', { counts: countsData, warehouses: uniqueWarehouses, items: itemsData });
       
       setNetworkError(null);
       setRetryCount(0);
@@ -237,7 +239,7 @@ export default function MonthlyCountPage() {
             workingEmail = storeOwnerEmail;
           }
           
-          const c = getCache('monthly_count_v2');
+          const c = getCache('monthly_count_v3');
           const stale = isStale(c, 180000);
           const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
           
