@@ -176,7 +176,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           { title: language === 'he' ? 'דיווח זריקות' : 'Waste', url: createPageUrl("WasteReports"), icon: TrendingDown, adminOnly: false, workerHidden: false },
           { title: language === 'he' ? 'מחשבון הנדסת תפריט' : 'Menu Engineering Calculator', url: createPageUrl("MenuEngineering"), icon: Calculator, adminOnly: false, workerHidden: false },
           { title: language === 'he' ? 'העברות מלאי' : 'Inventory Transfers', url: createPageUrl("InventoryTransfers"), icon: ArrowLeftRight, adminOnly: false, workerHidden: true },
-          { title: language === 'he' ? 'משתמשי המסעדה' : 'Restaurant Users', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
+          { title: language === 'he' ? 'פורטל עובדים' : 'Worker Portal', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
           { title: language === 'he' ? 'סידור עבודה' : 'Weekly Schedule', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
 
           { title: t('user_profile'), url: createPageUrl("UserProfile"), icon: UserCircle, adminOnly: false, workerHidden: false },
