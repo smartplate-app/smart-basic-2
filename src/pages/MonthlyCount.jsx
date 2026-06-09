@@ -51,12 +51,11 @@ export default function MonthlyCountPage() {
   const [exportDatePreset, setExportDatePreset] = useState("month");
   const [exportingSingleSheetId, setExportingSingleSheetId] = useState(null);
 
-  // Hydrate from cache for instant UI
+  // Hydrate from cache for instant UI (v2 key to bust old duplicate-warehouse cache)
   useEffect(() => {
-    const c = getCache('monthly_count_v1');
+    const c = getCache('monthly_count_v2');
     if (c?.data) {
       setCounts(c.data.counts || []);
-      // Deduplicate warehouses from cache to prevent stale duplicate artifacts
       const cachedWarehouses = (c.data.warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
       setWarehouses(cachedWarehouses);
       setItems(c.data.items || []);
@@ -140,7 +139,7 @@ export default function MonthlyCountPage() {
       setItems(itemsData);
       console.log(`[MonthlyCount] Successfully loaded ${itemsData.length} items`);
 
-      setCache('monthly_count_v1', { counts: countsData, warehouses: warehousesData, items: itemsData });
+      setCache('monthly_count_v2', { counts: countsData, warehouses: uniqueWarehouses, items: itemsData });
       
       setNetworkError(null);
       setRetryCount(0);
