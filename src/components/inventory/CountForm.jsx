@@ -415,9 +415,10 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     }
   }, []);
 
-  // Keep local warehouse options in sync with props (deduplicated)
+  // Keep local warehouse options in sync with props (deduplicated, strictly replace — never accumulate)
   useEffect(() => {
-    setWarehouseOptions((warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i));
+    const deduped = (warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
+    setWarehouseOptions(deduped);
   }, [warehouses]);
 
   useEffect(() => {
@@ -794,7 +795,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     const name = prompt(t('warehouse_name') || 'Warehouse name');
     if (!name) return;
     const created = await base44.entities.Warehouse.create({ name, catalog_items: [] });
-    setWarehouseOptions(prev => [...prev, created]);
+    // Don't manually append — onWarehouseCatalogSaved triggers a full reload which updates warehouseOptions via props
     if (typeof onWarehouseCatalogSaved === 'function') {
       onWarehouseCatalogSaved();
     }
