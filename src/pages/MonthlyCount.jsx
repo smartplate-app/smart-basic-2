@@ -237,7 +237,7 @@ export default function MonthlyCountPage() {
             workingEmail = storeOwnerEmail;
           }
           
-          const c = getCache('monthly_count_v1');
+          const c = getCache('monthly_count_v2');
           const stale = isStale(c, 180000);
           const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
           
