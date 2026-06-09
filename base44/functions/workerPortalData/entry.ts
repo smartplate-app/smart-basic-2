@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
             const seenI = new Set();
             const items = allItems
               .filter(i => { if (seenI.has(i.id)) return false; seenI.add(i.id); return true; })
-              .map(i => ({ id: i.id, name: i.name, unit: i.unit, supplier_name: i.supplier_name, price_after_discount: i.price_after_discount || 0 }));
+              .map(i => ({ id: i.id, name: i.name, unit: i.unit, supplier_name: i.supplier_name, supplier_id: i.supplier_id || '', price_after_discount: i.price_after_discount || 0, price: i.price || 0, discount: i.discount || 0, catalog_number: i.catalog_number || '', minimum_stock: i.minimum_stock || 0, nickname: i.nickname || '' }));
             
             return Response.json({ 
                 suppliers, 
@@ -91,8 +91,9 @@ Deno.serve(async (req) => {
         }
 
         if (action === 'createCount') {
-            const { warehouse_name, count_date, count_type, items: countItems, total_inventory_value } = body;
+            const { warehouse_id, warehouse_name, count_date, count_type, items: countItems, total_inventory_value } = body;
             const count = await base44.asServiceRole.entities.InventoryCount.create({
+                warehouse_id: warehouse_id || '',
                 warehouse_name: warehouse_name || 'ספירה כללית',
                 count_date: count_date || new Date().toISOString().split('T')[0],
                 count_type: count_type || 'monthly',
@@ -106,13 +107,7 @@ Deno.serve(async (req) => {
         }
 
         if (action === 'loadWarehouses') {
-            const [byCreated, byOwner] = await Promise.all([
-                base44.asServiceRole.entities.Warehouse.filter({ created_by: owner.email }),
-                base44.asServiceRole.entities.Warehouse.filter({ store_owner_email: owner.email })
-            ]);
-            const all = [...byCreated, ...byOwner];
-            const seen = new Set();
-            const warehouses = all.filter(w => { if (seen.has(w.id)) return false; seen.add(w.id); return true; });
+            const warehouses = await base44.asServiceRole.entities.Warehouse.filter({ created_by: owner.email, is_active: true });
             return Response.json({ warehouses });
         }
 
