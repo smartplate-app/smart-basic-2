@@ -187,6 +187,71 @@ Deno.serve(async (req) => {
             return Response.json({ sessions });
         }
 
+        if (action === 'scanReceipt') {
+            const { file_urls = [] } = body;
+            if (!Array.isArray(file_urls) || file_urls.length === 0) {
+                return Response.json({ error: 'file_urls required' }, { status: 400 });
+            }
+            const currentYear = new Date().getFullYear();
+            const llm = await base44.asServiceRole.integrations.Core.InvokeLLM({
+                model: 'gemini_3_flash',
+                prompt: `You are an expert accountant extracting data from an Israeli supplier invoice/delivery note image. Read the Hebrew text carefully. DO NOT invent or hallucinate data.
+
+VERY IMPORTANT: DO NOT TRANSLATE any item names. Extract the exact text in its original language exactly as it appears in the document.
+
+CRITICAL EXTRACTION RULES:
+1. invoice_number: Look for "מספר חשבונית", "חשבונית מס'", "תעודת משלוח", "מספר מסמך". Extract EXACTLY the invoice number.
+2. invoice_date: Look for "תאריך", "תאריך הפקה". Format strictly as YYYY-MM-DD. Current year is ${currentYear}.
+3. total_incl_vat: Look for "סה"כ לתשלום", "סה"כ כולל מע"מ", "לתשלום ש"ח". The final total to pay.
+4. total_excl_vat: Look for "סה"כ לפני מע"מ", "ללא מע"מ".
+5. vat_amount: Look for "סכום מע"מ", "מע"מ".
+6. is_refund: true ONLY if document says "חשבונית זיכוי", "זיכוי", or total is explicitly negative.
+7. document_type: "invoice" for חשבונית מס, "delivery_note" for תעודת משלוח, "summary_invoice" for חשבונית מרכזת.
+8. items: Extract ALL items with name, quantity, price per unit.
+
+Extract precisely. Return 0 for missing amounts, empty string for missing text.`,
+                file_urls,
+                response_json_schema: {
+                    type: 'object',
+                    properties: {
+                        invoice_number: { type: 'string' },
+                        invoice_date: { type: 'string' },
+                        total_excl_vat: { type: 'number' },
+                        vat_amount: { type: 'number' },
+                        total_incl_vat: { type: 'number' },
+                        is_refund: { type: 'boolean' },
+                        document_type: { type: 'string', enum: ['invoice', 'delivery_note', 'summary_invoice'] },
+                        items: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    item_name: { type: 'string' },
+                                    quantity: { type: 'number' },
+                                    price: { type: 'number' },
+                                    total: { type: 'number' }
+                                }
+                            }
+                        }
+                    },
+                    required: ['invoice_number', 'invoice_date', 'total_incl_vat']
+                }
+            });
+            return Response.json({
+                success: true,
+                header: {
+                    invoice_number: llm.invoice_number,
+                    invoice_date: llm.invoice_date,
+                    total_excl_vat: llm.total_excl_vat,
+                    vat_amount: llm.vat_amount,
+                    total_incl_vat: llm.total_incl_vat,
+                    is_refund: llm.is_refund,
+                    document_type: llm.document_type || 'invoice'
+                },
+                items: llm.items || []
+            });
+        }
+
         if (action === 'createWaste') {
             const { warehouse_id, warehouse_name, report_date, shift, items: wasteItems, total_waste_value, notes } = body;
             const report = await base44.asServiceRole.entities.WasteReport.create({

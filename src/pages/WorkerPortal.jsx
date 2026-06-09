@@ -294,6 +294,7 @@ export default function WorkerPortal() {
             externalItems={items}
             externalOrders={orders}
             noOrderMode={true}
+            ownerId={ownerId}
             onSubmit={handleReceiptSubmit}
             onCancel={() => setView('menu')}
           />

@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 import OrderPreviewModal from "@/components/orders/OrderPreviewModal";
 
-export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user, externalItems = null, externalOrders = null }) {
+export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user, externalItems = null, externalOrders = null, ownerId = null }) {
   const [previewOrder, setPreviewOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
@@ -443,6 +443,8 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
+    // Capture supplier_id at call time (not stale closure)
+    const currentSupplierId = formData.supplier_id;
     try {
       setUploading(true);
       const uploadedUrls = await Promise.all(files.map(async (file) => {
@@ -461,10 +463,10 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
           receipt_images: [...prev.receipt_images, ...urls]
         }));
         
-        // Auto-scan after upload — use the freshly uploaded URLs only (avoid stale closure)
-        setTimeout(() => {
-          handleAutoScanWithUrls(urls);
-        }, 300);
+        // Auto-scan immediately after upload with captured supplier_id
+        if (!noOrderMode || currentSupplierId) {
+          handleAutoScanWithUrls(urls, currentSupplierId);
+        }
       }
     } catch (error) {
       console.error("Error uploading images:", error);
@@ -599,10 +601,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
       const results = await Promise.all(
         urlsToScan.map(async (url) => {
-          const { data } = await base44.functions.invoke('scanAndMatchReceipt', {
-            file_urls: [url],
-            supplier_id: supplierId || null,
-          });
+          const { data } = ownerId
+            ? await base44.functions.invoke('workerPortalData', { ownerId, action: 'scanReceipt', file_urls: [url] })
+            : await base44.functions.invoke('scanAndMatchReceipt', { file_urls: [url], supplier_id: supplierId || null });
           const resp = data?.header || {};
           const isRefund = Boolean(resp.is_refund);
           const incl = Number(resp.total_incl_vat);
@@ -630,10 +631,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         return;
       }
 
-      const { data } = await base44.functions.invoke('scanAndMatchReceipt', {
-        file_urls: urlsToScan,
-        supplier_id: formData.supplier_id || null,
-      });
+      const { data } = ownerId
+        ? await base44.functions.invoke('workerPortalData', { ownerId, action: 'scanReceipt', file_urls: urlsToScan })
+        : await base44.functions.invoke('scanAndMatchReceipt', { file_urls: urlsToScan, supplier_id: formData.supplier_id || null });
 
       if (!data?.success) {
         throw new Error(data?.error || 'Failed to scan receipt');
