@@ -54,7 +54,7 @@ export default function MonthlyCountPage() {
   // Hydrate from cache for instant UI (v3 key to bust all stale caches)
   useEffect(() => {
     // Clear old cache keys to prevent stale duplicate data
-    try { localStorage.removeItem('monthly_count_v1'); localStorage.removeItem('monthly_count_v2'); } catch {}
+    try { localStorage.removeItem('monthly_count_v1'); localStorage.removeItem('monthly_count_v2'); localStorage.removeItem('monthly_count_v3'); } catch {}
     const c = getCache('monthly_count_v3');
     if (c?.data) {
       setCounts(c.data.counts || []);
