@@ -447,17 +447,17 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         // Unused handleDownloadJPG removed.
 
         return (
-          <div className="fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center sm:p-4">
+          <div className="fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center sm:p-4" style={{ pointerEvents: 'auto' }}>
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 50 }}
-        className={`bg-white shadow-2xl overflow-hidden flex flex-col w-full ${viewMode === 'mobile' ? 'max-w-[430px] rounded-t-2xl sm:rounded-2xl max-h-[95dvh]' : 'max-w-5xl rounded-t-2xl sm:rounded-xl max-h-[92dvh] sm:max-h-[90vh]'}`}
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className={`bg-white shadow-2xl flex flex-col w-full ${viewMode === 'mobile' ? 'max-w-[430px] rounded-t-2xl sm:rounded-2xl max-h-[95dvh]' : 'max-w-5xl rounded-t-2xl sm:rounded-xl max-h-[92dvh] sm:max-h-[90vh]'}`}
+        style={{ overflow: 'hidden', touchAction: 'auto' }}
       >
 
 
-        <div className="flex-1 min-h-0 bg-gray-100 p-2 sm:p-4 overflow-y-auto flex justify-center" style={{ overscrollBehavior: 'contain' }}>
+        <div className="flex-1 min-h-0 bg-gray-100 p-2 sm:p-4 overflow-y-auto flex justify-center" style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}>
           <div className={`order-preview-embed not-prose bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden ${viewMode === 'mobile' ? 'w-full max-w-sm h-fit' : 'w-full h-fit'}`}>
             <div className="w-full relative">
               <div style={{
@@ -615,7 +615,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 p-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+24px)] border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]" style={{ position: 'relative', zIndex: 50, touchAction: 'manipulation', isolation: 'isolate' }}>
+        <div className="flex flex-col gap-2 p-4 border-t bg-white shrink-0 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)', touchAction: 'manipulation', zIndex: 10, position: 'relative' }}>
           {!hideActions && (
             <div className="flex gap-2 w-full">
               <Button
