@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
         const sheetId = 100 + i;
         
         const dataRows = s.items.map(item => {
-           let cases = 'N/A';
+           let cases = '';
            let units = item.counted_quantity !== undefined ? item.counted_quantity : '';
            
            if (item.unit === 'case') {
