@@ -53,7 +53,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
   const [filteredAvailableItems, setFilteredAvailableItems] = useState([]);
   const [hasDraft, setHasDraft] = useState(false);
   const [isOffline, setIsOffline] = useState(false); // Forced false to prevent Android WebView navigator.onLine issues
-  const [warehouseOptions, setWarehouseOptions] = useState(warehouses || []);
+  const [warehouseOptions, setWarehouseOptions] = useState(() => (warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i));
   const [availableSearch, setAvailableSearch] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [exportingSheets, setExportingSheets] = useState(false);
@@ -415,9 +415,9 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
     }
   }, []);
 
-  // Keep local warehouse options in sync with props
+  // Keep local warehouse options in sync with props (deduplicated)
   useEffect(() => {
-    setWarehouseOptions(warehouses || []);
+    setWarehouseOptions((warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i));
   }, [warehouses]);
 
   useEffect(() => {
