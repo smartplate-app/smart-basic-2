@@ -627,20 +627,18 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             </div>
           )}
           
-          {(adminUser?.admin_original_email || adminUser?.acting_as_user_email) && (
-            <Button
-              onClick={async () => {
-                if (!navigator.share) { alert('navigator.share not available'); return; }
-                try { await navigator.share({ title: 'Test Share', text: 'Testing native share sheet', url: window.location.href }); }
-                catch (e) { if (e.name !== 'AbortError') alert('Share error: ' + e.message); }
-              }}
-              variant="outline"
-              size="sm"
-              className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 text-xs"
-            >
-              📤 {adminUser?.language === 'he' ? 'בדוק Share Sheet (אדמין)' : 'Test Share Sheet (admin)'}
-            </Button>
-          )}
+          <Button
+            onClick={async () => {
+              if (!navigator.share) { alert('navigator.share not available on this device/browser'); return; }
+              try { await navigator.share({ title: 'Test Share', text: 'Testing native share sheet from SmartPlate', url: window.location.href }); }
+              catch (e) { if (e.name !== 'AbortError') alert('Share error: ' + e.message); }
+            }}
+            variant="outline"
+            size="sm"
+            className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 text-xs"
+          >
+            📤 בדוק Share Sheet
+          </Button>
 
           <Button
             onClick={onClose}
