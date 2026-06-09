@@ -56,7 +56,9 @@ export default function MonthlyCountPage() {
     const c = getCache('monthly_count_v1');
     if (c?.data) {
       setCounts(c.data.counts || []);
-      setWarehouses(c.data.warehouses || []);
+      // Deduplicate warehouses from cache to prevent stale duplicate artifacts
+      const cachedWarehouses = (c.data.warehouses || []).filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
+      setWarehouses(cachedWarehouses);
       setItems(c.data.items || []);
       setLoading(false);
     }
@@ -130,8 +132,10 @@ export default function MonthlyCountPage() {
       setCounts(countsData);
       console.log(`[MonthlyCount] Successfully loaded ${countsData.length} counts`);
       
-      setWarehouses(warehousesData);
-      console.log(`[MonthlyCount] Successfully loaded ${warehousesData.length} warehouses`);
+      // Deduplicate warehouses by id to prevent stale cache artifacts
+      const uniqueWarehouses = warehousesData.filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i);
+      setWarehouses(uniqueWarehouses);
+      console.log(`[MonthlyCount] Successfully loaded ${uniqueWarehouses.length} warehouses (deduped from ${warehousesData.length})`);
       
       setItems(itemsData);
       console.log(`[MonthlyCount] Successfully loaded ${itemsData.length} items`);
