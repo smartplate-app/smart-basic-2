@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
             const workers = await base44.asServiceRole.entities.Worker.filter(q, '-created_date', 10000);
             const schedules = await base44.asServiceRole.entities.WeeklySchedule.filter(q, '-week_start_date', 10000);
             const recipes = await base44.asServiceRole.entities.Recipe.filter(q, '-created_date', 10000);
-            const warehouses = await base44.asServiceRole.entities.Warehouse.filter(q, '-created_date', 10000);
+            const warehouses = (await base44.asServiceRole.entities.Warehouse.filter({ created_by: userEmail }, '-created_date', 10000)).filter(w => w.is_active !== false);
             const cogsReports = await base44.asServiceRole.entities.CogsReport.filter(q, '-created_date', 10000);
             const priceChanges = await base44.asServiceRole.entities.PriceChangeLog.filter(q, '-created_date', 10000);
             const wasteReports = await base44.asServiceRole.entities.WasteReport.filter(q, '-created_date', 10000);
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
             const dashboardData = await base44.asServiceRole.entities.MonthlyDashboardData.filter(q, '-month', 10000);
             const positions = await base44.asServiceRole.entities.JobPosition.filter(q, '-created_date', 10000);
             const recipes = await base44.asServiceRole.entities.Recipe.filter(q, '-created_date', 10000);
-            const warehouses = await base44.asServiceRole.entities.Warehouse.filter(q, '-created_date', 10000);
+            const warehouses = (await base44.asServiceRole.entities.Warehouse.filter({ created_by: userEmail }, '-created_date', 10000)).filter(w => w.is_active !== false);
             const cogsReports = await base44.asServiceRole.entities.CogsReport.filter(q, '-created_date', 10000);
             const wasteReports = await base44.asServiceRole.entities.WasteReport.filter(q, '-created_date', 10000);
             const priceChanges = await base44.asServiceRole.entities.PriceChangeLog.filter(q, '-created_date', 10000);
