@@ -864,7 +864,12 @@ export default function MonthlyCountPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('all_warehouses')}</SelectItem>
-                  {warehouses.map(warehouse => (
+                  {/* Only show warehouses that have actual counts, deduped by warehouse_id */}
+                  {Array.from(new Map(
+                    counts
+                      .filter(c => c.warehouse_id && c.warehouse_id !== 'multi')
+                      .map(c => [c.warehouse_id, { id: c.warehouse_id, name: c.warehouse_name || c.warehouse_id }])
+                  ).values()).map(warehouse => (
                     <SelectItem key={warehouse.id} value={warehouse.id}>
                       {warehouse.name}
                     </SelectItem>

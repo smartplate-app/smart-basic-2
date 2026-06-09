@@ -49,7 +49,12 @@ Deno.serve(async (req) => {
         base44.asServiceRole.entities[entityName].filter({ store_owner_email: ownerEmail })
       ]);
       const combined = [...(r1 || []), ...(r2 || [])];
-      return combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+      const deduped = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+      // For Warehouse: only return active warehouses to avoid returning stale/test records
+      if (entityName === 'Warehouse') {
+        return deduped.filter(w => w.is_active !== false);
+      }
+      return deduped;
     };
 
     await Promise.all([
