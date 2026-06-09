@@ -614,12 +614,27 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
               </Button>
 
               <Button
-                onClick={async () => {
-                  await handleDownloadImage({ shareOnly: true });
+                onPointerDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.97)';
+                  e.currentTarget.style.opacity = '0.85';
                 }}
-                className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
+                onPointerUp={(e) => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.opacity = '';
+                }}
+                onPointerLeave={(e) => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.opacity = '';
+                }}
+                onClick={() => {
+                  if (downloading || sending) return;
+                  // Defer the heavy work so the button visually responds immediately
+                  setTimeout(() => handleDownloadImage({ shareOnly: true }), 50);
+                }}
+                className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm disabled:opacity-50 text-[15px] active:scale-95 transition-transform touch-manipulation select-none"
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
               >
                 {downloading || sending ? <Loader className="w-5 h-5 ml-1.5 animate-spin" /> : <Share className="w-5 h-5 ml-1.5" />}
                 {safeT('share_order', 'שתף', 'Share')}
