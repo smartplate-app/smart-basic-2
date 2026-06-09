@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
 
         if (action === 'load') {
             // Also try store_owner_email for chain sub-stores
-            const [suppliersByCreated, suppliersByOwner, orders, itemsByCreated, itemsByOwner, warehousesByCreated, warehousesByOwner, recentCounts] = await Promise.all([
+            const [suppliersByCreated, suppliersByOwner, orders, itemsByCreated, itemsByOwner, warehousesByCreated, warehousesByOwner, countsByCreated, countsByOwner] = await Promise.all([
                 base44.asServiceRole.entities.Supplier.filter({ created_by: owner.email }),
                 base44.asServiceRole.entities.Supplier.filter({ store_owner_email: owner.email }),
                 base44.asServiceRole.entities.Order.filter({ store_owner_email: owner.email }, "-created_date"),
@@ -31,7 +31,8 @@ Deno.serve(async (req) => {
                 base44.asServiceRole.entities.Item.filter({ store_owner_email: owner.email }),
                 base44.asServiceRole.entities.Warehouse.filter({ created_by: owner.email, is_active: true }),
                 base44.asServiceRole.entities.Warehouse.filter({ store_owner_email: owner.email, is_active: true }),
-                base44.asServiceRole.entities.InventoryCount.filter({ store_owner_email: owner.email }, "-created_date", 20)
+                base44.asServiceRole.entities.InventoryCount.filter({ created_by: owner.email }, "-created_date", 30),
+                base44.asServiceRole.entities.InventoryCount.filter({ store_owner_email: owner.email }, "-created_date", 30)
             ]);
             // Merge and deduplicate suppliers
             const allSuppliers = [...suppliersByCreated, ...suppliersByOwner];
@@ -47,9 +48,11 @@ Deno.serve(async (req) => {
             const allWarehouses = [...warehousesByCreated, ...warehousesByOwner];
             const seenW = new Set();
             const warehouses = allWarehouses.filter(w => { if (seenW.has(w.id)) return false; seenW.add(w.id); return true; });
-            // Deduplicate counts
+            // Deduplicate counts (merge both created_by and store_owner_email)
+            const allCounts = [...countsByCreated, ...countsByOwner];
+            allCounts.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
             const seenC = new Set();
-            const counts = recentCounts.filter(c => { if (seenC.has(c.id)) return false; seenC.add(c.id); return true; });
+            const counts = allCounts.filter(c => { if (seenC.has(c.id)) return false; seenC.add(c.id); return true; });
             
             return Response.json({ 
                 suppliers, 
