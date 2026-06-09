@@ -99,10 +99,13 @@ export default function MonthlyCountPage() {
         } else {
             console.log("[MonthlyCount] Loading data in parallel...");
             const query = { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
+            // Use service role for store users (workers/managers) so RLS doesn't block them from seeing the owner's data
+            const isStoreUser = currentUserReq.store_user_owner_email || currentUserReq.acting_as_store_email;
+            const api = isStoreUser ? base44.asServiceRole.entities : base44.entities;
             const [fetchedCounts, fetchedWarehouses, fetchedItems] = await Promise.all([
-              base44.entities.InventoryCount.filter(query, "-count_date", 10000),
-              base44.entities.Warehouse.filter(query, "name", 10000),
-              base44.entities.Item.filter(query, "name", 10000)
+              api.InventoryCount.filter(query, "-count_date", 10000),
+              api.Warehouse.filter(query, "name", 10000),
+              api.Item.filter(query, "name", 10000)
             ]);
             countsData = fetchedCounts || [];
             warehousesData = fetchedWarehouses || [];
