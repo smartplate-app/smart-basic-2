@@ -506,6 +506,22 @@ export default function OrdersPage() {
   //   // Intentionally disabled to avoid showing blocking alerts
   // }, [orders, user, language]);
 
+  const testNativeShare = async () => {
+    if (!navigator.share) {
+      alert('navigator.share not available on this device/browser');
+      return;
+    }
+    try {
+      await navigator.share({
+        title: 'Test Share',
+        text: 'Testing native share sheet from SmartPlate',
+        url: window.location.href
+      });
+    } catch (e) {
+      if (e.name !== 'AbortError') alert('Share error: ' + e.message);
+    }
+  };
+
   const verifyDraftsNow = async () => {
     try {
       const { data } = await base44.functions.invoke('verifyDrafts', {});
@@ -1058,6 +1074,17 @@ export default function OrdersPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            {user?.admin_original_email && (
+              <Button
+                onClick={testNativeShare}
+                variant="outline"
+                size="sm"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50 text-xs"
+                title="Test native share sheet (admin only)"
+              >
+                📤 {language === 'he' ? 'בדוק Share Sheet' : 'Test Share Sheet'}
+              </Button>
+            )}
             {!isViewer && (
               <>
                 <Button
