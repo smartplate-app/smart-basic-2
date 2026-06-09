@@ -215,19 +215,34 @@ Deno.serve(async (req) => {
                 model: 'gemini_3_flash',
                 prompt: `You are an expert accountant extracting data from an Israeli supplier invoice/delivery note image. Read the Hebrew text carefully. DO NOT invent or hallucinate data.
 
-VERY IMPORTANT: DO NOT TRANSLATE any item names. Extract the exact text in its original language exactly as it appears in the document.
+VERY IMPORTANT: DO NOT TRANSLATE any item names. Extract the exact text in its original language exactly as it appears in the document. If the document is in Hebrew, keep names in Hebrew. If in English, keep in English.
 
 CRITICAL EXTRACTION RULES:
-1. invoice_number: Look for "מספר חשבונית", "חשבונית מס'", "תעודת משלוח", "מספר מסמך". Extract EXACTLY the invoice number.
-2. invoice_date: Look for "תאריך", "תאריך הפקה". Format strictly as YYYY-MM-DD. Current year is ${currentYear}.
-3. total_incl_vat: Look for "סה"כ לתשלום", "סה"כ כולל מע"מ", "לתשלום ש"ח". The final total to pay.
-4. total_excl_vat: Look for "סה"כ לפני מע"מ", "ללא מע"מ".
-5. vat_amount: Look for "סכום מע"מ", "מע"מ".
-6. is_refund: true ONLY if document says "חשבונית זיכוי", "זיכוי", or total is explicitly negative.
-7. document_type: "invoice" for חשבונית מס, "delivery_note" for תעודת משלוח, "summary_invoice" for חשבונית מרכזת.
-8. items: Extract ALL items with name, quantity, price per unit.
+1. invoice_number:
+   - Look for "מספר חשבונית", "חשבונית מס'", "מס' חשבונית", "תעודת משלוח", "מספר מסמך", or "מזהה".
+   - Extract EXACTLY the invoice number (digits, sometimes with dashes or letters). Do NOT extract phone numbers or dates.
+2. invoice_date:
+   - Look for "תאריך", "תאריך הפקה", "תאריך מסמך", "Date".
+   - Format strictly as YYYY-MM-DD. If the year is "24" -> 2024, "25" -> 2025. (The current year is ${currentYear}). Do not invent future dates.
+3. total_incl_vat:
+   - Look for "סה"כ לתשלום", "סה"כ כולל מע"מ", "לתשלום ש"ח", "סה"כ".
+   - This is the final absolute bottom-line total you have to pay. Extract the exact numeric value.
+4. total_excl_vat:
+   - Look for "סה"כ לפני מע"מ", "סכום פטור", "סכום חייב", "ללא מע"מ".
+5. vat_amount:
+   - Look for "סכום מע"מ", "מע"מ 17%", "מע"מ".
+6. is_refund:
+   - Set to true ONLY if the document says "חשבונית זיכוי", "זיכוי", "החזר", or if the total is explicitly negative.
+7. document_type:
+   - "invoice" for "חשבונית מס" or "חשבונית"
+   - "delivery_note" for "תעודת משלוח"
+   - "summary_invoice" for "חשבונית מס מרכזת" or "חשבונית מרכזת"
+   - CRITICAL: If the document explicitly says "תעודת משלוח", it must be "delivery_note" even if it contains pricing and totals.
+8. items:
+   - Extract the list of ALL items exactly as they appear in the invoice (the "תיאור" / Description column).
+   - Look for the item name, quantity ("כמות", "כמויות"), price per unit ("מחיר יחידה", "מחיר"), and total line price ("סה"כ", "סכום").
 
-Extract precisely. Return 0 for missing amounts, empty string for missing text.`,
+Extract these values precisely. If a value is missing, return 0 for amounts or empty string for text.`,
                 file_urls,
                 response_json_schema: {
                     type: 'object',
