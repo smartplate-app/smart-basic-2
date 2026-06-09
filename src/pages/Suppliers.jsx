@@ -70,13 +70,21 @@ export default function SuppliersPage() {
                   // Resolve if TARGET user is a store user (when admin controls someone, use their records)
                   // Also use store_user_owner_email from the user object (set by layout auth check) as fallback
                   let storeOwnerEmail = currentUser.store_user_owner_email || null;
-                  try {
-                    const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: targetEmail });
-                    if (Array.isArray(storeUserRecords) && storeUserRecords.length > 0) {
-                      const activeRec = storeUserRecords.find(r => r.is_active !== false) || storeUserRecords[0];
-                      storeOwnerEmail = activeRec?.owner_email || storeOwnerEmail;
-                    }
-                  } catch {}
+
+                  // If user has acting_as_store_email and is NOT an admin, treat directly as manager
+                  if (!storeOwnerEmail && currentUser.acting_as_store_email && currentUser.role !== 'admin') {
+                    storeOwnerEmail = currentUser.acting_as_store_email;
+                  }
+
+                  if (!storeOwnerEmail) {
+                    try {
+                      const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: targetEmail });
+                      if (Array.isArray(storeUserRecords) && storeUserRecords.length > 0) {
+                        const activeRec = storeUserRecords.find(r => r.is_active !== false) || storeUserRecords[0];
+                        storeOwnerEmail = activeRec?.owner_email || storeOwnerEmail;
+                      }
+                    } catch {}
+                  }
                   const isStoreUser = !!storeOwnerEmail;
 
                   const isAdminControlling = currentUser?.role === 'admin' && workingEmail !== currentUser.email;

@@ -96,6 +96,14 @@ export default function ItemsPage() {
       let storeOwnerEmail = currentUser.store_user_owner_email || currentUser.acting_as_store_email || null;
       let storeUserRole = currentUser.store_user_role || null;
       let isStoreUser = !!(storeUserRole && storeOwnerEmail);
+
+      // If user has acting_as_store_email and is NOT an admin impersonating, treat as manager
+      if (!isStoreUser && currentUser.acting_as_store_email && currentUser.role !== 'admin') {
+        isStoreUser = true;
+        storeOwnerEmail = currentUser.acting_as_store_email;
+        storeUserRole = 'manager';
+      }
+
       if (!isStoreUser) {
         try {
           const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });

@@ -112,6 +112,13 @@ export default function OrdersPage() {
       let storeOwnerEmail = currentUser.store_user_owner_email || currentUser.acting_as_store_email || null;
       let storeUserRole = currentUser.store_user_role || null;
       let isStoreUser = !!(storeUserRole && storeOwnerEmail);
+
+      // If user has acting_as_store_email and is NOT an admin impersonating, treat as manager
+      if (!isStoreUser && currentUser.acting_as_store_email && currentUser.role !== 'admin') {
+        isStoreUser = true;
+        storeOwnerEmail = currentUser.acting_as_store_email;
+        storeUserRole = 'manager';
+      }
       
       if (!isStoreUser) {
         // Check StoreUser entity for this user - catches new invites before layout sets context
