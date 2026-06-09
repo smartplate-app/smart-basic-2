@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 import OrderPreviewModal from "@/components/orders/OrderPreviewModal";
 
-export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user }) {
+export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user, externalItems = null, externalOrders = null }) {
   const [previewOrder, setPreviewOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
@@ -160,14 +160,20 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
 
   useEffect(() => {
     if (formData.supplier_id && !receipt) {
-       base44.entities.Order.filter({ supplier_id: formData.supplier_id }).then(orders => {
+      if (externalOrders && externalOrders.length > 0) {
+        // Worker portal: filter pre-fetched orders by supplier
+        const open = externalOrders.filter(o => o.supplier_id === formData.supplier_id && (o.status === 'sent' || o.status === 'confirmed'));
+        setOpenOrders(open);
+      } else {
+        base44.entities.Order.filter({ supplier_id: formData.supplier_id }).then(orders => {
           const open = orders.filter(o => o.status === 'sent' || o.status === 'confirmed');
           setOpenOrders(open);
-       });
+        });
+      }
     } else {
        setOpenOrders([]);
     }
-  }, [formData.supplier_id, receipt]);
+  }, [formData.supplier_id, receipt, externalOrders]);
 
   useEffect(() => {
     if (order && !selectedOpenOrderIds.includes(order.id)) {

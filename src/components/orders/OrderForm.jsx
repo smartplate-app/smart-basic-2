@@ -12,7 +12,7 @@ import { base44 } from "@/api/base44Client";
 import { useLanguage } from "../LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 
-export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSaveDraft }) {
+export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSaveDraft, externalItems }) {
   const { t, language } = useLanguage();
   const safeT = (key, he, en) => {
     const v = t(key);
@@ -57,6 +57,8 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   }, []);
 
   React.useEffect(() => {
+    // Skip auth call if external items provided (worker portal context)
+    if (externalItems) return;
     const loadUser = async () => {
       try {
         const user = await base44.auth.me();
@@ -91,6 +93,12 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
   }, [order]);
 
   const loadSupplierItems = async (supplierId) => {
+    // If external items are provided (e.g. worker portal), filter them locally — no auth needed
+    if (externalItems && externalItems.length > 0) {
+      const filtered = externalItems.filter(i => i.supplier_id === supplierId);
+      setAvailableItems(filtered);
+      return;
+    }
     setLoadingItems(true);
     try {
       const user = await base44.auth.me();

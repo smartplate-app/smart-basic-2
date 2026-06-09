@@ -216,7 +216,13 @@ export default function WorkerPortal() {
           <Button onClick={() => setView('menu')} variant="outline" className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" /> {t('cancel')}
           </Button>
-          <OrderForm order={null} suppliers={suppliers} onSubmit={handleOrderSubmit} onCancel={() => setView('menu')} />
+          <OrderForm
+            order={null}
+            suppliers={suppliers}
+            externalItems={items}
+            onSubmit={handleOrderSubmit}
+            onCancel={() => setView('menu')}
+          />
         </div>
       </div>
     );
@@ -230,7 +236,16 @@ export default function WorkerPortal() {
           <Button onClick={() => setView('menu')} variant="outline" className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" /> {t('cancel')}
           </Button>
-          <ReceiveSupplyForm order={null} receipt={null} suppliers={suppliers} onSubmit={handleReceiptSubmit} onCancel={() => setView('menu')} />
+          <ReceiveSupplyForm
+            order={null}
+            receipt={null}
+            suppliers={suppliers}
+            externalItems={items}
+            externalOrders={orders}
+            noOrderMode={true}
+            onSubmit={handleReceiptSubmit}
+            onCancel={() => setView('menu')}
+          />
         </div>
       </div>
     );
