@@ -49,12 +49,19 @@ export default function WarehousesPage() {
           data = adminData.data.warehouses;
         }
       } else {
-        const [byCreator, byOwner] = await Promise.all([
-          base44.entities.Warehouse.filter({ created_by: targetEmail }, "name", 10000),
-          base44.entities.Warehouse.filter({ store_owner_email: targetEmail }, "name", 10000)
-        ]);
-        const merged = [...byCreator, ...byOwner];
-        data = merged.filter((w, i, self) => i === self.findIndex((t) => t.id === w.id));
+        // Check if user is a store user - use service-role to bypass RLS
+        const storeOwnerEmail = currentUser?.store_user_owner_email || currentUser?.acting_as_store_email || null;
+        if (storeOwnerEmail) {
+          const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['warehouses'] });
+          data = mgData?.data?.warehouses || [];
+        } else {
+          const [byCreator, byOwner] = await Promise.all([
+            base44.entities.Warehouse.filter({ created_by: targetEmail }, "name", 10000),
+            base44.entities.Warehouse.filter({ store_owner_email: targetEmail }, "name", 10000)
+          ]);
+          const merged = [...byCreator, ...byOwner];
+          data = merged.filter((w, i, self) => i === self.findIndex((t) => t.id === w.id));
+        }
       }
       setWarehouses(data);
       setCache('warehouses_v1', { warehouses: data });

@@ -104,7 +104,7 @@ export default function SuppliersPage() {
                         console.error("Admin data fetch error:", e);
                     }
                   } else if (isStoreUser && storeOwnerEmail) {
-                    // Manager: use service-role function to bypass RLS
+                    // Any store user (worker or manager): use service-role to bypass RLS, scoped to owner
                     const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['suppliers', 'items'] });
                     suppliersData = mgData?.data?.suppliers || [];
                     itemsData = mgData?.data?.items || [];

@@ -132,9 +132,9 @@ export default function ItemsPage() {
         } else {
           throw new Error('Failed to load admin data');
         }
-      } else if (isStoreUser && storeOwnerEmail && storeUserRole === 'manager') {
-        // Manager: use service-role function to bypass RLS
-        console.log('[Items] Loading as MANAGER for owner:', storeOwnerEmail);
+      } else if (isStoreUser && storeOwnerEmail) {
+        // Any store user (worker or manager): use service-role to bypass RLS, scoped to owner
+        console.log('[Items] Loading as STORE USER for owner:', storeOwnerEmail);
         const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail: storeOwnerEmail, entities: ['items', 'suppliers', 'warehouses'] });
         itemsData = mgData?.data?.items || [];
         suppliersData = mgData?.data?.suppliers || [];
