@@ -457,7 +457,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       >
 
 
-        <div className="flex-1 min-h-0 bg-gray-100 p-2 sm:p-4 overflow-y-auto flex justify-center">
+        <div className="flex-1 min-h-0 bg-gray-100 p-2 sm:p-4 overflow-y-auto flex justify-center" style={{ overscrollBehavior: 'contain' }}>
           <div className={`order-preview-embed not-prose bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden ${viewMode === 'mobile' ? 'w-full max-w-sm h-fit' : 'w-full h-fit'}`}>
             <div className="w-full relative">
               <div style={{
@@ -615,7 +615,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 p-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+24px)] border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+        <div className="flex flex-col gap-2 p-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+24px)] border-t bg-white sticky bottom-0 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]" style={{ position: 'relative', zIndex: 50, touchAction: 'manipulation', isolation: 'isolate' }}>
           {!hideActions && (
             <div className="flex gap-2 w-full">
               <Button
@@ -635,37 +635,60 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
               </Button>
 
               <button
-                onClick={(e) => {
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (downloading || sending) return;
                   const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
                   const shareText = language === 'he'
                     ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
                     : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
-
                   if (navigator.share) {
-                    // Synchronous call — no await before this, required for Android gesture chain
-                    navigator.share({
-                      title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
-                      text: shareText,
-                      url: orderUrl,
-                    }).then(() => {
-                      if (!order.order_number && order.id) {
-                        base44.entities.Order.update(order.id, { order_number: ensuredNumber, status: order.status === 'draft' ? 'sent' : (order.status || 'sent') }).catch(() => {});
-                      }
-                      if (onSend) onSend({ ...order, order_number: ensuredNumber, status: 'sent' });
-                    }).catch((err) => {
-                      if (err.name !== 'AbortError') {
-                        navigator.clipboard.writeText(shareText).then(() => toast.success(language === 'he' ? 'הועתק!' : 'Copied!')).catch(() => {});
-                      }
-                    });
+                    navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText, url: orderUrl })
+                      .then(() => { if (onSend) onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); })
+                      .catch((err) => { if (err.name !== 'AbortError') navigator.clipboard.writeText(shareText).catch(() => {}); });
+                  } else {
+                    navigator.clipboard.writeText(shareText + '\n' + orderUrl).then(() => toast.success(language === 'he' ? 'הועתק!' : 'Copied!')).catch(() => {});
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (downloading || sending) return;
+                  const ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+                  const shareText = language === 'he'
+                    ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
+                    : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
+                  if (navigator.share) {
+                    navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText, url: orderUrl })
+                      .then(() => { if (onSend) onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); })
+                      .catch((err) => { if (err.name !== 'AbortError') navigator.clipboard.writeText(shareText).catch(() => {}); });
                   } else {
                     navigator.clipboard.writeText(shareText + '\n' + orderUrl).then(() => toast.success(language === 'he' ? 'הועתק!' : 'Copied!')).catch(() => {});
                   }
                 }}
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
-                className="flex-[1.5] h-12 rounded-md bg-[#d4a373] text-white font-medium text-[15px] flex items-center justify-center gap-1.5"
-                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                style={{
+                  flex: '1.5',
+                  height: '48px',
+                  backgroundColor: '#d4a373',
+                  color: 'white',
+                  fontWeight: '500',
+                  fontSize: '15px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  position: 'relative',
+                  zIndex: 100,
+                }}
               >
                 <Share className="w-5 h-5" />
                 {safeT('share_order', 'שתף', 'Share')}
