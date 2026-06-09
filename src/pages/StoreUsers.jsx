@@ -49,12 +49,18 @@ function AccessLinkCard({ role, title, subtitle, pin, link, generating, copied, 
               {copied ? (language === 'he' ? 'הועתק!' : 'Copied!') : (language === 'he' ? 'העתק' : 'Copy')}
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 const msg = language === 'he'
                   ? `שלום! הנה הקישור לפורטל העובדים:\n${link}\n\nקוד גישה: ${pin}`
                   : `Hi! Here is your worker portal link:\n${link}\n\nAccess PIN: ${pin}`;
                 if (navigator.share) {
-                  navigator.share({ text: msg });
+                  try {
+                    await navigator.share({ text: msg });
+                  } catch (e) {
+                    if (e.name !== 'AbortError') {
+                      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+                    }
+                  }
                 } else {
                   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
                 }
