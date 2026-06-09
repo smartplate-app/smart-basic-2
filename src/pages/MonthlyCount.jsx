@@ -98,9 +98,12 @@ export default function MonthlyCountPage() {
             }
         } else {
             console.log("[MonthlyCount] Loading data in parallel...");
-            const query = { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
             // Use service role for store users (workers/managers) so RLS doesn't block them from seeing the owner's data
             const isStoreUser = currentUserReq.store_user_owner_email || currentUserReq.acting_as_store_email;
+            // When using service role (bypasses RLS), scope strictly to store_owner_email to avoid leaking other users' data
+            const query = isStoreUser
+              ? { store_owner_email: userEmail }
+              : { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
             const api = isStoreUser ? base44.asServiceRole.entities : base44.entities;
             const [fetchedCounts, fetchedWarehouses, fetchedItems] = await Promise.all([
               api.InventoryCount.filter(query, "-count_date", 10000),
