@@ -461,9 +461,9 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
           receipt_images: [...prev.receipt_images, ...urls]
         }));
         
-        // Auto-scan after upload
+        // Auto-scan after upload — use the freshly uploaded URLs only (avoid stale closure)
         setTimeout(() => {
-          handleAutoScanWithUrls([...formData.receipt_images, ...urls]);
+          handleAutoScanWithUrls(urls);
         }, 300);
       }
     } catch (error) {
