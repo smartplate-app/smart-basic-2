@@ -1160,6 +1160,7 @@ export default function OrdersPage() {
               order={editingOrder}
               suppliers={suppliers}
               externalItems={managerItems.length > 0 ? managerItems : undefined}
+              defaultRestaurantName={user?.acting_as_store_name || user?.store_user_store_name || user?.business_name || ""}
               onSubmit={handleSubmit}
               onSaveDraft={handleSaveDraft}
               onCancel={() => {
