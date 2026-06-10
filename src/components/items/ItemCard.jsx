@@ -63,22 +63,30 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
+              <DropdownMenuItem asChild={!!item.source_document_id} onClick={(e) => {
+                if (!item.source_document_id) {
+                  e.preventDefault();
+                  alert(t('language') === 'he' ? 'לא נמצא מסמך מקור לפריט זה' : 'Source document not found');
+                }
+              }}>
+                {item.source_document_id ? (
+                  <Link to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`} className="flex items-center gap-2 cursor-pointer">
+                    <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                    {t('language') === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-2 cursor-pointer text-gray-500">
+                    <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                    {t('language') === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                  </div>
+                )}
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(item)}>
-                <Pencil className="w-4 h-4 mr-2" />
+                <Pencil className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
                 {t('edit')}
               </DropdownMenuItem>
-              {item.source_document_id && (
-                <DropdownMenuItem asChild>
-                  <Link to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`} className="flex items-center gap-2 cursor-pointer">
-                    <ExternalLink className="w-4 h-4" />
-                    {item.source_type === 'inventory_count'
-                      ? (t('language') === 'he' ? 'צפה בספירת מלאי' : 'View Inventory Count')
-                      : (t('language') === 'he' ? 'צפה בקבלת אספקה' : 'View Supply Receipt')}
-                  </Link>
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem onClick={() => onDelete(item)} className="text-red-600">
-                <Trash2 className="w-4 h-4 mr-2" />
+                <Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
                 {t('delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>

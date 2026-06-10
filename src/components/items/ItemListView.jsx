@@ -229,24 +229,32 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild={!!(src && item.source_document_id)} onClick={(e) => {
+                            if (!(src && item.source_document_id)) {
+                              e.preventDefault();
+                              alert(language === 'he' ? 'לא נמצא מסמך מקור לפריט זה' : 'Source document not found');
+                            }
+                          }}>
+                            {src && item.source_document_id ? (
+                              <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
+                                <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                                {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                              </Link>
+                            ) : (
+                              <div className="flex items-center gap-2 cursor-pointer text-gray-500">
+                                <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                                {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                              </div>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onEdit(item)}>
-                            <Pencil className="w-4 h-4 mr-2" />
+                            <Pencil className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
                             {t('edit')}
                           </DropdownMenuItem>
-                          {src && item.source_document_id && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem asChild>
-                                <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
-                                  <ExternalLink className="w-4 h-4" />
-                                  {language === 'he' ? 'צפה במקור הפריט' : 'View item source'}
-                                </Link>
-                              </DropdownMenuItem>
-                            </>
-                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onDelete(item)} className="text-red-600">
-                            <Trash2 className="w-4 h-4 mr-2" />
+                            <Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
                             {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -255,25 +263,33 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                   </TableRow>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
+                  <ContextMenuItem asChild={!!(src && item.source_document_id)} onClick={(e) => {
+                    if (!(src && item.source_document_id)) {
+                      e.preventDefault();
+                      alert(language === 'he' ? 'לא נמצא מסמך מקור לפריט זה' : 'Source document not found');
+                    }
+                  }}>
+                    {src && item.source_document_id ? (
+                      <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
+                        <src.icon className={`w-4 h-4 ${src.color} mr-2 rtl:ml-2 rtl:mr-0`} />
+                        {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                        {item.source_document_number && <span className="text-xs text-gray-400 mr-1 rtl:mr-0 rtl:ml-1">({item.source_document_number})</span>}
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-2 cursor-pointer text-gray-500">
+                        <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                        {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                      </div>
+                    )}
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
                   <ContextMenuItem onClick={() => onEdit(item)}>
-                    <Pencil className="w-4 h-4 mr-2" />
+                    <Pencil className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
                     {language === 'he' ? 'ערוך פריט' : 'Edit item'}
                   </ContextMenuItem>
-                  {src && item.source_document_id && (
-                    <>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem asChild>
-                        <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
-                          <src.icon className={`w-4 h-4 ${src.color}`} />
-                          {language === 'he' ? 'צפה במקור הפריט' : 'View item source'}
-                          {item.source_document_number && <span className="text-xs text-gray-400 mr-1">({item.source_document_number})</span>}
-                        </Link>
-                      </ContextMenuItem>
-                    </>
-                  )}
                   <ContextMenuSeparator />
                   <ContextMenuItem onClick={() => onDelete(item)} className="text-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
                     {language === 'he' ? 'מחק פריט' : 'Delete item'}
                   </ContextMenuItem>
                 </ContextMenuContent>

@@ -863,27 +863,33 @@ const handleCleanOrphans = async (ownerEmail) => {
                           </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start">
+                          <DropdownMenuItem asChild={!!item.source_document_id} onClick={(e) => {
+                            if (!item.source_document_id) {
+                              e.preventDefault();
+                              alert(language === 'he' ? 'לא נמצא מסמך מקור לפריט זה' : 'Source document not found');
+                            }
+                          }}>
+                            {item.source_document_id ? (
+                              <Link
+                                to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`}
+                                className="flex items-center gap-2 cursor-pointer"
+                              >
+                                <ExternalLink className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                                {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                                {item.source_document_number && <span className="text-xs text-gray-400">({item.source_document_number})</span>}
+                              </Link>
+                            ) : (
+                              <div className="flex items-center gap-2 cursor-pointer text-gray-500">
+                                <ExternalLink className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                                {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                              </div>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleEdit(items.find(i => i.id === item.id) || item)}>
                             <FileText className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
                             {language === 'he' ? 'ערוך פריט' : 'Edit item'}
                           </DropdownMenuItem>
-                          {item.source_document_id && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`}
-                                  className="flex items-center gap-2 cursor-pointer"
-                                >
-                                  <ExternalLink className="w-4 h-4" />
-                                  {item.source_type === 'inventory_count'
-                                    ? (language === 'he' ? 'צפה בספירת מלאי' : 'View inventory count')
-                                    : (language === 'he' ? 'צפה בקבלת אספקה' : 'View supply receipt')}
-                                  {item.source_document_number && <span className="text-xs text-gray-400">({item.source_document_number})</span>}
-                                </Link>
-                              </DropdownMenuItem>
-                            </>
-                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleDelete(item)} className="text-red-600">
                             <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
