@@ -1647,12 +1647,13 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                     </>
                   )}
                 </div>
-                <Button type="button" onClick={() => {
+                <Button type="button" onClick={async () => {
                   const currentData = formDataRef.current;
                   if (currentData?.id) {
                     const dirtyItems = Array.from(dirtyItemsRef.current.values());
                     const hasDirtyMetadata = dirtyMetadataRef.current;
                     if (dirtyItems.length > 0 || hasDirtyMetadata) {
+                      setSyncStatus('saving');
                       const cleanedDirtyItems = dirtyItems.map(item => ({
                         ...item,
                         counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
@@ -1668,12 +1669,19 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                         status: currentData.status,
                         notes: currentData.notes
                       } : null;
-                      base44.functions.invoke('syncActiveCountItems', {
-                        currentCountId: currentData.id,
-                        updatedItems: cleanedDirtyItems,
-                        metadata,
-                        total_inventory_value: currentData.total_inventory_value || 0
-                      }).catch(console.error);
+                      
+                      try {
+                        await base44.functions.invoke('syncActiveCountItems', {
+                          currentCountId: currentData.id,
+                          updatedItems: cleanedDirtyItems,
+                          metadata,
+                          total_inventory_value: currentData.total_inventory_value || 0
+                        });
+                        dirtyItemsRef.current.clear();
+                        dirtyMetadataRef.current = false;
+                      } catch (e) {
+                        console.error(e);
+                      }
                     }
                   }
                   onCancel();
