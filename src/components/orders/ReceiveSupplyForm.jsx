@@ -1809,6 +1809,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         </AlertDescription>
                       </Alert>
                     )}
+                </>
+              )}
 
                     <div className={`grid gap-2 pt-4 w-full ${scannedDocs.length > 1 ? 'grid-cols-2' : ((receipt && onDelete && !isReadOnly) ? 'grid-cols-3' : (!isReadOnly ? 'grid-cols-2' : 'grid-cols-1'))}`}>
 
@@ -1923,8 +1925,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         </>
                       )}
                     </div>
-                </>
-              )}
             </>
           ) : null}
     </form>
