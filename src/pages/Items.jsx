@@ -866,7 +866,7 @@ const handleCleanOrphans = async (ownerEmail) => {
                           <DropdownMenuItem asChild={!!item.source_document_id} onClick={(e) => {
                             if (!item.source_document_id) {
                               e.preventDefault();
-                              alert(language === 'he' ? 'לא נמצא מסמך מקור לפריט זה' : 'Source document not found');
+                              alert(language === 'he' ? 'לא נמצא מסמך מקור מקושר לפריט זה' : 'Source document not linked');
                             }
                           }}>
                             {item.source_document_id ? (
@@ -874,14 +874,25 @@ const handleCleanOrphans = async (ownerEmail) => {
                                 to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`}
                                 className="flex items-center gap-2 cursor-pointer"
                               >
-                                <ExternalLink className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                                {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
-                                {item.source_document_number && <span className="text-xs text-gray-400">({item.source_document_number})</span>}
+                                <ExternalLink className="w-4 h-4 rtl:ml-2 ltr:mr-2 shrink-0" />
+                                <span>
+                                  {item.source_type === 'inventory_count'
+                                    ? (language === 'he' ? `מספירת מלאי: ${item.source_document_number || 'ללא שם'}` : `From count: ${item.source_document_number || 'Unnamed'}`)
+                                    : item.source_type === 'supply_receipt'
+                                    ? (language === 'he' ? `מקבלת אספקה (מסמך ${item.source_document_number || 'ללא מספר'})` : `From receipt (Doc ${item.source_document_number || 'N/A'})`)
+                                    : (language === 'he' ? 'מקור הפריט' : 'Source document')}
+                                </span>
                               </Link>
                             ) : (
                               <div className="flex items-center gap-2 cursor-pointer text-gray-500">
-                                <ExternalLink className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                                {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                                <ExternalLink className="w-4 h-4 rtl:ml-2 ltr:mr-2 shrink-0" />
+                                <span>
+                                  {item.source_type === 'inventory_count'
+                                    ? (language === 'he' ? `מספירת מלאי (חסר קישור)` : `From count (No link)`)
+                                    : item.source_type === 'supply_receipt'
+                                    ? (language === 'he' ? `מקבלת אספקה (חסר קישור)` : `From receipt (No link)`)
+                                    : (language === 'he' ? 'מקור הפריט לא ידוע' : 'Unknown source')}
+                                </span>
                               </div>
                             )}
                           </DropdownMenuItem>

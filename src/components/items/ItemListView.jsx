@@ -232,19 +232,30 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                           <DropdownMenuItem asChild={!!(src && item.source_document_id)} onClick={(e) => {
                             if (!(src && item.source_document_id)) {
                               e.preventDefault();
-                              alert(language === 'he' ? 'לא נמצא מסמך מקור לפריט זה' : 'Source document not found');
+                              alert(language === 'he' ? 'לא נמצא מסמך מקור מקושר לפריט זה' : 'Source document not linked');
                             }
                           }}>
                             {src && item.source_document_id ? (
                               <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
-                                <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                                {src.label}
-                                {item.source_document_number && <span className="mx-1 text-gray-400" dir="ltr">({item.source_document_number})</span>}
+                                <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+                                <span>
+                                  {item.source_type === 'inventory_count'
+                                    ? (language === 'he' ? `מספירת מלאי: ${item.source_document_number || 'ללא שם'}` : `From count: ${item.source_document_number || 'Unnamed'}`)
+                                    : item.source_type === 'supply_receipt'
+                                    ? (language === 'he' ? `מקבלת אספקה (מסמך ${item.source_document_number || 'ללא מספר'})` : `From receipt (Doc ${item.source_document_number || 'N/A'})`)
+                                    : (language === 'he' ? 'מקור פריט' : 'Source document')}
+                                </span>
                               </Link>
                             ) : (
                               <div className="flex items-center gap-2 cursor-pointer text-gray-500">
-                                <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                                {language === 'he' ? 'מקור' : 'Source'}
+                                <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+                                <span>
+                                  {item.source_type === 'inventory_count'
+                                    ? (language === 'he' ? `מספירת מלאי (חסר קישור)` : `From count (No link)`)
+                                    : item.source_type === 'supply_receipt'
+                                    ? (language === 'he' ? `מקבלת אספקה (חסר קישור)` : `From receipt (No link)`)
+                                    : (language === 'he' ? 'מקור פריט לא ידוע' : 'Unknown source')}
+                                </span>
                               </div>
                             )}
                           </DropdownMenuItem>
@@ -267,19 +278,30 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                   <ContextMenuItem asChild={!!(src && item.source_document_id)} onClick={(e) => {
                     if (!(src && item.source_document_id)) {
                       e.preventDefault();
-                      alert(language === 'he' ? 'לא נמצא מסמך מקור לפריט זה' : 'Source document not found');
+                      alert(language === 'he' ? 'לא נמצא מסמך מקור מקושר לפריט זה' : 'Source document not linked');
                     }
                   }}>
                     {src && item.source_document_id ? (
                       <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
-                        <src.icon className={`w-4 h-4 ${src.color} mr-2 rtl:ml-2 rtl:mr-0`} />
-                        {src.label}
-                        {item.source_document_number && <span className="text-xs text-gray-400 mx-1" dir="ltr">({item.source_document_number})</span>}
+                        <src.icon className={`w-4 h-4 shrink-0 ${src.color} mr-2 rtl:ml-2 rtl:mr-0`} />
+                        <span>
+                          {item.source_type === 'inventory_count'
+                            ? (language === 'he' ? `מספירת מלאי: ${item.source_document_number || 'ללא שם'}` : `From count: ${item.source_document_number || 'Unnamed'}`)
+                            : item.source_type === 'supply_receipt'
+                            ? (language === 'he' ? `מקבלת אספקה (מסמך ${item.source_document_number || 'ללא מספר'})` : `From receipt (Doc ${item.source_document_number || 'N/A'})`)
+                            : (language === 'he' ? 'מקור פריט' : 'Source document')}
+                        </span>
                       </Link>
                     ) : (
                       <div className="flex items-center gap-2 cursor-pointer text-gray-500">
-                        <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                        {language === 'he' ? 'מקור' : 'Source'}
+                        <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+                        <span>
+                          {item.source_type === 'inventory_count'
+                            ? (language === 'he' ? `מספירת מלאי (חסר קישור)` : `From count (No link)`)
+                            : item.source_type === 'supply_receipt'
+                            ? (language === 'he' ? `מקבלת אספקה (חסר קישור)` : `From receipt (No link)`)
+                            : (language === 'he' ? 'מקור פריט לא ידוע' : 'Unknown source')}
+                        </span>
                       </div>
                     )}
                   </ContextMenuItem>

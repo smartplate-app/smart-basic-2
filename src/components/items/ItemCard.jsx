@@ -66,19 +66,30 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
               <DropdownMenuItem asChild={!!item.source_document_id} onClick={(e) => {
                 if (!item.source_document_id) {
                   e.preventDefault();
-                  alert(t('language') === 'he' ? 'לא נמצא מסמך מקור לפריט זה' : 'Source document not found');
+                  alert(t('language') === 'he' ? 'לא נמצא מסמך מקור מקושר לפריט זה' : 'Source document not linked');
                 }
               }}>
                 {item.source_document_id ? (
                   <Link to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`} className="flex items-center gap-2 cursor-pointer">
-                    <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                    {item.source_type === 'inventory_count' ? (t('language') === 'he' ? 'ספירה' : 'Count') : (t('language') === 'he' ? 'קבלת אספקה' : 'Supply receipt')}
-                    {item.source_document_number && <span className="mx-1" dir="ltr">({item.source_document_number})</span>}
+                    <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+                    <span>
+                      {item.source_type === 'inventory_count' 
+                        ? (t('language') === 'he' ? `מספירת מלאי: ${item.source_document_number || 'ללא שם'}` : `From count: ${item.source_document_number || 'Unnamed'}`)
+                        : item.source_type === 'supply_receipt'
+                        ? (t('language') === 'he' ? `מקבלת אספקה (מסמך ${item.source_document_number || 'ללא מספר'})` : `From receipt (Doc ${item.source_document_number || 'N/A'})`)
+                        : (t('language') === 'he' ? 'מקור פריט' : 'Source document')}
+                    </span>
                   </Link>
                 ) : (
                   <div className="flex items-center gap-2 cursor-pointer text-gray-500">
-                    <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                    {t('language') === 'he' ? 'מקור' : 'Source'}
+                    <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+                    <span>
+                      {item.source_type === 'inventory_count'
+                        ? (t('language') === 'he' ? `מספירת מלאי (חסר קישור)` : `From count (No link)`)
+                        : item.source_type === 'supply_receipt'
+                        ? (t('language') === 'he' ? `מקבלת אספקה (חסר קישור)` : `From receipt (No link)`)
+                        : (t('language') === 'he' ? 'מקור פריט לא ידוע' : 'Unknown source')}
+                    </span>
                   </div>
                 )}
               </DropdownMenuItem>
