@@ -312,12 +312,7 @@ export default function SupplyReceiptsPage() {
       // This closes the full credit cycle: whenever a refund doc is saved with a linked receipt,
       // the original doc (awaiting credit) gets marked as resolved.
       if (cleanData.linked_receipt_id) {
-        await base44.entities.SupplyReceipt.update(cleanData.linked_receipt_id, {
-          awaiting_credit: false,
-          refund_received: true,
-          reviewed: true,
-          needs_review: false
-        }).catch(() => {});
+        await base44.functions.invoke('closeAwaitingCredit', { linked_receipt_id: cleanData.linked_receipt_id }).catch(() => {});
         // Optimistic update in local state
         setReceipts(prev => prev.map(r =>
           r.id === cleanData.linked_receipt_id
