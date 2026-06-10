@@ -379,10 +379,7 @@ export default function SupplyReceiptsPage() {
   const filteredReceipts = receipts.filter(receipt => {
     // Exclude resolved receipts only when explicitly filtering for normal invoices/delivery notes.
     // "All" should show absolutely everything.
-    if (statusFilter === 'invoices' || statusFilter === 'delivery_notes') {
-        const isResolved = receipt.reviewed || receipt.refund_received || receipt.linked_receipt_id;
-        if (isResolved) return false;
-    }
+
 
     const matchesSearch = receipt.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          receipt.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
