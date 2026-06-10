@@ -27,7 +27,9 @@ export default function WasteReports() {
     let repsData = [];
 
     const isAdminControlling = !!(currentUser?.admin_original_email && currentUser?.acting_as_user_email);
-    let targetEmail = currentUser?.acting_as_store_email || currentUser?.acting_as_user_email || currentUser?.email;
+    const ownerEmail = currentUser?.acting_as_store_email || currentUser?.store_user_owner_email;
+    const isStoreUser = !!ownerEmail;
+    let targetEmail = ownerEmail || currentUser?.acting_as_user_email || currentUser?.email;
     
     if (isAdminControlling) {
         try {
@@ -38,11 +40,21 @@ export default function WasteReports() {
                 repsData = data.data.wasteReports || [];
             }
         } catch(e) {}
+    } else if (isStoreUser) {
+        const { data: mgData } = await base44.functions.invoke('getManagerData', {
+          ownerEmail,
+          entities: ['warehouses', 'items', 'wasteReports']
+        });
+        if (mgData?.data) {
+          whData = mgData.data.warehouses || [];
+          itsData = mgData.data.items || [];
+          repsData = mgData.data.wasteReports || [];
+        }
     } else {
         const [wh, its, reps] = await Promise.all([
-          base44.entities.Warehouse.filter({ created_by: targetEmail }),
-          base44.entities.Item.filter({ created_by: targetEmail }),
-          base44.entities.WasteReport.filter({ created_by: targetEmail })
+          base44.entities.Warehouse.filter({ $or: [{ created_by: targetEmail }, { store_owner_email: targetEmail }] }),
+          base44.entities.Item.filter({ $or: [{ created_by: targetEmail }, { store_owner_email: targetEmail }] }),
+          base44.entities.WasteReport.filter({ $or: [{ created_by: targetEmail }, { store_owner_email: targetEmail }] })
         ]);
         whData = wh;
         itsData = its;

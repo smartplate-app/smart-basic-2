@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
       entitiesToFetch.includes('dashboardData') && fetchBoth('MonthlyDashboardData').then(d => result.dashboardData = d),
       entitiesToFetch.includes('schedules') && fetchBoth('WeeklySchedule').then(d => result.schedules = d),
       entitiesToFetch.includes('cogsReports') && fetchBoth('CogsReport').then(d => result.cogsReports = d),
+      entitiesToFetch.includes('priceChangeLogs') && fetchBoth('PriceChangeLog').then(d => result.priceChangeLogs = d),
     ].filter(Boolean));
 
     return Response.json({ success: true, data: result });
