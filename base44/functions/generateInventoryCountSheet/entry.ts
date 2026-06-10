@@ -123,56 +123,42 @@ Deno.serve(async (req) => {
       'יחידה',
       'מק"ט',
       'מחיר ליחידה',
-      'שם מחסן',
       'ארגזים שנספרו',
       'יחידות שנספרו',
       'הערות'
     ] : [
-      'supplier_name',
-      'item_name',
-      'unit',
-      'catalog_number',
-      'price_per_unit',
-      'warehouse_name',
-      'counted_cases',
-      'counted_units',
-      'notes'
+      'Supplier',
+      'Item Name',
+      'Unit',
+      'Catalog #',
+      'Price/Unit',
+      'Counted Cases',
+      'Counted Units',
+      'Notes'
     ];
 
-    let flatItems = [];
+    // Group items by warehouse
+    const warehouseMap = new Map();
+    const noWarehouseKey = isHebrew ? 'ללא מחסן' : 'No Warehouse';
+
     (items || []).forEach(it => {
-      const warehouses = it.warehouse_names && it.warehouse_names.length > 0 
-        ? it.warehouse_names 
-        : (it.warehouse_name ? [it.warehouse_name] : ['']);
-      
+      const warehouses = it.warehouse_names && it.warehouse_names.length > 0
+        ? it.warehouse_names
+        : (it.warehouse_name ? [it.warehouse_name] : [noWarehouseKey]);
+
       warehouses.forEach(whName => {
-        flatItems.push({
-          ...it,
-          single_warehouse_name: whName
-        });
+        const key = whName || noWarehouseKey;
+        if (!warehouseMap.has(key)) warehouseMap.set(key, []);
+        warehouseMap.get(key).push(it);
       });
     });
 
-    const rows = flatItems
-      .sort((a,b) => {
-        return (a.single_warehouse_name||'').localeCompare(b.single_warehouse_name||'') || 
-               (a.supplier_name||'').localeCompare(b.supplier_name||'') || 
-               (a.name||'').localeCompare(b.name||'');
-      })
-      .map(it => {
-        const isCaseItem = it.unit === 'case';
-        return [
-          it.supplier_name || '',
-          it.name || '',
-          it.unit || '',
-          it.catalog_number || '',
-          Number(it.price || 0),
-          it.single_warehouse_name || '',
-          isCaseItem ? '' : 'N/A', // Counted Cases
-          '',                      // Counted Units
-          ''                       // Notes
-        ];
-      });
+    // If no warehouse grouping, put everything under one tab
+    if (warehouseMap.size === 0) {
+      warehouseMap.set(isHebrew ? 'כל הפריטים' : 'All Items', items);
+    }
+
+    const warehouseEntries = Array.from(warehouseMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 
     const root = await findOrCreateFolder(driveToken, 'SmartPlateUploads', null);
     const userFolder = await findOrCreateFolder(driveToken, workingEmail, root.id);
@@ -182,84 +168,102 @@ Deno.serve(async (req) => {
     const fileMeta = await driveRequest(driveToken, '/drive/v3/files', {
       method: 'POST',
       query: { fields: 'id,name,webViewLink' },
-      body: { name: sheet_name || `InventoryCount-${monthLabel}` , mimeType: 'application/vnd.google-apps.spreadsheet', parents: [parent.id] }
+      body: { name: sheet_name || `InventoryCount-${monthLabel}`, mimeType: 'application/vnd.google-apps.spreadsheet', parents: [parent.id] }
     });
 
-    if (isHebrew) {
-      try {
-        await sheetsRequest(sheetsToken, `/v4/spreadsheets/${fileMeta.id}:batchUpdate`, {
-          method: 'POST',
-          body: {
-            requests: [
-              {
-                updateSheetProperties: {
-                  properties: {
-                    sheetId: 0,
-                    rightToLeft: true
-                  },
-                  fields: 'rightToLeft'
-                }
-              }
-            ]
+    const spreadsheetId = fileMeta.id;
+
+    // Build sheets: rename Sheet1 to first warehouse, add rest
+    const firstWhName = warehouseEntries[0][0];
+    const safeTabName = (name) => name.replace(/[\\\/\?\*\[\]:]/g, '-').substring(0, 31);
+
+    // Rename the default Sheet1 to first warehouse name
+    const renameRequests = [
+      {
+        updateSheetProperties: {
+          properties: { sheetId: 0, title: safeTabName(firstWhName), ...(isHebrew ? { rightToLeft: true } : {}) },
+          fields: isHebrew ? 'title,rightToLeft' : 'title'
+        }
+      }
+    ];
+
+    // Add additional sheets for each warehouse (after the first)
+    for (let i = 1; i < warehouseEntries.length; i++) {
+      renameRequests.push({
+        addSheet: {
+          properties: {
+            title: safeTabName(warehouseEntries[i][0]),
+            index: i,
+            ...(isHebrew ? { rightToLeft: true } : {})
           }
-        });
-      } catch (e) {
-        console.error('Failed to set RTL:', e);
-      }
-    }
-
-    await sheetsRequest(sheetsToken, `/v4/spreadsheets/${fileMeta.id}/values:batchUpdate`, {
-      method: 'POST',
-      body: {
-        valueInputOption: 'RAW',
-        data: [{ range: 'Sheet1!A1', values: [headers, ...rows] }]
-      }
-    });
-
-    try {
-      await sheetsRequest(sheetsToken, `/v4/spreadsheets/${fileMeta.id}:batchUpdate`, {
-        method: 'POST',
-        body: {
-          requests: [
-            {
-              setBasicFilter: {
-                filter: {
-                  range: {
-                    sheetId: 0,
-                    startRowIndex: 0,
-                    endRowIndex: rows.length + 1,
-                    startColumnIndex: 0,
-                    endColumnIndex: headers.length
-                  }
-                }
-              }
-            },
-            {
-              updateSheetProperties: {
-                properties: {
-                  sheetId: 0,
-                  gridProperties: {
-                    frozenRowCount: 1
-                  }
-                },
-                fields: 'gridProperties.frozenRowCount'
-              }
-            },
-            {
-              autoResizeDimensions: {
-                dimensions: {
-                  sheetId: 0,
-                  dimension: 'COLUMNS',
-                  startIndex: 0,
-                  endIndex: headers.length
-                }
-              }
-            }
-          ]
         }
       });
-    } catch (filterError) {
-      console.error('Failed to set basic filter:', filterError);
+    }
+
+    const batchResult = await sheetsRequest(sheetsToken, `/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      method: 'POST',
+      body: { requests: renameRequests }
+    });
+
+    // Get real sheetIds assigned to each tab
+    const sheetIdMap = new Map();
+    sheetIdMap.set(safeTabName(firstWhName), 0);
+    if (batchResult?.replies) {
+      batchResult.replies.forEach((reply, idx) => {
+        if (reply?.addSheet?.properties) {
+          const tabName = safeTabName(warehouseEntries[idx + 1]?.[0] || '');
+          sheetIdMap.set(tabName, reply.addSheet.properties.sheetId);
+        }
+      });
+    }
+
+    // Write data to each sheet tab
+    const valueData = [];
+    for (const [whName, whItems] of warehouseEntries) {
+      const tabName = safeTabName(whName);
+      const rows = whItems
+        .sort((a, b) => (a.supplier_name||'').localeCompare(b.supplier_name||'') || (a.name||'').localeCompare(b.name||''))
+        .map(it => {
+          const isCaseItem = it.unit === 'case';
+          return [
+            it.supplier_name || '',
+            it.name || '',
+            it.unit || '',
+            it.catalog_number || '',
+            Number(it.price || 0),
+            isCaseItem ? '' : 'N/A',
+            '',
+            ''
+          ];
+        });
+      valueData.push({ range: `${tabName}!A1`, values: [headers, ...rows] });
+    }
+
+    await sheetsRequest(sheetsToken, `/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
+      method: 'POST',
+      body: { valueInputOption: 'RAW', data: valueData }
+    });
+
+    // Format each sheet: freeze header, filter, auto-resize
+    const formatRequests = [];
+    for (const [whName, whItems] of warehouseEntries) {
+      const tabName = safeTabName(whName);
+      const sheetId = sheetIdMap.get(tabName) ?? 0;
+      const rowCount = whItems.length + 1;
+      formatRequests.push(
+        { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } },
+        { setBasicFilter: { filter: { range: { sheetId, startRowIndex: 0, endRowIndex: rowCount, startColumnIndex: 0, endColumnIndex: headers.length } } } },
+        { autoResizeDimensions: { dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: headers.length } } }
+      );
+    }
+
+    try {
+      await sheetsRequest(sheetsToken, `/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+        method: 'POST',
+        body: { requests: formatRequests }
+      });
+    } catch (formatError) {
+      console.error('Failed to format sheets:', formatError);
     }
 
     const shareTo = (user.drive_share_email || workingEmail).trim();
