@@ -941,17 +941,20 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       const newItemsToCreate = formData.verified_items.filter(item => !item.item_id && item.item_name);
       if (newItemsToCreate.length > 0) {
         const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
+        // We don't have the receipt ID yet (it will be created by onSubmit), so pass supplier info as source hint
         for (const item of newItemsToCreate) {
           const itemPayload = {
             name: item.item_name,
-            supplier_id: 'pending',
-            supplier_name: 'להשלמה',
+            supplier_id: formData.supplier_id || 'pending',
+            supplier_name: formData.supplier_name || 'להשלמה',
             price: item.actual_price || 0,
             unit: item.unit || 'unit',
             is_pending_completion: true,
             status: 'pending_completion',
             store_owner_email: workingEmail,
-            created_by: user?.email
+            created_by: user?.email,
+            source_type: 'supply_receipt',
+            source_document_number: formData.invoice_number || formData.order_number || ''
           };
           const createdItem = await base44.entities.Item.create(itemPayload);
           // Update the receipt item with the new ID
@@ -1834,14 +1837,16 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                     const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
                                     const createdItem = await base44.entities.Item.create({
                                       name: item.item_name,
-                                      supplier_id: 'pending',
-                                      supplier_name: 'להשלמה',
+                                      supplier_id: formData.supplier_id || 'pending',
+                                      supplier_name: formData.supplier_name || 'להשלמה',
                                       price: item.actual_price || 0,
                                       unit: item.unit || 'unit',
                                       is_pending_completion: true,
                                       status: 'pending_completion',
                                       store_owner_email: workingEmail,
-                                      created_by: user?.email
+                                      created_by: user?.email,
+                                      source_type: 'supply_receipt',
+                                      source_document_number: formData.invoice_number || formData.order_number || ''
                                     });
                                     item.item_id = createdItem.id;
                                   } catch(e) { console.error(e); }

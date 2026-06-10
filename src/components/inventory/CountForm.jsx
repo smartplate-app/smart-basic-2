@@ -1322,6 +1322,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                                               supplier_name: language === 'he' ? "להשלמה" : "Pending",
                                               unit: "unit",
                                               price: parseFloat(customItemData.price) || 0,
+                                              source_type: 'inventory_count',
+                                              source_document_number: formData.name || formData.count_date || ''
                                             };
                                             const targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email;
                                             if (targetEmail) {
