@@ -388,6 +388,10 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       
       if (!shareSucceeded) {
         // Fallback for desktop or when share is completely missing: Try to copy to clipboard so they can paste it
+        const phone = (order.supplier_phone || "").replace(/\D/g, "");
+        const textWithLink = shareText + "\n\n" + (language === 'he' ? "קישור להזמנה: " : "Order link: ") + orderUrl;
+        
+        let hasImageInClipboard = false;
         try {
           if (navigator.clipboard && navigator.clipboard.write) {
             const pngDataUrl = canvas.toDataURL('image/png');
@@ -397,28 +401,32 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             await navigator.clipboard.write([
               new ClipboardItem({
                 'image/png': pngBlob,
-                'text/plain': new Blob([shareText], { type: 'text/plain' })
+                'text/plain': new Blob([textWithLink], { type: 'text/plain' })
               })
             ]);
-            toast.success(language === 'he' ? 'התמונה והטקסט הועתקו! הדבק אותם בוואטסאפ' : 'Image and text copied! Paste them in WhatsApp');
+            hasImageInClipboard = true;
+            toast.success(language === 'he' ? 'התמונה והטקסט הועתקו! הדבק (Ctrl+V או Cmd+V) בוואטסאפ כדי לשלוח' : 'Image and text copied! Paste (Ctrl+V / Cmd+V) in WhatsApp to send', { duration: 8000 });
           } else {
-             await navigator.clipboard.writeText(shareText);
-             toast.success(language === 'he' ? 'טקסט ההזמנה הועתק! התמונה לא נתמכת במכשיר זה.' : 'Order text copied! Image copying unsupported on this device.');
+             await navigator.clipboard.writeText(textWithLink);
+             toast.success(language === 'he' ? 'טקסט ההזמנה הועתק! התמונה לא נתמכת במכשיר זה.' : 'Order text copied! Image copying unsupported on this device.', { duration: 6000 });
           }
         } catch (copyErr) {
           console.error('Clipboard copy failed', copyErr);
           try {
-             await navigator.clipboard.writeText(shareText);
-             toast.success(language === 'he' ? 'טקסט ההזמנה הועתק!' : 'Order text copied!');
+             await navigator.clipboard.writeText(textWithLink);
+             toast.success(language === 'he' ? 'טקסט ההזמנה הועתק!' : 'Order text copied!', { duration: 6000 });
           } catch (e) {}
         }
 
         // Open WhatsApp Web/Desktop automatically
-        const phone = (order.supplier_phone || "").replace(/\D/g, "");
-        const textWithLink = shareText + "\n\n" + (language === 'he' ? "קישור להזמנה: " : "Order link: ") + orderUrl;
-        
         setTimeout(() => {
-          window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(textWithLink)}` : `https://wa.me/?text=${encodeURIComponent(textWithLink)}`, '_blank');
+          if (hasImageInClipboard) {
+            // We intentionally DO NOT pass ?text= here, so the user is forced to paste the clipboard manually.
+            // Pasting will attach the image AND set the text as the caption natively in WhatsApp Desktop!
+            window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}` : `https://wa.me/`, '_blank');
+          } else {
+            window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(textWithLink)}` : `https://wa.me/?text=${encodeURIComponent(textWithLink)}`, '_blank');
+          }
         }, 500);
       }
 
