@@ -351,9 +351,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       const safeName = (order.restaurant_name || '').replace(/[^a-zA-Zא-ת0-9]/g, '_') || 'order';
       const file = new File([blob], `order_${safeName}.jpg`, { type: 'image/jpeg' });
 
+      const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
+
       let shareSucceeded = false;
       
-      if (navigator.share) {
+      if (isMobile && navigator.share) {
         try {
           // Attempt to share the file + text natively
           await navigator.share({ 
@@ -397,7 +400,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 'text/plain': new Blob([shareText], { type: 'text/plain' })
               })
             ]);
-            toast.success(language === 'he' ? 'התמונה והטקסט הועתקו! פתח וואטסאפ והדבק' : 'Image and text copied! Open WhatsApp and paste');
+            toast.success(language === 'he' ? 'התמונה והטקסט הועתקו! הדבק אותם בוואטסאפ' : 'Image and text copied! Paste them in WhatsApp');
           } else {
              await navigator.clipboard.writeText(shareText);
              toast.success(language === 'he' ? 'טקסט ההזמנה הועתק! התמונה לא נתמכת במכשיר זה.' : 'Order text copied! Image copying unsupported on this device.');
@@ -409,6 +412,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
              toast.success(language === 'he' ? 'טקסט ההזמנה הועתק!' : 'Order text copied!');
           } catch (e) {}
         }
+
+        // Open WhatsApp Web/Desktop automatically
+        const phone = (order.supplier_phone || "").replace(/\D/g, "");
+        const textWithLink = shareText + "\n\n" + (language === 'he' ? "קישור להזמנה: " : "Order link: ") + orderUrl;
+        
+        setTimeout(() => {
+          window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(textWithLink)}` : `https://wa.me/?text=${encodeURIComponent(textWithLink)}`, '_blank');
+        }, 500);
       }
 
       if (onSend) {
