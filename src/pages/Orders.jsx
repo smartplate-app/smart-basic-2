@@ -1167,8 +1167,10 @@ export default function OrdersPage() {
                     suppliers={suppliers}
                     noOrderMode={true}
                     onSubmit={handleReceiveSubmit}
+                    onSuccess={() => setShowNoOrderReceiveForm(false)}
                     onCancel={() => setShowNoOrderReceiveForm(false)}
-                    autoOpenUpload={true}
+                    autoOpenUpload={false}
+                    user={user}
                   />
                 </div>
               </DialogContent>
