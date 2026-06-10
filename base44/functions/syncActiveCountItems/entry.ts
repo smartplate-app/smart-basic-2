@@ -8,9 +8,9 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { currentCountId, updatedItems, metadata } = await req.json();
+        const { currentCountId, updatedItems, metadata, total_inventory_value: clientTotal } = await req.json();
 
-        if ((!updatedItems || updatedItems.length === 0) && !metadata) {
+        if ((!updatedItems || updatedItems.length === 0) && !metadata && clientTotal === undefined) {
             return Response.json({ success: true });
         }
 
@@ -67,11 +67,18 @@ Deno.serve(async (req) => {
             }
 
             if (changed || count.id === currentCountId) { // Always update the current one to update saved timestamp
-                const total_inventory_value = items.reduce((sum, i) => sum + (Number(i.total_cost) || 0), 0);
+                // Recalculate from items; if no items changed and client sent a total, trust the client value
+                const calculatedTotal = items.reduce((sum, i) => sum + (Number(i.total_cost) || 0), 0);
+                const total_inventory_value = calculatedTotal > 0 ? calculatedTotal : (clientTotal !== undefined ? clientTotal : calculatedTotal);
                 const updates = { items, total_inventory_value };
                 if (count.id === currentCountId && metadata) {
                     Object.assign(updates, metadata);
                 }
+                await base44.asServiceRole.entities.InventoryCount.update(count.id, updates);
+            } else if (count.id === currentCountId && clientTotal !== undefined && clientTotal > 0) {
+                // No items changed but we have a client-side total — persist it
+                const updates = { total_inventory_value: clientTotal };
+                if (metadata) Object.assign(updates, metadata);
                 await base44.asServiceRole.entities.InventoryCount.update(count.id, updates);
             }
         });

@@ -508,7 +508,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           base44.functions.invoke('syncActiveCountItems', {
             currentCountId: currentData.id,
             updatedItems: cleanedDirtyItems,
-            metadata
+            metadata,
+            total_inventory_value: currentData.total_inventory_value || 0
           }).catch(console.error);
         }
       }
@@ -1669,7 +1670,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
                       base44.functions.invoke('syncActiveCountItems', {
                         currentCountId: currentData.id,
                         updatedItems: cleanedDirtyItems,
-                        metadata
+                        metadata,
+                        total_inventory_value: currentData.total_inventory_value || 0
                       }).catch(console.error);
                     }
                   }
