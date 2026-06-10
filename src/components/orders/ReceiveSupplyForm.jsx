@@ -1011,13 +1011,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
     </div>
   );
 
-  return (
-    <>
-      {fullScreen && (
-        <div className="w-full min-h-full bg-white">
-          {headerContent}
-          <div className="p-4">
-            <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
+  const formInner = (
+    <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
           {order && (
             <div className="mb-4 flex">
               <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOrder(order)} className="text-gray-800 border-gray-300 hover:bg-gray-50 bg-white shadow-sm font-semibold">
@@ -1931,11 +1926,11 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
               )}
             </>
           ) : null}
-        </form>
-          </div>
-        </div>
-      )}
-
+    </form>
+  );
+  return (
+    <>
+      {fullScreen ? (<div className="w-full min-h-full bg-white">{headerContent}<div className="p-4">{formInner}</div></div>) : (<div className="p-4">{formInner}</div>)}
       <Dialog open={anomalyCheck.show} onOpenChange={(val) => { if (!val) setAnomalyCheck({ show: false, messages: [], onContinue: null }); }}>
         <DialogContent className="max-w-md" dir={language === 'he' ? 'rtl' : 'ltr'}>
           <DialogHeader>
