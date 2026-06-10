@@ -128,6 +128,20 @@
     "description": {
       "type": "string",
       "maxLength": 1000
+    },
+    "is_pending_completion": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this item is missing details and requires completion"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "pending_completion"
+      ],
+      "default": "active",
+      "description": "Status of the item"
     }
   },
   "required": [

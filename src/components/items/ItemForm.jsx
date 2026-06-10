@@ -220,7 +220,9 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
       price: price,
       discount: discount,
       price_after_discount: calculatePriceAfterDiscount(price, discount),
-      minimum_stock: currentItem.minimum_stock || 0
+      minimum_stock: currentItem.minimum_stock || 0,
+      is_pending_completion: false,
+      status: "active"
     };
     
     onSubmit(completeData);
