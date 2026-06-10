@@ -384,7 +384,7 @@ export default function WorkerPortal() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4" dir="rtl">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { setView('order'); logAction('פתיחה', 'הזמנה'); }}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { logAction('פתיחה', 'הזמנה'); window.location.href = '/Orders'; }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-blue-100 rounded-lg">
@@ -398,7 +398,7 @@ export default function WorkerPortal() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { setView('receive'); logAction('פתיחה', 'קבלת אספקה'); }}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { logAction('פתיחה', 'קבלת אספקה'); window.location.href = '/SupplyReceipts'; }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-green-100 rounded-lg">
@@ -412,7 +412,7 @@ export default function WorkerPortal() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { setView('count'); logAction('פתיחה', 'ספירת מלאי'); }}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { logAction('פתיחה', 'ספירת מלאי'); window.location.href = '/MonthlyCount'; }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-amber-100 rounded-lg">
@@ -426,7 +426,7 @@ export default function WorkerPortal() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { setView('waste'); logAction('פתיחה', 'דיווח פחת'); }}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { logAction('פתיחה', 'דיווח פחת'); window.location.href = '/WasteReports'; }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="p-3 bg-red-100 rounded-lg">
