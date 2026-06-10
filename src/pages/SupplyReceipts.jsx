@@ -533,20 +533,22 @@ export default function SupplyReceiptsPage() {
           </TabsList>
 
           <TabsContent value="pending_orders" className="mt-8">
-            <AnimatePresence>
-              {showForm && selectedOrder && !editingReceipt && (
-                 <ReceiveSupplyForm
-                   order={selectedOrder}
-                   receipt={null}
-                   suppliers={suppliers}
-                   noOrderMode={false}
-                   user={user}
-                   onSubmit={handleReceiptSubmit}
-                   onSuccess={async () => { setShowForm(false); setSelectedOrder(null); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
-                   onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
-                 />
-               )}
-            </AnimatePresence>
+            {showForm && selectedOrder && !editingReceipt && (
+              <div className="fixed inset-0 z-[60] bg-white overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
+                <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24">
+                  <ReceiveSupplyForm
+                    order={selectedOrder}
+                    receipt={null}
+                    suppliers={suppliers}
+                    noOrderMode={false}
+                    user={user}
+                    onSubmit={handleReceiptSubmit}
+                    onSuccess={async () => { setShowForm(false); setSelectedOrder(null); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
+                    onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
+                  />
+                </div>
+              </div>
+            )}
             {!showForm && (
               <div className="space-y-6 pb-24">
                 {['today', 'future', 'past'].map(section => {
@@ -602,43 +604,41 @@ export default function SupplyReceiptsPage() {
             )}
           </TabsContent>
 
+          {/* Full-screen overlay forms */}
+          {(showNoOrderForm || (showForm && editingReceipt)) && (
+            <div className="fixed inset-0 z-[60] bg-white overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
+              <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24">
+                {showNoOrderForm && (
+                  <ReceiveSupplyForm
+                    order={null}
+                    receipt={null}
+                    suppliers={suppliers}
+                    noOrderMode={true}
+                    user={user}
+                    onSubmit={handleReceiptSubmit}
+                    onSuccess={async () => { setShowNoOrderForm(false); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
+                    onCancel={() => setShowNoOrderForm(false)}
+                  />
+                )}
+                {showForm && editingReceipt && (
+                  <ReceiveSupplyForm
+                    order={null}
+                    receipt={editingReceipt}
+                    suppliers={suppliers}
+                    noOrderMode={true}
+                    user={user}
+                    onSubmit={handleReceiptSubmit}
+                    onSuccess={async () => { setShowForm(false); setEditingReceipt(null); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
+                    onCancel={() => { setShowForm(false); setEditingReceipt(null); }}
+                    onDelete={handleDeleteReceipt}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
           <TabsContent value="receipts" className="mt-8">
             <AnimatePresence>
-              {/* Editing Form */}
-              {showForm && editingReceipt && (
-                <ReceiveSupplyForm
-                  order={null}
-                  receipt={editingReceipt}
-                  suppliers={suppliers}
-                  noOrderMode={true}
-                  user={user}
-                  onSubmit={handleReceiptSubmit}
-                  onSuccess={async () => { setShowForm(false); setEditingReceipt(null); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
-                  onCancel={() => {
-                    setShowForm(false);
-                    setEditingReceipt(null);
-                  }}
-                  onDelete={handleDeleteReceipt}
-                />
-              )}
-
-              {/* Receive from Sent Order Form - moved to pending_orders tab */}
-
-               {/* Supply Without Order Form */}
-               {showNoOrderForm && (
-                <ReceiveSupplyForm
-                  order={null}
-                  receipt={null}
-                  suppliers={suppliers}
-                  noOrderMode={true}
-                  user={user}
-                  onSubmit={handleReceiptSubmit}
-                  onSuccess={async () => { setShowNoOrderForm(false); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
-                  onCancel={() => {
-                    setShowNoOrderForm(false);
-                  }}
-                />
-              )}
             </AnimatePresence>
 
 
