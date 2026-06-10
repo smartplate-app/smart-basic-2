@@ -189,7 +189,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                       {src && (
                         <div className="flex items-center gap-1 mt-0.5">
                           <src.icon className={`w-3 h-3 ${src.color}`} />
-                          <span className="text-xs text-gray-400">{src.label}{item.source_document_number && <span className="font-medium"> · {item.source_document_number}</span>}</span>
+                          <span className="text-xs text-gray-400 flex items-center gap-1">{src.label}{item.source_document_number && <><span className="mx-1">·</span><span className="font-medium" dir="ltr">{item.source_document_number}</span></>}</span>
                         </div>
                       )}
                     </TableCell>
@@ -238,12 +238,13 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                             {src && item.source_document_id ? (
                               <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
                                 <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                                {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                                {src.label}
+                                {item.source_document_number && <span className="mx-1 text-gray-400" dir="ltr">({item.source_document_number})</span>}
                               </Link>
                             ) : (
                               <div className="flex items-center gap-2 cursor-pointer text-gray-500">
                                 <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                                {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                                {language === 'he' ? 'מקור' : 'Source'}
                               </div>
                             )}
                           </DropdownMenuItem>
@@ -272,13 +273,13 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                     {src && item.source_document_id ? (
                       <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
                         <src.icon className={`w-4 h-4 ${src.color} mr-2 rtl:ml-2 rtl:mr-0`} />
-                        {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
-                        {item.source_document_number && <span className="text-xs text-gray-400 mr-1 rtl:mr-0 rtl:ml-1">({item.source_document_number})</span>}
+                        {src.label}
+                        {item.source_document_number && <span className="text-xs text-gray-400 mx-1" dir="ltr">({item.source_document_number})</span>}
                       </Link>
                     ) : (
                       <div className="flex items-center gap-2 cursor-pointer text-gray-500">
                         <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                        {language === 'he' ? 'מאיפה הפריט הזה הגיע?' : 'Where did this come from?'}
+                        {language === 'he' ? 'מקור' : 'Source'}
                       </div>
                     )}
                   </ContextMenuItem>
