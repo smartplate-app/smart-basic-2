@@ -351,12 +351,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       const safeName = (order.restaurant_name || '').replace(/[^a-zA-Zא-ת0-9]/g, '_') || 'order';
       const file = new File([blob], `order_${safeName}.jpg`, { type: 'image/jpeg' });
 
-      const isIOSiPad = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || isIOSiPad;
-
       let shareSucceeded = false;
       
-      if (isMobile && navigator.share) {
+      if (navigator.share) {
         try {
           // Attempt to share the file + text natively
           await navigator.share({ 
@@ -368,18 +365,20 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         } catch(e) {
           console.error('Share failed with file, trying text only', e);
           if (e.name === 'AbortError' || (e.message && e.message.includes('abort'))) {
+             setDownloading(false);
              return; // User cancelled the share sheet intentionally
           }
           // If file sharing fails (unsupported on this specific OS version), fallback to sharing just the text
           try {
             await navigator.share({ 
               title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
-              text: shareText
+              text: shareText + "\n\n" + orderUrl
             });
             shareSucceeded = true;
           } catch (textShareErr) {
             console.error('Text share fallback failed', textShareErr);
             if (textShareErr.name === 'AbortError' || (textShareErr.message && textShareErr.message.includes('abort'))) {
+               setDownloading(false);
                return; // User cancelled
             }
           }
@@ -387,47 +386,23 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       } 
       
       if (!shareSucceeded) {
-        // Fallback for desktop or when share is completely missing: Try to copy to clipboard so they can paste it
-        const phone = (order.supplier_phone || "").replace(/\D/g, "");
+        // Fallback for browsers without share API
         const textWithLink = shareText + "\n\n" + (language === 'he' ? "קישור להזמנה: " : "Order link: ") + orderUrl;
         
-        let hasImageInClipboard = false;
         try {
-          if (navigator.clipboard && navigator.clipboard.write) {
-            const pngDataUrl = canvas.toDataURL('image/png');
-            const pngRes = await fetch(pngDataUrl);
-            const pngBlob = await pngRes.blob();
-            
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                'image/png': pngBlob,
-                'text/plain': new Blob([textWithLink], { type: 'text/plain' })
-              })
-            ]);
-            hasImageInClipboard = true;
-            toast.success(language === 'he' ? 'התמונה והטקסט הועתקו! הדבק (Ctrl+V או Cmd+V) בוואטסאפ כדי לשלוח' : 'Image and text copied! Paste (Ctrl+V / Cmd+V) in WhatsApp to send', { duration: 8000 });
-          } else {
-             await navigator.clipboard.writeText(textWithLink);
-             toast.success(language === 'he' ? 'טקסט ההזמנה הועתק! התמונה לא נתמכת במכשיר זה.' : 'Order text copied! Image copying unsupported on this device.', { duration: 6000 });
-          }
+          await navigator.clipboard.writeText(textWithLink);
+          toast.success(language === 'he' ? 'טקסט ההזמנה והקישור הועתקו ללוח' : 'Order text and link copied!', { duration: 6000 });
         } catch (copyErr) {
           console.error('Clipboard copy failed', copyErr);
-          try {
-             await navigator.clipboard.writeText(textWithLink);
-             toast.success(language === 'he' ? 'טקסט ההזמנה הועתק!' : 'Order text copied!', { duration: 6000 });
-          } catch (e) {}
         }
 
-        // Open WhatsApp Web/Desktop automatically
-        setTimeout(() => {
-          if (hasImageInClipboard) {
-            // We intentionally DO NOT pass ?text= here, so the user is forced to paste the clipboard manually.
-            // Pasting will attach the image AND set the text as the caption natively in WhatsApp Desktop!
-            window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}` : `https://wa.me/`, '_blank');
-          } else {
-            window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(textWithLink)}` : `https://wa.me/?text=${encodeURIComponent(textWithLink)}`, '_blank');
-          }
-        }, 500);
+        // Trigger native download
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `order_${safeName}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
 
       if (onSend) {
