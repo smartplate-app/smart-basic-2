@@ -1155,12 +1155,12 @@ export default function OrdersPage() {
             </Dialog>
 
             <Dialog open={showNoOrderReceiveForm} onOpenChange={setShowNoOrderReceiveForm}>
-              <DialogContent className="max-w-3xl md:max-w-4xl w-[96vw] max-h-[90vh] overflow-y-auto p-0">
+              <DialogContent className="max-w-3xl md:max-w-4xl w-[96vw] max-h-[90vh] p-0 flex flex-col">
                 <DialogHeader className="sr-only">
                   <DialogTitle>Receive / Scan Without Order</DialogTitle>
                   <DialogDescription></DialogDescription>
                 </DialogHeader>
-                <div className="overflow-y-auto p-1">
+                <div className="overflow-y-auto flex-1 p-1">
                   <ReceiveSupplyForm
                     order={null}
                     receipt={null}
