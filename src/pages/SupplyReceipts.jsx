@@ -289,10 +289,11 @@ export default function SupplyReceiptsPage() {
         summarized_delivery_note_ids: Array.isArray(receiptData.summarized_delivery_note_ids) ? receiptData.summarized_delivery_note_ids : []
       };
 
+      let savedReceipt = null;
       if (editingReceipt) {
         await base44.entities.SupplyReceipt.update(editingReceipt.id, cleanData);
       } else {
-        await base44.entities.SupplyReceipt.create(cleanData);
+        savedReceipt = await base44.entities.SupplyReceipt.create(cleanData);
         // Close linked open orders as delivered
         const linkedOrderIds = [cleanData.order_id, ...(cleanData.linked_order_ids || [])].filter(Boolean);
         if (linkedOrderIds.length > 0) {
@@ -328,7 +329,8 @@ export default function SupplyReceiptsPage() {
       setSelectedOrder(null);
       setEditingReceipt(null);
       alert(t('receipt_saved_successfully'));
-      // We also trigger onSuccess which calls loadData as well for redundancy
+      // Return the saved receipt so ReceiveSupplyForm can use its ID for new items
+      return savedReceipt || null;
     } catch (error) {
       console.error("Full error saving receipt:", error);
       const errorMsg = error?.response?.data?.message || error?.message || error.toString();

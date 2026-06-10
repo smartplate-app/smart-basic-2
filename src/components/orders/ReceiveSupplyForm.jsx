@@ -936,12 +936,27 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       if (!confirmed) return;
     }
 
+    let finalData = { ...formData };
+    if (selectedOpenOrderIds.length > 0) {
+      const selectedOrdersObj = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
+      if (order && selectedOpenOrderIds.includes(order.id) && !selectedOrdersObj.find(o => o.id === order.id)) {
+        selectedOrdersObj.push(order);
+      }
+      finalData.order_id = selectedOrdersObj[0]?.id || "";
+      finalData.linked_order_ids = selectedOpenOrderIds;
+      finalData.order_number = selectedOrdersObj.map(o => o.order_number).join(', ');
+    }
+
+    // Save receipt first to get its ID
+    const savedReceipt = await onSubmit(finalData);
+
     // Auto-create new items that are marked as having issues/unrecognized
+    // Now we can attach source_document_id because we have the receipt ID
     try {
       const newItemsToCreate = formData.verified_items.filter(item => !item.item_id && item.item_name);
       if (newItemsToCreate.length > 0) {
         const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-        // We don't have the receipt ID yet (it will be created by onSubmit), so pass supplier info as source hint
+        const receiptId = savedReceipt?.id || null;
         for (const item of newItemsToCreate) {
           const itemPayload = {
             name: item.item_name,
@@ -954,30 +969,16 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
             store_owner_email: workingEmail,
             created_by: user?.email,
             source_type: 'supply_receipt',
-            source_document_number: formData.invoice_number || formData.order_number || ''
+            source_document_number: formData.invoice_number || formData.order_number || '',
+            source_document_id: receiptId || ''
           };
-          const createdItem = await base44.entities.Item.create(itemPayload);
-          // Update the receipt item with the new ID
-          item.item_id = createdItem.id;
+          await base44.entities.Item.create(itemPayload);
         }
       }
     } catch (e) {
       console.error("Error auto-creating new items:", e);
-      // We don't block the receipt save if this fails, we just log it
     }
 
-    let finalData = { ...formData };
-    if (selectedOpenOrderIds.length > 0) {
-      const selectedOrdersObj = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
-      if (order && selectedOpenOrderIds.includes(order.id) && !selectedOrdersObj.find(o => o.id === order.id)) {
-        selectedOrdersObj.push(order);
-      }
-      finalData.order_id = selectedOrdersObj[0]?.id || "";
-      finalData.linked_order_ids = selectedOpenOrderIds;
-      finalData.order_number = selectedOrdersObj.map(o => o.order_number).join(', ');
-    }
-
-    await onSubmit(finalData);
     if (onSuccess) onSuccess();
     };
 
