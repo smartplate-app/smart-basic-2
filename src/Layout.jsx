@@ -539,21 +539,9 @@ const [authLoading, setAuthLoading] = useState(() => {
   };
 
   const isWorker = (() => {
-    // If viewing another restaurant (acting_as_store), respect that role
-    if (user?.acting_as_store_email) {
-      return (storeUserRole === 'worker' || user?.store_user_role === 'worker');
-    }
-    // If the user has no own business (pure store-user account), treat accordingly
-    const hasOwnRestaurant = !!user?.business_name;
-    if (!hasOwnRestaurant) {
-      return (storeUserRole === 'worker' || user?.store_user_role === 'worker');
-    }
-    // Viewer should never be considered worker
-    if (storeUserRole === 'viewer' || user?.store_user_role === 'viewer') {
-      return false;
-    }
-    // Otherwise, user is in their own (owner/head) context → not a worker
-    return false;
+    const effectiveRole = storeUserRole || user?.store_user_role;
+    // Only actual 'worker' role gets restricted nav — managers and owners see everything
+    return effectiveRole === 'worker';
   })();
     const isAdminControllingUser = user?.admin_original_email && user?.acting_as_user_email;
 
