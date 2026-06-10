@@ -511,6 +511,14 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             metadata,
             total_inventory_value: currentData.total_inventory_value || 0
           }).catch(console.error);
+        } else if (currentData?.id) {
+          // Even if no dirty items, persist the total
+          base44.functions.invoke('syncActiveCountItems', {
+            currentCountId: currentData.id,
+            updatedItems: [],
+            metadata: null,
+            total_inventory_value: currentData.total_inventory_value || 0
+          }).catch(console.error);
         }
       }
     };
@@ -616,7 +624,8 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
             await base44.functions.invoke('syncActiveCountItems', {
               currentCountId: currentData.id,
               updatedItems: cleanedDirtyItems,
-              metadata
+              metadata,
+              total_inventory_value: currentData.total_inventory_value || 0
             });
             setDbSavedAt(new Date());
             setSyncStatus('saved');
