@@ -750,7 +750,7 @@ const handleCleanOrphans = async (ownerEmail) => {
               </Button>
             </div>
 
-            <DropdownMenu>
+            <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <MoreHorizontal className="w-4 h-4" />
@@ -854,7 +854,7 @@ const handleCleanOrphans = async (ownerEmail) => {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {incompleteItems.map(item => (
-                      <DropdownMenu key={item.id}>
+                      <DropdownMenu key={item.id} dir={language === 'he' ? 'rtl' : 'ltr'}>
                         <DropdownMenuTrigger asChild>
                           <div className="bg-white border border-amber-300 shadow-sm rounded-md px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-2 select-none">
                             <span className="font-medium">{item.name}</span>

@@ -304,7 +304,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
             <Label htmlFor="warehouse_ids">{t('warehouse')}</Label>
             {!showWarehouseForm ? (
               <div className="flex gap-2">
-                <DropdownMenu>
+                <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="flex-1 justify-between font-normal overflow-hidden">
                       <span className="truncate">

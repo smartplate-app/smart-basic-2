@@ -129,7 +129,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
 
           <div className="space-y-2">
             <Label htmlFor="warehouse_ids">{t('warehouse')}</Label>
-            <DropdownMenu>
+            <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full justify-between font-normal overflow-hidden">
                   <span className="truncate">
