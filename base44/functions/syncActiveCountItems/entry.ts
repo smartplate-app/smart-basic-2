@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
         }
 
         const calculatedTotal = items.reduce((sum, i) => sum + (Number(i.total_cost) || 0), 0);
-        const total_inventory_value = calculatedTotal > 0 ? calculatedTotal : (clientTotal !== undefined ? clientTotal : 0);
+        let total_inventory_value = calculatedTotal > 0 ? calculatedTotal : (clientTotal !== undefined ? clientTotal : 0);
 
         // Sanity check to avoid NaN
         if (isNaN(total_inventory_value)) {
