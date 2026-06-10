@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
         const counts = [];
         for (const id of countIds) {
             const count = await base44.asServiceRole.entities.InventoryCount.get(id);
-            if (count && count.created_by === workingEmail) {
+            if (count && (count.created_by === workingEmail || count.store_owner_email === workingEmail)) {
                 counts.push(count);
             }
         }
