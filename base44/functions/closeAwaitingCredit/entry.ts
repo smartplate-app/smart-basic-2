@@ -3,15 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const body = await req.json();
 
-    const { linked_receipt_id } = await req.json();
+    // Support both: called from automation (body.data.linked_receipt_id)
+    // and called directly from frontend (body.linked_receipt_id)
+    const linked_receipt_id = body.linked_receipt_id || body.data?.linked_receipt_id;
 
     if (!linked_receipt_id) {
-      return Response.json({ success: false, error: 'linked_receipt_id is required' }, { status: 400 });
+      return Response.json({ success: false, error: 'no linked_receipt_id' });
     }
 
     await base44.asServiceRole.entities.SupplyReceipt.update(linked_receipt_id, {
