@@ -68,6 +68,7 @@ Deno.serve(async (req) => {
       entitiesToFetch.includes('wasteReports') && fetchBoth('WasteReport').then(d => result.wasteReports = d),
       entitiesToFetch.includes('dashboardData') && fetchBoth('MonthlyDashboardData').then(d => result.dashboardData = d),
       entitiesToFetch.includes('schedules') && fetchBoth('WeeklySchedule').then(d => result.schedules = d),
+      entitiesToFetch.includes('cogsReports') && fetchBoth('CogsReport').then(d => result.cogsReports = d),
     ].filter(Boolean));
 
     return Response.json({ success: true, data: result });

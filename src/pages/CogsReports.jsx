@@ -61,22 +61,26 @@ export default function CogsReportsPage() {
 
       let data = [];
       const isAdminControlling = currentUser?.role === 'admin' && targetEmail !== currentUser.email;
+      const isStoreUser = !!(currentUser.store_user_owner_email || currentUser.acting_as_store_email);
 
       if (isAdminControlling) {
           const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
           if (adminData?.success && adminData?.data?.cogsReports) {
               data = adminData.data.cogsReports;
           }
+      } else if (isStoreUser) {
+          // Sub-user (manager/worker): use service-role backend to fetch owner's data bypassing RLS
+          const { data: mgData } = await base44.functions.invoke('getManagerData', {
+            ownerEmail: targetEmail,
+            entities: ['cogsReports']
+          });
+          if (mgData?.success) {
+            data = mgData.data.cogsReports || [];
+          }
       } else {
           const dataCreated = await base44.entities.CogsReport.filter({ created_by: targetEmail }, "-created_date");
           const dataOwned = await base44.entities.CogsReport.filter({ store_owner_email: targetEmail }, "-created_date");
           data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-          
-          if (targetEmail !== currentUser.email) {
-            const myData = await base44.entities.CogsReport.filter({ created_by: currentUser.email }, "-created_date");
-            const myDataOwned = await base44.entities.CogsReport.filter({ store_owner_email: currentUser.email }, "-created_date");
-            data = [...data, ...myData, ...myDataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-          }
 
           if (currentUser.chain_id && !currentUser.is_chain_head) {
             try {
