@@ -534,7 +534,7 @@ export default function SupplyReceiptsPage() {
 
           <TabsContent value="pending_orders" className="mt-8">
             {showForm && selectedOrder && !editingReceipt && (
-              <div className="fixed inset-0 z-[60] bg-white overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
+              <div className="fixed inset-0 z-[200] bg-white overflow-y-auto" dir={isRTL ? "rtl" : "ltr"} style={{ top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0 }}>
                 <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24">
                   <ReceiveSupplyForm
                     order={selectedOrder}
@@ -606,7 +606,7 @@ export default function SupplyReceiptsPage() {
 
           {/* Full-screen overlay forms */}
           {(showNoOrderForm || (showForm && editingReceipt)) && (
-            <div className="fixed inset-0 z-[60] bg-white overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
+            <div className="fixed inset-0 z-[200] bg-white overflow-y-auto" dir={isRTL ? "rtl" : "ltr"} style={{ top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0 }}>
               <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24">
                 {showNoOrderForm && (
                   <ReceiveSupplyForm
