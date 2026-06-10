@@ -544,8 +544,8 @@ useEffect(() => {
       if (!formData.is_refund || !(formData.supplier_id || receipt?.supplier_id)) { setPreviousReceipts([]); return; }
       const supplierId = formData.supplier_id || receipt?.supplier_id;
       const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
-      const filtered = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
-      filtered.sort((a, b) => (b.awaiting_credit?1:0) - (a.awaiting_credit?1:0) || new Date(b.received_date) - new Date(a.received_date));
+      const filtered = (list || []).filter(r => !r.is_refund && r.awaiting_credit === true && (!receipt || r.id !== receipt.id));
+      filtered.sort((a, b) => new Date(b.received_date) - new Date(a.received_date));
       setPreviousReceipts(filtered.slice(0, 200));
     } catch (e) { setPreviousReceipts([]); }
   })();
