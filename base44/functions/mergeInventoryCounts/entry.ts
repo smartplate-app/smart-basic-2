@@ -17,17 +17,15 @@ Deno.serve(async (req) => {
 
         const workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
 
-        // Fetch counts using service role but only merge ones belonging to this store
+        // Fetch ALL requested counts via service role (no ownership filter — admin/manager can merge any counts)
         const counts = [];
         for (const id of countIds) {
             const count = await base44.asServiceRole.entities.InventoryCount.get(id);
-            if (count && (count.created_by === workingEmail || count.store_owner_email === workingEmail)) {
-                counts.push(count);
-            }
+            if (count) counts.push(count);
         }
 
         if (counts.length < 2) {
-            return Response.json({ error: 'Not enough valid counts found for this user' }, { status: 404 });
+            return Response.json({ error: 'Not enough valid counts found' }, { status: 404 });
         }
 
         const mergedItemsMap = new Map();
@@ -62,8 +60,9 @@ Deno.serve(async (req) => {
             total_inventory_value: totalInventoryValue,
             name: mergedName || "Head Warehouse Summary",
             notes: "Auto-merged from: " + counts.map(c => c.name || c.warehouse_name).join(", "),
-            status: "in_progress", // Keep as in progress so user can review before completing
-            created_by: workingEmail
+            status: "in_progress",
+            created_by: workingEmail,
+            store_owner_email: workingEmail
         };
 
         const createdCount = await base44.asServiceRole.entities.InventoryCount.create(newCount);
