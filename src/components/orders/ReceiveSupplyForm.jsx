@@ -1012,7 +1012,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
 
   return (
     <>
-      {fullScreen ? (
+      {fullScreen && (
         <div className="w-full min-h-full bg-white">
           {headerContent}
           <div className="p-4">
@@ -1933,7 +1933,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         </form>
           </div>
         </div>
-      ) : null}
+      )}
 
       <Dialog open={anomalyCheck.show} onOpenChange={(val) => { if (!val) setAnomalyCheck({ show: false, messages: [], onContinue: null }); }}>
         <DialogContent className="max-w-md" dir={language === 'he' ? 'rtl' : 'ltr'}>
