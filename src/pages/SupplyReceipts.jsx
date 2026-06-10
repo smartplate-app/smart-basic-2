@@ -535,18 +535,17 @@ export default function SupplyReceiptsPage() {
           <TabsContent value="pending_orders" className="mt-8">
             {showForm && selectedOrder && !editingReceipt && (
               <div dir={isRTL ? "rtl" : "ltr"} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, background: 'white', overflowY: 'auto', margin: 0, padding: 0 }}>
-                <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24">
                   <ReceiveSupplyForm
                     order={selectedOrder}
                     receipt={null}
                     suppliers={suppliers}
                     noOrderMode={false}
                     user={user}
+                    fullScreen={true}
                     onSubmit={handleReceiptSubmit}
                     onSuccess={async () => { setShowForm(false); setSelectedOrder(null); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
                     onCancel={() => { setShowForm(false); setSelectedOrder(null); }}
                   />
-                </div>
               </div>
             )}
             {!showForm && (
@@ -607,7 +606,6 @@ export default function SupplyReceiptsPage() {
           {/* Full-screen overlay forms */}
           {(showNoOrderForm || (showForm && editingReceipt)) && (
             <div dir={isRTL ? "rtl" : "ltr"} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100dvh', zIndex: 9999, background: 'white', overflowY: 'auto', margin: 0, padding: 0 }}>
-              <div className="p-4 md:p-6 max-w-2xl mx-auto pb-24">
                 {showNoOrderForm && (
                   <ReceiveSupplyForm
                     order={null}
@@ -615,6 +613,7 @@ export default function SupplyReceiptsPage() {
                     suppliers={suppliers}
                     noOrderMode={true}
                     user={user}
+                    fullScreen={true}
                     onSubmit={handleReceiptSubmit}
                     onSuccess={async () => { setShowNoOrderForm(false); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
                     onCancel={() => setShowNoOrderForm(false)}
@@ -627,13 +626,13 @@ export default function SupplyReceiptsPage() {
                     suppliers={suppliers}
                     noOrderMode={true}
                     user={user}
+                    fullScreen={true}
                     onSubmit={handleReceiptSubmit}
                     onSuccess={async () => { setShowForm(false); setEditingReceipt(null); await loadData(user?.acting_as_store_email || user?.email, storeOwnerEmailState, 0, user?.store_user_role); }}
                     onCancel={() => { setShowForm(false); setEditingReceipt(null); }}
                     onDelete={handleDeleteReceipt}
                   />
                 )}
-              </div>
             </div>
           )}
 

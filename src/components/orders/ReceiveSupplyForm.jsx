@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 import OrderPreviewModal from "@/components/orders/OrderPreviewModal";
 
-export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user, externalItems = null, externalOrders = null, ownerId = null }) {
+export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user, externalItems = null, externalOrders = null, ownerId = null, fullScreen = false }) {
   const [previewOrder, setPreviewOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
@@ -991,27 +991,32 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
     }));
   };
 
+  const headerContent = (
+    <div className="flex flex-row items-center justify-between pb-4 p-4 border-b">
+      <div className="flex items-center gap-3">
+        <span className="text-xl font-bold">
+          {receipt ? (language === 'he' ? 'צפייה במסמך' : 'View Document') : (noOrderMode ? t('supply_without_order') : t('receive'))}
+        </span>
+        {isReadOnly && (
+          <Button type="button" variant="outline" size="sm" onClick={() => setIsReadOnly(false)} className="h-8 text-gray-700">
+            <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+            {language === 'he' ? 'עריכת מסמך' : 'Edit Document'}
+          </Button>
+        )}
+      </div>
+      <Button variant="ghost" size="icon" onClick={onCancel}>
+        <X className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+
   return (
     <>
-      <Card className="mb-8 shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <div className="flex items-center gap-3">
-            <CardTitle className="text-xl font-bold">
-              {receipt ? (language === 'he' ? 'צפייה במסמך' : 'View Document') : (noOrderMode ? t('supply_without_order') : t('receive'))}
-            </CardTitle>
-            {isReadOnly && (
-              <Button type="button" variant="outline" size="sm" onClick={() => setIsReadOnly(false)} className="h-8 text-gray-700">
-                <Edit className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                {language === 'he' ? 'עריכת מסמך' : 'Edit Document'}
-              </Button>
-            )}
-          </div>
-        <Button variant="ghost" size="icon" onClick={onCancel}>
-          <X className="w-4 h-4" />
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
+      {fullScreen ? (
+        <div className="w-full min-h-full bg-white">
+          {headerContent}
+          <div className="p-4">
+            <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
           {order && (
             <div className="mb-4 flex">
               <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOrder(order)} className="text-gray-800 border-gray-300 hover:bg-gray-50 bg-white shadow-sm font-semibold">
@@ -1926,8 +1931,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
             </>
           ) : null}
         </form>
-      </CardContent>
-    </Card>
+          </div>
+        </div>
+      ) : null}
 
       <Dialog open={anomalyCheck.show} onOpenChange={(val) => { if (!val) setAnomalyCheck({ show: false, messages: [], onContinue: null }); }}>
         <DialogContent className="max-w-md" dir={language === 'he' ? 'rtl' : 'ltr'}>
