@@ -1878,7 +1878,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               try {
                                 if (base44.entities.SupplyReceipt.bulkCreate) await base44.entities.SupplyReceipt.bulkCreate(payloads);
                                 else await Promise.all(payloads.map(p => base44.entities.SupplyReceipt.create(p)));
-                                if (formData.linked_receipt_id && payloads.some(p => p.is_refund)) await base44.entities.SupplyReceipt.update(formData.linked_receipt_id, {awaiting_credit: false, refund_received: true, reviewed: true, needs_review: false}).catch(()=>{});
+                                if (formData.linked_receipt_id && payloads.some(p => p.is_refund)) await base44.entities.SupplyReceipt.update(formData.linked_receipt_id, {awaiting_credit: false, reviewed: true, needs_review: false}).catch(()=>{});
                                 alert(language === 'he' ? 'נשמרו כל החשבוניות' : 'All invoices saved');
                                 if (onSuccess) onSuccess(); else if (onCancel) onCancel();
                               } catch (e) {

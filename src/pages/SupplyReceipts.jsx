@@ -317,7 +317,7 @@ export default function SupplyReceiptsPage() {
         // Optimistic update in local state
         setReceipts(prev => prev.map(r =>
           r.id === cleanData.linked_receipt_id
-            ? { ...r, awaiting_credit: false, refund_received: true, reviewed: true, needs_review: false }
+            ? { ...r, awaiting_credit: false, reviewed: true, needs_review: false }
             : r
         ));
       }

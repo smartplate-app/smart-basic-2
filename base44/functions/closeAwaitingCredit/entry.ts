@@ -13,9 +13,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'no linked_receipt_id' });
     }
 
+    // Only clear awaiting_credit on the original doc.
+    // refund_received belongs on the credit/refund doc itself, NOT on the original.
     await base44.asServiceRole.entities.SupplyReceipt.update(linked_receipt_id, {
       awaiting_credit: false,
-      refund_received: true,
       reviewed: true,
       needs_review: false
     });
