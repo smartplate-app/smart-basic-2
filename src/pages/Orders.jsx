@@ -28,7 +28,7 @@ export default function OrdersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("history");
+  const [statusFilter, setStatusFilter] = useState("sent");
   const [supplierFilter, setSupplierFilter] = useState("all");
   const [datePreset, setDatePreset] = useState("all");
   const [sortBy, setSortBy] = useState("none");
