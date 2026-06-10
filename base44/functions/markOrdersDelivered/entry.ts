@@ -15,7 +15,8 @@ Deno.serve(async (req) => {
     const updatedOrders = [];
     
     for (const orderId of orderIds) {
-      const order = await base44.asServiceRole.entities.Order.get(orderId);
+      if (!orderId) continue;
+      const order = await base44.asServiceRole.entities.Order.get(orderId).catch(() => null);
       if (!order) continue;
       
       let allowed = (order.created_by === user.email) || (user.role === 'admin') || (order.store_owner_email === user.email);
