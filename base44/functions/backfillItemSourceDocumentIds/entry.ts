@@ -1,8 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// One-time backfill: for each Item with source_type='supply_receipt' and missing source_document_id,
-// find the matching SupplyReceipt by invoice_number/order_number and set source_document_id.
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -11,51 +8,67 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin only' }, { status: 403 });
     }
 
-    // Get all items missing source_document_id but with source_type=supply_receipt
-    const allItems = await base44.asServiceRole.entities.Item.filter({ source_type: 'supply_receipt' }, '-created_date', 5000);
-    const itemsToFix = allItems.filter(i => !i.source_document_id && i.source_document_number);
+    // Target ALL items requiring completion (supplier_id === 'pending') that are missing source_document_id
+    // This handles both new items with source_type and older ones that defaulted to 'manual'
+    const pendingItems = await base44.asServiceRole.entities.Item.filter({ supplier_id: 'pending' }, '-created_date', 200);
+    const itemsToFix = pendingItems.filter(i => !i.source_document_id);
 
     if (itemsToFix.length === 0) {
-      return Response.json({ success: true, message: 'No items need fixing', fixed: 0 });
-    }
-
-    // Get all supply receipts (service role)
-    const allReceipts = await base44.asServiceRole.entities.SupplyReceipt.list('-created_date', 10000);
-
-    // Build a lookup: invoice_number -> receipt id, also order_number -> receipt id
-    const byInvoice = {};
-    const byOrder = {};
-    for (const r of allReceipts) {
-      if (r.invoice_number) {
-        const key = `${r.invoice_number}__${r.supplier_id || ''}`;
-        if (!byInvoice[key]) byInvoice[key] = r.id;
-        // Also index without supplier for fuzzy match
-        if (!byInvoice[r.invoice_number]) byInvoice[r.invoice_number] = r.id;
-      }
-      if (r.order_number) {
-        if (!byOrder[r.order_number]) byOrder[r.order_number] = r.id;
-      }
+      return Response.json({ success: true, message: 'No pending items need fixing', fixed: 0 });
     }
 
     let fixed = 0;
     let notFound = 0;
     const details = [];
 
-    for (const item of itemsToFix) {
-      const docNum = item.source_document_number;
-      // Try invoice number match first (with supplier scope), then plain, then order number
-      const receiptId = 
-        byInvoice[`${docNum}__${item.supplier_id || ''}`] ||
-        byInvoice[docNum] ||
-        byOrder[docNum];
+    // Load all documents that could be sources
+    const allCounts = await base44.asServiceRole.entities.InventoryCount.list('-created_date', 200);
+    const allReceipts = await base44.asServiceRole.entities.SupplyReceipt.list('-created_date', 200);
 
-      if (receiptId) {
-        await base44.asServiceRole.entities.Item.update(item.id, { source_document_id: receiptId });
+    for (const item of itemsToFix) {
+      let matchedDocId = null;
+      let matchedType = null;
+      let matchedDocNumber = null;
+
+      // 1. Check Inventory Counts (if the item exists in the count's items array)
+      const countMatch = allCounts.find(c => c.items && c.items.some(ci => ci.item_id === item.id));
+      if (countMatch) {
+        matchedDocId = countMatch.id;
+        matchedType = 'inventory_count';
+        matchedDocNumber = countMatch.name || countMatch.count_date || 'ספירת מלאי';
+      } else {
+        // 2. Check Supply Receipts (if the item exists in verified_items)
+        const receiptMatch = allReceipts.find(r => r.verified_items && r.verified_items.some(vi => vi.item_id === item.id));
+        if (receiptMatch) {
+          matchedDocId = receiptMatch.id;
+          matchedType = 'supply_receipt';
+          matchedDocNumber = receiptMatch.invoice_number || receiptMatch.order_number || 'קבלת אספקה';
+        }
+      }
+
+      // 3. Fallback: if we still don't know but we know the user who created it, 
+      // check if there's an 'in_progress' count they created recently.
+      if (!matchedDocId && item.created_by) {
+        const fallbackCount = allCounts.find(c => c.created_by === item.created_by && c.status === 'in_progress');
+        if (fallbackCount) {
+          matchedDocId = fallbackCount.id;
+          matchedType = 'inventory_count';
+          matchedDocNumber = fallbackCount.name || fallbackCount.count_date || 'ספירת מלאי';
+        }
+      }
+
+      if (matchedDocId) {
+        await base44.asServiceRole.entities.Item.update(item.id, { 
+          source_document_id: matchedDocId,
+          source_type: matchedType,
+          source_document_number: matchedDocNumber
+        });
         fixed++;
-        details.push({ item_id: item.id, item_name: item.name, receipt_id: receiptId, doc_num: docNum });
+        details.push({ item_id: item.id, item_name: item.name, matched_doc_id: matchedDocId, matched_type: matchedType });
+        await new Promise(resolve => setTimeout(resolve, 250)); // rate limit prevention
       } else {
         notFound++;
-        details.push({ item_id: item.id, item_name: item.name, doc_num: docNum, status: 'not_found' });
+        details.push({ item_id: item.id, item_name: item.name, status: 'not_found' });
       }
     }
 

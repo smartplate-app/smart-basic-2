@@ -72,7 +72,7 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
                 {item.source_document_id ? (
                   <Link to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`} className="flex items-center gap-2 cursor-pointer">
                     <ExternalLink className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
-                    {item.source_type === 'inventory_count' ? (t('language') === 'he' ? 'ספירת מלאי' : 'Inventory count') : (t('language') === 'he' ? 'קבלת אספקה' : 'Supply receipt')}
+                    {item.source_type === 'inventory_count' ? (t('language') === 'he' ? 'ספירה' : 'Count') : (t('language') === 'he' ? 'קבלת אספקה' : 'Supply receipt')}
                     {item.source_document_number && <span className="mx-1" dir="ltr">({item.source_document_number})</span>}
                   </Link>
                 ) : (
@@ -141,7 +141,7 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
               <span className="text-xs text-gray-400 flex items-center gap-1">
                 {item.source_type === 'supply_receipt'
                   ? (t('language') === 'he' ? 'קבלת אספקה' : 'Supply receipt')
-                  : (t('language') === 'he' ? 'ספירת מלאי' : 'Inventory count')}
+                  : (t('language') === 'he' ? 'ספירה' : 'Count')}
                 {item.source_document_number && (
                   <>
                     <span className="mx-1">·</span>

@@ -31,7 +31,7 @@ const sourceLabel = (item, language) => {
   if (!item.source_type || item.source_type === 'manual') return null;
   const isReceipt = item.source_type === 'supply_receipt';
   return {
-    label: isReceipt ? (language === 'he' ? 'קבלת אספקה' : 'Supply receipt') : (language === 'he' ? 'ספירת מלאי' : 'Inventory count'),
+    label: isReceipt ? (language === 'he' ? 'קבלת אספקה' : 'Supply receipt') : (language === 'he' ? 'ספירה' : 'Count'),
     icon: isReceipt ? FileText : ClipboardList,
     color: isReceipt ? 'text-blue-400' : 'text-green-500',
     url: isReceipt ? `/SupplyReceipts?highlight=${item.source_document_id}` : `/MonthlyCount?highlight=${item.source_document_id}`,
