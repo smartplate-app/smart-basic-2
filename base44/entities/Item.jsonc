@@ -107,6 +107,24 @@
       "type": "string",
       "description": "Email of the store owner (for chain sub-stores)"
     },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "supply_receipt",
+        "inventory_count"
+      ],
+      "default": "manual",
+      "description": "How the item was originally created"
+    },
+    "source_document_id": {
+      "type": "string",
+      "description": "ID of the source document (receipt or count) that created this item"
+    },
+    "source_document_number": {
+      "type": "string",
+      "description": "Human-readable number/name of the source document"
+    },
     "description": {
       "type": "string",
       "maxLength": 1000

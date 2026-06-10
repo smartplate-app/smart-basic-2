@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, MoreVertical, Pencil, Package } from "lucide-react";
+import { Trash2, MoreVertical, Pencil, Package, FileText, ClipboardList, ExternalLink } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
+import { Link } from "react-router-dom";
 
 export default function ItemCard({ item, onEdit, onDelete, selectable = true, selected = false, onToggleSelect }) {
   const { t } = useLanguage();
@@ -66,6 +67,16 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
                 <Pencil className="w-4 h-4 mr-2" />
                 {t('edit')}
               </DropdownMenuItem>
+              {item.source_document_id && (
+                <DropdownMenuItem asChild>
+                  <Link to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`} className="flex items-center gap-2 cursor-pointer">
+                    <ExternalLink className="w-4 h-4" />
+                    {item.source_type === 'inventory_count'
+                      ? (t('language') === 'he' ? 'צפה בספירת מלאי' : 'View Inventory Count')
+                      : (t('language') === 'he' ? 'צפה בקבלת אספקה' : 'View Supply Receipt')}
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => onDelete(item)} className="text-red-600">
                 <Trash2 className="w-4 h-4 mr-2" />
                 {t('delete')}
@@ -111,9 +122,28 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
             <p className="text-sm text-gray-600 mt-2">{item.description}</p>
           )}
 
-          <div className="text-xs text-gray-400 pt-2 border-t">
-            {t('created_at')}: {new Date(item.created_date).toLocaleDateString()}
-          </div>
+          {item.source_type && item.source_type !== 'manual' && (
+            <div className="flex items-center gap-1.5 pt-2 border-t">
+              {item.source_type === 'supply_receipt' ? (
+                <FileText className="w-3 h-3 text-blue-400 flex-shrink-0" />
+              ) : (
+                <ClipboardList className="w-3 h-3 text-green-400 flex-shrink-0" />
+              )}
+              <span className="text-xs text-gray-400">
+                {item.source_type === 'supply_receipt'
+                  ? (t('language') === 'he' ? 'קבלת אספקה' : 'Supply receipt')
+                  : (t('language') === 'he' ? 'ספירת מלאי' : 'Inventory count')}
+                {item.source_document_number && (
+                  <span className="font-medium text-gray-500"> · {item.source_document_number}</span>
+                )}
+              </span>
+            </div>
+          )}
+          {(!item.source_type || item.source_type === 'manual') && (
+            <div className="text-xs text-gray-400 pt-2 border-t">
+              {t('created_at')}: {new Date(item.created_date).toLocaleDateString()}
+            </div>
+          )}
         </CardContent>
       </Card>
     </motion.div>

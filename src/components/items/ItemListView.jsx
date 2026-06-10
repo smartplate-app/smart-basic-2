@@ -1,12 +1,21 @@
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeftRight } from "lucide-react";
+import { Pencil, Trash2, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeftRight, FileText, ClipboardList, ExternalLink } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableHeader,
@@ -17,6 +26,17 @@ import {
 } from "@/components/ui/table"; // Added table component imports
 import { useLanguage } from "../LanguageProvider";
 import { Checkbox } from "@/components/ui/checkbox";
+
+const sourceLabel = (item, language) => {
+  if (!item.source_type || item.source_type === 'manual') return null;
+  const isReceipt = item.source_type === 'supply_receipt';
+  return {
+    label: isReceipt ? (language === 'he' ? 'קבלת אספקה' : 'Supply receipt') : (language === 'he' ? 'ספירת מלאי' : 'Inventory count'),
+    icon: isReceipt ? FileText : ClipboardList,
+    color: isReceipt ? 'text-blue-400' : 'text-green-500',
+    url: isReceipt ? `/SupplyReceipts?highlight=${item.source_document_id}` : `/MonthlyCount?highlight=${item.source_document_id}`,
+  };
+};
 
 export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll, headerTopClass = "top-[64px] md:top-[84px]" }) {
   const { t, language } = useLanguage();
@@ -141,81 +161,125 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
               </TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="bg-white divide-y divide-gray-200"> {/* Replaced <tbody> with <TableBody> */}
-            {sortedItems.map((item) => (
-              <TableRow
-                key={item.id}
-                onDoubleClick={() => onEdit(item)}
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
-              > {/* Replaced <tr> with <TableRow> */}
-                <TableCell className="px-3 py-3 text-center">
-                  <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={() => onToggleSelect && onToggleSelect(item.id)} aria-label="Select row" className="h-5 w-5 sm:h-4 sm:w-4" />
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right"> {/* Replaced <td> with <TableCell> */}
-                  <div 
-                    onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-                    className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer inline-block"
-                    title={language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item'}
+          <TableBody className="bg-white divide-y divide-gray-200">
+            {sortedItems.map((item) => {
+              const src = sourceLabel(item, language);
+              return (
+              <ContextMenu key={item.id}>
+                <ContextMenuTrigger asChild>
+                  <TableRow
+                    onDoubleClick={() => onEdit(item)}
+                    className="hover:bg-gray-50 cursor-pointer transition-colors"
                   >
-                    {item.nickname || item.name}
-                    {item.nickname && <span className="text-xs text-gray-500 font-normal ml-1 rtl:mr-1 rtl:ml-0">({item.name})</span>}
-                  </div>
-                  {item.description && (
-                    <div className="text-xs text-gray-500 truncate max-w-xs mt-0.5">{item.description}</div>
-                  )}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
-                  {item.supplier_name}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right text-sm text-gray-600">
-                  {item.catalog_number || '-'}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
-                  {item.units_per_package} {language === 'he' ? ({ unit: 'יחידה', liter: 'ליטר', kg: 'קילוגרם', gram: 'גרם', ml: 'מ"ל', case: 'ארגז' }[item.unit] || item.unit) : item.unit}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right text-sm text-gray-900 font-medium">
-                  {item.price > 0 ? `₪${item.price.toFixed(2)}` : '-'} {/* Removed t('currency') */}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right text-sm">
-                  {item.discount > 0 ? (
-                    <span className="text-red-600 font-medium">{item.discount}%</span>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-right text-sm font-bold">
-                  {item.price > 0 ? (
-                    <span className={item.discount > 0 ? "text-red-600" : "text-gray-900"}>
-                      ₪{getFinalPrice(item).toFixed(2)} {/* Removed t('currency') */}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-center">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(item)}>
-                        <Pencil className="w-4 h-4 mr-2" />
-                        {t('edit')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onDelete(item)}
-                        className="text-red-600"
+                    <TableCell className="px-3 py-3 text-center">
+                      <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={() => onToggleSelect && onToggleSelect(item.id)} aria-label="Select row" className="h-5 w-5 sm:h-4 sm:w-4" />
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right">
+                      <div 
+                        onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+                        className="text-sm font-bold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer inline-block"
+                        title={language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item'}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {t('delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                        {item.nickname || item.name}
+                        {item.nickname && <span className="text-xs text-gray-500 font-normal ml-1 rtl:mr-1 rtl:ml-0">({item.name})</span>}
+                      </div>
+                      {item.description && (
+                        <div className="text-xs text-gray-500 truncate max-w-xs mt-0.5">{item.description}</div>
+                      )}
+                      {src && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <src.icon className={`w-3 h-3 ${src.color}`} />
+                          <span className="text-xs text-gray-400">{src.label}{item.source_document_number && <span className="font-medium"> · {item.source_document_number}</span>}</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
+                      {item.supplier_name}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right text-sm text-gray-600">
+                      {item.catalog_number || '-'}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
+                      {item.units_per_package} {language === 'he' ? ({ unit: 'יחידה', liter: 'ליטר', kg: 'קילוגרם', gram: 'גרם', ml: 'מ"ל', case: 'ארגז' }[item.unit] || item.unit) : item.unit}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right text-sm text-gray-900 font-medium">
+                      {item.price > 0 ? `₪${item.price.toFixed(2)}` : '-'}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right text-sm">
+                      {item.discount > 0 ? (
+                        <span className="text-red-600 font-medium">{item.discount}%</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right text-sm font-bold">
+                      {item.price > 0 ? (
+                        <span className={item.discount > 0 ? "text-red-600" : "text-gray-900"}>
+                          ₪{getFinalPrice(item).toFixed(2)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onEdit(item)}>
+                            <Pencil className="w-4 h-4 mr-2" />
+                            {t('edit')}
+                          </DropdownMenuItem>
+                          {src && item.source_document_id && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
+                                  <ExternalLink className="w-4 h-4" />
+                                  {language === 'he' ? 'צפה במקור הפריט' : 'View item source'}
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => onDelete(item)} className="text-red-600">
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            {t('delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => onEdit(item)}>
+                    <Pencil className="w-4 h-4 mr-2" />
+                    {language === 'he' ? 'ערוך פריט' : 'Edit item'}
+                  </ContextMenuItem>
+                  {src && item.source_document_id && (
+                    <>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem asChild>
+                        <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
+                          <src.icon className={`w-4 h-4 ${src.color}`} />
+                          {language === 'he' ? 'צפה במקור הפריט' : 'View item source'}
+                          {item.source_document_number && <span className="text-xs text-gray-400 mr-1">({item.source_document_number})</span>}
+                        </Link>
+                      </ContextMenuItem>
+                    </>
+                  )}
+                  <ContextMenuSeparator />
+                  <ContextMenuItem onClick={() => onDelete(item)} className="text-red-600">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {language === 'he' ? 'מחק פריט' : 'Delete item'}
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+              );
+            })}
           </TableBody>
         </table>
       </div>
