@@ -1338,7 +1338,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         </div>
                       </div>
                     </>
-                  ) : (formData.receipt_images.length > 0) && (
+                  ) : (formData.receipt_images.length > 0 || isReadOnly) && (
                     <>
                       <div ref={invoiceDetailsRef} style={{ scrollMarginTop: '96px' }} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
                         <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
@@ -1811,6 +1811,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                     )}
 
                     <div className={`grid gap-2 pt-4 w-full ${scannedDocs.length > 1 ? 'grid-cols-2' : ((receipt && onDelete && !isReadOnly) ? 'grid-cols-3' : (!isReadOnly ? 'grid-cols-2' : 'grid-cols-1'))}`}>
+
                       {scannedDocs.length > 1 ? (
                         <>
                           <Button
