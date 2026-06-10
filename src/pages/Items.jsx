@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp, Check, ChevronDown, AlertTriangle } from "lucide-react";
+import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp, Check, ChevronDown, AlertTriangle, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/LanguageProvider";
+import { Link } from "react-router-dom";
 
 import ItemForm from "../components/items/ItemForm";
 import ItemCard from "../components/items/ItemCard";
@@ -853,17 +854,43 @@ const handleCleanOrphans = async (ownerEmail) => {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {incompleteItems.map(item => (
-                      <div 
-                        key={item.id} 
-                        onClick={() => {
-                          const fullItem = items.find(i => i.id === item.id) || item;
-                          handleEdit(fullItem);
-                        }}
-                        className="bg-white border border-amber-300 shadow-sm rounded-md px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-2"
-                      >
-                        <span className="font-medium">{item.name}</span>
-                        <span className="text-gray-500 text-xs">₪{item.price || 0}</span>
-                      </div>
+                      <DropdownMenu key={item.id}>
+                        <DropdownMenuTrigger asChild>
+                          <div className="bg-white border border-amber-300 shadow-sm rounded-md px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-2 select-none">
+                            <span className="font-medium">{item.name}</span>
+                            <span className="text-gray-500 text-xs">₪{item.price || 0}</span>
+                            <MoreHorizontal className="w-3 h-3 text-gray-400" />
+                          </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => handleEdit(items.find(i => i.id === item.id) || item)}>
+                            <FileText className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                            {language === 'he' ? 'ערוך פריט' : 'Edit item'}
+                          </DropdownMenuItem>
+                          {item.source_document_id && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`}
+                                  className="flex items-center gap-2 cursor-pointer"
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                  {item.source_type === 'inventory_count'
+                                    ? (language === 'he' ? 'צפה בספירת מלאי' : 'View inventory count')
+                                    : (language === 'he' ? 'צפה בקבלת אספקה' : 'View supply receipt')}
+                                  {item.source_document_number && <span className="text-xs text-gray-400">({item.source_document_number})</span>}
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleDelete(item)} className="text-red-600">
+                            <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                            {language === 'he' ? 'מחק פריט' : 'Delete item'}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     ))}
                   </div>
                 </div>
