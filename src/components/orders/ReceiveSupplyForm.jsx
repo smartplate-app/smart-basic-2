@@ -348,11 +348,10 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     } catch {}
   }, [autoOpenUpload, formData.receipt_images]);
 
-  // Fallback: if no suppliers provided, fetch from owner/head context so workers/managers can select
+  // Fallback: always fetch suppliers on mount; if prop suppliers are already set they'll override via the sync effect above
   useEffect(() => {
     const fetchFallbackSuppliers = async () => {
       try {
-        if (availableSuppliers && availableSuppliers.length > 0) return;
         const u = await base44.auth.me();
         const workingEmail = u.acting_as_store_email || u.email;
         let ownerEmail = u.store_user_owner_email || null;
@@ -367,7 +366,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
         }
         const emails = new Set([workingEmail]);
         if (ownerEmail) emails.add(ownerEmail);
-        // Try to include chain head email (if exists)
         try {
           if (ownerEmail) {
             const stores = await base44.entities.ChainStore.filter({ user_email: ownerEmail });
@@ -392,13 +390,20 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
         });
         const lists = await Promise.all(fetches);
         const merged = lists.flat().filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-        setAvailableSuppliers(merged);
+        if (merged.length > 0) {
+          setAvailableSuppliers(prev => {
+            // Merge: prefer already-loaded ones, add any missing from direct fetch
+            const combined = [...prev];
+            merged.forEach(s => { if (!combined.find(x => x.id === s.id)) combined.push(s); });
+            return combined;
+          });
+        }
       } catch (e) {
         console.error('Fallback supplier load failed', e);
       }
     };
     fetchFallbackSuppliers();
-  }, [availableSuppliers]);
+  }, []); // run once on mount
   const handleSupplierSelect = (supplierId) => {
     const supplier = availableSuppliers.find(s => s.id === supplierId);
     if (supplier) {
