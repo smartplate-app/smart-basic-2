@@ -1919,7 +1919,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               <span className="truncate">{safeT('delete', 'מחיקה', 'Delete')}</span>
                             </Button>
                           )}
-                          <Button type="button" variant="outline" onClick={onCancel} className="h-10 px-1 text-xs sm:text-sm shadow-none">
+                          <Button type="button" variant="outline" onClick={onCancel} className="h-10 px-1 text-xs sm:text-sm shadow-none text-black font-semibold border-black">
                             <span className="truncate">{isReadOnly ? (language === 'he' ? 'סגור' : 'Close') : safeT('cancel', 'ביטול', 'Cancel')}</span>
                           </Button>
                         </>
