@@ -62,6 +62,7 @@ export default function ItemsPage() {
   const [pendingSearchTerm, setPendingSearchTerm] = useState("");
   const [selectedPendingIds, setSelectedPendingIds] = useState([]);
   const [showBulkSupplierModal, setShowBulkSupplierModal] = useState(false);
+  const [pendingSupplierId, setPendingSupplierId] = useState(null);
   const [pendingActionType, setPendingActionType] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null); // { id, type }
 
@@ -521,6 +522,7 @@ export default function ItemsPage() {
 
       setSelectedPendingIds([]);
       setShowBulkSupplierModal(false);
+      setPendingSupplierId(null);
       await loadData(user);
       alert(language === 'he' ? 'השיוך לספק בוצע בהצלחה!' : 'Successfully assigned to supplier!');
     } catch (error) {
@@ -1312,7 +1314,10 @@ const handleCleanOrphans = async (ownerEmail) => {
           onDelete={handleConfirmDuplicatesDelete}
         />
 
-        <Dialog open={showBulkSupplierModal} onOpenChange={setShowBulkSupplierModal}>
+        <Dialog open={showBulkSupplierModal} onOpenChange={(open) => {
+          setShowBulkSupplierModal(open);
+          if (!open) setPendingSupplierId(null);
+        }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{language === 'he' ? 'שיוך ספק לפריטים נבחרים' : 'Assign Supplier to Selected Items'}</DialogTitle>
@@ -1321,8 +1326,8 @@ const handleCleanOrphans = async (ownerEmail) => {
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <Select onValueChange={(val) => {
-                handleBulkAssignSupplier(val);
+              <Select value={pendingSupplierId || ""} onValueChange={(val) => {
+                setPendingSupplierId(val);
               }}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={language === 'he' ? 'בחר ספק...' : 'Select supplier...'} />
@@ -1334,9 +1339,20 @@ const handleCleanOrphans = async (ownerEmail) => {
                 </SelectContent>
               </Select>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowBulkSupplierModal(false)}>
+            <DialogFooter className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => {
+                setShowBulkSupplierModal(false);
+                setPendingSupplierId(null);
+              }}>
                 {language === 'he' ? 'בטל' : 'Cancel'}
+              </Button>
+              <Button 
+                onClick={() => handleBulkAssignSupplier(pendingSupplierId)}
+                disabled={!pendingSupplierId || loading}
+                className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
+              >
+                {loading && <Loader className="w-4 h-4 mr-2 animate-spin rtl:ml-2 rtl:mr-0" />}
+                {language === 'he' ? 'שמור' : 'Save'}
               </Button>
             </DialogFooter>
           </DialogContent>
