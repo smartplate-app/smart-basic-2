@@ -343,11 +343,11 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   <ChevronsUpDown className={`h-5 w-5 shrink-0 opacity-50 text-gray-500 ${language === 'he' ? 'mr-2' : 'ml-2'}`} />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200" align={language === 'he' ? 'end' : 'start'} style={{ zIndex: 10001 }}>
-                <Command>
-                  <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3" placeholder={safeT('search_supplier', 'חפש ספק...', 'Search supplier...')} />
-                  <div className="h-px bg-gray-100 w-full" />
-                  <CommandList className="max-h-[45vh] sm:max-h-[350px] overflow-y-auto p-1.5">
+              <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} onTouchMove={(e) => e.stopPropagation()} className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200 overflow-hidden" align={language === 'he' ? 'end' : 'start'} style={{ zIndex: 10001 }}>
+                <Command className="w-full flex flex-col" onTouchMove={(e) => e.stopPropagation()}>
+                  <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3 border-none outline-none focus:ring-0" placeholder={safeT('search_supplier', 'חפש ספק...', 'Search supplier...')} />
+                  <div className="h-px bg-gray-100 w-full shrink-0" />
+                  <CommandList className="h-[250px] sm:h-[300px] w-full overflow-y-auto p-1.5 block touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }} onTouchMove={(e) => e.stopPropagation()}>
                     <CommandEmpty className="py-6 text-center text-sm text-gray-500">{t('no_suppliers_available') || 'אין ספקים זמינים'}</CommandEmpty>
                     <CommandGroup>
                       {suppliers && suppliers.map((supplier) => (
