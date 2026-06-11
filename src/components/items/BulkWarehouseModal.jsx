@@ -75,7 +75,7 @@ export default function BulkWarehouseModal({
           <Button variant="outline" onClick={onClose} disabled={saving}>
             {isRTL ? 'ביטול' : 'Cancel'}
           </Button>
-          <Button onClick={handleSave} disabled={saving || targetWarehouseIds.length === 0} className="bg-amber-500 hover:bg-amber-600 text-white">
+          <Button onClick={handleSave} disabled={saving || targetWarehouseIds.length === 0} className="bg-black hover:bg-gray-800 text-white">
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin rtl:ml-2 rtl:mr-0" />}
             {isRTL ? 'שמור שיוך' : 'Save Assignment'}
           </Button>
