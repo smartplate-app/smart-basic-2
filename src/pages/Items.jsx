@@ -459,9 +459,16 @@ export default function ItemsPage() {
         await Promise.all(allWarehousesToUpdate);
       }
 
-      await loadData(user);
+      // Optimistic update to prevent reverting visually before DB replica syncs
+      setItems(prevItems => prevItems.map(item => item.id === targetId ? { ...item, ...cleanData } : item));
+      
       setShowEditModal(false);
       setEditingItem(null);
+      
+      // Delayed background reload
+      setTimeout(() => {
+        if (user) loadData(user);
+      }, 3000);
     } catch (error) {
       console.error("Error updating item:", error);
       alert(t('error_saving') + ': ' + (error.message || 'Unknown error'));
@@ -520,10 +527,28 @@ export default function ItemsPage() {
       });
       if (!data?.success) throw new Error(data?.error || 'Failed to update');
 
+      // Optimistic update
+      setItems(prevItems => prevItems.map(item => {
+        if (selectedPendingIds.includes(item.id)) {
+          return {
+            ...item,
+            supplier_id: supplier.id,
+            supplier_name: supplier.name,
+            is_pending_completion: false,
+            status: 'active'
+          };
+        }
+        return item;
+      }));
+
       setSelectedPendingIds([]);
       setShowBulkSupplierModal(false);
       setPendingSupplierId(null);
-      await loadData(user);
+      
+      setTimeout(() => {
+        if (user) loadData(user);
+      }, 3000);
+      
       alert(language === 'he' ? 'השיוך לספק בוצע בהצלחה!' : 'Successfully assigned to supplier!');
     } catch (error) {
       console.error("Bulk assign supplier failed:", error);
@@ -545,11 +570,17 @@ export default function ItemsPage() {
       });
       if (!data?.success) throw new Error(data?.error || 'Failed to delete');
 
+      // Optimistic update
+      setItems(prevItems => prevItems.map(item => targetIds.includes(item.id) ? null : item).filter(Boolean));
+
       if (pendingActionType === 'delete') setSelectedPendingIds([]);
       else setSelectedIds([]);
       setPendingActionType(null);
-      await loadData(user);
       setShowDeleteDialog(false);
+      
+      setTimeout(() => {
+        if (user) loadData(user);
+      }, 3000);
     } catch (e) {
       console.error("Bulk delete failed:", e);
       alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete items'));
@@ -849,7 +880,9 @@ const handleCleanOrphans = async (ownerEmail) => {
                         if (!data?.success) throw new Error(data?.error || 'Failed');
                         
                         setSelectedIds([]);
-                        loadData(user);
+                        setTimeout(() => {
+                          if (user) loadData(user);
+                        }, 3000);
                       }}>
                         <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-red-500" />
                         <span className="text-red-500">{language === 'he' ? `הסר ממחסן נוכחי (${warehouses.find(w => w.id === selectedWarehouseId)?.name || ''})` : `Remove from current warehouse (${warehouses.find(w => w.id === selectedWarehouseId)?.name || ''})`}</span>
@@ -1293,8 +1326,10 @@ const handleCleanOrphans = async (ownerEmail) => {
              else setSelectedIds([]);
              setPendingActionType(null);
              
-             // Background reload to sync
-             loadData(user);
+             // Background reload to sync (delayed to avoid read-replica lag overriding optimistic update)
+             setTimeout(() => {
+               if (user) loadData(user);
+             }, 3000);
              alert(language === 'he' ? 'השיוך בוצע בהצלחה!' : 'Assignment successful!');
            }}
          />
