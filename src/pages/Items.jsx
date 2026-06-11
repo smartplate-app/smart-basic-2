@@ -1078,6 +1078,16 @@ const handleCleanOrphans = async (ownerEmail) => {
                               <span className="font-medium truncate" title={item.supplier_name}>{item.supplier_name}</span>
                             </div>
                           )}
+                          {((item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0) || item.warehouse_name) && (
+                            <div className="flex items-center gap-1 truncate min-w-0 text-blue-600">
+                              <span className="text-blue-400 whitespace-nowrap">{language === 'he' ? 'מחסנים:' : 'Warehouses:'}</span>
+                              <span className="font-medium truncate" title={item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0 ? item.warehouse_names.filter(Boolean).join(', ') : item.warehouse_name}>
+                                {item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0 
+                                  ? item.warehouse_names.filter(Boolean).join(', ') 
+                                  : item.warehouse_name}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
