@@ -905,10 +905,10 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200 bg-white" align="start" style={{ zIndex: 99999 }}>
-                    <Command className="bg-white text-gray-900">
+                    <Command className="bg-white text-gray-900 max-h-[350px]">
                       <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3 bg-white text-gray-900 placeholder:text-gray-400" placeholder={language === 'he' ? 'חפש ספק...' : 'Search supplier...'} />
                       <div className="h-px bg-gray-100 w-full" />
-                      <CommandList className="max-h-[45vh] sm:max-h-[350px] overflow-y-auto p-1.5 bg-white">
+                      <CommandList className="max-h-[250px] sm:max-h-[300px] overflow-y-auto p-1.5 bg-white touch-pan-y pointer-events-auto overscroll-contain">
                         <CommandEmpty className="py-6 text-center text-sm text-gray-500 bg-white">{t('no_suppliers') || 'לא נמצאו ספקים.'}</CommandEmpty>
                         <CommandGroup className="bg-white text-gray-900">
                           {[...availableSuppliers].slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })).map((supplier) => (
