@@ -22,11 +22,8 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
   const [availableSuppliers, setAvailableSuppliers] = useState(Array.isArray(suppliers) ? suppliers : []);
-  
-  // Initialize form data from receipt (for editing) or empty (for new)
   const [formData, setFormData] = useState(() => {
     if (receipt) {
-      // Editing existing receipt
       return {
       order_id: receipt.order_id || "",
       order_number: receipt.order_number || "",
@@ -54,10 +51,9 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
       summarized_delivery_note_ids: receipt.summarized_delivery_note_ids || [],
       document_type: receipt.document_type || "invoice",
       is_zero_vat: !!receipt.is_zero_vat,
-      manual_entry_mode: true // Already has data, show edit mode
+      manual_entry_mode: true
       };
     }
-    // New receipt — pre-populate items from order if provided so הוזמן column is filled before scan
     const initialOrderItems = order ? (order.items || []).map(oi => ({
       item_id: oi.item_id || "",
       item_name: oi.item_name || oi.name || "",
@@ -104,13 +100,11 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
       summarized_delivery_note_ids: [],
       document_type: "invoice",
       is_zero_vat: false,
-      manual_entry_mode: initialOrderItems.length > 0 // show items table immediately if order items exist
+      manual_entry_mode: initialOrderItems.length > 0
     };
   });
-
   const [exclVatInput, setExclVatInput] = useState("");
   const [inclVatInput, setInclVatInput] = useState("");
-
   useEffect(() => {
     if (formData.invoice_total !== undefined && formData.invoice_total !== null && !inclVatInput) {
       setInclVatInput(String(formData.invoice_total));
@@ -119,7 +113,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
       setExclVatInput(String((formData.invoice_total / vatRate).toFixed(2)));
     }
   }, [formData.invoice_total, formData.is_zero_vat, user]);
-
   const handleExclVatChange = (raw) => {
      setExclVatInput(raw);
      const parsed = parseFloat(raw.replace(',', '.'));
@@ -132,7 +125,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
         updateInvoiceTotal(finalIncl);
      }
   };
-
   const handleInclVatChange = (raw) => {
      setInclVatInput(raw);
      const parsed = parseFloat(raw.replace(',', '.'));
@@ -146,22 +138,18 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
         updateInvoiceTotal(finalIncl);
      }
   };
-
   const updateInvoiceTotal = (val) => {
      setFormData(prev => {
         const { calculatedTotal, totalsMatch } = recalculateTotals(prev.verified_items, val);
         return { ...prev, invoice_total: val, calculated_total: calculatedTotal, totals_match: totalsMatch };
      });
   };
-
   const [uploading, setUploading] = useState(false);
   const [openOrders, setOpenOrders] = useState([]);
   const [selectedOpenOrderIds, setSelectedOpenOrderIds] = useState([]);
-
   useEffect(() => {
     if (formData.supplier_id && !receipt) {
       if (externalOrders && externalOrders.length > 0) {
-        // Worker portal: filter pre-fetched orders by supplier
         const open = externalOrders.filter(o => o.supplier_id === formData.supplier_id && (o.status === 'sent' || o.status === 'confirmed'));
         setOpenOrders(open);
       } else {
@@ -174,24 +162,19 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
        setOpenOrders([]);
     }
   }, [formData.supplier_id, receipt, externalOrders]);
-
   useEffect(() => {
     if (order && !selectedOpenOrderIds.includes(order.id)) {
       setSelectedOpenOrderIds(prev => [...prev, order.id]);
     }
   }, [order]);
-
   const handleLoadItemsFromOrders = () => {
      let selectedOrders = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
      if (order && selectedOpenOrderIds.includes(order.id) && !selectedOrders.find(o => o.id === order.id)) {
        selectedOrders.push(order);
      }
-     
-     // If the order prop isn't in openOrders but is selected (fallback for noOrderMode if openOrders is used directly)
      if (selectedOrders.length === 0 && selectedOpenOrderIds.length > 0) {
        selectedOrders = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
      }
-     
      const combinedItems = [];
      selectedOrders.forEach(o => {
        (o.items || []).forEach(oi => {
@@ -220,18 +203,14 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
           }
        });
      });
-     
      if (combinedItems.length > 0) {
         setFormData(prev => {
-          // Merge existing manual items with the loaded order items
           const existingItems = [...(prev.verified_items || [])];
-          
           combinedItems.forEach(ci => {
             const existingIndex = existingItems.findIndex(ei => 
               (ei.item_id && ci.item_id && ei.item_id === ci.item_id) || 
               (ei.item_name && ci.item_name && ei.item_name === ci.item_name)
             );
-            
             if (existingIndex >= 0) {
               existingItems[existingIndex].ordered_quantity += ci.ordered_quantity;
               existingItems[existingIndex].received_quantity += ci.received_quantity;
@@ -239,7 +218,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
               existingItems.push(ci);
             }
           });
-
           const { calculatedTotal, totalsMatch } = recalculateTotals(existingItems, prev.invoice_total);
           return { ...prev, verified_items: existingItems, calculated_total: calculatedTotal, totals_match: totalsMatch };
         });
@@ -252,9 +230,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
   const [anomalyCheck, setAnomalyCheck] = useState({ show: false, messages: [], onContinue: null });
   const [supplierPopoverOpen, setSupplierPopoverOpen] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(!!receipt);
-
-  // eslint-disable-next-line no-unused-vars
-  const checkForAnomalies = () => [];
   const [duplicateReceipts, setDuplicateReceipts] = useState([]);
   const [previousReceipts, setPreviousReceipts] = useState([]);
   const [deliveryNotes, setDeliveryNotes] = useState([]);
@@ -267,26 +242,21 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
     try {
       const el = invoiceDetailsRef?.current;
       if (!el) return;
-      // Use smooth scroll but ensure it targets the correct scrollable parent (Dialog)
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch {}
   };
-
-  // Ensure no English keys show in Hebrew when translations are missing
   const safeT = (key, fallbackHe, fallbackEn) => {
     const v = t(key);
     if (language === 'he' && (v === key || !v)) return fallbackHe;
     if (v === key || !v) return fallbackEn ?? key;
     return v;
   };
-
   const getUnitLabel = (u) => {
     if (!u) return '';
     if (language !== 'he') return u;
     const map = { unit: 'יחידה', liter: 'ליטר', kg: 'ק״ג', case: 'ארגז', gram: 'גרם', ml: 'מ״ל' };
     return map[u] || u;
   };
-
   const isPdfUrl = (u) => { try { return /\.pdf(\?|$)/i.test(String(u || '')); } catch { return false; } };
   useEffect(() => {
     (async () => {
@@ -299,15 +269,11 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
       } catch (error) { console.error("Error loading data:", error); }
     })();
   }, []);
-
-  // Keep availableSuppliers in sync with parent prop
   useEffect(() => {
     if (Array.isArray(suppliers)) {
       setAvailableSuppliers(suppliers);
     }
   }, [suppliers]);
-
-  // Prefill from selected order
   useEffect(() => {
     if (order && !formData.order_id) {
       setFormData(prev => ({
@@ -321,8 +287,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
       }));
     }
   }, [order]);
-
-  // If requested, auto-open file chooser to start the scan flow quickly
   useEffect(() => {
     try {
       if (autoOpenUpload && (formData.receipt_images || []).length === 0) {
@@ -333,8 +297,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
       }
     } catch {}
   }, [autoOpenUpload, formData.receipt_images]);
-
-  // Fallback: always fetch suppliers on mount; if prop suppliers are already set they'll override via the sync effect above
   useEffect(() => {
     const fetchFallbackSuppliers = async () => {
       try {
@@ -368,7 +330,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
             }
           }
         } catch {}
-
         const fetches = [];
         emails.forEach(e => {
           fetches.push(base44.entities.Supplier.filter({ created_by: e }, '-created_date'));
@@ -378,7 +339,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
         const merged = lists.flat().filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
         if (merged.length > 0) {
           setAvailableSuppliers(prev => {
-            // Merge: prefer already-loaded ones, add any missing from direct fetch
             const combined = [...prev];
             merged.forEach(s => { if (!combined.find(x => x.id === s.id)) combined.push(s); });
             return combined;
@@ -389,7 +349,7 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
       }
     };
     fetchFallbackSuppliers();
-  }, []); // run once on mount
+  }, []);
   const handleSupplierSelect = (supplierId) => {
     const supplier = availableSuppliers.find(s => s.id === supplierId);
     if (supplier) {
@@ -399,17 +359,13 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
         supplier_name: supplier.name,
         supplier_email: supplier.email || "",
         order_number: `MANUAL-${Date.now()}`,
-        manual_entry_mode: true // ensure form stays visible and no navigation occurs
+        manual_entry_mode: true
       }));
     }
   };
-
-
-
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    // Capture supplier_id at call time (not stale closure)
     const currentSupplierId = formData.supplier_id;
     try {
       setUploading(true);
@@ -441,8 +397,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
           ...prev,
           receipt_images: [...prev.receipt_images, ...urls]
         }));
-        
-        // Auto-scan immediately after upload with captured supplier_id
         if (!noOrderMode || currentSupplierId) {
           handleAutoScanWithUrls(urls, currentSupplierId);
         }
@@ -454,8 +408,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
       setUploading(false);
     }
   };
-
-  // Drag & drop handlers (desktop)
   const onDropUpload = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -467,51 +419,39 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
   };
   const onDragOverUpload = (e) => { e.preventDefault(); e.stopPropagation(); setDragActive(true); };
   const onDragLeaveUpload = (e) => { e.preventDefault(); e.stopPropagation(); setDragActive(false); };
-
-  // Helper function to recalculate totals
   const recalculateTotals = (items, invoiceTotal) => {
     const calculatedTotal = items.reduce((sum, item) => {
       const actualPrice = parseFloat(item.actual_price) || 0;
       const actualDiscount = parseFloat(item.actual_discount) || 0;
       const receivedQuantity = parseFloat(item.received_quantity) || 0;
-
       const itemPricePerPackage = actualPrice * (1 - actualDiscount / 100);
       return sum + (itemPricePerPackage * receivedQuantity);
     }, 0);
     const totalsMatch = Math.abs(calculatedTotal - (parseFloat(invoiceTotal) || 0)) < 1;
     return { calculatedTotal, totalsMatch };
   };
-
-  // Sanitize invoice number: avoid times and strip spaces/punctuation; keep common prefixes (e.g., I2600000777)
   const sanitizeInvoiceNumber = (raw) => {
     if (!raw) return '';
     const s = String(raw).trim();
-    // HH:MM or HH.MM
     if (/^\d{1,2}[:.]\d{2}$/.test(s)) return '';
-    // 4-digit time-like (e.g., 2325)
     if (/^\d{4}$/.test(s)) {
       const hh = parseInt(s.slice(0, 2), 10);
       const mm = parseInt(s.slice(2), 10);
       if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) return '';
     }
-    // Remove spaces and non word chars except dash and slash
     return s.replace(/\s+/g, '').replace(/[^\w\-\/]/g, '');
   };
-
   const checkDuplicateInvoice = async (invoiceNum, supplierId, excludeId) => {
   if (!invoiceNum || !supplierId) { setDuplicateExists(false); setDuplicateReceipts([]); return false; }
   try {
-    // Align duplicate check with what the list shows: only receipts created by the current working user
     const me = await base44.auth.me();
     const workingEmail = me.acting_as_store_email || me.email;
     const normalizedNumber = String(invoiceNum).trim();
-
     const results = await base44.entities.SupplyReceipt.filter({
       supplier_id: supplierId,
       invoice_number: normalizedNumber,
       created_by: workingEmail
     });
-
     const filtered = (results || []).filter(r => !excludeId || r.id !== excludeId);
     if (filtered.length > 0) {
       setDuplicateExists(true);
@@ -527,8 +467,6 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts,
     return false;
   }
 };
-
-// Load previous non-refund receipts for linking when refund toggled and supplier selected
 useEffect(() => {
   (async () => {
     try {
@@ -540,29 +478,24 @@ useEffect(() => {
       } else {
         list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
       }
-      // Allow linking to ANY previous invoice from this supplier (not just those awaiting credit)
       const filtered = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
       filtered.sort((a, b) => new Date(b.received_date) - new Date(a.received_date));
       setPreviousReceipts(filtered.slice(0, 200));
     } catch (e) { setPreviousReceipts([]); }
   })();
 }, [formData.is_refund, formData.supplier_id, receipt?.supplier_id, receipts]);
-
-// Load delivery notes for summary invoice selection
 useEffect(() => {
   (async () => {
     try {
       if (formData.document_type !== 'summary_invoice') { setDeliveryNotes([]); return; }
       const supplierId = formData.supplier_id || receipt?.supplier_id;
       if (!supplierId) { setDeliveryNotes([]); return; }
-      
       let list = [];
       if (receipts && Array.isArray(receipts) && receipts.length > 0) {
         list = receipts.filter(r => r.supplier_id === supplierId);
       } else {
         list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
       }
-      
       const me = user || await base44.auth.me();
       const workingEmail = me.acting_as_store_email || me.acting_as_user_email || me.email;
       const filtered = (list || []).filter(r => r.document_type === 'delivery_note' && (r.created_by === workingEmail || r.store_owner_email === workingEmail || r.store_owner_email === me.store_user_owner_email) && (!receipt || r.id !== receipt.id));
@@ -570,7 +503,6 @@ useEffect(() => {
     } catch (e) { setDeliveryNotes([]); }
   })();
 }, [formData.supplier_id, formData.document_type, receipts, user]);
-
 const handleAutoScan = async () => {
   if (!formData.receipt_images.length) {
     alert(t('click_to_upload_images'));
@@ -578,17 +510,14 @@ const handleAutoScan = async () => {
   }
   handleAutoScanWithUrls(formData.receipt_images);
 };
-
 const handleAutoScanWithUrls = async (urlsToScan) => {
   if (!urlsToScan || !urlsToScan.length) return;
   if (noOrderMode && !formData.supplier_id) {
     alert(t('supplier_required'));
     return;
   }
-
   try {
     setScanning(true);
-
     if (urlsToScan.length > 1) {
       const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
       const results = await Promise.all(
@@ -622,18 +551,13 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         }
         return;
       }
-
       const { data } = ownerId
         ? await base44.functions.invoke('workerPortalData', { ownerId, action: 'scanReceipt', file_urls: urlsToScan })
         : await base44.functions.invoke('scanAndMatchReceipt', { file_urls: urlsToScan, supplier_id: formData.supplier_id || null });
-
       if (!data?.success) {
         throw new Error(data?.error || 'Failed to scan receipt');
       }
-
       const response = data.header || {};
-      console.log('Scanned invoice header and items data:', data);
-
       const responseIsRefund = Boolean(response.is_refund);
       const docType = response.document_type || 'invoice';
       const incl = Number(response.total_incl_vat);
@@ -642,12 +566,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       let totalCandidate = (isFinite(incl) && incl > 0) ? incl : ((isFinite(excl) && isFinite(vat)) ? (excl + vat) : Number(response.invoice_total || 0));
       let adjustedInvoiceTotal = (typeof totalCandidate === 'number' && isFinite(totalCandidate)) ? totalCandidate : 0;
       adjustedInvoiceTotal = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
-
       const invoiceNum = sanitizeInvoiceNumber(response.invoice_number || '');
       const chosenDate = response.invoice_date || formData.received_date;
-
       const isZeroVat = vat === 0 && excl === incl && incl > 0;
-      
       const rows = Array.isArray(data.items) ? data.items : [];
       const mappedItems = rows.map(r => ({
         item_id: r.item_id || "",
@@ -667,18 +588,14 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         units_per_package: 1,
         price_after_discount: 0,
       }));
-
       const finalIncl = responseIsRefund ? -Math.abs(adjustedInvoiceTotal) : Math.abs(adjustedInvoiceTotal);
       setInclVatInput(String(finalIncl));
       const userVatMultiplier = 1 + (user?.vat_percent ?? 18) / 100;
       const vatRate = isZeroVat ? 1 : userVatMultiplier;
       setExclVatInput(String((finalIncl / vatRate).toFixed(2)));
-
       const noTotalFound = !isFinite(adjustedInvoiceTotal) || Math.abs(adjustedInvoiceTotal) === 0;
-
       if (noOrderMode) {
         const { calculatedTotal, totalsMatch } = recalculateTotals(mappedItems, adjustedInvoiceTotal);
-
         setFormData(prev => ({
           ...prev,
           document_type: docType,
@@ -690,11 +607,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
           verified_items: mappedItems,
           calculated_total: calculatedTotal,
           totals_match: totalsMatch,
-          manual_entry_mode: true // Automatically switch to manual entry mode to allow editing/adding
+          manual_entry_mode: true
         }));
-
         scrollToDetails();
-
         const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
         const isDup = await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
         if (noTotalFound) {
@@ -702,15 +617,10 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         } else {
           alert(t('scanning_complete') || 'סריקה הושלמה! הוסף פריטים ידנית.');
         }
-        // Duplicate warning shown via inline alert in the form (duplicateExists state)
-
       } else {
         const invoiceTotal = adjustedInvoiceTotal;
-        
         let newItems = [...formData.verified_items];
-        // Merge scanned items with existing order items
         if (newItems.length > 0 && mappedItems.length > 0) {
-           // Reset received and certificate quantities to 0 for ordered items before applying scanned quantities
            newItems = newItems.map(item => ({ ...item, received_quantity: 0, certificate_quantity: 0 }));
            mappedItems.forEach(mi => {
               const existingIndex = newItems.findIndex(ni => 
@@ -721,7 +631,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                  newItems[existingIndex].certificate_quantity = mi.certificate_quantity;
                  newItems[existingIndex].received_quantity = mi.received_quantity;
                  newItems[existingIndex].actual_price = mi.actual_price;
-                 // השארנו את הפריט המקורי כתקין אם הוא תאם לפריט בהזמנה
               } else {
                  newItems.push(mi);
               }
@@ -729,9 +638,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         } else if (mappedItems.length > 0) {
            newItems = mappedItems;
         }
-
         const { calculatedTotal, totalsMatch } = recalculateTotals(newItems, invoiceTotal);
-
         setFormData(prev => ({
           ...prev,
           document_type: docType,
@@ -745,9 +652,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
           totals_match: totalsMatch,
           manual_entry_mode: true
         }));
-
         scrollToDetails();
-
         const supplierId = formData.supplier_id || (receipt?.supplier_id || '');
         await checkDuplicateInvoice(invoiceNum, supplierId, receipt?.id);
         if (noTotalFound) {
@@ -756,7 +661,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
           alert(t('scanning_complete') || 'סריקה הושלמה! בדוק את הפרטים.');
         }
       }
-
     } catch (error) {
       console.error("Error scanning invoice:", error);
       alert(t('scanning_invoice') + ' - ' + (error.message || t('error_saving')));
@@ -764,35 +668,24 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       setScanning(false);
     }
   };
-
-
-
-     const handleSkipScanAndEnterManually = () => {
-    // When user clicks "Enter Manually", show the form with empty fields
-    // This allows them to manually add items
-    // The invoice details section will show because we set a flag
+  const handleSkipScanAndEnterManually = () => {
     setFormData(prev => ({
       ...prev,
-      manual_entry_mode: true // Flag to show invoice details section
+      manual_entry_mode: true
     }));
   };
-
   const updateVerifiedItem = (index, field, value) => {
     setFormData(prev => {
       const updatedVerifiedItems = [...prev.verified_items];
       updatedVerifiedItems[index] = { ...updatedVerifiedItems[index], [field]: value };
-      
-      // Update item-specific flags only if not in noOrderMode
       if (!noOrderMode && (field === 'actual_price' || field === 'actual_discount')) {
         const item = updatedVerifiedItems[index];
         item.price_changed = Math.abs(item.actual_price - item.catalog_price) > 0.01;
         item.discount_changed = Math.abs(item.actual_discount - item.catalog_discount) > 0.01;
       }
-
-      // Re-calculate price changes summary for order-based flow
       let priceChangesSummary = prev.price_changes_summary;
       let hasPriceChanges = prev.has_price_changes;
-      if (!noOrderMode) { // Only calculate for order-based mode where catalog prices exist
+      if (!noOrderMode) {
         let newHasPriceChanges = false;
         const newPriceChangesSummary = [];
         updatedVerifiedItems.forEach(item_ => {
@@ -817,9 +710,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         priceChangesSummary = newPriceChangesSummary;
         hasPriceChanges = newHasPriceChanges;
       }
-
       const { calculatedTotal, totalsMatch } = recalculateTotals(updatedVerifiedItems, prev.invoice_total);
-
       let awaitingCredit = prev.awaiting_credit;
       if (field === 'request_credit_quantity' || field === 'request_credit_price') {
         const hasAnyCreditReq = updatedVerifiedItems.some(i => i.request_credit_quantity || i.request_credit_price);
@@ -827,7 +718,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
           awaitingCredit = true;
         }
       }
-
       return {
         ...prev,
         needs_review: false,
@@ -840,11 +730,10 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       };
     });
   };
-
   const addManualItem = () => {
     setFormData(prev => {
       const newItem = {
-        item_id: "", // New items have no existing item_id
+        item_id: "",
         item_name: "",
         ordered_quantity: 0,
         certificate_quantity: 0,
@@ -868,10 +757,8 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       return { ...prev, verified_items: newItems, calculated_total: calculatedTotal, totals_match: totalsMatch };
     });
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     const executeSubmit = async () => {
       if (noOrderMode) {
       if (!formData.supplier_id) {
@@ -886,17 +773,14 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
         alert(t('receipt_images_required') || 'יש להעלות תמונות קבלה.');
         return;
       }
-      // In noOrderMode, all items are new or manually added, no push report logic
     } else {
       if (!formData.order_id) {
         alert(t('select_order'));
         return;
       }
-      
       const pushedItems = formData.verified_items.filter(item => 
         item.received_quantity > item.ordered_quantity
       );
-      
       if (pushedItems.length > 0) {
         const pushData = pushedItems.map(item => ({
           item_id: item.item_id,
@@ -908,9 +792,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
           price_per_unit: item.actual_price,
           extra_cost: (item.received_quantity - item.ordered_quantity) * item.actual_price
         }));
-        
         const totalExtraCost = pushData.reduce((sum, item) => sum + item.extra_cost, 0);
-        
         try {
           await base44.entities.SupplierPushReport.create({
             receipt_id: '',
@@ -923,14 +805,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
             total_extra_cost: totalExtraCost,
             notes: `Supplier provided more than ordered on ${pushedItems.length} items`
           });
-          
           console.log('Supplier push report created');
         } catch (error) {
           console.error('Error creating supplier push report:', error);
         }
       }
     }
-
     const dup = await checkDuplicateInvoice(formData.invoice_number, formData.supplier_id || (receipt?.supplier_id || ''), receipt?.id);
     if (dup) {
       const msg = language === 'he'
@@ -939,7 +819,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       const confirmed = window.confirm(msg);
       if (!confirmed) return;
     }
-
     let finalData = { ...formData };
     if (selectedOpenOrderIds.length > 0) {
       const selectedOrdersObj = openOrders.filter(o => selectedOpenOrderIds.includes(o.id));
@@ -950,12 +829,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       finalData.linked_order_ids = selectedOpenOrderIds;
       finalData.order_number = selectedOrdersObj.map(o => o.order_number).join(', ');
     }
-
-    // Save receipt first to get its ID
     const savedReceipt = await onSubmit(finalData);
-
-    // Auto-create new items that are marked as having issues/unrecognized
-    // Now we can attach source_document_id because we have the receipt ID
     try {
       const newItemsToCreate = formData.verified_items.filter(item => !item.item_id && item.item_name);
       if (newItemsToCreate.length > 0) {
@@ -982,20 +856,16 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
     } catch (e) {
       console.error("Error auto-creating new items:", e);
     }
-
     if (onSuccess) onSuccess();
     };
-
     executeSubmit();
     };
-
     const removeImage = (index) => {
     setFormData(prev => ({
       ...prev,
       receipt_images: prev.receipt_images.filter((_, i) => i !== index)
     }));
   };
-
   const headerContent = (
     <div className="flex flex-row items-center justify-between pb-4 p-4 border-b">
       <div className="flex items-center gap-3">
@@ -1014,7 +884,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
       </Button>
     </div>
   );
-
   const formInner = (
     <form onSubmit={handleSubmit} className="space-y-6 pb-28 md:pb-6">
           {order && (
@@ -1025,16 +894,35 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
               </Button>
             </div>
           )}
-
-
           {(noOrderMode || order) ? (
             <>
               <div className="space-y-2">
-                <Popover open={supplierPopoverOpen} onOpenChange={setSupplierPopoverOpen}><PopoverTrigger asChild><Button variant="outline" role="combobox" aria-expanded={supplierPopoverOpen} className="w-full justify-between font-normal text-black h-12 text-base"><span className="truncate text-black">{formData.supplier_id && availableSuppliers.length > 0 ? availableSuppliers.find((s) => s.id === formData.supplier_id)?.name || t('select_supplier') : t('select_supplier')}</span><ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" /></Button></PopoverTrigger><PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" style={{ zIndex: 10001 }}><Command><CommandInput placeholder={language === 'he' ? 'חפש ספק...' : 'Search supplier...'} /><CommandList className="max-h-[40vh] sm:max-h-[300px] overflow-y-auto"><CommandEmpty>{t('no_suppliers') || 'לא נמצאו ספקים.'}</CommandEmpty><CommandGroup>
-                          {[...availableSuppliers].slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })).map((supplier) => (<CommandItem key={supplier.id} value={supplier.name} onSelect={() => { handleSupplierSelect(supplier.id); setSupplierPopoverOpen(false); }}><Check className={cn("mr-2 h-4 w-4 shrink-0", formData.supplier_id === supplier.id ? "opacity-100" : "opacity-0")} /><span className="truncate">{supplier.name}</span></CommandItem>))}
-                        </CommandGroup></CommandList></Command></PopoverContent></Popover>
+                <Popover open={supplierPopoverOpen} onOpenChange={setSupplierPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" aria-expanded={supplierPopoverOpen} className="w-full justify-between text-black h-14 text-lg bg-white border-2 border-gray-200 hover:border-[#d4a373] hover:bg-gray-50 transition-colors rounded-xl shadow-sm">
+                      <span className="truncate font-bold text-gray-800">{formData.supplier_id && availableSuppliers.length > 0 ? availableSuppliers.find((s) => s.id === formData.supplier_id)?.name || t('select_supplier') : t('select_supplier')}</span>
+                      <ChevronsUpDown className="ml-2 h-5 w-5 shrink-0 opacity-50 text-gray-500" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200" align="start" style={{ zIndex: 10001 }}>
+                    <Command>
+                      <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3" placeholder={language === 'he' ? 'חפש ספק...' : 'Search supplier...'} />
+                      <div className="h-px bg-gray-100 w-full" />
+                      <CommandList className="max-h-[45vh] sm:max-h-[350px] overflow-y-auto p-1.5">
+                        <CommandEmpty className="py-6 text-center text-sm text-gray-500">{t('no_suppliers') || 'לא נמצאו ספקים.'}</CommandEmpty>
+                        <CommandGroup>
+                          {[...availableSuppliers].slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })).map((supplier) => (
+                            <CommandItem key={supplier.id} value={supplier.name} onSelect={() => { handleSupplierSelect(supplier.id); setSupplierPopoverOpen(false); }} className="py-3.5 px-3 my-0.5 rounded-lg text-base font-semibold cursor-pointer aria-selected:bg-[#d4a373]/15 aria-selected:text-[#b88c60]">
+                              <Check className={cn("mr-3 h-5 w-5 shrink-0 text-[#d4a373]", formData.supplier_id === supplier.id ? "opacity-100" : "opacity-0")} />
+                              <span className="truncate">{supplier.name}</span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
-
               {(formData.supplier_id || receipt) && (
                 <>
                   {!receipt && openOrders.length > 0 && (
@@ -1139,7 +1027,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
                       <div className="absolute -top-10 -left-10 w-32 h-32 bg-purple-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
                     </div>
-
                     {formData.receipt_images.length > 0 && (
                       <div className="grid grid-cols-3 gap-2 mt-2">
                         {formData.receipt_images.map((url, index) => (
@@ -1170,7 +1057,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                         ))}
                       </div>
                     )}
-
                     {formData.receipt_images.length > 0 && !isReadOnly && (
                       <div className="flex flex-col gap-2 sticky bottom-0 pb-safe z-50 bg-white/95 dark:bg-[#0b1530]/95 backdrop-blur md:static md:bg-transparent md:dark:bg-transparent p-2 md:p-0 rounded-md pointer-events-auto">
                         {scanning && (
@@ -1198,7 +1084,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       </div>
                     )}
                   </div>
-
                   {scannedDocs.length > 1 ? (
                     <>
                       <div ref={invoiceDetailsRef} style={{ scrollMarginTop: '96px' }} className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
@@ -1420,7 +1305,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           )}
                         </div>
                       </div>
-
                       <div className="bg-white border rounded-lg p-4 mt-4 space-y-5 shadow-sm">
                         <div className="grid grid-cols-1 gap-3">
                           <div>
@@ -1484,7 +1368,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             </div>
                           </div>
                         </div>
-
                         <div className="pt-4 border-t border-gray-100">
                           <Label className="text-xs text-gray-500 mb-2.5 block font-medium">
                             {language === 'he' ? 'מאפיינים נוספים (ניתן לערוך במידת הצורך)' : 'Additional attributes (editable)'}
@@ -1509,7 +1392,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                               <Check className={`w-3.5 h-3.5 ${formData.is_zero_vat ? 'opacity-100' : 'opacity-0 hidden'}`} />
                               <span>{language === 'he' ? 'ללא מע״מ (0%)' : 'No VAT (0%)'}</span>
                             </button>
-                            
                             {formData.is_refund && (
                               <button
                                 type="button"
@@ -1602,9 +1484,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                              </div>
                             </>
                             )}
-
                       </div>
-
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <Label className="text-base font-semibold">
@@ -1625,7 +1505,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                             </Button>
                           )}
                         </div>
-                        
                         {formData.verified_items.length > 0 && (
                           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                             <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -1717,7 +1596,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                           />
                                         </td>
                                       </tr>
-                                      {/* Credit checkboxes row if discrepancies exist */}
                                       {((item.price_changed || item.discount_changed || (item.certificate_quantity !== item.received_quantity && item.certificate_quantity > 0))) && (
                                         <tr className={`${index % 2 === 0 ? 'bg-white' : 'bg-[#f9fafb]'}`}>
                                           <td></td>
@@ -1747,7 +1625,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                           </div>
                         )}
                       </div>
-
                       {formData.verified_items.some(i => i.request_credit_quantity || i.request_credit_price) && (
                         <div className={`mt-4 p-4 border rounded-lg shadow-sm ${formData.refund_received ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                           <h4 className={`font-bold mb-2 ${formData.refund_received ? 'text-green-800' : 'text-red-800'}`}>
@@ -1789,7 +1666,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   await navigator.share({ title: language === 'he' ? 'בקשת זיכוי' : 'Credit Request', text: text });
                                   if (targetEmail) alert(language === 'he' ? `בקשת הזיכוי נשלחה גם למייל הספק: ${targetEmail}` : `Credit request also sent to supplier email: ${targetEmail}`);
                                   return;
-                                } catch (_) { /* fallback */ }
+                                } catch (_) { }
                               }
                               window.open(phone ? `https://wa.me/972${phone.startsWith('0') ? phone.slice(1) : phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                               if (targetEmail) setTimeout(() => alert(language === 'he' ? `בקשת הזיכוי נשלחה גם למייל הספק: ${targetEmail}` : `Credit request also sent to supplier email: ${targetEmail}`), 500);
@@ -1802,7 +1679,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       )}
                     </>
                   )}
-
                   {duplicateExists && (
                       <Alert variant="destructive" className="mt-2 bg-orange-50 border-orange-300 text-orange-800">
                         <AlertDescription>
@@ -1815,9 +1691,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                     )}
                 </>
               )}
-
                     <div className={`grid gap-2 pt-4 w-full ${scannedDocs.length > 1 ? 'grid-cols-2' : ((receipt && onDelete && !isReadOnly) ? 'grid-cols-3' : (!isReadOnly ? 'grid-cols-2' : 'grid-cols-1'))}`}>
-
                       {scannedDocs.length > 1 ? (
                         <>
                           <Button
@@ -1833,11 +1707,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 const confirmed = window.confirm(msg);
                                 if (!confirmed) return;
                               }
-
                               const executeMultiSubmit = async () => {
                                 const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
                                 const baseData = { supplier_id: formData.supplier_id, supplier_name: formData.supplier_name, supplier_email: formData.supplier_email, received_date: formData.received_date, store_owner_email: workingEmail, created_by: user?.email, verified_items: [], price_changes_summary: [], has_price_changes: false, notes: formData.notes || "", needs_review: !!formData.needs_review, review_note: formData.review_note || "" };
-                              // Create missing items from the first doc's items (since multiple docs just copy baseData)
                               const itemsWithIssues = baseData.verified_items?.filter(item => !item.item_id && item.item_name) || [];
                               if (itemsWithIssues.length > 0) {
                                 for (const item of itemsWithIssues) {
@@ -1860,7 +1732,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                   } catch(e) { console.error(e); }
                                 }
                               }
-
                               const payloads = scannedDocs.map((d, i) => ({
                                 ...baseData,
                                 order_id: "",
@@ -1889,7 +1760,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 alert((language === 'he' ? 'שמירה נכשלה' : 'Save failed') + ': ' + (e?.message || e));
                               }
                               };
-
                               executeMultiSubmit();
                               }}
                               >
@@ -1982,7 +1852,6 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {previewOrder && (
         <OrderPreviewModal
           order={previewOrder}

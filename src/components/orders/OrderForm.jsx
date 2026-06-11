@@ -332,36 +332,40 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
                   variant="outline"
                   role="combobox"
                   aria-expanded={supplierOpen}
-                  className="w-full justify-between font-normal bg-transparent border-input h-9 sm:h-10 text-xs sm:text-sm"
+                  className="w-full justify-between text-black h-14 text-lg bg-white border-2 border-gray-200 hover:border-[#d4a373] hover:bg-gray-50 transition-colors rounded-xl shadow-sm"
                   disabled={!!order}
                 >
-                  {currentOrder.supplier_id
-                    ? suppliers?.find((supplier) => supplier.id === currentOrder.supplier_id)?.name
-                    : t('select_supplier')}
-                  <ChevronsUpDown className={`h-4 w-4 shrink-0 opacity-50 ${language === 'he' ? 'mr-2' : 'ml-2'}`} />
+                  <span className="truncate font-bold text-gray-800">
+                    {currentOrder.supplier_id
+                      ? suppliers?.find((supplier) => supplier.id === currentOrder.supplier_id)?.name
+                      : t('select_supplier')}
+                  </span>
+                  <ChevronsUpDown className={`h-5 w-5 shrink-0 opacity-50 text-gray-500 ${language === 'he' ? 'mr-2' : 'ml-2'}`} />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align={language === 'he' ? 'end' : 'start'}>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200" align={language === 'he' ? 'end' : 'start'} style={{ zIndex: 10001 }}>
                 <Command>
-                  <CommandInput placeholder={safeT('search_supplier', 'חפש ספק...', 'Search supplier...')} />
-                  <CommandList className="max-h-[40vh] sm:max-h-[300px] overflow-y-auto">
-                    <CommandEmpty>{t('no_suppliers_available') || 'אין ספקים זמינים'}</CommandEmpty>
+                  <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3" placeholder={safeT('search_supplier', 'חפש ספק...', 'Search supplier...')} />
+                  <div className="h-px bg-gray-100 w-full" />
+                  <CommandList className="max-h-[45vh] sm:max-h-[350px] overflow-y-auto p-1.5">
+                    <CommandEmpty className="py-6 text-center text-sm text-gray-500">{t('no_suppliers_available') || 'אין ספקים זמינים'}</CommandEmpty>
                     <CommandGroup>
                       {suppliers && suppliers.map((supplier) => (
                         <CommandItem
                           key={supplier.id}
                           value={supplier.name}
+                          className="py-3.5 px-3 my-0.5 rounded-lg text-base font-semibold cursor-pointer aria-selected:bg-[#d4a373]/15 aria-selected:text-[#b88c60]"
                           onSelect={() => {
                             handleSupplierChange(supplier.id);
                             setSupplierOpen(false);
                           }}
                         >
                           <Check
-                            className={`h-4 w-4 ${language === 'he' ? 'ml-2' : 'mr-2'} ${
+                            className={`h-5 w-5 text-[#d4a373] ${language === 'he' ? 'ml-3' : 'mr-3'} ${
                               currentOrder.supplier_id === supplier.id ? "opacity-100" : "opacity-0"
                             }`}
                           />
-                          {supplier.name}
+                          <span className="truncate">{supplier.name}</span>
                         </CommandItem>
                       ))}
                     </CommandGroup>
