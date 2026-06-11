@@ -135,42 +135,42 @@ export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl w-[95vw] sm:w-full max-h-[90vh] md:max-h-[85vh] h-[90vh] sm:h-auto flex flex-col overflow-hidden p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
           <DialogTitle>{language === 'he' ? 'ניקוי פריטים כפולים' : 'Clean Duplicate Items'}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             {language === 'he' 
               ? 'המערכת זיהתה פריטים עם שמות זהים. בחר אילו מהם ברצונך למחוק (ברירת המחדל היא לשמור את הגרסה החדשה ביותר של כל פריט).'
               : 'The system found items with identical names. Select which ones to delete (defaults to keeping the newest version).'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto pr-2 pb-4 space-y-6">
+        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 pb-2 space-y-4">
           {duplicateGroups.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               {language === 'he' ? 'לא נמצאו פריטים כפולים.' : 'No duplicate items found.'}
             </div>
           ) : (
             <>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 p-3 rounded-lg border gap-3">
-                <span className="font-semibold shrink-0 mt-1 sm:mt-0">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-50 p-2 sm:p-3 rounded-lg border gap-2 sm:gap-3 shrink-0">
+                <span className="font-semibold text-sm sm:text-base shrink-0 mt-1 md:mt-0">
                   {language === 'he' ? `נבחרו ${selectedIds.length} מתוך ${totalDuplicates} פריטים למחיקה` : `${selectedIds.length} of ${totalDuplicates} items selected for deletion`}
                 </span>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <div className="relative flex-1 sm:w-64">
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
                     <Search className={`absolute top-2.5 ${language === 'he' ? 'right-2.5' : 'left-2.5'} text-gray-400 w-4 h-4`} />
                     <Input
-                      placeholder={language === 'he' ? 'חיפוש פריט או ספק...' : 'Search item or supplier...'}
+                      placeholder={language === 'he' ? 'חיפוש...' : 'Search...'}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className={`h-9 bg-white ${language === 'he' ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
+                      className={`h-9 text-sm bg-white ${language === 'he' ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
                     />
                   </div>
-                  <Button variant="outline" size="sm" onClick={toggleAll} className="gap-2 shrink-0 h-9">
+                  <Button variant="outline" size="sm" onClick={toggleAll} className="gap-1 sm:gap-2 shrink-0 h-9 px-2 sm:px-3">
                     {selectedIds.length > 0 ? (
-                      <><Square className="w-4 h-4" /> {language === 'he' ? 'נקה בחירה' : 'Clear selection'}</>
+                      <><Square className="w-4 h-4" /> <span className="hidden sm:inline">{language === 'he' ? 'נקה בחירה' : 'Clear selection'}</span><span className="sm:hidden">{language === 'he' ? 'נקה' : 'Clear'}</span></>
                     ) : (
-                      <><CheckSquare className="w-4 h-4" /> {language === 'he' ? 'בחר הכל' : 'Select all'}</>
+                      <><CheckSquare className="w-4 h-4" /> <span className="hidden sm:inline">{language === 'he' ? 'בחר הכל' : 'Select all'}</span><span className="sm:hidden">{language === 'he' ? 'הכל' : 'All'}</span></>
                     )}
                   </Button>
                 </div>
@@ -183,35 +183,35 @@ export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete 
               )}
 
               {filteredGroups.map((group, idx) => (
-                <div key={idx} className="border rounded-lg overflow-hidden">
-                  <div className="bg-gray-100 px-4 py-2 font-bold border-b text-gray-800">
-                    {group.name} <span className="text-sm font-normal text-gray-500 ml-2 rtl:mr-2 rtl:ml-0">({group.items.length} {language === 'he' ? 'גרסאות' : 'versions'})</span>
+                <div key={idx} className="border rounded-lg overflow-hidden shrink-0">
+                  <div className="bg-gray-100 px-3 sm:px-4 py-1.5 sm:py-2 font-bold border-b text-gray-800 text-sm sm:text-base">
+                    {group.name} <span className="text-xs sm:text-sm font-normal text-gray-500 ml-2 rtl:mr-2 rtl:ml-0">({group.items.length} {language === 'he' ? 'גרסאות' : 'versions'})</span>
                   </div>
                   <div className="divide-y">
                     {group.items.map((item, itemIdx) => {
                       const isSelected = selectedIds.includes(item.id);
                       return (
-                        <label key={item.id} className={`flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors ${isSelected ? 'bg-red-50/50' : ''}`}>
-                          <div className="flex items-center justify-center pt-1">
+                        <label key={item.id} className={`flex items-start sm:items-center gap-2 sm:gap-3 p-2 sm:p-3 hover:bg-gray-50 cursor-pointer transition-colors ${isSelected ? 'bg-red-50/50' : ''}`}>
+                          <div className="flex items-center justify-center pt-0.5 sm:pt-0 shrink-0">
                             <input 
                               type="checkbox" 
                               checked={isSelected}
                               onChange={() => toggleItem(item.id)}
-                              className="w-5 h-5 rounded border-gray-300 accent-red-500"
+                              className="w-4 h-4 sm:w-5 sm:h-5 rounded border-gray-300 accent-red-500"
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className={`font-medium ${isSelected ? 'text-red-700 line-through opacity-70' : 'text-gray-900'}`}>
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                              <span className={`font-medium text-sm sm:text-base ${isSelected ? 'text-red-700 line-through opacity-70' : 'text-gray-900'}`}>
                                 {item.name}
                               </span>
                               {itemIdx === 0 && (
-                                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
+                                <span className="text-[10px] sm:text-xs bg-green-100 text-green-800 px-1.5 sm:px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">
                                   {language === 'he' ? 'החדש ביותר' : 'Newest'}
                                 </span>
                               )}
                             </div>
-                            <div className="text-sm text-gray-500 flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                            <div className="text-xs sm:text-sm text-gray-500 flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 sm:mt-1">
                               {item.supplier_name && <span>{language === 'he' ? 'ספק:' : 'Supplier:'} {item.supplier_name}</span>}
                               {item.catalog_number && <span>{language === 'he' ? 'מק״ט:' : 'Catalog:'} {item.catalog_number}</span>}
                               {(item.price || item.price_after_discount) && (
@@ -229,7 +229,7 @@ export default function CleanDuplicatesModal({ isOpen, onClose, items, onDelete 
           )}
         </div>
 
-        <DialogFooter className="border-t pt-4">
+        <DialogFooter className="border-t pt-3 sm:pt-4 shrink-0 mt-auto bg-white">
           <Button variant="outline" onClick={onClose} disabled={deleting}>
             {language === 'he' ? 'ביטול' : 'Cancel'}
           </Button>
