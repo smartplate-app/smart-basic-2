@@ -1202,7 +1202,7 @@ const handleCleanOrphans = async (ownerEmail) => {
            <AlertDialogHeader>
              <AlertDialogTitle>{language === 'he' ? 'מחיקת פריטים נבחרים' : 'Delete selected items'}</AlertDialogTitle>
              <AlertDialogDescription>
-               {language === 'he' ? `האם למחוק ${selectedIds.length} פריטים שנבחרו? הפעולה אינה ניתנת לשחזור.` : `Delete ${selectedIds.length} selected items? This action cannot be undone.`}
+               {language === 'he' ? `האם למחוק ${pendingActionType === 'delete' ? selectedPendingIds.length : selectedIds.length} פריטים שנבחרו? הפעולה אינה ניתנת לשחזור.` : `Delete ${pendingActionType === 'delete' ? selectedPendingIds.length : selectedIds.length} selected items? This action cannot be undone.`}
              </AlertDialogDescription>
            </AlertDialogHeader>
            <AlertDialogFooter>
