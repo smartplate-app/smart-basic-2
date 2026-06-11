@@ -336,6 +336,7 @@ export default function MonthlyCountPage() {
         await base44.entities.InventoryCount.update(editingCount.id, countData);
         console.log('[MonthlyCount] Count updated successfully');
       } else {
+        countData.store_owner_email = user?.store_user_owner_email || user?.acting_as_store_email || user?.acting_as_user_email || user?.email || null;
         await base44.entities.InventoryCount.create(countData);
         console.log('[MonthlyCount] Count created successfully');
       }
@@ -831,6 +832,7 @@ export default function MonthlyCountPage() {
 
           {showCountForm && (
             <CountForm
+              user={user}
               count={editingCount}
               warehouses={warehouses}
               items={items}

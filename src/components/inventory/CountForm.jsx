@@ -17,7 +17,7 @@ import { Item } from "@/entities/Item";
 
 const LOCAL_STORAGE_KEY = 'offline_count_draft';
 
-export default function CountForm({ count, warehouses, items: initialItems, onSubmit, onCancel, onWarehouseCatalogSaved }) {
+export default function CountForm({ user, count, warehouses, items: initialItems, onSubmit, onCancel, onWarehouseCatalogSaved }) {
   const { t, language } = useLanguage();
   const [formData, setFormData] = useState(() => {
     if (count) {
@@ -548,6 +548,7 @@ export default function CountForm({ count, warehouses, items: initialItems, onSu
           const cleanedData = {
             ...currentData,
             warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
+            store_owner_email: user?.store_user_owner_email || user?.acting_as_store_email || user?.acting_as_user_email || user?.email || null,
             items: currentData.items.map(item => {
               const cQty = Number(item.counted_quantity);
               const pUnit = Number(item.price_per_unit);
