@@ -505,7 +505,7 @@ export default function ItemsPage() {
 
     setLoading(true);
     try {
-      const batchSize = 10;
+      const batchSize = 5;
       for (let i = 0; i < selectedPendingIds.length; i += batchSize) {
         const batch = selectedPendingIds.slice(i, i + batchSize);
         await Promise.all(batch.map(async (itemId) => {
@@ -516,6 +516,9 @@ export default function ItemsPage() {
             status: 'active'
           });
         }));
+        if (i + batchSize < selectedPendingIds.length) {
+          await new Promise(r => setTimeout(r, 300));
+        }
       }
       setSelectedPendingIds([]);
       setShowBulkSupplierModal(false);
@@ -534,13 +537,16 @@ export default function ItemsPage() {
     if (targetIds.length === 0) { setShowDeleteDialog(false); return; }
     setDeleting(true);
     try {
-      const batchSize = 10;
+      const batchSize = 5;
       for (let i = 0; i < targetIds.length; i += batchSize) {
         const batch = targetIds.slice(i, i + batchSize);
         if (user?.store_user_owner_email || user?.acting_as_store_email) {
           await Promise.all(batch.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
         } else {
           await Promise.all(batch.map(id => base44.entities.Item.delete(id)));
+        }
+        if (i + batchSize < targetIds.length) {
+          await new Promise(r => setTimeout(r, 300));
         }
       }
       if (pendingActionType === 'delete') setSelectedPendingIds([]);
@@ -828,7 +834,7 @@ const handleCleanOrphans = async (ownerEmail) => {
                         const next = existing.filter(id => !selectedIds.includes(id));
                         await base44.entities.Warehouse.update(currentWh.id, { catalog_items: next });
                         
-                        const batchSize = 10;
+                        const batchSize = 5;
                         for (let i = 0; i < selectedIds.length; i += batchSize) {
                           const batch = selectedIds.slice(i, i + batchSize);
                           await Promise.all(batch.map(async (itemId) => {
@@ -846,6 +852,9 @@ const handleCleanOrphans = async (ownerEmail) => {
                               warehouse_name: newWnames.length > 0 ? newWnames[0] : ""
                             });
                           }));
+                          if (i + batchSize < selectedIds.length) {
+                            await new Promise(r => setTimeout(r, 300));
+                          }
                         }
                         setSelectedIds([]);
                         loadData(user);
@@ -1248,7 +1257,7 @@ const handleCleanOrphans = async (ownerEmail) => {
              }));
 
              // Update each item
-             const batchSize = 10;
+             const batchSize = 5;
              for (let i = 0; i < selectedIds.length; i += batchSize) {
                const batch = selectedIds.slice(i, i + batchSize);
                await Promise.all(batch.map(async (itemId) => {
@@ -1275,6 +1284,9 @@ const handleCleanOrphans = async (ownerEmail) => {
                    });
                  }
                }));
+               if (i + batchSize < selectedIds.length) {
+                 await new Promise(r => setTimeout(r, 300));
+               }
              }
 
              setSelectedIds([]);
