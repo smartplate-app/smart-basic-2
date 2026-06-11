@@ -213,10 +213,38 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
   const handleDownloadImage = async (opts = {}) => {
     const shareOnly = !!opts.shareOnly;
+    
+    let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
+    const shareText = language === 'he' 
+      ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
+      : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
+
+    // Fast path for sharing: use pre-generated file if available to preserve user gesture
+    if (shareOnly && pregeneratedFile && navigator.share) {
+       try {
+          if (!order.order_number && order.id) {
+             base44.entities.Order.update(order.id, { order_number: ensuredNumber, status: order.status === 'draft' ? 'sent' : (order.status || 'sent') }).catch(() => {});
+             order.order_number = ensuredNumber;
+          }
+          await navigator.share({ files: [pregeneratedFile], title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText });
+          if (onSend) { try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {} }
+          return;
+       } catch (e) {
+          if (e.name === 'AbortError' || (e.message && e.message.includes('abort'))) return;
+          console.error("Fast share failed, falling back to text only", e);
+          try {
+             await navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText + "\n\n" + orderUrl });
+             if (onSend) { try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {} }
+             return;
+          } catch (textErr) {
+             if (textErr.name === 'AbortError' || (textErr.message && textErr.message.includes('abort'))) return;
+          }
+       }
+    }
+
     try {
       setDownloading(true);
 
-      let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
       try {
         if (!order.order_number && order.id) {
           base44.entities.Order.update(order.id, {
@@ -227,10 +255,6 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         }
       } catch (_) {}
       
-      const shareText = language === 'he' 
-        ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
-        : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
-
       // Create a temporary container with the order content
       const tempContainer = document.createElement('div');
       tempContainer.style.position = 'fixed';
@@ -386,17 +410,31 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       } 
       
       if (!shareSucceeded) {
-        // Fallback for browsers without share API
+        // Since native sharing failed (often fails for files on desktop or some mobile browsers),
+        // we'll share just the text with the native API if possible, or fallback to clipboard.
         const textWithLink = shareText + "\n\n" + (language === 'he' ? "קישור להזמנה: " : "Order link: ") + orderUrl;
         
         try {
-          await navigator.clipboard.writeText(textWithLink);
-          toast.success(language === 'he' ? 'טקסט ההזמנה והקישור הועתקו ללוח' : 'Order text and link copied!', { duration: 6000 });
-        } catch (copyErr) {
-          console.error('Clipboard copy failed', copyErr);
+            if (navigator.share) {
+               await navigator.share({
+                   title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
+                   text: textWithLink
+               });
+            } else {
+                throw new Error("No native share api");
+            }
+        } catch(textErr) {
+             if (textErr.name !== 'AbortError' && !(textErr.message && textErr.message.includes('abort'))) {
+                 try {
+                  await navigator.clipboard.writeText(textWithLink);
+                  toast.success(language === 'he' ? 'טקסט ההזמנה והקישור הועתקו ללוח' : 'Order text and link copied!', { duration: 6000 });
+                } catch (copyErr) {
+                  console.error('Clipboard copy failed', copyErr);
+                }
+             }
         }
 
-        // Trigger native download
+        // Trigger native download of the image as fallback for the missing file in text share
         const a = document.createElement('a');
         a.href = dataUrl;
         a.download = `order_${safeName}.jpg`;
