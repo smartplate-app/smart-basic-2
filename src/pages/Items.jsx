@@ -522,6 +522,7 @@ export default function ItemsPage() {
       setSelectedPendingIds([]);
       setShowBulkSupplierModal(false);
       await loadData(user);
+      alert(language === 'he' ? 'השיוך לספק בוצע בהצלחה!' : 'Successfully assigned to supplier!');
     } catch (error) {
       console.error("Bulk assign supplier failed:", error);
       alert((t('error_saving') || 'Error') + ': ' + (error.message || 'Failed to update items'));
