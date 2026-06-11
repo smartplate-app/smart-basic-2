@@ -904,11 +904,11 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       <ChevronsUpDown className="ml-2 h-5 w-5 shrink-0 opacity-50 text-gray-500" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200 bg-white overflow-hidden" align="start" style={{ zIndex: 99999 }}>
-                    <Command className="bg-white text-gray-900 w-full flex flex-col">
+                  <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} onTouchMove={(e) => e.stopPropagation()} className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200 bg-white" align="start" style={{ zIndex: 99999 }}>
+                    <Command className="bg-white text-gray-900 w-full flex flex-col" onTouchMove={(e) => e.stopPropagation()}>
                       <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3 bg-white text-gray-900 placeholder:text-gray-400 border-none outline-none focus:ring-0" placeholder={language === 'he' ? 'חפש ספק...' : 'Search supplier...'} />
                       <div className="h-px bg-gray-100 w-full shrink-0" />
-                      <CommandList className="h-[250px] sm:h-[300px] w-full overflow-y-auto p-1.5 bg-white block" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+                      <CommandList className="h-[250px] sm:h-[300px] w-full overflow-y-auto p-1.5 bg-white block touch-pan-y" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }} onTouchMove={(e) => e.stopPropagation()}>
                         <CommandEmpty className="py-6 text-center text-sm text-gray-500 bg-white">{t('no_suppliers') || 'לא נמצאו ספקים.'}</CommandEmpty>
                         <CommandGroup className="bg-white text-gray-900">
                           {[...availableSuppliers].slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })).map((supplier) => (
