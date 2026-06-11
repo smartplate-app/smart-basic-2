@@ -990,7 +990,7 @@ const handleCleanOrphans = async (ownerEmail) => {
                                   className="inline-flex items-center gap-1 text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-2 py-1.5 rounded transition-colors border border-amber-200/50"
                                   title={item.source_document_number}
                                 >
-                                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                  <FileText className="w-3.5 h-3.5 shrink-0" />
                                   <span className="truncate font-medium max-w-[120px]">
                                     {item.source_type === 'inventory_count'
                                       ? (language === 'he' ? `ספירה: ${item.source_document_number || 'ללא שם'}` : `Count: ${item.source_document_number || 'Unnamed'}`)

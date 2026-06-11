@@ -71,7 +71,7 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
               }}>
                 {item.source_document_id ? (
                   <Link to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`} className="flex items-center gap-2 cursor-pointer">
-                    <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+                    <FileText className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-amber-600" />
                     <span>
                       {item.source_type === 'inventory_count' 
                         ? (t('language') === 'he' ? `מספירת מלאי: ${item.source_document_number || 'ללא שם'}` : `From count: ${item.source_document_number || 'Unnamed'}`)
@@ -82,7 +82,7 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
                   </Link>
                 ) : (
                   <div className="flex items-center gap-2 cursor-pointer text-gray-500">
-                    <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+                    <FileText className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-amber-600" />
                     <span>
                       {item.source_type === 'inventory_count'
                         ? (t('language') === 'he' ? `מספירת מלאי (חסר קישור)` : `From count (No link)`)

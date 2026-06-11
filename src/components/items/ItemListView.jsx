@@ -250,7 +250,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                               </div>
                             ) : (
                               <div className="flex items-center gap-2 cursor-pointer text-gray-500">
-                                <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
+                                <FileText className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-amber-600" />
                                 <span>
                                   {item.source_type === 'inventory_count'
                                     ? (language === 'he' ? `מספירת מלאי (חסר קישור)` : `From count (No link)`)
