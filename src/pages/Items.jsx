@@ -505,21 +505,18 @@ export default function ItemsPage() {
 
     setLoading(true);
     try {
-      const batchSize = 5;
-      for (let i = 0; i < selectedPendingIds.length; i += batchSize) {
-        const batch = selectedPendingIds.slice(i, i + batchSize);
-        await Promise.all(batch.map(async (itemId) => {
-          await base44.entities.Item.update(itemId, {
+      const { data } = await base44.functions.invoke('bulkItemOperations', {
+        action: 'updateSupplier',
+        itemIds: selectedPendingIds,
+        payload: {
             supplier_id: supplier.id,
             supplier_name: supplier.name,
             is_pending_completion: false,
             status: 'active'
-          });
-        }));
-        if (i + batchSize < selectedPendingIds.length) {
-          await new Promise(r => setTimeout(r, 300));
         }
-      }
+      });
+      if (!data?.success) throw new Error(data?.error || 'Failed to update');
+
       setSelectedPendingIds([]);
       setShowBulkSupplierModal(false);
       await loadData(user);
@@ -537,18 +534,12 @@ export default function ItemsPage() {
     if (targetIds.length === 0) { setShowDeleteDialog(false); return; }
     setDeleting(true);
     try {
-      const batchSize = 5;
-      for (let i = 0; i < targetIds.length; i += batchSize) {
-        const batch = targetIds.slice(i, i + batchSize);
-        if (user?.store_user_owner_email || user?.acting_as_store_email) {
-          await Promise.all(batch.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
-        } else {
-          await Promise.all(batch.map(id => base44.entities.Item.delete(id)));
-        }
-        if (i + batchSize < targetIds.length) {
-          await new Promise(r => setTimeout(r, 300));
-        }
-      }
+      const { data } = await base44.functions.invoke('bulkItemOperations', {
+        action: 'delete',
+        itemIds: targetIds
+      });
+      if (!data?.success) throw new Error(data?.error || 'Failed to delete');
+
       if (pendingActionType === 'delete') setSelectedPendingIds([]);
       else setSelectedIds([]);
       setPendingActionType(null);
@@ -834,28 +825,13 @@ const handleCleanOrphans = async (ownerEmail) => {
                         const next = existing.filter(id => !selectedIds.includes(id));
                         await base44.entities.Warehouse.update(currentWh.id, { catalog_items: next });
                         
-                        const batchSize = 5;
-                        for (let i = 0; i < selectedIds.length; i += batchSize) {
-                          const batch = selectedIds.slice(i, i + batchSize);
-                          await Promise.all(batch.map(async (itemId) => {
-                            const item = items.find(i => i.id === itemId);
-                            if (!item) return;
-                            const currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
-                            const currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
-                            if (!currentWids.includes(currentWh.id)) return;
-                            const newWids = currentWids.filter(id => id !== currentWh.id);
-                            const newWnames = currentWnames.filter(name => name !== currentWh.name);
-                            await base44.entities.Item.update(item.id, {
-                              warehouse_ids: newWids,
-                              warehouse_names: newWnames,
-                              warehouse_id: newWids.length > 0 ? newWids[0] : "",
-                              warehouse_name: newWnames.length > 0 ? newWnames[0] : ""
-                            });
-                          }));
-                          if (i + batchSize < selectedIds.length) {
-                            await new Promise(r => setTimeout(r, 300));
-                          }
-                        }
+                        const { data } = await base44.functions.invoke('bulkItemOperations', {
+                            action: 'removeWarehouse',
+                            itemIds: selectedIds,
+                            payload: { warehouseId: currentWh.id, warehouseName: currentWh.name }
+                        });
+                        if (!data?.success) throw new Error(data?.error || 'Failed');
+                        
                         setSelectedIds([]);
                         loadData(user);
                       }}>
@@ -1257,37 +1233,12 @@ const handleCleanOrphans = async (ownerEmail) => {
              }));
 
              // Update each item
-             const batchSize = 5;
-             for (let i = 0; i < selectedIds.length; i += batchSize) {
-               const batch = selectedIds.slice(i, i + batchSize);
-               await Promise.all(batch.map(async (itemId) => {
-                 const item = items.find(i => i.id === itemId);
-                 if (!item) return;
-                 let currentWids = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
-                 let currentWnames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
-                 
-                 let updated = false;
-                 targetWarehouses.forEach(wh => {
-                   if (!currentWids.includes(wh.id)) {
-                     currentWids.push(wh.id);
-                     currentWnames.push(wh.name);
-                     updated = true;
-                   }
-                 });
-
-                 if (updated) {
-                   await base44.entities.Item.update(item.id, {
-                     warehouse_ids: currentWids,
-                     warehouse_names: currentWnames,
-                     warehouse_id: item.warehouse_id || currentWids[0],
-                     warehouse_name: item.warehouse_name || currentWnames[0]
-                   });
-                 }
-               }));
-               if (i + batchSize < selectedIds.length) {
-                 await new Promise(r => setTimeout(r, 300));
-               }
-             }
+             const { data } = await base44.functions.invoke('bulkItemOperations', {
+                action: 'addWarehouses',
+                itemIds: selectedIds,
+                payload: { targetWarehouses: targetWarehouses.map(w => ({id: w.id, name: w.name})) }
+             });
+             if (!data?.success) throw new Error(data?.error || 'Failed');
 
              setSelectedIds([]);
              loadData(user);
