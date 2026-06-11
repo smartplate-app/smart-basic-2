@@ -1256,7 +1256,8 @@ const handleCleanOrphans = async (ownerEmail) => {
              if (pendingActionType === 'warehouse') setSelectedPendingIds([]);
              else setSelectedIds([]);
              setPendingActionType(null);
-             loadData(user);
+             await loadData(user);
+             alert(language === 'he' ? 'השיוך בוצע בהצלחה!' : 'Assignment successful!');
            }}
          />
        )}

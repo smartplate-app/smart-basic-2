@@ -9,7 +9,7 @@ import { useLanguage } from "../LanguageProvider";
 import { Link } from "react-router-dom";
 
 export default function ItemCard({ item, onEdit, onDelete, selectable = true, selected = false, onToggleSelect }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const handleDoubleClick = () => {
     onEdit(item);
@@ -52,6 +52,11 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
             {item.catalog_number && (
               <p className="text-xs text-gray-500 mt-1">
                 {t('catalog_number')}: {item.catalog_number}
+              </p>
+            )}
+            {item.warehouse_names && item.warehouse_names.length > 0 && (
+              <p className="text-xs text-blue-600 mt-1">
+                {language === 'he' ? 'מחסנים' : 'Warehouses'}: {item.warehouse_names.join(', ')}
               </p>
             )}
             </div>
