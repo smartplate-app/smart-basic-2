@@ -20,6 +20,7 @@ import BulkWarehouseModal from "../components/items/BulkWarehouseModal";
 import ImportSuppliersItemsModal from "../components/items/ImportSuppliersItemsModal";
 import CleanDuplicatesModal from "../components/items/CleanDuplicatesModal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { getCache, setCache, isStale } from "../components/utils/cache";
 
 export default function ItemsPage() {
@@ -56,6 +57,11 @@ export default function ItemsPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [supplierFilterOpen, setSupplierFilterOpen] = useState(false);
   const [showBulkWarehouseModal, setShowBulkWarehouseModal] = useState(false);
+  
+  const [pendingSearchTerm, setPendingSearchTerm] = useState("");
+  const [selectedPendingIds, setSelectedPendingIds] = useState([]);
+  const [showBulkSupplierModal, setShowBulkSupplierModal] = useState(false);
+  const [pendingActionType, setPendingActionType] = useState(null);
 
   // Hydrate from cache for instant UI
   React.useEffect(() => {
@@ -492,17 +498,46 @@ export default function ItemsPage() {
     }
   };
 
+  const handleBulkAssignSupplier = async (supplierId) => {
+    if (!supplierId || selectedPendingIds.length === 0) return;
+    const supplier = suppliers.find(s => s.id === supplierId);
+    if (!supplier) return;
+
+    setLoading(true);
+    try {
+      await Promise.all(selectedPendingIds.map(async (itemId) => {
+        await base44.entities.Item.update(itemId, {
+          supplier_id: supplier.id,
+          supplier_name: supplier.name,
+          is_pending_completion: false,
+          status: 'active'
+        });
+      }));
+      setSelectedPendingIds([]);
+      setShowBulkSupplierModal(false);
+      await loadData(user);
+    } catch (error) {
+      console.error("Bulk assign supplier failed:", error);
+      alert((t('error_saving') || 'Error') + ': ' + (error.message || 'Failed to update items'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleBulkDelete = async () => {
     if (isViewer) return;
-    if (selectedIds.length === 0) { setShowDeleteDialog(false); return; }
+    const targetIds = pendingActionType === 'delete' ? selectedPendingIds : selectedIds;
+    if (targetIds.length === 0) { setShowDeleteDialog(false); return; }
     setDeleting(true);
     try {
       if (user?.store_user_owner_email || user?.acting_as_store_email) {
-        await Promise.all(selectedIds.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
+        await Promise.all(targetIds.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
       } else {
-        await Promise.all(selectedIds.map(id => base44.entities.Item.delete(id)));
+        await Promise.all(targetIds.map(id => base44.entities.Item.delete(id)));
       }
-      setSelectedIds([]);
+      if (pendingActionType === 'delete') setSelectedPendingIds([]);
+      else setSelectedIds([]);
+      setPendingActionType(null);
       await loadData(user);
       setShowDeleteDialog(false);
     } catch (e) {
@@ -836,80 +871,131 @@ const handleCleanOrphans = async (ownerEmail) => {
         </div>
 
         {(() => {
-          const incompleteItems = items.filter(item => item.supplier_id === 'pending' || item.supplier_name === 'להשלמה' || item.supplier_name === 'Pending' || item.is_pending_completion === true || item.status === 'pending_completion');
-          if (incompleteItems.length === 0) return null;
+          const incompleteItemsAll = items.filter(item => item.supplier_id === 'pending' || item.supplier_name === 'להשלמה' || item.supplier_name === 'Pending' || item.is_pending_completion === true || item.status === 'pending_completion');
+          if (incompleteItemsAll.length === 0) return null;
           
+          const incompleteItems = incompleteItemsAll.filter(item => 
+            !pendingSearchTerm || item.name?.toLowerCase().includes(pendingSearchTerm.toLowerCase())
+          );
+
           return (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-amber-900">
-                    {language === 'he' ? 'פריטים דורשי השלמה' : 'Items needing completion'}
-                  </h3>
-                  <p className="text-sm text-amber-800 mb-3">
-                    {language === 'he' 
-                      ? 'הפריטים הבאים נוספו במהלך קבלת אספקה/ספירת מלאי ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):' 
-                      : 'The following items were added during supply receipt/inventory count and need to be completed:'}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                <div className="flex-1 w-full min-w-0">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-3">
+                    <div>
+                      <h3 className="font-semibold text-amber-900">
+                        {language === 'he' ? 'פריטים דורשי השלמה' : 'Items needing completion'}
+                      </h3>
+                      <p className="text-sm text-amber-800">
+                        {language === 'he' 
+                          ? 'הפריטים הבאים נוספו במהלך קבלת אספקה/ספירת מלאי ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):' 
+                          : 'The following items were added during supply receipt/inventory count and need to be completed:'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-3 mb-4 items-center">
+                    <div className="relative flex-1 w-full max-w-sm">
+                      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-3 ltr:left-3" />
+                      <Input
+                        placeholder={language === 'he' ? 'חיפוש בפריטים להשלמה...' : 'Search pending items...'}
+                        value={pendingSearchTerm}
+                        onChange={(e) => setPendingSearchTerm(e.target.value)}
+                        className="rtl:pr-9 ltr:pl-9 h-9 bg-white border-amber-200 focus-visible:ring-amber-400"
+                      />
+                    </div>
+                    {selectedPendingIds.length > 0 && !isViewer && (
+                      <div className="flex flex-wrap gap-2 w-full md:w-auto items-center">
+                        <span className="text-sm text-amber-800 font-medium whitespace-nowrap">
+                          {selectedPendingIds.length} {language === 'he' ? 'נבחרו' : 'selected'}
+                        </span>
+                        <Button size="sm" variant="outline" className="h-9 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 whitespace-nowrap" onClick={() => setShowBulkSupplierModal(true)}>
+                          {language === 'he' ? 'שייך לספק' : 'Assign Supplier'}
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-9 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 whitespace-nowrap" onClick={() => { setPendingActionType('warehouse'); setShowBulkWarehouseModal(true); }}>
+                          {language === 'he' ? 'שייך למחסן' : 'Assign Warehouse'}
+                        </Button>
+                        <Button size="sm" variant="destructive" className="h-9 bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:text-red-800 whitespace-nowrap" onClick={() => { setPendingActionType('delete'); setShowDeleteDialog(true); }}>
+                          <Trash2 className="w-4 h-4 rtl:ml-1 ltr:mr-1" />
+                          {language === 'he' ? 'מחק' : 'Delete'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {incompleteItems.map(item => (
-                      <DropdownMenu key={item.id} dir={language === 'he' ? 'rtl' : 'ltr'}>
-                        <DropdownMenuTrigger asChild>
-                          <div className="bg-white border border-amber-300 shadow-sm rounded-md px-3 py-1.5 text-sm cursor-pointer hover:bg-amber-100 transition-colors flex items-center gap-2 select-none">
-                            <span className="font-medium">{item.name}</span>
-                            <span className="text-gray-500 text-xs">₪{item.price || 0}</span>
-                            <MoreHorizontal className="w-3 h-3 text-gray-400" />
+                      <div key={item.id} onClick={(e) => {
+                        if(e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+                        if (selectedPendingIds.includes(item.id)) setSelectedPendingIds(selectedPendingIds.filter(id => id !== item.id));
+                        else setSelectedPendingIds([...selectedPendingIds, item.id]);
+                      }} className={`bg-white border ${selectedPendingIds.includes(item.id) ? 'border-amber-500 ring-1 ring-amber-500' : 'border-amber-200'} shadow-sm rounded-lg p-3 hover:bg-amber-50/50 transition-colors relative flex gap-3 cursor-pointer`}>
+                        <div className="flex flex-col items-center justify-start pt-1">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500"
+                            checked={selectedPendingIds.includes(item.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedPendingIds([...selectedPendingIds, item.id]);
+                              else setSelectedPendingIds(selectedPendingIds.filter(id => id !== item.id));
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-1 gap-2">
+                            <h4 className="font-semibold text-gray-900 truncate" title={item.name}>{item.name}</h4>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors">
+                                <FileText className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          <DropdownMenuItem asChild={!!item.source_document_id} onClick={(e) => {
-                            if (!item.source_document_id) {
-                              e.preventDefault();
-                              alert(language === 'he' ? 'לא נמצא מסמך מקור מקושר לפריט זה' : 'Source document not linked');
-                            }
-                          }}>
-                            {item.source_document_id ? (
-                              <Link
+                          
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-gray-600 mb-2">
+                            <div className="flex flex-col">
+                              <span className="text-gray-400">{language === 'he' ? 'מחיר' : 'Price'}:</span>
+                              <span className="font-medium">₪{item.price || 0}</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-gray-400">{language === 'he' ? 'הנחה' : 'Discount'}:</span>
+                              <span className="font-medium">{item.discount || 0}%</span>
+                            </div>
+                            {item.supplier_name && item.supplier_name !== 'להשלמה' && item.supplier_name !== 'pending' && item.supplier_name !== 'Pending' && (
+                              <div className="flex flex-col col-span-2 mt-1">
+                                <span className="text-gray-400">{language === 'he' ? 'ספק (מקובץ)' : 'Supplier (from doc)'}:</span>
+                                <span className="font-medium truncate" title={item.supplier_name}>{item.supplier_name}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {item.source_document_id && (
+                            <Link
                                 to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`}
-                                className="flex items-center gap-2 cursor-pointer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-2 py-1.5 rounded w-full justify-center transition-colors border border-amber-200/50"
+                                title={item.source_document_number}
                               >
-                                <ExternalLink className="w-4 h-4 rtl:ml-2 ltr:mr-2 shrink-0" />
-                                <span>
+                                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                <span className="truncate font-medium">
                                   {item.source_type === 'inventory_count'
-                                    ? (language === 'he' ? `מספירת מלאי: ${item.source_document_number || 'ללא שם'}` : `From count: ${item.source_document_number || 'Unnamed'}`)
+                                    ? (language === 'he' ? `ספירה: ${item.source_document_number || 'ללא שם'}` : `Count: ${item.source_document_number || 'Unnamed'}`)
                                     : item.source_type === 'supply_receipt'
-                                    ? (language === 'he' ? `מקבלת אספקה (מסמך ${item.source_document_number || 'ללא מספר'})` : `From receipt (Doc ${item.source_document_number || 'N/A'})`)
+                                    ? (language === 'he' ? `מסמך מקור: ${item.source_document_number || 'ללא מספר'}` : `Source Doc: ${item.source_document_number || 'N/A'}`)
                                     : (language === 'he' ? 'מקור הפריט' : 'Source document')}
                                 </span>
                               </Link>
-                            ) : (
-                              <div className="flex items-center gap-2 cursor-pointer text-gray-500">
-                                <ExternalLink className="w-4 h-4 rtl:ml-2 ltr:mr-2 shrink-0" />
-                                <span>
-                                  {item.source_type === 'inventory_count'
-                                    ? (language === 'he' ? `מספירת מלאי (חסר קישור)` : `From count (No link)`)
-                                    : item.source_type === 'supply_receipt'
-                                    ? (language === 'he' ? `מקבלת אספקה (חסר קישור)` : `From receipt (No link)`)
-                                    : (language === 'he' ? 'מקור הפריט לא ידוע' : 'Unknown source')}
-                                </span>
-                              </div>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleEdit(items.find(i => i.id === item.id) || item)}>
-                            <FileText className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                            {language === 'he' ? 'ערוך פריט' : 'Edit item'}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleDelete(item)} className="text-red-600">
-                            <Trash2 className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
-                            {language === 'he' ? 'מחק פריט' : 'Delete item'}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
+                  {incompleteItems.length === 0 && incompleteItemsAll.length > 0 && (
+                    <div className="text-center py-4 text-amber-800/70 text-sm">
+                      {language === 'he' ? 'לא נמצאו פריטים תואמים לחיפוש.' : 'No items match your search.'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1174,6 +1260,36 @@ const handleCleanOrphans = async (ownerEmail) => {
           items={items}
           onDelete={handleConfirmDuplicatesDelete}
         />
+
+        <Dialog open={showBulkSupplierModal} onOpenChange={setShowBulkSupplierModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{language === 'he' ? 'שיוך ספק לפריטים נבחרים' : 'Assign Supplier to Selected Items'}</DialogTitle>
+              <DialogDescription>
+                {language === 'he' ? `בחר ספק לשייך ל-${selectedPendingIds.length} פריטים:` : `Select supplier for ${selectedPendingIds.length} items:`}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Select onValueChange={(val) => {
+                handleBulkAssignSupplier(val);
+              }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={language === 'he' ? 'בחר ספק...' : 'Select supplier...'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map(s => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBulkSupplierModal(false)}>
+                {language === 'he' ? 'בטל' : 'Cancel'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
     </div>
   );
 }
