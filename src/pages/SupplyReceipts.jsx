@@ -541,6 +541,7 @@ export default function SupplyReceiptsPage() {
                     order={selectedOrder}
                     receipt={null}
                     suppliers={suppliers}
+                    receipts={receipts}
                     noOrderMode={false}
                     user={user}
                     fullScreen={true}
@@ -613,6 +614,7 @@ export default function SupplyReceiptsPage() {
                     order={null}
                     receipt={null}
                     suppliers={suppliers}
+                    receipts={receipts}
                     noOrderMode={true}
                     user={user}
                     fullScreen={true}
@@ -626,6 +628,7 @@ export default function SupplyReceiptsPage() {
                     order={null}
                     receipt={editingReceipt}
                     suppliers={suppliers}
+                    receipts={receipts}
                     noOrderMode={true}
                     user={user}
                     fullScreen={true}

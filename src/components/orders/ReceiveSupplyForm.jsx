@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import PdfThumbnail from "@/components/receipts/PdfThumbnail";
 import OrderPreviewModal from "@/components/orders/OrderPreviewModal";
 
-export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user, externalItems = null, externalOrders = null, ownerId = null, fullScreen = false }) {
+export default function ReceiveSupplyForm({ order, receipt, suppliers, receipts, onSubmit, onSuccess, onCancel, onDelete, noOrderMode = false, autoOpenUpload = false, user, externalItems = null, externalOrders = null, ownerId = null, fullScreen = false }) {
   const [previewOrder, setPreviewOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [catalogItems, setCatalogItems] = useState({});
@@ -287,31 +287,17 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
     return map[u] || u;
   };
 
-  // Detect PDF URLs (handles query strings)
-  const isPdfUrl = (u) => {
-    try { return /\.pdf(\?|$)/i.test(String(u || '')); } catch { return false; }
-  };
-
+  const isPdfUrl = (u) => { try { return /\.pdf(\?|$)/i.test(String(u || '')); } catch { return false; } };
   useEffect(() => {
-    const loadData = async () => {
+    (async () => {
       try {
         const allItems = await base44.entities.Item.list();
         setItems(allItems);
-        
         const itemsMap = {};
-        allItems.forEach(item => {
-          itemsMap[item.id] = {
-            price: item.price || 0,
-            discount: item.discount || 0,
-            name: item.name
-          };
-        });
+        allItems.forEach(item => { itemsMap[item.id] = { price: item.price || 0, discount: item.discount || 0, name: item.name }; });
         setCatalogItems(itemsMap);
-      } catch (error) {
-        console.error("Error loading data:", error);
-      }
-    };
-    loadData();
+      } catch (error) { console.error("Error loading data:", error); }
+    })();
   }, []);
 
   // Keep availableSuppliers in sync with parent prop
@@ -548,14 +534,19 @@ useEffect(() => {
     try {
       const supplierId = formData.supplier_id || receipt?.supplier_id;
       if (!formData.is_refund || !supplierId) { setPreviousReceipts([]); return; }
-      const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
+      let list = [];
+      if (receipts && Array.isArray(receipts) && receipts.length > 0) {
+        list = receipts.filter(r => r.supplier_id === supplierId);
+      } else {
+        list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
+      }
       // Allow linking to ANY previous invoice from this supplier (not just those awaiting credit)
       const filtered = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
       filtered.sort((a, b) => new Date(b.received_date) - new Date(a.received_date));
       setPreviousReceipts(filtered.slice(0, 200));
     } catch (e) { setPreviousReceipts([]); }
   })();
-}, [formData.is_refund, formData.supplier_id, receipt?.supplier_id]);
+}, [formData.is_refund, formData.supplier_id, receipt?.supplier_id, receipts]);
 
 // Load delivery notes for summary invoice selection
 useEffect(() => {
@@ -564,14 +555,21 @@ useEffect(() => {
       if (formData.document_type !== 'summary_invoice') { setDeliveryNotes([]); return; }
       const supplierId = formData.supplier_id || receipt?.supplier_id;
       if (!supplierId) { setDeliveryNotes([]); return; }
-      const me = await base44.auth.me();
-      const workingEmail = me.acting_as_store_email || me.email;
-      const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
-      const filtered = (list || []).filter(r => r.document_type === 'delivery_note' && r.created_by === workingEmail && (!receipt || r.id !== receipt.id));
+      
+      let list = [];
+      if (receipts && Array.isArray(receipts) && receipts.length > 0) {
+        list = receipts.filter(r => r.supplier_id === supplierId);
+      } else {
+        list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
+      }
+      
+      const me = user || await base44.auth.me();
+      const workingEmail = me.acting_as_store_email || me.acting_as_user_email || me.email;
+      const filtered = (list || []).filter(r => r.document_type === 'delivery_note' && (r.created_by === workingEmail || r.store_owner_email === workingEmail || r.store_owner_email === me.store_user_owner_email) && (!receipt || r.id !== receipt.id));
       setDeliveryNotes(filtered.slice(0, 200));
     } catch (e) { setDeliveryNotes([]); }
   })();
-}, [formData.supplier_id, formData.document_type]);
+}, [formData.supplier_id, formData.document_type, receipts, user]);
 
 const handleAutoScan = async () => {
   if (!formData.receipt_images.length) {
