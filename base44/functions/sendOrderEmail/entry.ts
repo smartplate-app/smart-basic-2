@@ -108,43 +108,54 @@ Deno.serve(async (req) => {
 <html>
   <body style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:16px;">
     <div style="max-width:720px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
-      <div style="background:#111827;color:#ffffff;padding:16px 20px;">
+      <div style="background:#111827;color:#ffffff;padding:16px 20px;" dir="${body?.language === 'he' ? 'rtl' : 'ltr'}">
         <div style="font-size:18px;font-weight:700;">Smart Plate basic</div>
-        <div style="font-size:13px;opacity:0.85;">New order notification</div>
+        <div style="font-size:13px;opacity:0.85;">${body?.language === 'he' ? 'התראת הזמנה חדשה' : 'New order notification'}</div>
       </div>
-      <div style="padding:20px;">
-        <p style="margin:0 0 12px 0;">Hello${order.supplier_name ? ' ' + order.supplier_name : ''},</p>
-        <p style="margin:0 0 12px 0;">קיבלת הזמנה חדשה באמצעות SMART PLATE BASIC — איזה כיף!</p>
+      <div style="padding:20px;" dir="${body?.language === 'he' ? 'rtl' : 'ltr'}">
+        <p style="margin:0 0 12px 0;">
+          ${body?.language === 'he' ? 'שלום / היי' : 'Hello'} 
+          ${order.supplier_name ? '<strong style="font-size: 1.2em;">' + order.supplier_name + '</strong>' : ''},
+        </p>
+        <p style="margin:0 0 12px 0;">${body?.language === 'he' ? 'קיבלת הזמנה חדשה באמצעות SMART PLATE BASIC — איזה כיף!' : 'You received a new order via SMART PLATE BASIC!'}</p>
         <div style="margin:16px 0;padding:12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;">
-          <div style="margin:4px 0;"><strong>From:</strong> ${restaurantName || '-'}</div>
-          <div style="margin:4px 0;"><strong>Order #:</strong> ${orderNumber}</div>
-          <div style="margin:4px 0;"><strong>Delivery date:</strong> ${deliveryDate || '-'}</div>
-          <div style="margin:4px 0;"><strong>Sent at:</strong> <span dir="ltr">${new Date().toLocaleDateString(body?.language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(body?.language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}</span></div>
-          <div style="margin:4px 0;"><strong>Total:</strong> ₪${totalCost}</div>
+          <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'מאת:' : 'From:'}</strong> ${restaurantName || '-'}</div>
+          <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'הזמנה #:' : 'Order #:'}</strong> ${orderNumber}</div>
+          <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'תאריך אספקה:' : 'Delivery date:'}</strong> ${deliveryDate || '-'}</div>
+          <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'נשלח בתאריך:' : 'Sent at:'}</strong> <span dir="ltr">${new Date().toLocaleDateString(body?.language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(body?.language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}</span></div>
+          <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'סה"כ לתשלום:' : 'Total:'}</strong> ₪${totalCost}</div>
         </div>
         <table style="width:100%;border-collapse:collapse;margin:10px 0 16px 0;font-size:13px;">
           <thead>
             <tr>
-              <th style="text-align:right;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">Item</th>
-              <th style="text-align:right;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">Qty</th>
-              <th style="text-align:right;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">Unit</th>
-              <th style="text-align:right;padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">Amount</th>
+              <th style="text-align:${body?.language === 'he' ? 'right' : 'left'};padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">${body?.language === 'he' ? 'פריטים' : 'Item'}</th>
+              <th style="text-align:${body?.language === 'he' ? 'right' : 'left'};padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">${body?.language === 'he' ? 'כמות' : 'Qty'}</th>
+              <th style="text-align:${body?.language === 'he' ? 'right' : 'left'};padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">${body?.language === 'he' ? 'יחידה' : 'Unit'}</th>
+              <th style="text-align:${body?.language === 'he' ? 'right' : 'left'};padding:6px 8px;border:1px solid #e5e7eb;background:#f9fafb;">${body?.language === 'he' ? 'סכום' : 'Amount'}</th>
             </tr>
           </thead>
           <tbody>${itemsRows || ''}</tbody>
         </table>
         
-        <p style="margin:16px 0 0 0;color:#6b7280;font-size:12px;">Please reply to this email for any questions or confirmations.</p>
+        <p style="margin:16px 0 0 0;color:#6b7280;font-size:12px;">${body?.language === 'he' ? 'אנא השב למייל זה לכל שאלה או אישור.' : 'Please reply to this email for any questions or confirmations.'}</p>
         
         <br/>
         <br/>
         ${restaurantName ? `<div style="font-weight: bold; margin-top: 10px;">${restaurantName}</div>` : ''}
         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-          הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.
+          ${body?.language === 'he' ? 'הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.' : 'This order was sent via SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.'}
         </div>
-        ${user.restaurant_logo ? `<br/><img src="${user.restaurant_logo}" alt="Logo" style="max-height:80px;" />` : ''}
+        
+        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; margin-top: 20px;" dir="ltr">
+          <div style="display: inline-flex; flex-direction: column; border-radius: 8px; overflow: hidden; border: 2px solid #111827; font-family: system-ui, sans-serif; font-weight: 900; font-size: 14px; line-height: 1; margin: 0 auto 8px;">
+            <div style="background: #111827; color: #ffffff; padding: 6px 10px 4px; letter-spacing: 0.5px;">SMART</div>
+            <div style="background: #ffffff; color: #111827; padding: 4px 10px 6px; letter-spacing: 0.5px;">PLATE</div>
+          </div>
+          <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
+          <div style="font-size: 10px; margin-top: 4px; font-weight: 600; color: #2563eb;">foodcostapp.com</div>
+        </div>
       </div>
-      <div style="padding:12px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;">Sent by Smart Plate basic</div>
+      <div style="padding:12px 20px;background:#f9fafb;border-top:1px solid #e5e7eb;color:#6b7280;font-size:12px;" dir="${body?.language === 'he' ? 'rtl' : 'ltr'}">${body?.language === 'he' ? 'נשלח על ידי Smart Plate basic' : 'Sent by Smart Plate basic'}</div>
     </div>
     
     <br/><br/><br/><br/><br/><br/><br/><br/>
