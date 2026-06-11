@@ -344,7 +344,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align={language === 'he' ? 'end' : 'start'}>
                 <Command>
                   <CommandInput placeholder={safeT('search_supplier', 'חפש ספק...', 'Search supplier...')} />
-                  <CommandList>
+                  <CommandList className="max-h-[var(--radix-popover-content-available-height,250px)] overflow-y-auto">
                     <CommandEmpty>{t('no_suppliers_available') || 'אין ספקים זמינים'}</CommandEmpty>
                     <CommandGroup>
                       {suppliers && suppliers.map((supplier) => (
