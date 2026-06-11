@@ -54,9 +54,13 @@ export default function ItemCard({ item, onEdit, onDelete, selectable = true, se
                 {t('catalog_number')}: {item.catalog_number}
               </p>
             )}
-            {item.warehouse_names && item.warehouse_names.length > 0 && (
+            {((item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0) || item.warehouse_name) && (
               <p className="text-xs text-blue-600 mt-1">
-                {language === 'he' ? 'מחסנים' : 'Warehouses'}: {item.warehouse_names.join(', ')}
+                {language === 'he' ? 'מחסנים' : 'Warehouses'}: {
+                  item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0 
+                    ? item.warehouse_names.filter(Boolean).join(', ') 
+                    : item.warehouse_name
+                }
               </p>
             )}
             </div>

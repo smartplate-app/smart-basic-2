@@ -25,7 +25,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
       const filteredNames = [];
       wIds.forEach((id, idx) => {
         const name = wNames[idx] || "";
-        if (id && !badIds.includes(id) && !badNames.includes(name)) {
+        if (id && typeof id === 'string' && id.trim() !== "" && !badIds.includes(id) && !badNames.includes(name)) {
           filteredIds.push(id);
           filteredNames.push(name);
         }
@@ -52,10 +52,10 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
 
   const handleWarehouseToggle = (warehouseId, warehouseName) => {
     setFormData(prev => {
-      let currentIds = prev.warehouse_ids || [];
-      let currentNames = prev.warehouse_names || [];
+      let currentIds = (prev.warehouse_ids || []).filter(id => id && typeof id === 'string' && id.trim() !== "");
+      let currentNames = (prev.warehouse_names || []).filter(name => name && typeof name === 'string' && name.trim() !== "");
       
-      if (prev.warehouse_id && !currentIds.includes(prev.warehouse_id)) {
+      if (prev.warehouse_id && typeof prev.warehouse_id === 'string' && prev.warehouse_id.trim() !== "" && !currentIds.includes(prev.warehouse_id)) {
         currentIds = [...currentIds, prev.warehouse_id];
         currentNames = [...currentNames, prev.warehouse_name];
       }

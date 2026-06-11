@@ -32,7 +32,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
       const filteredNames = [];
       wIds.forEach((id, idx) => {
         const name = wNames[idx] || "";
-        if (!badIds.includes(id) && !badNames.includes(name)) {
+        if (id && typeof id === 'string' && id.trim() !== "" && !badIds.includes(id) && !badNames.includes(name)) {
           filteredIds.push(id);
           filteredNames.push(name);
         }
@@ -109,11 +109,11 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
 
   const handleWarehouseToggle = (warehouseId, warehouseName) => {
     setCurrentItem(prev => {
-      let currentIds = prev.warehouse_ids || [];
-      let currentNames = prev.warehouse_names || [];
+      let currentIds = (prev.warehouse_ids || []).filter(id => id && typeof id === 'string' && id.trim() !== "");
+      let currentNames = (prev.warehouse_names || []).filter(name => name && typeof name === 'string' && name.trim() !== "");
       
       // Migration from old single select to array
-      if (prev.warehouse_id && !currentIds.includes(prev.warehouse_id)) {
+      if (prev.warehouse_id && typeof prev.warehouse_id === 'string' && prev.warehouse_id.trim() !== "" && !currentIds.includes(prev.warehouse_id)) {
         currentIds = [...currentIds, prev.warehouse_id];
         currentNames = [...currentNames, prev.warehouse_name];
       }
@@ -200,11 +200,11 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
     const discount = currentItem.discount || 0;
     
     // Ensure arrays are initialized
-    const finalWarehouseIds = currentItem.warehouse_ids || [];
-    const finalWarehouseNames = currentItem.warehouse_names || [];
+    const finalWarehouseIds = (currentItem.warehouse_ids || []).filter(id => id && typeof id === 'string' && id.trim() !== "");
+    const finalWarehouseNames = (currentItem.warehouse_names || []).filter(name => name && typeof name === 'string' && name.trim() !== "");
 
     // Fallback migration logic
-    if (currentItem.warehouse_id && finalWarehouseIds.length === 0) {
+    if (currentItem.warehouse_id && typeof currentItem.warehouse_id === 'string' && currentItem.warehouse_id.trim() !== "" && finalWarehouseIds.length === 0) {
       finalWarehouseIds.push(currentItem.warehouse_id);
       finalWarehouseNames.push(currentItem.warehouse_name || "");
     }

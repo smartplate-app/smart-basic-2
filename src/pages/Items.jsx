@@ -428,12 +428,15 @@ export default function ItemsPage() {
       const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
 
       // Make sure warehouses arrays and single values are synced
-      if (cleanData.warehouse_ids && cleanData.warehouse_ids.length > 0) {
+      cleanData.warehouse_ids = (cleanData.warehouse_ids || []).filter(id => id && typeof id === 'string' && id.trim() !== "");
+      cleanData.warehouse_names = (cleanData.warehouse_names || []).filter(name => name && typeof name === 'string' && name.trim() !== "");
+
+      if (cleanData.warehouse_ids.length > 0) {
         cleanData.warehouse_id = cleanData.warehouse_ids[0];
-        cleanData.warehouse_name = cleanData.warehouse_names[0];
-      } else if (cleanData.warehouse_id) {
+        cleanData.warehouse_name = cleanData.warehouse_names[0] || "";
+      } else if (cleanData.warehouse_id && typeof cleanData.warehouse_id === 'string' && cleanData.warehouse_id.trim() !== "") {
         cleanData.warehouse_ids = [cleanData.warehouse_id];
-        cleanData.warehouse_names = [cleanData.warehouse_name];
+        cleanData.warehouse_names = [cleanData.warehouse_name || ""];
       } else {
         cleanData.warehouse_ids = [];
         cleanData.warehouse_names = [];

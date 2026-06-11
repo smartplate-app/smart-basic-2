@@ -65,6 +65,10 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
         return (item.supplier_name || '').toString().toLowerCase();
       case 'catalog_number':
         return (item.catalog_number || '').toString().toLowerCase();
+      case 'warehouse':
+        return ((item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0) 
+          ? item.warehouse_names.filter(Boolean).join(', ') 
+          : (item.warehouse_name || '')).toString().toLowerCase();
       case 'unit':
         return `${item.unit || ''}_${item.units_per_package || 0}`;
       case 'price':
@@ -133,6 +137,12 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                 </button>
               </TableHead>
               <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
+                <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('warehouse')}>
+                  <span>{t('warehouse') || 'מחסן'}</span>
+                  {sortKey === 'warehouse' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
+                </button>
+              </TableHead>
+              <TableHead className="bg-white px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">
                 <button className="w-full flex items-center justify-between gap-2 select-none" onClick={() => handleSort('unit')}>
                   <span>{t('unit_of_measure')}</span>
                   {sortKey === 'unit' ? (sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 text-gray-400" />}
@@ -198,6 +208,11 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                     </TableCell>
                     <TableCell className="px-4 py-3 text-right text-sm text-gray-600">
                       {item.catalog_number || '-'}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right text-sm text-gray-700 truncate max-w-[120px]" title={item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0 ? item.warehouse_names.filter(Boolean).join(', ') : item.warehouse_name || '-'}>
+                      {item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0 
+                        ? item.warehouse_names.filter(Boolean).join(', ') 
+                        : item.warehouse_name || '-'}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-right text-sm text-gray-700">
                       {item.units_per_package} {language === 'he' ? ({ unit: 'יחידה', liter: 'ליטר', kg: 'קילוגרם', gram: 'גרם', ml: 'מ"ל', case: 'ארגז' }[item.unit] || item.unit) : item.unit}
