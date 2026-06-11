@@ -549,6 +549,7 @@ export default function CountForm({ user, count, warehouses, items: initialItems
             ...currentData,
             warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
             store_owner_email: user?.store_user_owner_email || user?.acting_as_store_email || user?.acting_as_user_email || user?.email || null,
+            created_by: currentData.created_by || user?.email,
             items: currentData.items.map(item => {
               const cQty = Number(item.counted_quantity);
               const pUnit = Number(item.price_per_unit);
@@ -1339,7 +1340,7 @@ export default function CountForm({ user, count, warehouses, items: initialItems
                                                 setItems(prev => [...prev, data.item]);
                                               }
                                             } else {
-                                              const createdItem = await base44.entities.Item.create(cleanData);
+                                              const createdItem = await base44.entities.Item.create({ ...cleanData, created_by: user.email });
                                               if (createdItem?.id) {
                                                 newItemId = createdItem.id;
                                                 setItems(prev => [...prev, createdItem]);
