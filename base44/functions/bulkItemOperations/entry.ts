@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
                     }
                 } catch (e) {
                     console.error("Error on item", id, e);
+                    throw e; // Actually throw to fail the request
                 }
             }));
             // small delay to prevent database limits

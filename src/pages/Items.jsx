@@ -427,6 +427,12 @@ export default function ItemsPage() {
       }
       const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
 
+      // Auto-mark as complete if it has a valid supplier now
+      if (cleanData.supplier_id && cleanData.supplier_name && cleanData.supplier_id !== 'pending' && cleanData.supplier_name !== 'להשלמה' && cleanData.supplier_name !== 'Pending') {
+        cleanData.is_pending_completion = false;
+        cleanData.status = 'active';
+      }
+
       await base44.entities.Item.update(targetId, cleanData);
 
       // Sync warehouse catalog_items
