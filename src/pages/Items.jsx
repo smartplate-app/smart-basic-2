@@ -830,8 +830,8 @@ const handleCleanOrphans = async (ownerEmail) => {
                         // Optimistic update
                         setItems(prevItems => prevItems.map(item => {
                           if (selectedIds.includes(item.id)) {
-                            const wids = (item.warehouse_ids || []).filter(id => id !== currentWh.id);
-                            const wnames = (item.warehouse_names || []).filter(name => name !== currentWh.name);
+                            const wids = (item.warehouse_ids || []).filter(id => id && id !== currentWh.id && typeof id === 'string' && id.trim() !== "");
+                            const wnames = (item.warehouse_names || []).filter(name => name && name !== currentWh.name && typeof name === 'string' && name.trim() !== "");
                             return { ...item, warehouse_ids: wids, warehouse_names: wnames, warehouse_id: wids[0] || "", warehouse_name: wnames[0] || "" };
                           }
                           return item;
@@ -1266,12 +1266,14 @@ const handleCleanOrphans = async (ownerEmail) => {
                      currentWnames.push(wh.name);
                    }
                  });
+                 const fWids = currentWids.filter(id => id && typeof id === 'string' && id.trim() !== "");
+                 const fWnames = currentWnames.filter(name => name && typeof name === 'string' && name.trim() !== "");
                  return {
                    ...item,
-                   warehouse_ids: currentWids.filter(id => id && id.trim() !== ""),
-                   warehouse_names: currentWnames.filter(name => name && name.trim() !== ""),
-                   warehouse_id: currentWids[0] || "",
-                   warehouse_name: currentWnames[0] || ""
+                   warehouse_ids: fWids,
+                   warehouse_names: fWnames,
+                   warehouse_id: fWids[0] || "",
+                   warehouse_name: fWnames[0] || ""
                  };
                }
                return item;

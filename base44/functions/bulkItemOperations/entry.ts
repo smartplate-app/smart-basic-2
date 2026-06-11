@@ -34,6 +34,9 @@ Deno.serve(async (req) => {
                             let currentWids = [...(it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []))];
                             let currentWnames = [...(it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []))];
                             let updated = false;
+                            
+                            const originalLen = currentWids.length;
+
                             (payload.targetWarehouses || []).forEach(wh => {
                                 if (!currentWids.includes(wh.id)) {
                                     currentWids.push(wh.id);
@@ -42,10 +45,10 @@ Deno.serve(async (req) => {
                                 }
                             });
                             
-                            currentWids = currentWids.filter(wid => wid && wid.trim() !== "");
-                            currentWnames = currentWnames.filter(wname => wname && wname.trim() !== "");
+                            currentWids = currentWids.filter(wid => wid && typeof wid === 'string' && wid.trim() !== "");
+                            currentWnames = currentWnames.filter(wname => wname && typeof wname === 'string' && wname.trim() !== "");
 
-                            if (updated) {
+                            if (updated || currentWids.length !== originalLen) {
                                 await base44.asServiceRole.entities.Item.update(id, {
                                     warehouse_ids: currentWids,
                                     warehouse_names: currentWnames,
@@ -61,8 +64,8 @@ Deno.serve(async (req) => {
                             let currentWids = [...(it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []))];
                             let currentWnames = [...(it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []))];
                             if (currentWids.includes(payload.warehouseId)) {
-                                const newWids = currentWids.filter(w => w !== payload.warehouseId && w.trim() !== "");
-                                const newWnames = currentWnames.filter(w => w !== payload.warehouseName && w.trim() !== "");
+                                const newWids = currentWids.filter(w => w && typeof w === 'string' && w !== payload.warehouseId && w.trim() !== "");
+                                const newWnames = currentWnames.filter(w => w && typeof w === 'string' && w !== payload.warehouseName && w.trim() !== "");
                                 await base44.asServiceRole.entities.Item.update(id, {
                                     warehouse_ids: newWids,
                                     warehouse_names: newWnames,
