@@ -26,13 +26,13 @@ Deno.serve(async (req) => {
                             await base44.entities.Item.delete(id);
                         }
                     } else if (action === 'updateSupplier') {
-                        await base44.entities.Item.update(id, payload);
+                        await base44.asServiceRole.entities.Item.update(id, payload);
                     } else if (action === 'addWarehouses') {
                         const items = await base44.entities.Item.filter({ id });
                         if (items && items.length > 0) {
                             const it = items[0];
-                            let currentWids = it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []);
-                            let currentWnames = it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []);
+                            let currentWids = [...(it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []))];
+                            let currentWnames = [...(it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []))];
                             let updated = false;
                             (payload.targetWarehouses || []).forEach(wh => {
                                 if (!currentWids.includes(wh.id)) {
@@ -41,12 +41,16 @@ Deno.serve(async (req) => {
                                     updated = true;
                                 }
                             });
+                            
+                            currentWids = currentWids.filter(wid => wid && wid.trim() !== "");
+                            currentWnames = currentWnames.filter(wname => wname && wname.trim() !== "");
+
                             if (updated) {
-                                await base44.entities.Item.update(id, {
+                                await base44.asServiceRole.entities.Item.update(id, {
                                     warehouse_ids: currentWids,
                                     warehouse_names: currentWnames,
-                                    warehouse_id: it.warehouse_id || currentWids[0],
-                                    warehouse_name: it.warehouse_name || currentWnames[0]
+                                    warehouse_id: currentWids.length > 0 ? currentWids[0] : "",
+                                    warehouse_name: currentWnames.length > 0 ? currentWnames[0] : ""
                                 });
                             }
                         }
@@ -54,12 +58,12 @@ Deno.serve(async (req) => {
                         const items = await base44.entities.Item.filter({ id });
                         if (items && items.length > 0) {
                             const it = items[0];
-                            let currentWids = it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []);
-                            let currentWnames = it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []);
+                            let currentWids = [...(it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []))];
+                            let currentWnames = [...(it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []))];
                             if (currentWids.includes(payload.warehouseId)) {
-                                const newWids = currentWids.filter(w => w !== payload.warehouseId);
-                                const newWnames = currentWnames.filter(w => w !== payload.warehouseName);
-                                await base44.entities.Item.update(id, {
+                                const newWids = currentWids.filter(w => w !== payload.warehouseId && w.trim() !== "");
+                                const newWnames = currentWnames.filter(w => w !== payload.warehouseName && w.trim() !== "");
+                                await base44.asServiceRole.entities.Item.update(id, {
                                     warehouse_ids: newWids,
                                     warehouse_names: newWnames,
                                     warehouse_id: newWids.length > 0 ? newWids[0] : "",

@@ -16,7 +16,28 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
 
   React.useEffect(() => {
     if (item) {
-      setFormData(item);
+      const badIds = ["multi", "all_summary", ""];
+      const badNames = ["ספירה מרובת מחסנים", "Multi-Warehouse Count", ""];
+      let wIds = item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []);
+      let wNames = item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []);
+      
+      const filteredIds = [];
+      const filteredNames = [];
+      wIds.forEach((id, idx) => {
+        const name = wNames[idx] || "";
+        if (id && !badIds.includes(id) && !badNames.includes(name)) {
+          filteredIds.push(id);
+          filteredNames.push(name);
+        }
+      });
+
+      setFormData({
+        ...item,
+        warehouse_ids: filteredIds,
+        warehouse_names: filteredNames,
+        warehouse_id: filteredIds[0] || "",
+        warehouse_name: filteredNames[0] || ""
+      });
     }
   }, [item]);
 

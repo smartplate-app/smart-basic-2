@@ -827,6 +827,16 @@ const handleCleanOrphans = async (ownerEmail) => {
                         const next = existing.filter(id => !selectedIds.includes(id));
                         await base44.entities.Warehouse.update(currentWh.id, { catalog_items: next });
                         
+                        // Optimistic update
+                        setItems(prevItems => prevItems.map(item => {
+                          if (selectedIds.includes(item.id)) {
+                            const wids = (item.warehouse_ids || []).filter(id => id !== currentWh.id);
+                            const wnames = (item.warehouse_names || []).filter(name => name !== currentWh.name);
+                            return { ...item, warehouse_ids: wids, warehouse_names: wnames, warehouse_id: wids[0] || "", warehouse_name: wnames[0] || "" };
+                          }
+                          return item;
+                        }));
+
                         const { data } = await base44.functions.invoke('bulkItemOperations', {
                             action: 'removeWarehouse',
                             itemIds: selectedIds,
@@ -1245,7 +1255,29 @@ const handleCleanOrphans = async (ownerEmail) => {
                return base44.entities.Warehouse.update(wh.id, { catalog_items: next });
              }));
 
-             // Update each item
+             // Optimistic update
+             setItems(prevItems => prevItems.map(item => {
+               if (targetItemIds.includes(item.id)) {
+                 const currentWids = [...(item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []))];
+                 const currentWnames = [...(item.warehouse_names || (item.warehouse_name ? [item.warehouse_name] : []))];
+                 targetWarehouses.forEach(wh => {
+                   if (!currentWids.includes(wh.id)) {
+                     currentWids.push(wh.id);
+                     currentWnames.push(wh.name);
+                   }
+                 });
+                 return {
+                   ...item,
+                   warehouse_ids: currentWids.filter(id => id && id.trim() !== ""),
+                   warehouse_names: currentWnames.filter(name => name && name.trim() !== ""),
+                   warehouse_id: currentWids[0] || "",
+                   warehouse_name: currentWnames[0] || ""
+                 };
+               }
+               return item;
+             }));
+
+             // Update each item in DB
              const { data } = await base44.functions.invoke('bulkItemOperations', {
                 action: 'addWarehouses',
                 itemIds: targetItemIds,
@@ -1256,7 +1288,9 @@ const handleCleanOrphans = async (ownerEmail) => {
              if (pendingActionType === 'warehouse') setSelectedPendingIds([]);
              else setSelectedIds([]);
              setPendingActionType(null);
-             await loadData(user);
+             
+             // Background reload to sync
+             loadData(user);
              alert(language === 'he' ? 'השיוך בוצע בהצלחה!' : 'Assignment successful!');
            }}
          />
