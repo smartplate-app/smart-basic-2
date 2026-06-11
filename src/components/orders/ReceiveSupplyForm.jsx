@@ -546,15 +546,16 @@ export default function ReceiveSupplyForm({ order, receipt, suppliers, onSubmit,
 useEffect(() => {
   (async () => {
     try {
-      if (!formData.is_refund || !(formData.supplier_id || receipt?.supplier_id)) { setPreviousReceipts([]); return; }
       const supplierId = formData.supplier_id || receipt?.supplier_id;
+      if (!formData.is_refund || !supplierId) { setPreviousReceipts([]); return; }
       const list = await base44.entities.SupplyReceipt.filter({ supplier_id: supplierId });
-      const filtered = (list || []).filter(r => !r.is_refund && r.awaiting_credit === true && (!receipt || r.id !== receipt.id));
+      // Allow linking to ANY previous invoice from this supplier (not just those awaiting credit)
+      const filtered = (list || []).filter(r => !r.is_refund && (!receipt || r.id !== receipt.id));
       filtered.sort((a, b) => new Date(b.received_date) - new Date(a.received_date));
       setPreviousReceipts(filtered.slice(0, 200));
     } catch (e) { setPreviousReceipts([]); }
   })();
-}, [formData.is_refund, formData.supplier_id]);
+}, [formData.is_refund, formData.supplier_id, receipt?.supplier_id]);
 
 // Load delivery notes for summary invoice selection
 useEffect(() => {
