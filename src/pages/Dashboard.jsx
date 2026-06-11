@@ -1182,25 +1182,25 @@ export default function DashboardPage() {
   })();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-8 2xl:p-12" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="w-full">
+    <div className="min-h-screen bg-[#f3f2f1] p-4 md:p-8" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+        <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-black p-6 rounded-xl text-white shadow-md ${isRTL ? 'md:flex-row-reverse' : ''}`}>
           <div>
-            <h1 className={`text-3xl font-bold text-gray-900 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <h1 className={`text-3xl font-bold flex items-center gap-3 ${isRTL ? 'text-right justify-start' : 'text-left justify-start'}`}>
+              <BarChart3 className="w-8 h-8" />
               {t('monthly_dashboard')}
             </h1>
-            <p className={`text-gray-600 mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <p className={`mt-1 opacity-90 ${isRTL ? 'text-right' : 'text-left'}`}>
               {t('dashboard_greeting', { name: (user.acting_as_user_name || user.full_name) })}
             </p>
           </div>
-          <div className={`flex flex-wrap gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex flex-wrap gap-2 justify-end ${isRTL ? 'flex-row-reverse' : ''}`}>
             {!isPwaInstalled && (
               installPromptEvent ? (
                 <Button
-                  variant="outline"
                   onClick={handlePwaInstall}
-                  className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                  className={`bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
                   <Download className="w-4 h-4" />
                   {language === 'he' ? 'התקן אפליקציה' : 'Install App'}
@@ -1208,9 +1208,8 @@ export default function DashboardPage() {
               ) : (
                 isIOS && (
                   <Button
-                    variant="outline"
                     onClick={() => setShowIosGuide(true)}
-                    className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                    className={`bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-4 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
                   >
                     <Share className="w-4 h-4" />
                     {language === 'he' ? 'הוסף למסך הבית' : 'Add to Home Screen'}
@@ -1221,7 +1220,7 @@ export default function DashboardPage() {
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-40 cursor-pointer px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-40 cursor-pointer px-4 py-2 border-none rounded-full text-sm font-bold text-black focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {Array.from({ length: 12 }, (_, i) => {
                 const date = moment().subtract(i, 'months');
@@ -1233,12 +1232,12 @@ export default function DashboardPage() {
               })}
             </select>
             {!editMode ? (
-              <Button onClick={() => setEditMode(true)} variant="outline" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button onClick={() => setEditMode(true)} className={`bg-white/20 hover:bg-white/30 text-white border-none rounded-full px-6 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Edit2 className="w-4 h-4" />
                 {t('edit')}
               </Button>
             ) : (
-              <Button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 bg-gray-900 hover:bg-gray-800 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button onClick={handleSave} disabled={saving} className={`bg-pink-500 hover:bg-pink-600 text-white border-none rounded-full px-6 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {t('save')}
               </Button>
@@ -1283,16 +1282,16 @@ export default function DashboardPage() {
         </Dialog>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-3xl">
-            <TabsTrigger value="actual" className="flex items-center gap-2">
+          <TabsList className="bg-gray-200/60 p-1.5 rounded-full flex mx-auto overflow-x-auto w-full md:max-w-3xl no-scrollbar shadow-inner border border-gray-300/30">
+            <TabsTrigger value="actual" className="flex-1 rounded-full flex items-center justify-center gap-2 text-sm whitespace-nowrap data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-black py-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'ביצוע בפועל' : 'Actual'}
             </TabsTrigger>
-            <TabsTrigger value="afc" className="flex items-center gap-2">
+            <TabsTrigger value="afc" className="flex-1 rounded-full flex items-center justify-center gap-2 text-sm whitespace-nowrap data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-black py-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'דוח AFC' : 'AFC'}
             </TabsTrigger>
-            <TabsTrigger value="purchases_vs_usage" className="flex items-center gap-2">
+            <TabsTrigger value="purchases_vs_usage" className="flex-1 rounded-full flex items-center justify-center gap-2 text-sm whitespace-nowrap data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-black py-2">
               <BarChart3 className="w-4 h-4" />
               {language === 'he' ? 'קניינות לעומת שימוש' : 'Purchases vs Usage'}
             </TabsTrigger>
@@ -1301,14 +1300,14 @@ export default function DashboardPage() {
           {/* Actual Performance Tab */}
           <TabsContent value="actual" className="space-y-6">
             <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm font-medium text-gray-700">
                 {language === 'he' ? 'בחר חודש:' : 'Select month:'}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="w-36 cursor-pointer px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-36 cursor-pointer px-4 py-2 border-none shadow-sm rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   {Array.from({ length: 18 }, (_, i) => {
                     const date = moment().subtract(i, 'months');
@@ -1369,7 +1368,7 @@ export default function DashboardPage() {
 
             <div className="max-w-4xl mx-auto mb-6 mt-4">
               {/* Dark Header */}
-              <div className="bg-[#1f2937] text-white p-5 rounded-t-xl flex items-center justify-between shadow-md">
+              <div className="bg-black text-white p-5 rounded-t-xl flex items-center justify-between shadow-md">
                 <div className={`text-xl font-medium flex items-center gap-3 w-full ${isRTL ? 'flex-row-reverse justify-end' : 'justify-end'}`}>
                   <span>{moment(selectedMonth).format('MMMM YYYY')} MTD — ({projectionDaysElapsed} {language === 'he' ? 'ימים' : 'days'})</span>
                   <span>📸</span>
@@ -1477,25 +1476,25 @@ export default function DashboardPage() {
             </div>
 
             {/* Cost Breakdown Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+            <Card className="rounded-xl border-none shadow-md overflow-hidden">
+              <div className="bg-black text-white p-5">
+                <h3 className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
                   {language === 'he' ? 'פילוח עלויות' : 'Cost Breakdown'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
+              </div>
+              <CardContent className="pt-6 bg-white">
             ...
               </CardContent>
             </Card>
 
             {/* Category Report (Image/PDF → Percent of Total) */}
-            <Card>
-              <CardHeader>
-                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+            <Card className="rounded-xl border-none shadow-md overflow-hidden">
+              <div className="bg-black text-white p-5">
+                <h3 className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
                   {language === 'he' ? 'דוח קטגוריות (מתמונה/‏PDF)' : 'Category Report (from Image/PDF)'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
+              </div>
+              <CardContent className="pt-6 bg-white">
                 <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <input
                     type="file"
@@ -1552,30 +1551,30 @@ export default function DashboardPage() {
 
           {/* AFC Report Tab */}
           <TabsContent value="afc" className="space-y-6">
-            <Card>
-              <CardHeader>
+            <Card className="rounded-xl border-none shadow-md overflow-hidden">
+              <div className="bg-black text-white p-6">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Button variant="outline" onClick={handleGenerateAfcSheet} className="gap-2 h-9">
+                  <Button onClick={handleGenerateAfcSheet} className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full gap-2 px-4 h-9">
                     <FileSpreadsheet className="w-4 h-4" />
                     {language === 'he' ? 'צור גיליון AFC' : 'Generate AFC Sheet'}
                   </Button>
                   {lastAfcSheetId && (
-                    <Button variant="outline" onClick={() => openSheetsApp(lastAfcSheetId, lastAfcSheetUrl)} className="gap-2 h-9">
+                    <Button onClick={() => openSheetsApp(lastAfcSheetId, lastAfcSheetUrl)} className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full gap-2 px-4 h-9">
                       <FileSpreadsheet className="w-4 h-4" />
                       {language === 'he' ? 'פתח באפליקציית Sheets' : 'Open in Sheets App'}
                     </Button>
                   )}
-                  <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                  <h3 className={`text-xl font-bold w-full mt-3 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {language === 'he' ? 'דוח AFC' : 'AFC Report'}
-                  </CardTitle>
+                  </h3>
+                  <div className={`w-full ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <span className="text-sm opacity-80">
+                      {language === 'he' ? 'מייצר Google Sheet עם 3 עמודות: פריט, יחידה, שימוש' : 'Generates Google Sheet with 3 columns: Item, Unit, Usage'}
+                    </span>
+                  </div>
                 </div>
-                <div className={`mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  <span className="text-xs text-gray-500">
-                    {language === 'he' ? 'מייצר Google Sheet עם 3 עמודות: פריט, יחידה, שימוש' : 'Generates Google Sheet with 3 columns: Item, Unit, Usage'}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </div>
+              <CardContent className="space-y-4 pt-6 bg-white">
                 <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
                   <div className="space-y-2">
                     <Label className={isRTL ? 'text-right block' : 'text-left block'}>
@@ -1661,13 +1660,13 @@ export default function DashboardPage() {
                 </CardContent>
                 </Card>
 
-                <Card>
-                <CardHeader>
-                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                <Card className="rounded-xl border-none shadow-md overflow-hidden">
+                <div className="bg-black text-white p-5">
+                <h3 className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
                   {language === 'he' ? 'פירוט שימוש לפי פריט' : 'Per-Item Usage Breakdown'}
-                </CardTitle>
-                </CardHeader>
-                <CardContent>
+                </h3>
+                </div>
+                <CardContent className="pt-6 bg-white">
                 {(!selectedStartCountId || !selectedEndCountId) ? (
                   <div className={isRTL ? 'text-right text-gray-500' : 'text-left text-gray-500'}>
                     {language === 'he' ? 'בחר ספירת פתיחה וסיום כדי לראות פירוט לפי פריט' : 'Choose start and end counts to see per-item usage'}
@@ -1742,8 +1741,8 @@ export default function DashboardPage() {
 
             </div>
 
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-4 md:p-6 bg-gray-50 rounded-xl">
+            <Card className="border-none shadow-md rounded-xl overflow-hidden">
+              <CardContent className="p-4 md:p-6 bg-white">
                 <div className={`flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6 ${isRTL ? 'md:flex-row-reverse text-right' : 'text-left'}`}>
                   <div className="flex-1 space-y-1">
                     <h3 className="text-base font-bold text-gray-900">
