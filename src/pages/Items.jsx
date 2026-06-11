@@ -955,14 +955,14 @@ const handleCleanOrphans = async (ownerEmail) => {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 overflow-x-hidden">
                     {incompleteItems.map(item => (
                       <div key={item.id} onClick={(e) => {
                         if(e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
                         if (selectedPendingIds.includes(item.id)) setSelectedPendingIds(selectedPendingIds.filter(id => id !== item.id));
                         else setSelectedPendingIds([...selectedPendingIds, item.id]);
-                      }} className={`bg-white border ${selectedPendingIds.includes(item.id) ? 'border-amber-500 ring-1 ring-amber-500' : 'border-amber-200'} shadow-sm rounded-lg p-3 hover:bg-amber-50/50 transition-colors relative flex gap-3 items-center cursor-pointer`}>
-                        <div className="flex flex-col items-center justify-center">
+                      }} className={`bg-white border ${selectedPendingIds.includes(item.id) ? 'border-amber-500 ring-1 ring-amber-500' : 'border-amber-200'} shadow-sm rounded-lg p-2 sm:p-3 hover:bg-amber-50/50 transition-colors relative flex gap-2 sm:gap-3 items-center cursor-pointer w-full overflow-hidden`}>
+                        <div className="flex flex-col items-center justify-center shrink-0">
                           <input 
                             type="checkbox" 
                             className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500"
@@ -973,22 +973,22 @@ const handleCleanOrphans = async (ownerEmail) => {
                             }}
                           />
                         </div>
-                        <div className="flex-1 min-w-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                          <div className="flex flex-1 min-w-0 items-center gap-4">
+                        <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3">
+                          <div className="flex flex-1 min-w-0 flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 w-full">
                             <h4 
-                              className="font-semibold text-gray-900 truncate w-48 shrink-0 cursor-pointer hover:text-blue-600 hover:underline transition-colors" 
+                              className="font-semibold text-sm sm:text-base text-gray-900 truncate w-full sm:w-48 shrink-0 cursor-pointer hover:text-blue-600 hover:underline transition-colors" 
                               title={item.name}
                               onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }}
                             >
                               {item.name}
                             </h4>
                             
-                            <div className="flex gap-4 text-sm text-gray-600 shrink-0">
-                              <div className="flex items-center gap-1">
+                            <div className="flex gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 shrink-0 w-full sm:w-auto">
+                              <div className="flex items-center gap-1 whitespace-nowrap">
                                 <span className="text-gray-400">{language === 'he' ? 'מחיר:' : 'Price:'}</span>
                                 <span className="font-medium">₪{item.price || 0}</span>
                               </div>
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 whitespace-nowrap">
                                 <span className="text-gray-400">{language === 'he' ? 'הנחה:' : 'Discount:'}</span>
                                 <span className="font-medium">{item.discount || 0}%</span>
                               </div>
@@ -1002,15 +1002,15 @@ const handleCleanOrphans = async (ownerEmail) => {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end mt-1 sm:mt-0">
                             {item.source_document_id && (
                               <button
                                   onClick={(e) => { e.stopPropagation(); setPreviewDoc({ id: item.source_document_id, type: item.source_type }); }}
-                                  className="inline-flex items-center gap-1 text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-2 py-1.5 rounded transition-colors border border-amber-200/50"
+                                  className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded transition-colors border border-amber-200/50 max-w-[120px] sm:max-w-none"
                                   title={item.source_document_number}
                                 >
-                                  <FileText className="w-3.5 h-3.5 shrink-0" />
-                                  <span className="truncate font-medium max-w-[120px]">
+                                  <FileText className="w-3 h-3 shrink-0" />
+                                  <span className="truncate font-medium">
                                     {item.source_type === 'inventory_count'
                                       ? (language === 'he' ? `ספירה: ${item.source_document_number || 'ללא שם'}` : `Count: ${item.source_document_number || 'Unnamed'}`)
                                       : item.source_type === 'supply_receipt'
@@ -1019,8 +1019,8 @@ const handleCleanOrphans = async (ownerEmail) => {
                                   </span>
                                 </button>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors ml-auto sm:ml-0" title={language === 'he' ? 'ערוך' : 'Edit'}>
-                              <Pencil className="w-4 h-4" />
+                            <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1 sm:p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors" title={language === 'he' ? 'ערוך' : 'Edit'}>
+                              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </div>
