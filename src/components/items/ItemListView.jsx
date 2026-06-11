@@ -38,7 +38,7 @@ const sourceLabel = (item, language) => {
   };
 };
 
-export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll, headerTopClass = "top-[64px] md:top-[84px]" }) {
+export default function ItemListView({ items, onEdit, onDelete, selectedIds = [], onToggleSelect, onToggleSelectAll, onPreviewDocument, headerTopClass = "top-[64px] md:top-[84px]" }) {
   const { t, language } = useLanguage();
 
   // Sorting state
@@ -229,14 +229,16 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild={!!(src && item.source_document_id)} onClick={(e) => {
+                          <DropdownMenuItem onClick={(e) => {
                             if (!(src && item.source_document_id)) {
                               e.preventDefault();
                               alert(language === 'he' ? 'לא נמצא מסמך מקור מקושר לפריט זה' : 'Source document not linked');
+                            } else if (onPreviewDocument) {
+                              onPreviewDocument(item.source_document_id, item.source_type);
                             }
                           }}>
                             {src && item.source_document_id ? (
-                              <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
+                              <div className="flex items-center gap-2 cursor-pointer">
                                 <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
                                 <span>
                                   {item.source_type === 'inventory_count'
@@ -245,7 +247,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                                     ? (language === 'he' ? `מקבלת אספקה (מסמך ${item.source_document_number || 'ללא מספר'})` : `From receipt (Doc ${item.source_document_number || 'N/A'})`)
                                     : (language === 'he' ? 'מקור פריט' : 'Source document')}
                                 </span>
-                              </Link>
+                              </div>
                             ) : (
                               <div className="flex items-center gap-2 cursor-pointer text-gray-500">
                                 <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
@@ -275,14 +277,16 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                   </TableRow>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                  <ContextMenuItem asChild={!!(src && item.source_document_id)} onClick={(e) => {
+                  <ContextMenuItem onClick={(e) => {
                     if (!(src && item.source_document_id)) {
                       e.preventDefault();
                       alert(language === 'he' ? 'לא נמצא מסמך מקור מקושר לפריט זה' : 'Source document not linked');
+                    } else if (onPreviewDocument) {
+                      onPreviewDocument(item.source_document_id, item.source_type);
                     }
                   }}>
                     {src && item.source_document_id ? (
-                      <Link to={src.url} className="flex items-center gap-2 cursor-pointer">
+                      <div className="flex items-center gap-2 cursor-pointer">
                         <src.icon className={`w-4 h-4 shrink-0 ${src.color} mr-2 rtl:ml-2 rtl:mr-0`} />
                         <span>
                           {item.source_type === 'inventory_count'
@@ -291,7 +295,7 @@ export default function ItemListView({ items, onEdit, onDelete, selectedIds = []
                             ? (language === 'he' ? `מקבלת אספקה (מסמך ${item.source_document_number || 'ללא מספר'})` : `From receipt (Doc ${item.source_document_number || 'N/A'})`)
                             : (language === 'he' ? 'מקור פריט' : 'Source document')}
                         </span>
-                      </Link>
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2 cursor-pointer text-gray-500">
                         <ExternalLink className="w-4 h-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />

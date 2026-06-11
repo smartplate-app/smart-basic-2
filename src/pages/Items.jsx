@@ -19,6 +19,7 @@ import ItemListView from "../components/items/ItemListView";
 import BulkWarehouseModal from "../components/items/BulkWarehouseModal";
 import ImportSuppliersItemsModal from "../components/items/ImportSuppliersItemsModal";
 import CleanDuplicatesModal from "../components/items/CleanDuplicatesModal";
+import DocumentPreviewModal from "../components/items/DocumentPreviewModal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { getCache, setCache, isStale } from "../components/utils/cache";
@@ -62,6 +63,7 @@ export default function ItemsPage() {
   const [selectedPendingIds, setSelectedPendingIds] = useState([]);
   const [showBulkSupplierModal, setShowBulkSupplierModal] = useState(false);
   const [pendingActionType, setPendingActionType] = useState(null);
+  const [previewDoc, setPreviewDoc] = useState(null); // { id, type }
 
   // Hydrate from cache for instant UI
   React.useEffect(() => {
@@ -983,9 +985,8 @@ const handleCleanOrphans = async (ownerEmail) => {
 
                           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
                             {item.source_document_id && (
-                              <Link
-                                  to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`}
-                                  onClick={(e) => e.stopPropagation()}
+                              <button
+                                  onClick={(e) => { e.stopPropagation(); setPreviewDoc({ id: item.source_document_id, type: item.source_type }); }}
                                   className="inline-flex items-center gap-1 text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-2 py-1.5 rounded transition-colors border border-amber-200/50"
                                   title={item.source_document_number}
                                 >
@@ -997,7 +998,7 @@ const handleCleanOrphans = async (ownerEmail) => {
                                       ? (language === 'he' ? `מסמך: ${item.source_document_number || 'ללא מספר'}` : `Doc: ${item.source_document_number || 'N/A'}`)
                                       : (language === 'he' ? 'מקור' : 'Source')}
                                   </span>
-                                </Link>
+                                </button>
                             )}
                             <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors ml-auto sm:ml-0">
                               <FileText className="w-4 h-4" />
@@ -1165,6 +1166,7 @@ const handleCleanOrphans = async (ownerEmail) => {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     selectedIds={selectedIds}
+                    onPreviewDocument={(id, type) => setPreviewDoc({ id, type })}
                     onToggleSelect={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])}
                     onToggleSelectAll={(list) => {
                       const ids = list.map(i => i.id);
@@ -1288,6 +1290,13 @@ const handleCleanOrphans = async (ownerEmail) => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <DocumentPreviewModal
+          isOpen={!!previewDoc}
+          docId={previewDoc?.id}
+          docType={previewDoc?.type}
+          onClose={() => setPreviewDoc(null)}
+        />
     </div>
   );
 }
