@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     }
 
     // 1. Suppliers
-    const suppliers = await readAll("Supplier", { store_owner_email: OWNER_EMAIL });
+    const suppliers = await readAll("Supplier", { created_by: OWNER_EMAIL });
     log.push({ entity: "Supplier", count: suppliers.length });
     if (!dryRun) {
       let m = 0;
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     }
 
     // 2. Items
-    const items = await readAll("Item", { store_owner_email: OWNER_EMAIL });
+    const items = await readAll("Item", { created_by: OWNER_EMAIL });
     log.push({ entity: "Item", count: items.length });
     if (!dryRun) {
       let m = 0;
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     }
 
     // 3. Recipes
-    const recipes = await readAll("Recipe", { store_owner_email: OWNER_EMAIL });
+    const recipes = await readAll("Recipe", { created_by: OWNER_EMAIL });
     log.push({ entity: "Recipe", count: recipes.length });
     if (!dryRun) {
       let m = 0;
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
     }
 
     // 4. Orders
-    const orders = await readAll("Order", { store_owner_email: OWNER_EMAIL });
+    const orders = await readAll("Order", { created_by: OWNER_EMAIL });
     log.push({ entity: "Order", count: orders.length });
     if (!dryRun) {
       let m = 0;
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     }
 
     // 5. SupplyReceipts
-    const receipts = await readAll("SupplyReceipt", { store_owner_email: OWNER_EMAIL });
+    const receipts = await readAll("SupplyReceipt", { created_by: OWNER_EMAIL });
     log.push({ entity: "SupplyReceipt", count: receipts.length });
     if (!dryRun) {
       let m = 0;
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     }
 
     // 6. InventoryCount
-    const counts = await readAll("InventoryCount", { store_owner_email: OWNER_EMAIL });
+    const counts = await readAll("InventoryCount", { created_by: OWNER_EMAIL });
     log.push({ entity: "InventoryCount", count: counts.length });
     if (!dryRun) {
       let m = 0;
