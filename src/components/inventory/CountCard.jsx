@@ -78,7 +78,7 @@ export default function CountCard({ count, onEdit, onDelete, onExportSheet }) {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <Package className="w-4 h-4 text-green-500" />
-              {t('items')} ({count.items?.length || 0}):
+              {t('items')} ({(count.items || []).filter(i => Number(i.counted_quantity) > 0).length} / {count.items?.length || 0}):
             </div>
             {count.items && count.items.length > 0 && (
               <div className="bg-gray-50 rounded-lg p-3 space-y-2 max-h-40 overflow-y-auto">

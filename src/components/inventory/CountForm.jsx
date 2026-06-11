@@ -563,6 +563,8 @@ export default function CountForm({ user, count, warehouses, items: initialItems
             })
           };
           
+          cleanedData.total_inventory_value = cleanedData.items.reduce((sum, item) => sum + (item.total_cost || 0), 0);
+          
           const dirtyItemsAtStart = Array.from(dirtyItemsRef.current.keys());
           const hasDirtyMetadataAtStart = dirtyMetadataRef.current;
 
@@ -1651,39 +1653,64 @@ export default function CountForm({ user, count, warehouses, items: initialItems
                 </div>
                 <Button type="button" onClick={async () => {
                   const currentData = formDataRef.current;
-                  if (currentData?.id) {
-                    const dirtyItems = Array.from(dirtyItemsRef.current.values());
-                    const hasDirtyMetadata = dirtyMetadataRef.current;
-                    if (dirtyItems.length > 0 || hasDirtyMetadata) {
+                  const dirtyItems = Array.from(dirtyItemsRef.current.values());
+                  const hasDirtyMetadata = dirtyMetadataRef.current;
+                  
+                  if (!currentData?.id) {
+                    const hasAnyEntered = dirtyItems.length > 0 || currentData.items.some(i => i.counted_quantity !== "" && i.counted_quantity != null && i.counted_quantity !== 0) || currentData.name || hasDirtyMetadata;
+                    if (hasAnyEntered) {
                       setSyncStatus('saving');
-                      const cleanedDirtyItems = dirtyItems.map(item => ({
-                        ...item,
-                        counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
-                        price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
-                        total_cost: Number(item.total_cost) || 0
-                      }));
-                      const metadata = hasDirtyMetadata ? {
-                        name: currentData.name,
-                        count_date: currentData.count_date,
-                        count_type: currentData.count_type,
-                        warehouse_id: currentData.warehouse_id,
-                        warehouse_name: currentData.warehouse_name,
-                        status: currentData.status,
-                        notes: currentData.notes
-                      } : null;
-                      
+                      const cleanedData = {
+                        ...currentData,
+                        warehouse_name: currentData.warehouse_name || (language === 'he' ? 'טיוטה חדשה' : 'New Draft'),
+                        store_owner_email: user?.store_user_owner_email || user?.acting_as_store_email || user?.acting_as_user_email || user?.email || null,
+                        created_by: currentData.created_by || user?.email,
+                        items: currentData.items.map(item => {
+                          const cQty = Number(item.counted_quantity);
+                          const pUnit = Number(item.price_per_unit);
+                          const tCost = Number(item.total_cost);
+                          return {
+                            ...item,
+                            counted_quantity: item.counted_quantity === "" || item.counted_quantity == null || isNaN(cQty) ? 0 : cQty,
+                            price_per_unit: item.price_per_unit === "" || item.price_per_unit == null || isNaN(pUnit) ? 0 : pUnit,
+                            total_cost: isNaN(tCost) ? 0 : tCost
+                          };
+                        })
+                      };
+                      cleanedData.total_inventory_value = cleanedData.items.reduce((sum, item) => sum + (item.total_cost || 0), 0);
                       try {
-                        await base44.functions.invoke('syncActiveCountItems', {
-                          currentCountId: currentData.id,
-                          updatedItems: cleanedDirtyItems,
-                          metadata,
-                          total_inventory_value: currentData.total_inventory_value || 0
-                        });
-                        dirtyItemsRef.current.clear();
-                        dirtyMetadataRef.current = false;
-                      } catch (e) {
-                        console.error(e);
-                      }
+                        await base44.entities.InventoryCount.create(cleanedData);
+                      } catch (e) { console.error(e); }
+                    }
+                  } else if (dirtyItems.length > 0 || hasDirtyMetadata) {
+                    setSyncStatus('saving');
+                    const cleanedDirtyItems = dirtyItems.map(item => ({
+                      ...item,
+                      counted_quantity: item.counted_quantity === "" || item.counted_quantity == null ? 0 : Number(item.counted_quantity),
+                      price_per_unit: item.price_per_unit === "" || item.price_per_unit == null ? 0 : Number(item.price_per_unit),
+                      total_cost: Number(item.total_cost) || 0
+                    }));
+                    const metadata = hasDirtyMetadata ? {
+                      name: currentData.name,
+                      count_date: currentData.count_date,
+                      count_type: currentData.count_type,
+                      warehouse_id: currentData.warehouse_id,
+                      warehouse_name: currentData.warehouse_name,
+                      status: currentData.status,
+                      notes: currentData.notes
+                    } : null;
+                    
+                    try {
+                      await base44.functions.invoke('syncActiveCountItems', {
+                        currentCountId: currentData.id,
+                        updatedItems: cleanedDirtyItems,
+                        metadata,
+                        total_inventory_value: currentData.items.reduce((sum, item) => sum + (item.total_cost || 0), 0)
+                      });
+                      dirtyItemsRef.current.clear();
+                      dirtyMetadataRef.current = false;
+                    } catch (e) {
+                      console.error(e);
                     }
                   }
                   onCancel();
