@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
     try {
@@ -15,24 +15,36 @@ Deno.serve(async (req) => {
         const queryEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
         const api = isAdminImpersonating ? base44.asServiceRole.entities : base44.entities;
 
-        // Fetch deleted items to get their warehouse_ids
-        const deletedItems = [];
-        for (const id of idsToDelete) {
-             const results = await api.Item.filter({ id });
-             if (results && results.length > 0) {
-                 deletedItems.push(results[0]);
-             }
+        // Fetch ALL items in one go to avoid rate limits
+        let allItems = [];
+        if (isAdminImpersonating) {
+            try {
+                const storeUsers = await base44.asServiceRole.entities.StoreUser.filter({ owner_email: queryEmail });
+                const allowedEmails = [queryEmail, ...storeUsers.map(u => u.user_email)];
+                for (const email of allowedEmails) {
+                    const r = await api.Item.filter({ created_by: email }, "-created_date", 10000);
+                    if (r) allItems = [...allItems, ...r];
+                }
+                const r2 = await api.Item.filter({ store_owner_email: queryEmail }, "-created_date", 10000);
+                if (r2) allItems = [...allItems, ...r2];
+            } catch(e) {
+                allItems = await api.Item.filter({ created_by: queryEmail }, "-created_date", 10000);
+            }
+        } else {
+            allItems = await api.Item.filter({}, "-created_date", 10000);
         }
+
+        // Fetch deleted items to get their warehouse_ids
+        const deletedItems = allItems.filter(i => idsToDelete.includes(i.id));
 
         // Collect target items map
         const targetIds = [...new Set(Object.values(mappingToKeep || {}))];
         const targetItemsMap = {};
-        for (const id of targetIds) {
-             const results = await api.Item.filter({ id });
-             if (results && results.length > 0) {
-                 targetItemsMap[id] = results[0];
-             }
-        }
+        allItems.forEach(i => {
+            if (targetIds.includes(i.id)) {
+                targetItemsMap[i.id] = i;
+            }
+        });
 
         // Update target items with deleted items' warehouses
         for (const targetId of targetIds) {
@@ -83,19 +95,19 @@ Deno.serve(async (req) => {
                         const allowedEmails = [queryEmail, ...storeUsers.map(u => u.user_email)];
                         
                         for (const email of allowedEmails) {
-                            const r = await api[entityName].filter({ created_by: email });
+                            const r = await api[entityName].filter({ created_by: email }, "-created_date", 10000);
                             if (r) records = [...records, ...r];
                         }
                         
                         try {
-                            const r2 = await api[entityName].filter({ store_owner_email: queryEmail });
+                            const r2 = await api[entityName].filter({ store_owner_email: queryEmail }, "-created_date", 10000);
                             if (r2) records = [...records, ...r2];
                         } catch(e) {}
                     } catch(e) {
-                        records = await api[entityName].filter({ created_by: queryEmail });
+                        records = await api[entityName].filter({ created_by: queryEmail }, "-created_date", 10000);
                     }
                 } else {
-                    records = await api[entityName].filter({});
+                    records = await api[entityName].filter({}, "-created_date", 10000);
                 }
 
                 const updates = [];
@@ -105,9 +117,15 @@ Deno.serve(async (req) => {
                     const updateData = processFn(record);
                     if (updateData) {
                         updates.push(api[entityName].update(record.id, updateData));
+                        if (updates.length % 10 === 0) {
+                            await Promise.all(updates.splice(0, updates.length));
+                            await new Promise(r => setTimeout(r, 50));
+                        }
                     }
                 }
-                await Promise.all(updates);
+                if (updates.length > 0) {
+                    await Promise.all(updates);
+                }
             } catch (e) {
                 console.error(`Error updating ${entityName}:`, e);
             }
@@ -194,12 +212,20 @@ Deno.serve(async (req) => {
             return changed ? { verified_items: newItems } : null;
         });
 
-        // Delete the items
+        // Delete the items safely
+        let delCount = 0;
         for (const id of idsToDelete) {
-             await api.Item.delete(id);
+             try {
+                 await api.Item.delete(id);
+                 delCount++;
+             } catch(e) {
+                 console.warn("Failed to delete item", id, e.message);
+             }
+             // brief delay to avoid rate limit
+             await new Promise(r => setTimeout(r, 20));
         }
 
-        return Response.json({ success: true, deletedCount: idsToDelete.length });
+        return Response.json({ success: true, deletedCount: delCount });
 
     } catch (error) {
         console.error('Replace and Delete failed:', error);
