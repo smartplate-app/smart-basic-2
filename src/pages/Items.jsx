@@ -1218,31 +1218,38 @@ const handleCleanOrphans = async (ownerEmail) => {
        {!isViewer && (
          <BulkWarehouseModal
            isOpen={showBulkWarehouseModal}
-           onClose={() => setShowBulkWarehouseModal(false)}
-           selectedCount={selectedIds.length}
-           warehouses={warehouses}
+           onClose={() => {
+             setShowBulkWarehouseModal(false);
+             setPendingActionType(null);
+           }}
+           selectedCount={pendingActionType === 'warehouse' ? selectedPendingIds.length : selectedIds.length}
+           warehouses={warehouses.filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i)}
            onAssignToWarehouses={async (targetIds) => {
              if (!targetIds || targetIds.length === 0) return;
              
              const targetWarehouses = warehouses.filter(w => targetIds.includes(w.id));
              if (targetWarehouses.length === 0) return;
+             
+             const targetItemIds = pendingActionType === 'warehouse' ? selectedPendingIds : selectedIds;
 
              // Update each warehouse's catalog_items
              await Promise.all(targetWarehouses.map(async (wh) => {
                const existing = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
-               const next = Array.from(new Set([...existing, ...selectedIds]));
+               const next = Array.from(new Set([...existing, ...targetItemIds]));
                return base44.entities.Warehouse.update(wh.id, { catalog_items: next });
              }));
 
              // Update each item
              const { data } = await base44.functions.invoke('bulkItemOperations', {
                 action: 'addWarehouses',
-                itemIds: selectedIds,
+                itemIds: targetItemIds,
                 payload: { targetWarehouses: targetWarehouses.map(w => ({id: w.id, name: w.name})) }
              });
              if (!data?.success) throw new Error(data?.error || 'Failed');
 
-             setSelectedIds([]);
+             if (pendingActionType === 'warehouse') setSelectedPendingIds([]);
+             else setSelectedIds([]);
+             setPendingActionType(null);
              loadData(user);
            }}
          />
