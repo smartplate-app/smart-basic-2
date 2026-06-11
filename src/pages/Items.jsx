@@ -925,14 +925,14 @@ const handleCleanOrphans = async (ownerEmail) => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="flex flex-col gap-2">
                     {incompleteItems.map(item => (
                       <div key={item.id} onClick={(e) => {
                         if(e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
                         if (selectedPendingIds.includes(item.id)) setSelectedPendingIds(selectedPendingIds.filter(id => id !== item.id));
                         else setSelectedPendingIds([...selectedPendingIds, item.id]);
-                      }} className={`bg-white border ${selectedPendingIds.includes(item.id) ? 'border-amber-500 ring-1 ring-amber-500' : 'border-amber-200'} shadow-sm rounded-lg p-3 hover:bg-amber-50/50 transition-colors relative flex gap-3 cursor-pointer`}>
-                        <div className="flex flex-col items-center justify-start pt-1">
+                      }} className={`bg-white border ${selectedPendingIds.includes(item.id) ? 'border-amber-500 ring-1 ring-amber-500' : 'border-amber-200'} shadow-sm rounded-lg p-3 hover:bg-amber-50/50 transition-colors relative flex gap-3 items-center cursor-pointer`}>
+                        <div className="flex flex-col items-center justify-center">
                           <input 
                             type="checkbox" 
                             className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500"
@@ -943,50 +943,51 @@ const handleCleanOrphans = async (ownerEmail) => {
                             }}
                           />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start mb-1 gap-2">
-                            <h4 className="font-semibold text-gray-900 truncate" title={item.name}>{item.name}</h4>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors">
-                                <FileText className="w-4 h-4" />
-                              </button>
+                        <div className="flex-1 min-w-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div className="flex flex-1 min-w-0 items-center gap-4">
+                            <h4 className="font-semibold text-gray-900 truncate w-48 shrink-0" title={item.name}>{item.name}</h4>
+                            
+                            <div className="flex gap-4 text-sm text-gray-600 shrink-0">
+                              <div className="flex items-center gap-1">
+                                <span className="text-gray-400">{language === 'he' ? 'מחיר:' : 'Price:'}</span>
+                                <span className="font-medium">₪{item.price || 0}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-gray-400">{language === 'he' ? 'הנחה:' : 'Discount:'}</span>
+                                <span className="font-medium">{item.discount || 0}%</span>
+                              </div>
                             </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-gray-600 mb-2">
-                            <div className="flex flex-col">
-                              <span className="text-gray-400">{language === 'he' ? 'מחיר' : 'Price'}:</span>
-                              <span className="font-medium">₪{item.price || 0}</span>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-gray-400">{language === 'he' ? 'הנחה' : 'Discount'}:</span>
-                              <span className="font-medium">{item.discount || 0}%</span>
-                            </div>
+                            
                             {item.supplier_name && item.supplier_name !== 'להשלמה' && item.supplier_name !== 'pending' && item.supplier_name !== 'Pending' && (
-                              <div className="flex flex-col col-span-2 mt-1">
-                                <span className="text-gray-400">{language === 'he' ? 'ספק (מקובץ)' : 'Supplier (from doc)'}:</span>
+                              <div className="hidden md:flex items-center gap-1 text-sm text-gray-600 truncate min-w-0 ml-4 rtl:mr-4 rtl:ml-0">
+                                <span className="text-gray-400 whitespace-nowrap">{language === 'he' ? 'ספק (מקובץ):' : 'Supplier:'}</span>
                                 <span className="font-medium truncate" title={item.supplier_name}>{item.supplier_name}</span>
                               </div>
                             )}
                           </div>
 
-                          {item.source_document_id && (
-                            <Link
-                                to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-2 py-1.5 rounded w-full justify-center transition-colors border border-amber-200/50"
-                                title={item.source_document_number}
-                              >
-                                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                                <span className="truncate font-medium">
-                                  {item.source_type === 'inventory_count'
-                                    ? (language === 'he' ? `ספירה: ${item.source_document_number || 'ללא שם'}` : `Count: ${item.source_document_number || 'Unnamed'}`)
-                                    : item.source_type === 'supply_receipt'
-                                    ? (language === 'he' ? `מסמך מקור: ${item.source_document_number || 'ללא מספר'}` : `Source Doc: ${item.source_document_number || 'N/A'}`)
-                                    : (language === 'he' ? 'מקור הפריט' : 'Source document')}
-                                </span>
-                              </Link>
-                          )}
+                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                            {item.source_document_id && (
+                              <Link
+                                  to={item.source_type === 'inventory_count' ? `/MonthlyCount?highlight=${item.source_document_id}` : `/SupplyReceipts?highlight=${item.source_document_id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1 text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-2 py-1.5 rounded transition-colors border border-amber-200/50"
+                                  title={item.source_document_number}
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate font-medium max-w-[120px]">
+                                    {item.source_type === 'inventory_count'
+                                      ? (language === 'he' ? `ספירה: ${item.source_document_number || 'ללא שם'}` : `Count: ${item.source_document_number || 'Unnamed'}`)
+                                      : item.source_type === 'supply_receipt'
+                                      ? (language === 'he' ? `מסמך: ${item.source_document_number || 'ללא מספר'}` : `Doc: ${item.source_document_number || 'N/A'}`)
+                                      : (language === 'he' ? 'מקור' : 'Source')}
+                                  </span>
+                                </Link>
+                            )}
+                            <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors ml-auto sm:ml-0">
+                              <FileText className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
