@@ -127,10 +127,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 ` : ''}
 
                 <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                  <div style="display: inline-flex; flex-direction: column; border-radius: 8px; overflow: hidden; border: 2px solid #111827; font-family: system-ui, sans-serif; font-weight: 900; font-size: 14px; line-height: 1; margin: 0 auto 8px;">
-                    <div style="background: #111827; color: #ffffff; padding: 6px 10px 4px; letter-spacing: 0.5px;">SMART</div>
-                    <div style="background: #ffffff; color: #111827; padding: 4px 10px 6px; letter-spacing: 0.5px;">PLATE</div>
-                  </div>
+                  <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/4c53051d0_smartplate_logo_long_big_tp_800x176.png" alt="Smart Plate" style="height: 30px; margin: 0 auto 8px;" />
                   <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
                   <div style="font-size: 10px; margin-top: 4px; font-weight: 600; color: #2563eb;">foodcostapp.com</div>
                 </div>
@@ -350,10 +347,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             ` : ''}
 
             <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-              <div style="display: inline-flex; flex-direction: column; border-radius: 8px; overflow: hidden; border: 2px solid #111827; font-family: system-ui, sans-serif; font-weight: 900; font-size: 14px; line-height: 1; margin: 0 auto 8px;">
-                <div style="background: #111827; color: #ffffff; padding: 6px 10px 4px; letter-spacing: 0.5px;">SMART</div>
-                <div style="background: #ffffff; color: #111827; padding: 4px 10px 6px; letter-spacing: 0.5px;">PLATE</div>
-              </div>
+              <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/4c53051d0_smartplate_logo_long_big_tp_800x176.png" alt="Smart Plate" style="height: 30px; margin: 0 auto 8px;" />
               <div style="font-size: 9px; margin-top: 2px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">The ultimate food & labor cost app</div>
               <div style="font-size: 10px; margin-top: 4px; font-weight: 600; color: #2563eb;">foodcostapp.com</div>
             </div>
@@ -616,10 +610,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
 
                           {/* Footer */}
                           <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
-                              <div style={{ display: 'inline-flex', flexDirection: 'column', borderRadius: '8px', overflow: 'hidden', border: '2px solid #111827', fontFamily: 'system-ui, sans-serif', fontWeight: 900, fontSize: '14px', lineHeight: 1, margin: '0 auto 8px' }}>
-                                <div style={{ background: '#111827', color: '#ffffff', padding: '6px 10px 4px', letterSpacing: '0.5px' }}>SMART</div>
-                                <div style={{ background: '#ffffff', color: '#111827', padding: '4px 10px 6px', letterSpacing: '0.5px' }}>PLATE</div>
-                              </div>
+                              <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/4c53051d0_smartplate_logo_long_big_tp_800x176.png" alt="Smart Plate" style={{ height: '30px', margin: '0 auto 8px' }} />
                               <div style={{ fontSize: '9px', marginTop: '2px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>The ultimate food & labor cost app</div>
                               <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: 600, color: '#2563eb' }}>foodcostapp.com</div>
                           </div>
