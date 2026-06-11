@@ -775,31 +775,32 @@ const handleCleanOrphans = async (ownerEmail) => {
             <h1 className="text-3xl font-bold text-gray-900">{t('items_title')}</h1>
             <p className="text-gray-600 mt-2">{t('items_greeting', { name: user.full_name })}</p>
           </div>
-          <div className="flex gap-3 flex-wrap items-center w-full md:w-auto mt-4 md:mt-0">
-            <div className="flex bg-white rounded-lg shadow-sm border">
+          <div className="flex gap-2 sm:gap-3 items-center w-full md:w-auto mt-4 md:mt-0 justify-end md:justify-start">
+            <div className="flex bg-white rounded-lg shadow-sm border shrink-0">
               <Button
                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('cards')}
-                className={viewMode === 'cards' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white' : 'text-gray-600 hover:bg-gray-100'}
+                className={viewMode === 'cards' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white h-9 w-9' : 'text-gray-600 hover:bg-gray-100 h-9 w-9'}
               >
-                <LayoutGrid className="w-5 h-5" />
+                <LayoutGrid className="w-4 h-4" />
               </Button>
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white' : 'text-gray-600 hover:bg-gray-100'}
+                className={viewMode === 'list' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white h-9 w-9' : 'text-gray-600 hover:bg-gray-100 h-9 w-9'}
               >
-                <List className="w-5 h-5" />
+                <List className="w-4 h-4" />
               </Button>
             </div>
 
             <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2 shrink-0 h-9 px-2 sm:px-4">
                   <MoreHorizontal className="w-4 h-4" />
-                  {language === 'he' ? 'פעולות נוספות' : 'More Actions'}
+                  <span className="hidden sm:inline">{language === 'he' ? 'פעולות נוספות' : 'More Actions'}</span>
+                  <span className="sm:hidden text-sm">{language === 'he' ? 'פעולות' : 'More'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align={language === 'he' ? 'start' : 'end'} className="w-56">
@@ -874,10 +875,11 @@ const handleCleanOrphans = async (ownerEmail) => {
                 setShowForm(!showForm);
                 setEditingItem(null);
               }}
-              className="bg-[#d4a373] hover:bg-[#b88c60] text-white"
+              className="bg-[#d4a373] hover:bg-[#b88c60] text-white shrink-0 h-9 px-2 sm:px-4"
             >
-              <Plus className="w-5 h-5 rtl:ml-2 ltr:mr-2" />
-              {t('add_new_item')}
+              <Plus className="w-4 h-4 sm:rtl:ml-2 sm:ltr:mr-2" />
+              <span className="hidden sm:inline">{t('add_new_item')}</span>
+              <span className="sm:hidden text-sm">{language === 'he' ? 'חדש' : 'New'}</span>
             </Button>
             )}
           </div>
