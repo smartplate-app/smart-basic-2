@@ -904,7 +904,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       <ChevronsUpDown className="ml-2 h-5 w-5 shrink-0 opacity-50 text-gray-500" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200" align="start" style={{ zIndex: 10001 }}>
+                  <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200" align="start" style={{ zIndex: 10001 }}>
                     <Command>
                       <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3" placeholder={language === 'he' ? 'חפש ספק...' : 'Search supplier...'} />
                       <div className="h-px bg-gray-100 w-full" />
