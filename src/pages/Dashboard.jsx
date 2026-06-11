@@ -1368,8 +1368,10 @@ export default function DashboardPage() {
 
             <div className="max-w-4xl mx-auto mb-6 mt-4">
               {/* Dark Header */}
-              <div className="bg-black text-white p-5 rounded-t-xl flex items-center justify-between shadow-md">
-                <div className={`text-xl font-medium flex items-center gap-3 w-full ${isRTL ? 'flex-row-reverse justify-end' : 'justify-end'}`}>
+              <div className="bg-black text-white p-5 rounded-t-xl flex items-center justify-between shadow-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full blur-2xl opacity-20 -ml-10 -mb-10 pointer-events-none"></div>
+                <div className={`text-xl font-medium flex items-center gap-3 w-full relative z-10 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-end'}`}>
                   <span>{moment(selectedMonth).format('MMMM YYYY')} MTD — ({projectionDaysElapsed} {language === 'he' ? 'ימים' : 'days'})</span>
                   <span>📸</span>
                 </div>
@@ -1380,30 +1382,30 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   
                   {/* Sales Cubes */}
-                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px]">
-                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מכירות וולט' : 'Delivery Sales'}</div>
+                  <div className="bg-purple-50 border border-purple-100/50 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px] hover:shadow-md transition-shadow">
+                    <div className="text-xs text-purple-600/70 mb-1 font-medium">{language === 'he' ? 'מכירות וולט' : 'Delivery Sales'}</div>
                     {!editMode ? (
-                      <div className="text-2xl font-bold text-gray-900">{formatCurrency(deliverySales)}</div>
+                      <div className="text-2xl font-bold text-purple-900">{formatCurrency(deliverySales)}</div>
                     ) : (
-                      <Input type="number" value={deliverySales} onChange={(e) => setDeliverySales(parseFloat(e.target.value) || 0)} className="w-full text-center font-bold text-sm h-8" />
+                      <Input type="number" value={deliverySales} onChange={(e) => setDeliverySales(parseFloat(e.target.value) || 0)} className="w-full text-center font-bold text-sm h-8 bg-white/50 border-purple-200" />
                     )}
-                    {actualSales > 0 && !editMode && <div className="text-[11px] text-gray-400 mt-1 font-medium">{((deliverySales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}</div>}
+                    {actualSales > 0 && !editMode && <div className="text-[11px] text-purple-400 mt-1 font-medium">{((deliverySales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}</div>}
                   </div>
 
-                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px]">
-                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מכירות מסעדה' : 'Dine-in Sales'}</div>
+                  <div className="bg-pink-50 border border-pink-100/50 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px] hover:shadow-md transition-shadow">
+                    <div className="text-xs text-pink-600/70 mb-1 font-medium">{language === 'he' ? 'מכירות מסעדה' : 'Dine-in Sales'}</div>
                     {!editMode ? (
-                      <div className="text-2xl font-bold text-gray-900">{formatCurrency(restaurantSales)}</div>
+                      <div className="text-2xl font-bold text-pink-900">{formatCurrency(restaurantSales)}</div>
                     ) : (
-                      <Input type="number" value={restaurantSales} onChange={(e) => setRestaurantSales(parseFloat(e.target.value) || 0)} className="w-full text-center font-bold text-sm h-8" />
+                      <Input type="number" value={restaurantSales} onChange={(e) => setRestaurantSales(parseFloat(e.target.value) || 0)} className="w-full text-center font-bold text-sm h-8 bg-white/50 border-pink-200" />
                     )}
-                    {actualSales > 0 && !editMode && <div className="text-[11px] text-gray-400 mt-1 font-medium">{((restaurantSales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}</div>}
+                    {actualSales > 0 && !editMode && <div className="text-[11px] text-pink-400 mt-1 font-medium">{((restaurantSales / actualSales) * 100).toFixed(1)}% {language === 'he' ? 'מהמחזור' : 'of total'}</div>}
                   </div>
 
-                  <div className="bg-[#f9fafb] border border-gray-100 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px]">
-                    <div className="text-xs text-gray-500 mb-1 font-medium">{language === 'he' ? 'מחזור כולל מע"מ' : 'Total Sales (incl. VAT)'}</div>
-                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(actualSales)}</div>
-                    <div className="text-[11px] text-gray-400 mt-1 font-medium">{language === 'he' ? 'נטו: ' : 'Net: '}{formatCurrency(actualSalesExVAT)}</div>
+                  <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-blue-100/50 rounded-xl p-4 text-center shadow-sm flex flex-col justify-center min-h-[140px] hover:shadow-md transition-shadow">
+                    <div className="text-xs text-blue-600/70 mb-1 font-medium">{language === 'he' ? 'מחזור כולל מע"מ' : 'Total Sales (incl. VAT)'}</div>
+                    <div className="text-2xl font-bold text-blue-900">{formatCurrency(actualSales)}</div>
+                    <div className="text-[11px] text-blue-400 mt-1 font-medium">{language === 'he' ? 'נטו: ' : 'Net: '}{formatCurrency(actualSalesExVAT)}</div>
                   </div>
 
                   {/* Total Costs Cube (Moved to top row to balance 4x2 grid) */}
@@ -1477,8 +1479,9 @@ export default function DashboardPage() {
 
             {/* Cost Breakdown Chart */}
             <Card className="rounded-xl border-none shadow-md overflow-hidden">
-              <div className="bg-black text-white p-5">
-                <h3 className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="bg-black text-white p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-1/4 w-40 h-40 bg-pink-500 rounded-full blur-3xl opacity-20 -mt-10 pointer-events-none"></div>
+                <h3 className={`text-lg font-bold relative z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
                   {language === 'he' ? 'פילוח עלויות' : 'Cost Breakdown'}
                 </h3>
               </div>
@@ -1489,8 +1492,9 @@ export default function DashboardPage() {
 
             {/* Category Report (Image/PDF → Percent of Total) */}
             <Card className="rounded-xl border-none shadow-md overflow-hidden">
-              <div className="bg-black text-white p-5">
-                <h3 className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="bg-black text-white p-5 relative overflow-hidden">
+                <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-purple-500 rounded-full blur-3xl opacity-20 -mb-10 pointer-events-none"></div>
+                <h3 className={`text-lg font-bold relative z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
                   {language === 'he' ? 'דוח קטגוריות (מתמונה/‏PDF)' : 'Category Report (from Image/PDF)'}
                 </h3>
               </div>
@@ -1552,8 +1556,10 @@ export default function DashboardPage() {
           {/* AFC Report Tab */}
           <TabsContent value="afc" className="space-y-6">
             <Card className="rounded-xl border-none shadow-md overflow-hidden">
-              <div className="bg-black text-white p-6">
-                <div className="flex flex-wrap items-center gap-3">
+              <div className="bg-black text-white p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-pink-500 rounded-full blur-[60px] opacity-20 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500 rounded-full blur-[60px] opacity-20 pointer-events-none"></div>
+                <div className="flex flex-wrap items-center gap-3 relative z-10">
                   <Button onClick={handleGenerateAfcSheet} className="bg-white/20 hover:bg-white/30 text-white border-none rounded-full gap-2 px-4 h-9">
                     <FileSpreadsheet className="w-4 h-4" />
                     {language === 'he' ? 'צור גיליון AFC' : 'Generate AFC Sheet'}
@@ -1661,8 +1667,9 @@ export default function DashboardPage() {
                 </Card>
 
                 <Card className="rounded-xl border-none shadow-md overflow-hidden">
-                <div className="bg-black text-white p-5">
-                <h3 className={`text-lg font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className="bg-black text-white p-5 relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-24 bg-pink-500 rounded-full blur-[50px] opacity-15 pointer-events-none"></div>
+                <h3 className={`text-lg font-bold relative z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
                   {language === 'he' ? 'פירוט שימוש לפי פריט' : 'Per-Item Usage Breakdown'}
                 </h3>
                 </div>

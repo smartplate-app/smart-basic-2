@@ -191,8 +191,10 @@ export default function RecipesPage() {
   return (
     <div className="min-h-screen bg-[#f3f2f1] p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-black p-6 rounded-xl text-white shadow-md">
-          <div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-black p-6 rounded-xl text-white shadow-md relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500 rounded-full blur-3xl opacity-20 -mr-10 -mt-10 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full blur-2xl opacity-20 -ml-10 -mb-10 pointer-events-none"></div>
+          <div className="relative z-10">
             <h1 className="text-3xl font-bold flex items-center gap-3">
               <ChefHat className="w-8 h-8" />
               {language === 'he' ? 'ניהול מתכונים' : 'Recipe Management'}
@@ -201,7 +203,7 @@ export default function RecipesPage() {
               {language === 'he' ? 'שלום, נהל את המתכונים והמחירים שלך' : 'Hello, manage your recipes and prices'}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 justify-end">
+          <div className="flex flex-wrap gap-2 justify-end relative z-10">
 
             
             <Button 
