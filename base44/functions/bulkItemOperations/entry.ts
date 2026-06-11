@@ -28,9 +28,8 @@ Deno.serve(async (req) => {
                     } else if (action === 'updateSupplier') {
                         await base44.asServiceRole.entities.Item.update(id, payload);
                     } else if (action === 'addWarehouses') {
-                        const items = await base44.asServiceRole.entities.Item.filter({ id });
-                        if (items && items.length > 0) {
-                            const it = items[0];
+                        const it = await base44.asServiceRole.entities.Item.get(id);
+                        if (it) {
                             let currentWids = [...(it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []))];
                             let currentWnames = [...(it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []))];
                             let updated = false;
@@ -58,9 +57,8 @@ Deno.serve(async (req) => {
                             }
                         }
                     } else if (action === 'removeWarehouse') {
-                        const items = await base44.asServiceRole.entities.Item.filter({ id });
-                        if (items && items.length > 0) {
-                            const it = items[0];
+                        const it = await base44.asServiceRole.entities.Item.get(id);
+                        if (it) {
                             let currentWids = [...(it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []))];
                             let currentWnames = [...(it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []))];
                             if (currentWids.includes(payload.warehouseId)) {
