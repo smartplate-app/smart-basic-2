@@ -15,8 +15,6 @@ Deno.serve(async (req) => {
 
         const isOwnerOrAdmin = user.role === 'admin' || user.store_user_owner_email || user.acting_as_store_email;
         
-        const debugInfo = [];
-        
         for (let i = 0; i < itemIds.length; i += 10) {
             const batch = itemIds.slice(i, i + 10);
             await Promise.all(batch.map(async (id) => {
@@ -35,10 +33,13 @@ Deno.serve(async (req) => {
                             else throw err;
                         }
                     } else if (action === 'addWarehouses') {
-                        const items = await base44.asServiceRole.entities.Item.filter({ id });
-                        debugInfo.push({ id, found: !!(items && items.length > 0), items });
-                        if (items && items.length > 0) {
-                            const it = items[0];
+                        let it;
+                        try {
+                            it = await base44.asServiceRole.entities.Item.get(id);
+                        } catch(e) {
+                            // not found
+                        }
+                        if (it) {
                             const itemData = it.data || it;
                             let currentWids = [...(itemData.warehouse_ids || (itemData.warehouse_id ? [itemData.warehouse_id] : []))];
                             let currentWnames = [...(itemData.warehouse_names || (itemData.warehouse_name ? [itemData.warehouse_name] : []))];
@@ -58,22 +59,22 @@ Deno.serve(async (req) => {
                             currentWnames = currentWnames.filter(wname => wname && typeof wname === 'string' && wname.trim() !== "");
 
                             if (updated || currentWids.length !== originalLen) {
-                                console.error(`Updating item ${id} with warehouses:`, currentWids);
-                                const res = await base44.asServiceRole.entities.Item.update(id, {
+                                await base44.asServiceRole.entities.Item.update(id, {
                                     warehouse_ids: currentWids,
                                     warehouse_names: currentWnames,
                                     warehouse_id: currentWids.length > 0 ? currentWids[0] : "",
                                     warehouse_name: currentWnames.length > 0 ? currentWnames[0] : ""
                                 });
-                                console.error(`Item ${id} updated result:`, res?.id);
-                            } else {
-                                console.error(`Item ${id} not updated. Wids:`, currentWids);
                             }
                         }
                     } else if (action === 'removeWarehouse') {
-                        const items = await base44.asServiceRole.entities.Item.filter({ id });
-                        if (items && items.length > 0) {
-                            const it = items[0];
+                        let it;
+                        try {
+                            it = await base44.asServiceRole.entities.Item.get(id);
+                        } catch(e) {
+                            // not found
+                        }
+                        if (it) {
                             const itemData = it.data || it;
                             let currentWids = [...(itemData.warehouse_ids || (itemData.warehouse_id ? [itemData.warehouse_id] : []))];
                             let currentWnames = [...(itemData.warehouse_names || (itemData.warehouse_name ? [itemData.warehouse_name] : []))];
@@ -98,7 +99,7 @@ Deno.serve(async (req) => {
             await new Promise(r => setTimeout(r, 150));
         }
 
-        return Response.json({ success: true, debug: "test" });
+        return Response.json({ success: true });
     } catch (error) {
         return Response.json({ error: error.message }, { status: 500 });
     }
