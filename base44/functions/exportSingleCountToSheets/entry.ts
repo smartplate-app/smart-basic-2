@@ -216,8 +216,8 @@ Deno.serve(async (req) => {
               range: { sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: 7 },
               cell: {
                 userEnteredFormat: {
-                  backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 },
-                  textFormat: { bold: true }
+                  backgroundColor: { red: 0.85, green: 0.92, blue: 0.98 },
+                  textFormat: { bold: true, foregroundColor: { red: 0.1, green: 0.2, blue: 0.3 } }
                 }
               },
               fields: 'userEnteredFormat(backgroundColor,textFormat)'
