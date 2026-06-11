@@ -26,9 +26,23 @@ Deno.serve(async (req) => {
                             await base44.entities.Item.delete(id);
                         }
                     } else if (action === 'updateSupplier') {
-                        await base44.asServiceRole.entities.Item.update(id, payload);
+                        try {
+                            await base44.asServiceRole.entities.Item.update(id, payload);
+                        } catch (err) {
+                            if (err?.status === 404) console.warn(`Item ${id} not found for supplier update, skipping.`);
+                            else throw err;
+                        }
                     } else if (action === 'addWarehouses') {
-                        const it = await base44.asServiceRole.entities.Item.get(id);
+                        let it = null;
+                        try {
+                            it = await base44.asServiceRole.entities.Item.get(id);
+                        } catch (err) {
+                            if (err?.status === 404) {
+                                console.warn(`Item ${id} not found, skipping.`);
+                            } else {
+                                throw err;
+                            }
+                        }
                         if (it) {
                             let currentWids = [...(it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []))];
                             let currentWnames = [...(it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []))];
@@ -57,7 +71,16 @@ Deno.serve(async (req) => {
                             }
                         }
                     } else if (action === 'removeWarehouse') {
-                        const it = await base44.asServiceRole.entities.Item.get(id);
+                        let it = null;
+                        try {
+                            it = await base44.asServiceRole.entities.Item.get(id);
+                        } catch (err) {
+                            if (err?.status === 404) {
+                                console.warn(`Item ${id} not found, skipping.`);
+                            } else {
+                                throw err;
+                            }
+                        }
                         if (it) {
                             let currentWids = [...(it.warehouse_ids || (it.warehouse_id ? [it.warehouse_id] : []))];
                             let currentWnames = [...(it.warehouse_names || (it.warehouse_name ? [it.warehouse_name] : []))];
