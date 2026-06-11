@@ -1,5 +1,48 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+async function driveRequest(accessToken, path, { method = 'GET', query = {}, headers = {}, body } = {}) {
+  const url = new URL(`https://www.googleapis.com${path}`);
+  Object.entries(query || {}).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v)); });
+  const res = await fetch(url.toString(), {
+    method,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ...(body && !(body instanceof Uint8Array || typeof body === 'string') ? { 'Content-Type': 'application/json' } : {}),
+      ...headers,
+    },
+    body: body && !(body instanceof Uint8Array || typeof body === 'string') ? JSON.stringify(body) : body,
+  });
+  if (!res.ok) { const txt = await res.text().catch(() => ''); throw new Error(`Drive ${method} ${path} failed (${res.status}): ${txt}`); }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? await res.json() : await res.arrayBuffer();
+}
+
+async function findOrCreateFolder(accessToken, name, parentId = null) {
+  try {
+    const qParts = [
+      `name = '${name.replace(/'/g, "\\'")}'`,
+      "mimeType = 'application/vnd.google-apps.folder'",
+      'trashed = false',
+    ];
+    if (parentId) qParts.push(`'${parentId}' in parents`);
+    const q = qParts.join(' and ');
+    const list = await driveRequest(accessToken, '/drive/v3/files', { query: { q, fields: 'files(id,name,webViewLink,parents)', spaces: 'drive' } });
+    if (list?.files?.length) return list.files[0];
+  } catch (_) {}
+  const meta = { name, mimeType: 'application/vnd.google-apps.folder' };
+  if (parentId) meta.parents = [parentId];
+  return await driveRequest(accessToken, '/drive/v3/files', { method: 'POST', query: { fields: 'id,name,webViewLink' }, body: meta });
+}
+
+async function ensureShared(accessToken, fileId, email) {
+  if (!email) return;
+  await driveRequest(accessToken, `/drive/v3/files/${fileId}/permissions`, {
+    method: 'POST',
+    query: { sendNotificationEmail: 'false' },
+    body: { role: 'writer', type: 'user', emailAddress: email }
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -52,6 +95,14 @@ Deno.serve(async (req) => {
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlesheets');
 
     const isHebrew = language === 'he';
+    
+    // Translate 'Summary' tab if needed
+    sheetData.forEach(s => {
+      if (s.title === 'Summary' && isHebrew) {
+        s.title = 'סיכום';
+      }
+    });
+
     const sheetsRequests = sheetData.map((s, i) => ({
        properties: { title: s.title, sheetId: 100 + i, rightToLeft: isHebrew }
     }));
@@ -117,7 +168,8 @@ Deno.serve(async (req) => {
         const values = [];
         const isHebrew = language === 'he';
         const summarySuffix = isHebrew ? ' (סיכום)' : ' (Summary)';
-        const titleRow = title + (s.title === 'Summary' ? summarySuffix : ` - ${s.title}`);
+        const isSummaryTab = s.title === 'Summary' || s.title === 'סיכום';
+        const titleRow = title + (isSummaryTab ? summarySuffix : ` - ${s.title}`);
         
         values.push([titleRow, '', '', '', '', '', '']); // Title row
         
@@ -238,6 +290,35 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({ requests: formattingRequests })
     });
+
+    // Move to Drive Folder & Share
+    try {
+      const driveToken = await base44.asServiceRole.connectors.getAccessToken('googledrive');
+      const workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
+      
+      const root = await findOrCreateFolder(driveToken, 'SmartPlateUploads', null);
+      const userFolder = await findOrCreateFolder(driveToken, workingEmail, root.id);
+      const monthLabel = new Date().toISOString().slice(0,7);
+      const parent = await findOrCreateFolder(driveToken, `Counts-${monthLabel}`, userFolder.id);
+
+      // Get current file to find its current parents
+      const fileMeta = await driveRequest(driveToken, `/drive/v3/files/${spreadsheetId}`, { query: { fields: 'parents' } });
+      const previousParents = fileMeta.parents ? fileMeta.parents.join(',') : '';
+
+      // Move file
+      await driveRequest(driveToken, `/drive/v3/files/${spreadsheetId}`, {
+        method: 'PATCH',
+        query: { addParents: parent.id, removeParents: previousParents }
+      });
+
+      // Share with user
+      const shareTo = (user.drive_share_email || workingEmail).trim();
+      if (shareTo) {
+        await ensureShared(driveToken, spreadsheetId, shareTo);
+      }
+    } catch (e) {
+      console.error('Failed to move and share file in Drive:', e);
+    }
 
     // Share with store managers
     try {
