@@ -427,6 +427,20 @@ export default function ItemsPage() {
       }
       const { id, created_date, updated_date, created_by_id, created_by, is_sample, ...cleanData } = itemData;
 
+      // Make sure warehouses arrays and single values are synced
+      if (cleanData.warehouse_ids && cleanData.warehouse_ids.length > 0) {
+        cleanData.warehouse_id = cleanData.warehouse_ids[0];
+        cleanData.warehouse_name = cleanData.warehouse_names[0];
+      } else if (cleanData.warehouse_id) {
+        cleanData.warehouse_ids = [cleanData.warehouse_id];
+        cleanData.warehouse_names = [cleanData.warehouse_name];
+      } else {
+        cleanData.warehouse_ids = [];
+        cleanData.warehouse_names = [];
+        cleanData.warehouse_id = "";
+        cleanData.warehouse_name = "";
+      }
+
       // Auto-mark as complete if it has a valid supplier now
       if (cleanData.supplier_id && cleanData.supplier_name && cleanData.supplier_id !== 'pending' && cleanData.supplier_name !== 'להשלמה' && cleanData.supplier_name !== 'Pending') {
         cleanData.is_pending_completion = false;
