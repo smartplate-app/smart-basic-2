@@ -939,17 +939,17 @@ const handleCleanOrphans = async (ownerEmail) => {
                       </div>
                     </div>
                     {selectedPendingIds.length > 0 && !isViewer && (
-                      <div className="flex flex-wrap gap-2 w-full md:w-auto items-center">
-                        <span className="text-sm text-amber-800 font-medium whitespace-nowrap">
+                      <div className="flex overflow-x-auto gap-2 w-full md:w-auto items-center pb-1 -mb-1 hide-scrollbar">
+                        <span className="text-sm text-amber-800 font-medium whitespace-nowrap shrink-0">
                           {selectedPendingIds.length} {language === 'he' ? 'נבחרו' : 'selected'}
                         </span>
-                        <Button size="sm" variant="outline" className="h-9 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 whitespace-nowrap" onClick={() => setShowBulkSupplierModal(true)}>
+                        <Button size="sm" variant="outline" className="h-9 px-2.5 sm:px-3 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 whitespace-nowrap shrink-0" onClick={() => setShowBulkSupplierModal(true)}>
                           {language === 'he' ? 'שייך לספק' : 'Assign Supplier'}
                         </Button>
-                        <Button size="sm" variant="outline" className="h-9 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 whitespace-nowrap" onClick={() => { setPendingActionType('warehouse'); setShowBulkWarehouseModal(true); }}>
+                        <Button size="sm" variant="outline" className="h-9 px-2.5 sm:px-3 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 whitespace-nowrap shrink-0" onClick={() => { setPendingActionType('warehouse'); setShowBulkWarehouseModal(true); }}>
                           {language === 'he' ? 'שייך למחסן' : 'Assign Warehouse'}
                         </Button>
-                        <Button size="sm" variant="destructive" className="h-9 bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:text-red-800 whitespace-nowrap" onClick={() => { setPendingActionType('delete'); setShowDeleteDialog(true); }}>
+                        <Button size="sm" variant="destructive" className="h-9 px-2.5 sm:px-3 bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:text-red-800 whitespace-nowrap shrink-0" onClick={() => { setPendingActionType('delete'); setShowDeleteDialog(true); }}>
                           <Trash2 className="w-4 h-4 rtl:ml-1 ltr:mr-1" />
                           {language === 'he' ? 'מחק' : 'Delete'}
                         </Button>
