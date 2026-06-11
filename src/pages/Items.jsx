@@ -894,22 +894,22 @@ const handleCleanOrphans = async (ownerEmail) => {
           );
 
           return (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-                <div className="flex-1 w-full min-w-0">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-3">
-                    <div>
-                      <h3 className="font-semibold text-amber-900">
-                        {language === 'he' ? 'פריטים דורשי השלמה' : 'Items needing completion'}
-                      </h3>
-                      <p className="text-sm text-amber-800">
-                        {language === 'he' 
-                          ? 'הפריטים הבאים נוספו במהלך קבלת אספקה/ספירת מלאי ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):' 
-                          : 'The following items were added during supply receipt/inventory count and need to be completed:'}
-                      </p>
-                    </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 sm:p-4 mb-6">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start gap-2.5 sm:gap-3 px-1 sm:px-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-amber-900 text-sm sm:text-base">
+                      {language === 'he' ? 'פריטים דורשי השלמה' : 'Items needing completion'}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-amber-800 mt-0.5">
+                      {language === 'he' 
+                        ? 'הפריטים הבאים נוספו במהלך קבלת אספקה/ספירת מלאי ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):' 
+                        : 'The following items were added during supply receipt/inventory count and need to be completed:'}
+                    </p>
                   </div>
+                </div>
+                <div className="w-full min-w-0">
 
                   <div className="flex flex-col md:flex-row gap-3 mb-4 items-center">
                     <div className="relative flex-1 w-full max-w-sm flex items-center gap-2">

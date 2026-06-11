@@ -903,7 +903,7 @@ const [authLoading, setAuthLoading] = useState(() => {
                               <img 
                                 src={user.restaurant_logo} 
                                 alt="Restaurant Logo"
-                                className="h-10 object-contain rounded-lg"
+                                className="max-h-10 sm:max-h-12 w-auto max-w-[200px] object-contain rounded-lg"
                               />
                             ) : (
                               <div className="text-lg font-bold text-black dark:text-white tracking-wide">{user?.business_name || user?.store_user_store_name || 'System'}</div>
@@ -943,7 +943,7 @@ const [authLoading, setAuthLoading] = useState(() => {
                                   <img 
                                     src={user.restaurant_logo} 
                                     alt="Restaurant Logo"
-                                    className="h-14 object-contain rounded-lg"
+                                    className="max-h-14 w-auto max-w-[200px] object-contain rounded-lg"
                                   />
                                 ) : (
                                   <span className="text-xl font-bold text-black dark:text-white tracking-wide">{user?.business_name || user?.store_user_store_name || 'System'}</span>
