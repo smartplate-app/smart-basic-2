@@ -897,14 +897,31 @@ const handleCleanOrphans = async (ownerEmail) => {
                   </div>
 
                   <div className="flex flex-col md:flex-row gap-3 mb-4 items-center">
-                    <div className="relative flex-1 w-full max-w-sm">
-                      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-3 ltr:left-3" />
-                      <Input
-                        placeholder={language === 'he' ? 'חיפוש בפריטים להשלמה...' : 'Search pending items...'}
-                        value={pendingSearchTerm}
-                        onChange={(e) => setPendingSearchTerm(e.target.value)}
-                        className="rtl:pr-9 ltr:pl-9 h-9 bg-white border-amber-200 focus-visible:ring-amber-400"
-                      />
+                    <div className="relative flex-1 w-full max-w-sm flex items-center gap-2">
+                      <div className="flex items-center justify-center shrink-0">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500 cursor-pointer"
+                          checked={incompleteItems.length > 0 && selectedPendingIds.length === incompleteItems.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedPendingIds(incompleteItems.map(i => i.id));
+                            } else {
+                              setSelectedPendingIds([]);
+                            }
+                          }}
+                          title={language === 'he' ? 'בחר הכל' : 'Select all'}
+                        />
+                      </div>
+                      <div className="relative flex-1">
+                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-3 ltr:left-3" />
+                        <Input
+                          placeholder={language === 'he' ? 'חיפוש בפריטים להשלמה...' : 'Search pending items...'}
+                          value={pendingSearchTerm}
+                          onChange={(e) => setPendingSearchTerm(e.target.value)}
+                          className="rtl:pr-9 ltr:pl-9 h-9 bg-white border-amber-200 focus-visible:ring-amber-400"
+                        />
+                      </div>
                     </div>
                     {selectedPendingIds.length > 0 && !isViewer && (
                       <div className="flex flex-wrap gap-2 w-full md:w-auto items-center">
