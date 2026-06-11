@@ -155,12 +155,10 @@ Deno.serve(async (req) => {
            }
            
            return [
+              item.supplier_name || '',
               item.item_name || '',
               cases,
               units,
-              item.unit || '',
-              item.price_per_unit !== undefined ? item.price_per_unit : '',
-              item.total_cost !== undefined ? item.total_cost : '',
               item.notes || ''
            ];
         });
@@ -174,14 +172,11 @@ Deno.serve(async (req) => {
         values.push([titleRow, '', '', '', '', '', '']); // Title row
         
         const headers = isHebrew 
-           ? ['שם פריט', 'ארגזים שנספרו', 'יחידות שנספרו', 'יחידה', 'מחיר ליחידה', 'עלות כוללת', 'הערות']
-           : ['Item Name', 'Counted Cases', 'Counted Units', 'Unit', 'Price per Unit', 'Total Cost', 'Notes'];
+           ? ['שם ספק', 'שם פריט', 'ארגזים שנספרו', 'יחידות שנספרו', 'הערות']
+           : ['Supplier', 'Item Name', 'Counted Cases', 'Counted Units', 'Notes'];
         values.push(headers); // Headers
         
         for (const row of dataRows) values.push(row);
-        
-        const totalLabel = isHebrew ? 'סה"כ' : 'Total';
-        values.push(['', '', '', '', totalLabel, s.total || 0, '']); // Total row
         
         valuesData.push({
            range: `'${sheetTitle}'!A1:G${values.length}`,
@@ -189,18 +184,17 @@ Deno.serve(async (req) => {
         });
         
         const rowsCount = values.length;
-        const totalRowIndex = rowsCount - 1; // 0-based
         
         formattingRequests.push(
             {
             mergeCells: {
-              range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 7 },
+              range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 5 },
               mergeType: 'MERGE_ALL'
             }
             },
             {
             repeatCell: {
-              range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 7 },
+              range: { sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 5 },
               cell: {
                 userEnteredFormat: {
                   horizontalAlignment: 'CENTER',
@@ -213,7 +207,7 @@ Deno.serve(async (req) => {
             },
             {
             repeatCell: {
-              range: { sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: 7 },
+              range: { sheetId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: 5 },
               cell: {
                 userEnteredFormat: {
                   backgroundColor: { red: 0.85, green: 0.92, blue: 0.98 },
@@ -235,31 +229,8 @@ Deno.serve(async (req) => {
             }
             },
             {
-            repeatCell: {
-              range: { sheetId, startRowIndex: 2, endRowIndex: totalRowIndex + 1, startColumnIndex: 4, endColumnIndex: 6 },
-              cell: {
-                userEnteredFormat: {
-                  numberFormat: { type: 'NUMBER', pattern: '#,##0.00' }
-                }
-              },
-              fields: 'userEnteredFormat.numberFormat'
-            }
-            },
-            {
-            repeatCell: {
-              range: { sheetId, startRowIndex: totalRowIndex, endRowIndex: totalRowIndex + 1, startColumnIndex: 0, endColumnIndex: 7 },
-              cell: {
-                userEnteredFormat: {
-                  textFormat: { bold: true },
-                  backgroundColor: { red: 0.96, green: 0.96, blue: 0.86 }
-                }
-              },
-              fields: 'userEnteredFormat(textFormat,backgroundColor)'
-            }
-            },
-            {
             autoResizeDimensions: {
-              dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 7 }
+              dimensions: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 5 }
             }
             }
         );

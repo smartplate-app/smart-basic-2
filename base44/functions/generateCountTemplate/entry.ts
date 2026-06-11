@@ -49,12 +49,12 @@ Deno.serve(async (req) => {
 
         // Create headers based on language
         const headers = {
-            he: ['שם הפריט', 'כמות נספרת', 'יחידה / ליטר / קילו / מארז', 'מחיר ליחידה', 'מחסן', 'הערות'],
-            en: ['Item Name', 'Counted Quantity', 'unit / liter / kg / case', 'Price per Unit', 'Warehouse', 'Remarks'],
-            ar: ['اسم الصنف', 'الكمية المحسوبة', 'وحدة / لتر / كجم / صندوق', 'السعر لكل وحدة', 'المخزن', 'ملاحظات'],
-            el: ['Όνομα είδους', 'Ποσότητα', 'μονάδα / λίτρο / κιλό / κιβώτιο', 'Τιμή ανά μονάδα', 'Αποθήκη', 'Παρατηρήσεις'],
-            de: ['Artikelname', 'Gezählte Menge', 'Einheit / Liter / kg / Kiste', 'Preis pro Einheit', 'Lager', 'Bemerkungen'],
-            ru: ['Название товара', 'Подсчитанное количество', 'единица / литр / кг / ящик', 'Цена за единицу', 'Склад', 'Примечания']
+            he: ['שם ספק', 'שם פריט', 'ארגזים שנספרו', 'יחידות שנספרו', 'הערות'],
+            en: ['Supplier', 'Item Name', 'Counted Cases', 'Counted Units', 'Notes'],
+            ar: ['اسم المورد', 'اسم الصنف', 'الصناديق المحسوبة', 'الوحدات المحسوبة', 'ملاحظات'],
+            el: ['Προμηθευτής', 'Όνομα είδους', 'Καταμετρημένα Κιβώτια', 'Καταμετρημένες Μονάδες', 'Παρατηρήσεις'],
+            de: ['Lieferant', 'Artikelname', 'Gezählte Kisten', 'Gezählte Einheiten', 'Bemerkungen'],
+            ru: ['Поставщик', 'Название товара', 'Подсчитанные ящики', 'Подсчитанные единицы', 'Примечания']
         };
 
         const header = headers[language] || headers['he'];
@@ -67,10 +67,10 @@ Deno.serve(async (req) => {
         
         // Add example row
         const exampleRow = language === 'he' 
-            ? ['דוגמה: עגבניות', '10', 'kg', '15.50', 'מחסן ראשי', 'דוגמה - מחק שורה זו']
+            ? ['הירקן שלי', 'דוגמה: עגבניות', '', '10', 'דוגמה - מחק שורה זו']
             : language === 'ar'
-            ? ['مثال: طماطم', '10', 'kg', '15.50', 'المخزن الرئيسي', 'مثال - احذف هذا السطر']
-            : ['Example: Tomatoes', '10', 'kg', '15.50', 'Main Warehouse', 'Example - delete this row'];
+            ? ['المورد الخاص بي', 'مثال: طماطم', '', '10', 'مثال - احذف هذا السطر']
+            : ['My Greengrocer', 'Example: Tomatoes', '', '10', 'Example - delete this row'];
         csvRows.push(exampleRow.map(cell => `"${cell}"`).join(','));
         
         // Add all items
@@ -80,14 +80,13 @@ Deno.serve(async (req) => {
                 : (item.warehouse_name ? [item.warehouse_name] : ['']);
             
             warehouses.forEach(whName => {
-                const itemPrice = item.price || '';
+                const isCaseItem = item.unit === 'case';
                 const row = [
+                    `"${item.supplier_name || ''}"`,
                     `"${item.name || ''}"`,
-                    '', // Empty quantity
-                    `"${item.unit || 'unit'}"`,
-                    itemPrice, // Price from catalog (or empty if not set)
-                    `"${whName}"`,
-                    ''
+                    isCaseItem ? '""' : '"N/A"', // Counted Cases
+                    '""', // Counted Units
+                    '""' // Notes
                 ];
                 csvRows.push(row.join(','));
             });

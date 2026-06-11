@@ -120,18 +120,12 @@ Deno.serve(async (req) => {
     const headers = isHebrew ? [
       'שם ספק',
       'שם פריט',
-      'יחידה',
-      'מק"ט',
-      'מחיר ליחידה',
       'ארגזים שנספרו',
       'יחידות שנספרו',
       'הערות'
     ] : [
       'Supplier',
       'Item Name',
-      'Unit',
-      'Catalog #',
-      'Price/Unit',
       'Counted Cases',
       'Counted Units',
       'Notes'
@@ -228,9 +222,6 @@ Deno.serve(async (req) => {
           return [
             it.supplier_name || '',
             it.name || '',
-            it.unit || '',
-            it.catalog_number || '',
-            Number(it.price || 0),
             isCaseItem ? '' : 'N/A',
             '',
             ''
