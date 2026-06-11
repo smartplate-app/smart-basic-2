@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp, Check, ChevronDown, AlertTriangle, ExternalLink } from "lucide-react";
+import { Plus, Search, Loader, LayoutGrid, List, Trash2, FileSpreadsheet, FileText, Wand2, MoreHorizontal, FileDown, FileUp, Check, ChevronDown, AlertTriangle, ExternalLink, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -962,7 +962,13 @@ const handleCleanOrphans = async (ownerEmail) => {
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                           <div className="flex flex-1 min-w-0 items-center gap-4">
-                            <h4 className="font-semibold text-gray-900 truncate w-48 shrink-0" title={item.name}>{item.name}</h4>
+                            <h4 
+                              className="font-semibold text-gray-900 truncate w-48 shrink-0 cursor-pointer hover:text-blue-600 hover:underline transition-colors" 
+                              title={item.name}
+                              onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }}
+                            >
+                              {item.name}
+                            </h4>
                             
                             <div className="flex gap-4 text-sm text-gray-600 shrink-0">
                               <div className="flex items-center gap-1">
@@ -1000,8 +1006,8 @@ const handleCleanOrphans = async (ownerEmail) => {
                                   </span>
                                 </button>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors ml-auto sm:ml-0">
-                              <FileText className="w-4 h-4" />
+                            <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors ml-auto sm:ml-0" title={language === 'he' ? 'ערוך' : 'Edit'}>
+                              <Pencil className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
