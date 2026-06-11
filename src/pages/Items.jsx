@@ -944,9 +944,9 @@ const handleCleanOrphans = async (ownerEmail) => {
                 </div>
                 <div className="w-full min-w-0">
 
-                  <div className="flex flex-col md:flex-row gap-3 mb-4 items-center">
+                  <div className="flex flex-col md:flex-row gap-3 mb-4 items-start md:items-center">
                     <div className="relative flex-1 w-full max-w-sm flex items-center gap-2">
-                      <div className="flex items-center justify-center shrink-0">
+                      <div className="flex items-center justify-center shrink-0 rtl:mr-[9px] sm:rtl:mr-[13px] ltr:ml-[9px] sm:ltr:ml-[13px]">
                         <input
                           type="checkbox"
                           className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500 cursor-pointer"
