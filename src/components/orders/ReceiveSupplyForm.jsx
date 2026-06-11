@@ -904,15 +904,15 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                       <ChevronsUpDown className="ml-2 h-5 w-5 shrink-0 opacity-50 text-gray-500" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200" align="start" style={{ zIndex: 10001 }}>
-                    <Command>
-                      <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3" placeholder={language === 'he' ? 'חפש ספק...' : 'Search supplier...'} />
+                  <PopoverContent onOpenAutoFocus={(e) => e.preventDefault()} className="w-[--radix-popover-trigger-width] p-0 rounded-xl shadow-2xl border border-gray-200 bg-white" align="start" style={{ zIndex: 99999 }}>
+                    <Command className="bg-white text-gray-900">
+                      <CommandInput autoFocus={false} style={{ fontSize: '16px' }} className="h-12 text-base px-3 bg-white text-gray-900 placeholder:text-gray-400" placeholder={language === 'he' ? 'חפש ספק...' : 'Search supplier...'} />
                       <div className="h-px bg-gray-100 w-full" />
-                      <CommandList className="max-h-[45vh] sm:max-h-[350px] overflow-y-auto p-1.5">
-                        <CommandEmpty className="py-6 text-center text-sm text-gray-500">{t('no_suppliers') || 'לא נמצאו ספקים.'}</CommandEmpty>
-                        <CommandGroup>
+                      <CommandList className="max-h-[45vh] sm:max-h-[350px] overflow-y-auto p-1.5 bg-white">
+                        <CommandEmpty className="py-6 text-center text-sm text-gray-500 bg-white">{t('no_suppliers') || 'לא נמצאו ספקים.'}</CommandEmpty>
+                        <CommandGroup className="bg-white text-gray-900">
                           {[...availableSuppliers].slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' })).map((supplier) => (
-                            <CommandItem key={supplier.id} value={supplier.name} onSelect={() => { handleSupplierSelect(supplier.id); setSupplierPopoverOpen(false); }} className="py-3.5 px-3 my-0.5 rounded-lg text-base font-semibold cursor-pointer aria-selected:bg-[#d4a373]/15 aria-selected:text-[#b88c60]">
+                            <CommandItem key={supplier.id} value={supplier.name} onSelect={() => { handleSupplierSelect(supplier.id); setSupplierPopoverOpen(false); }} className="py-3.5 px-3 my-0.5 rounded-lg text-base font-semibold cursor-pointer aria-selected:bg-[#d4a373]/15 aria-selected:text-[#b88c60] text-gray-800 hover:bg-gray-50">
                               <Check className={cn("mr-3 h-5 w-5 shrink-0 text-[#d4a373]", formData.supplier_id === supplier.id ? "opacity-100" : "opacity-0")} />
                               <span className="truncate">{supplier.name}</span>
                             </CommandItem>
