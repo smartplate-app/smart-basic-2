@@ -770,12 +770,12 @@ const handleCleanOrphans = async (ownerEmail) => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="w-full">
-        <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 ${viewMode === 'list' ? 'sticky top-[56px] md:top-[72px] z-40 bg-gray-50/95 backdrop-blur supports-[backdrop-filter]:bg-gray-50/70 border-b pt-4 pb-4' : ''}`}>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('items_title')}</h1>
-            <p className="text-gray-600 mt-2">{t('items_greeting', { name: user.full_name })}</p>
+        <div className={`flex flex-col md:flex-row justify-between items-center mb-4 md:mb-8 gap-3 md:gap-4 ${viewMode === 'list' ? 'sticky top-[56px] md:top-[72px] z-40 bg-gray-50/95 backdrop-blur supports-[backdrop-filter]:bg-gray-50/70 border-b pt-2 md:pt-4 pb-2 md:pb-4' : ''}`}>
+          <div className="text-center md:text-start w-full md:w-auto">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{t('items_title')}</h1>
+            <p className="text-gray-600 mt-1 text-sm md:text-base">{t('items_greeting', { name: user.full_name })}</p>
           </div>
-          <div className="flex gap-2 sm:gap-3 items-center w-full md:w-auto mt-4 md:mt-0 justify-end md:justify-start">
+          <div className="flex gap-2 sm:gap-3 items-center justify-center md:justify-start w-full md:w-auto">
             <div className="flex bg-white rounded-lg shadow-sm border shrink-0">
               <Button
                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
@@ -963,56 +963,35 @@ const handleCleanOrphans = async (ownerEmail) => {
                         if(e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
                         if (selectedPendingIds.includes(item.id)) setSelectedPendingIds(selectedPendingIds.filter(id => id !== item.id));
                         else setSelectedPendingIds([...selectedPendingIds, item.id]);
-                      }} className={`bg-white border ${selectedPendingIds.includes(item.id) ? 'border-amber-500 ring-1 ring-amber-500' : 'border-amber-200'} shadow-sm rounded-lg p-2 sm:p-3 hover:bg-amber-50/50 transition-colors relative flex gap-2 sm:gap-3 items-center cursor-pointer w-full overflow-hidden`}>
-                        <div className="flex flex-col items-center justify-center shrink-0">
+                      }} className={`bg-white border ${selectedPendingIds.includes(item.id) ? 'border-amber-500 ring-1 ring-amber-500' : 'border-amber-200'} shadow-sm rounded-lg p-2 sm:p-3 hover:bg-amber-50/50 transition-colors relative flex flex-col gap-2 cursor-pointer w-full overflow-hidden`}>
+                        {/* Top row: Checkbox, Name, Buttons */}
+                        <div className="flex items-center gap-2">
                           <input 
                             type="checkbox" 
-                            className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500"
+                            className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500 shrink-0"
                             checked={selectedPendingIds.includes(item.id)}
                             onChange={(e) => {
                               if (e.target.checked) setSelectedPendingIds([...selectedPendingIds, item.id]);
                               else setSelectedPendingIds(selectedPendingIds.filter(id => id !== item.id));
                             }}
                           />
-                        </div>
-                        <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-3">
-                          <div className="flex flex-1 min-w-0 flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 w-full">
-                            <h4 
-                              className="font-semibold text-sm sm:text-base text-gray-900 truncate w-full sm:w-48 shrink-0 cursor-pointer hover:text-blue-600 hover:underline transition-colors" 
-                              title={item.name}
-                              onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }}
-                            >
-                              {item.name}
-                            </h4>
-                            
-                            <div className="flex gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 shrink-0 w-full sm:w-auto">
-                              <div className="flex items-center gap-1 whitespace-nowrap">
-                                <span className="text-gray-400">{language === 'he' ? 'מחיר:' : 'Price:'}</span>
-                                <span className="font-medium">₪{item.price || 0}</span>
-                              </div>
-                              <div className="flex items-center gap-1 whitespace-nowrap">
-                                <span className="text-gray-400">{language === 'he' ? 'הנחה:' : 'Discount:'}</span>
-                                <span className="font-medium">{item.discount || 0}%</span>
-                              </div>
-                            </div>
-                            
-                            {item.supplier_name && item.supplier_name !== 'להשלמה' && item.supplier_name !== 'pending' && item.supplier_name !== 'Pending' && (
-                              <div className="hidden md:flex items-center gap-1 text-sm text-gray-600 truncate min-w-0 ml-4 rtl:mr-4 rtl:ml-0">
-                                <span className="text-gray-400 whitespace-nowrap">{language === 'he' ? 'ספק (מקובץ):' : 'Supplier:'}</span>
-                                <span className="font-medium truncate" title={item.supplier_name}>{item.supplier_name}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end mt-1 sm:mt-0">
+                          <h4 
+                            className="font-semibold text-sm sm:text-base text-gray-900 truncate flex-1 cursor-pointer hover:text-blue-600 hover:underline transition-colors" 
+                            title={item.name}
+                            onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }}
+                          >
+                            {item.name}
+                          </h4>
+                          
+                          <div className="flex items-center gap-1.5 shrink-0">
                             {item.source_document_id && (
                               <button
                                   onClick={(e) => { e.stopPropagation(); setPreviewDoc({ id: item.source_document_id, type: item.source_type }); }}
-                                  className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded transition-colors border border-amber-200/50 max-w-[120px] sm:max-w-none"
+                                  className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-1.5 sm:px-2 py-1 rounded transition-colors border border-amber-200/50"
                                   title={item.source_document_number}
                                 >
-                                  <FileText className="w-3 h-3 shrink-0" />
-                                  <span className="truncate font-medium">
+                                  <FileText className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="truncate font-medium max-w-[80px] hidden sm:inline">
                                     {item.source_type === 'inventory_count'
                                       ? (language === 'he' ? `ספירה: ${item.source_document_number || 'ללא שם'}` : `Count: ${item.source_document_number || 'Unnamed'}`)
                                       : item.source_type === 'supply_receipt'
@@ -1025,6 +1004,24 @@ const handleCleanOrphans = async (ownerEmail) => {
                               <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                           </div>
+                        </div>
+
+                        {/* Bottom row: Details */}
+                        <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 pl-6 rtl:pr-6 rtl:pl-0">
+                          <div className="flex items-center gap-1 whitespace-nowrap">
+                            <span className="text-gray-400">{language === 'he' ? 'מחיר:' : 'Price:'}</span>
+                            <span className="font-medium">₪{item.price || 0}</span>
+                          </div>
+                          <div className="flex items-center gap-1 whitespace-nowrap">
+                            <span className="text-gray-400">{language === 'he' ? 'הנחה:' : 'Discount:'}</span>
+                            <span className="font-medium">{item.discount || 0}%</span>
+                          </div>
+                          {item.supplier_name && item.supplier_name !== 'להשלמה' && item.supplier_name !== 'pending' && item.supplier_name !== 'Pending' && (
+                            <div className="flex items-center gap-1 truncate min-w-0">
+                              <span className="text-gray-400 whitespace-nowrap">{language === 'he' ? 'ספק:' : 'Supplier:'}</span>
+                              <span className="font-medium truncate" title={item.supplier_name}>{item.supplier_name}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
