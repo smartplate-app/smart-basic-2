@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Globe, Mail, Lock, User, Store } from 'lucide-react';
 import GoogleIcon from "@/components/GoogleIcon";
 
-const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png";
+const logoUrl = "https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png";
 
 export default function Register() {
   const [loading, setLoading] = useState(false);
@@ -162,11 +162,8 @@ export default function Register() {
         
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center gap-3 mb-10">
-            <div className="bg-white p-2.5 rounded-2xl shadow-lg">
-              <div className="flex flex-col items-center justify-center bg-black text-white rounded-xl leading-none w-14 h-14 shadow-sm font-black tracking-widest text-[10px] text-center">
-                <span>SMART</span>
-                <span className="mt-0.5">PLATE</span>
-              </div>
+            <div className="bg-white p-1.5 rounded-2xl shadow-lg">
+              <img src={logoUrl} alt="Smart Plate Logo" className="w-14 h-14 object-contain rounded-xl" />
             </div>
             <span className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md">Smart Plate</span>
           </div>
@@ -234,11 +231,8 @@ export default function Register() {
         <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12">
           {/* Mobile Logo */}
           <div className="md:hidden flex flex-col items-center gap-4 mb-8 justify-center">
-            <div className="bg-slate-100 p-3 rounded-2xl shadow-sm">
-              <div className="flex flex-col items-center justify-center bg-black text-white rounded-xl leading-none w-12 h-12 shadow-sm font-black tracking-widest text-[9px] text-center">
-                <span>SMART</span>
-                <span className="mt-0.5">PLATE</span>
-              </div>
+            <div className="bg-slate-100 p-2 rounded-2xl shadow-sm">
+              <img src={logoUrl} alt="Smart Plate Logo" className="w-12 h-12 object-contain rounded-xl" />
             </div>
             <span className="text-2xl font-bold text-slate-800">Smart Plate</span>
           </div>

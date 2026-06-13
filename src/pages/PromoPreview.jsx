@@ -51,11 +51,8 @@ export default function PromoPreview() {
       {/* Header */}
       <div className="relative z-20 flex justify-between items-center p-6 lg:px-12">
         <div className="flex items-center gap-3">
-          <div className="bg-white p-2 rounded-xl shadow-lg">
-            <div className="flex flex-col items-center justify-center bg-black text-white rounded-lg leading-none w-10 h-10 shadow-sm font-black tracking-widest text-[7px] text-center shrink-0">
-              <span>SMART</span>
-              <span className="mt-0.5">PLATE</span>
-            </div>
+          <div className="bg-white p-1 rounded-xl shadow-lg">
+            <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png" alt="Smart Plate Logo" className="w-10 h-10 object-contain rounded-lg" />
           </div>
           <span className="text-xl md:text-2xl font-extrabold tracking-tight text-white drop-shadow-md">Smart Plate</span>
         </div>
