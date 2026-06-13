@@ -55,7 +55,10 @@ export default function Register() {
       passMatchError: "הסיסמאות אינן תואמות",
       fillAllError: "אנא מלא את כל השדות",
       successTitle: "החשבון נוצר בהצלחה!",
-      successDesc: "מעביר אותך למערכת..."
+      successDesc: "מעביר אותך למערכת...",
+      imgAlt1: "ניהול מסעדה מהנייד",
+      imgAlt2: "בינה מלאכותית לקבלות",
+      imgAlt3: "הזמנות בווצאפ"
     },
     en: {
       welcome: "Welcome to Smart Plate",
@@ -85,7 +88,10 @@ export default function Register() {
       passMatchError: "Passwords do not match",
       fillAllError: "Please fill in all fields",
       successTitle: "Account created successfully!",
-      successDesc: "Redirecting you to the system..."
+      successDesc: "Redirecting you to the system...",
+      imgAlt1: "Restaurant mobile management",
+      imgAlt2: "Invoice AI",
+      imgAlt3: "WhatsApp Ordering"
     }
   };
 
@@ -187,15 +193,15 @@ export default function Register() {
               <div className="grid grid-cols-2 gap-4 absolute inset-0 transform translate-x-12 -translate-y-8">
                 <div className="space-y-4 pt-12">
                   <div className="bg-white p-2 rounded-2xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500">
-                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=600&q=80" alt="Restaurant mobile management" className="w-full h-48 object-cover rounded-xl" />
+                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=600&q=80" alt={text.imgAlt1 || "Restaurant mobile management"} className="w-full h-48 object-cover rounded-xl" />
                   </div>
                   <div className="bg-white p-2 rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                    <img src="https://images.unsplash.com/photo-1581349485608-9469926a8e5e?auto=format&fit=crop&w=600&q=80" alt="Invoice AI" className="w-full h-56 object-cover rounded-xl" />
+                    <img src="https://images.unsplash.com/photo-1581349485608-9469926a8e5e?auto=format&fit=crop&w=600&q=80" alt={text.imgAlt2 || "Invoice AI"} className="w-full h-56 object-cover rounded-xl" />
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div className="bg-white p-2 rounded-2xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                    <img src="https://images.unsplash.com/photo-1613511874284-cd4a3b8d9ba8?auto=format&fit=crop&w=600&q=80" alt="WhatsApp Ordering" className="w-full h-64 object-cover rounded-xl" />
+                    <img src="https://images.unsplash.com/photo-1613511874284-cd4a3b8d9ba8?auto=format&fit=crop&w=600&q=80" alt={text.imgAlt3 || "WhatsApp Ordering"} className="w-full h-64 object-cover rounded-xl" />
                   </div>
                 </div>
               </div>
