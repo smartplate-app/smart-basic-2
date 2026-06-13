@@ -55,12 +55,16 @@ Deno.serve(async (req) => {
       user ? `Submitted by logged-in user: ${user.email}` : 'Submitted by guest user'
     ].filter(Boolean).join('\n');
 
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: adminEmail,
-      from_name: "Smart Plate Alerts",
-      subject,
-      body: lines
-    });
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: adminEmail,
+        from_name: "Smart Plate Alerts",
+        subject,
+        body: lines
+      });
+    } catch (emailError) {
+      console.error("Failed to send email to admin:", emailError);
+    }
 
     return Response.json({ success: true, id: record.id });
   } catch (error) {
