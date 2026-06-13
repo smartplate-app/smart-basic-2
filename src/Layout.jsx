@@ -1229,7 +1229,10 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden { -
                           </DialogHeader>
                           <div className={'space-y-3 text-sm ' + (isRTL ? 'text-right' : 'text-left')}>
                             <div className="flex items-center gap-3">
-                              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png" alt="App Icon" className="h-10 w-10 rounded-lg border" />
+                              <div className="flex flex-col items-center justify-center bg-black text-white rounded-xl leading-none w-10 h-10 shadow-sm font-black tracking-widest text-[7px] text-center shrink-0">
+                                <span>SMART</span>
+                                <span className="mt-0.5">PLATE</span>
+                              </div>
                               <span className="text-gray-600">{language === 'he' ? 'האייקון שיופיע במסך הבית' : 'This is the icon that will appear on your home screen.'}</span>
                             </div>
                             <ol className="list-decimal ml-5 space-y-2 rtl:mr-5 rtl:ml-0">
