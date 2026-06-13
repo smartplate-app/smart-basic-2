@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2, Globe, CheckCircle2 } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 
-const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/b1f6773e1_IMG_0299.png";
+const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -170,19 +170,7 @@ export default function Login() {
               </svg>
               {text.apple}
             </Button>
-            <Button
-              variant="outline"
-              className="w-full h-12 text-base font-medium shadow-sm hover:bg-slate-50 border-slate-200"
-              onClick={() => base44.auth.loginWithProvider("azure", "/")}
-            >
-              <svg className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" viewBox="0 0 23 23">
-                <path fill="#f25022" d="M1 1h10v10H1z"/>
-                <path fill="#00a4ef" d="M12 1h10v10H12z"/>
-                <path fill="#7fba00" d="M1 12h10v10H1z"/>
-                <path fill="#ffb900" d="M12 12h10v10H12z"/>
-              </svg>
-              {text.microsoft}
-            </Button>
+
           </div>
 
           <div className="relative mb-8">

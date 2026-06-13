@@ -150,7 +150,7 @@ const [authLoading, setAuthLoading] = useState(() => {
   try {
     if (authLoading && !user) {
       sessionStorage.setItem('b44_login_cooldown_until', String(Date.now() + 2 * 60 * 1000));
-      base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+      window.location.href = "/app-login" + window.location.search;
     }
   } catch {}
   }, 8000);
@@ -506,7 +506,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           const cleanUrl = new URL(window.location.href);
           cleanUrl.searchParams.delete('code');
           cleanUrl.searchParams.delete('state');
-          base44.auth.redirectToLogin(cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+          window.location.href = "/app-login" + window.location.search;
           return;
         }
         if (!user) setAuthLoading(false);
@@ -530,7 +530,7 @@ const [authLoading, setAuthLoading] = useState(() => {
       console.error("[Layout] Max retries reached or non-network error");
       // Just redirect to login on ANY error if they don't have a user instead of showing "Connection error"
       if (!user && !localStorage.getItem('b44_user_cache')) {
-         base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+         window.location.href = "/app-login" + window.location.search;
          return;
       }
       setError(err.message || "Failed to load app");

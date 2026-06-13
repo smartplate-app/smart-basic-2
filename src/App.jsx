@@ -77,7 +77,10 @@ const AuthenticatedApp = () => {
     '/PublicOrder',
     '/pages/PublicOrder',
     '/Register',
+    '/register',
     '/pages/Register',
+    '/app-login',
+    '/pages/app-login',
     '/StoreLogin',
     '/pages/StoreLogin',
     '/WorkerPortal',
@@ -134,13 +137,13 @@ const AuthenticatedApp = () => {
       {/* Public auth routes */}
       <Route path="/WorkerLogin" element={<WorkerLogin />} />
       <Route path="/WorkerPortal" element={<WorkerPortal />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/app-login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/StoreLogin" element={<StoreLogin />} />
 
       {/* All app routes are protected */}
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/app-login" replace />} />}>
         <Route element={<AppLayoutRoute />}>
           <Route path="/" element={<MainPage />} />
           {Object.entries(Pages).map(([path, Page]) => (

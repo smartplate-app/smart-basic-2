@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Globe, Mail, Lock, User, Store } from 'lucide-react';
 import GoogleIcon from "@/components/GoogleIcon";
 
-const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/b1f6773e1_IMG_0299.png";
+const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/690a006cfeba8053be10f189/b1f6773e1_IMG_0299.png";
 
 export default function Register() {
   const [loading, setLoading] = useState(false);
@@ -128,7 +128,7 @@ export default function Register() {
       setTimeout(() => { window.location.href = "/"; }, 1500);
     } catch (err) {
       console.error('Error creating account:', err);
-      alert('Failed to create account. Email might already be in use.');
+      alert(err?.response?.data?.error || err?.message || 'Failed to create account. Email might already be in use.');
     } finally {
       setSubmitting(false);
     }
@@ -338,7 +338,7 @@ export default function Register() {
 
           <div className="mt-8 text-center text-slate-600">
             {text.haveAccount}{" "}
-            <Link to="/login" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline">
+            <Link to="/app-login" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline">
               {text.login}
             </Link>
           </div>
