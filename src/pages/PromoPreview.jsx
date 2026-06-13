@@ -8,7 +8,7 @@ export default function PromoPreview() {
 
   const t = {
     he: {
-      welcome: "ברוכים הבאים ל-Smart Plate",
+      welcome: "ברוכים הבאים ל-Smart Plate Basic",
       subtitle: "מערכת ניהול המסעדות והפוד-קוסט המתקדמת בישראל",
       feat1: "שליחת הזמנות לספקים בקליק ישירות לווצאפ",
       feat2: "קליטת חשבוניות אוטומטית וקריאת נתונים בעזרת בינה מלאכותית (AI)",
@@ -23,7 +23,7 @@ export default function PromoPreview() {
       imgAlt3: "הזמנות בווצאפ"
     },
     en: {
-      welcome: "Welcome to Smart Plate",
+      welcome: "Welcome to Smart Plate Basic",
       subtitle: "The most advanced restaurant & food-cost management system",
       feat1: "Send orders to suppliers in one click directly via WhatsApp",
       feat2: "Automatic invoice processing and data reading with AI",
