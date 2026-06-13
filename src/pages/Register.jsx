@@ -9,10 +9,8 @@ import GoogleIcon from "@/components/GoogleIcon";
 
 const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/b1f6773e1_IMG_0299.png";
 
-export default function RegisterPage() {
-  const [loading, setLoading] = useState(true);
-  const [inviteData, setInviteData] = useState(null);
-  const [promoData, setPromoData] = useState(null);
+export default function Register() {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   const [username, setUsername] = useState('');
@@ -27,7 +25,6 @@ export default function RegisterPage() {
   const [lang, setLang] = useState("he");
 
   const isRTL = lang === 'he';
-  const isOpenReg = !inviteData && !promoData && !error;
 
   const t = {
     he: {
@@ -58,12 +55,7 @@ export default function RegisterPage() {
       passMatchError: "הסיסמאות אינן תואמות",
       fillAllError: "אנא מלא את כל השדות",
       successTitle: "החשבון נוצר בהצלחה!",
-      successDesc: "מעביר אותך למערכת...",
-      vipAccess: "גישת VIP למייסדים",
-      completeReg: "השלם הרשמה",
-      welcomeUser: "ברוך הבא",
-      managerRole: "אתה מצטרף כמנהל של",
-      workerRole: "אתה מצטרף כעובד של",
+      successDesc: "מעביר אותך למערכת..."
     },
     en: {
       welcome: "Welcome to Smart Plate",
@@ -93,157 +85,20 @@ export default function RegisterPage() {
       passMatchError: "Passwords do not match",
       fillAllError: "Please fill in all fields",
       successTitle: "Account created successfully!",
-      successDesc: "Redirecting you to the system...",
-      vipAccess: "VIP Founding Member Access",
-      completeReg: "Complete Registration",
-      welcomeUser: "Welcome",
-      managerRole: "You are joining as Manager of",
-      workerRole: "You are joining as Worker of",
+      successDesc: "Redirecting you to the system..."
     }
   };
 
   const text = t[lang];
 
-  useEffect(() => {
-    verifyLink();
-  }, []);
-
-  const verifyLink = async () => {
-    try {
-      setLoading(true);
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('invite') || urlParams.get('token');
-      const promo = urlParams.get('promo');
-
-      // If no token or promo, allow open registration!
-      if (!token && !promo) {
-        setLoading(false);
-        return;
-      }
-
-      const isPromo = !!promo;
-      const oauthKey = isPromo ? `oauth_promo_${promo}` : `oauth_invite_${token}`;
-      
-      // Check if returning from OAuth
-      if (sessionStorage.getItem(oauthKey)) {
-        sessionStorage.removeItem(oauthKey);
-        try {
-          const isAuth = await base44.auth.isAuthenticated();
-          if (isAuth) {
-            const currentUser = await base44.auth.me();
-            
-            if (isPromo) {
-              const response = await base44.functions.invoke('verifyPromoCode', { code: promo });
-              if (!response.data.success || !response.data.promo) {
-                setError(response.data.error || 'Invalid or expired promo code');
-                setLoading(false);
-                return;
-              }
-              
-              const signupResponse = await base44.functions.invoke('redeemPromoCode', {
-                code: promo,
-                username: currentUser.email.split('@')[0],
-                password: 'oauth-' + Math.random().toString(36).substring(7),
-                oauth_user_email: currentUser.email,
-                full_name: response.data.promo.recipient_name
-              });
-              
-              if (signupResponse.data.success) {
-                setSuccess(true);
-                setTimeout(() => window.location.href = window.location.origin + '/#/pages/Orders', 1500);
-                return;
-              } else {
-                setError('Registration failed: ' + signupResponse.data.error);
-                setLoading(false);
-                return;
-              }
-            } else {
-              const response = await base44.functions.invoke('verifyInviteToken', { token });
-              if (!response.data.success || !response.data.invite) {
-                setError(response.data.error || 'Invalid or expired invitation');
-                setLoading(false);
-                return;
-              }
-              
-              const invite = response.data.invite;
-              const signupResponse = await base44.functions.invoke('completeSignup', {
-                invite_token: token,
-                username: currentUser.email.split('@')[0],
-                password: 'oauth-' + Math.random().toString(36).substring(7),
-                invite_type: invite.invite_type,
-                chain_id: invite.chain_id,
-                store_id: invite.store_id,
-                store_name: invite.store_name,
-                role: invite.role,
-                inviter_email: invite.inviter_email,
-                oauth_user_email: currentUser.email
-              });
-              
-              if (signupResponse.data.success) {
-                setSuccess(true);
-                setTimeout(() => window.location.href = window.location.origin + '/#/pages/Orders', 1500);
-                return;
-              } else {
-                setError('Registration failed: ' + signupResponse.data.error);
-                setLoading(false);
-                return;
-              }
-            }
-          }
-        } catch (authError) {
-          console.log('[Register] OAuth auth check failed:', authError);
-        }
-      }
-
-      if (isPromo) {
-        const response = await base44.functions.invoke('verifyPromoCode', { code: promo });
-        if (response.data.success && response.data.promo) {
-          setPromoData(response.data.promo);
-          setLoading(false);
-        } else {
-          setError(response.data.error || 'Invalid or expired promo code');
-          setLoading(false);
-        }
-      } else {
-        const response = await base44.functions.invoke('verifyInviteToken', { token });
-        if (response.data.success && response.data.invite) {
-          setInviteData(response.data.invite);
-          setUsername(response.data.invite.email?.split('@')[0] || '');
-          setLoading(false);
-        } else {
-          setError(response.data.error || 'Invalid or expired invitation');
-          setLoading(false);
-        }
-      }
-    } catch (err) {
-      setError('Failed to verify link. Please try again.');
-      setLoading(false);
-    }
-  };
-
   const handleOAuthClick = (provider) => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('invite') || params.get('token');
-    const promo = params.get('promo');
-
-    if (promo) {
-      sessionStorage.setItem(`oauth_promo_${promo}`, 'true');
-      const returnUrl = encodeURIComponent(`${window.location.origin}/#/pages/Register?promo=${promo}`);
-      window.location.href = `/auth/login?provider=${provider}&next=${returnUrl}`;
-    } else if (token) {
-      sessionStorage.setItem(`oauth_invite_${token}`, 'true');
-      const returnUrl = encodeURIComponent(`${window.location.origin}/#/pages/Register?invite=${token}`);
-      window.location.href = `/auth/login?provider=${provider}&next=${returnUrl}`;
-    } else {
-      // Standard open registration OAuth
-      window.location.href = `/auth/login?provider=${provider}&next=${encodeURIComponent(window.location.origin + '/')}`;
-    }
+    window.location.href = `/auth/login?provider=${provider}&next=${encodeURIComponent(window.location.origin + '/')}`;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!password || !confirmPassword) {
+    if (!password || !confirmPassword || !email || !restaurantName || !username) {
       alert(text.fillAllError);
       return;
     }
@@ -260,70 +115,17 @@ export default function RegisterPage() {
 
     try {
       setSubmitting(true);
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('invite') || urlParams.get('token');
-      const promo = urlParams.get('promo');
-
-      if (promo) {
-        if (!email || !restaurantName) {
-          alert(text.fillAllError);
-          setSubmitting(false);
-          return;
-        }
-        const response = await base44.functions.invoke('redeemPromoCode', {
-          code: promo,
-          username: username.trim(),
-          password: password,
-          email: email.trim(),
-          restaurant_name: restaurantName.trim(),
-          full_name: promoData?.recipient_name
-        });
-        if (response.data.success) {
-          setSuccess(true);
-          setTimeout(() => { window.location.href = `/auth/login?next=${encodeURIComponent(window.location.origin + '/pages/Orders')}`; }, 2000);
-        } else {
-          alert(response.data.error || 'Failed to create account');
-        }
-      } else if (token) {
-        const response = await base44.functions.invoke('completeSignup', {
-          invite_token: token,
-          username: username.trim(),
-          password: password,
-          invite_type: inviteData?.invite_type,
-          chain_id: inviteData?.chain_id,
-          store_id: inviteData?.store_id,
-          store_name: inviteData?.store_name,
-          role: inviteData?.role,
-          inviter_email: inviteData?.inviter_email
-        });
-        if (response.data.success) {
-          setSuccess(true);
-          setTimeout(() => { window.location.href = `/auth/login?next=${encodeURIComponent(window.location.origin + '/pages/Orders')}`; }, 2000);
-        } else {
-          alert(response.data.error || 'Failed to create account');
-        }
-      } else {
-        // Open Registration Flow
-        if (!email || !restaurantName || !username) {
-          alert(text.fillAllError);
-          setSubmitting(false);
-          return;
-        }
-        await base44.auth.register({
-          email: email.trim(),
-          password: password,
-          full_name: username.trim()
-        });
-        
-        // Log them in automatically after registration
-        await base44.auth.loginViaEmailPassword(email.trim(), password);
-        
-        // Update user profile with business name
-        await base44.auth.updateMe({ business_name: restaurantName.trim() });
-        
-        setSuccess(true);
-        setTimeout(() => { window.location.href = "/"; }, 1500);
-      }
+      await base44.auth.register({
+        email: email.trim(),
+        password: password,
+        full_name: username.trim()
+      });
+      
+      await base44.auth.loginViaEmailPassword(email.trim(), password);
+      await base44.auth.updateMe({ business_name: restaurantName.trim() });
+      
+      setSuccess(true);
+      setTimeout(() => { window.location.href = "/"; }, 1500);
     } catch (err) {
       console.error('Error creating account:', err);
       alert('Failed to create account. Email might already be in use.');
@@ -331,14 +133,6 @@ export default function RegisterPage() {
       setSubmitting(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-      </div>
-    );
-  }
 
   if (success) {
     return (
@@ -416,170 +210,131 @@ export default function RegisterPage() {
           </div>
 
           <div className="mb-8 text-center md:text-start">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">
-              {promoData ? text.vipAccess : (inviteData ? text.completeReg : text.regTitle)}
-            </h2>
-            <p className="text-slate-500">
-              {promoData ? `${text.welcomeUser}, ${promoData.recipient_name}!` : (inviteData ? `${text.welcomeUser}, ${inviteData.full_name}!` : text.regSubtitle)}
-            </p>
-            {inviteData && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 text-sm font-medium">
-                {inviteData.role === 'manager' ? text.managerRole : text.workerRole}: {inviteData.store_name}
-              </div>
-            )}
-            {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium flex items-center gap-2 justify-center md:justify-start">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                {error}
-              </div>
-            )}
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">{text.regTitle}</h2>
+            <p className="text-slate-500">{text.regSubtitle}</p>
           </div>
 
-          {!error && (
-            <>
-              <div className="space-y-3 mb-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 text-base font-medium shadow-sm hover:bg-slate-50 border-slate-200"
-                  onClick={() => handleOAuthClick("google")}
-                >
-                  <GoogleIcon className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" />
-                  {text.google}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 text-base font-medium bg-black text-white hover:bg-gray-900 border-black shadow-sm"
-                  onClick={() => handleOAuthClick("apple")}
-                >
-                  <svg className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
-                  </svg>
-                  {text.apple}
-                </Button>
+          <div className="space-y-3 mb-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base font-medium shadow-sm hover:bg-slate-50 border-slate-200"
+              onClick={() => handleOAuthClick("google")}
+            >
+              <GoogleIcon className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" />
+              {text.google}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-base font-medium bg-black text-white hover:bg-gray-900 border-black shadow-sm"
+              onClick={() => handleOAuthClick("apple")}
+            >
+              <svg className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
+              </svg>
+              {text.apple}
+            </Button>
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-sm uppercase">
+              <span className="bg-white px-4 text-slate-400 font-medium">{text.or}</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-slate-700">{text.fullName}</Label>
+              <div className="relative">
+                <User className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
+                  required
+                />
               </div>
+            </div>
 
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
-                </div>
-                <div className="relative flex justify-center text-sm uppercase">
-                  <span className="bg-white px-4 text-slate-400 font-medium">{text.or}</span>
-                </div>
+            <div className="space-y-2">
+              <Label className="text-slate-700">{text.restaurantName}</Label>
+              <div className="relative">
+                <Store className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
+                  required
+                />
               </div>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {(isOpenReg || promoData) && (
-                  <>
-                    <div className="space-y-2">
-                      <Label className="text-slate-700">{text.fullName}</Label>
-                      <div className="relative">
-                        <User className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <Input
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
+            <div className="space-y-2">
+              <Label className="text-slate-700">{text.email}</Label>
+              <div className="relative">
+                <Mail className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
+                  required
+                />
+              </div>
+            </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-slate-700">{text.restaurantName}</Label>
-                      <div className="relative">
-                        <Store className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <Input
-                          value={restaurantName}
-                          onChange={(e) => setRestaurantName(e.target.value)}
-                          className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+            <div className="space-y-2">
+              <Label className="text-slate-700">{text.pass}</Label>
+              <div className="relative">
+                <Lock className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute end-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
 
-                {inviteData && (
-                  <div className="space-y-2">
-                    <Label className="text-slate-700">{text.fullName}</Label>
-                    <div className="relative">
-                      <User className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <Input
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                )}
+            <div className="space-y-2">
+              <Label className="text-slate-700">{text.confirmPass}</Label>
+              <div className="relative">
+                <Lock className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
+                  required
+                  minLength={6}
+                />
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label className="text-slate-700">{text.email}</Label>
-                  <div className="relative">
-                    <Mail className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      type="email"
-                      value={inviteData ? inviteData.email : email}
-                      onChange={(e) => !inviteData && setEmail(e.target.value)}
-                      disabled={!!inviteData}
-                      className={`ps-11 h-12 text-base rounded-xl focus-visible:ring-blue-500 ${inviteData ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-50 border-slate-200'}`}
-                      required
-                    />
-                  </div>
+            <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 mt-6" disabled={submitting}>
+              {submitting ? (
+                <div className="flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" />
+                  {text.registering}
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-700">{text.pass}</Label>
-                  <div className="relative">
-                    <Lock className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
-                      required
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute end-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-slate-700">{text.confirmPass}</Label>
-                  <div className="relative">
-                    <Lock className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 mt-6" disabled={submitting}>
-                  {submitting ? (
-                    <div className="flex items-center justify-center">
-                      <Loader2 className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" />
-                      {text.registering}
-                    </div>
-                  ) : (
-                    text.registerBtn
-                  )}
-                </Button>
-              </form>
-            </>
-          )}
+              ) : (
+                text.registerBtn
+              )}
+            </Button>
+          </form>
 
           <div className="mt-8 text-center text-slate-600">
             {text.haveAccount}{" "}

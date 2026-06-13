@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Mail, Lock, Loader2, Globe, CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react";
+import { Mail, Lock, Loader2, Globe, CheckCircle2 } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 
 const logoUrl = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/b1f6773e1_IMG_0299.png";
@@ -254,7 +254,7 @@ export default function Login() {
 
           <div className="mt-8 text-center text-slate-600">
             {text.noAccount}{" "}
-            <Link to="/register" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline">
+            <Link to="/Register" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline">
               {text.createOne}
             </Link>
           </div>
