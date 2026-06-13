@@ -27,6 +27,7 @@ import WorkerLogin from './pages/WorkerLogin';
 import WorkerPortal from './pages/WorkerPortal';
 import ManagersSection from './pages/ManagersSection';
 import PromoPreview from './pages/PromoPreview';
+import Register from './pages/Register';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -145,6 +146,7 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/StoreLogin" element={<StoreLogin />} />
       <Route path="/PromoPreview" element={<PromoPreview />} />
+      <Route path="/Register" element={<Register />} />
 
       {/* All app routes are protected */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/PromoPreview" replace />} />}>

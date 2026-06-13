@@ -14,12 +14,11 @@ export default function Register() {
   const [error, setError] = useState(null);
   
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+
   const [email, setEmail] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   
-  const [showPassword, setShowPassword] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [lang, setLang] = useState("he");
@@ -34,15 +33,15 @@ export default function Register() {
       feat2: "קליטת חשבוניות אוטומטית וקריאת נתונים בעזרת בינה מלאכותית (AI)",
       feat3: "מחשבון הנדסת תפריט חכם למיקסום רווחים",
       feat4: "ניהול מלא של העסק מכל מקום, ישירות מהטלפון הנייד",
-      regTitle: "יצירת חשבון חדש",
-      regSubtitle: "הצטרף עכשיו והתחל לנהל חכם",
+      regTitle: "בקשת גישה למערכת",
+      regSubtitle: "השאירו פרטים ונחזור אליכם בהקדם לתת לכם גישה",
       email: "אימייל",
       pass: "סיסמה",
       confirmPass: "אימות סיסמה",
       fullName: "שם מלא",
       restaurantName: "שם המסעדה",
-      registerBtn: "צור חשבון",
-      registering: "יוצר חשבון...",
+      registerBtn: "שליחת בקשה",
+      registering: "שולח...",
       or: "או",
       google: "הירשם עם Google",
       apple: "הירשם עם Apple",
@@ -53,9 +52,9 @@ export default function Register() {
       copyright: "כל הזכויות שמורות ל-Smart Plate",
       passHint: "לפחות 6 תווים",
       passMatchError: "הסיסמאות אינן תואמות",
-      fillAllError: "אנא מלא את כל השדות",
-      successTitle: "החשבון נוצר בהצלחה!",
-      successDesc: "מעביר אותך למערכת...",
+      fillAllError: "אנא מלא את השדות הנדרשים",
+      successTitle: "הבקשה נשלחה בהצלחה!",
+      successDesc: "נחזור אליכם בהקדם האפשרי. מעביר אותך חזרה...",
       imgAlt1: "ניהול מסעדה מהנייד",
       imgAlt2: "בינה מלאכותית לקבלות",
       imgAlt3: "הזמנות בווצאפ"
@@ -67,15 +66,15 @@ export default function Register() {
       feat2: "Automatic invoice processing and data reading with AI",
       feat3: "Smart Menu Engineering calculator to maximize profits",
       feat4: "Manage your entire business on the go, directly from your mobile phone",
-      regTitle: "Create a new account",
-      regSubtitle: "Join now and start managing smart",
+      regTitle: "Request System Access",
+      regSubtitle: "Leave your details and we'll get back to you shortly with access",
       email: "Email",
       pass: "Password",
       confirmPass: "Confirm Password",
       fullName: "Full Name",
       restaurantName: "Restaurant Name",
-      registerBtn: "Create Account",
-      registering: "Creating...",
+      registerBtn: "Submit Request",
+      registering: "Submitting...",
       or: "OR",
       google: "Sign up with Google",
       apple: "Sign up with Apple",
@@ -86,9 +85,9 @@ export default function Register() {
       copyright: "All rights reserved to Smart Plate",
       passHint: "At least 6 characters",
       passMatchError: "Passwords do not match",
-      fillAllError: "Please fill in all fields",
-      successTitle: "Account created successfully!",
-      successDesc: "Redirecting you to the system...",
+      fillAllError: "Please fill in all required fields",
+      successTitle: "Request sent successfully!",
+      successDesc: "We will get back to you shortly. Redirecting...",
       imgAlt1: "Restaurant mobile management",
       imgAlt2: "Invoice AI",
       imgAlt3: "WhatsApp Ordering"
@@ -104,37 +103,31 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!password || !confirmPassword || !email || !restaurantName || !username) {
+    if (!email || !restaurantName || !username) {
       alert(text.fillAllError);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      alert(text.passMatchError);
-      return;
-    }
-
-    if (password.length < 6) {
-      alert(text.passHint);
       return;
     }
 
     try {
       setSubmitting(true);
-      await base44.auth.register({
+      const { data } = await base44.functions.invoke('submitAccessRequest', {
+        full_name: username.trim(),
         email: email.trim(),
-        password: password,
-        full_name: username.trim()
+        phone: '', // Optional
+        business_name: restaurantName.trim(),
+        message: 'Requested via Register page',
+        page_url: window.location.href
       });
       
-      await base44.auth.loginViaEmailPassword(email.trim(), password);
-      await base44.auth.updateMe({ business_name: restaurantName.trim() });
-      
-      setSuccess(true);
-      setTimeout(() => { window.location.href = "/"; }, 1500);
+      if (data?.success) {
+        setSuccess(true);
+        setTimeout(() => { window.location.href = "/"; }, 3000);
+      } else {
+        alert(data?.error || 'Failed to submit request');
+      }
     } catch (err) {
-      console.error('Error creating account:', err);
-      alert(err?.response?.data?.error || err?.message || 'Failed to create account. Email might already be in use.');
+      console.error('Error submitting request:', err);
+      alert(err?.message || 'Failed to submit request');
     } finally {
       setSubmitting(false);
     }
@@ -242,37 +235,7 @@ export default function Register() {
             <p className="text-slate-500">{text.regSubtitle}</p>
           </div>
 
-          <div className="space-y-3 mb-6">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-12 text-base font-medium shadow-sm hover:bg-slate-50 border-slate-200"
-              onClick={() => handleOAuthClick("google")}
-            >
-              <GoogleIcon className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" />
-              {text.google}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-12 text-base font-medium bg-black text-white hover:bg-gray-900 border-black shadow-sm"
-              onClick={() => handleOAuthClick("apple")}
-            >
-              <svg className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
-              </svg>
-              {text.apple}
-            </Button>
-          </div>
 
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-sm uppercase">
-              <span className="bg-white px-4 text-slate-400 font-medium">{text.or}</span>
-            </div>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -315,42 +278,7 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-slate-700">{text.pass}</Label>
-              <div className="relative">
-                <Lock className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-[#2d6a4f]"
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute end-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label className="text-slate-700">{text.confirmPass}</Label>
-              <div className="relative">
-                <Lock className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-[#2d6a4f]"
-                  required
-                  minLength={6}
-                />
-              </div>
-            </div>
 
             <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl bg-[#2d6a4f] hover:bg-[#1b4332] text-white mt-6" disabled={submitting}>
               {submitting ? (
