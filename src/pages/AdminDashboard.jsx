@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
+  const [accessRequests, setAccessRequests] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -111,6 +112,10 @@ export default function AdminDashboard() {
       setChains(chainsData);
       const storesData = await base44.entities.ChainStore.list();
       setChainStores(storesData);
+      
+      // Load access requests
+      const accessRequestsData = await base44.entities.AccessRequest.list('-created_date');
+      setAccessRequests(accessRequestsData);
       
     } catch (error) {
       console.error("Error loading admin data:", error);
@@ -792,6 +797,73 @@ export default function AdminDashboard() {
             )}
 
             {!selectedUser ? (
+              <>
+          {accessRequests.length > 0 && (
+            <Card className="mb-6 border-2 border-orange-200">
+              <CardHeader className="bg-orange-50 rounded-t-lg pb-4">
+                <CardTitle className="flex items-center gap-2 text-orange-800">
+                  <Mail className="w-5 h-5" />
+                  {language === 'he' ? 'בקשות גישה חדשות' : 'Pending Access Requests'}
+                  <Badge className="bg-orange-500">{accessRequests.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                  {accessRequests.map(req => (
+                    <div key={req.id} className="border border-orange-100 rounded-lg p-4 bg-white flex justify-between items-center shadow-sm">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900">{req.full_name}</p>
+                          <span className="text-xs text-gray-400">
+                            {new Date(req.created_date).toLocaleString(language === 'he' ? 'he-IL' : 'en-US')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">{req.email} {req.phone ? `| ${req.phone}` : ''}</p>
+                        {req.business_name && (
+                          <p className="text-sm font-medium text-orange-700 mt-1">
+                            {language === 'he' ? 'עסק:' : 'Business:'} {req.business_name}
+                          </p>
+                        )}
+                        {req.message && (
+                          <p className="text-sm text-gray-500 mt-2 bg-gray-50 p-2 rounded italic">
+                            "{req.message}"
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setInviteEmail(req.email);
+                            setInviteName(req.full_name);
+                            setShowInviteModal(true);
+                          }}
+                          className="bg-orange-500 hover:bg-orange-600"
+                        >
+                          <Mail className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                          {language === 'he' ? 'שלח הזמנה' : 'Send Invite'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            if(confirm(language === 'he' ? 'למחוק בקשה זו?' : 'Delete this request?')) {
+                              await base44.entities.AccessRequest.delete(req.id);
+                              setAccessRequests(accessRequests.filter(r => r.id !== req.id));
+                            }
+                          }}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          {language === 'he' ? 'מחק' : 'Delete'}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -897,6 +969,7 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
+          </>
         ) : (
           <div className="space-y-6">
             <Card>
