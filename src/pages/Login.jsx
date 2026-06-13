@@ -138,7 +138,7 @@ export default function Login() {
                 </div>
                 <div className="space-y-4">
                   <div className="bg-white p-2 rounded-2xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                    <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/45cf48573_IMG_0348.png" alt={text.imgAlt3 || "WhatsApp Ordering"} className="w-full h-64 object-cover rounded-xl" />
+                    <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/e1d42ab8f_smartplate_logo_insta_320x320px.png" alt={text.imgAlt3 || "WhatsApp Ordering"} className="w-full h-64 object-contain bg-black rounded-xl" />
                   </div>
                 </div>
               </div>
