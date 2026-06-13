@@ -20,10 +20,10 @@ export default function Login() {
     he: {
       welcome: "ברוכים הבאים ל-Smart Plate",
       subtitle: "מערכת ניהול המסעדות והפוד-קוסט המתקדמת בישראל",
-      feat1: "ניהול פוד-קוסט ומלאי חכם",
-      feat2: "מעקב אחר הזמנות וקבלות מספקים",
-      feat3: "סידור עבודה וניהול שכר עובדים",
-      feat4: "דוחות בזמן אמת ותחזיות חכמות",
+      feat1: "שליחת הזמנות לספקים בקליק ישירות לווצאפ",
+      feat2: "קליטת חשבוניות אוטומטית וקריאת נתונים בעזרת בינה מלאכותית (AI)",
+      feat3: "מחשבון הנדסת תפריט חכם למיקסום רווחים",
+      feat4: "ניהול מלא של העסק מכל מקום, ישירות מהטלפון הנייד",
       loginTitle: "התחברות למערכת",
       loginSubtitle: "הזן את פרטי ההתחברות שלך",
       email: "אימייל",
@@ -44,10 +44,10 @@ export default function Login() {
     en: {
       welcome: "Welcome to Smart Plate",
       subtitle: "The most advanced restaurant & food-cost management system",
-      feat1: "Smart Food Cost & Inventory Management",
-      feat2: "Orders & Supplier Receipts Tracking",
-      feat3: "Employee Scheduling & Payroll",
-      feat4: "Real-time Reports & Smart Predictions",
+      feat1: "Send orders to suppliers in one click directly via WhatsApp",
+      feat2: "Automatic invoice processing and data reading with AI",
+      feat3: "Smart Menu Engineering calculator to maximize profits",
+      feat4: "Manage your entire business on the go, directly from your mobile phone",
       loginTitle: "Log in to your account",
       loginSubtitle: "Enter your login credentials",
       email: "Email",
@@ -87,44 +87,66 @@ export default function Login() {
   return (
     <div className={`min-h-screen flex flex-col md:flex-row ${isRTL ? 'font-sans' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Marketing Section */}
-      <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-gradient-to-br from-slate-900 to-slate-800 text-white p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-purple-500/10 blur-3xl"></div>
+      <div className="hidden md:flex md:w-3/5 lg:w-3/4 bg-gradient-to-br from-[#1b4332] to-[#2d6a4f] text-white p-8 lg:p-16 flex-col justify-between relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#52b788]/20 blur-3xl"></div>
         
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-16">
-            <div className="bg-white p-2 rounded-xl">
-              <img src={logoUrl} alt="Smart Plate" className="h-10 w-auto" />
+        <div className="relative z-10 flex flex-col h-full">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="bg-white p-2.5 rounded-2xl shadow-lg">
+              <img src={logoUrl} alt="Smart Plate" className="h-12 w-auto" />
             </div>
-            <span className="text-2xl font-bold tracking-tight">Smart Plate</span>
+            <span className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md">Smart Plate</span>
           </div>
           
-          <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
-            {text.welcome}
-          </h1>
-          <p className="text-xl text-slate-300 mb-12 max-w-lg">
-            {text.subtitle}
-          </p>
-          
-          <div className="space-y-6 text-lg">
-            {[text.feat1, text.feat2, text.feat3, text.feat4].map((feat, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="bg-blue-500/20 p-1.5 rounded-full">
-                  <CheckCircle2 className="w-5 h-5 text-blue-400" />
-                </div>
-                <span className="text-slate-200">{feat}</span>
+          <div className="flex-1 flex flex-col xl:flex-row gap-12 items-center">
+            <div className="flex-1">
+              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight mb-6 drop-shadow-sm">
+                {text.welcome}
+              </h1>
+              <p className="text-xl lg:text-2xl text-green-50 mb-10 max-w-2xl font-light">
+                {text.subtitle}
+              </p>
+              
+              <div className="space-y-6 text-lg lg:text-xl font-medium bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/20 shadow-xl">
+                {[text.feat1, text.feat2, text.feat3, text.feat4].map((feat, i) => (
+                  <div key={i} className="flex items-start gap-4">
+                    <div className="bg-[#52b788] p-1.5 rounded-full mt-1 shrink-0 shadow-md">
+                      <CheckCircle2 className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-white leading-relaxed">{feat}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div className="flex-1 w-full max-w-lg xl:max-w-none relative hidden xl:block">
+              <div className="grid grid-cols-2 gap-4 absolute inset-0 transform translate-x-12 -translate-y-8">
+                <div className="space-y-4 pt-12">
+                  <div className="bg-white p-2 rounded-2xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500">
+                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=600&q=80" alt="Restaurant mobile management" className="w-full h-48 object-cover rounded-xl" />
+                  </div>
+                  <div className="bg-white p-2 rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <img src="https://images.unsplash.com/photo-1581349485608-9469926a8e5e?auto=format&fit=crop&w=600&q=80" alt="Invoice AI" className="w-full h-56 object-cover rounded-xl" />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-white p-2 rounded-2xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                    <img src="https://images.unsplash.com/photo-1613511874284-cd4a3b8d9ba8?auto=format&fit=crop&w=600&q=80" alt="WhatsApp Ordering" className="w-full h-64 object-cover rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="relative z-10 text-sm text-slate-500">
+        <div className="relative z-10 text-sm text-green-200 mt-10">
           © {new Date().getFullYear()} {text.copyright}
         </div>
       </div>
 
       {/* Login Section */}
-      <div className="w-full md:w-1/2 lg:w-2/5 bg-white flex flex-col min-h-screen relative overflow-y-auto">
+      <div className="w-full md:w-2/5 lg:w-1/4 min-w-[320px] max-w-[500px] bg-white flex flex-col min-h-screen relative overflow-y-auto shadow-2xl z-20">
         <div className="absolute top-4 end-4">
           <Button 
             variant="ghost" 
@@ -170,7 +192,6 @@ export default function Login() {
               </svg>
               {text.apple}
             </Button>
-
           </div>
 
           <div className="relative mb-8">
@@ -202,7 +223,7 @@ export default function Login() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
+                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-[#2d6a4f]"
                   required
                 />
               </div>
@@ -223,12 +244,12 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-blue-500"
+                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-[#2d6a4f]"
                   required
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 mt-2" disabled={loading}>
+            <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl bg-[#2d6a4f] hover:bg-[#1b4332] text-white mt-2" disabled={loading}>
               {loading ? (
                 <div className="flex items-center justify-center">
                   <Loader2 className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" />
@@ -240,9 +261,9 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-8 text-center text-slate-600">
+          <div className="mt-8 text-center text-slate-600 text-sm">
             {text.noAccount}{" "}
-            <Link to="/Register" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline">
+            <Link to="/Register" className="text-[#2d6a4f] font-bold hover:text-[#1b4332] hover:underline">
               {text.createOne}
             </Link>
           </div>
