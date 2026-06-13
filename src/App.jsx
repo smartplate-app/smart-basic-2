@@ -26,6 +26,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import WorkerLogin from './pages/WorkerLogin';
 import WorkerPortal from './pages/WorkerPortal';
 import ManagersSection from './pages/ManagersSection';
+import PromoPreview from './pages/PromoPreview';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -156,6 +157,7 @@ const AuthenticatedApp = () => {
           <Route path="/pos-settings" element={<POSSettings />} />
           <Route path="/PriceChanges" element={<PriceChangesPage />} />
           <Route path="/ManagersSection" element={<ManagersSection />} />
+          <Route path="/PromoPreview" element={<PromoPreview />} />
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Route>

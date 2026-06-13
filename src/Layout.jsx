@@ -183,6 +183,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           // Hidden diagnostics (not shown in nav), access via /#/pages/Diagnostics
           { title: language === 'he' ? 'תמיכה' : 'Support', url: createPageUrl("Support"), icon: MessageCircle, adminOnly: false, workerHidden: false },
           { title: language === 'he' ? 'מדיה לתמיכה' : 'KB Media', url: createPageUrl("KBMedia"), icon: Video, adminOnly: true, workerHidden: true },
+          { title: language === 'he' ? 'תצוגת התחברות' : 'Login Preview', url: createPageUrl("PromoPreview"), icon: Video, adminOnly: true, workerHidden: true },
           { title: (language === 'he' ? 'מנהלים' : 'Managers'), url: createPageUrl("ManagersSection"), icon: UserCog, adminOnly: false, workerHidden: true },
           { title: t('nav_users'), url: createPageUrl("Users"), icon: Shield, adminOnly: true, workerHidden: true },
           { title: language === 'he' ? 'בדיקת הזמנות' : 'Test Invites', url: createPageUrl("TestInviteLinks"), icon: Shield, adminOnly: true, workerHidden: true },
