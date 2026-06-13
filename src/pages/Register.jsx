@@ -163,7 +163,10 @@ export default function Register() {
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center gap-3 mb-10">
             <div className="bg-white p-2.5 rounded-2xl shadow-lg">
-              <img src={logoUrl} alt="Smart Plate" className="h-12 w-auto" />
+              <div className="flex flex-col items-center justify-center bg-black text-white rounded-xl leading-none w-14 h-14 shadow-sm font-black tracking-widest text-[10px] text-center">
+                <span>SMART</span>
+                <span className="mt-0.5">PLATE</span>
+              </div>
             </div>
             <span className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md">Smart Plate</span>
           </div>
@@ -232,7 +235,10 @@ export default function Register() {
           {/* Mobile Logo */}
           <div className="md:hidden flex flex-col items-center gap-4 mb-8 justify-center">
             <div className="bg-slate-100 p-3 rounded-2xl shadow-sm">
-              <img src={logoUrl} alt="Smart Plate" className="h-10 w-auto" />
+              <div className="flex flex-col items-center justify-center bg-black text-white rounded-xl leading-none w-12 h-12 shadow-sm font-black tracking-widest text-[9px] text-center">
+                <span>SMART</span>
+                <span className="mt-0.5">PLATE</span>
+              </div>
             </div>
             <span className="text-2xl font-bold text-slate-800">Smart Plate</span>
           </div>
