@@ -25,7 +25,11 @@ Deno.serve(async (req) => {
     const metaData = await metaRes.json();
     const sheetNames = metaData.sheets.map(s => s.properties.title);
 
-    let allRowsData = "";
+    const parsedPositions = [];
+    const parsedWorkers = [];
+
+    const normalizeText = (text) => (text || '').toString().toLowerCase().trim();
+
     for (const sheetName of sheetNames) {
       const range = `'${sheetName}'!A1:Z1000`;
       const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`, {
@@ -37,63 +41,75 @@ Deno.serve(async (req) => {
       const rows = data.values || [];
       if (rows.length < 2) continue;
 
-      allRowsData += `\n\n--- Sheet: ${sheetName} ---\n` + JSON.stringify(rows.slice(0, 1000));
-    }
+      const headers = rows[0].map(normalizeText);
+      const isPositions = headers.some(h => h.includes('position name') || h.includes('שם תפקיד'));
+      const isWorkers = headers.some(h => h.includes('full name') || h.includes('שם מלא') || h.includes('שם'));
 
-    if (!allRowsData) return Response.json({ error: 'No data found in spreadsheet' }, { status: 400 });
+      if (isPositions && !isWorkers) {
+        // Parse Positions
+        const nameIdx = headers.findIndex(h => h.includes('name') || h.includes('שם'));
+        const sectionIdx = headers.findIndex(h => h.includes('section') || h.includes('department') || h.includes('מחלקה'));
+        const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('סוג'));
+        const tipsIdx = headers.findIndex(h => h.includes('tips') || h.includes('טיפים'));
+        const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('rate') || h.includes('תעריף'));
 
-    const prompt = `You are parsing a restaurant Google Sheets file into structured JSON.
-Tabs: "Workers", "Job Positions" (names may vary).
-Rules:
-1. Extract Job Positions: name, section (kitchen/service/bar/management/cleaning/other), default_payment_type (hourly/monthly/daily), on_tips (boolean), default_payment_amount.
-2. Extract Workers: full_name, phone, job_position_name, secondary_job_position_name (2nd role), other_roles (array of strings, e.g. 3rd, 4th roles), payment_type (hourly/monthly/daily), payment_amount.
-If payment_type is missing or invalid, default to 'hourly'. Section default 'other'. 
-Data:
-${allRowsData}
-`;
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row[nameIdx]) continue;
+          
+          let pType = normalizeText(row[typeIdx]);
+          if (pType.includes('month') || pType.includes('חודש')) pType = 'monthly';
+          else if (pType.includes('day') || pType.includes('יומי')) pType = 'daily';
+          else pType = 'hourly';
 
-    const response = await base44.integrations.Core.InvokeLLM({
-      prompt,
-      model: 'gemini_3_flash',
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          positions: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                section: { type: 'string', enum: ["kitchen", "service", "bar", "management", "cleaning", "other"] },
-                default_payment_type: { type: 'string', enum: ["monthly", "daily", "hourly"] },
-                on_tips: { type: 'boolean' },
-                default_payment_amount: { type: 'number' }
-              },
-              required: ['name', 'default_payment_type', 'default_payment_amount']
-            }
-          },
-          workers: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                full_name: { type: 'string' },
-                phone: { type: 'string' },
-                job_position_name: { type: 'string' },
-                secondary_job_position_name: { type: 'string' },
-                other_roles: { type: 'array', items: { type: 'string' } },
-                payment_type: { type: 'string', enum: ["monthly", "daily", "hourly"] },
-                payment_amount: { type: 'number' }
-              },
-              required: ['full_name', 'job_position_name', 'payment_type', 'payment_amount']
-            }
-          }
+          let onTips = false;
+          const tipsVal = normalizeText(row[tipsIdx]);
+          if (tipsVal === 'yes' || tipsVal === 'true' || tipsVal === 'כן') onTips = true;
+
+          parsedPositions.push({
+            name: row[nameIdx]?.trim() || '',
+            section: row[sectionIdx]?.trim() || 'other',
+            default_payment_type: pType,
+            on_tips: onTips,
+            default_payment_amount: parseFloat(row[amountIdx]) || 0
+          });
+        }
+      } else if (isWorkers) {
+        // Parse Workers
+        const nameIdx = headers.findIndex(h => h.includes('full name') || h.includes('שם מלא') || h.includes('שם'));
+        const phoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('טלפון'));
+        const pos1Idx = headers.findIndex(h => h.includes('main') && (h.includes('position') || h.includes('תפקיד')));
+        const pos2Idx = headers.findIndex(h => h.includes('2nd') || h.includes('שני'));
+        const pos3Idx = headers.findIndex(h => h.includes('3rd') || h.includes('שלישי'));
+        const pos4Idx = headers.findIndex(h => h.includes('4th') || h.includes('רביעי'));
+        const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('סוג'));
+        const amountIdx = headers.findIndex(h => h.includes('rate') || h.includes('amount') || h.includes('תעריף'));
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row[nameIdx]) continue;
+
+          let pType = normalizeText(row[typeIdx]);
+          if (pType.includes('month') || pType.includes('חודש')) pType = 'monthly';
+          else if (pType.includes('day') || pType.includes('יומי')) pType = 'daily';
+          else pType = 'hourly';
+
+          const otherRoles = [];
+          if (pos3Idx >= 0 && row[pos3Idx]) otherRoles.push(row[pos3Idx].trim());
+          if (pos4Idx >= 0 && row[pos4Idx]) otherRoles.push(row[pos4Idx].trim());
+
+          parsedWorkers.push({
+            full_name: row[nameIdx]?.trim() || '',
+            phone: phoneIdx >= 0 ? row[phoneIdx]?.trim() : '',
+            job_position_name: pos1Idx >= 0 ? row[pos1Idx]?.trim() : '',
+            secondary_job_position_name: pos2Idx >= 0 ? row[pos2Idx]?.trim() : '',
+            other_roles: otherRoles,
+            payment_type: pType,
+            payment_amount: parseFloat(row[amountIdx]) || 0
+          });
         }
       }
-    });
-
-    const parsedPositions = response.positions || [];
-    const parsedWorkers = response.workers || [];
+    }
 
     // Use specific store creator context
     let targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
@@ -128,7 +144,7 @@ ${allRowsData}
         updatedPos++;
         posMap.set(key, { ...existing, ...data });
       } else {
-        const created = await base44.entities.JobPosition.create(data);
+        const created = await base44.asServiceRole.entities.JobPosition.create(data);
         createdPos++;
         posMap.set(key, created);
       }
@@ -192,7 +208,7 @@ ${allRowsData}
         await base44.asServiceRole.entities.Worker.update(existing.id, data);
         updatedWorkers++;
       } else {
-        await base44.entities.Worker.create(data);
+        await base44.asServiceRole.entities.Worker.create(data);
         createdWorkers++;
       }
     });
