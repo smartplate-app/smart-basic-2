@@ -105,8 +105,8 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
         let changed = false;
         const updatedIngredients = recipe.ingredients.map(ing => {
           const qty = Number(ing.quantity) || 0;
-          const item = fetchedItems.find(i => i.id === ing.item_id || (ing.item_name && i.name && i.name.toLowerCase() === ing.item_name.toLowerCase()));
-          const prep = fetchedPrep.find(r => r.id === ing.item_id || (ing.item_name && r.name && r.name.toLowerCase() === ing.item_name.toLowerCase()));
+          const item = fetchedItems.find(i => i.id === ing.item_id) || fetchedItems.find(i => ing.item_name && i.name && i.name.toLowerCase() === ing.item_name.toLowerCase());
+          const prep = fetchedPrep.find(r => r.id === ing.item_id) || fetchedPrep.find(r => ing.item_name && r.name && r.name.toLowerCase() === ing.item_name.toLowerCase());
           
           let newCost = ing.cost !== undefined && ing.cost !== null ? ing.cost : 0;
           let newUnitPrice = ing.unit_price !== undefined && ing.unit_price !== null ? ing.unit_price : 0;
