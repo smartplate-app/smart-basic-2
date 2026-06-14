@@ -334,12 +334,13 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
     try {
       if (recipe?.id) {
         await base44.entities.Recipe.update(recipe.id, formData);
+        onSave(formData);
       } else {
         const currentUser = await base44.auth.me();
         const targetEmail = currentUser?.acting_as_store_email || currentUser?.acting_as_user_email || currentUser?.store_user_owner_email || currentUser?.email;
-        await base44.entities.Recipe.create({ ...formData, created_by: currentUser?.email, store_owner_email: targetEmail });
+        const newRecipe = await base44.entities.Recipe.create({ ...formData, created_by: currentUser?.email, store_owner_email: targetEmail });
+        onSave(newRecipe);
       }
-      onSave();
     } catch (error) {
       console.error(error);
       alert("Error saving recipe");

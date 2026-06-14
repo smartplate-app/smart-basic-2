@@ -278,9 +278,19 @@ export default function RecipesPage() {
         {showForm && (
           <RecipeForm
             recipe={editingRecipe}
-            onSave={() => {
+            onSave={(savedRecipe) => {
               setShowForm(false);
-              loadRecipes();
+              if (savedRecipe) {
+                setRecipes(prev => {
+                  const exists = prev.find(r => r.id === savedRecipe.id);
+                  if (exists) return prev.map(r => r.id === savedRecipe.id ? { ...r, ...savedRecipe } : r);
+                  return [savedRecipe, ...prev];
+                });
+              }
+              // Wait for DB replicas to catch up before fetching fresh data
+              setTimeout(() => {
+                loadRecipes();
+              }, 1500);
             }}
             onCancel={() => setShowForm(false)}
           />
