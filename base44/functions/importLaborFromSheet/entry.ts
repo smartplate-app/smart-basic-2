@@ -54,7 +54,7 @@ ${allRowsData}
 
     const response = await base44.integrations.Core.InvokeLLM({
       prompt,
-      model: 'gemini_3_1_pro',
+      model: 'gemini_3_flash',
       response_json_schema: {
         type: 'object',
         properties: {
@@ -109,8 +109,9 @@ ${allRowsData}
     const posMap = new Map(existingPositions.map(p => [p.name.trim().toLowerCase(), p]));
 
     let createdPos = 0, updatedPos = 0;
-    for (const p of parsedPositions) {
-      if (!p.name) continue;
+    
+    const posPromises = parsedPositions.map(async (p) => {
+      if (!p.name) return;
       const key = p.name.trim().toLowerCase();
       const existing = posMap.get(key);
       const data = {
@@ -118,29 +119,34 @@ ${allRowsData}
         section: p.section || 'other',
         default_payment_type: p.default_payment_type || 'hourly',
         default_payment_amount: Number(p.default_payment_amount) || 0,
-        tips_method: p.on_tips ? 'general_pool' : 'excluded'
+        tips_method: p.on_tips ? 'general_pool' : 'excluded',
+        created_by: targetEmail,
+        store_owner_email: targetEmail
       };
       if (existing) {
         await base44.asServiceRole.entities.JobPosition.update(existing.id, data);
         updatedPos++;
         posMap.set(key, { ...existing, ...data });
       } else {
-        const created = await base44.entities.JobPosition.create(data); // Will use current user context RLS or fall back
+        const created = await base44.entities.JobPosition.create(data);
         createdPos++;
         posMap.set(key, created);
       }
-    }
+    });
+    
+    await Promise.all(posPromises);
 
     // Save workers
     const existingWorkers = await base44.asServiceRole.entities.Worker.filter({ created_by: targetEmail }, 'full_name', 10000);
     const workerMap = new Map(existingWorkers.map(w => [w.full_name.trim().toLowerCase(), w]));
 
     let createdWorkers = 0, updatedWorkers = 0;
-    for (const w of parsedWorkers) {
-      if (!w.full_name) continue;
+    
+    const workerPromises = parsedWorkers.map(async (w) => {
+      if (!w.full_name) return;
       const posKey = (w.job_position_name || '').trim().toLowerCase();
       const pos = posMap.get(posKey);
-      if (!pos) continue; // Need valid position
+      if (!pos) return; // Need valid position
       
       const key = w.full_name.trim().toLowerCase();
       const existing = workerMap.get(key);
@@ -177,7 +183,9 @@ ${allRowsData}
         job_position_ids: otherRoleIds,
         job_position_names: otherRoleNames,
         payment_type: w.payment_type || 'hourly',
-        payment_amount: Number(w.payment_amount) || 0
+        payment_amount: Number(w.payment_amount) || 0,
+        created_by: targetEmail,
+        store_owner_email: targetEmail
       };
 
       if (existing) {
@@ -187,7 +195,9 @@ ${allRowsData}
         await base44.entities.Worker.create(data);
         createdWorkers++;
       }
-    }
+    });
+    
+    await Promise.all(workerPromises);
 
     return Response.json({
       success: true,
