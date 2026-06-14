@@ -158,9 +158,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
               }
             }
             
-            if (calculatedCost !== ing.cost) {
-              newCost = calculatedCost;
-              newUnitPrice = qty > 0 ? calculatedCost / qty : newUnitPrice;
+            const roundedCost = Number(calculatedCost.toFixed(2));
+            const roundedUnitPrice = qty > 0 ? Number((calculatedCost / qty).toFixed(2)) : newUnitPrice;
+            if (roundedCost !== ing.cost || roundedUnitPrice !== ing.unit_price) {
+              newCost = roundedCost;
+              newUnitPrice = roundedUnitPrice;
               changed = true;
             }
           } else if (prep || ing.is_prep_recipe) {
@@ -170,9 +172,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
 
               const costPerUnit = prep.yield_quantity > 0 ? (prep.total_cost || 0) / prep.yield_quantity : (prep.total_cost || 0);
               const calculatedCost = costPerUnit * qty;
-              if (calculatedCost !== ing.cost) {
-                newCost = calculatedCost;
-                newUnitPrice = costPerUnit;
+              const roundedCost = Number(calculatedCost.toFixed(2));
+              const roundedUnitPrice = Number(costPerUnit.toFixed(2));
+              if (roundedCost !== ing.cost || roundedUnitPrice !== ing.unit_price) {
+                newCost = roundedCost;
+                newUnitPrice = roundedUnitPrice;
                 changed = true;
               }
             }
@@ -185,7 +189,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
           setFormData(prev => ({
             ...prev,
             ingredients: updatedIngredients,
-            total_cost: updatedIngredients.reduce((sum, ing) => sum + (Number(ing.cost) || 0), 0)
+            total_cost: Number(updatedIngredients.reduce((sum, ing) => sum + (Number(ing.cost) || 0), 0).toFixed(2))
           }));
         }
       }
@@ -242,14 +246,14 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   };
 
   const calculateTotalCost = (ingredients) => {
-    return ingredients.reduce((sum, ing) => sum + (Number(ing.cost) || 0), 0);
+    return Number(ingredients.reduce((sum, ing) => sum + (Number(ing.cost) || 0), 0).toFixed(2));
   };
 
   const handleAddIngredient = (item) => {
     // Default recipe unit is the purchase unit, unless it's a case, then default to unit
     const defaultRecipeUnit = item.unit === 'case' ? 'unit' : (item.unit || 'unit');
     const initialQuantity = 1;
-    const initialCost = getIngredientCost(item, initialQuantity, defaultRecipeUnit);
+    const initialCost = Number(getIngredientCost(item, initialQuantity, defaultRecipeUnit).toFixed(2));
     
     const newIngredients = [...formData.ingredients, {
       item_id: item.id,
@@ -287,29 +291,30 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       const prep = prepRecipes.find(r => r.id === ing.item_id);
       
       if (item) {
-        ing.cost = getIngredientCost(item, qty, ing.unit);
-        ing.unit_price = qty > 0 ? ing.cost / qty : ing.unit_price;
+        const rawCost = getIngredientCost(item, qty, ing.unit);
+        ing.cost = Number(rawCost.toFixed(2));
+        ing.unit_price = qty > 0 ? Number((rawCost / qty).toFixed(2)) : ing.unit_price;
       } else if (prep || ing.is_prep_recipe) {
         if (prep) {
           const costPerUnit = prep.yield_quantity > 0 ? (prep.total_cost || 0) / prep.yield_quantity : (prep.total_cost || 0);
-          ing.cost = costPerUnit * qty;
-          ing.unit_price = costPerUnit;
+          ing.cost = Number((costPerUnit * qty).toFixed(2));
+          ing.unit_price = Number(costPerUnit.toFixed(2));
         } else {
-          ing.cost = (ing.unit_price || 0) * qty;
+          ing.cost = Number(((ing.unit_price || 0) * qty).toFixed(2));
         }
       } else {
-        ing.cost = (ing.unit_price || 0) * qty;
+        ing.cost = Number(((ing.unit_price || 0) * qty).toFixed(2));
       }
     } else if (field === 'cost') {
       ing.cost = value === '' ? '' : Number(value);
       const parsedCost = Number(value) || 0;
       const qty = Number(ing.quantity) || 1;
-      ing.unit_price = qty > 0 ? Number((parsedCost / qty).toFixed(4)) : 0;
+      ing.unit_price = qty > 0 ? Number((parsedCost / qty).toFixed(2)) : 0;
     } else if (field === 'unit_price') {
       ing.unit_price = value === '' ? '' : Number(value);
       const parsedUnitPrice = Number(value) || 0;
       const qty = Number(ing.quantity) || 0;
-      ing.cost = Number((parsedUnitPrice * qty).toFixed(4));
+      ing.cost = Number((parsedUnitPrice * qty).toFixed(2));
     }
 
     setFormData({
@@ -381,11 +386,13 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       // Recalculate cost for the ingredient in the recipe form
       let newIngredients = formData.ingredients.map(ing => {
         if (ing.item_id === updatedItem.id) {
+          const newCost = Number(getIngredientCost(updatedItem, ing.quantity, ing.unit).toFixed(2));
           return {
             ...ing,
             item_name: updatedItem.name,
             original_item: updatedItem,
-            cost: getIngredientCost(updatedItem, ing.quantity, ing.unit)
+            cost: newCost,
+            unit_price: ing.quantity > 0 ? Number((newCost / ing.quantity).toFixed(2)) : newCost
           };
         }
         return ing;
@@ -394,7 +401,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
       if (isNew) {
         const defaultRecipeUnit = updatedItem.unit === 'case' ? 'unit' : (updatedItem.unit || 'unit');
         const initialQuantity = 1;
-        const initialCost = getIngredientCost(updatedItem, initialQuantity, defaultRecipeUnit);
+        const initialCost = Number(getIngredientCost(updatedItem, initialQuantity, defaultRecipeUnit).toFixed(2));
         
         newIngredients.push({
           item_id: updatedItem.id,
@@ -423,13 +430,14 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
 
   const handleAddPrepRecipe = (prep) => {
     const costPerUnit = prep.yield_quantity > 0 ? (prep.total_cost || 0) / prep.yield_quantity : (prep.total_cost || 0);
+    const roundedCost = Number(costPerUnit.toFixed(2));
     const newIngredients = [...formData.ingredients, {
       item_id: prep.id,
       item_name: prep.name,
       quantity: 1,
       unit: prep.yield_unit || 'unit',
-      cost: costPerUnit,
-      unit_price: costPerUnit,
+      cost: roundedCost,
+      unit_price: roundedCost,
       is_prep_recipe: true
     }];
     setFormData({
@@ -825,14 +833,16 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       const ing = newIngredients[swappingIndex];
                       
                       const costPerUnit = prep.yield_quantity > 0 ? (prep.total_cost || 0) / prep.yield_quantity : (prep.total_cost || 0);
+                      const roundedUnitPrice = Number(costPerUnit.toFixed(2));
+                      const roundedCost = Number((costPerUnit * (ing.quantity || 1)).toFixed(2));
                       
                       newIngredients[swappingIndex] = {
                         ...ing,
                         item_id: prep.id,
                         item_name: prep.name,
                         unit: prep.yield_unit || 'unit',
-                        cost: costPerUnit * (ing.quantity || 1),
-                        unit_price: costPerUnit,
+                        cost: roundedCost,
+                        unit_price: roundedUnitPrice,
                         is_prep_recipe: true,
                         original_item: undefined
                       };
@@ -863,7 +873,9 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       const ing = newIngredients[swappingIndex];
                       
                       const defaultRecipeUnit = item.unit === 'case' ? 'unit' : (item.unit || 'unit');
-                      const newCost = getIngredientCost(item, ing.quantity || 1, defaultRecipeUnit);
+                      const rawCost = getIngredientCost(item, ing.quantity || 1, defaultRecipeUnit);
+                      const newCost = Number(rawCost.toFixed(2));
+                      const newUnitPrice = Number((rawCost / (ing.quantity || 1)).toFixed(2));
                       
                       newIngredients[swappingIndex] = {
                         ...ing,
@@ -871,7 +883,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                         item_name: item.name,
                         unit: defaultRecipeUnit,
                         cost: newCost,
-                        unit_price: newCost / (ing.quantity || 1),
+                        unit_price: newUnitPrice,
                         original_item: item,
                         is_prep_recipe: false
                       };
