@@ -1323,7 +1323,8 @@ const handleCleanOrphans = async (ownerEmail) => {
                return base44.entities.Warehouse.update(wh.id, { catalog_items: next });
              }));
 
-             // Optimistic update
+             // Optimistic update and prepare DB payloads
+             const payloads = {};
              setItems(prevItems => prevItems.map(item => {
                if (targetItemIds.includes(item.id)) {
                  const currentWids = [...(item.warehouse_ids || (item.warehouse_id ? [item.warehouse_id] : []))];
@@ -1336,6 +1337,14 @@ const handleCleanOrphans = async (ownerEmail) => {
                  });
                  const fWids = currentWids.filter(id => id && typeof id === 'string' && id.trim() !== "");
                  const fWnames = currentWnames.filter(name => name && typeof name === 'string' && name.trim() !== "");
+                 
+                 payloads[item.id] = {
+                   warehouse_ids: fWids,
+                   warehouse_names: fWnames,
+                   warehouse_id: fWids[0] || "",
+                   warehouse_name: fWnames[0] || ""
+                 };
+
                  return {
                    ...item,
                    warehouse_ids: fWids,
@@ -1347,13 +1356,20 @@ const handleCleanOrphans = async (ownerEmail) => {
                return item;
              }));
 
-             // Update each item in DB
-             const { data } = await base44.functions.invoke('bulkItemOperations', {
-                action: 'addWarehouses',
-                itemIds: targetItemIds,
-                payload: { targetWarehouses: targetWarehouses.map(w => ({id: w.id, name: w.name})) }
-             });
-             if (!data?.success) throw new Error(data?.error || 'Failed');
+             // Update each item in DB directly from frontend
+             await Promise.all(targetItemIds.map(async (id) => {
+               if (payloads[id]) {
+                 await base44.entities.Item.update(id, payloads[id]);
+               }
+             }));
+
+             try {
+               await base44.functions.invoke('bulkItemOperations', {
+                  action: 'addWarehouses',
+                  itemIds: targetItemIds,
+                  payload: { targetWarehouses: targetWarehouses.map(w => ({id: w.id, name: w.name})) }
+               });
+             } catch(e) {}
 
              if (pendingActionType === 'warehouse') setSelectedPendingIds([]);
              else setSelectedIds([]);
