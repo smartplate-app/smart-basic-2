@@ -60,16 +60,16 @@ Deno.serve(async (req) => {
 
     // Build Workers Sheet Data
     const workersData = [
-      ['Full Name', 'Phone', 'Job Position Name', 'Payment Type (hourly/monthly/daily)', 'Payment Amount'],
-      ['John Doe', '050-1234567', 'Chef', 'hourly', '70'],
-      ['Jane Smith', '052-7654321', 'Waiter', 'hourly', '40']
+      ['Full Name', 'Phone', 'Main Job Position', '2nd role', '3rd role', '4th role', 'MAIN Job Payment Type (hourly/monthly/daily)', 'Main Role Rate'],
+      ['John Doe', '050-1234567', 'Chef', 'Manager', '', '', 'hourly', '70'],
+      ['Jane Smith', '052-7654321', 'Waiter', 'Host', 'Bartender', '', 'hourly', '55']
     ];
 
     // Build Job Positions Sheet Data
     const positionsData = [
-      ['Position Name', 'Department/Section (kitchen/service/bar/management/cleaning/other)', 'Default Payment Type (hourly/monthly/daily)', 'Default Payment Amount'],
-      ['Chef', 'kitchen', 'hourly', '70'],
-      ['Waiter', 'service', 'hourly', '40']
+      ['Position Name', 'Department/Section (kitchen/service/bar/management/cleaning/other)', 'Default Payment Type (hourly/monthly/daily)', 'On Tips (yes/no)', 'Default Payment Amount'],
+      ['Chef', 'kitchen', 'monthly', 'no', '70'],
+      ['Waiter', 'service', 'hourly', 'yes', '55']
     ];
 
     await writeValues(accessToken, spreadsheetId, "'Workers'!A1:E100", workersData);
