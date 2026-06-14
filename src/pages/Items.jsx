@@ -1202,14 +1202,24 @@ const handleCleanOrphans = async (ownerEmail) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="w-full lg:w-auto shrink-0">
+          <div className="w-full lg:w-auto shrink-0 flex gap-2">
+            {!isViewer && selectedIds.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => { setPendingActionType(null); setShowBulkWarehouseModal(true); }}
+                className="flex-1 lg:flex-none h-10 border-[#d4a373] text-[#d4a373] hover:bg-[#d4a373] hover:text-white"
+              >
+                <LayoutGrid className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                {language === 'he' ? 'שייך למחסנים' : 'Assign Warehouses'}
+              </Button>
+            )}
             <Button
               variant="destructive"
               disabled={selectedIds.length === 0}
-              onClick={() => setShowDeleteDialog(true)}
-              className="w-full lg:w-auto h-10"
+              onClick={() => { setPendingActionType(null); setShowDeleteDialog(true); }}
+              className="flex-1 lg:flex-none h-10"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'מחיקה' : 'Delete'}
             </Button>
           </div>
