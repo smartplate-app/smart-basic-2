@@ -834,7 +834,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
             const allPositions = [worker.job_position_name, worker.secondary_job_position_name, ...(worker.job_position_names || [])].filter(Boolean);
             const uniquePositions = [...new Set(allPositions)];
             const primaryPosition = uniquePositions[0];
-            const extraPositionsCount = uniquePositions.length - 1;
+            const extraPositions = uniquePositions.slice(1);
 
             return (
             <div key={worker.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
@@ -861,17 +861,17 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 mb-4">
+                <div className="flex flex-wrap items-center gap-1.5 mb-4">
                   {primaryPosition ? (
                     <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none font-medium text-xs px-2 py-0.5 rounded-md">
                       {primaryPosition}
                     </Badge>
                   ) : null}
-                  {extraPositionsCount > 0 && (
-                    <Badge variant="outline" className="text-gray-500 font-normal border-gray-200 text-[11px] px-1.5 py-0.5 rounded-md bg-white">
-                      +{extraPositionsCount} {language === 'he' ? 'נוספים' : 'more'}
+                  {extraPositions.map((pos, idx) => (
+                    <Badge key={idx} variant="outline" className="text-gray-500 font-normal border-gray-200 text-[11px] px-1.5 py-0.5 rounded-md bg-white">
+                      {pos}
                     </Badge>
-                  )}
+                  ))}
                 </div>
 
                 <div className="bg-gray-50/50 rounded-xl p-3.5 space-y-2.5 mt-auto border border-gray-100/50">
@@ -927,7 +927,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
             const allPositions = [worker.job_position_name, worker.secondary_job_position_name, ...(worker.job_position_names || [])].filter(Boolean);
             const uniquePositions = [...new Set(allPositions)];
             const primaryPosition = uniquePositions[0];
-            const extraPositionsCount = uniquePositions.length - 1;
+            const extraPositions = uniquePositions.slice(1);
 
             return (
             <div key={worker.id} className="bg-white rounded-xl border border-gray-100 p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md hover:border-gray-200 transition-all group">
@@ -940,7 +940,9 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                     <span className="font-bold text-gray-800 text-[15px] truncate shrink-0 max-w-[200px] lg:max-w-xs cursor-pointer hover:text-blue-600 hover:underline" onClick={() => handleStartEdit(worker)}>{worker.full_name}</span>
                     <div className="hidden md:flex items-center gap-1.5 flex-wrap">
                       {primaryPosition && <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none font-medium px-2 py-0 rounded-md text-[11px] h-5">{primaryPosition}</Badge>}
-                      {extraPositionsCount > 0 && <Badge variant="outline" className="text-gray-500 font-normal bg-white border-gray-200 px-1.5 py-0 rounded-md text-[10px] h-5">+{extraPositionsCount} {language === 'he' ? 'נוספים' : 'more'}</Badge>}
+                      {extraPositions.map((pos, idx) => (
+                        <Badge key={idx} variant="outline" className="text-gray-500 font-normal bg-white border-gray-200 px-1.5 py-0 rounded-md text-[10px] h-5">{pos}</Badge>
+                      ))}
                     </div>
                   </div>
                   <div className="text-[12px] text-gray-500 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -950,7 +952,9 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                   </div>
                   <div className="flex md:hidden items-center gap-1.5 mt-2 flex-wrap">
                       {primaryPosition && <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-none font-medium px-2 py-0 rounded-md text-[11px] h-5">{primaryPosition}</Badge>}
-                      {extraPositionsCount > 0 && <Badge variant="outline" className="text-gray-500 font-normal bg-white border-gray-200 px-1.5 py-0 rounded-md text-[10px] h-5">+{extraPositionsCount} {language === 'he' ? 'נוספים' : 'more'}</Badge>}
+                      {extraPositions.map((pos, idx) => (
+                        <Badge key={idx} variant="outline" className="text-gray-500 font-normal bg-white border-gray-200 px-1.5 py-0 rounded-md text-[10px] h-5">{pos}</Badge>
+                      ))}
                   </div>
                 </div>
               </div>
