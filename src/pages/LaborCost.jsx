@@ -198,7 +198,7 @@ export default function LaborCostPage() {
       await loadData();
     } catch (error) {
       console.error("Error deleting position:", error);
-      alert(t('error_saving'));
+      alert(t('error_saving') + '\n' + (error.message || ''));
     }
   };
 
