@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Globe, CheckCircle2 } from "lucide-react";
+import MarketingArticle from "@/components/marketing/MarketingArticle";
 
 export default function PromoPreview() {
   const [lang, setLang] = useState("he");
@@ -118,9 +119,13 @@ export default function PromoPreview() {
           </div>
         </div>
 
-      </div>
-      
-      <div className="relative z-10 text-sm text-green-200 py-6 text-center">
+        </div>
+
+        <div className="relative z-10 flex justify-center w-full px-6">
+         <MarketingArticle lang={lang} />
+        </div>
+
+        <div className="relative z-10 text-sm text-green-200 py-6 text-center">
         © {new Date().getFullYear()} {text.copyright}
       </div>
     </div>
