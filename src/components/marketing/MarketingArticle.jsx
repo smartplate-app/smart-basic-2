@@ -5,6 +5,11 @@ export default function MarketingArticle({ lang }) {
 
   return (
     <div className="mt-16 bg-white/10 p-8 md:p-12 rounded-3xl backdrop-blur-md border border-white/20 shadow-xl max-w-4xl text-right z-10 relative mb-12" dir="rtl">
+      <img 
+        src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/5080539db_IMG_0374.webp" 
+        alt="Food Cost Header" 
+        className="w-full h-auto max-h-[400px] object-cover rounded-2xl mb-8 shadow-lg"
+      />
       <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-8">איך לחשב עלות מתכון (פוד קוסט) בצורה נכונה?</h2>
       
       <div className="prose prose-invert prose-lg max-w-none text-green-50 space-y-5 leading-relaxed">
