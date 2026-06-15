@@ -95,9 +95,9 @@ export default function LaborCostPage() {
           } catch(e) { console.error("Admin fetch error", e); }
       } else {
           const res = await Promise.all([
-            base44.entities.JobPosition.filter({ created_by: headEmail || workingEmail }, "name"),
-            base44.entities.Worker.filter({ created_by: workingEmail }, "full_name"),
-            base44.entities.WeeklySchedule.filter({ created_by: workingEmail }, "-week_start_date")
+            base44.entities.JobPosition.filter({ created_by: headEmail || workingEmail }, "name", 1000),
+            base44.entities.Worker.filter({ created_by: workingEmail }, "full_name", 1000),
+            base44.entities.WeeklySchedule.filter({ created_by: workingEmail }, "-week_start_date", 100)
           ]);
           positionsData = res[0];
           workersData = res[1];

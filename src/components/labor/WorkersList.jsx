@@ -455,11 +455,11 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                         );
                       })}
                   </div>
-                  {(formData.job_position_ids || []).length > 0 && (
+                  {(formData.job_position_ids || []).filter(id => positions.some(p => p.id === id)).length > 0 && (
                     <p className="text-xs text-blue-600 mt-2">
                       {language === 'he' 
-                        ? `נבחרו ${formData.job_position_ids.length} תפקידים נוספים`
-                        : `${formData.job_position_ids.length} additional positions selected`}
+                        ? `נבחרו ${(formData.job_position_ids || []).filter(id => positions.some(p => p.id === id)).length} תפקידים נוספים`
+                        : `${(formData.job_position_ids || []).filter(id => positions.some(p => p.id === id)).length} additional positions selected`}
                     </p>
                   )}
                 </div>
@@ -643,7 +643,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
               <div className="space-y-2 md:col-span-2">
                 <Label>{language === 'he' ? 'תעריפים לפי תפקיד' : 'Rates per position'}</Label>
                 <div className="space-y-2">
-                  {([formData.job_position_id].filter(Boolean).concat(formData.job_position_ids || [])).map((pid) => {
+                  {Array.from(new Set([formData.job_position_id].filter(Boolean).concat(formData.job_position_ids || []))).map((pid) => {
                     const p = positions.find(pp => pp.id === pid);
                     if (!p) return null;
                     const defAmt = parseFloat(p.default_payment_amount) || 0;
