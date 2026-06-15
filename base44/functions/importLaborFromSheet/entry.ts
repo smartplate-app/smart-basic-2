@@ -47,6 +47,15 @@ Deno.serve(async (req) => {
       const workerPhoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('טלפון'));
       const workerPosIdx = headers.findIndex(h => h.includes('position') || h.includes('תפקיד'));
       
+      // Additional worker fields
+      const workerIdNumIdx = headers.findIndex(h => h.includes('id number') || h.includes('תעודת זהות') || h.includes('ת.ז'));
+      const workerAccountingIdIdx = headers.findIndex(h => h.includes('accounting id') || h.includes('מספר עובד') || h.includes('הנח"ש'));
+      const workerEmailIdx = headers.findIndex(h => h.includes('email') || h.includes('אימייל') || h.includes('דוא"ל'));
+      const workerBankNameIdx = headers.findIndex(h => h.includes('bank name') || h.includes('שם בנק') || h === 'בנק');
+      const workerBankBranchIdx = headers.findIndex(h => h.includes('branch') || h.includes('סניף'));
+      const workerBankAccountIdx = headers.findIndex(h => h.includes('account') || h.includes('חשבון'));
+      const workerStartDateIdx = headers.findIndex(h => h.includes('start date') || h.includes('תחילת עבודה') || h.includes('תאריך התחלה'));
+      
       // Skip schedule tabs outright
       const isScheduleTab = sheetName.includes('סידור') || sheetName.includes('משמרות') || sheetName.includes('schedule') || sheetName.includes('shift');
       if (isScheduleTab) continue;
@@ -117,9 +126,30 @@ Deno.serve(async (req) => {
           if (pos3Idx >= 0 && row[pos3Idx]) otherRoles.push(row[pos3Idx].trim());
           if (pos4Idx >= 0 && row[pos4Idx]) otherRoles.push(row[pos4Idx].trim());
 
+          let startDate = '';
+          if (workerStartDateIdx >= 0 && row[workerStartDateIdx]) {
+            // Very basic date normalization for sheet dates
+            const rawDate = row[workerStartDateIdx].trim();
+            if (rawDate.match(/^\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}$/)) {
+              const parts = rawDate.split(/[\/\-.]/);
+              // Assuming DD/MM/YYYY
+              if (parts[2].length === 2) parts[2] = '20' + parts[2];
+              startDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            } else {
+              startDate = rawDate;
+            }
+          }
+
           parsedWorkers.push({
             full_name: row[nameIdx]?.trim() || '',
             phone: phoneIdx >= 0 ? row[phoneIdx]?.trim() : '',
+            email: workerEmailIdx >= 0 ? row[workerEmailIdx]?.trim() : '',
+            id_number: workerIdNumIdx >= 0 ? row[workerIdNumIdx]?.trim() : '',
+            accounting_employee_id: workerAccountingIdIdx >= 0 ? row[workerAccountingIdIdx]?.trim() : '',
+            bank_name: workerBankNameIdx >= 0 ? row[workerBankNameIdx]?.trim() : '',
+            bank_branch: workerBankBranchIdx >= 0 ? row[workerBankBranchIdx]?.trim() : '',
+            bank_account: workerBankAccountIdx >= 0 ? row[workerBankAccountIdx]?.trim() : '',
+            start_date: startDate,
             job_position_name: pos1Idx >= 0 ? row[pos1Idx]?.trim() : '',
             secondary_job_position_name: pos2Idx >= 0 ? row[pos2Idx]?.trim() : '',
             other_roles: otherRoles,
@@ -221,8 +251,22 @@ Deno.serve(async (req) => {
         created_by: targetEmail,
         store_owner_email: targetEmail
       };
+      
+      // Add extra fields only if they have values to avoid overriding existing good data with empty strings
+      if (w.email) data.email = w.email;
+      if (w.id_number) data.id_number = w.id_number;
+      if (w.accounting_employee_id) data.accounting_employee_id = w.accounting_employee_id;
+      if (w.bank_name) data.bank_name = w.bank_name;
+      if (w.bank_branch) data.bank_branch = w.bank_branch;
+      if (w.bank_account) data.bank_account = w.bank_account;
+      if (w.start_date) data.start_date = w.start_date;
 
       if (existing) {
+        // For updates, we don't want to clear out existing secondary positions if the sheet didn't specify them
+        if (otherRoleIds.length === 0 && (existing.job_position_ids && existing.job_position_ids.length > 0)) {
+           delete data.job_position_ids;
+           delete data.job_position_names;
+        }
         await base44.entities.Worker.update(existing.id, data);
         updatedWorkers++;
       } else {
