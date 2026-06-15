@@ -47,16 +47,23 @@ Deno.serve(async (req) => {
       const workerPhoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('טלפון'));
       const workerPosIdx = headers.findIndex(h => h.includes('position') || h.includes('תפקיד'));
       
+      // Skip schedule tabs outright
+      const isScheduleTab = sheetName.includes('סידור') || sheetName.includes('משמרות') || sheetName.includes('schedule') || sheetName.includes('shift');
+      if (isScheduleTab) continue;
+
       // More strict matching to avoid parsing schedule tabs as job positions
-      const isWorkersTab = sheetName.toLowerCase().includes('worker') || sheetName.includes('עובדים') || sheetName.includes('staff');
-      const isPositionsTab = sheetName.toLowerCase().includes('position') || sheetName.includes('תפקידים') || sheetName.includes('role');
+      const isWorkersTab = sheetName.toLowerCase().includes('worker') || sheetName.includes('עובדים') || sheetName.includes('צוות') || sheetName.includes('כוח אדם') || sheetName.includes('staff');
+      const isPositionsTab = sheetName.toLowerCase().includes('position') || sheetName.includes('תפקיד') || sheetName.includes('משרות') || sheetName.includes('role');
       
-      const isWorkers = (isWorkersTab) || (workerNameIdx >= 0 && (workerPhoneIdx >= 0 || workerPosIdx >= 0));
+      const isWorkers = isWorkersTab || (!isPositionsTab && workerNameIdx >= 0 && (workerPhoneIdx >= 0 || workerPosIdx >= 0));
 
       const posNameIdx = headers.findIndex(h => h.includes('position name') || h.includes('שם תפקיד') || h === 'תפקיד' || h.includes('position'));
       const posTypeIdx = headers.findIndex(h => h.includes('payment type') || h.includes('סוג תשלום') || h.includes('type') || h.includes('סוג'));
       const posAmountIdx = headers.findIndex(h => h.includes('amount') || h.includes('rate') || h.includes('תעריף'));
-      const isPositions = (isPositionsTab) || (posNameIdx >= 0 && posTypeIdx >= 0 && posAmountIdx >= 0 && !isWorkers);
+      const isPositions = isPositionsTab || (!isWorkersTab && posNameIdx >= 0 && posTypeIdx >= 0 && posAmountIdx >= 0 && !isWorkers);
+
+      // Skip sheets that don't match our criteria at all, or might be schedule sheets
+      if (!isWorkers && !isPositions) continue;
 
       if (isPositions) {
         // Parse Positions
