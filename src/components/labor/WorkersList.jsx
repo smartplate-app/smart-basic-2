@@ -843,7 +843,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                       <AvatarFallback className="font-semibold text-lg">{getInitials(worker.full_name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <h4 className="font-bold text-[17px] text-gray-800 truncate">{worker.full_name}</h4>
+                      <h4 className="font-bold text-[17px] text-gray-800 truncate cursor-pointer hover:text-blue-600 hover:underline" onClick={() => handleStartEdit(worker)}>{worker.full_name}</h4>
                       <div className="flex items-center gap-1.5 text-[13px] text-gray-500 mt-0.5">
                         {worker.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{worker.phone}</span>}
                       </div>
@@ -935,7 +935,7 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col md:flex-row md:items-center gap-2 mb-0.5">
-                    <span className="font-bold text-gray-800 text-[15px] truncate shrink-0 max-w-[200px] lg:max-w-xs">{worker.full_name}</span>
+                    <span className="font-bold text-gray-800 text-[15px] truncate shrink-0 max-w-[200px] lg:max-w-xs cursor-pointer hover:text-blue-600 hover:underline" onClick={() => handleStartEdit(worker)}>{worker.full_name}</span>
                     <div className="hidden md:flex items-center gap-1.5 flex-wrap">
                       {primaryPosition && <Badge variant="secondary" className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-none font-medium px-2 py-0 rounded-md text-[11px] h-5">{primaryPosition}</Badge>}
                       {extraPositionsCount > 0 && <Badge variant="outline" className="text-gray-500 font-normal bg-white border-gray-200 px-1.5 py-0 rounded-md text-[10px] h-5">+{extraPositionsCount} {language === 'he' ? 'נוספים' : 'more'}</Badge>}
