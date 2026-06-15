@@ -200,6 +200,9 @@
     "create": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.created_by": "{{user.email}}"
         },
         {
@@ -214,6 +217,9 @@
     },
     "read": {
       "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
         {
           "data.created_by": "{{user.email}}"
         },
@@ -230,6 +236,9 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.created_by": "{{user.email}}"
         },
         {
@@ -244,6 +253,9 @@
     },
     "delete": {
       "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
         {
           "data.created_by": "{{user.email}}"
         },
