@@ -50,13 +50,7 @@ export default function PromoPreview() {
       <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#52b788]/30 blur-3xl"></div>
       
       {/* Header */}
-      <div className="relative z-20 flex justify-between items-center p-6 lg:px-12">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-1 rounded-xl shadow-lg">
-            <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png" alt="Smart Plate Logo" className="w-10 h-10 object-contain rounded-lg" />
-          </div>
-          <span className="text-xl md:text-2xl font-extrabold tracking-tight text-white drop-shadow-md">Smart Plate</span>
-        </div>
+      <div className="relative z-20 flex justify-end items-center p-6 lg:px-12">
         <Button variant="ghost" className="text-white hover:bg-white/20 hover:text-white" onClick={() => setLang(lang === 'he' ? 'en' : 'he')}>
           <Globe className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
           {text.switchLang}
@@ -68,6 +62,9 @@ export default function PromoPreview() {
         
         {/* Text and Actions */}
         <div className="flex-1 flex flex-col items-center xl:items-start text-center xl:text-start w-full">
+          <div className="bg-white p-2 rounded-3xl shadow-xl mb-8 flex items-center justify-center">
+            <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png" alt="Smart Plate Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain rounded-2xl" />
+          </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 drop-shadow-sm">
             {text.welcome}
           </h1>

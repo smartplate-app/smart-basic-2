@@ -155,15 +155,12 @@ export default function Register() {
         <div className="fixed bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#52b788]/20 blur-3xl pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col flex-1">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="bg-white p-1.5 rounded-2xl shadow-lg">
-              <img src={logoUrl} alt="Smart Plate Logo" className="w-14 h-14 object-contain rounded-xl" />
-            </div>
-            <span className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md">Smart Plate</span>
-          </div>
           
-          <div className="flex-1 flex flex-col xl:flex-row gap-12 items-center">
+          <div className="flex-1 flex flex-col xl:flex-row gap-12 items-center pt-8 md:pt-12">
             <div className="flex-1">
+              <div className="bg-white p-2 rounded-3xl shadow-xl mb-8 inline-flex items-center justify-center">
+                <img src={logoUrl} alt="Smart Plate Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain rounded-2xl" />
+              </div>
               <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight mb-6 drop-shadow-sm">
                 {text.welcome}
               </h1>
