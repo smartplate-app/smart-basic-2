@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2, Globe, CheckCircle2 } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 import MarketingArticle from "@/components/marketing/MarketingArticle";
+import MarketingArticleProfitability from "@/components/marketing/MarketingArticleProfitability";
 
 const logoUrl = "https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png";
 
@@ -144,6 +145,7 @@ export default function Login() {
           </div>
 
           <MarketingArticle lang={lang} isTeaser={true} />
+          <MarketingArticleProfitability lang={lang} isTeaser={true} />
 
         </div>
         

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Globe, CheckCircle2 } from "lucide-react";
 import MarketingArticle from "@/components/marketing/MarketingArticle";
+import MarketingArticleProfitability from "@/components/marketing/MarketingArticleProfitability";
 
 export default function PromoPreview() {
   const [lang, setLang] = useState("he");
@@ -118,8 +119,9 @@ export default function PromoPreview() {
 
         </div>
 
-        <div className="relative z-10 flex justify-center w-full px-6">
+        <div className="relative z-10 flex flex-col items-center w-full px-6">
           <MarketingArticle lang={lang} isTeaser={true} />
+          <MarketingArticleProfitability lang={lang} isTeaser={true} />
         </div>
 
         <div className="relative z-10 text-sm text-green-200 py-6 text-center">

@@ -29,6 +29,7 @@ import ManagersSection from './pages/ManagersSection';
 import PromoPreview from './pages/PromoPreview';
 import Register from './pages/Register';
 import ArticleFoodCost from './pages/ArticleFoodCost';
+import ArticleProfitability from './pages/ArticleProfitability';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
 
   const publicRoutes = [
   '/articles/food-cost',
+  '/articles/profitability',
   '/GoogleCampaign',
     '/pages/GoogleCampaign',
     '/OAuthCallback',
@@ -150,6 +152,7 @@ const AuthenticatedApp = () => {
       <Route path="/PromoPreview" element={<PromoPreview />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/articles/food-cost" element={<ArticleFoodCost />} />
+      <Route path="/articles/profitability" element={<ArticleProfitability />} />
 
       {/* All app routes are protected */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/PromoPreview" replace />} />}>
