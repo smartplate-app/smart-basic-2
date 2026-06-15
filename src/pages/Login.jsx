@@ -146,7 +146,7 @@ export default function Login() {
             </div>
           </div>
 
-          <MarketingArticle lang={lang} />
+          <MarketingArticle lang={lang} isTeaser={true} />
 
         </div>
         

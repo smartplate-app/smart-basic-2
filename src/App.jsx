@@ -28,6 +28,7 @@ import WorkerPortal from './pages/WorkerPortal';
 import ManagersSection from './pages/ManagersSection';
 import PromoPreview from './pages/PromoPreview';
 import Register from './pages/Register';
+import ArticleFoodCost from './pages/ArticleFoodCost';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -72,7 +73,8 @@ const AuthenticatedApp = () => {
   const location = useLocation();
 
   const publicRoutes = [
-    '/GoogleCampaign',
+  '/articles/food-cost',
+  '/GoogleCampaign',
     '/pages/GoogleCampaign',
     '/OAuthCallback',
     '/pages/OAuthCallback',
@@ -147,6 +149,7 @@ const AuthenticatedApp = () => {
       <Route path="/StoreLogin" element={<StoreLogin />} />
       <Route path="/PromoPreview" element={<PromoPreview />} />
       <Route path="/Register" element={<Register />} />
+      <Route path="/articles/food-cost" element={<ArticleFoodCost />} />
 
       {/* All app routes are protected */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/PromoPreview" replace />} />}>

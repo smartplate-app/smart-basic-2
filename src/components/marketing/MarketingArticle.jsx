@@ -1,6 +1,8 @@
 import React from 'react';
 
-export default function MarketingArticle({ lang }) {
+import { Link } from 'react-router-dom';
+
+export default function MarketingArticle({ lang, isTeaser = false }) {
   if (lang !== 'he') return null;
 
   return (
@@ -17,6 +19,14 @@ export default function MarketingArticle({ lang }) {
 
         <p>חישוב עלות מתכון הוא הבסיס לכל החלטת תמחור, בקרת מזון ורווחיות תפריט. בלי המספר הזה קשה לדעת אם מנה באמת מרוויחה, אם גודל המנה סביר, ואם שינוי קטן במרכיב אחד כבר פוגע בשורה התחתונה. החדשות הטובות הן שהחישוב עצמו לא מסובך. מה שחשוב הוא לעשות אותו נכון, באותה שיטה, ובאופן עקבי.</p>
 
+        {isTeaser ? (
+          <div className="mt-8">
+            <Link to="/articles/food-cost" className="inline-block bg-[#52b788] text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:bg-[#40916c] transition-colors">
+              להמשך קריאת המאמר
+            </Link>
+          </div>
+        ) : (
+          <>
         <h3 className="text-2xl font-bold text-white mt-10 mb-4">איך לחשב עלות מתכון בלי לפספס רכיבים</h3>
         <p>הטעות הנפוצה ביותר היא לחשב רק את המרכיבים הגדולים - חלבון, פחמימה, רוטב עיקרי - ולהתעלם מתבלינים, שמן, קישוטים או מרכיבים שנראים זניחים. בפועל, הזניחים מצטברים. אם זה קורה בעשר מנות ביום, שישה ימים בשבוע, המספר כבר רחוק מלהיות זניח.</p>
         
@@ -75,6 +85,8 @@ export default function MarketingArticle({ lang }) {
         <p>ככל שהחישוב מדויק יותר, כך השיחה הניהולית נהיית פשוטה יותר. במקום להגיד "נראה שהמנה הזאת לא מרוויחה", אפשר להגיד "העלות עלתה ב-2.10 ש"ח מאז העדכון האחרון, והפוד קוסט קפץ מעל היעד". זה כבר בסיס להחלטה.</p>
         
         <p className="font-bold text-[#52b788]">שליטה בעלות מתכון לא נועדה לייצר עוד דוח. היא נועדה לתת לכם שקט תפעולי - לדעת מה כל צלחת באמת עולה, לפני שהרווח נעלם בשקט מאחורי השירות.</p>
+          </>
+        )}
       </div>
     </div>
   );

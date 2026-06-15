@@ -202,7 +202,7 @@ export default function Register() {
             </div>
           </div>
 
-          <MarketingArticle lang={lang} />
+          <MarketingArticle lang={lang} isTeaser={true} />
 
         </div>
         

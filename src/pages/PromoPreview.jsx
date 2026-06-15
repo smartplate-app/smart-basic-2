@@ -122,7 +122,7 @@ export default function PromoPreview() {
         </div>
 
         <div className="relative z-10 flex justify-center w-full px-6">
-         <MarketingArticle lang={lang} />
+          <MarketingArticle lang={lang} isTeaser={true} />
         </div>
 
         <div className="relative z-10 text-sm text-green-200 py-6 text-center">
