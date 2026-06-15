@@ -56,6 +56,16 @@ Deno.serve(async (req) => {
       const workerBankAccountIdx = headers.findIndex(h => h.includes('account') || h.includes('חשבון'));
       const workerStartDateIdx = headers.findIndex(h => h.includes('start date') || h.includes('תחילת עבודה') || h.includes('תאריך התחלה'));
       
+      const taxCreditIdx = headers.findIndex(h => h.includes('tax credit') || h.includes('נקודות זיכוי'));
+      const managementBonusIdx = headers.findIndex(h => h.includes('management bonus') || h.includes('בונוס'));
+      const targetSalaryIdx = headers.findIndex(h => h.includes('target salary') || h.includes('יעד שכר'));
+      const employerCostIdx = headers.findIndex(h => h.includes('employer cost') || h.includes('עלות מעביד'));
+      const includesOvertimeIdx = headers.findIndex(h => h.includes('overtime') || h.includes('שעות נוספות') || h.includes('גלובלי'));
+      const includesTravelIdx = headers.findIndex(h => h.includes('includes travel') || h.includes('כולל נסיעות'));
+      const notesIdx = headers.findIndex(h => h.includes('notes') || h.includes('הערות'));
+      const tipHourlyOverrideIdx = headers.findIndex(h => h.includes('tip override') || h.includes('השלמה לשעה'));
+      const travelTypeIdx = headers.findIndex(h => h.includes('travel type') || h.includes('סוג נסיעות'));
+
       // Skip schedule tabs outright
       const isScheduleTab = sheetName.includes('סידור') || sheetName.includes('משמרות') || sheetName.includes('schedule') || sheetName.includes('shift');
       if (isScheduleTab) continue;
@@ -140,6 +150,19 @@ Deno.serve(async (req) => {
             }
           }
 
+          let travelType = 'none';
+          if (travelTypeIdx >= 0 && row[travelTypeIdx]) {
+            const val = row[travelTypeIdx].trim().toLowerCase();
+            if (val.includes('month') || val.includes('חודשי')) travelType = 'monthly';
+            else if (val.includes('day') || val.includes('יומי')) travelType = 'daily';
+          }
+
+          const parseBool = (idx) => {
+            if (idx < 0 || !row[idx]) return undefined;
+            const val = row[idx].trim().toLowerCase();
+            return val === 'yes' || val === 'כן' || val === 'true' || val === '1' || val === 'v' || val === 'x';
+          };
+
           parsedWorkers.push({
             full_name: row[nameIdx]?.trim() || '',
             phone: phoneIdx >= 0 ? row[phoneIdx]?.trim() : '',
@@ -150,6 +173,15 @@ Deno.serve(async (req) => {
             bank_branch: workerBankBranchIdx >= 0 ? row[workerBankBranchIdx]?.trim() : '',
             bank_account: workerBankAccountIdx >= 0 ? row[workerBankAccountIdx]?.trim() : '',
             start_date: startDate,
+            tax_credit_points: taxCreditIdx >= 0 ? parseFloat(row[taxCreditIdx]) : undefined,
+            management_bonus: managementBonusIdx >= 0 ? parseFloat(row[managementBonusIdx]) : undefined,
+            target_monthly_salary: targetSalaryIdx >= 0 ? parseFloat(row[targetSalaryIdx]) : undefined,
+            employer_cost_percentage: employerCostIdx >= 0 ? parseFloat(row[employerCostIdx]) : undefined,
+            tip_hourly_rate_override: tipHourlyOverrideIdx >= 0 ? parseFloat(row[tipHourlyOverrideIdx]) : undefined,
+            travel_expense_type: travelTypeIdx >= 0 ? travelType : undefined,
+            salary_includes_overtime: parseBool(includesOvertimeIdx),
+            salary_includes_travel: parseBool(includesTravelIdx),
+            notes: notesIdx >= 0 ? row[notesIdx]?.trim() : undefined,
             job_position_name: pos1Idx >= 0 ? row[pos1Idx]?.trim() : '',
             secondary_job_position_name: pos2Idx >= 0 ? row[pos2Idx]?.trim() : '',
             other_roles: otherRoles,
@@ -260,6 +292,15 @@ Deno.serve(async (req) => {
       if (w.bank_branch) data.bank_branch = w.bank_branch;
       if (w.bank_account) data.bank_account = w.bank_account;
       if (w.start_date) data.start_date = w.start_date;
+      if (w.tax_credit_points !== undefined && !isNaN(w.tax_credit_points)) data.tax_credit_points = w.tax_credit_points;
+      if (w.management_bonus !== undefined && !isNaN(w.management_bonus)) data.management_bonus = w.management_bonus;
+      if (w.target_monthly_salary !== undefined && !isNaN(w.target_monthly_salary)) data.target_monthly_salary = w.target_monthly_salary;
+      if (w.employer_cost_percentage !== undefined && !isNaN(w.employer_cost_percentage)) data.employer_cost_percentage = w.employer_cost_percentage;
+      if (w.tip_hourly_rate_override !== undefined && !isNaN(w.tip_hourly_rate_override)) data.tip_hourly_rate_override = w.tip_hourly_rate_override;
+      if (w.travel_expense_type !== undefined) data.travel_expense_type = w.travel_expense_type;
+      if (w.salary_includes_overtime !== undefined) data.salary_includes_overtime = w.salary_includes_overtime;
+      if (w.salary_includes_travel !== undefined) data.salary_includes_travel = w.salary_includes_travel;
+      if (w.notes) data.notes = w.notes;
 
       if (existing) {
         // For updates, we don't want to clear out existing secondary positions if the sheet didn't specify them

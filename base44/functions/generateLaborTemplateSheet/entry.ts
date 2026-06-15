@@ -60,9 +60,9 @@ Deno.serve(async (req) => {
 
     // Build Workers Sheet Data
     const workersData = [
-      ['Full Name', 'Phone', 'Main Job Position', '2nd role', '3rd role', '4th role', 'MAIN Job Payment Type (hourly/monthly/daily)', 'Main Role Rate'],
-      ['John Doe', '050-1234567', 'Chef', 'Manager', '', '', 'hourly', '70'],
-      ['Jane Smith', '052-7654321', 'Waiter', 'Host', 'Bartender', '', 'hourly', '55']
+      ['Full Name', 'Phone', 'Email', 'ID Number', 'Bank Name', 'Branch', 'Account', 'Start Date', 'Main Job Position', '2nd role', '3rd role', '4th role', 'MAIN Job Payment Type (hourly/monthly/daily)', 'Main Role Rate', 'Notes'],
+      ['John Doe', '050-1234567', 'john@example.com', '123456789', 'Leumi', '123', '123456', '01/01/2023', 'Chef', 'Manager', '', '', 'hourly', '70', ''],
+      ['Jane Smith', '052-7654321', 'jane@example.com', '987654321', 'Hapoalim', '456', '654321', '15/05/2024', 'Waiter', 'Host', 'Bartender', '', 'hourly', '55', '']
     ];
 
     // Build Job Positions Sheet Data
