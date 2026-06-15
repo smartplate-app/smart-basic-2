@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
     }
 
     // Save positions
-    const existingPositions = await base44.asServiceRole.entities.JobPosition.filter({ created_by: targetEmail }, 'name', 10000);
+    const existingPositions = await base44.entities.JobPosition.filter({ created_by: targetEmail }, 'name', 10000);
     const posMap = new Map(existingPositions.map(p => [p.name.trim().toLowerCase(), p]));
 
     let createdPos = 0, updatedPos = 0;
@@ -159,11 +159,11 @@ Deno.serve(async (req) => {
         store_owner_email: targetEmail
       };
       if (existing) {
-        await base44.asServiceRole.entities.JobPosition.update(existing.id, data);
+        await base44.entities.JobPosition.update(existing.id, data);
         updatedPos++;
         posMap.set(key, { ...existing, ...data });
       } else {
-        const created = await base44.asServiceRole.entities.JobPosition.create(data);
+        const created = await base44.entities.JobPosition.create(data);
         createdPos++;
         posMap.set(key, created);
       }
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
     await Promise.all(posPromises);
 
     // Save workers
-    const existingWorkers = await base44.asServiceRole.entities.Worker.filter({ created_by: targetEmail }, 'full_name', 10000);
+    const existingWorkers = await base44.entities.Worker.filter({ created_by: targetEmail }, 'full_name', 10000);
     const workerMap = new Map(existingWorkers.map(w => [w.full_name.trim().toLowerCase(), w]));
 
     let createdWorkers = 0, updatedWorkers = 0;
@@ -223,10 +223,10 @@ Deno.serve(async (req) => {
       };
 
       if (existing) {
-        await base44.asServiceRole.entities.Worker.update(existing.id, data);
+        await base44.entities.Worker.update(existing.id, data);
         updatedWorkers++;
       } else {
-        await base44.asServiceRole.entities.Worker.create(data);
+        await base44.entities.Worker.create(data);
         createdWorkers++;
       }
     });
