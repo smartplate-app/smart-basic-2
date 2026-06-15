@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2, Globe, CheckCircle2 } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
+import MarketingArticle from "@/components/marketing/MarketingArticle";
 
 const logoUrl = "https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png";
 
@@ -93,11 +94,11 @@ export default function Login() {
   return (
     <div className={`min-h-screen flex flex-col md:flex-row ${isRTL ? 'font-sans' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Marketing Section */}
-      <div className="hidden md:flex md:w-3/5 lg:w-3/4 bg-gradient-to-br from-[#1b4332] to-[#2d6a4f] text-white p-8 lg:p-16 flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#52b788]/20 blur-3xl"></div>
+      <div className="hidden md:flex md:w-3/5 lg:w-3/4 bg-gradient-to-br from-[#1b4332] to-[#2d6a4f] text-white p-8 lg:p-16 flex-col relative overflow-y-auto">
+        <div className="fixed top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
+        <div className="fixed bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#52b788]/20 blur-3xl pointer-events-none"></div>
         
-        <div className="relative z-10 flex flex-col h-full">
+        <div className="relative z-10 flex flex-col flex-1">
           <div className="flex items-center gap-3 mb-10">
             <div className="bg-white p-1.5 rounded-2xl shadow-lg">
               <img src={logoUrl} alt="Smart Plate Logo" className="w-14 h-14 object-contain rounded-xl" />
@@ -144,9 +145,12 @@ export default function Login() {
               </div>
             </div>
           </div>
+
+          <MarketingArticle lang={lang} />
+
         </div>
         
-        <div className="relative z-10 text-sm text-green-200 mt-10">
+        <div className="relative z-10 text-sm text-green-200 mt-auto pt-10">
           © {new Date().getFullYear()} {text.copyright}
         </div>
       </div>
