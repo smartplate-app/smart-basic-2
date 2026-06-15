@@ -94,8 +94,8 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       job_position_name: worker.job_position_name || "",
       secondary_job_position_id: worker.secondary_job_position_id || "",
       secondary_job_position_name: worker.secondary_job_position_name || "",
-      job_position_ids: worker.job_position_ids || [],
-      job_position_names: worker.job_position_names || [],
+      job_position_ids: Array.from(new Set([...(worker.job_position_ids || []), worker.secondary_job_position_id].filter(Boolean))),
+      job_position_names: Array.from(new Set([...(worker.job_position_names || []), worker.secondary_job_position_name].filter(Boolean))),
       section: worker.section || "",
       payment_type: worker.payment_type || "monthly",
       payment_amount: workerPaymentAmount,
@@ -258,7 +258,9 @@ export default function WorkersList({ workers, positions, onAdd, onUpdate, onDel
       management_bonus: formData.management_bonus || 0,
       payment_type: baseType,
       position_rates: comp,
-      total_cost_with_employer: finalTotalCost
+      total_cost_with_employer: finalTotalCost,
+      secondary_job_position_id: null,
+      secondary_job_position_name: null
     };
 
     try {

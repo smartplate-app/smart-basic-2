@@ -186,18 +186,17 @@ Deno.serve(async (req) => {
       const key = w.full_name.trim().toLowerCase();
       const existing = workerMap.get(key);
       
-      let secondaryPosId = null;
-      let secondaryPosName = null;
+      const otherRoleIds = [];
+      const otherRoleNames = [];
+      
       if (w.secondary_job_position_name) {
         const secPos = posMap.get(w.secondary_job_position_name.trim().toLowerCase());
         if (secPos) {
-          secondaryPosId = secPos.id;
-          secondaryPosName = secPos.name;
+          otherRoleIds.push(secPos.id);
+          otherRoleNames.push(secPos.name);
         }
       }
-      
-      const otherRoleIds = [];
-      const otherRoleNames = [];
+
       if (w.other_roles && w.other_roles.length > 0) {
         for (const roleName of w.other_roles) {
           const rPos = posMap.get((roleName || '').trim().toLowerCase());
@@ -213,10 +212,10 @@ Deno.serve(async (req) => {
         phone: w.phone || '',
         job_position_id: pos.id,
         job_position_name: pos.name,
-        secondary_job_position_id: secondaryPosId,
-        secondary_job_position_name: secondaryPosName,
-        job_position_ids: otherRoleIds,
-        job_position_names: otherRoleNames,
+        secondary_job_position_id: null,
+        secondary_job_position_name: null,
+        job_position_ids: Array.from(new Set(otherRoleIds)),
+        job_position_names: Array.from(new Set(otherRoleNames)),
         payment_type: w.payment_type || 'hourly',
         payment_amount: Number(w.payment_amount) || 0,
         created_by: targetEmail,
