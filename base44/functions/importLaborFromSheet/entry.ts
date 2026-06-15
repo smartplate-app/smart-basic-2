@@ -42,43 +42,55 @@ Deno.serve(async (req) => {
       if (rows.length < 2) continue;
 
       const headers = rows[0].map(normalizeText);
-      const isPositions = headers.some(h => h.includes('position name') || h.includes('שם תפקיד'));
-      const isWorkers = headers.some(h => h.includes('full name') || h.includes('שם מלא') || h.includes('שם'));
+      
+      const workerNameIdx = headers.findIndex(h => h.includes('full name') || h.includes('שם מלא') || h === 'שם' || h.includes('שם עובד'));
+      const workerPhoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('טלפון'));
+      const workerPosIdx = headers.findIndex(h => h.includes('position') || h.includes('תפקיד'));
+      
+      // More strict matching to avoid parsing schedule tabs as job positions
+      const isWorkersTab = sheetName.toLowerCase().includes('worker') || sheetName.includes('עובדים') || sheetName.includes('staff');
+      const isPositionsTab = sheetName.toLowerCase().includes('position') || sheetName.includes('תפקידים') || sheetName.includes('role');
+      
+      const isWorkers = (isWorkersTab) || (workerNameIdx >= 0 && (workerPhoneIdx >= 0 || workerPosIdx >= 0));
 
-      if (isPositions && !isWorkers) {
+      const posNameIdx = headers.findIndex(h => h.includes('position name') || h.includes('שם תפקיד') || h === 'תפקיד' || h.includes('position'));
+      const posTypeIdx = headers.findIndex(h => h.includes('payment type') || h.includes('סוג תשלום') || h.includes('type') || h.includes('סוג'));
+      const posAmountIdx = headers.findIndex(h => h.includes('amount') || h.includes('rate') || h.includes('תעריף'));
+      const isPositions = (isPositionsTab) || (posNameIdx >= 0 && posTypeIdx >= 0 && posAmountIdx >= 0 && !isWorkers);
+
+      if (isPositions) {
         // Parse Positions
-        const nameIdx = headers.findIndex(h => h.includes('name') || h.includes('שם'));
         const sectionIdx = headers.findIndex(h => h.includes('section') || h.includes('department') || h.includes('מחלקה'));
-        const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('סוג'));
         const tipsIdx = headers.findIndex(h => h.includes('tips') || h.includes('טיפים'));
-        const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('rate') || h.includes('תעריף'));
 
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
-          if (!row[nameIdx]) continue;
+          if (!row[posNameIdx]) continue;
           
-          let pType = normalizeText(row[typeIdx]);
+          let pType = normalizeText(row[posTypeIdx]);
           if (pType.includes('month') || pType.includes('חודש')) pType = 'monthly';
           else if (pType.includes('day') || pType.includes('יומי')) pType = 'daily';
           else pType = 'hourly';
 
           let onTips = false;
-          const tipsVal = normalizeText(row[tipsIdx]);
+          const tipsVal = tipsIdx >= 0 ? normalizeText(row[tipsIdx]) : '';
           if (tipsVal === 'yes' || tipsVal === 'true' || tipsVal === 'כן') onTips = true;
 
           parsedPositions.push({
-            name: row[nameIdx]?.trim() || '',
-            section: row[sectionIdx]?.trim() || 'other',
+            name: row[posNameIdx]?.trim() || '',
+            section: sectionIdx >= 0 ? (row[sectionIdx]?.trim() || 'other') : 'other',
             default_payment_type: pType,
             on_tips: onTips,
-            default_payment_amount: parseFloat(row[amountIdx]) || 0
+            default_payment_amount: parseFloat(row[posAmountIdx]) || 0
           });
         }
       } else if (isWorkers) {
         // Parse Workers
-        const nameIdx = headers.findIndex(h => h.includes('full name') || h.includes('שם מלא') || h.includes('שם'));
-        const phoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('טלפון'));
-        const pos1Idx = headers.findIndex(h => h.includes('main') && (h.includes('position') || h.includes('תפקיד')));
+        const nameIdx = workerNameIdx;
+        const phoneIdx = workerPhoneIdx;
+        const pos1Idx = headers.findIndex(h => (h.includes('main') || h.includes('עיקרי')) && (h.includes('position') || h.includes('תפקיד')));
+        const fallbackPos1Idx = workerPosIdx;
+        const actualPos1Idx = pos1Idx >= 0 ? pos1Idx : fallbackPos1Idx;
         const pos2Idx = headers.findIndex(h => h.includes('2nd') || h.includes('שני'));
         const pos3Idx = headers.findIndex(h => h.includes('3rd') || h.includes('שלישי'));
         const pos4Idx = headers.findIndex(h => h.includes('4th') || h.includes('רביעי'));
