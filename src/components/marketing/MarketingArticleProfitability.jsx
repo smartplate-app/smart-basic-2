@@ -7,7 +7,7 @@ export default function MarketingArticleProfitability({ lang, isTeaser = false }
   return (
     <div className="mt-8 bg-white/10 p-8 md:p-12 rounded-3xl backdrop-blur-md border border-white/20 shadow-xl max-w-4xl w-full text-right z-10 relative mb-12" dir="rtl">
       <img 
-        src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/c63086b6a_IMG_0382.webp" 
+        src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/3a2415580_IMG_0389.png" 
         alt="Profitability Metrics" 
         className="w-full h-auto max-h-[400px] object-cover rounded-2xl mb-8 shadow-lg"
       />
