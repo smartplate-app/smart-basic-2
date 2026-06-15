@@ -42,7 +42,7 @@ export default function LaborCostPage() {
 
   // Hydrate from cache for instant UI
   useEffect(() => {
-    const c = getCache('labor_v1');
+    const c = getCache('labor_v2');
     if (c?.data) {
       setPositions(c.data.positions || []);
       setWorkers(c.data.workers || []);
@@ -107,7 +107,7 @@ export default function LaborCostPage() {
       setPositions(positionsData);
       setWorkers(workersData);
       setSchedules(schedulesData);
-      setCache('labor_v1', { positions: positionsData, workers: workersData, schedules: schedulesData });
+      setCache('labor_v2', { positions: positionsData, workers: workersData, schedules: schedulesData });
     } catch (error) {
       console.error("Error loading data:", error);
       
@@ -135,7 +135,7 @@ export default function LaborCostPage() {
       const load = async () => {
         let currentUser;
         try { currentUser = await base44.auth.me(); } catch(e){}
-        const c = getCache('labor_v1');
+        const c = getCache('labor_v2');
         const stale = isStale(c, 180000);
         const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
         if (stale || !c?.data || isImpersonating) {
