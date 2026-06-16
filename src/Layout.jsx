@@ -177,7 +177,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           { title: language === 'he' ? 'מחשבון הנדסת תפריט' : 'Menu Engineering Calculator', url: createPageUrl("MenuEngineering"), icon: Calculator, adminOnly: false, workerHidden: true },
           { title: language === 'he' ? 'העברות מלאי' : 'Inventory Transfers', url: createPageUrl("InventoryTransfers"), icon: ArrowLeftRight, adminOnly: false, workerHidden: true },
           { title: language === 'he' ? 'פורטל עובדים' : 'Worker Portal', url: createPageUrl("StoreUsers"), icon: Users, adminOnly: false, workerHidden: true },
-          { title: language === 'he' ? 'כח אדם' : 'Labor Management', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
+          { title: language === 'he' ? 'כוח אדם' : 'Labor Management', url: createPageUrl("LaborCost"), icon: Users, adminOnly: false, workerHidden: true },
 
           { title: t('user_profile'), url: createPageUrl("UserProfile"), icon: UserCircle, adminOnly: false, workerHidden: false },
           // Hidden diagnostics (not shown in nav), access via /#/pages/Diagnostics
@@ -1197,7 +1197,7 @@ button, a, nav, header, footer, [role="button"], .no-select, .sidebar-hidden { -
               className={'flex flex-col items-center py-2 ' + (location.pathname.includes('LaborCost') ? 'text-[#d4a373]' : 'text-gray-600 dark:text-gray-300')}
             >
               <Users className="h-5 w-5 mb-1" />
-              <span>{language === 'he' ? 'כח אדם' : 'Labor'}</span>
+              <span>{language === 'he' ? 'כוח אדם' : 'Labor'}</span>
             </Link>
             <Link 
               to={createPageUrl('InventoryTransfers')} 
