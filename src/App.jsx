@@ -24,6 +24,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import WorkerLogin from './pages/WorkerLogin';
+import WelcomePage from './pages/WelcomePage';
 import WorkerPortal from './pages/WorkerPortal';
 import ManagersSection from './pages/ManagersSection';
 import PromoPreview from './pages/PromoPreview';
@@ -104,7 +105,9 @@ const AuthenticatedApp = () => {
     '/AuthKick',
     '/pages/AuthKick',
     '/PromoPreview',
-    '/pages/PromoPreview'
+    '/pages/PromoPreview',
+    '/WelcomePage',
+    '/pages/WelcomePage'
     ];
 
     let pathToUse = location.pathname;
@@ -153,6 +156,7 @@ const AuthenticatedApp = () => {
       <Route path="/Register" element={<Register />} />
       <Route path="/articles/food-cost" element={<ArticleFoodCost />} />
       <Route path="/articles/profitability" element={<ArticleProfitability />} />
+      <Route path="/WelcomePage" element={<WelcomePage />} />
 
       {/* All app routes are protected */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/PromoPreview" replace />} />}>
