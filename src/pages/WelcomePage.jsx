@@ -59,10 +59,10 @@ export default function WelcomePage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex-1 flex flex-col xl:flex-row gap-8 lg:gap-12 items-center justify-center p-6 lg:p-12 max-w-7xl mx-auto w-full mt-4 md:mt-0">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 lg:p-12 max-w-5xl mx-auto w-full mt-4 md:mt-0">
         
         {/* Text and Actions */}
-        <div className="flex-1 flex flex-col items-center xl:items-start text-center xl:text-start w-full">
+        <div className="flex-1 flex flex-col items-center text-center w-full">
           <div className="bg-white p-2 rounded-3xl shadow-xl mb-8 flex items-center justify-center">
             <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png" alt="Smart Plate Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain rounded-2xl" />
           </div>
@@ -73,23 +73,23 @@ export default function WelcomePage() {
             {text.subtitle}
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12">
-            <Link to="/app-login" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-2xl bg-white text-[#1b4332] hover:bg-gray-100 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
-                {text.loginBtn}
-              </Button>
-            </Link>
+          <div className={`flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
             <Link to="/Register" className="w-full sm:w-auto">
               <Button className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-2xl bg-[#52b788] text-white hover:bg-[#40916c] shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 border border-[#74c69d]">
                 {text.signupBtn}
               </Button>
             </Link>
+            <Link to="/app-login" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-2xl bg-white text-[#1b4332] hover:bg-gray-100 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1">
+                {text.loginBtn}
+              </Button>
+            </Link>
           </div>
 
-          <div className="space-y-4 text-base md:text-lg font-medium bg-white/10 p-6 md:p-8 rounded-3xl backdrop-blur-md border border-white/20 shadow-xl w-full max-w-2xl text-start">
+          <div className={`space-y-4 text-base md:text-lg font-medium bg-white/10 p-6 md:p-8 rounded-3xl backdrop-blur-md border border-white/20 shadow-xl w-full max-w-2xl ${isRTL ? 'text-right' : 'text-left'}`}>
             {[text.feat1, text.feat2, text.feat3, text.feat4].map((feat, i) => (
-              <div key={i} className="flex items-start gap-4">
-                <div className="bg-[#52b788] p-1.5 rounded-full mt-1 shrink-0 shadow-md">
+              <div key={i} className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="bg-[#52b788] p-1.5 rounded-full shrink-0 shadow-md">
                   <CheckCircle2 className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-white leading-relaxed">{feat}</span>
@@ -98,12 +98,7 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        </div>
-
-        <div className="relative z-10 flex flex-col items-center w-full px-6">
-          <MarketingArticle lang={lang} isTeaser={true} />
-          <MarketingArticleProfitability lang={lang} isTeaser={true} />
-        </div>
+      </div>
 
         <div className="relative z-10 text-sm text-green-200 py-6 text-center">
         © {new Date().getFullYear()} {text.copyright}
