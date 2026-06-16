@@ -64,6 +64,25 @@ export default function WeeklyScheduleTable({
     });
   };
 
+  const moveSectionUp = (sIdx) => {
+    if (sIdx === 0) return;
+    const newSections = [...(schedule.sections || [])];
+    const temp = newSections[sIdx - 1];
+    newSections[sIdx - 1] = newSections[sIdx];
+    newSections[sIdx] = temp;
+    setSchedule({ ...schedule, sections: newSections });
+  };
+
+  const moveSectionDown = (sIdx) => {
+    const sectionsCount = (schedule.sections || []).length;
+    if (sIdx === sectionsCount - 1) return;
+    const newSections = [...(schedule.sections || [])];
+    const temp = newSections[sIdx + 1];
+    newSections[sIdx + 1] = newSections[sIdx];
+    newSections[sIdx] = temp;
+    setSchedule({ ...schedule, sections: newSections });
+  };
+
   return (
     <DragDropContext 
       onDragStart={() => setIsDraggingShift(true)} 
@@ -90,9 +109,20 @@ export default function WeeklyScheduleTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align={isRTL ? 'start' : 'end'}>
+                        {sIdx > 0 && (
+                          <DropdownMenuItem onClick={() => moveSectionUp(sIdx)}>
+                            {language === 'he' ? 'העבר למעלה' : 'Move up'}
+                          </DropdownMenuItem>
+                        )}
+                        {sIdx < sections.length - 1 && (
+                          <DropdownMenuItem onClick={() => moveSectionDown(sIdx)}>
+                            {language === 'he' ? 'העבר למטה' : 'Move down'}
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => renameSection(section.id, section.name)}>
                           {language === 'he' ? 'שנה שם' : 'Rename'}
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => removeSection(section.id)} className="text-red-600">
                           {language === 'he' ? 'מחק חלק זה' : 'Delete section'}
                         </DropdownMenuItem>
