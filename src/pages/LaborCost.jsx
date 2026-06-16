@@ -302,7 +302,7 @@ export default function LaborCostPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex w-full overflow-x-auto overflow-y-hidden justify-start sm:grid sm:grid-cols-6 max-w-5xl scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <TabsTrigger value="schedule" className="whitespace-nowrap shrink-0">{language === 'he' ? 'כוח אדם' : 'Schedule'}</TabsTrigger>
+            <TabsTrigger value="schedule" className="whitespace-nowrap shrink-0">{language === 'he' ? 'סידור עבודה' : 'Schedule'}</TabsTrigger>
             <TabsTrigger value="goals" className="whitespace-nowrap shrink-0">{language === 'he' ? 'יעדים' : 'Goals'}</TabsTrigger>
             <TabsTrigger value="positions" className="whitespace-nowrap shrink-0">{t('positions')}</TabsTrigger>
             <TabsTrigger value="workers" className="whitespace-nowrap shrink-0">{t('workers')}</TabsTrigger>
