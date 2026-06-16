@@ -281,7 +281,7 @@ export default function LaborCostPage() {
       <div className="w-full">
         <div className={`mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
           <div className={isRTL ? 'text-right' : ''}>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{language === 'he' ? 'סידור עבודה' : 'Weekly Schedule'}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{language === 'he' ? 'כח אדם' : 'Labor Management'}</h1>
             <p className="text-gray-600 dark:text-gray-300 mt-2">{t('manage_workers_schedules')}</p>
           </div>
           <Button
@@ -302,7 +302,7 @@ export default function LaborCostPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex w-full overflow-x-auto overflow-y-hidden justify-start sm:grid sm:grid-cols-6 max-w-5xl scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <TabsTrigger value="schedule" className="whitespace-nowrap shrink-0">{language === 'he' ? 'סידור עבודה' : 'Schedule'}</TabsTrigger>
+            <TabsTrigger value="schedule" className="whitespace-nowrap shrink-0">{language === 'he' ? 'כח אדם' : 'Schedule'}</TabsTrigger>
             <TabsTrigger value="goals" className="whitespace-nowrap shrink-0">{language === 'he' ? 'יעדים' : 'Goals'}</TabsTrigger>
             <TabsTrigger value="positions" className="whitespace-nowrap shrink-0">{t('positions')}</TabsTrigger>
             <TabsTrigger value="workers" className="whitespace-nowrap shrink-0">{t('workers')}</TabsTrigger>
