@@ -89,6 +89,41 @@ export default function WeeklyScheduleTable({
     setSchedule({ ...schedule, sections: newSections });
   };
 
+  const hidePositionFromSection = (sectionId, positionId) => {
+    const confirmMessage = language === 'he' ? 'להסיר את התפקיד (וכל המשמרות שבו) מחלק זה?' : 'Remove position (and all its shifts) from this section?';
+    if (!window.confirm(confirmMessage)) return;
+
+    const newSections = (schedule?.sections?.length > 0 ? schedule.sections : [{id:'default', name:''}]).map(s => {
+      if (s.id === sectionId) {
+        return { ...s, hidden_positions: [...(s.hidden_positions || []), positionId] };
+      }
+      return s;
+    });
+
+    const newShifts = (schedule?.shifts || []).filter(shift => 
+      !( (shift.section_id === sectionId || (sectionId === 'default' && !shift.section_id)) && shift.job_position_id === positionId )
+    );
+
+    setSchedule({
+      ...(schedule || {}),
+      sections: newSections,
+      shifts: newShifts
+    });
+  };
+
+  const restoreHiddenPositions = (sectionId) => {
+    const newSections = (schedule?.sections?.length > 0 ? schedule.sections : [{id:'default', name:''}]).map(s => {
+      if (s.id === sectionId) {
+        return { ...s, hidden_positions: [] };
+      }
+      return s;
+    });
+    setSchedule({
+      ...(schedule || {}),
+      sections: newSections
+    });
+  };
+
   return (
     <DragDropContext 
       onDragStart={() => setIsDraggingShift(true)} 
@@ -131,9 +166,28 @@ export default function WeeklyScheduleTable({
                         <DropdownMenuItem onClick={() => renameSection(section.id, section.name)}>
                           {language === 'he' ? 'שנה שם' : 'Rename'}
                         </DropdownMenuItem>
+                        {section.hidden_positions?.length > 0 && (
+                          <DropdownMenuItem onClick={() => restoreHiddenPositions(section.id)}>
+                            {language === 'he' ? 'שחזר תפקידים שהוסרו' : 'Restore hidden roles'}
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => removeSection(section.id)} className="text-red-600">
                           {language === 'he' ? 'מחק חלק זה' : 'Delete section'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  {isDefaultSection && section.hidden_positions?.length > 0 && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-6 w-6">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align={isRTL ? 'start' : 'end'}>
+                        <DropdownMenuItem onClick={() => restoreHiddenPositions(section.id)}>
+                          {language === 'he' ? 'שחזר תפקידים שהוסרו' : 'Restore hidden roles'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -169,6 +223,7 @@ export default function WeeklyScheduleTable({
                     <div ref={provided.innerRef} {...provided.droppableProps} className="flex flex-col">
                       {(positionOrder.length > 0 ? positionOrder : positions.map(p => p.id))
                         .map((positionId, posIndex) => {
+                          if (section.hidden_positions && section.hidden_positions.includes(positionId)) return null;
                           const position = positions.find(p => p.id === positionId);
                           if (!position) return null;
                           const positionRows = (schedule?.position_rows || []).filter(r => r.position_id === position.id);
@@ -243,6 +298,10 @@ export default function WeeklyScheduleTable({
                                                     <DropdownMenuItem onClick={() => addPositionRow(position.id, position.name)}>
                                                       <Plus className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
                                                       {language === 'he' ? 'שכפל שורת תפקיד' : 'Duplicate role row'}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => hidePositionFromSection(section.id, position.id)} className="text-red-600">
+                                                      <Trash className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                                                      {language === 'he' ? 'הסר תפקיד ממשמרת זו' : 'Remove role from this section'}
                                                     </DropdownMenuItem>
                                                   </>
                                                 ) : (
