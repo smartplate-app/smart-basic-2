@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GripVertical, Plus, MoreHorizontal, MessageCircle, Trash, Copy } from "lucide-react";
+import { GripVertical, Plus, MoreHorizontal, MessageCircle, Trash, Copy, ChevronDown, ChevronUp } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import moment from "moment";
 
@@ -31,6 +31,12 @@ export default function WeeklyScheduleTable({
   formatCurrency,
   scheduleTableRef
 }) {
+  const [collapsedSections, setCollapsedSections] = useState({});
+
+  const toggleSection = (sectionId) => {
+    setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
+
   const sections = schedule?.sections?.length > 0 
     ? schedule.sections 
     : [{ id: 'default', name: '' }];
@@ -100,6 +106,9 @@ export default function WeeklyScheduleTable({
               {/* Section Header */}
               <div className="flex items-center justify-between p-3 border-b bg-gray-100 min-w-[800px]">
                 <div className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleSection(section.id)}>
+                    {collapsedSections[section.id] ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                  </Button>
                   {section.name || (language === 'he' ? 'משמרת כללית' : 'General Shift')}
                   {!isDefaultSection && (
                     <DropdownMenu>
@@ -138,7 +147,7 @@ export default function WeeklyScheduleTable({
                 )}
               </div>
 
-              <div className="flex flex-col min-w-[800px]">
+              <div className={`flex flex-col min-w-[800px] ${collapsedSections[section.id] ? 'hidden' : ''}`}>
                 {/* Table Header */}
                 <div className="flex bg-gray-50 border-b">
                   <div className={`w-[140px] shrink-0 border-x p-2 text-xs font-semibold ${isRTL ? 'border-r-0' : 'border-l-0'} flex items-center`}>
