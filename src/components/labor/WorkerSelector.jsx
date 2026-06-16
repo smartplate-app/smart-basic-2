@@ -29,17 +29,45 @@ export default function WorkerSelector({
   }, [workers, searchQuery]);
 
   const groupedWorkers = useMemo(() => {
-    if (!groupByDepartment) return { all: filteredWorkers };
+    const isTarget = (w) => w.job_position_id === targetPositionId || w.secondary_job_position_id === targetPositionId || (w.job_position_ids || []).includes(targetPositionId);
+    
+    if (!groupByDepartment) {
+      const sorted = [...filteredWorkers].sort((a, b) => {
+        const aIsTarget = isTarget(a);
+        const bIsTarget = isTarget(b);
+        if (aIsTarget && !bIsTarget) return -1;
+        if (!aIsTarget && bIsTarget) return 1;
+        return 0;
+      });
+      return { all: sorted };
+    }
     
     const groups = {};
+    const targetPositionName = positions?.find(p => p.id === targetPositionId)?.name;
+    
     filteredWorkers.forEach(w => {
-      // Find worker's primary position name, or the target position if they have it as secondary
-      const posName = w.job_position_name || (language === 'he' ? 'כללי' : 'General');
-      if (!groups[posName]) groups[posName] = [];
-      groups[posName].push(w);
+      const isTargetPos = isTarget(w);
+      let groupName = w.job_position_name || (language === 'he' ? 'כללי' : 'General');
+      
+      if (isTargetPos && targetPositionName) {
+        groupName = targetPositionName;
+      }
+      
+      if (!groups[groupName]) groups[groupName] = [];
+      groups[groupName].push(w);
     });
-    return groups;
-  }, [filteredWorkers, groupByDepartment, language]);
+    
+    const sortedGroups = {};
+    if (targetPositionName && groups[targetPositionName]) {
+      sortedGroups[targetPositionName] = groups[targetPositionName];
+    }
+    Object.keys(groups).sort().forEach(key => {
+      if (key !== targetPositionName) {
+        sortedGroups[key] = groups[key];
+      }
+    });
+    return sortedGroups;
+  }, [filteredWorkers, groupByDepartment, language, targetPositionId, positions]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -114,9 +142,12 @@ export default function WorkerSelector({
                     return (
                       <button
                         key={w.id}
+                        disabled={!isTargetPos && !isSelected}
                         onClick={() => {
-                          onSelectWorker(w.id);
-                          setOpen(false);
+                          if (isTargetPos || isSelected) {
+                            onSelectWorker(w.id);
+                            setOpen(false);
+                          }
                         }}
                         className={`
                           flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all
@@ -124,12 +155,12 @@ export default function WorkerSelector({
                             ? 'bg-[#d4a373] text-white shadow-sm' 
                             : isTargetPos 
                               ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:shadow-sm' 
-                              : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+                              : 'bg-white border border-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
                           }
                         `}
                       >
                         {isSelected && <Check className="w-3.5 h-3.5" />}
-                        {!isSelected && !isTargetPos && <User className="w-3.5 h-3.5 opacity-50" />}
+                        {!isSelected && !isTargetPos && <User className="w-3.5 h-3.5 opacity-40" />}
                         {w.full_name}
                       </button>
                     );

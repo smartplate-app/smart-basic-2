@@ -1471,7 +1471,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           <div className="absolute top-0 left-0 w-full h-1.5 bg-[#d4a373]" />
           <DialogHeader className="pt-4 pb-2">
             <DialogTitle className={`text-xl font-bold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
-              {editingShift?.id ? t('edit_shift') : t('add_shift')}
+              {editingShift?.id ? (language === 'he' ? 'עריכת שיבוץ' : t('edit_shift')) : (language === 'he' ? 'שיבוץ למשמרת' : t('add_shift'))}
             </DialogTitle>
           </DialogHeader>
           
