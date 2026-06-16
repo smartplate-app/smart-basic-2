@@ -201,7 +201,7 @@ export default function WeeklyScheduleTable({
                                                       {language === 'he' ? 'קבע שעות לתפקיד' : 'Set role hours'}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => addPositionRow(position.id)}>
+                                                    <DropdownMenuItem onClick={() => addPositionRow(position.id, position.name)}>
                                                       <Plus className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
                                                       {language === 'he' ? 'שכפל שורת תפקיד' : 'Duplicate role row'}
                                                     </DropdownMenuItem>
