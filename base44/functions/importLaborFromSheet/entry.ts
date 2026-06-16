@@ -121,8 +121,18 @@ Deno.serve(async (req) => {
         const pos3Idx = headers.findIndex(h => h.includes('3rd') || h.includes('שלישי') || h.includes('תפקיד 3') || h.includes('role 3') || h.includes('נוסף 2'));
         const pos4Idx = headers.findIndex(h => h.includes('4th') || h.includes('רביעי') || h.includes('תפקיד 4') || h.includes('role 4') || h.includes('נוסף 3'));
         const pos5Idx = headers.findIndex(h => h.includes('5th') || h.includes('חמישי') || h.includes('תפקיד 5') || h.includes('role 5') || h.includes('נוסף 4'));
+        
+        // Find specific rate columns for secondary roles if they exist
+        // Note: we'll match anything like "2nd rate", "תעריף תפקיד 2", "rate 2"
+        const pos2RateIdx = headers.findIndex(h => (h.includes('rate') || h.includes('amount') || h.includes('תעריף')) && (h.includes('2nd') || h.includes('שני') || h.includes('2') || h.includes('משני')));
+        const pos3RateIdx = headers.findIndex(h => (h.includes('rate') || h.includes('amount') || h.includes('תעריף')) && (h.includes('3rd') || h.includes('שלישי') || h.includes('3')));
+        const pos4RateIdx = headers.findIndex(h => (h.includes('rate') || h.includes('amount') || h.includes('תעריף')) && (h.includes('4th') || h.includes('רביעי') || h.includes('4')));
+        const pos5RateIdx = headers.findIndex(h => (h.includes('rate') || h.includes('amount') || h.includes('תעריף')) && (h.includes('5th') || h.includes('חמישי') || h.includes('5')));
+
         const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('סוג'));
-        const amountIdx = headers.findIndex(h => h.includes('rate') || h.includes('amount') || h.includes('תעריף'));
+        // Make sure the main amountIdx doesn't grab a secondary rate column by mistake
+        // If there's a specific 'main rate' we take it, otherwise the first rate column that isn't for a secondary role
+        const amountIdx = headers.findIndex((h, i) => (h.includes('rate') || h.includes('amount') || h.includes('תעריף')) && i !== pos2RateIdx && i !== pos3RateIdx && i !== pos4RateIdx && i !== pos5RateIdx);
 
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
@@ -137,6 +147,12 @@ Deno.serve(async (req) => {
           if (pos3Idx >= 0 && row[pos3Idx]) otherRoles.push(row[pos3Idx].trim());
           if (pos4Idx >= 0 && row[pos4Idx]) otherRoles.push(row[pos4Idx].trim());
           if (pos5Idx >= 0 && row[pos5Idx]) otherRoles.push(row[pos5Idx].trim());
+
+          const customRates = {};
+          if (pos2Idx >= 0 && row[pos2Idx] && pos2RateIdx >= 0 && row[pos2RateIdx]) customRates[row[pos2Idx].trim().toLowerCase()] = parseFloat(row[pos2RateIdx]) || 0;
+          if (pos3Idx >= 0 && row[pos3Idx] && pos3RateIdx >= 0 && row[pos3RateIdx]) customRates[row[pos3Idx].trim().toLowerCase()] = parseFloat(row[pos3RateIdx]) || 0;
+          if (pos4Idx >= 0 && row[pos4Idx] && pos4RateIdx >= 0 && row[pos4RateIdx]) customRates[row[pos4Idx].trim().toLowerCase()] = parseFloat(row[pos4RateIdx]) || 0;
+          if (pos5Idx >= 0 && row[pos5Idx] && pos5RateIdx >= 0 && row[pos5RateIdx]) customRates[row[pos5Idx].trim().toLowerCase()] = parseFloat(row[pos5RateIdx]) || 0;
 
           let startDate = '';
           if (workerStartDateIdx >= 0 && row[workerStartDateIdx]) {
@@ -187,6 +203,7 @@ Deno.serve(async (req) => {
             job_position_name: pos1Idx >= 0 ? row[pos1Idx]?.trim() : '',
             secondary_job_position_name: pos2Idx >= 0 ? row[pos2Idx]?.trim() : '',
             other_roles: otherRoles,
+            custom_rates: customRates,
             payment_type: pType,
             payment_amount: parseFloat(row[amountIdx]) || 0
           });
@@ -252,21 +269,36 @@ Deno.serve(async (req) => {
       
       const otherRoleIds = [];
       const otherRoleNames = [];
+      const positionRates = [];
+      
+      // Main role rate
+      positionRates.push({
+        position_id: pos.id,
+        position_name: pos.name,
+        amount: Number(w.payment_amount) || pos.default_payment_amount || 0,
+        payment_type: w.payment_type || pos.default_payment_type || 'hourly'
+      });
       
       if (w.secondary_job_position_name) {
-        const secPos = posMap.get(w.secondary_job_position_name.trim().toLowerCase());
+        const key = w.secondary_job_position_name.trim().toLowerCase();
+        const secPos = posMap.get(key);
         if (secPos) {
           otherRoleIds.push(secPos.id);
           otherRoleNames.push(secPos.name);
+          const overrideAmt = w.custom_rates && w.custom_rates[key] ? w.custom_rates[key] : secPos.default_payment_amount;
+          positionRates.push({ position_id: secPos.id, position_name: secPos.name, amount: overrideAmt || 0, payment_type: secPos.default_payment_type || 'hourly' });
         }
       }
 
       if (w.other_roles && w.other_roles.length > 0) {
         for (const roleName of w.other_roles) {
-          const rPos = posMap.get((roleName || '').trim().toLowerCase());
+          const key = (roleName || '').trim().toLowerCase();
+          const rPos = posMap.get(key);
           if (rPos) {
             otherRoleIds.push(rPos.id);
             otherRoleNames.push(rPos.name);
+            const overrideAmt = w.custom_rates && w.custom_rates[key] ? w.custom_rates[key] : rPos.default_payment_amount;
+            positionRates.push({ position_id: rPos.id, position_name: rPos.name, amount: overrideAmt || 0, payment_type: rPos.default_payment_type || 'hourly' });
           }
         }
       }
@@ -282,6 +314,7 @@ Deno.serve(async (req) => {
         job_position_names: Array.from(new Set(otherRoleNames)),
         payment_type: w.payment_type || 'hourly',
         payment_amount: Number(w.payment_amount) || 0,
+        position_rates: positionRates,
         created_by: targetEmail,
         store_owner_email: targetEmail
       };

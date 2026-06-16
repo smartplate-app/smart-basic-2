@@ -12,7 +12,7 @@ async function createSpreadsheet(accessToken, title) {
     body: JSON.stringify({
       properties: { title },
       sheets: [
-        { properties: { title: 'Workers', gridProperties: { columnCount: 10 } } },
+        { properties: { title: 'Workers', gridProperties: { columnCount: 18 } } },
         { properties: { title: 'Job Positions', gridProperties: { columnCount: 10 } } }
       ]
     })
@@ -60,9 +60,9 @@ Deno.serve(async (req) => {
 
     // Build Workers Sheet Data
     const workersData = [
-      ['Full Name', 'Phone', 'Email', 'ID Number', 'Bank Name', 'Branch', 'Account', 'Start Date', 'Main Job Position', '2nd role', '3rd role', '4th role', 'MAIN Job Payment Type (hourly/monthly/daily)', 'Main Role Rate', 'Notes'],
-      ['John Doe', '050-1234567', 'john@example.com', '123456789', 'Leumi', '123', '123456', '01/01/2023', 'Chef', 'Manager', '', '', 'hourly', '70', ''],
-      ['Jane Smith', '052-7654321', 'jane@example.com', '987654321', 'Hapoalim', '456', '654321', '15/05/2024', 'Waiter', 'Host', 'Bartender', '', 'hourly', '55', '']
+      ['Full Name', 'Phone', 'Email', 'ID Number', 'Bank Name', 'Branch', 'Account', 'Start Date', 'Main Job Position', 'Main Role Rate', '2nd role', '2nd role rate', '3rd role', '3rd role rate', '4th role', '4th role rate', 'MAIN Job Payment Type (hourly/monthly/daily)', 'Notes'],
+      ['John Doe', '050-1234567', 'john@example.com', '123456789', 'Leumi', '123', '123456', '01/01/2023', 'Chef', '70', 'Manager', '75', '', '', '', '', 'hourly', ''],
+      ['Jane Smith', '052-7654321', 'jane@example.com', '987654321', 'Hapoalim', '456', '654321', '15/05/2024', 'Waiter', '55', 'Host', '60', 'Bartender', '65', '', '', 'hourly', '']
     ];
 
     // Build Job Positions Sheet Data
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
       ['Waiter', 'service', 'hourly', 'yes', '55']
     ];
 
-    await writeValues(accessToken, spreadsheetId, "'Workers'!A1:E100", workersData);
+    await writeValues(accessToken, spreadsheetId, "'Workers'!A1:R100", workersData);
     await writeValues(accessToken, spreadsheetId, "'Job Positions'!A1:D100", positionsData);
 
     // Share with store managers
