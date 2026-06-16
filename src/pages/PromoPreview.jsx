@@ -98,24 +98,7 @@ export default function PromoPreview() {
           </div>
         </div>
 
-        {/* Images Grid (Hidden on very small screens, visible on md+) */}
-        <div className="flex-1 w-full max-w-lg xl:max-w-none relative hidden md:block">
-          <div className="grid grid-cols-2 gap-4 transform xl:translate-x-12">
-            <div className="space-y-4 pt-12">
-              <div className="bg-white p-2 rounded-2xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500">
-                <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/eb6333ac4_IMG_0502.png" alt={text.imgAlt1} className="w-full h-48 lg:h-64 object-cover rounded-xl" />
-              </div>
-              <div className="bg-white p-2 rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/ee589f675_IMG_0380.jpg" alt={text.imgAlt2} className="w-full h-56 lg:h-72 object-cover object-top rounded-xl" />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-white p-2 rounded-2xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                <img src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0d18c242b_IMG_0347.jpg" alt={text.imgAlt3} className="w-full h-auto aspect-video object-cover rounded-xl" />
-              </div>
-            </div>
-          </div>
-        </div>
+
 
         </div>
 
