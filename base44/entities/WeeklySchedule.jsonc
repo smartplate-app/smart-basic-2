@@ -20,6 +20,21 @@
       "default": 0,
       "description": "Predicted sales for the week (including VAT)"
     },
+    "sections": {
+      "type": "array",
+      "description": "Optional sections to divide the schedule (e.g., Morning, Evening)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "shifts": {
       "type": "array",
       "description": "All shifts for the week",
@@ -53,6 +68,10 @@
           "position_row_id": {
             "type": "string",
             "description": "Optional: ID of the position row this shift belongs to (for multiple rows per position)"
+          },
+          "section_id": {
+            "type": "string",
+            "description": "Optional: ID of the section this shift belongs to (if sections are used)"
           },
           "department": {
             "type": "string",

@@ -447,6 +447,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
     setSchedule({
       ...schedule,
+      sections: template.sections || [],
       shifts: loadedShifts,
       position_rows: template.position_rows || [],
       total_hours: calculateTotals().totalHours,
@@ -456,7 +457,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     toast.success(t('template_loaded_successfully'));
   };
 
-  const handleCellDoubleClick = (dayKey, dateStr, positionId, rowId) => {
+  const handleCellDoubleClick = (dayKey, dateStr, positionId, rowId, sectionId) => {
     const position = positions.find(p => p.id === positionId);
     let defaultStartTime = position?.default_start_time || "09:00";
       let defaultEndTime = position?.default_end_time || "17:00";
@@ -611,7 +612,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       date: selectedCell.date,
       day: selectedCell.day,
       id: editingShift.id || undefined,
-      position_row_id: selectedCell?.rowId || editingShift.position_row_id 
+      position_row_id: selectedCell?.rowId || editingShift.position_row_id,
+      section_id: selectedCell?.sectionId || editingShift.section_id || undefined
     };
 
     const prevKey = editingShift.__originalKey;
@@ -861,6 +863,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         job_position_id: s.job_position_id,
         job_position: s.job_position,
         position_row_id: s.position_row_id || undefined,
+        section_id: s.section_id || undefined,
         worker_id: s.worker_id || "",
         worker_name: s.worker_name || "",
         start_time: s.start_time,
@@ -875,6 +878,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       await base44.entities.ScheduleTemplate.create({
         template_name: templateName,
         template_type: templateSaveType,
+        sections: schedule.sections || [],
         position_rows: schedule.position_rows || [],
         position_order: positionOrder || [],
         shifts: templateShifts,
@@ -1098,8 +1102,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
     // Shifts: reorder within cell or move across cells
     const parse = (id) => {
-      const [day, positionId, rowRaw] = id.split('|');
-      return { day, positionId, rowId: rowRaw && rowRaw !== 'default' ? rowRaw : undefined };
+      const [day, positionId, rowRaw, sectionRaw] = id.split('|');
+      return { day, positionId, rowId: rowRaw && rowRaw !== 'default' ? rowRaw : undefined, sectionId: sectionRaw && sectionRaw !== 'default' ? sectionRaw : undefined };
     };
     const src = parse(source.droppableId);
     const dst = parse(destination.droppableId);
@@ -1107,7 +1111,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const matchCell = (s, cell) => (
       s.day === cell.day &&
       s.job_position_id === cell.positionId &&
-      ((cell.rowId && s.position_row_id === cell.rowId) || (!cell.rowId && !s.position_row_id))
+      ((cell.rowId && s.position_row_id === cell.rowId) || (!cell.rowId && !s.position_row_id)) &&
+      ((cell.sectionId && s.section_id === cell.sectionId) || (!cell.sectionId && !s.section_id))
     );
 
     const list = (schedule?.shifts || []);
@@ -1145,6 +1150,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         job_position_id: dst.positionId,
         job_position: destPosition?.name || updated.job_position,
         position_row_id: dst.rowId,
+        section_id: dst.sectionId,
         base_payment: newBasePayment,
         payment_for_shift: newPaymentForShift
       };

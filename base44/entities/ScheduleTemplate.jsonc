@@ -19,6 +19,21 @@
       "default": "populated",
       "description": "Whether this template saves only the structure (roles & hours) or the fully populated schedule"
     },
+    "sections": {
+      "type": "array",
+      "description": "Optional sections to divide the schedule",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "position_rows": {
       "type": "array",
       "description": "Position rows structure"
@@ -52,6 +67,9 @@
             "type": "string"
           },
           "position_row_id": {
+            "type": "string"
+          },
+          "section_id": {
             "type": "string"
           },
           "worker_id": {
