@@ -117,9 +117,10 @@ Deno.serve(async (req) => {
         const pos1Idx = headers.findIndex(h => (h.includes('main') || h.includes('עיקרי')) && (h.includes('position') || h.includes('תפקיד')));
         const fallbackPos1Idx = workerPosIdx;
         const actualPos1Idx = pos1Idx >= 0 ? pos1Idx : fallbackPos1Idx;
-        const pos2Idx = headers.findIndex(h => h.includes('2nd') || h.includes('שני'));
-        const pos3Idx = headers.findIndex(h => h.includes('3rd') || h.includes('שלישי'));
-        const pos4Idx = headers.findIndex(h => h.includes('4th') || h.includes('רביעי'));
+        const pos2Idx = headers.findIndex(h => h.includes('2nd') || h.includes('שני') || h.includes('תפקיד 2') || h.includes('role 2') || h.includes('נוסף 1') || h.includes('תפקיד משני'));
+        const pos3Idx = headers.findIndex(h => h.includes('3rd') || h.includes('שלישי') || h.includes('תפקיד 3') || h.includes('role 3') || h.includes('נוסף 2'));
+        const pos4Idx = headers.findIndex(h => h.includes('4th') || h.includes('רביעי') || h.includes('תפקיד 4') || h.includes('role 4') || h.includes('נוסף 3'));
+        const pos5Idx = headers.findIndex(h => h.includes('5th') || h.includes('חמישי') || h.includes('תפקיד 5') || h.includes('role 5') || h.includes('נוסף 4'));
         const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('סוג'));
         const amountIdx = headers.findIndex(h => h.includes('rate') || h.includes('amount') || h.includes('תעריף'));
 
@@ -135,6 +136,7 @@ Deno.serve(async (req) => {
           const otherRoles = [];
           if (pos3Idx >= 0 && row[pos3Idx]) otherRoles.push(row[pos3Idx].trim());
           if (pos4Idx >= 0 && row[pos4Idx]) otherRoles.push(row[pos4Idx].trim());
+          if (pos5Idx >= 0 && row[pos5Idx]) otherRoles.push(row[pos5Idx].trim());
 
           let startDate = '';
           if (workerStartDateIdx >= 0 && row[workerStartDateIdx]) {
