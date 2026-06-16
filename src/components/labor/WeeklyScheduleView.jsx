@@ -472,7 +472,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         if (!perDay && row?.default_end_time) defaultEndTime = row.default_end_time;
       }
     
-    setSelectedCell({ day: dayKey, date: dateStr, positionId: positionId, rowId });
+    setSelectedCell({ day: dayKey, date: dateStr, positionId: positionId, rowId, sectionId });
     setEditingShift({
       day: dayKey,
       date: dateStr,
@@ -486,7 +486,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       overtime_rate: "regular", // Default to regular 100%
       payment_for_shift: 0,
       base_payment: 0,
-      notes: ""
+      notes: "",
+      section_id: sectionId
     });
     setShowShiftDialog(true);
   };
