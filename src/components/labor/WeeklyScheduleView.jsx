@@ -833,10 +833,6 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const handleSaveAsTemplate = async (setAsDefault = false) => {
-    if (!schedule || (schedule.shifts.length === 0 && (!schedule.position_rows || schedule.position_rows.length === 0))) {
-      toast.info(language === 'he' ? 'אין נתונים לשמירה כתבנית' : 'No data to save as template');
-      return;
-    }
     if (!templateName.trim()) {
       toast.error(t('template_name_required'));
       return;
@@ -856,7 +852,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         }
       }
 
-      const shiftsToSave = templateSaveType === "populated" ? schedule.shifts : schedule.shifts.map(s => ({
+      const currentShifts = schedule?.shifts || [];
+      const shiftsToSave = templateSaveType === "populated" ? currentShifts : currentShifts.map(s => ({
         ...s,
         worker_id: "",
         worker_name: "",
@@ -884,8 +881,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       await base44.entities.ScheduleTemplate.create({
         template_name: templateName,
         template_type: templateSaveType,
-        sections: schedule.sections || [],
-        position_rows: schedule.position_rows || [],
+        sections: schedule?.sections || [],
+        position_rows: schedule?.position_rows || [],
         position_order: positionOrder || [],
         shifts: templateShifts,
         is_default: setAsDefault,
@@ -1613,7 +1610,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 </SelectContent>
               </Select>
             </div>
-            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={() => handleSaveAsTemplate(false)} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || (!schedule?.shifts?.length && (!schedule?.position_rows || schedule?.position_rows?.length === 0))}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}{t('save')}</Button><Button onClick={() => handleSaveAsTemplate(true)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || (!schedule?.shifts?.length && (!schedule?.position_rows || schedule?.position_rows?.length === 0))}><Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('set_as_default')}</Button></div>
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={() => handleSaveAsTemplate(false)} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}{t('save')}</Button><Button onClick={() => handleSaveAsTemplate(true)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}><Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('set_as_default')}</Button></div>
             <h3 className="font-semibold pt-4 border-t mt-4">{t('load_existing_template')}</h3>
             {templates.length === 0 ? <div className="text-center py-4 text-gray-500"><p>{t('no_templates_saved')}</p></div> : (<div className="space-y-2"><Select value={selectedTemplate} onValueChange={setSelectedTemplate}><SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue placeholder={t('select_template_to_load')} /></SelectTrigger><SelectContent>{templates.map(template => (<SelectItem key={template.id} value={template.id}>{template.template_name} {template.is_default && `(${t('default')})`}</SelectItem>))}</SelectContent></Select><div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}{t('load_template')}</Button>{selectedTemplate && <Button onClick={() => handleDeleteTemplate(selectedTemplate)} variant="destructive" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}><Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('delete_template')}</Button>}</div></div>)}
           </div>
