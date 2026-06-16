@@ -456,7 +456,11 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       total_cost: calculateTotals().totalCost,
       labor_cost_percentage: calculateTotals().laborPercentage
     });
-    toast.success(t('template_loaded_successfully'));
+    if (loadedShifts.length === 0) {
+      toast.info(language === 'he' ? 'התבנית נטענה, אך היא אינה מכילה משמרות' : 'Template loaded, but it contains no shifts');
+    } else {
+      toast.success(t('template_loaded_successfully'));
+    }
   };
 
   const handleCellDoubleClick = (dayKey, dateStr, positionId, rowId, sectionId) => {
@@ -1609,6 +1613,13 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                   <SelectItem value="populated">{language === 'he' ? 'סידור מלא (כולל שיבוץ עובדים)' : 'Populated (including workers)'}</SelectItem>
                 </SelectContent>
               </Select>
+              {templateSaveType === 'structure' && (!schedule?.shifts || schedule.shifts.length === 0) && (
+                 <p className="text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-100 mt-2">
+                   {language === 'he' 
+                     ? 'שים לב: הלוח כרגע ריק ממשמרות! התבנית תשמור רק את התפקידים. כדי שהתבנית תכיל שעות משמרת קבועות, עליך להוסיף תחילה משמרות ללוח (אפשר גם ללא עובד).' 
+                     : 'Note: The board is currently empty of shifts! The template will only save the roles. To save fixed shift hours, you must first add empty shifts to the board.'}
+                 </p>
+              )}
             </div>
             <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={() => handleSaveAsTemplate(false)} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}{t('save')}</Button><Button onClick={() => handleSaveAsTemplate(true)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}><Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('set_as_default')}</Button></div>
             <h3 className="font-semibold pt-4 border-t mt-4">{t('load_existing_template')}</h3>
