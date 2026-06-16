@@ -43,8 +43,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
       section: "other",
       default_payment_type: "monthly",
       default_payment_amount: 0,
-      default_start_time: "09:00",
-      default_end_time: "17:00",
+
       tip_hourly_rate: 0,
       tip_allocation_percent: 0,
       tips_method: "general_pool",
@@ -62,8 +61,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
       section: position.section || "other",
       default_payment_type: position.default_payment_type || "monthly",
       default_payment_amount: position.default_payment_amount || 0,
-      default_start_time: position.default_start_time || "09:00",
-      default_end_time: position.default_end_time || "17:00",
+
       tip_hourly_rate: typeof position.tip_hourly_rate === 'number' ? position.tip_hourly_rate : 0,
       tip_allocation_percent: typeof position.tip_allocation_percent === 'number' ? position.tip_allocation_percent : 0,
       tips_method: position.tips_method || "general_pool",
@@ -88,13 +86,13 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", tip_hourly_rate: 0, tip_allocation_percent: 0, tips_method: "general_pool", is_active: true, color: "#E6F4FF" });
+    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, tip_hourly_rate: 0, tip_allocation_percent: 0, tips_method: "general_pool", is_active: true, color: "#E6F4FF" });
   };
 
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, default_start_time: "09:00", default_end_time: "17:00", tip_hourly_rate: 0, tip_allocation_percent: 0, tips_method: "general_pool", is_active: true, color: "#E6F4FF" });
+    setFormData({ name: "", description: "", section: "other", default_payment_type: "monthly", default_payment_amount: 0, tip_hourly_rate: 0, tip_allocation_percent: 0, tips_method: "general_pool", is_active: true, color: "#E6F4FF" });
   };
 
   const sectionColors = {
@@ -271,23 +269,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
 
 
 
-              <div className="space-y-2">
-                <Label>{tf('default_start_time', 'שעת התחלה ברירת מחדל', 'Default start time')}</Label>
-                <Input
-                  type="time"
-                  value={formData.default_start_time}
-                  onChange={(e) => setFormData({ ...formData, default_start_time: e.target.value })}
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label>{tf('default_end_time', 'שעת סיום ברירת מחדל', 'Default end time')}</Label>
-                <Input
-                  type="time"
-                  value={formData.default_end_time}
-                  onChange={(e) => setFormData({ ...formData, default_end_time: e.target.value })}
-                />
-              </div>
             </div>
 
             {/* Color picker */}
@@ -375,13 +357,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                       )}
                     </div>
 
-                    {(position.default_start_time || position.default_end_time) && (
-                      <div className="mt-2 p-2 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                          {tf('default_hours', 'שעות ברירת מחדל', 'Default hours')}: {position.default_start_time || '09:00'} - {position.default_end_time || '17:00'}
-                        </p>
-                      </div>
-                    )}
+
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" onClick={() => handleStartEdit(position)}>
@@ -416,11 +392,7 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
                         {paymentTypeLabels[position.default_payment_type]} · {position.default_payment_amount.toLocaleString()} {t('currency')}
                       </span>
                     )}
-                    {(position.default_start_time || position.default_end_time) && (
-                      <span>
-                        {tf('default_hours', 'שעות ברירת מחדל', 'Default hours')}: {position.default_start_time || '09:00'} - {position.default_end_time || '17:00'}
-                      </span>
-                    )}
+
                     <span>
                       {tf('tips_method', 'תגמול מהטיפים', 'Tips method')}: {position.tips_method === 'excluded' ? tf('excluded','לא זכאי','Excluded') : position.tips_method === 'percent_allocation' ? tf('percent_allocation','הפרשה אחוזית','Percent allocation') : (language === 'he' ? 'השלמה' : 'Completion')}
                     </span>
