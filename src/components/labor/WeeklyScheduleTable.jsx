@@ -392,9 +392,9 @@ export default function WeeklyScheduleTable({
                                                               <div className={`font-bold text-[11px] leading-tight mb-0.5 ${isRTL ? 'pr-4' : 'pl-4'} ${!shift.worker_id ? 'text-gray-500 italic' : ''}`}>
                                                                 {shift.worker_name || (language === 'he' ? 'ללא שיבוץ' : 'Unassigned')}
                                                               </div>
-                                                              <div className={`flex items-center justify-between text-[10px] ${isRTL ? 'pr-4' : 'pl-4'}`}>
-                                                                <span className="font-medium text-gray-700 bg-white/50 px-1 rounded">{shift.start_time}-{shift.end_time}</span>
-                                                                {shift.worker_id && <span className="shift-cost opacity-80">{formatCurrency(shift.payment_for_shift || 0)}</span>}
+                                                              <div className={`flex flex-wrap items-center justify-between gap-1 text-[10px] ${isRTL ? 'pr-4' : 'pl-4'}`}>
+                                                                <span className="font-medium text-gray-700 bg-white/50 px-1 rounded break-all whitespace-normal" style={{ direction: 'ltr' }}>{shift.start_time}-{shift.end_time}</span>
+                                                                {shift.worker_id && <span className="shift-cost opacity-80 break-all whitespace-normal">{formatCurrency(shift.payment_for_shift || 0)}</span>}
                                                               </div>
                                                               {shift.notes && (
                                                                 <div className={`flex items-center gap-1 mt-1 text-[10px] text-gray-700 font-medium ${isRTL ? 'pr-4' : 'pl-4'}`}>
