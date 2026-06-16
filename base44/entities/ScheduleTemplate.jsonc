@@ -10,6 +10,23 @@
       "type": "string",
       "description": "Description of this template"
     },
+    "template_type": {
+      "type": "string",
+      "enum": [
+        "structure",
+        "populated"
+      ],
+      "default": "populated",
+      "description": "Whether this template saves only the structure (roles & hours) or the fully populated schedule"
+    },
+    "position_rows": {
+      "type": "array",
+      "description": "Position rows structure"
+    },
+    "position_order": {
+      "type": "array",
+      "description": "Order of positions"
+    },
     "shifts": {
       "type": "array",
       "description": "All shifts in the template",
@@ -32,6 +49,9 @@
             "type": "string"
           },
           "job_position": {
+            "type": "string"
+          },
+          "position_row_id": {
             "type": "string"
           },
           "worker_id": {
@@ -62,6 +82,9 @@
       "type": "boolean",
       "default": false,
       "description": "Whether this is the default template to load for new weeks"
+    },
+    "created_by": {
+      "type": "string"
     }
   },
   "required": [

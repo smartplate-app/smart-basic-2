@@ -80,9 +80,46 @@ export default function WeeklyScheduleTable({
                                 </div>
                                 <div className="h-2 w-2 rounded-sm" style={{ backgroundColor: position.color || '#1E88E5' }} />
                                 <span className={`text-[13px] leading-tight font-extrabold ${['text-blue-800','text-gray-800'][posIndex % 2]}`}>{position.name}</span>
-                                <Button size="icon" variant="ghost" className="h-6 w-6 ml-auto rtl:mr-auto rtl:ml-0" title={language === 'he' ? 'הוסף שורת תפקיד' : 'Add position row'} onClick={() => addPositionRow(position.id)}>
-                                  <Plus className="h-3 w-3" />
-                                </Button>
+                                
+                                <div className="flex items-center ml-auto rtl:mr-auto rtl:ml-0 gap-0.5">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button size="icon" variant="ghost" className="h-6 w-6" title={language === 'he' ? 'עוד פעולות לתפקיד' : 'More actions for role'}>
+                                        <MoreHorizontal className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align={isRTL ? 'start' : 'end'} dir={isRTL ? 'rtl' : 'ltr'}>
+                                      <DropdownMenuItem onClick={async () => {
+                                        const name = prompt(language === 'he' ? 'ערוך שם תפקיד' : 'Edit role name', position.name);
+                                        if (name && name !== position.name) {
+                                          try {
+                                            const { base44 } = await import('@/api/base44Client');
+                                            await base44.entities.JobPosition.update(position.id, { name });
+                                            // The parent will re-fetch or we can rely on real-time if it's set, but we might need to reload. 
+                                            // Since we don't have direct access to reload positions, it will update on next fetch or we can do it via a quick reload.
+                                            window.location.reload();
+                                          } catch (err) {}
+                                        }
+                                      }}>
+                                        {language === 'he' ? 'ערוך שם תפקיד' : 'Edit role name'}
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => {
+                                        openRowTimeDialog({
+                                          row_id: null,
+                                          position_id: position.id,
+                                          default_start_time: position.default_start_time,
+                                          default_end_time: position.default_end_time
+                                        });
+                                      }}>
+                                        {language === 'he' ? 'קבע שעות לתפקיד' : 'Set role hours'}
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+
+                                  <Button size="icon" variant="ghost" className="h-6 w-6" title={language === 'he' ? 'הוסף שורת תפקיד' : 'Add position row'} onClick={() => addPositionRow(position.id)}>
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               </div>
                             </td>
                             {days.map(day => {
@@ -116,13 +153,13 @@ export default function WeeklyScheduleTable({
                                                   {language === 'he' ? 'קבע שעות לשורה' : 'Set row hours'}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => {
-                                                  const name = prompt(language === 'he' ? 'שם לשורה' : 'Row name', row.label || '');
+                                                  const name = prompt(language === 'he' ? 'שם לתפקיד (שורה)' : 'Role name (row)', row.label || '');
                                                   if (name !== null) {
                                                     const updated = (schedule?.position_rows || []).map(rr => rr.row_id === row.row_id ? { ...rr, label: name } : rr);
                                                     setSchedule({ ...(schedule || {}), position_rows: updated });
                                                   }
                                                 }}>
-                                                  {language === 'he' ? 'שנה שם שורה' : 'Rename row'}
+                                                  {language === 'he' ? 'ערוך שם תפקיד' : 'Edit role name'}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleCellDoubleClick(day.key, dateStr, position.id, rowId)}>
                                                   {language === 'he' ? 'הוסף משמרת' : 'Add shift'}

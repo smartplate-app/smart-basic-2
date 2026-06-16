@@ -51,6 +51,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [monthlyPredictedSales, setMonthlyPredictedSales] = useState(0); // Monthly predicted sales including VAT
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [templateSaveType, setTemplateSaveType] = useState("structure");
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [sending, setSending] = useState(false);
@@ -413,19 +414,21 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const applyTemplateShifts = (template) => {
-    const loadedShifts = template.shifts.map(s => {
+    const loadedShifts = (template.shifts || []).map(s => {
       const dayIndex = days.findIndex(d => d.key === s.day);
       const shiftDate = moment(weekStartDate).day(dayIndex).format('YYYY-MM-DD');
       
-      let basePayment = s.base_payment;
-      let paymentForShift = s.payment_for_shift;
+      let basePayment = s.base_payment || 0;
+      let paymentForShift = s.payment_for_shift || 0;
       
       // Recalculate payment to ensure up-to-date worker rates
-      const worker = workers.find(w => w.id === s.worker_id);
-      if (worker) {
-        const calc = calculatePayment(worker, s.hours_worked, s.overtime_rate, s.job_position_id);
-        basePayment = calc.basePayment;
-        paymentForShift = calc.totalPayment;
+      if (s.worker_id) {
+        const worker = workers.find(w => w.id === s.worker_id);
+        if (worker) {
+          const calc = calculatePayment(worker, s.hours_worked, s.overtime_rate, s.job_position_id);
+          basePayment = calc.basePayment;
+          paymentForShift = calc.totalPayment;
+        }
       }
 
       return {
@@ -437,9 +440,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       };
     });
 
+    if (template.position_order && template.position_order.length > 0) {
+      const newPositionIds = positions.map(p => p.id).filter(id => !template.position_order.includes(id));
+      setPositionOrder([...template.position_order, ...newPositionIds]);
+    }
+
     setSchedule({
       ...schedule,
       shifts: loadedShifts,
+      position_rows: template.position_rows || [],
       total_hours: calculateTotals().totalHours,
       total_cost: calculateTotals().totalCost,
       labor_cost_percentage: calculateTotals().laborPercentage
@@ -541,13 +550,13 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const handleShiftSave = () => {
-    if (!editingShift.worker_id || !editingShift.job_position_id || !editingShift.start_time || !editingShift.end_time) {
-      toast.error(t('all_shift_fields_required'));
+    if (!editingShift.job_position_id || !editingShift.start_time || !editingShift.end_time) {
+      toast.error(language === 'he' ? 'חובה למלא תפקיד, שעת התחלה ושעת סיום' : 'Position, start time and end time are required');
       return;
     }
 
-    const worker = workers.find(w => w.id === editingShift.worker_id);
-    if (!worker) {
+    const worker = editingShift.worker_id ? workers.find(w => w.id === editingShift.worker_id) : null;
+    if (editingShift.worker_id && !worker) {
       toast.error(t('worker_not_found'));
       return;
     }
@@ -597,7 +606,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const saveShiftToSchedule = (worker, position) => {
     const updatedShift = {
       ...editingShift,
-      worker_name: worker.full_name,
+      worker_name: worker ? worker.full_name : "",
       job_position: position.name,
       date: selectedCell.date,
       day: selectedCell.day,
@@ -816,8 +825,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   };
 
   const handleSaveAsTemplate = async (setAsDefault = false) => {
-    if (!schedule || schedule.shifts.length === 0) {
-      toast.info(t('no_shifts_to_save_as_template'));
+    if (!schedule || (schedule.shifts.length === 0 && (!schedule.position_rows || schedule.position_rows.length === 0))) {
+      toast.info(language === 'he' ? 'אין נתונים לשמירה כתבנית' : 'No data to save as template');
       return;
     }
     if (!templateName.trim()) {
@@ -839,12 +848,21 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         }
       }
 
-      const templateShifts = schedule.shifts.map(s => ({
+      const shiftsToSave = templateSaveType === "populated" ? schedule.shifts : schedule.shifts.map(s => ({
+        ...s,
+        worker_id: "",
+        worker_name: "",
+        base_payment: 0,
+        payment_for_shift: 0
+      }));
+
+      const templateShifts = shiftsToSave.map(s => ({
         day: s.day,
         job_position_id: s.job_position_id,
         job_position: s.job_position,
-        worker_id: s.worker_id,
-        worker_name: s.worker_name,
+        position_row_id: s.position_row_id || undefined,
+        worker_id: s.worker_id || "",
+        worker_name: s.worker_name || "",
         start_time: s.start_time,
         end_time: s.end_time,
         hours_worked: s.hours_worked,
@@ -856,6 +874,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
       await base44.entities.ScheduleTemplate.create({
         template_name: templateName,
+        template_type: templateSaveType,
+        position_rows: schedule.position_rows || [],
+        position_order: positionOrder || [],
         shifts: templateShifts,
         is_default: setAsDefault,
         created_by: user.email
@@ -1011,10 +1032,26 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     setSchedule(next);
   };
   const openRowTimeDialog = (row) => { setEditingRow(row); setRowTime({ start: row.default_start_time || '', end: row.default_end_time || '', mode: 'all', dayFrom: 'sunday', dayTo: 'saturday' }); setShowRowTimeDialog(true); };
-  const applyRowTimes = (cfg) => {
+  const applyRowTimes = async (cfg) => {
+    if (!editingRow) return;
+    
+    if (!editingRow.row_id) {
+      // It's the main position row
+      try {
+        await base44.entities.JobPosition.update(editingRow.position_id, {
+          default_start_time: cfg.start,
+          default_end_time: cfg.end
+        });
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+      }
+      return;
+    }
+
     const daysOrder = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
     const updated = (schedule?.position_rows || []).map(r => {
-      if (!editingRow || r.row_id !== editingRow.row_id) return r;
+      if (r.row_id !== editingRow.row_id) return r;
       const next = { ...r };
       if (cfg.mode === 'all') {
         next.default_start_time = cfg.start;
@@ -1431,7 +1468,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             <div className="space-y-5 px-1 py-2">
               <div className="space-y-1.5">
                 <Label htmlFor="worker_id" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {t('worker')} <span className="text-red-500">*</span>
+                  {t('worker')}
                 </Label>
                 <WorkerSelector 
                   workers={workers}
@@ -1552,7 +1589,19 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           <div className="space-y-4">
             <h3 className="font-semibold">{t('save_current_as_template')}</h3>
             <div className="space-y-2"><Label htmlFor="template_name_input" className={isRTL ? 'text-right block' : 'text-left block'}>{t('template_name')}</Label><Input id="template_name_input" value={templateName} onChange={(e) => setTemplateName(e.target.value)} placeholder={t('template_name')} className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'} /></div>
-            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={() => handleSaveAsTemplate(false)} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || !schedule?.shifts?.length}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}{t('save')}</Button><Button onClick={() => handleSaveAsTemplate(true)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || !schedule?.shifts?.length}><Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('set_as_default')}</Button></div>
+            <div className="space-y-2">
+              <Label className={isRTL ? 'text-right block' : 'text-left block'}>{language === 'he' ? 'סוג תבנית' : 'Template Type'}</Label>
+              <Select value={templateSaveType} onValueChange={setTemplateSaveType}>
+                <SelectTrigger className={isRTL ? 'text-right' : 'text-left'}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="structure">{language === 'he' ? 'רק מבנה (תפקידים, שורות ושעות)' : 'Structure only (roles, rows, and hours)'}</SelectItem>
+                  <SelectItem value="populated">{language === 'he' ? 'סידור מלא (כולל שיבוץ עובדים)' : 'Populated (including workers)'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={() => handleSaveAsTemplate(false)} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || (!schedule?.shifts?.length && (!schedule?.position_rows || schedule?.position_rows?.length === 0))}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}{t('save')}</Button><Button onClick={() => handleSaveAsTemplate(true)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || (!schedule?.shifts?.length && (!schedule?.position_rows || schedule?.position_rows?.length === 0))}><Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('set_as_default')}</Button></div>
             <h3 className="font-semibold pt-4 border-t mt-4">{t('load_existing_template')}</h3>
             {templates.length === 0 ? <div className="text-center py-4 text-gray-500"><p>{t('no_templates_saved')}</p></div> : (<div className="space-y-2"><Select value={selectedTemplate} onValueChange={setSelectedTemplate}><SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue placeholder={t('select_template_to_load')} /></SelectTrigger><SelectContent>{templates.map(template => (<SelectItem key={template.id} value={template.id}>{template.template_name} {template.is_default && `(${t('default')})`}</SelectItem>))}</SelectContent></Select><div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}{t('load_template')}</Button>{selectedTemplate && <Button onClick={() => handleDeleteTemplate(selectedTemplate)} variant="destructive" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}><Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('delete_template')}</Button>}</div></div>)}
           </div>
