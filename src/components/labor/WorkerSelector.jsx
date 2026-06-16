@@ -60,7 +60,8 @@ export default function WorkerSelector({
       </PopoverTrigger>
       
       <PopoverContent 
-        className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border shadow-xl rounded-xl overflow-hidden" 
+        className="z-[10010] p-0 bg-white border shadow-xl rounded-xl overflow-hidden" 
+        style={{ width: "var(--radix-popover-trigger-width)", minWidth: "250px" }}
         align={isRTL ? "end" : "start"}
       >
         <div className={`p-3 border-b bg-slate-50/50 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
