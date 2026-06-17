@@ -43,9 +43,9 @@ Deno.serve(async (req) => {
 
       const headers = rows[0].map(normalizeText);
       
-      const workerNameIdx = headers.findIndex(h => h.includes('full name') || h.includes('שם מלא') || h === 'שם' || h.includes('שם עובד'));
-      const workerPhoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('טלפון'));
-      const workerPosIdx = headers.findIndex(h => h.includes('position') || h.includes('תפקיד'));
+      const workerNameIdx = headers.findIndex(h => h.includes('name') || h.includes('שם'));
+      const workerPhoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('טלפון') || h.includes('נייד'));
+      const workerPosIdx = headers.findIndex(h => h.includes('position') || h.includes('תפקיד') || h.includes('משרה'));
       
       // Additional worker fields
       const workerIdNumIdx = headers.findIndex(h => h.includes('id number') || h.includes('תעודת זהות') || h.includes('ת.ז') || h.includes('מספר זהות'));
@@ -252,6 +252,50 @@ Deno.serve(async (req) => {
     
     await Promise.all(posPromises);
 
+    // Pre-pass: Create any missing positions dynamically so we don't skip workers
+    const missingPositionsToCreate = new Set();
+    
+    const addMissingPos = (posName) => {
+      const name = posName?.trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (!posMap.has(key)) {
+        missingPositionsToCreate.add(name);
+      }
+    };
+
+    for (const w of parsedWorkers) {
+      if (!w.full_name) continue;
+      
+      const originalPosName = w.job_position_name?.trim() || 'General';
+      addMissingPos(originalPosName);
+      
+      if (w.secondary_job_position_name) addMissingPos(w.secondary_job_position_name);
+      if (w.other_roles && w.other_roles.length > 0) {
+        for (const role of w.other_roles) {
+          addMissingPos(role);
+        }
+      }
+    }
+
+    for (const posName of missingPositionsToCreate) {
+      const key = posName.toLowerCase();
+      if (!posMap.has(key)) {
+        const data = {
+          name: posName,
+          section: 'other',
+          default_payment_type: 'hourly',
+          default_payment_amount: 0,
+          tips_method: 'general_pool',
+          created_by: targetEmail,
+          store_owner_email: targetEmail
+        };
+        const created = await base44.entities.JobPosition.create(data);
+        createdPos++;
+        posMap.set(key, created);
+      }
+    }
+
     // Save workers
     const existingWorkers = await base44.entities.Worker.filter({ created_by: targetEmail }, 'full_name', 10000);
     const workerMap = new Map(existingWorkers.map(w => [w.full_name.trim().toLowerCase(), w]));
@@ -260,9 +304,11 @@ Deno.serve(async (req) => {
     
     const workerPromises = parsedWorkers.map(async (w) => {
       if (!w.full_name) return;
-      const posKey = (w.job_position_name || '').trim().toLowerCase();
+      
+      const originalPosName = w.job_position_name?.trim() || 'General';
+      const posKey = originalPosName.toLowerCase();
       const pos = posMap.get(posKey);
-      if (!pos) return; // Need valid position
+      if (!pos) return; // Should rarely happen now due to pre-pass
       
       const key = w.full_name.trim().toLowerCase();
       const existing = workerMap.get(key);
