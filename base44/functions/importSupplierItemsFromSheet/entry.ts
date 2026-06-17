@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { spreadsheetUrl, spreadsheetId: rawId, sheetName, supplierId, supplierName } = await req.json();
+    const body = await req.json();
+    const { spreadsheetUrl, spreadsheetId: rawId, sheetName, supplierId, supplierName, targetEmail: providedTargetEmail } = body;
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
     if (!supplierId) return Response.json({ error: 'Missing supplierId' }, { status: 400 });
@@ -182,7 +183,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No items parsed' }, { status: 400 });
     }
 
-    const targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
+    let targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
+    if (providedTargetEmail && (user.role === 'admin' || user.email.startsWith('service+'))) {
+      targetEmail = providedTargetEmail;
+    }
 
     // Get existing warehouses to resolve names to IDs
     const existingWarehouses = await base44.entities.Warehouse.filter({ created_by: targetEmail }, null, 5000);
@@ -202,10 +206,10 @@ Deno.serve(async (req) => {
     }
 
     for (const wName of warehousesToCreate) {
-      const newWh = await base44.entities.Warehouse.create({
+      const newWh = await base44.asServiceRole.entities.Warehouse.create({
         name: wName,
         created_by: targetEmail,
-        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined,
+        store_owner_email: targetEmail,
         catalog_items: []
       });
       warehouseMap.set(wName.toLowerCase(), newWh);
@@ -239,12 +243,12 @@ Deno.serve(async (req) => {
         warehouse_id: whIds[0] || "",
         warehouse_name: whNames[0] || "",
         created_by: targetEmail,
-        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
+        store_owner_email: targetEmail
       };
     });
 
     // Create items (user-scoped)
-    const created = await base44.entities.Item.bulkCreate(payload);
+    const created = await base44.asServiceRole.entities.Item.bulkCreate(payload);
 
     // Update warehouses catalog_items
     const warehouseUpdates = new Map();
@@ -265,7 +269,7 @@ Deno.serve(async (req) => {
         if (wh) {
           const existingCatalog = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
           const updatedCatalog = Array.from(new Set([...existingCatalog, ...newItemIds]));
-          await base44.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
+          await base44.asServiceRole.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
         }
       } catch (e) {
         console.error("Failed to update warehouse catalog for wId", wId, e);

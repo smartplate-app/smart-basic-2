@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { spreadsheetUrl } = await req.json();
+    const body = await req.json();
+    const { spreadsheetUrl, targetEmail: providedTargetEmail } = body;
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl);
     if (!spreadsheetId) return Response.json({ error: 'Invalid Google Sheets URL' }, { status: 400 });
 
@@ -186,7 +187,10 @@ Return a JSON object matching the schema exactly.`,
     
     const bodyRows = allNonEmptyRows.slice(startIndex);
 
-    const targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
+    let targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
+    if (providedTargetEmail && (user.role === 'admin' || user.email.startsWith('service+'))) {
+      targetEmail = providedTargetEmail;
+    }
     const existingSuppliers = await base44.entities.Supplier.filter({ created_by: targetEmail }, null, 5000);
     const supplierMap = new Map(existingSuppliers.map(s => [s.name.trim().toLowerCase(), s]));
 
@@ -241,11 +245,11 @@ Return a JSON object matching the schema exactly.`,
 
     // Create missing suppliers
     for (const sName of newSuppliersToCreate) {
-      const newSup = await base44.entities.Supplier.create({
+      const newSup = await base44.asServiceRole.entities.Supplier.create({
         name: sName,
         supplier_type: 'simple',
         created_by: targetEmail,
-        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
+        store_owner_email: targetEmail
       });
       supplierMap.set(sName.toLowerCase(), newSup);
     }
@@ -270,10 +274,10 @@ Return a JSON object matching the schema exactly.`,
 
     // Create missing warehouses
     for (const wName of warehousesToCreate) {
-      const newWh = await base44.entities.Warehouse.create({
+      const newWh = await base44.asServiceRole.entities.Warehouse.create({
         name: wName,
         created_by: targetEmail,
-        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined,
+        store_owner_email: targetEmail,
         catalog_items: []
       });
       warehouseMap.set(wName.toLowerCase(), newWh);
@@ -321,7 +325,7 @@ Return a JSON object matching the schema exactly.`,
         price_after_discount: toNumber(row.price) * (1 - (toNumber(row.discount) / 100)),
         minimum_stock: toNumber(row.minimum_stock) || 0,
         created_by: targetEmail,
-        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
+        store_owner_email: targetEmail
       });
     }
 
@@ -337,7 +341,7 @@ Return a JSON object matching the schema exactly.`,
     const createdItemsCount = itemsToCreate.length;
     for (let i = 0; i < itemsToCreate.length; i += 500) {
       const chunk = itemsToCreate.slice(i, i + 500);
-      await base44.entities.Item.bulkCreate(chunk);
+      await base44.asServiceRole.entities.Item.bulkCreate(chunk);
     }
 
     // Update warehouses catalog_items
@@ -359,7 +363,7 @@ Return a JSON object matching the schema exactly.`,
         if (wh) {
           const existingCatalog = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
           const updatedCatalog = Array.from(new Set([...existingCatalog, ...newItemIds]));
-          await base44.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
+          await base44.asServiceRole.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
         }
       } catch (e) {
         console.error("Failed to update warehouse catalog for wId", wId, e);
