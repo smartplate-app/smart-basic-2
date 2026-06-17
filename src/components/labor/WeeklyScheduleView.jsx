@@ -900,6 +900,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
                   shiftsToSave.push({
                     day: dayKey,
+                    date: moment().format('YYYY-MM-DD'), // Temporary date for schema validation
                     job_position_id: position.id,
                     job_position: position.name,
                     position_row_id: row?.row_id || undefined,
@@ -923,6 +924,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
       const templateShifts = shiftsToSave.map(s => ({
         day: s.day,
+        date: s.date || moment().format('YYYY-MM-DD'),
         job_position_id: s.job_position_id,
         job_position: s.job_position,
         position_row_id: s.position_row_id || undefined,
