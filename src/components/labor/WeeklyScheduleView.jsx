@@ -857,13 +857,69 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       }
 
       const currentShifts = schedule?.shifts || [];
-      const shiftsToSave = templateSaveType === "populated" ? currentShifts : currentShifts.map(s => ({
-        ...s,
-        worker_id: "",
-        worker_name: "",
-        base_payment: 0,
-        payment_for_shift: 0
-      }));
+      let shiftsToSave = [];
+      
+      if (templateSaveType === "populated") {
+        shiftsToSave = currentShifts;
+      } else {
+        if (currentShifts.length > 0) {
+          shiftsToSave = currentShifts.map(s => ({
+            ...s,
+            worker_id: "",
+            worker_name: "",
+            base_payment: 0,
+            payment_for_shift: 0
+          }));
+        } else {
+          // Auto-generate full week structure if board is empty
+          const daysOrder = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+          const posRows = schedule?.position_rows || [];
+          const posOrder = positionOrder.length > 0 ? positionOrder : positions.map(p => p.id);
+          const secs = schedule?.sections?.length > 0 ? schedule.sections : [{id:'default'}];
+
+          posOrder.forEach(posId => {
+            const position = positions.find(p => p.id === posId);
+            if (!position) return;
+            const rowsForPos = posRows.filter(r => r.position_id === posId);
+            const allRows = [null, ...rowsForPos];
+
+            secs.forEach(sec => {
+              if (sec.hidden_positions && sec.hidden_positions.includes(posId)) return;
+
+              allRows.forEach(row => {
+                daysOrder.forEach(dayKey => {
+                  let defaultStart = position.default_start_time || "09:00";
+                  let defaultEnd = position.default_end_time || "17:00";
+                  if (row) {
+                    const perDay = row.per_day_times?.[dayKey];
+                    if (perDay?.start) defaultStart = perDay.start;
+                    if (perDay?.end) defaultEnd = perDay.end;
+                    if (!perDay && row.default_start_time) defaultStart = row.default_start_time;
+                    if (!perDay && row.default_end_time) defaultEnd = row.default_end_time;
+                  }
+
+                  shiftsToSave.push({
+                    day: dayKey,
+                    job_position_id: position.id,
+                    job_position: position.name,
+                    position_row_id: row?.row_id || undefined,
+                    section_id: sec.id === 'default' ? undefined : sec.id,
+                    worker_id: "",
+                    worker_name: "",
+                    start_time: defaultStart,
+                    end_time: defaultEnd,
+                    hours_worked: calculateHours(defaultStart, defaultEnd),
+                    overtime_rate: "regular",
+                    base_payment: 0,
+                    payment_for_shift: 0,
+                    notes: ""
+                  });
+                });
+              });
+            });
+          });
+        }
+      }
 
       const templateShifts = shiftsToSave.map(s => ({
         day: s.day,
@@ -1609,15 +1665,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="structure">{language === 'he' ? 'רק מבנה (תפקידים, שורות ושעות)' : 'Structure only (roles, rows, and hours)'}</SelectItem>
+                  <SelectItem value="structure">{language === 'he' ? 'רק מבנה (מייצר משמרות ריקות לכל הלוח)' : 'Structure only (generates empty shifts for the board)'}</SelectItem>
                   <SelectItem value="populated">{language === 'he' ? 'סידור מלא (כולל שיבוץ עובדים)' : 'Populated (including workers)'}</SelectItem>
                 </SelectContent>
               </Select>
               {templateSaveType === 'structure' && (!schedule?.shifts || schedule.shifts.length === 0) && (
                  <p className="text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-100 mt-2">
                    {language === 'he' 
-                     ? 'שים לב: הלוח כרגע ריק ממשמרות! התבנית תשמור רק את התפקידים. כדי שהתבנית תכיל שעות משמרת קבועות, עליך להוסיף תחילה משמרות ללוח (אפשר גם ללא עובד).' 
-                     : 'Note: The board is currently empty of shifts! The template will only save the roles. To save fixed shift hours, you must first add empty shifts to the board.'}
+                     ? 'טיפ: מכיוון שהלוח ריק, המערכת תייצר אוטומטית משמרות ריקות (ללא עובד) לכל התפקידים והימים בשבוע כדי שתוכל להתחיל לשבץ מיד.' 
+                     : 'Tip: Because the board is empty, the system will automatically generate empty shifts (unassigned) for all roles and days so you can start scheduling right away.'}
                  </p>
               )}
             </div>
