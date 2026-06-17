@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     if (!getRes.ok) {
       const errorText = await getRes.text();
       console.error("GetRes error:", errorText);
-      return Response.json({ error: 'Failed to read sheet data. Google reports this file does not exist or is fully restricted. If using a work/school account, "Anyone with the link" might only mean your organization. Please verify the link works in an Incognito window.' }, { status: 400 });
+      return Response.json({ error: 'לא ניתן לקרוא את הקובץ. גוגל מדווחת שהקובץ לא קיים או שחסוק לחלוטין. אם אתה משתמש בחשבון עסקי, "כל מי שיש לו את הקישור" עלול להיות מוגבל לארגון שלך. אנא ודא שהקישור נפתח בחלון גלישה בסתר (Incognito).' }, { status: 400 });
     }
 
     const data = await getRes.json();
@@ -241,7 +241,7 @@ Return a JSON object matching the schema exactly.`,
 
     // Create missing suppliers
     for (const sName of newSuppliersToCreate) {
-      const newSup = await base44.asServiceRole.entities.Supplier.create({
+      const newSup = await base44.entities.Supplier.create({
         name: sName,
         supplier_type: 'simple',
         created_by: targetEmail,
@@ -270,7 +270,7 @@ Return a JSON object matching the schema exactly.`,
 
     // Create missing warehouses
     for (const wName of warehousesToCreate) {
-      const newWh = await base44.asServiceRole.entities.Warehouse.create({
+      const newWh = await base44.entities.Warehouse.create({
         name: wName,
         created_by: targetEmail,
         store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined,
@@ -337,7 +337,7 @@ Return a JSON object matching the schema exactly.`,
     const createdItemsCount = itemsToCreate.length;
     for (let i = 0; i < itemsToCreate.length; i += 500) {
       const chunk = itemsToCreate.slice(i, i + 500);
-      await base44.asServiceRole.entities.Item.bulkCreate(chunk);
+      await base44.entities.Item.bulkCreate(chunk);
     }
 
     // Update warehouses catalog_items
@@ -359,7 +359,7 @@ Return a JSON object matching the schema exactly.`,
         if (wh) {
           const existingCatalog = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
           const updatedCatalog = Array.from(new Set([...existingCatalog, ...newItemIds]));
-          await base44.asServiceRole.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
+          await base44.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
         }
       } catch (e) {
         console.error("Failed to update warehouse catalog for wId", wId, e);

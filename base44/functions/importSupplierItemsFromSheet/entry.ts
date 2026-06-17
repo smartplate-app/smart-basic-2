@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
     }
 
     for (const wName of warehousesToCreate) {
-      const newWh = await base44.asServiceRole.entities.Warehouse.create({
+      const newWh = await base44.entities.Warehouse.create({
         name: wName,
         created_by: targetEmail,
         store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined,
@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
         if (wh) {
           const existingCatalog = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
           const updatedCatalog = Array.from(new Set([...existingCatalog, ...newItemIds]));
-          await base44.asServiceRole.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
+          await base44.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
         }
       } catch (e) {
         console.error("Failed to update warehouse catalog for wId", wId, e);
