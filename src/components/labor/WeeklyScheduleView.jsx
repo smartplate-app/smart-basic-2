@@ -489,6 +489,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       job_position: position?.name || "",
       start_time: defaultStartTime,
       end_time: defaultEndTime,
+      actual_start_time: defaultStartTime,
+      actual_end_time: defaultEndTime,
       hours_worked: calculateHours(defaultStartTime, defaultEndTime),
       overtime_rate: "regular", // Default to regular 100%
       payment_for_shift: 0,
@@ -1626,8 +1628,13 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         >
           <div className="absolute top-0 left-0 w-full h-1.5 bg-[#d4a373]" />
           <DialogHeader className="pt-4 pb-2">
-            <DialogTitle className={`text-xl font-bold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
-              {editingShift?.id ? (language === 'he' ? 'עריכת שיבוץ' : t('edit_shift')) : (language === 'he' ? 'שיבוץ למשמרת' : t('add_shift'))}
+            <DialogTitle className={`text-xl font-bold text-gray-800 flex flex-col gap-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <span>{editingShift?.id ? (language === 'he' ? 'עריכת שיבוץ' : t('edit_shift')) : (language === 'he' ? 'שיבוץ למשמרת' : t('add_shift'))}</span>
+              {editingShift?.date && (
+                <span className="text-sm font-medium text-gray-500">
+                  {moment(editingShift.date).format('DD/MM/YYYY')}
+                </span>
+              )}
             </DialogTitle>
           </DialogHeader>
           

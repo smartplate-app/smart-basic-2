@@ -17,6 +17,15 @@
       "default": "evening",
       "description": "Shift type: morning, evening, or night"
     },
+    "status": {
+      "type": "string",
+      "enum": [
+        "saved",
+        "locked"
+      ],
+      "default": "saved",
+      "description": "Status of the tip calculation"
+    },
     "cash_tips": {
       "type": "number",
       "default": 0,

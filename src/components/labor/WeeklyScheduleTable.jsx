@@ -380,7 +380,12 @@ export default function WeeklyScheduleTable({
                                                               }}
                                                               onClick={() => { 
                                                                 if (isDraggingShift) return; 
-                                                                setEditingShift({ ...shift, __originalKey: getShiftDraggableId(shift) }); 
+                                                                setEditingShift({ 
+                                                                  ...shift, 
+                                                                  actual_start_time: shift.actual_start_time || shift.start_time,
+                                                                  actual_end_time: shift.actual_end_time || shift.end_time,
+                                                                  __originalKey: getShiftDraggableId(shift) 
+                                                                }); 
                                                                 setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId, sectionId: section.id }); 
                                                                 setShowShiftDialog(true); 
                                                               }}

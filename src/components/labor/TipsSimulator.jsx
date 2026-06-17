@@ -19,8 +19,46 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [localPositions, setLocalPositions] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const activePositions = propPositions || localPositions;
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setLoadingHistory(true);
+      try {
+        const targetDate = periodType === 'day' ? date : (periodType === 'current_week' ? moment().startOf('week').format('YYYY-MM-DD') : moment().subtract(1, 'week').startOf('week').format('YYYY-MM-DD'));
+        const existing = await base44.entities.TipEntry.filter({ date: targetDate });
+        setHistory(existing || []);
+      } catch(e) {
+        console.error(e);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+    fetchHistory();
+  }, [date, periodType]);
+
+  const toggleLock = async (entry) => {
+    try {
+      const newStatus = entry.status === 'locked' ? 'saved' : 'locked';
+      await base44.entities.TipEntry.update(entry.id, { status: newStatus });
+      setHistory(prev => prev.map(h => h.id === entry.id ? { ...h, status: newStatus } : h));
+    } catch(e) {
+      alert("שגיאה בשינוי מצב רשומה: " + e.message);
+    }
+  };
+
+  const deleteEntry = async (entry) => {
+    if (!window.confirm("האם למחוק רשומה זו?")) return;
+    try {
+      await base44.entities.TipEntry.delete(entry.id);
+      setHistory(prev => prev.filter(h => h.id !== entry.id));
+    } catch(e) {
+      alert("שגיאה במחיקת רשומה: " + e.message);
+    }
+  };
 
   const saveTips = async () => {
     if (!result) return;
@@ -269,6 +307,42 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
           </Button>
         </CardContent>
       </Card>
+
+      {loadingHistory ? (
+        <div className="flex justify-center p-4"><Loader className="animate-spin text-gray-500" /></div>
+      ) : history.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>היסטוריית חישובים לתאריך זה</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {history.map(h => (
+              <div key={h.id} className="border p-4 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50">
+                <div>
+                  <div className="font-semibold text-lg flex items-center gap-2">
+                    סה״כ חולק: ₪{h.total_tips?.toLocaleString()} 
+                    {h.status === 'locked' && <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">נעול לשכר</span>}
+                    {h.status !== 'locked' && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">טיוטה שמורה</span>}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    משמרת: {h.shift_type === 'morning' ? 'בוקר' : h.shift_type === 'evening' ? 'ערב' : 'לילה'} | 
+                    מזומן: ₪{h.cash_tips} | אשראי: ₪{h.credit_tips}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">{h.notes}</div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => toggleLock(h)}>
+                    {h.status === 'locked' ? 'שחרר נעילה' : 'נעל לשכר'}
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => deleteEntry(h)}>
+                    מחק
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {result && (
         <Card>
