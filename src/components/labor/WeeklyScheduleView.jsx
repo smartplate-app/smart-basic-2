@@ -579,6 +579,11 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       return;
     }
 
+    if (!editingShift.worker_id && (editingShift.actual_start_time || editingShift.actual_end_time)) {
+      toast.error(language === 'he' ? 'לא ניתן לשמור שעות בפועל ללא שיבוץ עובד למשמרת' : 'Cannot save actual hours without assigning a worker');
+      return;
+    }
+
     const worker = editingShift.worker_id ? workers.find(w => w.id === editingShift.worker_id) : null;
     if (editingShift.worker_id && !worker) {
       toast.error(t('worker_not_found'));
