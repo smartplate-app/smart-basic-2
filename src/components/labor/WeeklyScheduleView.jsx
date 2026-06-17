@@ -999,6 +999,25 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     }
   };
 
+  const handleRenameTemplate = async (templateId) => {
+    const template = templates.find(t => t.id === templateId);
+    if (!template) return;
+    const newName = prompt(language === 'he' ? 'שם חדש לתבנית:' : 'New template name:', template.template_name);
+    if (!newName || newName.trim() === '' || newName === template.template_name) return;
+    
+    setSaving(true);
+    try {
+      await base44.entities.ScheduleTemplate.update(templateId, { template_name: newName.trim() });
+      toast.success(language === 'he' ? 'שם התבנית עודכן' : 'Template renamed');
+      await loadTemplates();
+    } catch (error) {
+      console.error('Error renaming template:', error);
+      toast.error(language === 'he' ? 'שגיאה בעדכון שם התבנית' : 'Error renaming template');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleClearSchedule = async () => {
     const confirmMessage = language === 'he'
       ? 'האם אתה בטוח שברצונך למחוק את כל המשמרות בשבוע זה? פעולה זו לא ניתנת לביטול!'
@@ -1679,7 +1698,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
             <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={() => handleSaveAsTemplate(false)} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}{t('save')}</Button><Button onClick={() => handleSaveAsTemplate(true)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}><Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('set_as_default')}</Button></div>
             <h3 className="font-semibold pt-4 border-t mt-4">{t('load_existing_template')}</h3>
-            {templates.length === 0 ? <div className="text-center py-4 text-gray-500"><p>{t('no_templates_saved')}</p></div> : (<div className="space-y-2"><Select value={selectedTemplate} onValueChange={setSelectedTemplate}><SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue placeholder={t('select_template_to_load')} /></SelectTrigger><SelectContent>{templates.map(template => (<SelectItem key={template.id} value={template.id}>{template.template_name} {template.is_default && `(${t('default')})`}</SelectItem>))}</SelectContent></Select><div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}{t('load_template')}</Button>{selectedTemplate && <Button onClick={() => handleDeleteTemplate(selectedTemplate)} variant="destructive" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}><Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('delete_template')}</Button>}</div></div>)}
+            {templates.length === 0 ? <div className="text-center py-4 text-gray-500"><p>{t('no_templates_saved')}</p></div> : (<div className="space-y-3"><Select value={selectedTemplate} onValueChange={setSelectedTemplate}><SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue placeholder={t('select_template_to_load')} /></SelectTrigger><SelectContent>{templates.map(template => (<SelectItem key={template.id} value={template.id}>{template.template_name} {template.is_default && `(${t('default')})`}</SelectItem>))}</SelectContent></Select><div className={`flex flex-col sm:flex-row gap-2 ${isRTL ? 'sm:flex-row-reverse' : ''}`}><Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}{t('load_template')}</Button><Button onClick={() => handleRenameTemplate(selectedTemplate)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!selectedTemplate || saving}>{language === 'he' ? 'שנה שם' : 'Rename'}</Button><Button onClick={() => handleDeleteTemplate(selectedTemplate)} variant="destructive" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!selectedTemplate || saving}><Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('delete_template')}</Button></div></div>)}
           </div>
         </DialogContent>
       </Dialog>
