@@ -374,13 +374,13 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="unit">{t('unit_type')}</Label>
+            <Label htmlFor="unit">{language === 'he' ? 'יחידת פריט' : 'Item unit'} *</Label>
             <Select 
               value={currentItem.unit}
               onValueChange={(value) => handleChange("unit", value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('unit_type')} />
+                <SelectValue placeholder={language === 'he' ? 'יחידת פריט' : 'Item unit'} />
               </SelectTrigger>
               <SelectContent>
                 {UNITS.map(unit => (

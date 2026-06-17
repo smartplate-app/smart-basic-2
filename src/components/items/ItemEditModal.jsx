@@ -183,7 +183,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="unit">{t('unit_of_measure')} *</Label>
+              <Label htmlFor="unit">{language === 'he' ? 'יחידת פריט' : 'Item unit'} *</Label>
               <Select
                 value={formData.unit || 'unit'}
                 onValueChange={(value) => handleChange('unit', value)}
