@@ -851,7 +851,7 @@ const handleCleanOrphans = async (ownerEmail) => {
 
             <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 shrink-0 h-9 px-2 sm:px-4">
+                <Button variant="outline" className="gap-2 shrink-0 h-9 px-2 sm:px-4 text-gray-700 bg-white hover:bg-gray-50 border-gray-300">
                   <MoreHorizontal className="w-4 h-4" />
                   <span className="hidden sm:inline">{language === 'he' ? 'פעולות נוספות' : 'More Actions'}</span>
                   <span className="sm:hidden text-sm">{language === 'he' ? 'פעולות' : 'More'}</span>
