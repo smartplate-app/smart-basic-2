@@ -12,7 +12,7 @@ async function createSpreadsheet(accessToken, title) {
     body: JSON.stringify({
       properties: { title },
       sheets: [
-        { properties: { sheetId: 0, title: 'ספקים ופריטים', rightToLeft: true, gridProperties: { columnCount: 15 } } }
+        { properties: { sheetId: 0, title: 'ספקים ופריטים', rightToLeft: true, gridProperties: { columnCount: 14 } } }
       ]
     })
   });
@@ -56,13 +56,13 @@ Deno.serve(async (req) => {
     const spreadsheetId = await createSpreadsheet(accessToken, title);
 
     const data = [
-      ['שם הפריט', 'ספק', 'כינוי (בשפה שלך , יופיע לך בלבד)', 'יחידת הפריט (קילוגרם / גרם / ליטר / מיליליטר / ארגז)', 'כמות יחידות באריזה', 'תכולה ליחידה', 'יחידת מידה לתכולה', 'מחיר לפריט', 'מספר קטלוגי', 'מחסן', 'מחסן 2', 'מחסן 3', 'הנחה (%)', 'מלאי מינימום', 'כמות באריזה'],
-      ['גומיות חומות (דוגמה)', 'smart plate demo', 'הגומיות של האריזות', 'יחידה', '', '', '', '5', '123', 'מקרר אחורי', 'מקרר פס חם', '', '0', '5', '1'],
-      ['חמים ונעים (דוגמה)', 'smart plate demo', 'מה שחם בחורף', 'ארגז', '', '', '', '552', '233', 'מחסן בחוץ', '', '', '0', '', '1'],
-      ['נסיון test (דוגמה)', 'smart plate demo', '', 'יחידה', '', '', '', '35', '3256', 'מחסן בחוץ', '', '', '0', '', '1'],
+      ['שם הפריט', 'ספק', 'כינוי (בשפה שלך , יופיע לך בלבד)', 'יחידת הפריט (קילוגרם / גרם / ליטר / מיליליטר / ארגז)', 'כמות יחידות באריזה', 'תכולה ליחידה', 'יחידת מידה לתכולה', 'מחיר לפריט', 'מספר קטלוגי', 'מחסן', 'מחסן 2', 'מחסן 3', 'הנחה (%)', 'מלאי מינימום'],
+      ['גומיות חומות (דוגמה)', 'smart plate demo', 'הגומיות של האריזות', 'יחידה', '', '', '', '5', '123', 'מקרר אחורי', 'מקרר פס חם', '', '0', '5'],
+      ['חמים ונעים (דוגמה)', 'smart plate demo', 'מה שחם בחורף', 'ארגז', '', '', '', '552', '233', 'מחסן בחוץ', '', '', '0', ''],
+      ['נסיון test (דוגמה)', 'smart plate demo', '', 'יחידה', '', '', '', '35', '3256', 'מחסן בחוץ', '', '', '0', ''],
     ];
 
-    await writeValues(accessToken, spreadsheetId, "'ספקים ופריטים'!A1:O4", data);
+    await writeValues(accessToken, spreadsheetId, "'ספקים ופריטים'!A1:N4", data);
 
     // Apply formatting
     const formatReq = await fetch(`${SHEETS_BASE}/${spreadsheetId}:batchUpdate`, {
