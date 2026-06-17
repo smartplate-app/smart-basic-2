@@ -85,9 +85,9 @@ export default function ItemsPage() {
     // Do not open the form here; wait until suppliers are loaded to avoid empty supplier selection
   }, []);
 
-  const loadData = async (currentUser, retryCount = 0) => {
+  const loadData = async (currentUser, retryCount = 0, isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       setNetworkError(null);
 
       console.log(`[Items] Loading data (attempt ${retryCount + 1})...`);
@@ -331,7 +331,7 @@ export default function ItemsPage() {
           const stale = isStale(c, 180000);
           const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
           if (stale || isImpersonating) {
-            await loadData(currentUser);
+            await loadData(currentUser, 0, !!c?.data);
           }
         }
       } catch (error) {

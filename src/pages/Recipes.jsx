@@ -31,8 +31,8 @@ export default function RecipesPage() {
   const [showImageUploadModal, setShowImageUploadModal] = useState(false);
   const [missingRecipes, setMissingRecipes] = useState([]);
 
-  const loadRecipes = async () => {
-    setLoading(true);
+  const loadRecipes = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       let currentUser;
       try { currentUser = await base44.auth.me(); } catch(e){}
@@ -101,7 +101,7 @@ export default function RecipesPage() {
       const stale = isStale(c, 180000);
       const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email || currentUser?.store_user_owner_email;
       if (stale || isImpersonating) {
-        loadRecipes();
+        loadRecipes(!!c?.data);
       }
     };
     load();

@@ -48,9 +48,9 @@ export default function SuppliersPage() {
     }
   }, []);
 
-  const loadData = async (currentUser, retryCount = 0) => {
+  const loadData = async (currentUser, retryCount = 0, isBackground = false) => {
                 try {
-                  setLoading(true);
+                  if (!isBackground) setLoading(true);
                   setNetworkError(null);
 
                   // Add delay before retry only
@@ -272,7 +272,7 @@ export default function SuppliersPage() {
                           // Force reload if impersonating or cache is stale
                           const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
                           if (stale || isImpersonating) {
-                            await loadData(currentUser);
+                            await loadData(currentUser, 0, !!c?.data);
                           }
                         }
       } catch (error) {

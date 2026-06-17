@@ -40,9 +40,9 @@ export default function WarehousesPage() {
     }
   }, []);
 
-  const loadWarehouses = async (targetEmail, currentUser) => {
+  const loadWarehouses = async (targetEmail, currentUser, isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       let data = [];
       if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
         const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getUserData', userEmail: targetEmail });
@@ -88,7 +88,7 @@ export default function WarehousesPage() {
         const stale = isStale(c, 180000);
         const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
         if (stale || isImpersonating) {
-          await loadWarehouses(targetEmail, currentUser);
+          await loadWarehouses(targetEmail, currentUser, !!c?.data);
         } else {
           setLoading(false);
         }
