@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, Download, Plus, MoreHorizontal, Clock, User, Users, DollarSign } from "lucide-react";
+import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, Download, Plus, MoreHorizontal, Clock, User, Users, DollarSign, CheckCircle2 } from "lucide-react";
+import confetti from "canvas-confetti";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "../LanguageProvider";
 import { toast } from "sonner";
@@ -729,14 +730,39 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       }
 
       const user = currentUser || await base44.auth.me();
+      const showBigSuccess = () => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#22c55e', '#ffffff', '#eab308']
+        });
+        
+        toast.custom((t) => (
+          <div className="bg-green-600 text-white rounded-2xl shadow-2xl p-6 flex items-center gap-4 border-4 border-white/20 w-full sm:w-[400px]">
+            <CheckCircle2 className="w-12 h-12 shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-xl font-bold">{language === 'he' ? 'הסידור פורסם בהצלחה!' : 'Schedule published successfully!'}</span>
+              <span className="text-green-100 text-sm">{language === 'he' ? 'כל העובדים יוכלו לראות אותו עכשיו' : 'All workers can now view it'}</span>
+            </div>
+            <button onClick={() => toast.dismiss(t)} className="ml-auto shrink-0 opacity-70 hover:opacity-100">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        ), {
+          duration: 5000,
+          position: 'top-center'
+        });
+      };
+
       let savedSchedule;
       if (schedule && schedule.id) {
         savedSchedule = await base44.entities.WeeklySchedule.update(schedule.id, scheduleData);
-        toast.success(language === 'he' ? 'הסידור פורסם בהצלחה' : 'Schedule published successfully');
+        showBigSuccess();
       } else {
         scheduleData.created_by = user.email;
         savedSchedule = await base44.entities.WeeklySchedule.create(scheduleData);
-        toast.success(language === 'he' ? 'הסידור פורסם בהצלחה' : 'Schedule published successfully');
+        showBigSuccess();
       }
       
       lastSavedDataRef.current = JSON.stringify({
