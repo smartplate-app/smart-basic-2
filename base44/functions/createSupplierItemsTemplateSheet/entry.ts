@@ -21,6 +21,9 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         properties: { title },
+        sheets: [
+          { properties: { sheetId: 0, title: 'Sheet1', rightToLeft: true, gridProperties: { columnCount: 13 } } }
+        ]
       })
     });
 

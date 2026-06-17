@@ -12,7 +12,7 @@ async function createSpreadsheet(accessToken, title) {
     body: JSON.stringify({
       properties: { title },
       sheets: [
-        { properties: { title: 'ספקים ופריטים', gridProperties: { columnCount: 7 } } }
+        { properties: { sheetId: 0, title: 'ספקים ופריטים', rightToLeft: true, gridProperties: { columnCount: 15 } } }
       ]
     })
   });

@@ -17,7 +17,12 @@ Deno.serve(async (req) => {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ properties: { title } })
+      body: JSON.stringify({
+        properties: { title },
+        sheets: [
+          { properties: { sheetId: 0, title: 'Sheet1', rightToLeft: true, gridProperties: { columnCount: 7 } } }
+        ]
+      })
     });
 
     if (!createRes.ok) {
