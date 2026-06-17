@@ -17,7 +17,7 @@ export default function ImportLaborModal({ isOpen, onClose, onSuccess }) {
   const handleGenerateTemplate = async () => {
     try {
       setIsGenerating(true);
-      const res = await base44.functions.invoke("generateLaborTemplateSheet", {});
+      const res = await base44.functions.invoke("generateLaborTemplateSheet", { language });
       if (res.data.success) {
         window.open(res.data.url, "_blank");
         toast({
