@@ -57,11 +57,11 @@ Deno.serve(async (req) => {
       const workerStartDateIdx = headers.findIndex(h => h.includes('start date') || h.includes('תחילת עבודה') || h.includes('תאריך התחלה') || h.includes('התחלת עבודה'));
       
       const taxCreditIdx = headers.findIndex(h => h.includes('tax credit') || h.includes('נקודות זיכוי'));
-      const managementBonusIdx = headers.findIndex(h => h.includes('management bonus') || h.includes('בונוס'));
+      const managementBonusIdx = headers.findIndex(h => h.includes('management bonus') || h.includes('בונוס') || h.includes('תוספת ניהול'));
       const targetSalaryIdx = headers.findIndex(h => h.includes('target salary') || h.includes('יעד שכר'));
       const employerCostIdx = headers.findIndex(h => h.includes('employer cost') || h.includes('עלות מעביד'));
       const includesOvertimeIdx = headers.findIndex(h => h.includes('overtime') || h.includes('שעות נוספות') || h.includes('גלובלי'));
-      const includesTravelIdx = headers.findIndex(h => h.includes('includes travel') || h.includes('כולל נסיעות'));
+      const includesTravelIdx = headers.findIndex(h => h.includes('includes travel') || h.includes('כולל נסיעות') || h.includes('נסיעות'));
       const notesIdx = headers.findIndex(h => h.includes('notes') || h.includes('הערות'));
       const tipHourlyOverrideIdx = headers.findIndex(h => h.includes('tip override') || h.includes('השלמה לשעה'));
       const travelTypeIdx = headers.findIndex(h => h.includes('travel type') || h.includes('סוג נסיעות'));

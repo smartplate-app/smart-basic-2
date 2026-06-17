@@ -65,13 +65,13 @@ Deno.serve(async (req) => {
 
     // Build Workers Sheet Data
     const workersHeaders = isHebrew
-      ? ['שם מלא', 'טלפון', 'Email', 'מספר זהות', 'שם הבנק', 'מספר סניף', 'מספר חשבון', 'תאריך התחלת עבודה', 'תפקיד ראשי', 'תעריף לתפקיד ראשי', 'תפקיד 2', 'תעריף לתפקיד 2', 'תפקיד 3', 'תעריף לתפקיד 3', 'תפקיד 4', 'תעריף לתפקיד 4', 'שכר שעתי / יומי / חודשי לתקיד ראשי', 'הערות']
-      : ['Full Name', 'Phone', 'Email', 'ID Number', 'Bank Name', 'Branch', 'Account', 'Start Date', 'Main Job Position', 'Main Role Rate', '2nd role', '2nd role rate', '3rd role', '3rd role rate', '4th role', '4th role rate', 'MAIN Job Payment Type (hourly/monthly/daily)', 'Notes'];
+      ? ['שם מלא', 'טלפון', 'Email', 'מספר זהות', 'שם הבנק', 'מספר סניף', 'מספר חשבון', 'תאריך התחלת עבודה', 'תפקיד ראשי', 'תעריף לתפקיד ראשי', 'תפקיד 2', 'תעריף לתפקיד 2', 'תפקיד 3', 'תעריף לתפקיד 3', 'תפקיד 4', 'תעריף לתפקיד 4', 'שכר שעתי / יומי / חודשי לתפקיד ראשי', 'תוספת ניהול (חודשית)', 'האם השכר כולל שעות נוספות?', 'האם השכר השעתי כולל נסיעות?', 'הערות']
+      : ['Full Name', 'Phone', 'Email', 'ID Number', 'Bank Name', 'Branch', 'Account', 'Start Date', 'Main Job Position', 'Main Role Rate', '2nd role', '2nd role rate', '3rd role', '3rd role rate', '4th role', '4th role rate', 'MAIN Job Payment Type (hourly/monthly/daily)', 'Management Bonus', 'Includes Overtime', 'Includes Travel', 'Notes'];
 
     const workersData = [
       workersHeaders,
-      ['John Doe', '050-1234567', 'john@example.com', '123456789', 'Leumi', '123', '123456', '01/01/2023', 'Chef', '70', 'Manager', '75', '', '', '', '', 'hourly', ''],
-      ['Jane Smith', '052-7654321', 'jane@example.com', '987654321', 'Hapoalim', '456', '654321', '15/05/2024', 'Waiter', '55', 'Host', '60', 'Bartender', '65', '', '', 'hourly', '']
+      ['John Doe', '050-1234567', 'john@example.com', '123456789', 'Leumi', '123', '123456', '01/01/2023', 'Chef', '70', 'Manager', '75', '', '', '', '', 'hourly', '0', 'no', 'no', ''],
+      ['Jane Smith', '052-7654321', 'jane@example.com', '987654321', 'Hapoalim', '456', '654321', '15/05/2024', 'Waiter', '55', 'Host', '60', 'Bartender', '65', '', '', 'hourly', '0', 'no', 'yes', '']
     ];
 
     // Build Job Positions Sheet Data
