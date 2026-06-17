@@ -44,11 +44,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [selectedForAction, setSelectedForAction] = useState({});
 
   React.useEffect(() => {
-    // Clear selection when month/search changes
-    setSelectedForAction({});
-  }, [monthReceipts]);
-
-  React.useEffect(() => {
     (async () => {
       try {
         const u = await base44.auth.me();
@@ -93,6 +88,11 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
     }) : inRange;
     return filtered.sort((a, b) => (a.invoice_date || a.received_date || '').localeCompare(b.invoice_date || b.received_date || ''));
   }, [receipts, monthStart, monthEnd, itemSearch]);
+
+  React.useEffect(() => {
+    // Clear selection when month/search changes
+    setSelectedForAction({});
+  }, [monthReceipts]);
 
   const grouped = useMemo(() => {
     const map = {};
