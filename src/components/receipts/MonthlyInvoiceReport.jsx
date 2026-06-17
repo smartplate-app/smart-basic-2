@@ -145,7 +145,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
     let errorCount = 0;
     for (const id of ids) {
       try {
-        await base44.asServiceRole.entities.SupplyReceipt.delete(id);
+        await base44.entities.SupplyReceipt.delete(id);
       } catch (e) {
         errorCount++;
       }
