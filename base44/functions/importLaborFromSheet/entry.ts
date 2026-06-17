@@ -48,13 +48,13 @@ Deno.serve(async (req) => {
       const workerPosIdx = headers.findIndex(h => h.includes('position') || h.includes('תפקיד'));
       
       // Additional worker fields
-      const workerIdNumIdx = headers.findIndex(h => h.includes('id number') || h.includes('תעודת זהות') || h.includes('ת.ז'));
+      const workerIdNumIdx = headers.findIndex(h => h.includes('id number') || h.includes('תעודת זהות') || h.includes('ת.ז') || h.includes('מספר זהות'));
       const workerAccountingIdIdx = headers.findIndex(h => h.includes('accounting id') || h.includes('מספר עובד') || h.includes('הנח"ש'));
       const workerEmailIdx = headers.findIndex(h => h.includes('email') || h.includes('אימייל') || h.includes('דוא"ל'));
-      const workerBankNameIdx = headers.findIndex(h => h.includes('bank name') || h.includes('שם בנק') || h === 'בנק');
+      const workerBankNameIdx = headers.findIndex(h => h.includes('bank name') || h.includes('שם בנק') || h === 'בנק' || h.includes('שם הבנק'));
       const workerBankBranchIdx = headers.findIndex(h => h.includes('branch') || h.includes('סניף'));
       const workerBankAccountIdx = headers.findIndex(h => h.includes('account') || h.includes('חשבון'));
-      const workerStartDateIdx = headers.findIndex(h => h.includes('start date') || h.includes('תחילת עבודה') || h.includes('תאריך התחלה'));
+      const workerStartDateIdx = headers.findIndex(h => h.includes('start date') || h.includes('תחילת עבודה') || h.includes('תאריך התחלה') || h.includes('התחלת עבודה'));
       
       const taxCreditIdx = headers.findIndex(h => h.includes('tax credit') || h.includes('נקודות זיכוי'));
       const managementBonusIdx = headers.findIndex(h => h.includes('management bonus') || h.includes('בונוס'));
@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
       const isWorkers = isWorkersTab || (!isPositionsTab && workerNameIdx >= 0 && (workerPhoneIdx >= 0 || workerPosIdx >= 0));
 
       const posNameIdx = headers.findIndex(h => h.includes('position name') || h.includes('שם תפקיד') || h === 'תפקיד' || h.includes('position'));
-      const posTypeIdx = headers.findIndex(h => h.includes('payment type') || h.includes('סוג תשלום') || h.includes('type') || h.includes('סוג'));
-      const posAmountIdx = headers.findIndex(h => h.includes('amount') || h.includes('rate') || h.includes('תעריף'));
+      const posTypeIdx = headers.findIndex(h => h.includes('payment type') || h.includes('סוג תשלום') || h.includes('type') || h.includes('סוג') || h.includes('אופן תשלום'));
+      const posAmountIdx = headers.findIndex(h => h.includes('amount') || h.includes('rate') || h.includes('תעריף') || h.includes('סכום'));
       const isPositions = isPositionsTab || (!isWorkersTab && posNameIdx >= 0 && posTypeIdx >= 0 && posAmountIdx >= 0 && !isWorkers);
 
       // Skip sheets that don't match our criteria at all, or might be schedule sheets
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
         // Parse Workers
         const nameIdx = workerNameIdx;
         const phoneIdx = workerPhoneIdx;
-        const pos1Idx = headers.findIndex(h => (h.includes('main') || h.includes('עיקרי')) && (h.includes('position') || h.includes('תפקיד')));
+        const pos1Idx = headers.findIndex(h => (h.includes('main') || h.includes('עיקרי') || h.includes('ראשי')) && (h.includes('position') || h.includes('תפקיד')));
         const fallbackPos1Idx = workerPosIdx;
         const actualPos1Idx = pos1Idx >= 0 ? pos1Idx : fallbackPos1Idx;
         const pos2Idx = headers.findIndex(h => h.includes('2nd') || h.includes('שני') || h.includes('תפקיד 2') || h.includes('role 2') || h.includes('נוסף 1') || h.includes('תפקיד משני'));
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
         const pos4RateIdx = headers.findIndex(h => (h.includes('rate') || h.includes('amount') || h.includes('תעריף')) && (h.includes('4th') || h.includes('רביעי') || h.includes('4')));
         const pos5RateIdx = headers.findIndex(h => (h.includes('rate') || h.includes('amount') || h.includes('תעריף')) && (h.includes('5th') || h.includes('חמישי') || h.includes('5')));
 
-        const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('סוג'));
+        const typeIdx = headers.findIndex(h => h.includes('type') || h.includes('סוג') || h.includes('אופן תשלום') || h.includes('שכר'));
         // Make sure the main amountIdx doesn't grab a secondary rate column by mistake
         // If there's a specific 'main rate' we take it, otherwise the first rate column that isn't for a secondary role
         const amountIdx = headers.findIndex((h, i) => (h.includes('rate') || h.includes('amount') || h.includes('תעריף')) && i !== pos2RateIdx && i !== pos3RateIdx && i !== pos4RateIdx && i !== pos5RateIdx);
@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
             salary_includes_overtime: parseBool(includesOvertimeIdx),
             salary_includes_travel: parseBool(includesTravelIdx),
             notes: notesIdx >= 0 ? row[notesIdx]?.trim() : undefined,
-            job_position_name: pos1Idx >= 0 ? row[pos1Idx]?.trim() : '',
+            job_position_name: actualPos1Idx >= 0 ? row[actualPos1Idx]?.trim() : '',
             secondary_job_position_name: pos2Idx >= 0 ? row[pos2Idx]?.trim() : '',
             other_roles: otherRoles,
             custom_rates: customRates,

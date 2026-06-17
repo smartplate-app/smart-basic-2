@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
 
     // Build Workers Sheet Data
     const workersHeaders = isHebrew
-      ? ['שם מלא', 'טלפון', 'אימייל', 'תעודת זהות', 'שם בנק', 'סניף', 'חשבון', 'תאריך התחלה', 'תפקיד עיקרי', 'תעריף תפקיד עיקרי', 'תפקיד 2', 'תעריף תפקיד 2', 'תפקיד 3', 'תעריף תפקיד 3', 'תפקיד 4', 'תעריף תפקיד 4', 'סוג תשלום עיקרי (hourly/monthly/daily)', 'הערות']
+      ? ['שם מלא', 'טלפון', 'Email', 'מספר זהות', 'שם הבנק', 'מספר סניף', 'מספר חשבון', 'תאריך התחלת עבודה', 'תפקיד ראשי', 'תעריף לתפקיד ראשי', 'תפקיד 2', 'תעריף לתפקיד 2', 'תפקיד 3', 'תעריף לתפקיד 3', 'תפקיד 4', 'תעריף לתפקיד 4', 'שכר שעתי / יומי / חודשי לתקיד ראשי', 'הערות']
       : ['Full Name', 'Phone', 'Email', 'ID Number', 'Bank Name', 'Branch', 'Account', 'Start Date', 'Main Job Position', 'Main Role Rate', '2nd role', '2nd role rate', '3rd role', '3rd role rate', '4th role', '4th role rate', 'MAIN Job Payment Type (hourly/monthly/daily)', 'Notes'];
 
     const workersData = [
@@ -76,13 +76,13 @@ Deno.serve(async (req) => {
 
     // Build Job Positions Sheet Data
     const positionsHeaders = isHebrew
-      ? ['שם תפקיד', 'מחלקה (kitchen/service/bar/management/cleaning/other)', 'סוג תשלום ברירת מחדל (hourly/monthly/daily)', 'על טיפים (yes/no)', 'תעריף/סכום ברירת מחדל']
+      ? ['תפקיד', 'מחלקה', 'אופן תשלום לתפקיד (חודשי / יומי / שעתי)', 'סכום דיפולטיבי לתשלום', 'על טיפים?']
       : ['Position Name', 'Department/Section (kitchen/service/bar/management/cleaning/other)', 'Default Payment Type (hourly/monthly/daily)', 'On Tips (yes/no)', 'Default Payment Amount'];
 
     const positionsData = [
       positionsHeaders,
-      ['Chef', 'kitchen', 'monthly', 'no', '70'],
-      ['Waiter', 'service', 'hourly', 'yes', '55']
+      isHebrew ? ['Chef', 'kitchen', 'monthly', '70', 'no'] : ['Chef', 'kitchen', 'monthly', 'no', '70'],
+      isHebrew ? ['Waiter', 'service', 'hourly', '55', 'yes'] : ['Waiter', 'service', 'hourly', 'yes', '55']
     ];
 
     const workersSheetName = isHebrew ? 'עובדים' : 'Workers';
