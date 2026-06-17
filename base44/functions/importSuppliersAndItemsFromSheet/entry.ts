@@ -83,10 +83,45 @@ Deno.serve(async (req) => {
     if (allNonEmptyRows.length === 0) return Response.json({ error: 'Sheet has no data' }, { status: 400 });
 
     const sampleRows = allNonEmptyRows.slice(0, 15);
+    let startIndex = 0;
+    let response = null;
 
-    // Use LLM to map column indices and find data start
-    const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `Analyze the following sample rows from a Google Sheet intended for importing restaurant suppliers and items.
+    // Try hardcoded mapping first for reliability (Hebrew headers)
+    if (sampleRows.length > 0) {
+      const firstRow = sampleRows[0].map(h => String(h).trim().toLowerCase());
+      const findCol = (keywords) => {
+        return firstRow.findIndex(h => keywords.some(k => h.includes(k)));
+      };
+      
+      const supplier_col_idx = findCol(['ספק', 'supplier']);
+      const item_name_col_idx = findCol(['שם הפריט', 'שם פריט', 'שם', 'פריט', 'item name']);
+      
+      if (supplier_col_idx !== -1 && item_name_col_idx !== -1) {
+        response = {
+          header_row_idx: 0,
+          data_start_row_idx: 1,
+          supplier_col_idx,
+          item_name_col_idx,
+          nickname_col_idx: findCol(['כינוי (בשפה שלך', 'כינוי']),
+          price_col_idx: findCol(['מחיר לפריט', 'מחיר', 'מחיר ליחידה', 'price']),
+          unit_col_idx: findCol(['יחידת הפריט', 'יחידה', 'יח׳', 'סוג יחידה', 'unit']),
+          units_per_package_col_idx: findCol(['כמות יחידות באריזה', 'כמות באריזה', 'יחידות בחבילה']),
+          content_per_unit_col_idx: findCol(['תכולה ליחידה']),
+          content_unit_col_idx: findCol(['יחידת מידה לתכולה']),
+          catalog_number_col_idx: findCol(['מספר קטלוגי', 'מק"ט', 'קטלוג']),
+          warehouse1_col_idx: findCol(['מחסן', 'מחסן 1']),
+          warehouse2_col_idx: findCol(['מחסן 2']),
+          warehouse3_col_idx: findCol(['מחסן 3']),
+          discount_col_idx: findCol(['הנחה (%)', 'הנחה', '% הנחה']),
+          minimum_stock_col_idx: findCol(['מלאי מינימום', 'מלאי מינימלי'])
+        };
+      }
+    }
+
+    if (!response) {
+      // Use LLM to map column indices and find data start if hardcoded fails
+      response = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze the following sample rows from a Google Sheet intended for importing restaurant suppliers and items.
 Sample rows (JSON format):
 ${JSON.stringify(sampleRows)}
 
@@ -114,35 +149,36 @@ Optional fields:
 If an optional field is missing, return -1. 
 If the data is completely unstructured or missing supplier/item name, return supplier_col_idx: -1.
 Return a JSON object matching the schema exactly.`,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          header_row_idx: { type: 'integer' },
-          data_start_row_idx: { type: 'integer' },
-          supplier_col_idx: { type: 'integer' },
-          item_name_col_idx: { type: 'integer' },
-          nickname_col_idx: { type: 'integer' },
-          price_col_idx: { type: 'integer' },
-          unit_col_idx: { type: 'integer' },
-          units_per_package_col_idx: { type: 'integer' },
-          content_per_unit_col_idx: { type: 'integer' },
-          content_unit_col_idx: { type: 'integer' },
-          catalog_number_col_idx: { type: 'integer' },
-          warehouse1_col_idx: { type: 'integer' },
-          warehouse2_col_idx: { type: 'integer' },
-          warehouse3_col_idx: { type: 'integer' },
-          discount_col_idx: { type: 'integer' },
-          minimum_stock_col_idx: { type: 'integer' }
-        },
-        required: ['header_row_idx', 'data_start_row_idx', 'supplier_col_idx', 'item_name_col_idx', 'price_col_idx']
-      }
-    });
-
-    if (response.supplier_col_idx === -1 || response.item_name_col_idx === -1) {
-      return Response.json({ error: 'Could not find required columns (Supplier and Item Name) in the sheet' }, { status: 400 });
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            header_row_idx: { type: 'integer' },
+            data_start_row_idx: { type: 'integer' },
+            supplier_col_idx: { type: 'integer' },
+            item_name_col_idx: { type: 'integer' },
+            nickname_col_idx: { type: 'integer' },
+            price_col_idx: { type: 'integer' },
+            unit_col_idx: { type: 'integer' },
+            units_per_package_col_idx: { type: 'integer' },
+            content_per_unit_col_idx: { type: 'integer' },
+            content_unit_col_idx: { type: 'integer' },
+            catalog_number_col_idx: { type: 'integer' },
+            warehouse1_col_idx: { type: 'integer' },
+            warehouse2_col_idx: { type: 'integer' },
+            warehouse3_col_idx: { type: 'integer' },
+            discount_col_idx: { type: 'integer' },
+            minimum_stock_col_idx: { type: 'integer' }
+          },
+          required: ['header_row_idx', 'data_start_row_idx', 'supplier_col_idx', 'item_name_col_idx', 'price_col_idx']
+        }
+      });
     }
 
-    let startIndex = response.data_start_row_idx;
+    if (response.supplier_col_idx === -1 || response.item_name_col_idx === -1) {
+      return Response.json({ error: 'לא זוהו העמודות הנדרשות (ספק ושם פריט). אנא ודא שהן קיימות בקובץ.' }, { status: 400 });
+    }
+
+    startIndex = response.data_start_row_idx;
     if (startIndex === undefined || startIndex === null) {
       startIndex = response.header_row_idx !== -1 ? response.header_row_idx + 1 : 0;
     }
@@ -287,6 +323,14 @@ Return a JSON object matching the schema exactly.`,
         created_by: targetEmail,
         store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
       });
+    }
+
+    if (parsedRows.length === 0) {
+      return Response.json({ error: 'לא נמצאו שורות תקינות עם נתוני ספק ושם פריט. אנא ודא שהעמודות מולאו כהלכה.' }, { status: 400 });
+    }
+    
+    if (itemsToCreate.length === 0 && newSuppliersToCreate.size === 0) {
+      return Response.json({ error: 'כל הפריטים והספקים שבקובץ (סה"כ ' + parsedRows.length + ' שורות תקינות) כבר קיימים במערכת, לכן לא נוספו נתונים חדשים. כדי לעדכן קיימים, השתמש בעריכה.' }, { status: 400 });
     }
 
     // Create in chunks of 500
