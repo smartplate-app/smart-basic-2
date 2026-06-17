@@ -382,8 +382,8 @@ export default function WeeklyScheduleTable({
                                                                 if (isDraggingShift) return; 
                                                                 setEditingShift({ 
                                                                   ...shift, 
-                                                                  actual_start_time: shift.actual_start_time || shift.start_time,
-                                                                  actual_end_time: shift.actual_end_time || shift.end_time,
+                                                                  actual_start_time: shift.actual_start_time || '',
+                                                                  actual_end_time: shift.actual_end_time || '',
                                                                   __originalKey: getShiftDraggableId(shift) 
                                                                 }); 
                                                                 setSelectedCell({ day: day.key, date: dateStr, positionId: position.id, rowId, sectionId: section.id }); 

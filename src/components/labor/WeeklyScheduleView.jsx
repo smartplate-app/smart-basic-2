@@ -489,8 +489,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       job_position: position?.name || "",
       start_time: defaultStartTime,
       end_time: defaultEndTime,
-      actual_start_time: defaultStartTime,
-      actual_end_time: defaultEndTime,
+      actual_start_time: "",
+      actual_end_time: "",
       hours_worked: calculateHours(defaultStartTime, defaultEndTime),
       overtime_rate: "regular", // Default to regular 100%
       payment_for_shift: 0,
@@ -1684,18 +1684,57 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 <div className="space-y-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="font-semibold text-sm text-blue-700 border-b border-blue-100 pb-1 flex justify-between items-center">
                     <span>{language === 'he' ? 'בפועל' : 'Actual'}</span>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
-                      onClick={() => {
-                        handleTimeChange('actual_start_time', '');
-                        handleTimeChange('actual_end_time', '');
-                      }}
-                    >
-                      {language === 'he' ? 'נקה' : 'Clear'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
+                        onClick={() => {
+                          const updated = {
+                            ...editingShift,
+                            actual_start_time: editingShift.start_time,
+                            actual_end_time: editingShift.end_time
+                          };
+                          
+                          const actualHours = calculateHours(updated.actual_start_time, updated.actual_end_time);
+                          updated.actual_hours_worked = actualHours;
+                          
+                          const worker = workers.find(w => w.id === updated.worker_id);
+                          const { basePayment, totalPayment } = calculatePayment(worker, actualHours, 'regular', updated.job_position_id);
+                          
+                          updated.base_payment = basePayment;
+                          updated.payment_for_shift = totalPayment;
+                          setEditingShift(updated);
+                        }}
+                      >
+                        {language === 'he' ? 'תכנון -> בפועל' : 'Copy Planned'}
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
+                        onClick={() => {
+                          const updated = {
+                            ...editingShift,
+                            actual_start_time: '',
+                            actual_end_time: '',
+                            actual_hours_worked: null
+                          };
+                          
+                          const worker = workers.find(w => w.id === updated.worker_id);
+                          const plannedHours = calculateHours(updated.start_time, updated.end_time);
+                          const { basePayment, totalPayment } = calculatePayment(worker, plannedHours, 'regular', updated.job_position_id);
+                          
+                          updated.base_payment = basePayment;
+                          updated.payment_for_shift = totalPayment;
+                          setEditingShift(updated);
+                        }}
+                      >
+                        {language === 'he' ? 'נקה' : 'Clear'}
+                      </Button>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
