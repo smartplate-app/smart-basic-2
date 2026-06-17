@@ -12,8 +12,8 @@ async function createSpreadsheet(accessToken, title, isHebrew) {
     body: JSON.stringify({
       properties: { title },
       sheets: [
-        { properties: { title: isHebrew ? 'עובדים' : 'Workers', gridProperties: { columnCount: 18 } } },
-        { properties: { title: isHebrew ? 'תפקידים' : 'Job Positions', gridProperties: { columnCount: 10 } } }
+        { properties: { title: isHebrew ? 'עובדים' : 'Workers', gridProperties: { columnCount: 25, frozenRowCount: 1 } } },
+        { properties: { title: isHebrew ? 'תפקידים' : 'Job Positions', gridProperties: { columnCount: 10, frozenRowCount: 1 } } }
       ]
     })
   });
@@ -88,8 +88,8 @@ Deno.serve(async (req) => {
     const workersSheetName = isHebrew ? 'עובדים' : 'Workers';
     const positionsSheetName = isHebrew ? 'תפקידים' : 'Job Positions';
 
-    await writeValues(accessToken, spreadsheetId, `'${workersSheetName}'!A1:R100`, workersData);
-    await writeValues(accessToken, spreadsheetId, `'${positionsSheetName}'!A1:D100`, positionsData);
+    await writeValues(accessToken, spreadsheetId, `'${workersSheetName}'!A1:Z100`, workersData);
+    await writeValues(accessToken, spreadsheetId, `'${positionsSheetName}'!A1:Z100`, positionsData);
 
     // Share with store managers
     try {
