@@ -249,35 +249,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 }}>
                   {language === 'he' ? 'העלה ל-Google Drive' : (t('upload_to_drive') || 'Upload to Google Drive')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={async () => {
-                  setUploadResult(null);
-                  setUploadTarget('dropbox');
-                  try {
-                    let isAuth = false;
-                    try {
-                      const { data: auth } = await base44.functions.invoke('checkDropboxAuth', {});
-                      isAuth = !!auth?.authorized;
-                    } catch (authErr) {
-                      isAuth = false;
-                    }
-                    if (!isAuth) {
-                      alert(language === 'he' ? 'אנא התחבר ל-Dropbox תחילה.' : 'Please connect Dropbox first.');
-                      return;
-                    }
 
-                    let me = null;
-                    try { me = await base44.auth.me(); } catch {}
-                    
-                    setDriveAccount({ displayName: 'Dropbox' });
-                    setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
-
-                    setShowDriveConfirm(true);
-                  } catch (e) {
-                    alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
-                  }
-                }}>
-                  {language === 'he' ? 'העלה ל-Dropbox' : 'Upload to Dropbox'}
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
