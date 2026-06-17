@@ -56,10 +56,10 @@ Deno.serve(async (req) => {
     const spreadsheetId = await createSpreadsheet(accessToken, title);
 
     const data = [
-      ['ספק', 'שם הפריט', 'כינוי (בשפה שלך , יופיע לך בלבד)', 'יחידת הפריט (קילוגרם / גרם / ליטר / מיליליטר / ארגז)', 'כמות יחידות באריזה', 'תכולה ליחידה', 'יחידת מידה לתכולה', 'מחיר לפריט', 'מספר קטלוגי', 'מחסן', 'מחסן 2', 'מחסן 3', 'הנחה (%)', 'מלאי מינימום', 'כמות באריזה'],
-      ['smart plate demo', 'גומיות חומות (דוגמה)', 'הגומיות של האריזות', 'יחידה', '', '', '', '5', '123', 'מקרר אחורי', 'מקרר פס חם', '', '0', '5', '1'],
-      ['smart plate demo', 'חמים ונעים (דוגמה)', 'מה שחם בחורף', 'ארגז', '', '', '', '552', '233', 'מחסן בחוץ', '', '', '0', '', '1'],
-      ['smart plate demo', 'נסיון test (דוגמה)', '', 'יחידה', '', '', '', '35', '3256', 'מחסן בחוץ', '', '', '0', '', '1'],
+      ['שם הפריט', 'ספק', 'כינוי (בשפה שלך , יופיע לך בלבד)', 'יחידת הפריט (קילוגרם / גרם / ליטר / מיליליטר / ארגז)', 'כמות יחידות באריזה', 'תכולה ליחידה', 'יחידת מידה לתכולה', 'מחיר לפריט', 'מספר קטלוגי', 'מחסן', 'מחסן 2', 'מחסן 3', 'הנחה (%)', 'מלאי מינימום', 'כמות באריזה'],
+      ['גומיות חומות (דוגמה)', 'smart plate demo', 'הגומיות של האריזות', 'יחידה', '', '', '', '5', '123', 'מקרר אחורי', 'מקרר פס חם', '', '0', '5', '1'],
+      ['חמים ונעים (דוגמה)', 'smart plate demo', 'מה שחם בחורף', 'ארגז', '', '', '', '552', '233', 'מחסן בחוץ', '', '', '0', '', '1'],
+      ['נסיון test (דוגמה)', 'smart plate demo', '', 'יחידה', '', '', '', '35', '3256', 'מחסן בחוץ', '', '', '0', '', '1'],
     ];
 
     await writeValues(accessToken, spreadsheetId, "'ספקים ופריטים'!A1:O4", data);
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
                 sheetId: 0,
                 gridProperties: {
                   frozenRowCount: 1,
-                  frozenColumnCount: 2 // Freeze up to Item Name ('שם הפריט')
+                  frozenColumnCount: 1 // Freeze up to Item Name ('שם הפריט')
                 }
               },
               fields: 'gridProperties(frozenRowCount,frozenColumnCount)'
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
           },
           {
             repeatCell: {
-              range: { sheetId: 0, startColumnIndex: 0, endColumnIndex: 2 }, // Column A (Supplier) and B (Item Name)
+              range: { sheetId: 0, startColumnIndex: 0, endColumnIndex: 1 }, // Column A (Item Name)
               cell: {
                 userEnteredFormat: {
                   backgroundColor: { red: 1.0, green: 0.95, blue: 0.8 }, // Light yellow
@@ -121,10 +121,10 @@ Deno.serve(async (req) => {
               fields: 'userEnteredFormat(backgroundColor,textFormat)'
             }
           },
-          // Re-apply light grey to the intersection of examples and columns A, B
+          // Re-apply light grey to the intersection of examples and column A
           {
             repeatCell: {
-              range: { sheetId: 0, startRowIndex: 1, endRowIndex: 4, startColumnIndex: 0, endColumnIndex: 2 },
+              range: { sheetId: 0, startRowIndex: 1, endRowIndex: 4, startColumnIndex: 0, endColumnIndex: 1 },
               cell: {
                 userEnteredFormat: {
                   backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Light grey
