@@ -60,6 +60,15 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
     }
   };
 
+  const loadEntryToForm = (entry) => {
+    setDate(entry.date);
+    setPeriodType('day');
+    setShiftFilter(entry.shift_type === 'morning' ? 'morning' : 'evening');
+    setCash(entry.cash_tips || 0);
+    setCredit(entry.credit_tips || 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const saveTips = async () => {
     if (!result) return;
     setSaving(true);
@@ -79,12 +88,26 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
       });
 
       if (existing && existing.length > 0) {
+        const lockedExisting = existing.find(e => e.status === 'locked');
+        if (lockedExisting) {
+          alert("ישנה רשומה נעולה לתאריך/משמרת זו. לא ניתן לשמור חישוב חדש שידרוס אותה.");
+          setSaving(false);
+          return;
+        }
+
         const msg = isWeek 
-          ? "כבר חושבו טיפים לשבוע זה (לפי תאריך תחילת שבוע). האם ברצונך להוסיף רשומה נוספת בכל זאת?"
-          : "כבר חושבו טיפים למשמרת זו בתאריך הנבחר. האם ברצונך להוסיף רשומה נוספת בכל זאת?";
+          ? "קיימת טיוטה לשבוע זה. שמירה תדרוס את הטיוטה הקיימת. להמשיך?"
+          : "קיימת טיוטה למשמרת זו בתאריך הנבחר. שמירה תדרוס את הטיוטה הקיימת. להמשיך?";
         if (!window.confirm(msg)) {
           setSaving(false);
           return;
+        }
+
+        // Delete existing unlocked drafts to replace them
+        for (const e of existing) {
+          if (e.status !== 'locked') {
+            await base44.entities.TipEntry.delete(e.id);
+          }
         }
       }
 
@@ -111,6 +134,10 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         workers: workersData,
         notes: `מדיניות: ${result.inputs.policy_name || 'ללא'} | ${isWeek ? 'חישוב שבועי' : `חישוב יומי - ${shiftFilterVal === 'all' ? 'כל היום' : shiftFilterNameHeb}`}`
       });
+      
+      const updatedHistory = await base44.entities.TipEntry.filter({ date: periodType === 'day' ? date : targetDate });
+      setHistory(updatedHistory || []);
+      
       alert("הנתונים נשמרו בהצלחה!");
     } catch(err) {
       alert("שגיאה בשמירת נתונים: " + err.message);
@@ -333,10 +360,20 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
                   </div>
                   <div className="text-xs text-gray-500 mt-1">{h.notes}</div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => toggleLock(h)}>
+                <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
+                  <Button 
+                    variant={h.status === 'locked' ? 'outline' : 'default'} 
+                    size="sm" 
+                    onClick={() => toggleLock(h)}
+                    className={h.status === 'locked' ? '' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm border-blue-700'}
+                  >
                     {h.status === 'locked' ? 'שחרר נעילה' : 'נעל לשכר'}
                   </Button>
+                  {h.status !== 'locked' && (
+                    <Button variant="outline" size="sm" onClick={() => loadEntryToForm(h)}>
+                      ערוך טיוטה
+                    </Button>
+                  )}
                   <Button variant="destructive" size="sm" onClick={() => deleteEntry(h)}>
                     מחק
                   </Button>
