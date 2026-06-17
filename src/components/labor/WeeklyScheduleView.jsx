@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Save, Send, Trash2, Loader, Copy, FileText, Mail, X, AlertTriangle, Download, Plus, MoreHorizontal, Clock, User, Users, DollarSign, CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "../LanguageProvider";
 import { toast } from "sonner";
 import moment from "moment";
@@ -1663,161 +1664,169 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           </DialogHeader>
           
           {editingShift && (
-            <div className="space-y-5 px-1 py-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="worker_id" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>
-                  {t('worker')}
-                </Label>
-                <WorkerSelector 
-                  workers={workers}
-                  positions={positions}
-                  selectedWorkerId={editingShift.worker_id}
-                  onSelectWorker={handleWorkerChange}
-                  targetPositionId={editingShift.job_position_id}
-                  isRTL={isRTL}
-                  language={language}
-                />
-              </div>
+            <div className="space-y-4 px-1 py-2">
+              <Tabs defaultValue="plan" className="w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="plan">{language === 'he' ? 'תכנון שיבוץ' : 'Plan Shift'}</TabsTrigger>
+                  <TabsTrigger value="actual">{language === 'he' ? 'ביצוע בפועל' : 'Actual Time'}</TabsTrigger>
+                </TabsList>
 
-              <div className="space-y-4">
-                <div className="space-y-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <div className="font-semibold text-sm text-gray-600 border-b pb-1">{language === 'he' ? 'תכנון' : 'Planned'}</div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="start_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('start')} <span className="text-red-500">*</span></Label>
-                      <div className="relative">
-                        <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
-                        <Input id="start_time" type="time" value={editingShift.start_time || ''} onChange={(e) => handleTimeChange('start_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                <TabsContent value="plan" className="space-y-4 mt-0">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="worker_id" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {t('worker')}
+                    </Label>
+                    <WorkerSelector 
+                      workers={workers}
+                      positions={positions}
+                      selectedWorkerId={editingShift.worker_id}
+                      onSelectWorker={handleWorkerChange}
+                      targetPositionId={editingShift.job_position_id}
+                      isRTL={isRTL}
+                      language={language}
+                    />
+                  </div>
+
+                  <div className="space-y-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="start_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('start')} <span className="text-red-500">*</span></Label>
+                        <div className="relative">
+                          <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
+                          <Input id="start_time" type="time" value={editingShift.start_time || ''} onChange={(e) => handleTimeChange('start_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                        </div>
                       </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="end_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('end')} <span className="text-red-500">*</span></Label>
-                      <div className="relative">
-                        <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
-                        <Input id="end_time" type="time" value={editingShift.end_time || ''} onChange={(e) => handleTimeChange('end_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                      <div className="space-y-1.5">
+                        <Label htmlFor="end_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('end')} <span className="text-red-500">*</span></Label>
+                        <div className="relative">
+                          <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
+                          <Input id="end_time" type="time" value={editingShift.end_time || ''} onChange={(e) => handleTimeChange('end_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="font-semibold text-sm text-blue-700 border-b border-blue-100 pb-1 flex justify-between items-center">
-                    <span>{language === 'he' ? 'בפועל' : 'Actual'}</span>
-                    <div className="flex gap-2">
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
-                        onClick={() => {
-                          const updated = {
-                            ...editingShift,
-                            actual_start_time: editingShift.start_time,
-                            actual_end_time: editingShift.end_time
-                          };
-                          
-                          const actualHours = calculateHours(updated.actual_start_time, updated.actual_end_time);
-                          updated.actual_hours_worked = actualHours;
-                          
-                          const worker = workers.find(w => w.id === updated.worker_id);
-                          const { basePayment, totalPayment } = calculatePayment(worker, actualHours, 'regular', updated.job_position_id);
-                          
-                          updated.base_payment = basePayment;
-                          updated.payment_for_shift = totalPayment;
-                          setEditingShift(updated);
-                        }}
-                      >
-                        {language === 'he' ? 'תכנון -> בפועל' : 'Copy Planned'}
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
-                        onClick={() => {
-                          const updated = {
-                            ...editingShift,
-                            actual_start_time: '',
-                            actual_end_time: '',
-                            actual_hours_worked: null
-                          };
-                          
-                          const worker = workers.find(w => w.id === updated.worker_id);
-                          const plannedHours = calculateHours(updated.start_time, updated.end_time);
-                          const { basePayment, totalPayment } = calculatePayment(worker, plannedHours, 'regular', updated.job_position_id);
-                          
-                          updated.base_payment = basePayment;
-                          updated.payment_for_shift = totalPayment;
-                          setEditingShift(updated);
-                        }}
-                      >
-                        {language === 'he' ? 'נקה' : 'Clear'}
-                      </Button>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="notes" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('notes')}</Label>
+                    <div className="relative">
+                      <FileText className={`absolute top-3.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400 pointer-events-none`} />
+                      <Input id="notes" value={editingShift.notes || ''} onChange={(e) => setEditingShift({...editingShift, notes: e.target.value})} placeholder={t('notes')} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-9 text-right' : 'pl-9 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="actual_start_time" className={`font-semibold text-blue-800 block ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'כניסה' : 'Start In'}</Label>
-                      <div className="relative">
-                        <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-blue-400 pointer-events-none`} />
-                        <Input id="actual_start_time" type="time" value={editingShift.actual_start_time || ''} onChange={(e) => handleTimeChange('actual_start_time', e.target.value)} className={`h-11 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                </TabsContent>
+
+                <TabsContent value="actual" className="space-y-4 mt-0">
+                  <div className="space-y-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="font-semibold text-sm text-blue-700 border-b border-blue-100 pb-1 flex justify-between items-center">
+                      <span>{language === 'he' ? 'בפועל' : 'Actual'}</span>
+                      <div className="flex gap-2">
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
+                          onClick={() => {
+                            const updated = {
+                              ...editingShift,
+                              actual_start_time: editingShift.start_time,
+                              actual_end_time: editingShift.end_time
+                            };
+                            
+                            const actualHours = calculateHours(updated.actual_start_time, updated.actual_end_time);
+                            updated.actual_hours_worked = actualHours;
+                            
+                            const worker = workers.find(w => w.id === updated.worker_id);
+                            const { basePayment, totalPayment } = calculatePayment(worker, actualHours, 'regular', updated.job_position_id);
+                            
+                            updated.base_payment = basePayment;
+                            updated.payment_for_shift = totalPayment;
+                            setEditingShift(updated);
+                          }}
+                        >
+                          {language === 'he' ? 'תכנון -> בפועל' : 'Copy Planned'}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
+                          onClick={() => {
+                            const updated = {
+                              ...editingShift,
+                              actual_start_time: '',
+                              actual_end_time: '',
+                              actual_hours_worked: null
+                            };
+                            
+                            const worker = workers.find(w => w.id === updated.worker_id);
+                            const plannedHours = calculateHours(updated.start_time, updated.end_time);
+                            const { basePayment, totalPayment } = calculatePayment(worker, plannedHours, 'regular', updated.job_position_id);
+                            
+                            updated.base_payment = basePayment;
+                            updated.payment_for_shift = totalPayment;
+                            setEditingShift(updated);
+                          }}
+                        >
+                          {language === 'he' ? 'נקה' : 'Clear'}
+                        </Button>
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="actual_end_time" className={`font-semibold text-blue-800 block ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'יציאה' : 'End Out'}</Label>
-                      <div className="relative">
-                        <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-blue-400 pointer-events-none`} />
-                        <Input id="actual_end_time" type="time" value={editingShift.actual_end_time || ''} onChange={(e) => handleTimeChange('actual_end_time', e.target.value)} className={`h-11 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="actual_start_time" className={`font-semibold text-blue-800 block ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'כניסה' : 'Start In'}</Label>
+                        <div className="relative">
+                          <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-blue-400 pointer-events-none`} />
+                          <Input id="actual_start_time" type="time" value={editingShift.actual_start_time || ''} onChange={(e) => handleTimeChange('actual_start_time', e.target.value)} className={`h-11 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="actual_end_time" className={`font-semibold text-blue-800 block ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'יציאה' : 'End Out'}</Label>
+                        <div className="relative">
+                          <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-blue-400 pointer-events-none`} />
+                          <Input id="actual_end_time" type="time" value={editingShift.actual_end_time || ''} onChange={(e) => handleTimeChange('actual_end_time', e.target.value)} className={`h-11 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <div className={`bg-gradient-to-br from-[#d4a373]/10 to-[#b88c60]/10 border border-[#d4a373]/20 p-4 rounded-xl shadow-sm ${isRTL ? 'text-right' : 'text-left'}`}>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600 font-medium">{language === 'he' ? 'שעות' : 'Hours'}</span>
-                  <div className="flex items-center gap-2">
-                    {editingShift.actual_hours_worked != null && (
-                      <span className="text-sm text-gray-400 line-through">
-                        {editingShift.hours_worked?.toFixed(2)}
-                      </span>
+                  <div className={`bg-gradient-to-br from-[#d4a373]/10 to-[#b88c60]/10 border border-[#d4a373]/20 p-4 rounded-xl shadow-sm ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600 font-medium">{language === 'he' ? 'שעות' : 'Hours'}</span>
+                      <div className="flex items-center gap-2">
+                        {editingShift.actual_hours_worked != null && (
+                          <span className="text-sm text-gray-400 line-through">
+                            {editingShift.hours_worked?.toFixed(2)}
+                          </span>
+                        )}
+                        <span className="text-lg font-bold text-gray-800">
+                          {(editingShift.actual_hours_worked != null ? editingShift.actual_hours_worked : editingShift.hours_worked)?.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {editingShift.base_payment > 0 && (
+                      <>
+                        <div className="flex justify-between items-center mb-1 pb-2 border-b border-[#d4a373]/20">
+                          <span className="text-sm text-gray-600 font-medium">{language === 'he' ? 'שכר בסיס' : 'Base payment'}</span>
+                          <span className="text-sm text-gray-700">{editingShift.base_payment.toFixed(2)} {language === 'he' ? '₪' : 'ILS'}</span>
+                        </div>
+                        {editingShift.overtime_rate === '150' && (
+                          <div className="text-xs text-orange-600 bg-orange-50 p-1.5 rounded mb-2 flex items-start gap-1">
+                            <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                            <span>{t('overtime_150_note') || '150% allowed only Friday 18:00+ and Saturday'}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center mt-2 pt-1">
+                          <span className="text-base text-gray-800 font-bold">{language === 'he' ? 'סה״כ' : 'Total'}</span>
+                          <span className="text-xl font-black text-[#d4a373]">
+                            {(editingShift.payment_for_shift || 0).toFixed(2)} {language === 'he' ? '₪' : 'ILS'}
+                          </span>
+                        </div>
+                      </>
                     )}
-                    <span className="text-lg font-bold text-gray-800">
-                      {(editingShift.actual_hours_worked != null ? editingShift.actual_hours_worked : editingShift.hours_worked)?.toFixed(2)}
-                    </span>
                   </div>
-                </div>
-                
-                {editingShift.base_payment > 0 && (
-                  <>
-                    <div className="flex justify-between items-center mb-1 pb-2 border-b border-[#d4a373]/20">
-                      <span className="text-sm text-gray-600 font-medium">{language === 'he' ? 'שכר בסיס' : 'Base payment'}</span>
-                      <span className="text-sm text-gray-700">{editingShift.base_payment.toFixed(2)} {language === 'he' ? '₪' : 'ILS'}</span>
-                    </div>
-                    {editingShift.overtime_rate === '150' && (
-                      <div className="text-xs text-orange-600 bg-orange-50 p-1.5 rounded mb-2 flex items-start gap-1">
-                        <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
-                        <span>{t('overtime_150_note') || '150% allowed only Friday 18:00+ and Saturday'}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center mt-2 pt-1">
-                      <span className="text-base text-gray-800 font-bold">{language === 'he' ? 'סה״כ' : 'Total'}</span>
-                      <span className="text-xl font-black text-[#d4a373]">
-                        {(editingShift.payment_for_shift || 0).toFixed(2)} {language === 'he' ? '₪' : 'ILS'}
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="notes" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('notes')}</Label>
-                <div className="relative">
-                  <FileText className={`absolute top-3.5 ${isRTL ? 'right-3' : 'left-3'} h-4 w-4 text-gray-400 pointer-events-none`} />
-                  <Input id="notes" value={editingShift.notes || ''} onChange={(e) => setEditingShift({...editingShift, notes: e.target.value})} placeholder={t('notes')} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-9 text-right' : 'pl-9 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
-                </div>
-              </div>
+                </TabsContent>
+              </Tabs>
             </div>
           )}
           
