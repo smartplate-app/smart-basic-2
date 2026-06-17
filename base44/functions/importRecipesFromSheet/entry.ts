@@ -199,6 +199,11 @@ ${sheetData}
     }
 
     const prepRecipeItemsToCreate = [];
+    let targetEmailForCreate = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
+    if (body.targetEmail && (user.role === 'admin' || user.email.startsWith('service+'))) {
+      targetEmailForCreate = body.targetEmail;
+    }
+
     const prepRecipeItems = allRecipes.filter(r => r.type === 'prep_recipe' && r.name).map(r => ({
       name: r.name,
       unit: normalizeUnit(r.yield_unit),
@@ -207,7 +212,9 @@ ${sheetData}
       supplier_name: 'Prep Recipe',
       units_per_package: 1,
       minimum_stock: 0,
-      discount: 0
+      discount: 0,
+      created_by: targetEmailForCreate,
+      store_owner_email: targetEmailForCreate
     }));
 
     for (const itemData of prepRecipeItems) {
@@ -218,7 +225,7 @@ ${sheetData}
     }
 
     if (prepRecipeItemsToCreate.length > 0) {
-      const createdPrepItems = await base44.entities.Item.bulkCreate(prepRecipeItemsToCreate);
+      const createdPrepItems = await base44.asServiceRole.entities.Item.bulkCreate(prepRecipeItemsToCreate);
       for (const it of createdPrepItems) {
         itemMap.set(it.name.trim().toLowerCase(), it);
       }
@@ -286,7 +293,7 @@ ${sheetData}
            const pName = r.name.trim().toLowerCase();
            const pItem = itemMap.get(pName);
            if (pItem && pItem.id && pItem.price > 0) {
-               itemUpdates.push(() => base44.entities.Item.update(pItem.id, { price: pItem.price, price_after_discount: pItem.price }));
+               itemUpdates.push(() => base44.asServiceRole.entities.Item.update(pItem.id, { price: pItem.price, price_after_discount: pItem.price }));
            }
        }
     }
@@ -346,7 +353,9 @@ ${sheetData}
         yield_unit: normalizeUnit(r.yield_unit),
         sale_price: Number(r.sale_price) || 0,
         total_cost: totalCost,
-        ingredients: ingredients
+        ingredients: ingredients,
+        created_by: targetEmailForCreate,
+        store_owner_email: targetEmailForCreate
       };
     });
 
@@ -364,7 +373,7 @@ ${sheetData}
                            existing.yield_unit !== recipeData.yield_unit ||
                            JSON.stringify(existing.ingredients) !== JSON.stringify(recipeData.ingredients);
         if (hasChanges) {
-          recipeUpdateFns.push(() => base44.entities.Recipe.update(existing.id, recipeData));
+          recipeUpdateFns.push(() => base44.asServiceRole.entities.Recipe.update(existing.id, recipeData));
           updatedRecipesCount++;
         }
       } else {
@@ -377,7 +386,7 @@ ${sheetData}
     }
 
     if (recipesToCreate.length > 0) {
-      const created = await base44.entities.Recipe.bulkCreate(recipesToCreate);
+      const created = await base44.asServiceRole.entities.Recipe.bulkCreate(recipesToCreate);
       createdRecipesCount = created.length;
     }
 

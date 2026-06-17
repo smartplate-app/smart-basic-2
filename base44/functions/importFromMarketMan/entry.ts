@@ -9,10 +9,16 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { system_url, username, password, import_type = 'both' } = await req.json();
+        const reqBody = await req.json();
+        const { system_url, username, password, import_type = 'both', targetEmail: providedTargetEmail } = reqBody;
 
         if (!system_url || !username || !password) {
             return Response.json({ error: 'URL, username and password are required' }, { status: 400 });
+        }
+
+        let targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
+        if (providedTargetEmail && (user.role === 'admin' || user.email.startsWith('service+'))) {
+            targetEmail = providedTargetEmail;
         }
 
         let suppliers_imported = 0;
@@ -61,7 +67,8 @@ Deno.serve(async (req) => {
                                     email: supplier.email || '',
                                     contact_person: supplier.contact_name || supplier.contact || '',
                                     supplier_type: 'simple',
-                                    created_by: user.email
+                                    created_by: targetEmail,
+                                    store_owner_email: targetEmail
                                 });
                                 suppliers_imported++;
                             } catch (error) {
@@ -89,7 +96,7 @@ Deno.serve(async (req) => {
                         const items = itemsData.data || itemsData.items || itemsData.products || itemsData;
                         
                         // Get all suppliers to match items
-                        const allSuppliers = await base44.asServiceRole.entities.Supplier.filter({ created_by: user.email });
+                        const allSuppliers = await base44.asServiceRole.entities.Supplier.filter({ created_by: targetEmail });
                         
                         for (const item of items) {
                             try {
@@ -107,7 +114,8 @@ Deno.serve(async (req) => {
                                         catalog_number: item.sku || item.item_code || item.catalog_number || '',
                                         unit: mapUnit(item.unit || item.unit_type),
                                         price: parseFloat(item.price || item.cost || 0),
-                                        created_by: user.email
+                                        created_by: targetEmail,
+                                        store_owner_email: targetEmail
                                     });
                                     items_imported++;
                                 }
