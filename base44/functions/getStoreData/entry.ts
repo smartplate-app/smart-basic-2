@@ -31,46 +31,55 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Forbidden: not an active store user for this owner' }, { status: 403 });
         }
 
-        const q = { $or: [{ created_by: ownerEmail }, { store_owner_email: ownerEmail }] };
+        const fetchBoth = async (entityName, sortBy = '-created_date') => {
+            const [r1, r2] = await Promise.all([
+                base44.asServiceRole.entities[entityName].filter({ created_by: ownerEmail }, sortBy, 10000),
+                base44.asServiceRole.entities[entityName].filter({ store_owner_email: ownerEmail }, sortBy, 10000)
+            ]);
+            const combined = [...(r1 || []), ...(r2 || [])];
+            const deduped = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+            if (entityName === 'Warehouse') return deduped.filter(w => w.is_active !== false);
+            return deduped;
+        };
 
         if (action === 'getSuppliers') {
-            const suppliers = await base44.asServiceRole.entities.Supplier.filter(q, 'name', 10000);
+            const suppliers = await fetchBoth('Supplier', 'name');
             return Response.json({ success: true, suppliers });
         }
 
         if (action === 'getOrders') {
-            const orders = await base44.asServiceRole.entities.Order.filter(q, '-created_date', 10000);
+            const orders = await fetchBoth('Order', '-created_date');
             return Response.json({ success: true, orders });
         }
 
         if (action === 'getItems') {
-            const items = await base44.asServiceRole.entities.Item.filter(q, 'name', 10000);
+            const items = await fetchBoth('Item', 'name');
             return Response.json({ success: true, items });
         }
 
         if (action === 'getWarehouses') {
-            const warehouses = await base44.asServiceRole.entities.Warehouse.filter(q, 'name', 10000);
+            const warehouses = await fetchBoth('Warehouse', 'name');
             return Response.json({ success: true, warehouses });
         }
 
         if (action === 'getInventoryCounts') {
-            const counts = await base44.asServiceRole.entities.InventoryCount.filter(q, '-count_date', 10000);
+            const counts = await fetchBoth('InventoryCount', '-count_date');
             return Response.json({ success: true, counts });
         }
 
         if (action === 'getReceipts') {
-            const receipts = await base44.asServiceRole.entities.SupplyReceipt.filter(q, '-received_date', 10000);
+            const receipts = await fetchBoth('SupplyReceipt', '-received_date');
             return Response.json({ success: true, receipts });
         }
 
         if (action === 'getFullData') {
             const [suppliers, orders, items, warehouses, receipts, counts] = await Promise.all([
-                base44.asServiceRole.entities.Supplier.filter(q, 'name', 10000),
-                base44.asServiceRole.entities.Order.filter(q, '-created_date', 10000),
-                base44.asServiceRole.entities.Item.filter(q, 'name', 10000),
-                base44.asServiceRole.entities.Warehouse.filter(q, 'name', 10000),
-                base44.asServiceRole.entities.SupplyReceipt.filter(q, '-received_date', 10000),
-                base44.asServiceRole.entities.InventoryCount.filter(q, '-count_date', 10000)
+                fetchBoth('Supplier', 'name'),
+                fetchBoth('Order', '-created_date'),
+                fetchBoth('Item', 'name'),
+                fetchBoth('Warehouse', 'name'),
+                fetchBoth('SupplyReceipt', '-received_date'),
+                fetchBoth('InventoryCount', '-count_date')
             ]);
             return Response.json({ success: true, suppliers, orders, items, warehouses, receipts, counts });
         }

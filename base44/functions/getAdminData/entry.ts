@@ -17,58 +17,66 @@ Deno.serve(async (req) => {
             return Response.json({ success: true, users });
         }
 
+        const fetchBoth = async (entityName, sortBy = '-created_date') => {
+            const [r1, r2] = await Promise.all([
+                base44.asServiceRole.entities[entityName].filter({ created_by: userEmail }, sortBy, 10000),
+                base44.asServiceRole.entities[entityName].filter({ store_owner_email: userEmail }, sortBy, 10000)
+            ]);
+            const combined = [...(r1 || []), ...(r2 || [])];
+            const deduped = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+            if (entityName === 'Warehouse') return deduped.filter(w => w.is_active !== false);
+            return deduped;
+        };
+
         if (action === 'getUserData' && userEmail) {
-            const q = { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
-            const orders = await base44.asServiceRole.entities.Order.filter(q, '-created_date', 10000);
-            const receipts = await base44.asServiceRole.entities.SupplyReceipt.filter(q, '-created_date', 10000);
-            const items = await base44.asServiceRole.entities.Item.filter(q, '-created_date', 10000);
-            const suppliers = await base44.asServiceRole.entities.Supplier.filter(q, '-created_date', 10000);
-            const inventory = await base44.asServiceRole.entities.InventoryCount.filter(q, '-created_date', 10000);
-            const workers = await base44.asServiceRole.entities.Worker.filter(q, '-created_date', 10000);
-            const schedules = await base44.asServiceRole.entities.WeeklySchedule.filter(q, '-week_start_date', 10000);
-            const recipes = await base44.asServiceRole.entities.Recipe.filter(q, '-created_date', 10000);
-            const warehouses = (await base44.asServiceRole.entities.Warehouse.filter({ created_by: userEmail }, '-created_date', 10000)).filter(w => w.is_active !== false);
-            const cogsReports = await base44.asServiceRole.entities.CogsReport.filter(q, '-created_date', 10000);
-            const priceChanges = await base44.asServiceRole.entities.PriceChangeLog.filter(q, '-created_date', 10000);
-            const wasteReports = await base44.asServiceRole.entities.WasteReport.filter(q, '-created_date', 10000);
-            const monthlyDashboardData = await base44.asServiceRole.entities.MonthlyDashboardData.filter(q, '-month', 10000);
+            const [
+                orders, receipts, items, suppliers, inventory, workers, schedules,
+                recipes, warehouses, cogsReports, priceChanges, wasteReports, monthlyDashboardData
+            ] = await Promise.all([
+                fetchBoth('Order'),
+                fetchBoth('SupplyReceipt'),
+                fetchBoth('Item'),
+                fetchBoth('Supplier'),
+                fetchBoth('InventoryCount'),
+                fetchBoth('Worker'),
+                fetchBoth('WeeklySchedule', '-week_start_date'),
+                fetchBoth('Recipe'),
+                fetchBoth('Warehouse'),
+                fetchBoth('CogsReport'),
+                fetchBoth('PriceChangeLog'),
+                fetchBoth('WasteReport'),
+                fetchBoth('MonthlyDashboardData', '-month')
+            ]);
 
             return Response.json({
                 success: true,
                 data: {
-                    orders,
-                    receipts,
-                    items,
-                    suppliers,
-                    inventory,
-                    workers,
-                    schedules,
-                    recipes,
-                    warehouses,
-                    cogsReports,
-                    priceChanges,
-                    wasteReports,
-                    monthlyDashboardData
+                    orders, receipts, items, suppliers, inventory, workers, schedules,
+                    recipes, warehouses, cogsReports, priceChanges, wasteReports, monthlyDashboardData
                 }
             });
         }
 
         if (action === 'getFullUserData' && userEmail) {
-            const q = { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
-            const orders = await base44.asServiceRole.entities.Order.filter(q, '-created_date', 10000);
-            const receipts = await base44.asServiceRole.entities.SupplyReceipt.filter(q, '-created_date', 10000);
-            const items = await base44.asServiceRole.entities.Item.filter(q, '-created_date', 10000);
-            const suppliers = await base44.asServiceRole.entities.Supplier.filter(q, '-created_date', 10000);
-            const inventory = await base44.asServiceRole.entities.InventoryCount.filter(q, '-created_date', 10000);
-            const workers = await base44.asServiceRole.entities.Worker.filter(q, '-created_date', 10000);
-            const schedules = await base44.asServiceRole.entities.WeeklySchedule.filter(q, '-week_start_date', 10000);
-            const dashboardData = await base44.asServiceRole.entities.MonthlyDashboardData.filter(q, '-month', 10000);
-            const positions = await base44.asServiceRole.entities.JobPosition.filter(q, '-created_date', 10000);
-            const recipes = await base44.asServiceRole.entities.Recipe.filter(q, '-created_date', 10000);
-            const warehouses = (await base44.asServiceRole.entities.Warehouse.filter({ created_by: userEmail }, '-created_date', 10000)).filter(w => w.is_active !== false);
-            const cogsReports = await base44.asServiceRole.entities.CogsReport.filter(q, '-created_date', 10000);
-            const wasteReports = await base44.asServiceRole.entities.WasteReport.filter(q, '-created_date', 10000);
-            const priceChanges = await base44.asServiceRole.entities.PriceChangeLog.filter(q, '-created_date', 10000);
+            const [
+                orders, receipts, items, suppliers, inventory, workers, schedules,
+                dashboardData, positions, recipes, warehouses, cogsReports, wasteReports, priceChanges
+            ] = await Promise.all([
+                fetchBoth('Order'),
+                fetchBoth('SupplyReceipt'),
+                fetchBoth('Item'),
+                fetchBoth('Supplier'),
+                fetchBoth('InventoryCount'),
+                fetchBoth('Worker'),
+                fetchBoth('WeeklySchedule', '-week_start_date'),
+                fetchBoth('MonthlyDashboardData', '-month'),
+                fetchBoth('JobPosition'),
+                fetchBoth('Recipe'),
+                fetchBoth('Warehouse'),
+                fetchBoth('CogsReport'),
+                fetchBoth('WasteReport'),
+                fetchBoth('PriceChangeLog')
+            ]);
 
             return Response.json({
                 success: true,
