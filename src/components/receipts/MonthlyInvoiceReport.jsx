@@ -113,7 +113,9 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const grandTotal = useMemo(() => grouped.reduce((sum, g) => sum + g.total, 0), [grouped]);
   const totalReceipts = monthReceipts.length;
   const totalSuppliers = grouped.length;
-  const avgReceipt = totalReceipts > 0 ? (grandTotal / totalReceipts) : 0;
+  
+  const daysInPeriod = month === moment().format('YYYY-MM') ? Math.max(1, moment().date()) : monthEnd.date();
+  const avgDaily = grandTotal / daysInPeriod;
   
   // Calculate without VAT (assume standard Israel VAT of 17%, so divide by 1.17)
   const grandTotalNoVat = grandTotal / 1.17;
@@ -452,8 +454,8 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               <span className="text-2xl font-bold text-gray-900">{totalSuppliers}</span>
             </div>
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
-              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'ממוצע לקבלה' : 'Avg. Receipt'}</span>
-              <span className="text-2xl font-bold text-gray-900">₪{avgReceipt.toFixed(0)}</span>
+              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'ממוצע יומי' : 'Daily Average'}</span>
+              <span className="text-2xl font-bold text-gray-900">₪{avgDaily.toFixed(0)}</span>
             </div>
           </div>
           <div className="overflow-auto max-h-[60vh] w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
