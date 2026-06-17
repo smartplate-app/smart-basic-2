@@ -469,10 +469,10 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
           </div>
 
           <div>
-            <Label>{t('price_after_discount') || 'מחיר אחרי הנחה'}</Label>
+            <Label>{language === 'he' ? 'מחיר אחרי הנחה' : t('price_after_discount')}</Label>
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-green-700">{t('final_price') || 'מחיר סופי'}:</span>
+                <span className="text-sm text-green-700">{language === 'he' ? 'מחיר סופי' : t('final_price')}:</span>
                 <span className="text-lg font-bold text-green-700">
                   {(currentItem.price && currentItem.discount 
                     ? (currentItem.price * (1 - (currentItem.discount / 100))).toFixed(2)
@@ -482,13 +482,13 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               </div>
               <div className="flex items-center justify-between border-t border-green-200/50 pt-1">
                 <span className="text-sm text-green-700">
-                  {t('price_per_unit') || 'מחיר ל-'}{(() => {
-                    if (currentItem.unit === 'kg') return t('unit_kg') || 'ק״ג';
-                    if (currentItem.unit === 'gram') return t('unit_g') || 'גרם';
-                    if (currentItem.unit === 'liter') return t('unit_liter') || 'ליטר';
-                    if (currentItem.unit === 'ml') return t('unit_ml') || 'מ״ל';
-                    if (currentItem.unit === 'case') return t('unit_piece') || 'יחידה';
-                    return t('unit_piece') || 'יחידה';
+                  {language === 'he' ? 'מחיר ל-' : t('price_per_unit')}{(() => {
+                    if (currentItem.unit === 'kg') return language === 'he' ? 'ק״ג' : t('unit_kg');
+                    if (currentItem.unit === 'gram') return language === 'he' ? 'גרם' : t('unit_g');
+                    if (currentItem.unit === 'liter') return language === 'he' ? 'ליטר' : t('unit_liter');
+                    if (currentItem.unit === 'ml') return language === 'he' ? 'מ״ל' : t('unit_ml');
+                    if (currentItem.unit === 'case') return language === 'he' ? 'יחידה' : t('unit_piece');
+                    return language === 'he' ? 'יחידה' : t('unit_piece');
                   })()}:
                 </span>
                 <span className="text-md font-bold text-green-700">
@@ -497,14 +497,14 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {t('price_after_discount_help') || 'המחיר שישמש לכל החישובים'}
+              {language === 'he' ? 'המחיר שישמש לכל החישובים' : t('price_after_discount_help')}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
           <div>
-            <Label htmlFor="minimum_stock">{t('minimum_stock') || 'מלאי מינימום'}</Label>
+            <Label htmlFor="minimum_stock">{language === 'he' ? 'מלאי מינימום' : t('minimum_stock')}</Label>
             <Input
               id="minimum_stock"
               type="number"
@@ -515,7 +515,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               placeholder="0"
             />
             <p className="text-xs text-gray-500 mt-1">
-              {t('minimum_stock_help') || 'כמות מינימלית שחייבת להיות במלאי - תעזור להזמנות חכמות'}
+              {language === 'he' ? 'כמות מינימלית שחייבת להיות במלאי - תעזור להזמנות חכמות' : t('minimum_stock_help')}
             </p>
           </div>
         </div>
