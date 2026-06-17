@@ -1210,6 +1210,23 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     const newShifts = [...list];
     const movedOriginal = newShifts[from];
     if (!movedOriginal) return;
+
+    if (src.positionId !== dst.positionId && movedOriginal.worker_id) {
+      const worker = workers.find(w => w.id === movedOriginal.worker_id);
+      if (worker) {
+        const assignedPositions = [worker.job_position_id, ...(worker.job_position_ids || [])];
+        if (!assignedPositions.includes(dst.positionId)) {
+          const destPosition = positions.find(p => p.id === dst.positionId);
+          toast.error(
+            language === 'he' 
+            ? `העובד לא מוגדר בתפקיד ${destPosition?.name || ''}` 
+            : `Worker is not assigned to the role ${destPosition?.name || ''}`
+          );
+          return;
+        }
+      }
+    }
+
     newShifts.splice(from, 1);
 
     let updated = { ...movedOriginal };
