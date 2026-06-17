@@ -153,7 +153,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
             <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
               <DropdownMenuTrigger asChild>
                 <Button type="button" variant="outline" className="w-full justify-between font-normal overflow-hidden">
-                  <span className="truncate flex-1 min-w-0 text-left rtl:text-right">
+                  <span className="truncate flex-1 min-w-0 text-left rtl:text-right text-gray-900 dark:text-gray-100">
                     {((formData.warehouse_names && formData.warehouse_names.length > 0) || formData.warehouse_name)
                       ? (formData.warehouse_names && formData.warehouse_names.length > 0 
                           ? formData.warehouse_names.join(", ") 
@@ -163,7 +163,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
                   <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0 ml-2 rtl:mr-2 rtl:ml-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]" style={{ zIndex: 99999 }}>
+              <DropdownMenuContent align="end" className="w-[200px]" style={{ zIndex: 999999 }}>
                 {warehouses?.map(warehouse => {
                   const isSelected = (formData.warehouse_ids && formData.warehouse_ids.includes(warehouse.id)) || formData.warehouse_id === warehouse.id;
                   return (
