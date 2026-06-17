@@ -329,9 +329,9 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 cursor-pointer hover:opacity-80" onClick={() => handleStartEdit(position)}>
                       <span className="inline-block h-3 w-3 rounded" style={{ backgroundColor: position.color || '#E6F4FF' }} />
-                      <h4 className="font-bold text-lg">{position.name}</h4>
+                      <h4 className="font-bold text-lg underline decoration-gray-300 underline-offset-4">{position.name}</h4>
                     </div>
                     <Badge className={sectionColors[position.section] || sectionColors.other}>
                       {t(position.section)}
@@ -382,8 +382,8 @@ export default function JobPositionsList({ positions, onAdd, onUpdate, onDelete 
               <div className="flex items-center gap-3 min-w-0">
                 <span className="inline-block h-3 w-3 rounded" style={{ backgroundColor: position.color || '#E6F4FF' }} />
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold truncate max-w-[240px] md:max-w-[360px]">{position.name}</span>
+                  <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => handleStartEdit(position)}>
+                    <span className="font-semibold truncate max-w-[240px] md:max-w-[360px] underline decoration-gray-300 underline-offset-4">{position.name}</span>
                     <Badge className={sectionColors[position.section] || sectionColors.other}>{t(position.section)}</Badge>
                   </div>
                   <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-3">
