@@ -12,7 +12,7 @@ async function createSpreadsheet(accessToken, title) {
     body: JSON.stringify({
       properties: { title },
       sheets: [
-        { properties: { sheetId: 0, title: 'ספקים ופריטים', rightToLeft: true, gridProperties: { columnCount: 14 } } }
+        { properties: { title: 'ספקים ופריטים', gridProperties: { columnCount: 7 } } }
       ]
     })
   });
@@ -56,90 +56,14 @@ Deno.serve(async (req) => {
     const spreadsheetId = await createSpreadsheet(accessToken, title);
 
     const data = [
-      ['שם הפריט', 'ספק', 'כינוי (בשפה שלך , יופיע לך בלבד)', 'יחידת הפריט (קילוגרם / גרם / ליטר / מיליליטר / ארגז)', 'כמות יחידות באריזה', 'תכולה ליחידה', 'יחידת מידה לתכולה', 'מחיר לפריט', 'מספר קטלוגי', 'מחסן', 'מחסן 2', 'מחסן 3', 'הנחה (%)', 'מלאי מינימום'],
-      ['גומיות חומות (דוגמה)', 'smart plate demo', 'הגומיות של האריזות', 'יחידה', '', '', '', '5', '123', 'מקרר אחורי', 'מקרר פס חם', '', '0', '5'],
-      ['חמים ונעים (דוגמה)', 'smart plate demo', 'מה שחם בחורף', 'ארגז', '', '', '', '552', '233', 'מחסן בחוץ', '', '', '0', ''],
-      ['נסיון test (דוגמה)', 'smart plate demo', '', 'יחידה', '', '', '', '35', '3256', 'מחסן בחוץ', '', '', '0', ''],
+      ['שם ספק', 'שם פריט', 'מחיר', 'יחידת מידה', 'מק"ט', 'הנחה (%)', 'כמות באריזה'],
+      ['ירקן דוגמה', 'עגבניה', '5', 'ק"ג', '1001', '0', '1'],
+      ['ירקן דוגמה', 'מלפפון', '4.5', 'ק"ג', '1002', '5', '1'],
+      ['ספק בשר', 'חזה עוף', '35', 'ק"ג', '2001', '0', '1'],
+      ['ספק בשר', 'בשר טחון', '40', 'ק"ג', '2002', '0', '1'],
     ];
 
-    await writeValues(accessToken, spreadsheetId, "'ספקים ופריטים'!A1:N4", data);
-
-    // Apply formatting
-    const formatReq = await fetch(`${SHEETS_BASE}/${spreadsheetId}:batchUpdate`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        requests: [
-          {
-            updateSheetProperties: {
-              properties: {
-                sheetId: 0,
-                gridProperties: {
-                  frozenRowCount: 1,
-                  frozenColumnCount: 1 // Freeze up to Item Name ('שם הפריט')
-                }
-              },
-              fields: 'gridProperties(frozenRowCount,frozenColumnCount)'
-            }
-          },
-          {
-            repeatCell: {
-              range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 1.0, green: 0.95, blue: 0.8 }, // Light yellow
-                  textFormat: { bold: true }
-                }
-              },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)'
-            }
-          },
-          {
-            repeatCell: {
-              range: { sheetId: 0, startRowIndex: 1, endRowIndex: 4 }, // The examples
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Light grey
-                  textFormat: { italic: true, foregroundColor: { red: 0.4, green: 0.4, blue: 0.4 } }
-                }
-              },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)'
-            }
-          },
-          {
-            repeatCell: {
-              range: { sheetId: 0, startColumnIndex: 0, endColumnIndex: 1 }, // Column A (Item Name)
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 1.0, green: 0.95, blue: 0.8 }, // Light yellow
-                  textFormat: { bold: true }
-                }
-              },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)'
-            }
-          },
-          // Re-apply light grey to the intersection of examples and column A
-          {
-            repeatCell: {
-              range: { sheetId: 0, startRowIndex: 1, endRowIndex: 4, startColumnIndex: 0, endColumnIndex: 1 },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Light grey
-                  textFormat: { italic: true, foregroundColor: { red: 0.4, green: 0.4, blue: 0.4 } }
-                }
-              },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)'
-            }
-          }
-        ]
-      })
-    });
-    if (!formatReq.ok) {
-      console.error('Failed to format sheet:', await formatReq.text());
-    }
+    await writeValues(accessToken, spreadsheetId, "'ספקים ופריטים'!A1:G5", data);
 
     try {
       await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId });

@@ -21,9 +21,6 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         properties: { title },
-        sheets: [
-          { properties: { sheetId: 0, title: 'Sheet1', rightToLeft: true, gridProperties: { columnCount: 13 } } }
-        ]
       })
     });
 
@@ -38,22 +35,17 @@ Deno.serve(async (req) => {
 
     // Prepare headers and sample rows (Hebrew)
     const headers = [
-      'שם הפריט',
-      'כינוי (בשפה שלך , יופיע לך בלבד)',
-      'יחידת הפריט (קילוגרם / גרם / ליטר / מיליליטר / ארגז)',
-      'כמות יחידות באריזה',
-      'תכולה ליחידה',
-      'יחידת מידה לתכולה',
-      'מחיר לפריט',
+      'שם פריט',
       'מספר קטלוגי',
-      'מחסן',
-      'מחסן 2',
-      'מחסן 3',
+      'יחידה', // יח׳, ק"ג, ליטר, ארגז
+      'מחיר',
       'הנחה (%)',
-      'מלאי מינימום'
+      'יחידות בחבילה',
+      'מלאי מינימלי',
+      'הערות'
     ];
-    const row1 = ['עגבניות (דוגמה)', '', 'ק"ג', '', '', '', 9.9, 'VEG-001', 'מקרר ירקות', '', '', 0, 10];
-    const row2 = ['קוקה קולה 330מ״ל (דוגמה)', '', 'ארגז', 24, 330, 'מיליליטר', 72, 'DRK-330', 'מחסן משקאות', '', '', 10, 2];
+    const row1 = ['עגבניות', 'VEG-001', 'ק"ג', 9.9, 0, 1, 0, 'טרי'];
+    const row2 = ['קוקה קולה 330מ״ל', 'DRK-330', 'ארגז', 72, 10, 24, 2, 'מארז 24'];
 
     // Write values
     const updateRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
@@ -65,8 +57,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         valueInputOption: 'USER_ENTERED',
         data: [
-          { range: 'Sheet1!A1:M1', values: [headers] },
-          { range: 'Sheet1!A2:M3', values: [row1, row2] }
+          { range: 'Sheet1!A1:H1', values: [headers] },
+          { range: 'Sheet1!A2:H3', values: [row1, row2] }
         ]
       })
     });
@@ -74,83 +66,6 @@ Deno.serve(async (req) => {
     if (!updateRes.ok) {
       const txt = await updateRes.text();
       return Response.json({ error: 'Failed to write headers/rows', details: txt }, { status: 500 });
-    }
-
-    // Apply formatting
-    const formatReq = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        requests: [
-          {
-            updateSheetProperties: {
-              properties: {
-                sheetId: 0,
-                gridProperties: {
-                  frozenRowCount: 1,
-                  frozenColumnCount: 1 // Freeze up to Item Name ('שם הפריט')
-                }
-              },
-              fields: 'gridProperties(frozenRowCount,frozenColumnCount)'
-            }
-          },
-          {
-            repeatCell: {
-              range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 1.0, green: 0.95, blue: 0.8 }, // Light yellow
-                  textFormat: { bold: true }
-                }
-              },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)'
-            }
-          },
-          {
-            repeatCell: {
-              range: { sheetId: 0, startRowIndex: 1, endRowIndex: 3 }, // The examples
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Light grey
-                  textFormat: { italic: true, foregroundColor: { red: 0.4, green: 0.4, blue: 0.4 } }
-                }
-              },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)'
-            }
-          },
-          {
-            repeatCell: {
-              range: { sheetId: 0, startColumnIndex: 0, endColumnIndex: 1 }, // Column A (Item Name)
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 1.0, green: 0.95, blue: 0.8 }, // Light yellow
-                  textFormat: { bold: true }
-                }
-              },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)'
-            }
-          },
-          // Re-apply light grey to the intersection of examples and column A
-          {
-            repeatCell: {
-              range: { sheetId: 0, startRowIndex: 1, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: 1 },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Light grey
-                  textFormat: { italic: true, foregroundColor: { red: 0.4, green: 0.4, blue: 0.4 } }
-                }
-              },
-              fields: 'userEnteredFormat(backgroundColor,textFormat)'
-            }
-          }
-        ]
-      })
-    });
-    if (!formatReq.ok) {
-      console.error('Failed to format sheet:', await formatReq.text());
     }
 
     // Share the sheet with the intended user (owner's token creates it; we share to user's Google email)

@@ -16,10 +16,16 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'URL is required' }, { status: 400 });
         }
 
-        let workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
-        const { targetEmail: providedTargetEmail } = body;
-        if (providedTargetEmail && (user.role === 'admin' || user.email.startsWith('service+'))) {
-            workingEmail = providedTargetEmail;
+        let workingEmail = user.acting_as_store_email || user.acting_as_user_email || user.email;
+        let ownerEmail = user.store_user_owner_email || null;
+        if (!ownerEmail) {
+            try {
+                const storeUserRecords = await base44.entities.StoreUser.filter({ user_email: workingEmail, is_active: true });
+                if (storeUserRecords.length > 0) ownerEmail = storeUserRecords[0].owner_email || null;
+            } catch (_) {}
+        }
+        if (ownerEmail) {
+            workingEmail = ownerEmail;
         }
 
         // Mock response for Rosa App because it's a SPA and can't be scraped by LLM directly without a headless browser

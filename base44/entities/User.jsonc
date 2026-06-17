@@ -10,10 +10,6 @@
       "type": "string",
       "description": "Address of the restaurant or business"
     },
-    "business_tax_id": {
-      "type": "string",
-      "description": "Business ID or VAT number"
-    },
     "vat_percent": {
       "type": "number",
       "default": 17,

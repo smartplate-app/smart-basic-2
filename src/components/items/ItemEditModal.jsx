@@ -278,7 +278,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
 
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-green-700">{language === 'he' ? 'מחיר סופי' : t('final_price')}:</span>
+              <span className="text-sm text-green-700">{t('final_price') || 'Final Price'}:</span>
               <span className="text-lg font-bold text-green-700">
                 {(formData.price && formData.discount 
                   ? (formData.price * (1 - (formData.discount / 100))).toFixed(2)
@@ -288,13 +288,13 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
             </div>
             <div className="flex items-center justify-between border-t border-green-200/50 pt-1">
               <span className="text-sm text-green-700">
-                {language === 'he' ? 'מחיר ל-' : t('price_per_unit')}{(() => {
-                  if (formData.unit === 'kg') return language === 'he' ? 'ק״ג' : t('unit_kg');
-                  if (formData.unit === 'gram') return language === 'he' ? 'גרם' : t('unit_g');
-                  if (formData.unit === 'liter') return language === 'he' ? 'ליטר' : t('unit_liter');
-                  if (formData.unit === 'ml') return language === 'he' ? 'מ״ל' : t('unit_ml');
-                  if (formData.unit === 'case') return language === 'he' ? 'יחידה' : t('unit_piece');
-                  return language === 'he' ? 'יחידה' : t('unit_piece');
+                {t('price_per_unit') || 'Price per '}{(() => {
+                  if (formData.unit === 'kg') return t('unit_kg') || 'Kg';
+                  if (formData.unit === 'gram') return t('unit_g') || 'Gram';
+                  if (formData.unit === 'liter') return t('unit_liter') || 'Liter';
+                  if (formData.unit === 'ml') return t('unit_ml') || 'Ml';
+                  if (formData.unit === 'case') return t('unit_piece') || 'Unit';
+                  return t('unit_piece') || 'Unit';
                 })()}:
               </span>
               <span className="text-md font-bold text-green-700">
@@ -305,7 +305,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
 
           <div className="space-y-2 bg-orange-50 border border-orange-200 rounded-lg p-3">
             <Label htmlFor="minimum_stock" className="text-orange-800 font-semibold">
-              {language === 'he' ? 'מלאי מינימום' : t('minimum_stock')} 📦
+              {t('minimum_stock') || 'מלאי מינימום'} 📦
             </Label>
             <Input
               id="minimum_stock"
@@ -317,7 +317,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
               placeholder="0"
             />
             <p className="text-xs text-orange-600">
-              {language === 'he' ? 'השאר 0 אם לא רלוונטי. כשמוגדר - בהזמנה תקבל הצעה חכמה כמה להזמין' : t('minimum_stock_help')}
+              {t('minimum_stock_help') || 'השאר 0 אם לא רלוונטי. כשמוגדר - בהזמנה תקבל הצעה חכמה כמה להזמין'}
             </p>
           </div>
 

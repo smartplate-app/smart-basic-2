@@ -20,8 +20,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const reqBody = await req.json();
-    const { spreadsheetUrl, spreadsheetId: rawId, sheetName, targetEmail: providedTargetEmail } = reqBody;
+    const { spreadsheetUrl, spreadsheetId: rawId, sheetName } = await req.json();
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
 
@@ -60,10 +59,7 @@ Deno.serve(async (req) => {
     const idxAcc = col(['מספר ספק בחשבונאות', 'accounting', 'accounting code']);
     const idxNotes = col(['הערות', 'notes']);
 
-    let targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
-    if (providedTargetEmail && (user.role === 'admin' || user.email.startsWith('service+'))) {
-      targetEmail = providedTargetEmail;
-    }
+    const targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
 
     const payload = bodyRows.map(r => ({
       name: normStr(r[idxName]),
@@ -74,7 +70,7 @@ Deno.serve(async (req) => {
       accounting_code: idxAcc !== -1 ? normStr(r[idxAcc]) : undefined,
       grant_notes: idxNotes !== -1 ? normStr(r[idxNotes]) : undefined,
       created_by: targetEmail,
-      store_owner_email: targetEmail
+      store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
     })).filter(x => x.name);
 
     if (payload.length === 0) return Response.json({ error: 'No valid supplier rows' }, { status: 400 });

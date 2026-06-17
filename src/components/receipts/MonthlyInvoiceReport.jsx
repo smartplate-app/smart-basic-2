@@ -41,7 +41,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const [sortMode, setSortMode] = useState('supplier_asc');
   const [itemSearch, setItemSearch] = useState('');
   const [uploadTarget, setUploadTarget] = useState('drive');
-  const [selectedForAction, setSelectedForAction] = useState({});
 
   React.useEffect(() => {
     (async () => {
@@ -89,11 +88,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
     return filtered.sort((a, b) => (a.invoice_date || a.received_date || '').localeCompare(b.invoice_date || b.received_date || ''));
   }, [receipts, monthStart, monthEnd, itemSearch]);
 
-  React.useEffect(() => {
-    // Clear selection when month/search changes
-    setSelectedForAction({});
-  }, [monthReceipts]);
-
   const grouped = useMemo(() => {
     const map = {};
     monthReceipts.forEach(r => {
@@ -113,50 +107,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
   const grandTotal = useMemo(() => grouped.reduce((sum, g) => sum + g.total, 0), [grouped]);
   const totalReceipts = monthReceipts.length;
   const totalSuppliers = grouped.length;
-  
-  const daysInPeriod = month === moment().format('YYYY-MM') ? Math.max(1, moment().date()) : monthEnd.date();
-  const avgDaily = grandTotal / daysInPeriod;
-  
-  // Calculate without VAT (assume standard Israel VAT of 17%, so divide by 1.17)
-  const grandTotalNoVat = grandTotal / 1.17;
-
-  const toggleSelectAll = () => {
-    if (Object.keys(selectedForAction).length === monthReceipts.length && monthReceipts.length > 0) {
-      setSelectedForAction({});
-    } else {
-      const newSel = {};
-      monthReceipts.forEach(r => { newSel[r.id] = true; });
-      setSelectedForAction(newSel);
-    }
-  };
-
-  const toggleSelect = (e, rId) => {
-    e.stopPropagation();
-    setSelectedForAction(prev => ({
-      ...prev,
-      [rId]: !prev[rId]
-    }));
-  };
-
-  const handleBulkDelete = async () => {
-    const ids = Object.keys(selectedForAction).filter(id => selectedForAction[id]);
-    if (!ids.length) return;
-    if (!window.confirm(language === 'he' ? `האם אתה בטוח שברצונך למחוק ${ids.length} קבלות? פעולה זו תמחק אותן לצמיתות.` : `Are you sure you want to delete ${ids.length} receipts?`)) return;
-    
-    setUploading(true);
-    let errorCount = 0;
-    for (const id of ids) {
-      try {
-        await base44.entities.SupplyReceipt.delete(id);
-      } catch (e) {
-        errorCount++;
-      }
-    }
-    setUploading(false);
-    setSelectedForAction({});
-    alert(language === 'he' ? `נמחקו ${ids.length - errorCount} קבלות בהצלחה.${errorCount > 0 ? ` נכשלו ${errorCount}.` : ''}` : `Deleted ${ids.length - errorCount} receipts.${errorCount > 0 ? ` Failed ${errorCount}.` : ''}`);
-    window.location.reload();
-  };
+  const avgReceipt = totalReceipts > 0 ? (grandTotal / totalReceipts) : 0;
 
   return (
     <div className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -189,17 +140,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
              <FileText className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
              {language === 'he' ? 'דוח זיכוי/לבדיקה' : 'Refund/Review report'}
            </Button>
-
-            {Object.keys(selectedForAction).filter(k => selectedForAction[k]).length > 0 && (
-              <Button
-                variant="destructive"
-                disabled={uploading}
-                onClick={handleBulkDelete}
-                className="h-11 md:h-10 px-4 rounded-lg shadow-sm"
-              >
-                {language === 'he' ? `מחק מסומנים (${Object.keys(selectedForAction).filter(k => selectedForAction[k]).length})` : `Delete Selected (${Object.keys(selectedForAction).filter(k => selectedForAction[k]).length})`}
-              </Button>
-            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -251,7 +191,35 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 }}>
                   {language === 'he' ? 'העלה ל-Google Drive' : (t('upload_to_drive') || 'Upload to Google Drive')}
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={async () => {
+                  setUploadResult(null);
+                  setUploadTarget('dropbox');
+                  try {
+                    let isAuth = false;
+                    try {
+                      const { data: auth } = await base44.functions.invoke('checkDropboxAuth', {});
+                      isAuth = !!auth?.authorized;
+                    } catch (authErr) {
+                      isAuth = false;
+                    }
+                    if (!isAuth) {
+                      alert(language === 'he' ? 'אנא התחבר ל-Dropbox תחילה.' : 'Please connect Dropbox first.');
+                      return;
+                    }
 
+                    let me = null;
+                    try { me = await base44.auth.me(); } catch {}
+                    
+                    setDriveAccount({ displayName: 'Dropbox' });
+                    setTargetPath(`SmartPlateUploads/${(me?.email || 'me')}/Invoices-${month}`);
+
+                    setShowDriveConfirm(true);
+                  } catch (e) {
+                    alert((t('upload_failed') || 'Upload failed') + `: ${e?.message || e}`);
+                  }
+                }}>
+                  {language === 'he' ? 'העלה ל-Dropbox' : 'Upload to Dropbox'}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -436,14 +404,10 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
         </div>
 
         <div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
               <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'סה"כ הוצאות' : 'Total Expenses'}</span>
               <span className="text-2xl font-bold text-gray-900">₪{grandTotal.toFixed(0)}</span>
-            </div>
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center bg-gray-50">
-              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'סה"כ הוצאות ללא מע"מ' : 'Total (excl. VAT)'}</span>
-              <span className="text-xl font-bold text-gray-700">₪{grandTotalNoVat.toFixed(0)}</span>
             </div>
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
               <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'מספר קבלות' : 'Total Receipts'}</span>
@@ -454,22 +418,14 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               <span className="text-2xl font-bold text-gray-900">{totalSuppliers}</span>
             </div>
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center">
-              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'ממוצע יומי' : 'Daily Average'}</span>
-              <span className="text-2xl font-bold text-gray-900">₪{avgDaily.toFixed(0)}</span>
+              <span className="text-gray-500 text-sm mb-1">{language === 'he' ? 'ממוצע לקבלה' : 'Avg. Receipt'}</span>
+              <span className="text-2xl font-bold text-gray-900">₪{avgReceipt.toFixed(0)}</span>
             </div>
           </div>
           <div className="overflow-auto max-h-[60vh] w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <table className="w-full min-w-[700px] border-collapse relative">
               <thead className="bg-transparent border-b border-gray-100 sticky top-0 z-20">
                 <tr>
-                  <th className="px-4 py-4 w-12 sticky top-0 bg-white/95 backdrop-blur z-10">
-                    <input
-                      type="checkbox"
-                      checked={monthReceipts.length > 0 && Object.keys(selectedForAction).filter(k => selectedForAction[k]).length === monthReceipts.length}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </th>
                   <th className={`px-4 py-4 text-xs font-semibold text-gray-500 sticky top-0 bg-white/95 backdrop-blur z-10 ${isRTL ? 'text-right' : 'text-left'}`}>
                     <div className="inline-flex items-center gap-1 cursor-pointer hover:text-gray-900 transition-colors" onClick={() => setSortMode(sortMode === 'supplier_asc' ? 'supplier_desc' : 'supplier_asc')}>
                       {language === 'he' ? 'ספק' : (t('supplier') || 'Supplier')}
@@ -493,7 +449,7 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               <tbody className="bg-white divide-y divide-gray-50">
                 {grouped.length === 0 && (
                   <tr>
-                    <td className="px-4 py-8 text-center text-gray-500" colSpan={5}>
+                    <td className="px-4 py-8 text-center text-gray-500" colSpan={4}>
                       {language === 'he' ? 'אין קבלות להצגה בחודש זה' : (t('no_receipts_to_display') || 'No receipts to display')}
                     </td>
                   </tr>
@@ -502,7 +458,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                 {grouped.map(group => (
                   <tbody key={group.supplier_id} className="contents">
                     <tr className="bg-green-50/50 border-t border-green-100">
-                      <td className="px-4 py-3"></td>
                       <td className="px-4 py-3 font-semibold text-gray-900">{group.supplier_name}</td>
                       <td className="px-4 py-3 text-sm text-gray-500" colSpan={2}>{language === 'he' ? 'סה"כ' : (t('total') || 'Total')}</td>
                       <td className="px-4 py-3 font-bold text-green-700">₪{group.total.toFixed(2)}</td>
@@ -514,14 +469,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
                         onClick={() => setSelected(r)}
                         title={language === 'he' ? 'לחץ לצפייה בחשבונית' : 'Click to view'}
                       >
-                        <td className="px-4 py-3 w-12" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={!!selectedForAction[r.id]}
-                            onChange={(e) => toggleSelect(e, r.id)}
-                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                        </td>
                         <td className="px-4 py-3 text-sm text-gray-700 align-middle">
                           <div className="font-medium">{group.supplier_name}</div>
                           {itemSearch && Array.isArray(r.verified_items) && (
@@ -545,7 +492,6 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
 
                 {grouped.length > 0 && (
                   <tr className="sticky bottom-0 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                    <td className="bg-purple-50 px-4 py-4 border-t-2 border-purple-200"></td>
                     <td className="bg-purple-50 px-4 py-4 font-bold text-gray-900 border-t-2 border-purple-200">{language === 'he' ? 'סך הכל כללי' : (t('grand_total') || 'Grand Total')}</td>
                     <td className="bg-purple-50 px-4 py-4 border-t-2 border-purple-200" colSpan={2}></td>
                     <td className="bg-purple-50 px-4 py-4 font-bold text-purple-700 text-lg border-t-2 border-purple-200">₪{grandTotal.toFixed(2)}</td>
