@@ -1654,7 +1654,14 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           <div className="absolute top-0 left-0 w-full h-1.5 bg-[#d4a373]" />
           <DialogHeader className="pt-4 pb-2">
             <DialogTitle className={`text-xl font-bold text-gray-800 flex flex-col gap-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-              <span>{editingShift?.id ? (language === 'he' ? 'עריכת שיבוץ' : t('edit_shift')) : (language === 'he' ? 'שיבוץ למשמרת' : t('add_shift'))}</span>
+              <div className="flex items-center gap-2">
+                <span>{editingShift?.id ? (language === 'he' ? 'עריכת שיבוץ' : t('edit_shift')) : (language === 'he' ? 'שיבוץ למשמרת' : t('add_shift'))}</span>
+                {editingShift?.worker_id && workers.find(w => w.id === editingShift.worker_id) && (
+                  <span className="text-sm font-medium text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                    {workers.find(w => w.id === editingShift.worker_id)?.full_name}
+                  </span>
+                )}
+              </div>
               {editingShift?.date && (
                 <span className="text-sm font-medium text-gray-500">
                   {moment(editingShift.date).format('DD/MM/YYYY')}
