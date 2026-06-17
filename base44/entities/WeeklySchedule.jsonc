@@ -96,6 +96,15 @@
           "hours_worked": {
             "type": "number"
           },
+          "actual_start_time": {
+            "type": "string"
+          },
+          "actual_end_time": {
+            "type": "string"
+          },
+          "actual_hours_worked": {
+            "type": "number"
+          },
           "overtime_rate": {
             "type": "string",
             "enum": [

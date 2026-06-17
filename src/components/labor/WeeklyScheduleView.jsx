@@ -527,24 +527,35 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           };
 
   const handleTimeChange = (field, value) => {
-            const newStartTime = field === 'start_time' ? value : editingShift.start_time;
-            const newEndTime = field === 'end_time' ? value : editingShift.end_time;
-            const hours = calculateHours(newStartTime, newEndTime);
+    const updatedShift = { ...editingShift, [field]: value };
+    
+    // Calculate planned hours
+    const plannedHours = calculateHours(updatedShift.start_time, updatedShift.end_time);
+    updatedShift.hours_worked = plannedHours; // Keep this as planned fallback
+    
+    // Calculate actual hours if either actual_start_time or actual_end_time exist
+    let payableHours = plannedHours;
+    if (updatedShift.actual_start_time || updatedShift.actual_end_time) {
+      const actualStart = updatedShift.actual_start_time || updatedShift.start_time;
+      const actualEnd = updatedShift.actual_end_time || updatedShift.end_time;
+      const actualHours = calculateHours(actualStart, actualEnd);
+      updatedShift.actual_hours_worked = actualHours;
+      payableHours = actualHours;
+    } else {
+      updatedShift.actual_hours_worked = null;
+    }
 
-            const worker = workers.find(w => w.id === editingShift.worker_id);
-            const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
-            
-            const { basePayment, totalPayment } = calculatePayment(worker, hours, effectiveRate, editingShift.job_position_id);
+    const worker = workers.find(w => w.id === updatedShift.worker_id);
+    const effectiveRate = 'regular'; // overtime selection removed; fixed at 100%
+    
+    const { basePayment, totalPayment } = calculatePayment(worker, payableHours, effectiveRate, updatedShift.job_position_id);
 
-            setEditingShift({
-              ...editingShift,
-              [field]: value,
-              hours_worked: hours,
-              overtime_rate: effectiveRate, // Update to effective rate
-              base_payment: basePayment,
-              payment_for_shift: totalPayment
-            });
-          };
+    updatedShift.overtime_rate = effectiveRate;
+    updatedShift.base_payment = basePayment;
+    updatedShift.payment_for_shift = totalPayment;
+
+    setEditingShift(updatedShift);
+  };
 
   const checkForDoubleShift = (workerId, dayKey, currentShiftId, originalKey) => {
     // Check if this worker already has a shift on the same day (in any position)
@@ -1637,19 +1648,58 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="start_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('start')} <span className="text-red-500">*</span></Label>
-                  <div className="relative">
-                    <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
-                    <Input id="start_time" type="time" value={editingShift.start_time} onChange={(e) => handleTimeChange('start_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+              <div className="space-y-4">
+                <div className="space-y-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="font-semibold text-sm text-gray-600 border-b pb-1">{language === 'he' ? 'תכנון' : 'Planned'}</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="start_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('start')} <span className="text-red-500">*</span></Label>
+                      <div className="relative">
+                        <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
+                        <Input id="start_time" type="time" value={editingShift.start_time || ''} onChange={(e) => handleTimeChange('start_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="end_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('end')} <span className="text-red-500">*</span></Label>
+                      <div className="relative">
+                        <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
+                        <Input id="end_time" type="time" value={editingShift.end_time || ''} onChange={(e) => handleTimeChange('end_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="end_time" className={`font-semibold text-gray-700 block ${isRTL ? 'text-right' : 'text-left'}`}>{t('end')} <span className="text-red-500">*</span></Label>
-                  <div className="relative">
-                    <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-gray-400 pointer-events-none`} />
-                    <Input id="end_time" type="time" value={editingShift.end_time} onChange={(e) => handleTimeChange('end_time', e.target.value)} className={`h-11 border-gray-300 focus:border-[#d4a373] focus:ring-[#d4a373] ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+
+                <div className="space-y-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="font-semibold text-sm text-blue-700 border-b border-blue-100 pb-1 flex justify-between items-center">
+                    <span>{language === 'he' ? 'בפועל' : 'Actual'}</span>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
+                      onClick={() => {
+                        handleTimeChange('actual_start_time', '');
+                        handleTimeChange('actual_end_time', '');
+                      }}
+                    >
+                      {language === 'he' ? 'נקה' : 'Clear'}
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="actual_start_time" className={`font-semibold text-blue-800 block ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'כניסה' : 'Start In'}</Label>
+                      <div className="relative">
+                        <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-blue-400 pointer-events-none`} />
+                        <Input id="actual_start_time" type="time" value={editingShift.actual_start_time || ''} onChange={(e) => handleTimeChange('actual_start_time', e.target.value)} className={`h-11 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="actual_end_time" className={`font-semibold text-blue-800 block ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'יציאה' : 'End Out'}</Label>
+                      <div className="relative">
+                        <Clock className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} h-5 w-5 text-blue-400 pointer-events-none`} />
+                        <Input id="actual_end_time" type="time" value={editingShift.actual_end_time || ''} onChange={(e) => handleTimeChange('actual_end_time', e.target.value)} className={`h-11 border-blue-200 focus:border-blue-400 focus:ring-blue-400 ${isRTL ? 'pr-10 text-right' : 'pl-10 text-left'}`} dir={isRTL ? 'rtl' : 'ltr'} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1657,7 +1707,16 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               <div className={`bg-gradient-to-br from-[#d4a373]/10 to-[#b88c60]/10 border border-[#d4a373]/20 p-4 rounded-xl shadow-sm ${isRTL ? 'text-right' : 'text-left'}`}>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-600 font-medium">{language === 'he' ? 'שעות' : 'Hours'}</span>
-                  <span className="text-lg font-bold text-gray-800">{editingShift.hours_worked?.toFixed(1)}</span>
+                  <div className="flex items-center gap-2">
+                    {editingShift.actual_hours_worked != null && (
+                      <span className="text-sm text-gray-400 line-through">
+                        {editingShift.hours_worked?.toFixed(2)}
+                      </span>
+                    )}
+                    <span className="text-lg font-bold text-gray-800">
+                      {(editingShift.actual_hours_worked != null ? editingShift.actual_hours_worked : editingShift.hours_worked)?.toFixed(2)}
+                    </span>
+                  </div>
                 </div>
                 
                 {editingShift.base_payment > 0 && (

@@ -170,13 +170,21 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         const wid = sh.worker_id;
         const posId = sh.job_position_id || 'default';
         if (!wid) continue;
-        const hrs = typeof sh.hours_worked === 'number' && sh.hours_worked > 0
-          ? sh.hours_worked
+        
+        // Use actual hours if set, otherwise fallback to planned
+        const targetHours = sh.actual_hours_worked != null ? sh.actual_hours_worked : sh.hours_worked;
+        const targetStart = sh.actual_start_time || sh.start_time;
+        const targetEnd = sh.actual_end_time || sh.end_time;
+        
+        const hrs = typeof targetHours === 'number' && targetHours > 0
+          ? targetHours
           : (() => {
-              if (!sh.start_time || !sh.end_time) return 0;
-              const [shh, sm] = String(sh.start_time).split(":").map(Number);
-              const [eh, em] = String(sh.end_time).split(":").map(Number);
-              return ((eh * 60 + em) - (shh * 60 + sm)) / 60;
+              if (!targetStart || !targetEnd) return 0;
+              const [shh, sm] = String(targetStart).split(":").map(Number);
+              const [eh, em] = String(targetEnd).split(":").map(Number);
+              let diff = ((eh * 60 + em) - (shh * 60 + sm)) / 60;
+              if (diff < 0) diff += 24; // Cross-midnight fix
+              return diff;
             })();
         if (hrs <= 0) continue;
         
