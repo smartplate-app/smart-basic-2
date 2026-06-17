@@ -109,7 +109,7 @@ const translations = {
         "price_type": "סוג מחיר",
         "price_per_package": "מחיר לחבילה",
         "package": "חבילה",
-        "unit_type": "סוג יחידה",
+        "unit_type": "יחידת פריט",
         "price_per_product": "מחיר לפריט",
 
         // Add to Hebrew (he) translations:
