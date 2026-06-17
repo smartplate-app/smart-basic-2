@@ -441,6 +441,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         date: shiftDate,
         base_payment: basePayment,
         payment_for_shift: paymentForShift,
+        actual_start_time: "",
+        actual_end_time: "",
+        actual_hours_worked: null,
         id: undefined
       };
     });
@@ -850,6 +853,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           date: nextWeekShiftDate,
           base_payment: basePayment,
           payment_for_shift: paymentForShift,
+          actual_start_time: "",
+          actual_end_time: "",
+          actual_hours_worked: null,
           id: undefined
         };
       });
@@ -979,6 +985,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         worker_name: s.worker_name || "",
         start_time: s.start_time,
         end_time: s.end_time,
+        actual_start_time: "",
+        actual_end_time: "",
+        actual_hours_worked: null,
         hours_worked: s.hours_worked,
         overtime_rate: s.overtime_rate,
         base_payment: s.base_payment,
@@ -1144,6 +1153,9 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           ...sourceShift,
           day: day.key,
           date: dayDate,
+          actual_start_time: "",
+          actual_end_time: "",
+          actual_hours_worked: null,
           id: undefined
         });
       });
@@ -1307,6 +1319,13 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         base_payment: newBasePayment,
         payment_for_shift: newPaymentForShift
       };
+      
+      // If moved to a different day, wipe actual hours since it's a different shift
+      if (src.day !== dst.day) {
+        updated.actual_start_time = "";
+        updated.actual_end_time = "";
+        updated.actual_hours_worked = null;
+      }
     }
 
     // Check for overlap if moving to a new day or modifying shift
