@@ -306,7 +306,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               <div className="flex gap-2">
                 <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="flex-1 justify-between font-normal overflow-hidden">
+                    <Button type="button" variant="outline" className="flex-1 justify-between font-normal overflow-hidden">
                       <span className="truncate">
                         {((currentItem.warehouse_names && currentItem.warehouse_names.length > 0) || currentItem.warehouse_name)
                           ? (currentItem.warehouse_names && currentItem.warehouse_names.length > 0 

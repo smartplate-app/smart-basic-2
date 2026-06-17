@@ -152,7 +152,7 @@ export default function ItemEditModal({ item, suppliers, warehouses, isOpen, onC
             <Label htmlFor="warehouse_ids">{t('warehouse')}</Label>
             <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between font-normal overflow-hidden">
+                <Button type="button" variant="outline" className="w-full justify-between font-normal overflow-hidden">
                   <span className="truncate">
                     {((formData.warehouse_names && formData.warehouse_names.length > 0) || formData.warehouse_name)
                       ? (formData.warehouse_names && formData.warehouse_names.length > 0 
