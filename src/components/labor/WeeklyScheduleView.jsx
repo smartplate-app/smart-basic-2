@@ -1544,7 +1544,16 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       </Card>
 
       <Dialog open={showShiftDialog} onOpenChange={setShowShiftDialog}>
-        <DialogContent className={`sm:max-w-[425px] overflow-hidden ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <DialogContent 
+          className={`sm:max-w-[425px] overflow-hidden ${isRTL ? 'text-right' : 'text-left'}`} 
+          dir={isRTL ? 'rtl' : 'ltr'}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleShiftSave();
+            }
+          }}
+        >
           <div className="absolute top-0 left-0 w-full h-1.5 bg-[#d4a373]" />
           <DialogHeader className="pt-4 pb-2">
             <DialogTitle className={`text-xl font-bold text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -1672,7 +1681,16 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       <RowTimeDialog open={showRowTimeDialog} onClose={() => setShowRowTimeDialog(false)} initial={rowTime} onApply={(cfg) => { setShowRowTimeDialog(false); applyRowTimes(cfg); }} isRTL={isRTL} language={language} />
 
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
-        <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
+        <DialogContent 
+          className={isRTL ? 'text-right' : 'text-left'} 
+          dir={isRTL ? 'rtl' : 'ltr'}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && templateName.trim()) {
+              e.preventDefault();
+              handleSaveAsTemplate(false);
+            }
+          }}
+        >
           <DialogHeader><DialogTitle className={isRTL ? 'text-right' : 'text-left'}>{t('manage_templates')}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <h3 className="font-semibold">{t('save_current_as_template')}</h3>

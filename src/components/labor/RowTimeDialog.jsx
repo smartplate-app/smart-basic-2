@@ -34,7 +34,15 @@ export default function RowTimeDialog({ open, onClose, initial, onApply, isRTL, 
         <DialogHeader>
           <DialogTitle>{t('הגדרת שעות לשורת תפקיד', 'Set row hours')}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div 
+          className="space-y-4"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              onApply(cfg);
+            }
+          }}
+        >
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className={isRTL ? 'text-right block' : 'text-left block'}>{t('כניסה', 'Start')}</Label>
