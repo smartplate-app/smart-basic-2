@@ -34,6 +34,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
     supplier_email: "",
     restaurant_name: defaultRestaurantName || "",
     restaurant_address: "",
+    business_tax_id: "",
     items: [],
     notes: "",
     delivery_date: "",
@@ -66,7 +67,8 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           setCurrentOrder(prev => ({
             ...prev,
             restaurant_name: user.business_name,
-            restaurant_address: user.business_address || ""
+            restaurant_address: user.business_address || "",
+            business_tax_id: user.business_tax_id || ""
           }));
         }
       } catch (error) {
@@ -388,7 +390,7 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="space-y-1 sm:space-y-2">
             <Label htmlFor="restaurant_name" className="text-xs sm:text-sm">{t('business_name')} *</Label>
             <Input
@@ -407,6 +409,17 @@ export default function OrderForm({ order, suppliers, onSubmit, onCancel, onSave
               value={currentOrder.restaurant_address}
               onChange={(e) => setCurrentOrder({...currentOrder, restaurant_address: e.target.value})}
               placeholder={t('business_address')}
+              className="h-9 sm:h-10 text-base sm:text-sm"
+            />
+          </div>
+
+          <div className="space-y-1 sm:space-y-2">
+            <Label htmlFor="business_tax_id" className="text-xs sm:text-sm">{language === 'he' ? 'ח.פ/עוסק מורשה' : 'Business ID / VAT'}</Label>
+            <Input
+              id="business_tax_id"
+              value={currentOrder.business_tax_id || ""}
+              onChange={(e) => setCurrentOrder({...currentOrder, business_tax_id: e.target.value})}
+              placeholder={language === 'he' ? 'ח.פ / מס׳ עוסק' : 'Tax ID'}
               className="h-9 sm:h-10 text-base sm:text-sm"
             />
           </div>

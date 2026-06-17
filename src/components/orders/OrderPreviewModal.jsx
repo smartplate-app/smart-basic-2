@@ -64,6 +64,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                     <span>${language === 'he' ? 'מאת:' : 'From:'}</span>
                     <span style="font-weight: 600; color: #111827;">${order.restaurant_name}</span>
                   </div>
+                  ${order.business_tax_id ? `
+                  <div style="display: flex; justify-content: space-between;">
+                    <span>${language === 'he' ? 'ח.פ/עוסק:' : 'Business ID:'}</span>
+                    <span style="font-weight: 500; color: #111827;">${order.business_tax_id}</span>
+                  </div>` : ''}
                   ${order.restaurant_address ? `
                   <div style="display: flex; justify-content: space-between;">
                     <span>${language === 'he' ? 'כתובת:' : 'Address:'}</span>
@@ -216,8 +221,8 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
     
     let ensuredNumber = order.order_number || `ORD-${(order.id || Date.now()).toString().slice(-8)}`;
     const shareText = language === 'he' 
-      ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
-      : `Order from ${order.restaurant_name || ''}\n${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
+      ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.business_tax_id ? `ח.פ/עוסק: ${order.business_tax_id}\n` : ''}${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
+      : `Order from ${order.restaurant_name || ''}\n${order.business_tax_id ? `Business ID: ${order.business_tax_id}\n` : ''}${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
 
     // Fast path for sharing: use pre-generated file if available to preserve user gesture
     if (shareOnly && pregeneratedFile && navigator.share) {
@@ -284,6 +289,11 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                 <span>${language === 'he' ? 'מאת:' : 'From:'}</span>
                 <span style="font-weight: 600; color: #111827;">${order.restaurant_name}</span>
               </div>
+              ${order.business_tax_id ? `
+              <div style="display: flex; justify-content: space-between;">
+                <span>${language === 'he' ? 'ח.פ/עוסק:' : 'Business ID:'}</span>
+                <span style="font-weight: 500; color: #111827;">${order.business_tax_id}</span>
+              </div>` : ''}
               ${order.restaurant_address ? `
               <div style="display: flex; justify-content: space-between;">
                 <span>${language === 'he' ? 'כתובת:' : 'Address:'}</span>
