@@ -365,12 +365,12 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
                     variant={h.status === 'locked' ? 'outline' : 'default'} 
                     size="sm" 
                     onClick={() => toggleLock(h)}
-                    className={h.status === 'locked' ? '' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm border-blue-700'}
+                    className={h.status === 'locked' ? 'border-gray-300 text-gray-700 hover:bg-gray-100 font-medium bg-white' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm border-blue-700'}
                   >
                     {h.status === 'locked' ? 'שחרר נעילה' : 'נעל לשכר'}
                   </Button>
                   {h.status !== 'locked' && (
-                    <Button variant="outline" size="sm" onClick={() => loadEntryToForm(h)}>
+                    <Button variant="outline" size="sm" onClick={() => loadEntryToForm(h)} className="border-gray-300 text-gray-700 hover:bg-gray-100 font-medium bg-white">
                       ערוך טיוטה
                     </Button>
                   )}
