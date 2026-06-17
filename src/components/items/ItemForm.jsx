@@ -504,7 +504,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
 
         <div className="grid grid-cols-1 gap-4">
           <div>
-            <Label htmlFor="minimum_stock">{t('minimum_stock') || 'מלאי מינימום'}</Label>
+            <Label htmlFor="minimum_stock">{language === 'he' ? 'כמות מינימום מלאי' : 'Minimum stock'}</Label>
             <Input
               id="minimum_stock"
               type="number"
@@ -515,7 +515,7 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               placeholder="0"
             />
             <p className="text-xs text-gray-500 mt-1">
-              {t('minimum_stock_help') || 'כמות מינימלית שחייבת להיות במלאי - תעזור להזמנות חכמות'}
+              {language === 'he' ? 'כמות מינימלית שחייבת להיות במלאי - תעזור להזמנות חכמות' : 'Minimum quantity required in stock - helps with smart orders'}
             </p>
           </div>
         </div>
