@@ -40,8 +40,8 @@ Deno.serve(async (req) => {
       'הערות'
     ];
 
-    const row1 = ['ירקות מזרח', 'east@veggies.co.il', '03-5555555', 'דנה', 'simple', 'AC-1023', 'ספק ירקות ופירות'];
-    const row2 = ['סודה פלוס', 'orders@sodaplus.co.il', '050-1234567', 'אדם', 'catalogic', 'AC-5501', 'משקאות – קטלוג אקסל'];
+    const row1 = ['ירקות מזרח (דוגמה)', 'east@veggies.co.il', '03-5555555', 'דנה', 'simple', 'AC-1023', 'ספק ירקות ופירות'];
+    const row2 = ['סודה פלוס (דוגמה)', 'orders@sodaplus.co.il', '050-1234567', 'אדם', 'catalogic', 'AC-5501', 'משקאות – קטלוג אקסל'];
 
     // Write headers + sample
     const updateRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
@@ -62,6 +62,82 @@ Deno.serve(async (req) => {
     if (!updateRes.ok) {
       const txt = await updateRes.text();
       return Response.json({ error: 'Failed to write headers/rows', details: txt }, { status: 500 });
+    }
+
+    // Apply formatting
+    const formatReq = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        requests: [
+          {
+            updateSheetProperties: {
+              properties: {
+                sheetId: 0,
+                gridProperties: {
+                  frozenRowCount: 1,
+                  frozenColumnCount: 1 // Freeze Supplier Name
+                }
+              },
+              fields: 'gridProperties(frozenRowCount,frozenColumnCount)'
+            }
+          },
+          {
+            repeatCell: {
+              range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
+              cell: {
+                userEnteredFormat: {
+                  backgroundColor: { red: 1.0, green: 0.95, blue: 0.8 }, // Light yellow
+                  textFormat: { bold: true }
+                }
+              },
+              fields: 'userEnteredFormat(backgroundColor,textFormat)'
+            }
+          },
+          {
+            repeatCell: {
+              range: { sheetId: 0, startRowIndex: 1, endRowIndex: 3 }, // The examples
+              cell: {
+                userEnteredFormat: {
+                  backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Light grey
+                  textFormat: { italic: true, foregroundColor: { red: 0.4, green: 0.4, blue: 0.4 } }
+                }
+              },
+              fields: 'userEnteredFormat(backgroundColor,textFormat)'
+            }
+          },
+          {
+            repeatCell: {
+              range: { sheetId: 0, startColumnIndex: 0, endColumnIndex: 1 }, // Column A (Supplier Name)
+              cell: {
+                userEnteredFormat: {
+                  backgroundColor: { red: 1.0, green: 0.95, blue: 0.8 }, // Light yellow
+                  textFormat: { bold: true }
+                }
+              },
+              fields: 'userEnteredFormat(backgroundColor,textFormat)'
+            }
+          },
+          {
+            repeatCell: {
+              range: { sheetId: 0, startRowIndex: 1, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: 1 },
+              cell: {
+                userEnteredFormat: {
+                  backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 }, // Light grey
+                  textFormat: { italic: true, foregroundColor: { red: 0.4, green: 0.4, blue: 0.4 } }
+                }
+              },
+              fields: 'userEnteredFormat(backgroundColor,textFormat)'
+            }
+          }
+        ]
+      })
+    });
+    if (!formatReq.ok) {
+      console.error('Failed to format sheet:', await formatReq.text());
     }
 
     // Share with user (writer)
