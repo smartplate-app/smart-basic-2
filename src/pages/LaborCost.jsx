@@ -279,7 +279,7 @@ export default function LaborCostPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50 p-4 md:p-8">
       <div className="w-full">
-        <div className={`mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className={isRTL ? 'text-right' : ''}>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{language === 'he' ? 'כוח אדם' : 'Labor Management'}</h1>
             <p className="text-gray-600 dark:text-gray-300 mt-2">{t('manage_workers_schedules')}</p>
@@ -313,12 +313,12 @@ export default function LaborCostPage() {
           <TabsContent value="schedule" className="space-y-6">
             <WeeklyScheduleView
               weekNavigation={
-                <div className={`flex flex-col sm:flex-row items-center justify-between bg-white rounded-lg shadow-sm p-3 sm:p-4 gap-3 sm:gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-                  <div className={`flex items-center justify-between w-full sm:w-auto order-2 sm:order-none ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex flex-col sm:flex-row items-center justify-between bg-white rounded-lg shadow-sm p-3 sm:p-4 gap-3 sm:gap-4">
+                  <div className="flex items-center justify-between w-full sm:w-auto order-2 sm:order-none">
                     <Button
                       variant="outline"
                       onClick={handlePreviousWeek}
-                      className={`flex items-center gap-1 px-3 sm:px-4 ${isRTL ? 'flex-row-reverse' : ''}`}
+                      className="flex items-center gap-1 px-3 sm:px-4"
                     >
                       {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                       <span className="text-xs sm:text-sm">{t('previous_week')}</span>
@@ -326,7 +326,7 @@ export default function LaborCostPage() {
                     <Button
                       variant="outline"
                       onClick={handleNextWeek}
-                      className={`flex sm:hidden items-center gap-1 px-3 ${isRTL ? 'flex-row-reverse' : ''}`}
+                      className="flex sm:hidden items-center gap-1 px-3"
                     >
                       <span className="text-xs">{t('next_week')}</span>
                       {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -368,7 +368,7 @@ export default function LaborCostPage() {
                   <Button
                     variant="outline"
                     onClick={handleNextWeek}
-                    className={`hidden sm:flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''} order-3 sm:order-none`}
+                    className="hidden sm:flex items-center gap-2 order-3 sm:order-none"
                   >
                     <span className="text-sm">{t('next_week')}</span>
                     {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}

@@ -1377,8 +1377,8 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       <div className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <Card>
         <CardHeader>
-          <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <CardTitle className={`text-xl md:text-2xl font-bold flex items-center flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4`}>
+            <CardTitle className={`text-xl md:text-2xl font-bold flex items-center flex-wrap gap-2`}>
               <Calendar className="w-5 h-5 shrink-0 mr-2 rtl:ml-2 rtl:mr-0" />
               <span>{t('weekly_schedule')} - {moment(weekStartDate).format('DD/MM/YYYY')}</span>
               {schedule?.status === 'draft' && (
@@ -1393,7 +1393,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
           <div className="bg-[#faf8f5] rounded-2xl shadow-sm border border-[#e8e4db] overflow-hidden mb-6">
             {/* Header & Input */}
             <div className="p-5 sm:p-6 border-b border-[#e8e4db] bg-white/60">
-              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`}>
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <h3 className="text-lg font-bold text-[#5c5446] tracking-tight">
                     {language === 'he' ? 'תחזית והוצאות' : 'Forecast & Costs'}
@@ -1403,7 +1403,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                   </p>
                 </div>
                 
-                <div className={`flex items-center gap-3 bg-white p-2 sm:p-1.5 rounded-xl border border-[#e8e4db] shadow-sm w-full sm:w-auto ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex items-center gap-3 bg-white p-2 sm:p-1.5 rounded-xl border border-[#e8e4db] shadow-sm w-full sm:w-auto`}>
                   <div className={`bg-[#f4efe6] p-2 rounded-lg text-[#9e7d5a] hidden sm:flex items-center justify-center ${isRTL ? 'ml-1' : 'mr-1'}`}>
                     <DollarSign className="w-5 h-5" />
                   </div>
@@ -1504,24 +1504,24 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
           </div>
 
-          <div className={`flex gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Button onClick={() => setShowTemplateDialog(true)} variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex gap-2 flex-wrap`}>
+            <Button onClick={() => setShowTemplateDialog(true)} variant="outline" size="sm" className={`flex items-center gap-2`}>
               <FileText className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {t('manage_templates')}
             </Button>
-            <Button onClick={handleDownloadJPG} variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Button onClick={handleDownloadJPG} variant="outline" size="sm" className={`flex items-center gap-2`}>
               <Download className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'הורד AJ.jpg' : 'Download AJ.jpg'}
             </Button>
-            <Button onClick={handleCopyToNextWeek} variant="outline" size="sm" className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!schedule?.shifts?.length}>
+            <Button onClick={handleCopyToNextWeek} variant="outline" size="sm" className={`flex items-center gap-2`} disabled={!schedule?.shifts?.length}>
               <Copy className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {t('copy_to_next_week')}
             </Button>
-            <Button onClick={handleClearSchedule} variant="outline" size="sm" className={`flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!schedule?.shifts?.length && !schedule?.id}>
+            <Button onClick={handleClearSchedule} variant="outline" size="sm" className={`flex items-center gap-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400`} disabled={!schedule?.shifts?.length && !schedule?.id}>
               <X className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'נקה לוח משמרות' : 'Clear Schedule'}
             </Button>
-            <Button onClick={handlePublishSchedule} className={`bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving || isAutoSaving}>
+            <Button onClick={handlePublishSchedule} className={`bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2`} disabled={saving || isAutoSaving}>
               {saving || isAutoSaving ? (
                 <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" />
               ) : (
@@ -1644,15 +1644,15 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
           )}
           
-          <DialogFooter className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-3 justify-end mt-6 pt-4 border-t border-gray-100`}>
+          <DialogFooter className={`flex flex-row gap-3 justify-end mt-6 pt-4 border-t border-gray-100`}>
             {editingShift && editingShift.id && (
-              <Button type="button" variant="outline" onClick={handleShiftDelete} className={`flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button type="button" variant="outline" onClick={handleShiftDelete} className={`flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors`}>
                 <Trash2 className="w-4 h-4" />{t('delete')}
               </Button>
             )}
-            <div className={`flex gap-3 flex-1 ${isRTL ? 'justify-end flex-row-reverse' : 'justify-end'}`}>
+            <div className={`flex gap-3 flex-1 justify-end`}>
               <Button type="button" variant="ghost" onClick={() => { setShowShiftDialog(false); setEditingShift(null); setSelectedCell(null); }} className="hover:bg-gray-100 text-gray-600">{t('cancel')}</Button>
-              <Button type="submit" onClick={handleShiftSave} className={`flex items-center gap-2 bg-[#d4a373] hover:bg-[#b88c60] text-white shadow-md hover:shadow-lg transition-all px-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button type="submit" onClick={handleShiftSave} className={`flex items-center gap-2 bg-[#d4a373] hover:bg-[#b88c60] text-white shadow-md hover:shadow-lg transition-all px-6`}>
                 <Save className="w-4 h-4" />{t('save')}
               </Button>
             </div>
@@ -1663,7 +1663,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
       <Dialog open={showDoubleShiftWarning} onOpenChange={setShowDoubleShiftWarning}>
         <DialogContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className={`flex items-center gap-2 text-orange-600 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
+            <DialogTitle className={`flex items-center gap-2 text-orange-600 ${isRTL ? "text-right" : "text-left"}`}>
               <AlertTriangle className="w-5 h-5" />{language === 'he' ? 'אזהרת משמרת כפולה' : 'Double Shift Warning'}
             </DialogTitle>
           </DialogHeader>
@@ -1682,7 +1682,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
             </div>
           </div>
           
-          <DialogFooter className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 justify-end mt-4`}>
+          <DialogFooter className={`flex flex-row gap-2 justify-end mt-4`}>
             <Button type="button" variant="outline" onClick={handleCancelDoubleShift}>{t('cancel')}</Button>
             <Button type="button" onClick={handleConfirmDoubleShift} className="bg-orange-600 hover:bg-orange-700">{language === 'he' ? 'כן, הוסף משמרת' : 'Yes, Add Shift'}</Button>
           </DialogFooter>
@@ -1725,21 +1725,21 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                  </p>
               )}
             </div>
-            <div className={`flex items-center gap-3 py-3 border-y border-gray-100 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-3 py-3 border-y border-gray-100`}>
               <Switch id="is_default_template" checked={isDefaultTemplate} onCheckedChange={setIsDefaultTemplate} />
               <Label htmlFor="is_default_template" className={`cursor-pointer leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                 <div className="font-medium text-gray-900">{language === 'he' ? 'קבע כתבנית ברירת מחדל' : 'Set as default template'}</div>
                 <div className="text-xs text-gray-500 font-normal">{language === 'he' ? 'תטען אוטומטית בכל שבוע חדש' : 'Will load automatically for new weeks'}</div>
               </Label>
             </div>
-            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Button onClick={() => handleSaveAsTemplate()} className={`w-full flex items-center justify-center gap-2 bg-[#d4a373] hover:bg-[#c39062] ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}>
+            <div className={`flex gap-2`}>
+              <Button onClick={() => handleSaveAsTemplate()} className={`w-full flex items-center justify-center gap-2 bg-[#d4a373] hover:bg-[#c39062]`} disabled={saving}>
                 {saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
                 {language === 'he' ? 'שמור תבנית' : 'Save Template'}
               </Button>
             </div>
             <h3 className="font-semibold pt-4 border-t mt-4">{t('load_existing_template')}</h3>
-            {templates.length === 0 ? <div className="text-center py-4 text-gray-500"><p>{t('no_templates_saved')}</p></div> : (<div className="space-y-3"><Select value={selectedTemplate} onValueChange={setSelectedTemplate}><SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue placeholder={t('select_template_to_load')} /></SelectTrigger><SelectContent>{templates.map(template => (<SelectItem key={template.id} value={template.id}>{template.template_name} {template.is_default && `(${t('default')})`}</SelectItem>))}</SelectContent></Select><div className={`flex flex-col sm:flex-row gap-2 ${isRTL ? 'sm:flex-row-reverse' : ''}`}><Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}{t('load_template')}</Button><Button onClick={() => handleRenameTemplate(selectedTemplate)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!selectedTemplate || saving}>{language === 'he' ? 'שנה שם' : 'Rename'}</Button><Button onClick={() => handleDeleteTemplate(selectedTemplate)} variant="destructive" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!selectedTemplate || saving}><Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('delete_template')}</Button></div></div>)}
+            {templates.length === 0 ? <div className="text-center py-4 text-gray-500"><p>{t('no_templates_saved')}</p></div> : (<div className="space-y-3"><Select value={selectedTemplate} onValueChange={setSelectedTemplate}><SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue placeholder={t('select_template_to_load')} /></SelectTrigger><SelectContent>{templates.map(template => (<SelectItem key={template.id} value={template.id}>{template.template_name} {template.is_default && `(${t('default')})`}</SelectItem>))}</SelectContent></Select><div className={`flex flex-col sm:flex-row gap-2`}><Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2`}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}{t('load_template')}</Button><Button onClick={() => handleRenameTemplate(selectedTemplate)} variant="outline" className={`flex-1 flex items-center gap-2`} disabled={!selectedTemplate || saving}>{language === 'he' ? 'שנה שם' : 'Rename'}</Button><Button onClick={() => handleDeleteTemplate(selectedTemplate)} variant="destructive" className={`flex-1 flex items-center gap-2`} disabled={!selectedTemplate || saving}><Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('delete_template')}</Button></div></div>)}
           </div>
         </DialogContent>
       </Dialog>
