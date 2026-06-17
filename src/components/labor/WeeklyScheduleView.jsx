@@ -1717,14 +1717,14 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
                 <TabsContent value="actual" className="space-y-4 mt-0">
                   <div className="space-y-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="font-semibold text-sm text-blue-700 border-b border-blue-100 pb-1 flex justify-between items-center">
+                    <div className="font-semibold text-sm text-blue-700 border-b border-blue-100 pb-2 mb-1 flex justify-between items-center">
                       <span>{language === 'he' ? 'בפועל' : 'Actual'}</span>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <Button 
                           type="button" 
-                          variant="ghost" 
+                          variant="default" 
                           size="sm" 
-                          className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
+                          className="h-7 text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 shadow-sm rounded-md"
                           onClick={() => {
                             const updated = {
                               ...editingShift,
@@ -1743,13 +1743,13 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                             setEditingShift(updated);
                           }}
                         >
-                          {language === 'he' ? 'תכנון -> בפועל' : 'Copy Planned'}
+                          {language === 'he' ? 'העתק מתכנון' : 'Copy Planned'}
                         </Button>
                         <Button 
                           type="button" 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm" 
-                          className="h-6 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2"
+                          className="h-7 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 px-3 rounded-md"
                           onClick={() => {
                             const updated = {
                               ...editingShift,
