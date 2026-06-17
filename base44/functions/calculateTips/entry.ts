@@ -94,6 +94,13 @@ Deno.serve(async (req) => {
       const hourlyRate = overrideRate > 0 ? overrideRate : positionRate;
       const tipsMethod = pos?.tips_method || 'general_pool';
       
+      let baseWagePerHour = 0;
+      if (rec.payment_type === 'hourly' && Number(rec.payment_amount || 0) > 0) {
+        baseWagePerHour = Number(rec.payment_amount);
+      } else if (pos?.default_payment_type === 'hourly' && Number(pos.default_payment_amount || 0) > 0) {
+        baseWagePerHour = Number(pos.default_payment_amount);
+      }
+
       const key = `${w.worker_id}_${explicitPosId}`;
       if (normalizedWorkersMap.has(key)) {
         normalizedWorkersMap.get(key).hours += Number(w.hours || 0);
@@ -105,7 +112,8 @@ Deno.serve(async (req) => {
           job_position_name: rec.job_position_name || pos?.name || '',
           tips_method: tipsMethod,
           hours: Number(w.hours || 0),
-          hourly_rate: Number(hourlyRate || 0)
+          hourly_rate: Number(hourlyRate || 0),
+          base_wage_per_hour: baseWagePerHour
         });
       }
     });
@@ -236,11 +244,20 @@ Deno.serve(async (req) => {
     const results = normalizedWorkers.map(w => {
       const r = ensure(w.worker_id, w.job_position_id);
       const total = r.breakdown.hourly_fixed + r.breakdown.percent_share + r.breakdown.residual_share;
+      
+      const tipPerHour = w.hours > 0 ? (total / w.hours) : 0;
+      let completion = 0;
+      if (w.base_wage_per_hour > 0 && tipPerHour < w.base_wage_per_hour && w.hours > 0) {
+        completion = (w.base_wage_per_hour - tipPerHour) * w.hours;
+      }
+
       return {
         ...r,
         hours: w.hours,
         tips_method: w.tips_method,
         hourly_rate: w.hourly_rate,
+        base_wage_per_hour: w.base_wage_per_hour,
+        completion: completion,
         total,
         total_cash: r.breakdown.hourly_fixed_cash + r.breakdown.percent_cash + r.breakdown.residual_cash,
         total_credit: r.breakdown.hourly_fixed_credit + r.breakdown.percent_credit + r.breakdown.residual_credit
@@ -261,7 +278,8 @@ Deno.serve(async (req) => {
         hourly_paid: results.reduce((s, r) => s + r.breakdown.hourly_fixed, 0),
         percent_paid: results.reduce((s, r) => s + r.breakdown.percent_share, 0),
         residual_paid: results.reduce((s, r) => s + r.breakdown.residual_share, 0),
-        distributed_total: results.reduce((s, r) => s + r.total, 0)
+        distributed_total: results.reduce((s, r) => s + r.total, 0),
+        completion_total: results.reduce((s, r) => s + (r.completion || 0), 0)
       }
     };
 

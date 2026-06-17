@@ -95,7 +95,8 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         tip_amount: r.total,
         cash_tips: r.total_cash || 0,
         credit_tips: r.total_credit || 0,
-        tip_percentage: total_tips > 0 ? (r.total / total_tips) * 100 : 0
+        tip_percentage: total_tips > 0 ? (r.total / total_tips) * 100 : 0,
+        completion_amount: r.completion || 0
       }));
 
       const shiftFilterNameHeb = shiftFilterVal === 'morning' ? 'בוקר' : shiftFilterVal === 'afternoon' ? 'צהריים' : shiftFilterVal === 'evening' ? 'ערב' : 'לילה';
@@ -106,6 +107,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
         total_tips: total_tips,
         cash_tips: result.inputs.cash_tips || 0,
         credit_tips: result.inputs.credit_tips || 0,
+        total_completion: result.summary?.completion_total || 0,
         workers: workersData,
         notes: `מדיניות: ${result.inputs.policy_name || 'ללא'} | ${isWeek ? 'חישוב שבועי' : `חישוב יומי - ${shiftFilterVal === 'all' ? 'כל היום' : shiftFilterNameHeb}`}`
       });
@@ -327,6 +329,7 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
                   <div className="text-sm text-gray-600 mt-1">
                     משמרת: {h.shift_type === 'morning' ? 'בוקר' : h.shift_type === 'evening' ? 'ערב' : 'לילה'} | 
                     מזומן: ₪{h.cash_tips} | אשראי: ₪{h.credit_tips}
+                    {h.total_completion > 0 && ` | השלמה: ₪${h.total_completion}`}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">{h.notes}</div>
                 </div>
@@ -356,7 +359,10 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
                   </span>
                 )}
               </CardTitle>
-              <div className="text-sm text-gray-500 mt-1">סה"כ שחולק: ₪{(result?.summary?.distributed_total || 0).toLocaleString()}</div>
+              <div className="text-sm text-gray-500 mt-1 flex items-center flex-wrap gap-2">
+                <span>סה"כ שחולק: ₪{(result?.summary?.distributed_total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">(מזומן: ₪{Number(result.inputs.cash_tips || 0).toLocaleString()} | אשראי: ₪{Number(result.inputs.credit_tips || 0).toLocaleString()})</span>
+              </div>
             </div>
             <Button onClick={saveTips} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white gap-2">
               {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -374,7 +380,8 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
                     <th className="p-2 text-right font-semibold">שיטה</th>
                     <th className="p-2 text-right font-semibold">מזומן</th>
                     <th className="p-2 text-right font-semibold">אשראי</th>
-                    <th className="p-2 text-right font-bold text-gray-900">סה"כ</th>
+                    <th className="p-2 text-right font-bold text-gray-900">סה"כ טיפ</th>
+                    <th className="p-2 text-right font-semibold text-orange-700 bg-orange-50/50 rounded-tl-md">השלמה</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -391,8 +398,16 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
                       <td className="p-2 text-gray-600">₪{(r.total_cash || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       <td className="p-2 text-gray-600">₪{(r.total_credit || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                       <td className="p-2 font-bold text-green-700 bg-green-50/50">₪{(r.total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                      <td className="p-2 font-semibold text-orange-700 bg-orange-50/50">{r.completion > 0 ? `₪${r.completion.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-'}</td>
                     </tr>
                   ))}
+                  <tr className="bg-gray-100 font-bold">
+                    <td colSpan="4" className="p-2 text-right">סיכום כולל</td>
+                    <td className="p-2 text-gray-900">₪{(result.inputs.cash_tips || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td className="p-2 text-gray-900">₪{(result.inputs.credit_tips || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td className="p-2 text-green-700">₪{(result?.summary?.distributed_total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td className="p-2 text-orange-700">₪{(result?.summary?.completion_total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                  </tr>
                 </tbody>
               </table>
             </div>

@@ -41,6 +41,11 @@
       "default": 0,
       "description": "Total tips collected for this shift"
     },
+    "total_completion": {
+      "type": "number",
+      "default": 0,
+      "description": "Total completion amount"
+    },
     "workers": {
       "type": "array",
       "description": "Workers who worked this shift and their tip allocation",
@@ -64,6 +69,10 @@
           },
           "tip_percentage": {
             "type": "number"
+          },
+          "completion_amount": {
+            "type": "number",
+            "default": 0
           }
         }
       }
