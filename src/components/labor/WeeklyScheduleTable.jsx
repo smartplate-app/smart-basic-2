@@ -137,7 +137,7 @@ export default function WeeklyScheduleTable({
           const isDefaultSection = section.id === 'default';
 
           return (
-            <div key={section.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+            <div key={section.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto max-h-[calc(100vh-250px)]">
               {/* Section Header */}
               <div className="flex items-center justify-between p-3 border-b bg-gray-100 min-w-[800px]">
                 <div className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -203,7 +203,7 @@ export default function WeeklyScheduleTable({
 
               <div className={`flex flex-col min-w-[800px] ${collapsedSections[section.id] ? 'hidden' : ''}`}>
                 {/* Table Header */}
-                <div className="flex bg-gray-50 border-b">
+                <div className="flex bg-gray-50 border-b sticky top-0 z-30 shadow-sm">
                   <div className={`w-[140px] shrink-0 border-x p-2 text-xs font-semibold ${isRTL ? 'border-r-0' : 'border-l-0'} flex items-center`}>
                     {t('position')}
                   </div>
