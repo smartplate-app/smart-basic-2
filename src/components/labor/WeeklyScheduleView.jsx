@@ -840,7 +840,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
 
   const handleSaveAsTemplate = async () => {
     if (!templateName.trim()) {
-      toast.error(t('template_name_required'));
+      toast.error(language === 'he' ? 'שם התבנית הינו חובה' : 'Template name is required');
       return;
     }
 
@@ -953,14 +953,14 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         created_by: user.email
       });
 
-      toast.success(t('template_saved_successfully'));
+      toast.success(language === 'he' ? 'התבנית נשמרה בהצלחה' : 'Template saved successfully');
       setShowTemplateDialog(false);
       setTemplateName('');
       setIsDefaultTemplate(false);
       await loadTemplates();
     } catch (error) {
       console.error('Error saving template:', error);
-      toast.error(t('error_saving_template'));
+      toast.error(language === 'he' ? 'שגיאה בשמירת התבנית' : 'Error saving template');
     } finally {
       setSaving(false);
     }
