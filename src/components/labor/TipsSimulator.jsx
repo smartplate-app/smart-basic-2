@@ -236,38 +236,24 @@ export default function TipsSimulator({ presetWorkers, schedules: propSchedules,
               </select>
             </div>
             <div>
-              <label className="text-sm text-gray-600">תקופת חישוב</label>
-              <select className="w-full border rounded-md h-10 px-2" value={periodType} onChange={(e) => setPeriodType(e.target.value)}>
-                <option value="day">יום ספציפי (מלוח שנה)</option>
-                <option value="current_week">שבוע נוכחי</option>
-                <option value="last_week">שבוע שעבר</option>
+              <label className="text-sm text-gray-600">תאריך</label>
+              <Input type="date" value={date} dir="ltr" className="w-full text-left" onChange={(e) => setDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600">סינון משמרת</label>
+              <select className="w-full border rounded-md h-10 px-2" value={shiftFilter} onChange={(e) => setShiftFilter(e.target.value)}>
+                <option value="all">כל היום</option>
+                <option value="morning">משמרת בוקר</option>
+                <option value="afternoon">משמרת צהריים</option>
+                <option value="evening">משמרת ערב/לילה</option>
               </select>
             </div>
-            {periodType === 'day' && (
-              <>
-                <div>
-                  <label className="text-sm text-gray-600">תאריך</label>
-                  <Input type="date" value={date} dir="ltr" className="w-full text-left" onChange={(e) => setDate(e.target.value)} />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600">סינון משמרת</label>
-                  <select className="w-full border rounded-md h-10 px-2" value={shiftFilter} onChange={(e) => setShiftFilter(e.target.value)}>
-                    <option value="all">כל היום</option>
-                    <option value="morning">משמרת בוקר</option>
-                    <option value="afternoon">משמרת צהריים</option>
-                    <option value="evening">משמרת ערב/לילה</option>
-                  </select>
-                </div>
-              </>
-            )}
           </div>
 
           <p className="text-sm text-gray-500">
-            {periodType === 'day' 
-              ? (shiftFilter === 'all' 
+            {shiftFilter === 'all' 
                  ? 'השעות ייאספו אוטומטית מכלל משמרות היום בסידור העבודה לתאריך הנבחר.' 
-                 : `השעות ייאספו אך ורק מהמשמרות המוגדרות כ${shiftFilter === 'morning' ? 'בוקר' : shiftFilter === 'afternoon' ? 'צהריים' : 'ערב'} באותו תאריך בסידור העבודה.`)
-              : 'השעות ייאספו ויסוכמו מכל סידור העבודה של השבוע הנבחר עבור כל עובד.'}
+                 : `השעות ייאספו אך ורק מהמשמרות המוגדרות כ${shiftFilter === 'morning' ? 'בוקר' : shiftFilter === 'afternoon' ? 'צהריים' : 'ערב'} באותו תאריך בסידור העבודה.`}
           </p>
 
           <Button onClick={run} className="bg-gray-900 hover:bg-gray-800" disabled={loading}>
