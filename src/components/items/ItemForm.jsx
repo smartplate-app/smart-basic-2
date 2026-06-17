@@ -274,7 +274,6 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
               <Select 
                 value={currentItem.supplier_id}
                 onValueChange={handleSupplierChange}
-                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder={t('select_supplier')} />
@@ -307,17 +306,17 @@ export default function ItemForm({ item, suppliers, warehouses, onSubmit, onCanc
                 <DropdownMenu dir={language === 'he' ? 'rtl' : 'ltr'}>
                   <DropdownMenuTrigger asChild>
                     <Button type="button" variant="outline" className="flex-1 justify-between font-normal overflow-hidden">
-                      <span className="truncate">
+                      <span className="truncate flex-1 min-w-0 text-left rtl:text-right">
                         {((currentItem.warehouse_names && currentItem.warehouse_names.length > 0) || currentItem.warehouse_name)
                           ? (currentItem.warehouse_names && currentItem.warehouse_names.length > 0 
                               ? currentItem.warehouse_names.join(", ") 
                               : currentItem.warehouse_name)
                           : t('select_warehouse')}
                       </span>
-                      <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0 ml-2" />
+                      <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0 ml-2 rtl:mr-2 rtl:ml-0" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[200px]">
+                  <DropdownMenuContent align="end" className="w-[200px]" style={{ zIndex: 99999 }}>
                     {warehouses.map(warehouse => {
                       const isSelected = (currentItem.warehouse_ids && currentItem.warehouse_ids.includes(warehouse.id)) || currentItem.warehouse_id === warehouse.id;
                       return (
