@@ -525,6 +525,12 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
                                   <span>{language === 'he' ? 'מאת:' : 'From:'}</span>
                                   <span style={{ fontWeight: '600', color: '#111827' }}>{order.restaurant_name}</span>
                               </div>
+                              {order.business_tax_id && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                      <span>{language === 'he' ? 'ח.פ/עוסק:' : 'Business ID:'}</span>
+                                      <span style={{ fontWeight: '500', color: '#111827', textAlign: language === 'he' ? 'left' : 'right' }}>{order.business_tax_id}</span>
+                                  </div>
+                              )}
                               {order.restaurant_address && (
                                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                       <span>{language === 'he' ? 'כתובת:' : 'Address:'}</span>

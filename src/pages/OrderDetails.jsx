@@ -16,6 +16,7 @@ const translations = {
         status: 'סטטוס:',
         businessDetails: 'פרטי העסק המזמין',
         businessName: 'שם העסק',
+        businessTaxId: 'ח.פ/עוסק',
         deliveryAddress: 'כתובת למשלוח',
         deliveryDate: 'תאריך אספקה מבוקש:',
         itemsList: 'רשימת מוצרים',
@@ -44,6 +45,7 @@ const translations = {
         status: 'Status:',
         businessDetails: 'Ordering Business Details',
         businessName: 'Business Name',
+        businessTaxId: 'Business ID',
         deliveryAddress: 'Delivery Address',
         deliveryDate: 'Requested Delivery Date:',
         itemsList: 'Items List',
@@ -75,6 +77,7 @@ const translations = {
         status: 'Status:',
         businessDetails: 'Details des bestellenden Unternehmens',
         businessName: 'Firmenname',
+        businessTaxId: 'Unternehmens-ID',
         deliveryAddress: 'Lieferadresse',
         deliveryDate: 'Gewünschtes Lieferdatum:',
         itemsList: 'Artikelliste',
@@ -106,6 +109,7 @@ const translations = {
         status: 'Статус:',
         businessDetails: 'Детали заказчика',
         businessName: 'Название бизнеса',
+        businessTaxId: 'ИД бизнеса',
         deliveryAddress: 'Адрес доставки',
         deliveryDate: 'Запрошенная дата доставки:',
         itemsList: 'Список товаров',
@@ -612,6 +616,18 @@ export default function OrderDetailsPage() {
                                     <p style={{ fontSize: '14px', color: '#64748b', margin: '0' }}>{t.businessName}</p>
                                 </div>
                             </div>
+                            
+                            {order.business_tax_id && (
+                                <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                                    <Building style={{ width: '20px', height: '20px', color: '#64748b', marginTop: '2px' }} />
+                                    <div>
+                                        <p style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', margin: '0' }}>
+                                            {order.business_tax_id}
+                                        </p>
+                                        <p style={{ fontSize: '14px', color: '#64748b', margin: '0' }}>{t.businessTaxId}</p>
+                                    </div>
+                                </div>
+                            )}
                             
                             {order.restaurant_address && (
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>

@@ -120,6 +120,7 @@ Deno.serve(async (req) => {
         <p style="margin:0 0 12px 0;">${body?.language === 'he' ? 'קיבלת הזמנה חדשה באמצעות SMART PLATE BASIC — איזה כיף!' : 'You received a new order via SMART PLATE BASIC!'}</p>
         <div style="margin:16px 0;padding:12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;">
           <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'מאת:' : 'From:'}</strong> ${restaurantName || '-'}</div>
+          ${order.business_tax_id ? `<div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'ח.פ/עוסק:' : 'Business ID:'}</strong> ${order.business_tax_id}</div>` : ''}
           <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'הזמנה #:' : 'Order #:'}</strong> ${orderNumber}</div>
           <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'תאריך אספקה:' : 'Delivery date:'}</strong> ${deliveryDate || '-'}</div>
           <div style="margin:4px 0;"><strong>${body?.language === 'he' ? 'נשלח בתאריך:' : 'Sent at:'}</strong> <span dir="ltr">${new Date().toLocaleDateString(body?.language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(body?.language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}</span></div>
@@ -175,7 +176,7 @@ Deno.serve(async (req) => {
       }
       return `• ${(it.item_name || '')}${it.catalog_number ? ` (SKU: ${it.catalog_number})` : ''} — ${Number(it.quantity || 0)} ${displayUnit}`;
     }).join('\n');
-    const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\nOrder #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nSent at: ${new Date().toLocaleDateString(body?.language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(body?.language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.\n\n${restaurantName ? restaurantName + '\n' : ''}הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n\n\n\n\n\n`;
+    const text = `New order from Smart Plate basic\n\nFrom: ${restaurantName || '-'}\n${order.business_tax_id ? (body?.language === 'he' ? 'ח.פ/עוסק: ' : 'Business ID: ') + order.business_tax_id + '\\n' : ''}Order #: ${orderNumber}\nDelivery date: ${deliveryDate || '-'}\nSent at: ${new Date().toLocaleDateString(body?.language === 'he' ? 'he-IL' : 'en-US')} ${new Date().toLocaleTimeString(body?.language === 'he' ? 'he-IL' : 'en-US', {hour: '2-digit', minute:'2-digit'})}\nTotal: ₪${totalCost}\n\nItems:\n${itemsTxt}\n\nView online: ${publicUrl || ''}\nReply to confirm or ask questions.\n\n${restaurantName ? restaurantName + '\n' : ''}הזמנה זו נשלחה באמצעות מערכת SMART PLATE BASIC, The ultimate food & labor cost app for the restaurant industry 2026.\n\n\n\n\n\n\n\n\n`;
 
     // Attempt to use Gmail connector if authorized, fallback to Core.SendEmail
     const sendTo = async (rcpt) => {
