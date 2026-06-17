@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,6 +53,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [templateSaveType, setTemplateSaveType] = useState("structure");
+  const [isDefaultTemplate, setIsDefaultTemplate] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [sending, setSending] = useState(false);
@@ -836,7 +838,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     }
   };
 
-  const handleSaveAsTemplate = async (setAsDefault = false) => {
+  const handleSaveAsTemplate = async () => {
     if (!templateName.trim()) {
       toast.error(t('template_name_required'));
       return;
@@ -846,7 +848,7 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
     try {
       const user = currentUser || await base44.auth.me();
 
-      if (setAsDefault) {
+      if (isDefaultTemplate) {
         const existingDefaultTemplates = await base44.entities.ScheduleTemplate.filter({
           created_by: user.email,
           is_default: true
@@ -947,13 +949,14 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         position_rows: schedule?.position_rows || [],
         position_order: positionOrder || [],
         shifts: templateShifts,
-        is_default: setAsDefault,
+        is_default: isDefaultTemplate,
         created_by: user.email
       });
 
       toast.success(t('template_saved_successfully'));
       setShowTemplateDialog(false);
       setTemplateName('');
+      setIsDefaultTemplate(false);
       await loadTemplates();
     } catch (error) {
       console.error('Error saving template:', error);
@@ -1716,7 +1719,19 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
                  </p>
               )}
             </div>
-            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}><Button onClick={() => handleSaveAsTemplate(false)} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}{t('save')}</Button><Button onClick={() => handleSaveAsTemplate(true)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}><Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('set_as_default')}</Button></div>
+            <div className={`flex items-center gap-3 py-3 border-y border-gray-100 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Switch id="is_default_template" checked={isDefaultTemplate} onCheckedChange={setIsDefaultTemplate} />
+              <Label htmlFor="is_default_template" className={`cursor-pointer leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className="font-medium text-gray-900">{language === 'he' ? 'קבע כתבנית ברירת מחדל' : 'Set as default template'}</div>
+                <div className="text-xs text-gray-500 font-normal">{language === 'he' ? 'תטען אוטומטית בכל שבוע חדש' : 'Will load automatically for new weeks'}</div>
+              </Label>
+            </div>
+            <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Button onClick={() => handleSaveAsTemplate()} className={`w-full flex items-center justify-center gap-2 bg-[#d4a373] hover:bg-[#c39062] ${isRTL ? 'flex-row-reverse' : ''}`} disabled={saving}>
+                {saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <Save className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />}
+                {language === 'he' ? 'שמור תבנית' : 'Save Template'}
+              </Button>
+            </div>
             <h3 className="font-semibold pt-4 border-t mt-4">{t('load_existing_template')}</h3>
             {templates.length === 0 ? <div className="text-center py-4 text-gray-500"><p>{t('no_templates_saved')}</p></div> : (<div className="space-y-3"><Select value={selectedTemplate} onValueChange={setSelectedTemplate}><SelectTrigger className={isRTL ? 'text-right' : 'text-left'}><SelectValue placeholder={t('select_template_to_load')} /></SelectTrigger><SelectContent>{templates.map(template => (<SelectItem key={template.id} value={template.id}>{template.template_name} {template.is_default && `(${t('default')})`}</SelectItem>))}</SelectContent></Select><div className={`flex flex-col sm:flex-row gap-2 ${isRTL ? 'sm:flex-row-reverse' : ''}`}><Button onClick={handleLoadTemplate} disabled={!selectedTemplate || saving} className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>{saving ? <Loader className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : null}{t('load_template')}</Button><Button onClick={() => handleRenameTemplate(selectedTemplate)} variant="outline" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!selectedTemplate || saving}>{language === 'he' ? 'שנה שם' : 'Rename'}</Button><Button onClick={() => handleDeleteTemplate(selectedTemplate)} variant="destructive" className={`flex-1 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`} disabled={!selectedTemplate || saving}><Trash2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />{t('delete_template')}</Button></div></div>)}
           </div>
