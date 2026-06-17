@@ -68,9 +68,9 @@ export default function CountListView({ counts, onEdit, onDelete, onExport, onEx
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <Table className="w-full" dir={language === 'he' || language === 'ar' ? 'rtl' : 'ltr'}>
-          <TableHeader className="bg-gray-50 border-b">
+      <div className="overflow-auto max-h-[calc(100vh-300px)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <Table wrapperClassName="overflow-visible" className="w-full" dir={language === 'he' || language === 'ar' ? 'rtl' : 'ltr'}>
+          <TableHeader className="bg-gray-50 border-b sticky top-0 z-20 shadow-sm">
             <TableRow>
               <TableHead 
                 className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"

@@ -1466,7 +1466,7 @@ export default function CountForm({ user, count, warehouses, items: initialItems
 
                     {/* Desktop View - Table */}
                     <div className="hidden md:block border rounded-lg overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-white shadow-sm">
-                      <Table>
+                      <Table wrapperClassName="overflow-visible">
                         <TableHeader className="sticky top-0 bg-white z-20 shadow-sm border-b">
                           <TableRow>
                             <TableHead 
