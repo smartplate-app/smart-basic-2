@@ -7,40 +7,88 @@ import { useLanguage } from "../LanguageProvider";
 export default function RecipeListView({ recipes, onEdit, onDelete }) {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
-  const [sortDir, setSortDir] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
 
-  const toggleSort = () => {
-    if (sortDir === null) setSortDir('asc');
-    else if (sortDir === 'asc') setSortDir('desc');
-    else setSortDir(null);
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    } else if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = null;
+    }
+    setSortConfig(direction ? { key, direction } : { key: null, direction: null });
   };
 
   const sortedRecipes = [...recipes].sort((a, b) => {
-    if (!sortDir) return 0;
-    const nameA = a.name || '';
-    const nameB = b.name || '';
-    if (sortDir === 'asc') return nameA.localeCompare(nameB, language === 'he' ? 'he' : 'en');
-    return nameB.localeCompare(nameA, language === 'he' ? 'he' : 'en');
+    if (!sortConfig.key || !sortConfig.direction) return 0;
+    
+    let aValue = a[sortConfig.key];
+    let bValue = b[sortConfig.key];
+    
+    if (sortConfig.key === 'cost_percentage') {
+      const getCostPercentage = (r) => (r.type === 'sale_item' && r.sale_price > 0) ? ((r.total_cost / (r.sale_price / 1.18)) * 100) : -1;
+      aValue = getCostPercentage(a);
+      bValue = getCostPercentage(b);
+    } else {
+      if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+      if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+    }
+    
+    if (typeof aValue === 'string') {
+      const comp = aValue.localeCompare(bValue || '', language === 'he' ? 'he' : 'en');
+      return sortConfig.direction === 'asc' ? comp : -comp;
+    }
+    
+    if (aValue == null) aValue = -999999999;
+    if (bValue == null) bValue = -999999999;
+    
+    return sortConfig.direction === 'asc' ? (aValue > bValue ? 1 : -1) : (aValue < bValue ? 1 : -1);
   });
+
+  const renderSortIcon = (key) => {
+    if (sortConfig.key !== key || !sortConfig.direction) return <ArrowUpDown className="w-4 h-4 text-gray-400" />;
+    return sortConfig.direction === 'asc' ? <ArrowUp className="w-4 h-4 text-gray-700" /> : <ArrowDown className="w-4 h-4 text-gray-700" />;
+  };
+
+  const getSortHeaderClass = () => {
+    return `cursor-pointer hover:bg-gray-50 transition-colors select-none ${isRTL ? "text-right" : "text-left"}`;
+  };
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <Table wrapperClassName="max-h-[calc(100vh-250px)]">
         <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
           <TableRow>
-            <TableHead 
-              className={`cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? "text-right" : "text-left"}`}
-              onClick={toggleSort}
-            >
+            <TableHead className={getSortHeaderClass()} onClick={() => handleSort('name')}>
               <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
                 {language === 'he' ? 'שם המתכון' : 'Recipe Name'}
-                {sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : sortDir === 'desc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4 text-gray-400" />}
+                {renderSortIcon('name')}
               </div>
             </TableHead>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'סוג' : 'Type'}</TableHead>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</TableHead>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'מחיר מכירה' : 'Sale Price'}</TableHead>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'אחוז עלות' : 'Cost %'}</TableHead>
+            <TableHead className={getSortHeaderClass()} onClick={() => handleSort('type')}>
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'סוג' : 'Type'}
+                {renderSortIcon('type')}
+              </div>
+            </TableHead>
+            <TableHead className={getSortHeaderClass()} onClick={() => handleSort('total_cost')}>
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'עלות כוללת' : 'Total Cost'}
+                {renderSortIcon('total_cost')}
+              </div>
+            </TableHead>
+            <TableHead className={getSortHeaderClass()} onClick={() => handleSort('sale_price')}>
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'מחיר מכירה' : 'Sale Price'}
+                {renderSortIcon('sale_price')}
+              </div>
+            </TableHead>
+            <TableHead className={getSortHeaderClass()} onClick={() => handleSort('cost_percentage')}>
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'אחוז עלות' : 'Cost %'}
+                {renderSortIcon('cost_percentage')}
+              </div>
+            </TableHead>
             <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'פעולות' : 'Actions'}</TableHead>
           </TableRow>
         </TableHeader>

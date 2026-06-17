@@ -247,26 +247,45 @@ export default function RecipesPage() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} text-gray-400 w-5 h-5`} />
-            <Input
-              placeholder={language === 'he' ? 'חיפוש מתכונים...' : 'Search recipes...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`bg-white rounded-full ${isRTL ? 'pr-10' : 'pl-10'}`}
-            />
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+          <Card className="bg-white shadow-sm shrink-0 min-w-[200px] overflow-hidden rounded-xl h-12 flex items-center justify-center border-orange-200 border">
+            <div className="px-4 py-2 flex items-center gap-3 w-full">
+              <span className="text-sm font-semibold text-gray-700">
+                {language === 'he' ? 'ממוצע S.F.C %' : 'Avg S.F.C %'}
+              </span>
+              <span className="text-lg font-bold text-orange-600">
+                {(() => {
+                  const saleItems = recipes.filter(r => r.type === 'sale_item' && r.sale_price > 0);
+                  if (saleItems.length === 0) return '0.0%';
+                  const totalCost = saleItems.reduce((sum, r) => sum + (Number(r.total_cost) || 0), 0);
+                  const totalSale = saleItems.reduce((sum, r) => sum + (Number(r.sale_price) || 0), 0);
+                  return totalSale > 0 ? `${((totalCost / (totalSale / 1.18)) * 100).toFixed(1)}%` : '0.0%';
+                })()}
+              </span>
+            </div>
+          </Card>
+
+          <div className="flex-1 flex flex-col sm:flex-row gap-4 w-full">
+            <div className="relative flex-1">
+              <Search className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} text-gray-400 w-5 h-5`} />
+              <Input
+                placeholder={language === 'he' ? 'חיפוש מתכונים...' : 'Search recipes...'}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`bg-white rounded-full h-12 ${isRTL ? 'pr-10' : 'pl-10'}`}
+              />
+            </div>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="h-12 rounded-full border border-input bg-white px-4 py-2 text-sm focus-visible:outline-none shadow-sm"
+            >
+              <option value="all">{language === 'he' ? 'כל הסוגים' : 'All Types'}</option>
+              <option value="sale_item">{language === 'he' ? 'פריט למכירה' : 'Sale Item'}</option>
+              <option value="prep_recipe">{language === 'he' ? 'מתכון הכנה' : 'Prep Recipe'}</option>
+              <option value="last_scan">{language === 'he' ? 'סריקת תפריט אחרונה' : 'Last Menu Scan'}</option>
+            </select>
           </div>
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="h-10 rounded-full border border-input bg-white px-4 py-2 text-sm focus-visible:outline-none"
-          >
-            <option value="all">{language === 'he' ? 'כל הסוגים' : 'All Types'}</option>
-            <option value="sale_item">{language === 'he' ? 'פריט למכירה' : 'Sale Item'}</option>
-            <option value="prep_recipe">{language === 'he' ? 'מתכון הכנה' : 'Prep Recipe'}</option>
-            <option value="last_scan">{language === 'he' ? 'סריקת תפריט אחרונה' : 'Last Menu Scan'}</option>
-          </select>
         </div>
 
         <RecipeListView 
