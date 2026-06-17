@@ -39,7 +39,7 @@ const hexToRgba = (hex, alpha = 1) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-export default function WeeklyScheduleView({ weekStartDate, positions, workers, onScheduleSaved }) {
+export default function WeeklyScheduleView({ weekStartDate, positions, workers, onScheduleSaved, weekNavigation }) {
   const { t, language } = useLanguage();
   const isRTL = language === 'he';
 
@@ -1475,6 +1475,12 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
               </div>
             </div>
           </div>
+
+          {weekNavigation && (
+            <div className="mb-6">
+              {weekNavigation}
+            </div>
+          )}
 
           <div className="bg-white border rounded-lg p-3">
             <div className={`text-[12px] font-semibold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
