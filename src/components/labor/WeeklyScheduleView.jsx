@@ -1217,11 +1217,16 @@ export default function WeeklyScheduleView({ weekStartDate, positions, workers, 
         const assignedPositions = [worker.job_position_id, ...(worker.job_position_ids || [])];
         if (!assignedPositions.includes(dst.positionId)) {
           const destPosition = positions.find(p => p.id === dst.positionId);
-          toast.error(
-            language === 'he' 
-            ? `העובד לא מוגדר בתפקיד ${destPosition?.name || ''}` 
-            : `Worker is not assigned to the role ${destPosition?.name || ''}`
-          );
+          toast.custom((t) => (
+            <div className="bg-red-50 border-2 border-red-500 text-red-900 px-4 py-3 sm:px-6 sm:py-4 rounded-2xl shadow-2xl flex items-center justify-center gap-3 w-max max-w-[90vw] mx-auto animate-in fade-in zoom-in duration-300">
+              <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 flex-shrink-0" />
+              <span className="font-bold text-base sm:text-lg text-center">
+                {language === 'he' 
+                  ? `העובד לא מוגדר בתפקיד ${destPosition?.name || ''}` 
+                  : `Worker is not assigned to the role ${destPosition?.name || ''}`}
+              </span>
+            </div>
+          ), { duration: 4000, position: 'top-center' });
           return;
         }
       }
