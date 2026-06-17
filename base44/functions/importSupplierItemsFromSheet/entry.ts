@@ -65,14 +65,19 @@ Deno.serve(async (req) => {
 
     // Hebrew header map + synonyms
     const keyMap = {
-      name: ['שם פריט', 'שם', 'פריט', 'item name'],
+      name: ['שם הפריט', 'שם פריט', 'שם', 'פריט', 'item name'],
+      nickname: ['כינוי (בשפה שלך', 'כינוי'],
       catalog_number: ['מספר קטלוגי', 'מק"ט', 'קטלוג'],
-      unit: ['יחידה', 'יח׳', 'סוג יחידה', 'unit'],
-      price: ['מחיר', 'מחיר ליחידה', 'מחיר לפריט', 'price'],
+      unit: ['יחידת הפריט', 'יחידה', 'יח׳', 'סוג יחידה', 'unit'],
+      price: ['מחיר לפריט', 'מחיר', 'מחיר ליחידה', 'price'],
       discount: ['הנחה (%)', 'הנחה', '% הנחה', 'הנחה באחוזים', 'discount'],
-      units_per_package: ['יחידות בחבילה', 'כמות בחבילה', 'אריזות', 'כמות במארז'],
-      minimum_stock: ['מלאי מינימלי', 'מינ׳ מלאי'],
-      notes: ['הערות', 'תיאור']
+      units_per_package: ['כמות יחידות באריזה', 'כמות באריזה', 'יחידות בחבילה', 'כמות בחבילה', 'אריזות', 'כמות במארז'],
+      content_per_unit: ['תכולה ליחידה'],
+      content_unit: ['יחידת מידה לתכולה'],
+      warehouse1: ['מחסן', 'מחסן 1'],
+      warehouse2: ['מחסן 2'],
+      warehouse3: ['מחסן 3'],
+      minimum_stock: ['מלאי מינימום', 'מלאי מינימלי', 'מינ׳ מלאי']
     };
 
     const findCol = (names) => {
@@ -89,19 +94,32 @@ Deno.serve(async (req) => {
     let items = [];
     if (idxName !== -1 && idxUnit !== -1) {
       // Direct mapping
+      const idxNickname = findCol(keyMap.nickname);
       const idxCat = findCol(keyMap.catalog_number);
       const idxPrice = findCol(keyMap.price);
       const idxDisc = findCol(keyMap.discount);
       const idxUpp = findCol(keyMap.units_per_package);
+      const idxCpu = findCol(keyMap.content_per_unit);
+      const idxCu = findCol(keyMap.content_unit);
+      const idxW1 = findCol(keyMap.warehouse1);
+      const idxW2 = findCol(keyMap.warehouse2);
+      const idxW3 = findCol(keyMap.warehouse3);
       const idxMin = findCol(keyMap.minimum_stock);
 
       items = bodyRows.map(r => ({
         name: (r[idxName] || '').toString().trim(),
+        nickname: idxNickname !== -1 ? String(r[idxNickname] || '').trim() : undefined,
         unit: normalizeUnit(r[idxUnit]),
         catalog_number: idxCat !== -1 ? String(r[idxCat] || '').trim() : undefined,
         price: idxPrice !== -1 ? toNumber(r[idxPrice]) : 0,
         discount: idxDisc !== -1 ? toNumber(r[idxDisc]) : 0,
+        price_after_discount: idxPrice !== -1 ? (toNumber(r[idxPrice]) * (1 - ((idxDisc !== -1 ? toNumber(r[idxDisc]) : 0) / 100))) : 0,
         units_per_package: idxUpp !== -1 ? toNumber(r[idxUpp]) : 1,
+        content_per_unit: idxCpu !== -1 ? toNumber(r[idxCpu]) : 1,
+        content_unit: normalizeUnit(idxCu !== -1 ? r[idxCu] : r[idxUnit]),
+        warehouse1: idxW1 !== -1 ? String(r[idxW1] || '').trim() : undefined,
+        warehouse2: idxW2 !== -1 ? String(r[idxW2] || '').trim() : undefined,
+        warehouse3: idxW3 !== -1 ? String(r[idxW3] || '').trim() : undefined,
         minimum_stock: idxMin !== -1 ? toNumber(r[idxMin]) : 0,
       })).filter(it => it.name);
     } else {
@@ -111,7 +129,7 @@ Deno.serve(async (req) => {
         prompt: `קלט: כותרות ונתונים מגוגל שיטס של ספק. החזר JSON של פריטים לשמירה במערכת.
 כותרות: ${JSON.stringify(headers)}
 דוגמאות: ${JSON.stringify(preview)}
-החזר מערך של אובייקטים עם השדות: name (שם פריט), unit (unit: unit/kg/liter/case), catalog_number, price (מספר), discount (מספר), units_per_package (מספר), minimum_stock (מספר). שמור על עברית בשם.
+החזר מערך של אובייקטים לפי המבנה, חלץ נתונים כמו שם, כינוי, מחיר, הנחה, יחידה, כמות באריזה, תכולה ליחידה, מס קטלוגי, מחסנים.
 אם חסר unit – נחש לפי הטקסט (למשל 'בקבוק'≈unit, 'ק"ג'≈kg, 'ארגז'≈case).`,
         response_json_schema: {
           type: 'object',
@@ -122,11 +140,17 @@ Deno.serve(async (req) => {
                 type: 'object',
                 properties: {
                   name: { type: 'string' },
+                  nickname: { type: 'string' },
                   unit: { type: 'string' },
                   catalog_number: { type: 'string' },
                   price: { type: 'number' },
                   discount: { type: 'number' },
                   units_per_package: { type: 'number' },
+                  content_per_unit: { type: 'number' },
+                  content_unit: { type: 'string' },
+                  warehouse1: { type: 'string' },
+                  warehouse2: { type: 'string' },
+                  warehouse3: { type: 'string' },
                   minimum_stock: { type: 'number' }
                 },
                 required: ['name', 'unit']
@@ -138,11 +162,18 @@ Deno.serve(async (req) => {
       });
       items = (response.items || []).map(it => ({
         name: it.name,
+        nickname: it.nickname,
         unit: normalizeUnit(it.unit),
         catalog_number: it.catalog_number || undefined,
         price: toNumber(it.price),
         discount: toNumber(it.discount),
+        price_after_discount: toNumber(it.price) * (1 - (toNumber(it.discount) / 100)),
         units_per_package: toNumber(it.units_per_package) || 1,
+        content_per_unit: toNumber(it.content_per_unit) || 1,
+        content_unit: normalizeUnit(it.content_unit || it.unit),
+        warehouse1: it.warehouse1,
+        warehouse2: it.warehouse2,
+        warehouse3: it.warehouse3,
         minimum_stock: toNumber(it.minimum_stock) || 0,
       }));
     }
@@ -151,16 +182,95 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No items parsed' }, { status: 400 });
     }
 
-    // Attach supplier fields
-    const payload = items.map(it => ({
-      ...it,
-      supplier_id: supplierId,
-      supplier_name: supplierName || '',
-      unit: normalizeUnit(it.unit || 'unit'),
-    }));
+    const targetEmail = user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email || user.email;
+
+    // Get existing warehouses to resolve names to IDs
+    const existingWarehouses = await base44.entities.Warehouse.filter({ created_by: targetEmail }, null, 5000);
+    const warehouseMap = new Map(existingWarehouses.map(w => [w.name.trim().toLowerCase(), w]));
+    const warehousesToCreate = new Set();
+    const newWarehousesMap = new Map();
+
+    for (const it of items) {
+      for (const wName of [it.warehouse1, it.warehouse2, it.warehouse3]) {
+        if (wName && wName.trim() !== '') {
+          const w = wName.trim().toLowerCase();
+          if (!warehouseMap.has(w) && !warehousesToCreate.has(w)) {
+            warehousesToCreate.add(wName.trim());
+          }
+        }
+      }
+    }
+
+    for (const wName of warehousesToCreate) {
+      const newWh = await base44.asServiceRole.entities.Warehouse.create({
+        name: wName,
+        created_by: targetEmail,
+        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined,
+        catalog_items: []
+      });
+      warehouseMap.set(wName.toLowerCase(), newWh);
+      newWarehousesMap.set(newWh.id, newWh);
+    }
+
+    // Attach supplier and warehouse fields
+    const payload = items.map(it => {
+      const whNames = [];
+      const whIds = [];
+      for (const wName of [it.warehouse1, it.warehouse2, it.warehouse3]) {
+        if (wName && wName.trim() !== '') {
+          const wh = warehouseMap.get(wName.trim().toLowerCase());
+          if (wh && !whIds.includes(wh.id)) {
+            whIds.push(wh.id);
+            whNames.push(wh.name);
+          }
+        }
+      }
+
+      const { warehouse1, warehouse2, warehouse3, ...rest } = it;
+      
+      return {
+        ...rest,
+        id: crypto.randomUUID(), // Explicit ID for warehouse link
+        supplier_id: supplierId,
+        supplier_name: supplierName || '',
+        unit: normalizeUnit(it.unit || 'unit'),
+        warehouse_ids: whIds,
+        warehouse_names: whNames,
+        warehouse_id: whIds[0] || "",
+        warehouse_name: whNames[0] || "",
+        created_by: targetEmail,
+        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
+      };
+    });
 
     // Create items (user-scoped)
     const created = await base44.entities.Item.bulkCreate(payload);
+
+    // Update warehouses catalog_items
+    const warehouseUpdates = new Map();
+    for (const item of payload) {
+      if (item.warehouse_ids && item.warehouse_ids.length > 0) {
+        for (const wId of item.warehouse_ids) {
+          if (!warehouseUpdates.has(wId)) {
+            warehouseUpdates.set(wId, []);
+          }
+          warehouseUpdates.get(wId).push(item.id);
+        }
+      }
+    }
+
+    for (const [wId, newItemIds] of warehouseUpdates.entries()) {
+      try {
+        const wh = warehouseMap.get(Array.from(warehouseMap.keys()).find(k => warehouseMap.get(k).id === wId));
+        if (wh) {
+          const existingCatalog = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
+          const updatedCatalog = Array.from(new Set([...existingCatalog, ...newItemIds]));
+          await base44.asServiceRole.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
+        }
+      } catch (e) {
+        console.error("Failed to update warehouse catalog for wId", wId, e);
+      }
+    }
 
     return Response.json({ success: true, created_count: created.length });
   } catch (error) {

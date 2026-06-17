@@ -99,10 +99,17 @@ Your task is to figure out:
 - price_col_idx: Column for Price (e.g. 'מחיר', 'Price')
 
 Optional fields:
-- unit_col_idx: Column for Unit (e.g. 'יחידת מידה', 'Unit', 'קג', 'יח')
-- catalog_number_col_idx: Column for Catalog Number (e.g. 'מק"ט', 'SKU')
-- discount_col_idx: Column for Discount (e.g. 'הנחה', 'Discount')
-- units_per_package_col_idx: Column for Units Per Package (e.g. 'כמות באריזה')
+- nickname_col_idx: Column for Nickname (e.g. 'כינוי')
+- unit_col_idx: Column for Unit (e.g. 'יחידת הפריט', 'יחידת מידה', 'Unit', 'קג', 'יח')
+- units_per_package_col_idx: Column for Units Per Package (e.g. 'כמות יחידות באריזה', 'כמות באריזה')
+- content_per_unit_col_idx: Column for Content per Unit (e.g. 'תכולה ליחידה')
+- content_unit_col_idx: Column for Content Unit (e.g. 'יחידת מידה לתכולה')
+- catalog_number_col_idx: Column for Catalog Number (e.g. 'מספר קטלוגי', 'מק"ט', 'SKU')
+- warehouse1_col_idx: Column for Warehouse 1 (e.g. 'מחסן')
+- warehouse2_col_idx: Column for Warehouse 2 (e.g. 'מחסן 2')
+- warehouse3_col_idx: Column for Warehouse 3 (e.g. 'מחסן 3')
+- discount_col_idx: Column for Discount (e.g. 'הנחה (%)', 'הנחה', 'Discount')
+- minimum_stock_col_idx: Column for Minimum stock (e.g. 'מלאי מינימום')
 
 If an optional field is missing, return -1. 
 If the data is completely unstructured or missing supplier/item name, return supplier_col_idx: -1.
@@ -114,11 +121,18 @@ Return a JSON object matching the schema exactly.`,
           data_start_row_idx: { type: 'integer' },
           supplier_col_idx: { type: 'integer' },
           item_name_col_idx: { type: 'integer' },
+          nickname_col_idx: { type: 'integer' },
           price_col_idx: { type: 'integer' },
           unit_col_idx: { type: 'integer' },
+          units_per_package_col_idx: { type: 'integer' },
+          content_per_unit_col_idx: { type: 'integer' },
+          content_unit_col_idx: { type: 'integer' },
           catalog_number_col_idx: { type: 'integer' },
+          warehouse1_col_idx: { type: 'integer' },
+          warehouse2_col_idx: { type: 'integer' },
+          warehouse3_col_idx: { type: 'integer' },
           discount_col_idx: { type: 'integer' },
-          units_per_package_col_idx: { type: 'integer' }
+          minimum_stock_col_idx: { type: 'integer' }
         },
         required: ['header_row_idx', 'data_start_row_idx', 'supplier_col_idx', 'item_name_col_idx', 'price_col_idx']
       }
@@ -174,11 +188,18 @@ Return a JSON object matching the schema exactly.`,
       parsedRows.push({
         sName,
         item_name: itemName,
+        nickname: response.nickname_col_idx !== -1 ? r[response.nickname_col_idx] : undefined,
         unit: response.unit_col_idx !== -1 ? r[response.unit_col_idx] : 'unit',
+        units_per_package: response.units_per_package_col_idx !== -1 ? r[response.units_per_package_col_idx] : 1,
+        content_per_unit: response.content_per_unit_col_idx !== -1 ? r[response.content_per_unit_col_idx] : 1,
+        content_unit: response.content_unit_col_idx !== -1 ? r[response.content_unit_col_idx] : 'unit',
         catalog_number: response.catalog_number_col_idx !== -1 ? r[response.catalog_number_col_idx] : undefined,
         price: response.price_col_idx !== -1 ? r[response.price_col_idx] : 0,
+        warehouse1: response.warehouse1_col_idx !== -1 ? r[response.warehouse1_col_idx] : undefined,
+        warehouse2: response.warehouse2_col_idx !== -1 ? r[response.warehouse2_col_idx] : undefined,
+        warehouse3: response.warehouse3_col_idx !== -1 ? r[response.warehouse3_col_idx] : undefined,
         discount: response.discount_col_idx !== -1 ? r[response.discount_col_idx] : 0,
-        units_per_package: response.units_per_package_col_idx !== -1 ? r[response.units_per_package_col_idx] : 1
+        minimum_stock: response.minimum_stock_col_idx !== -1 ? r[response.minimum_stock_col_idx] : 0
       });
     }
 
@@ -193,6 +214,36 @@ Return a JSON object matching the schema exactly.`,
       supplierMap.set(sName.toLowerCase(), newSup);
     }
 
+    // Get existing warehouses to resolve names to IDs if provided
+    const existingWarehouses = await base44.entities.Warehouse.filter({ created_by: targetEmail }, null, 5000);
+    const warehouseMap = new Map(existingWarehouses.map(w => [w.name.trim().toLowerCase(), w]));
+    const warehousesToCreate = new Set();
+    const newWarehousesMap = new Map();
+
+    // Find all required new warehouses
+    for (const row of parsedRows) {
+      for (const wName of [row.warehouse1, row.warehouse2, row.warehouse3]) {
+        if (wName && wName.trim() !== '') {
+          const w = wName.trim().toLowerCase();
+          if (!warehouseMap.has(w) && !warehousesToCreate.has(w)) {
+            warehousesToCreate.add(wName.trim());
+          }
+        }
+      }
+    }
+
+    // Create missing warehouses
+    for (const wName of warehousesToCreate) {
+      const newWh = await base44.asServiceRole.entities.Warehouse.create({
+        name: wName,
+        created_by: targetEmail,
+        store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined,
+        catalog_items: []
+      });
+      warehouseMap.set(wName.toLowerCase(), newWh);
+      newWarehousesMap.set(newWh.id, newWh);
+    }
+
     // Build items payload
     for (const row of parsedRows) {
       const supplier = supplierMap.get(row.sName.toLowerCase());
@@ -202,16 +253,37 @@ Return a JSON object matching the schema exactly.`,
       if (existingItemsSet.has(itemKey)) continue;
       existingItemsSet.add(itemKey);
 
+      const whNames = [];
+      const whIds = [];
+      for (const wName of [row.warehouse1, row.warehouse2, row.warehouse3]) {
+        if (wName && wName.trim() !== '') {
+          const wh = warehouseMap.get(wName.trim().toLowerCase());
+          if (wh && !whIds.includes(wh.id)) {
+            whIds.push(wh.id);
+            whNames.push(wh.name);
+          }
+        }
+      }
+
       itemsToCreate.push({
+        id: crypto.randomUUID(), // Add explicit ID so we can update warehouse catalogs later
         name: row.item_name,
+        nickname: String(row.nickname || '').trim() || undefined,
         supplier_id: supplier.id,
         supplier_name: supplier.name,
         unit: normalizeUnit(row.unit),
+        units_per_package: toNumber(row.units_per_package) || 1,
+        content_per_unit: toNumber(row.content_per_unit) || 1,
+        content_unit: normalizeUnit(row.content_unit),
         catalog_number: String(row.catalog_number || '').trim() || undefined,
         price: toNumber(row.price),
+        warehouse_ids: whIds,
+        warehouse_names: whNames,
+        warehouse_id: whIds[0] || "",
+        warehouse_name: whNames[0] || "",
         discount: toNumber(row.discount),
-        price_after_discount: toNumber(row.price) / (1 + (toNumber(row.discount) / 100)),
-        units_per_package: toNumber(row.units_per_package) || 1,
+        price_after_discount: toNumber(row.price) * (1 - (toNumber(row.discount) / 100)),
+        minimum_stock: toNumber(row.minimum_stock) || 0,
         created_by: targetEmail,
         store_owner_email: (user.acting_as_store_email || user.store_user_owner_email || user.acting_as_user_email) ? targetEmail : undefined
       });
@@ -222,6 +294,32 @@ Return a JSON object matching the schema exactly.`,
     for (let i = 0; i < itemsToCreate.length; i += 500) {
       const chunk = itemsToCreate.slice(i, i + 500);
       await base44.asServiceRole.entities.Item.bulkCreate(chunk);
+    }
+
+    // Update warehouses catalog_items
+    const warehouseUpdates = new Map();
+    for (const item of itemsToCreate) {
+      if (item.warehouse_ids && item.warehouse_ids.length > 0) {
+        for (const wId of item.warehouse_ids) {
+          if (!warehouseUpdates.has(wId)) {
+            warehouseUpdates.set(wId, []);
+          }
+          warehouseUpdates.get(wId).push(item.id);
+        }
+      }
+    }
+
+    for (const [wId, newItemIds] of warehouseUpdates.entries()) {
+      try {
+        const wh = warehouseMap.get(Array.from(warehouseMap.keys()).find(k => warehouseMap.get(k).id === wId));
+        if (wh) {
+          const existingCatalog = Array.isArray(wh.catalog_items) ? wh.catalog_items : [];
+          const updatedCatalog = Array.from(new Set([...existingCatalog, ...newItemIds]));
+          await base44.asServiceRole.entities.Warehouse.update(wh.id, { catalog_items: updatedCatalog });
+        }
+      } catch (e) {
+        console.error("Failed to update warehouse catalog for wId", wId, e);
+      }
     }
 
     return Response.json({ 

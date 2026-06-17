@@ -35,17 +35,22 @@ Deno.serve(async (req) => {
 
     // Prepare headers and sample rows (Hebrew)
     const headers = [
-      'שם פריט',
+      'שם הפריט',
+      'כינוי (בשפה שלך , יופיע לך בלבד)',
+      'יחידת הפריט (קילוגרם / גרם / ליטר / מיליליטר / ארגז)',
+      'כמות יחידות באריזה',
+      'תכולה ליחידה',
+      'יחידת מידה לתכולה',
+      'מחיר לפריט',
       'מספר קטלוגי',
-      'יחידה', // יח׳, ק"ג, ליטר, ארגז
-      'מחיר',
+      'מחסן',
+      'מחסן 2',
+      'מחסן 3',
       'הנחה (%)',
-      'יחידות בחבילה',
-      'מלאי מינימלי',
-      'הערות'
+      'מלאי מינימום'
     ];
-    const row1 = ['עגבניות', 'VEG-001', 'ק"ג', 9.9, 0, 1, 0, 'טרי'];
-    const row2 = ['קוקה קולה 330מ״ל', 'DRK-330', 'ארגז', 72, 10, 24, 2, 'מארז 24'];
+    const row1 = ['עגבניות', '', 'ק"ג', '', '', '', 9.9, 'VEG-001', 'מקרר ירקות', '', '', 0, 10];
+    const row2 = ['קוקה קולה 330מ״ל', '', 'ארגז', 24, 330, 'מיליליטר', 72, 'DRK-330', 'מחסן משקאות', '', '', 10, 2];
 
     // Write values
     const updateRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
@@ -57,8 +62,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         valueInputOption: 'USER_ENTERED',
         data: [
-          { range: 'Sheet1!A1:H1', values: [headers] },
-          { range: 'Sheet1!A2:H3', values: [row1, row2] }
+          { range: 'Sheet1!A1:M1', values: [headers] },
+          { range: 'Sheet1!A2:M3', values: [row1, row2] }
         ]
       })
     });
