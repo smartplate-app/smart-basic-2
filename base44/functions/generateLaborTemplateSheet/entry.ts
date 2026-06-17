@@ -12,8 +12,8 @@ async function createSpreadsheet(accessToken, title, isHebrew) {
     body: JSON.stringify({
       properties: { title },
       sheets: [
-        { properties: { title: isHebrew ? 'עובדים' : 'Workers', gridProperties: { columnCount: 25, frozenRowCount: 1 } } },
-        { properties: { title: isHebrew ? 'תפקידים' : 'Job Positions', gridProperties: { columnCount: 10, frozenRowCount: 1 } } }
+        { properties: { title: isHebrew ? 'עובדים' : 'Workers', gridProperties: { columnCount: 25, frozenRowCount: 1, frozenColumnCount: 1 } } },
+        { properties: { title: isHebrew ? 'תפקידים' : 'Job Positions', gridProperties: { columnCount: 10, frozenRowCount: 1, frozenColumnCount: 1 } } }
       ]
     })
   });
