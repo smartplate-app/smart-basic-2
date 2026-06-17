@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Loader, Edit, MapPin, Trash2, Package } from "lucide-react";
+import { Plus, Search, Loader, Edit, MapPin, Trash2, Package, LayoutGrid, List } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,8 @@ export default function WarehousesPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const { t } = useLanguage();
+  const [viewMode, setViewMode] = useState("cards"); // 'cards' or 'list'
+  const { t, language } = useLanguage();
   const [isViewer, setIsViewer] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -134,6 +135,16 @@ export default function WarehousesPage() {
     setShowForm(true);
   };
 
+  const handleDelete = async (warehouse) => {
+    if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
+    try {
+      await base44.entities.Warehouse.delete(warehouse.id);
+      setWarehouses(prev => prev.filter(w => w.id !== warehouse.id));
+    } catch (e) {
+      alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
+    }
+  };
+
   const filteredWarehouses = warehouses.filter(warehouse =>
     warehouse.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (warehouse.location && warehouse.location.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -162,15 +173,38 @@ export default function WarehousesPage() {
             <h1 className="text-3xl font-bold text-gray-900">{t('warehouse_management')}</h1>
             <p className="text-gray-600 mt-2">{t('manage_warehouses')}</p>
           </div>
-          {!isViewer && (
-            <Button
-              onClick={() => setShowForm(!showForm)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              <Plus className="w-5 h-5 ml-2" />
-              {t('add_warehouse')}
-            </Button>
-          )}
+          
+          <div className="flex gap-2 sm:gap-3 items-center w-full md:w-auto">
+            <div className="flex bg-white rounded-lg shadow-sm border shrink-0">
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('cards')}
+                className={viewMode === 'cards' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white h-9 w-9' : 'text-gray-600 hover:bg-gray-100 h-9 w-9'}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-[#d4a373] hover:bg-[#b88c60] text-white h-9 w-9' : 'text-gray-600 hover:bg-gray-100 h-9 w-9'}
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {!isViewer && (
+              <Button
+                onClick={() => setShowForm(!showForm)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 h-9 px-2 sm:px-4"
+              >
+                <Plus className="w-4 h-4 rtl:ml-2 ltr:mr-2" />
+                <span className="hidden sm:inline">{t('add_warehouse')}</span>
+                <span className="sm:hidden text-sm">{language === 'he' ? 'חדש' : 'New'}</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         <AnimatePresence>
@@ -267,97 +301,165 @@ export default function WarehousesPage() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <AnimatePresence>
-            {loading ? (
-              Array(6).fill(0).map((_, i) => (
-                <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
-                  <div className="h-6 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                </div>
-              ))
-            ) : (
-              filteredWarehouses.map((warehouse) => (
-                <motion.div
-                  key={warehouse.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg text-gray-900 mb-1">{warehouse.name}</h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors border border-indigo-100 font-medium">
-                              <Package className="w-3 h-3 mr-1" />
-                              {warehouse.catalog_items?.length || 0} {t('items')}
-                            </Badge>
-                          </div>
-                          {warehouse.location && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                              <MapPin className="w-4 h-4" />
-                              {warehouse.location}
-                            </div>
-                          )}
-                        </div>
-                        {!isViewer && (
-                          <div className="flex gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleEdit(warehouse)}
-                              className="text-gray-400 hover:text-indigo-600"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={async () => {
-                                if (!confirm(`Delete warehouse "${warehouse.name}"?`)) return;
-                                try {
-                                  await base44.entities.Warehouse.delete(warehouse.id);
-                                  setWarehouses(prev => prev.filter(w => w.id !== warehouse.id));
-                                } catch (e) {
-                                  alert((t('error_saving') || 'Error') + ': ' + (e.message || 'Failed to delete warehouse'));
-                                }
-                              }}
-                              className="text-gray-400 hover:text-red-600"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {warehouse.description && (
-                        <p className="text-sm text-gray-600">{warehouse.description}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <Badge variant={warehouse.is_active ? "default" : "secondary"} className="bg-indigo-100 text-indigo-800">
-                          {warehouse.is_active ? t('active') : t('inactive')}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {t('created_at')}: {new Date(warehouse.created_date).toLocaleDateString('he-IL')}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
-        </div>
-
-        {!loading && filteredWarehouses.length === 0 && (
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array(6).fill(0).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl p-6 shadow-sm animate-pulse">
+                <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : filteredWarehouses.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg mb-2">{t('no_warehouses')}</div>
             <div className="text-gray-500">{t('create_warehouse_first')}</div>
           </div>
+        ) : (
+          viewMode === 'cards' ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <AnimatePresence>
+                {filteredWarehouses.map((warehouse) => (
+                  <motion.div
+                    key={warehouse.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <Card className="hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-lg text-gray-900 mb-1 truncate" title={warehouse.name}>{warehouse.name}</h3>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors border border-indigo-100 font-medium">
+                                <Package className="w-3 h-3 mr-1" />
+                                {warehouse.catalog_items?.length || 0} {t('items')}
+                              </Badge>
+                            </div>
+                            {warehouse.location && (
+                              <div className="flex items-center gap-2 text-sm text-gray-600 mt-1 truncate" title={warehouse.location}>
+                                <MapPin className="w-4 h-4 shrink-0" />
+                                <span className="truncate">{warehouse.location}</span>
+                              </div>
+                            )}
+                          </div>
+                          {!isViewer && (
+                            <div className="flex gap-1 shrink-0">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleEdit(warehouse)}
+                                className="text-gray-400 hover:text-indigo-600"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(warehouse)}
+                                className="text-gray-400 hover:text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {warehouse.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2" title={warehouse.description}>{warehouse.description}</p>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <Badge variant={warehouse.is_active ? "default" : "secondary"} className={warehouse.is_active ? "bg-indigo-100 text-indigo-800 hover:bg-indigo-200" : ""}>
+                            {warehouse.is_active ? t('active') : t('inactive')}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {t('created_at')}: {new Date(warehouse.created_date).toLocaleDateString('he-IL')}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left rtl:text-right">
+                  <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                    <tr>
+                      <th scope="col" className="px-6 py-3">{t('warehouse_name')}</th>
+                      <th scope="col" className="px-6 py-3">{t('items')}</th>
+                      <th scope="col" className="px-6 py-3">{t('location')}</th>
+                      <th scope="col" className="px-6 py-3">{t('status') || (language === 'he' ? 'סטטוס' : 'Status')}</th>
+                      <th scope="col" className="px-6 py-3">{t('created_at')}</th>
+                      {!isViewer && <th scope="col" className="px-6 py-3 w-[100px] text-center">{language === 'he' ? 'פעולות' : 'Actions'}</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredWarehouses.map((warehouse, index) => (
+                      <tr key={warehouse.id} className={`bg-white border-b hover:bg-gray-50 transition-colors ${index === filteredWarehouses.length - 1 ? 'border-b-0' : ''}`}>
+                        <td className="px-6 py-4 font-medium text-gray-900 truncate max-w-[200px]" title={warehouse.name}>
+                          {warehouse.name}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 font-medium">
+                            <Package className="w-3 h-3 mr-1 rtl:ml-1 rtl:mr-0" />
+                            {warehouse.catalog_items?.length || 0}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 truncate max-w-[200px]" title={warehouse.location}>
+                          {warehouse.location ? (
+                            <div className="flex items-center gap-1.5 text-gray-600">
+                              <MapPin className="w-3.5 h-3.5 shrink-0" />
+                              <span className="truncate">{warehouse.location}</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge variant={warehouse.is_active ? "default" : "secondary"} className={warehouse.is_active ? "bg-indigo-100 text-indigo-800 hover:bg-indigo-200" : ""}>
+                            {warehouse.is_active ? t('active') : t('inactive')}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                          {new Date(warehouse.created_date).toLocaleDateString('he-IL')}
+                        </td>
+                        {!isViewer && (
+                          <td className="px-6 py-4">
+                            <div className="flex justify-center gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleEdit(warehouse)}
+                                className="h-8 w-8 text-gray-400 hover:text-indigo-600"
+                                title={t('edit')}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(warehouse)}
+                                className="h-8 w-8 text-gray-400 hover:text-red-600"
+                                title={t('delete')}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
         )}
       </div>
     </div>
