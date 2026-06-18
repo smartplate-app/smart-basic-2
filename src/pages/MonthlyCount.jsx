@@ -97,7 +97,7 @@ export default function MonthlyCountPage() {
             if (data?.success) {
                 countsData = data.data.inventory || [];
                 warehousesData = data.data.warehouses || [];
-                itemsData = data.data.items || [];
+                itemsData = (data.data.items || []).filter(i => i.is_pending_completion !== true && i.status !== 'pending_completion');
             }
         } else {
             console.log("[MonthlyCount] Loading data in parallel...");
@@ -112,18 +112,18 @@ export default function MonthlyCountPage() {
               if (mgData?.success) {
                 countsData = mgData.data.inventoryCounts || [];
                 warehousesData = mgData.data.warehouses || [];
-                itemsData = mgData.data.items || [];
+                itemsData = (mgData.data.items || []).filter(i => i.is_pending_completion !== true && i.status !== 'pending_completion');
               }
             } else {
               const query = { $or: [{ created_by: userEmail }, { store_owner_email: userEmail }] };
-              const [fetchedCounts, fetchedWarehouses, fetchedItems] = await Promise.all([
+              const [fetchedCounts, fetchedWarehouses, fetchedItemsRaw] = await Promise.all([
                 base44.entities.InventoryCount.filter(query, "-count_date", 10000),
                 base44.entities.Warehouse.filter({ created_by: userEmail, is_active: true }, "name", 10000),
                 base44.entities.Item.filter(query, "name", 10000)
               ]);
               countsData = fetchedCounts || [];
               warehousesData = fetchedWarehouses || [];
-              itemsData = fetchedItems || [];
+              itemsData = (fetchedItemsRaw || []).filter(i => i.is_pending_completion !== true && i.status !== 'pending_completion');
             }
         }
       } catch (e) {

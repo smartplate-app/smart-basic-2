@@ -723,6 +723,7 @@ export default function CountForm({ user, count, warehouses, items: initialItems
   useEffect(() => {
     const term = (availableSearch || '').trim().toLowerCase();
     const newFilteredItems = items.filter(item => {
+      if (item.is_pending_completion === true || item.status === 'pending_completion') return false;
       const isNotInCount = !formData.items.some(countItem => countItem.item_id === item.id && countItem.warehouse_id === currentWarehouseTab);
       const matches = !term || 
         (item.name || '').toLowerCase().includes(term) ||
@@ -747,8 +748,9 @@ export default function CountForm({ user, count, warehouses, items: initialItems
       }
       
       workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;
-      const fetchedItems = await base44.entities.Item.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }, "name", 10000);
-      setItems(fetchedItems || []);
+      const fetchedItemsRaw = await base44.entities.Item.filter({ $or: [{ created_by: workingEmail }, { store_owner_email: workingEmail }] }, "name", 10000);
+      const fetchedItems = (fetchedItemsRaw || []).filter(i => i.is_pending_completion !== true && i.status !== 'pending_completion');
+      setItems(fetchedItems);
     } catch (e) {
       console.error("Failed to reload items", e);
     } finally {

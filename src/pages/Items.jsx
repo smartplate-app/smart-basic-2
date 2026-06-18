@@ -768,6 +768,9 @@ const handleCleanOrphans = async (ownerEmail) => {
 
    const currentWarehouse = selectedWarehouseId !== 'all' ? warehouses.find(w => w.id === selectedWarehouseId) : null;
   const filteredItems = items.filter(item => {
+    // Hide items that are pending completion (they are handled in InvoiceItems now)
+    if (item.is_pending_completion === true || item.status === 'pending_completion') return false;
+
     const searchStr = String(searchTerm || '').toLowerCase();
     const matchesSearch = !searchStr || 
                          String(item.name || '').toLowerCase().includes(searchStr) ||
@@ -941,168 +944,7 @@ const handleCleanOrphans = async (ownerEmail) => {
           </div>
         </div>
 
-        {(() => {
-          // Now incomplete items are handled via InvoiceItems side bar, so we don't need to show them here as much, but we'll keep the ones that are still Item entities
-          const incompleteItemsAll = items.filter(item => item.is_pending_completion === true || item.status === 'pending_completion');
-          if (incompleteItemsAll.length === 0) return null;
-          
-          const incompleteItems = incompleteItemsAll.filter(item => 
-            !pendingSearchTerm || item.name?.toLowerCase().includes(pendingSearchTerm.toLowerCase())
-          );
-
-          return (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 sm:p-4 mb-6">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-start gap-2.5 sm:gap-3 px-1 sm:px-0">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-amber-900 text-sm sm:text-base">
-                      {language === 'he' ? 'פריטים דורשי השלמה' : 'Items needing completion'}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-amber-800 mt-0.5">
-                      {language === 'he' 
-                        ? 'הפריטים הבאים נוספו במהלך קבלת אספקה/ספירת מלאי ויש להשלים את הגדרתם (לשייך לספק ולעדכן פרטים):' 
-                        : 'The following items were added during supply receipt/inventory count and need to be completed:'}
-                    </p>
-                  </div>
-                </div>
-                <div className="w-full min-w-0">
-
-                  <div className="flex flex-col md:flex-row gap-3 mb-4 items-start md:items-center">
-                    <div className="relative flex-1 w-full max-w-sm flex items-center gap-2">
-                      <div className="flex items-center justify-center shrink-0 rtl:mr-[9px] sm:rtl:mr-[13px] ltr:ml-[9px] sm:ltr:ml-[13px]">
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500 cursor-pointer"
-                          checked={incompleteItems.length > 0 && selectedPendingIds.length === incompleteItems.length}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedPendingIds(incompleteItems.map(i => i.id));
-                            } else {
-                              setSelectedPendingIds([]);
-                            }
-                          }}
-                          title={language === 'he' ? 'בחר הכל' : 'Select all'}
-                        />
-                      </div>
-                      <div className="relative flex-1">
-                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 rtl:right-3 ltr:left-3" />
-                        <Input
-                          placeholder={language === 'he' ? 'חיפוש בפריטים להשלמה...' : 'Search pending items...'}
-                          value={pendingSearchTerm}
-                          onChange={(e) => setPendingSearchTerm(e.target.value)}
-                          className="rtl:pr-9 ltr:pl-9 h-9 bg-white border-amber-200 focus-visible:ring-amber-400"
-                        />
-                      </div>
-                    </div>
-                    {selectedPendingIds.length > 0 && !isViewer && (
-                      <div className="flex overflow-x-auto gap-2 w-full md:w-auto items-center pb-1 -mb-1 hide-scrollbar">
-                        <span className="text-sm text-amber-800 font-medium whitespace-nowrap shrink-0">
-                          {selectedPendingIds.length} {language === 'he' ? 'נבחרו' : 'selected'}
-                        </span>
-                        <Button size="sm" variant="outline" className="h-9 px-2.5 sm:px-3 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 whitespace-nowrap shrink-0" onClick={() => setShowBulkSupplierModal(true)}>
-                          {language === 'he' ? 'שייך לספק' : 'Assign Supplier'}
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-9 px-2.5 sm:px-3 bg-white border-amber-300 text-amber-900 hover:bg-amber-100 whitespace-nowrap shrink-0" onClick={() => { setPendingActionType('warehouse'); setShowBulkWarehouseModal(true); }}>
-                          {language === 'he' ? 'שייך למחסן' : 'Assign Warehouse'}
-                        </Button>
-                        <Button size="sm" variant="destructive" className="h-9 px-2.5 sm:px-3 bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 hover:text-red-800 whitespace-nowrap shrink-0" onClick={() => { setPendingActionType('delete'); setShowDeleteDialog(true); }}>
-                          <Trash2 className="w-4 h-4 rtl:ml-1 ltr:mr-1" />
-                          {language === 'he' ? 'מחק' : 'Delete'}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-2 overflow-x-hidden">
-                    {incompleteItems.map(item => (
-                      <div key={item.id} onClick={(e) => {
-                        if(e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
-                        if (selectedPendingIds.includes(item.id)) setSelectedPendingIds(selectedPendingIds.filter(id => id !== item.id));
-                        else setSelectedPendingIds([...selectedPendingIds, item.id]);
-                      }} className={`bg-white border ${selectedPendingIds.includes(item.id) ? 'border-amber-500 ring-1 ring-amber-500' : 'border-amber-200'} shadow-sm rounded-lg p-2 sm:p-3 hover:bg-amber-50/50 transition-colors relative flex flex-col gap-2 cursor-pointer w-full overflow-hidden`}>
-                        {/* Top row: Checkbox, Name, Buttons */}
-                        <div className="flex items-center gap-2">
-                          <input 
-                            type="checkbox" 
-                            className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500 shrink-0"
-                            checked={selectedPendingIds.includes(item.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) setSelectedPendingIds([...selectedPendingIds, item.id]);
-                              else setSelectedPendingIds(selectedPendingIds.filter(id => id !== item.id));
-                            }}
-                          />
-                          <h4 
-                            className="font-semibold text-sm sm:text-base text-gray-900 truncate flex-1 cursor-pointer hover:text-blue-600 hover:underline transition-colors" 
-                            title={item.name}
-                            onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }}
-                          >
-                            {item.name}
-                          </h4>
-                          
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {item.source_document_id && (
-                              <button
-                                  onClick={(e) => { e.stopPropagation(); setPreviewDoc({ id: item.source_document_id, type: item.source_type }); }}
-                                  className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-amber-700 hover:text-amber-900 bg-amber-100/50 hover:bg-amber-100 px-1.5 sm:px-2 py-1 rounded transition-colors border border-amber-200/50"
-                                  title={item.source_document_number}
-                                >
-                                  <FileText className="w-3.5 h-3.5 shrink-0" />
-                                  <span className="truncate font-medium max-w-[80px] hidden sm:inline">
-                                    {item.source_type === 'inventory_count'
-                                      ? (language === 'he' ? `ספירה: ${item.source_document_number || 'ללא שם'}` : `Count: ${item.source_document_number || 'Unnamed'}`)
-                                      : item.source_type === 'supply_receipt'
-                                      ? (language === 'he' ? `מסמך: ${item.source_document_number || 'ללא מספר'}` : `Doc: ${item.source_document_number || 'N/A'}`)
-                                      : (language === 'he' ? 'מקור' : 'Source')}
-                                  </span>
-                                </button>
-                            )}
-                            <button onClick={(e) => { e.stopPropagation(); handleEdit(items.find(i => i.id === item.id) || item); }} className="p-1 sm:p-1.5 text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 rounded transition-colors" title={language === 'he' ? 'ערוך' : 'Edit'}>
-                              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Bottom row: Details */}
-                        <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 pl-6 rtl:pr-6 rtl:pl-0">
-                          <div className="flex items-center gap-1 whitespace-nowrap">
-                            <span className="text-gray-400">{language === 'he' ? 'מחיר:' : 'Price:'}</span>
-                            <span className="font-medium">₪{item.price || 0}</span>
-                          </div>
-                          <div className="flex items-center gap-1 whitespace-nowrap">
-                            <span className="text-gray-400">{language === 'he' ? 'הנחה:' : 'Discount:'}</span>
-                            <span className="font-medium">{item.discount || 0}%</span>
-                          </div>
-                          {item.supplier_name && item.supplier_name !== 'להשלמה' && item.supplier_name !== 'pending' && item.supplier_name !== 'Pending' && (
-                            <div className="flex items-center gap-1 truncate min-w-0">
-                              <span className="text-gray-400 whitespace-nowrap">{language === 'he' ? 'ספק:' : 'Supplier:'}</span>
-                              <span className="font-medium truncate" title={item.supplier_name}>{item.supplier_name}</span>
-                            </div>
-                          )}
-                          {((item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0) || item.warehouse_name) && (
-                            <div className="flex items-center gap-1 truncate min-w-0 text-blue-600">
-                              <span className="text-blue-400 whitespace-nowrap">{language === 'he' ? 'מחסנים:' : 'Warehouses:'}</span>
-                              <span className="font-medium truncate" title={item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0 ? item.warehouse_names.filter(Boolean).join(', ') : item.warehouse_name}>
-                                {item.warehouse_names && item.warehouse_names.filter(Boolean).length > 0 
-                                  ? item.warehouse_names.filter(Boolean).join(', ') 
-                                  : item.warehouse_name}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {incompleteItems.length === 0 && incompleteItemsAll.length > 0 && (
-                    <div className="text-center py-4 text-amber-800/70 text-sm">
-                      {language === 'he' ? 'לא נמצאו פריטים תואמים לחיפוש.' : 'No items match your search.'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        {/* Items needing completion block removed as requested - now handled in InvoiceItems */}
 
         <AnimatePresence>
           {!isViewer && showForm && (

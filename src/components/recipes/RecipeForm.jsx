@@ -78,22 +78,24 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
          return data;
       };
 
-      let fetchedItems, fetchedPrep, fetchedSuppliers, fetchedWarehouses;
+      let fetchedItemsRaw, fetchedPrep, fetchedSuppliers, fetchedWarehouses;
 
       if (cachedFormEntities && (Date.now() - lastEntitiesFetchTime < 60000)) {
-        fetchedItems = cachedFormEntities.items;
-        fetchedPrep = cachedFormEntities.prepRecipes;
-        fetchedSuppliers = cachedFormEntities.suppliers;
-        fetchedWarehouses = cachedFormEntities.warehouses;
+      fetchedItemsRaw = cachedFormEntities.items;
+      fetchedPrep = cachedFormEntities.prepRecipes;
+      fetchedSuppliers = cachedFormEntities.suppliers;
+      fetchedWarehouses = cachedFormEntities.warehouses;
       } else {
-        fetchedItems = await fetchWithFallback('Item', 'name');
-        fetchedPrep = await fetchWithFallback('Recipe', 'name', { type: 'prep_recipe' });
-        fetchedSuppliers = await fetchWithFallback('Supplier', 'name');
-        fetchedWarehouses = await fetchWithFallback('Warehouse', 'name');
-        
-        cachedFormEntities = { items: fetchedItems, prepRecipes: fetchedPrep, suppliers: fetchedSuppliers, warehouses: fetchedWarehouses };
-        lastEntitiesFetchTime = Date.now();
+      fetchedItemsRaw = await fetchWithFallback('Item', 'name');
+      fetchedPrep = await fetchWithFallback('Recipe', 'name', { type: 'prep_recipe' });
+      fetchedSuppliers = await fetchWithFallback('Supplier', 'name');
+      fetchedWarehouses = await fetchWithFallback('Warehouse', 'name');
+
+      cachedFormEntities = { items: fetchedItemsRaw, prepRecipes: fetchedPrep, suppliers: fetchedSuppliers, warehouses: fetchedWarehouses };
+      lastEntitiesFetchTime = Date.now();
       }
+
+      const fetchedItems = fetchedItemsRaw.filter(i => i.is_pending_completion !== true && i.status !== 'pending_completion');
 
       setItems(fetchedItems);
       setPrepRecipes(fetchedPrep);

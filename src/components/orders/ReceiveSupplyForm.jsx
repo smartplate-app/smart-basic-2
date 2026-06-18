@@ -847,7 +847,9 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
             store_owner_email: workingEmail,
             created_by: user?.email
           };
-          await base44.entities.InvoiceItem.create(itemPayload);
+          if (!item.item_id && item.item_name) {
+            await base44.entities.InvoiceItem.create(itemPayload);
+          }
         }
       }
     } catch (e) {
@@ -1723,7 +1725,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                       store_owner_email: workingEmail,
                                       created_by: user?.email
                                     });
-                                    item.item_id = createdItem.id;
+                                    item.item_id = createdItem.id; // Assigning the InvoiceItem ID so it doesn't get created again
                                   } catch(e) { console.error(e); }
                                 }
                               }
