@@ -18,6 +18,7 @@ import MenuEngineeringPage from './pages/MenuEngineering';
 import InstagramStoryGreek from './pages/InstagramStoryGreek';
 import POSSettings from './pages/POSSettings';
 import PriceChangesPage from './pages/PriceChanges';
+import InvoiceItemsPage from './pages/InvoiceItems';
 import StoreLogin from './pages/StoreLogin';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
@@ -171,6 +172,7 @@ const AuthenticatedApp = () => {
           <Route path="/InstagramStoryGreek" element={<InstagramStoryGreek />} />
           <Route path="/pos-settings" element={<POSSettings />} />
           <Route path="/PriceChanges" element={<PriceChangesPage />} />
+          <Route path="/InvoiceItems" element={<InvoiceItemsPage />} />
           <Route path="/ManagersSection" element={<ManagersSection />} />
           <Route path="*" element={<PageNotFound />} />
         </Route>

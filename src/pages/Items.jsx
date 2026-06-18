@@ -942,7 +942,8 @@ const handleCleanOrphans = async (ownerEmail) => {
         </div>
 
         {(() => {
-          const incompleteItemsAll = items.filter(item => item.supplier_id === 'pending' || item.supplier_name === 'להשלמה' || item.supplier_name === 'Pending' || item.is_pending_completion === true || item.status === 'pending_completion');
+          // Now incomplete items are handled via InvoiceItems side bar, so we don't need to show them here as much, but we'll keep the ones that are still Item entities
+          const incompleteItemsAll = items.filter(item => item.is_pending_completion === true || item.status === 'pending_completion');
           if (incompleteItemsAll.length === 0) return null;
           
           const incompleteItems = incompleteItemsAll.filter(item => 

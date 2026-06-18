@@ -171,6 +171,7 @@ const [authLoading, setAuthLoading] = useState(() => {
           { title: t('nav_items'), url: createPageUrl("Items"), icon: Package, adminOnly: false, workerHidden: true },
           { title: t('warehouse_management'), url: createPageUrl("Warehouses"), icon: Warehouse, adminOnly: false, workerHidden: true },
           { title: t('nav_monthly_count'), url: createPageUrl("MonthlyCount"), icon: Warehouse, adminOnly: false, workerHidden: false },
+          { title: language === 'he' ? 'פריטים מחשבוניות' : 'Invoice Items', url: createPageUrl("InvoiceItems"), icon: Package, adminOnly: false, workerHidden: true },
           { title: language === 'he' ? 'דוחות COGS' : 'COGS Reports', url: createPageUrl("CogsReports"), icon: BarChart3, adminOnly: false, workerHidden: true },
           { title: language === 'he' ? 'היסטוריית מחירים' : 'Price Changes', url: createPageUrl("PriceChanges"), icon: TrendingUp, adminOnly: false, workerHidden: true },
           { title: language === 'he' ? 'דיווח זריקות' : 'Waste', url: createPageUrl("WasteReports"), icon: TrendingDown, adminOnly: false, workerHidden: true },

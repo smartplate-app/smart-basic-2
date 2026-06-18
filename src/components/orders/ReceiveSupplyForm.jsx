@@ -842,15 +842,12 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
             supplier_name: formData.supplier_name || 'להשלמה',
             price: item.actual_price || 0,
             unit: item.unit || 'unit',
-            is_pending_completion: true,
-            status: 'pending_completion',
-            store_owner_email: workingEmail,
-            created_by: user?.email,
-            source_type: 'supply_receipt',
             source_document_number: formData.invoice_number || formData.order_number || '',
-            source_document_id: receiptId || ''
+            source_document_id: receiptId || '',
+            store_owner_email: workingEmail,
+            created_by: user?.email
           };
-          await base44.entities.Item.create(itemPayload);
+          await base44.entities.InvoiceItem.create(itemPayload);
         }
       }
     } catch (e) {
@@ -1715,18 +1712,16 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 for (const item of itemsWithIssues) {
                                   try {
                                     const workingEmail = user?.acting_as_store_email || user?.acting_as_user_email || user?.store_user_owner_email || user?.email;
-                                    const createdItem = await base44.entities.Item.create({
+                                    const createdItem = await base44.entities.InvoiceItem.create({
                                       name: item.item_name,
                                       supplier_id: formData.supplier_id || 'pending',
                                       supplier_name: formData.supplier_name || 'להשלמה',
                                       price: item.actual_price || 0,
                                       unit: item.unit || 'unit',
-                                      is_pending_completion: true,
-                                      status: 'pending_completion',
+                                      source_document_number: formData.invoice_number || formData.order_number || '',
+                                      source_document_id: "",
                                       store_owner_email: workingEmail,
-                                      created_by: user?.email,
-                                      source_type: 'supply_receipt',
-                                      source_document_number: formData.invoice_number || formData.order_number || ''
+                                      created_by: user?.email
                                     });
                                     item.item_id = createdItem.id;
                                   } catch(e) { console.error(e); }
