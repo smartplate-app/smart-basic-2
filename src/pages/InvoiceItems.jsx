@@ -36,19 +36,20 @@ export default function InvoiceItemsPage() {
             { created_by: effectiveEmail },
             { store_owner_email: effectiveEmail }
           ]
-        }, "-created_date"),
+        }, "-created_date", 10000),
         base44.entities.Item.filter({
           $or: [
             { created_by: effectiveEmail },
             { store_owner_email: effectiveEmail }
           ]
-        }, "name")
+        }, "name", 10000)
       ]);
 
-      setInvoiceItems(allInvoiceItems);
-      setItems(allItems);
+      setInvoiceItems(allInvoiceItems || []);
+      setItems(allItems || []);
     } catch (e) {
       console.error(e);
+      alert("Error loading data: " + e.message);
     } finally {
       setLoading(false);
     }
