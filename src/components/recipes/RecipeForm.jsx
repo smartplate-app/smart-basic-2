@@ -81,7 +81,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
 
       let fetchedItemsRaw, fetchedPrep, fetchedSuppliers, fetchedWarehouses;
 
-      if (cachedFormEntities && (Date.now() - lastEntitiesFetchTime < 60000)) {
+      if (cachedFormEntities && (Date.now() - lastEntitiesFetchTime < 5000)) {
       fetchedItemsRaw = cachedFormEntities.items;
       fetchedPrep = cachedFormEntities.prepRecipes;
       fetchedSuppliers = cachedFormEntities.suppliers;

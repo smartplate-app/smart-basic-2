@@ -40,7 +40,7 @@ export default function RecipesPage() {
       if (!currentUser) {
         const data = await base44.entities.Recipe.filter({}, "-created_date", 10000);
         setRecipes(data || []);
-        setCache('recipes_v1', { recipes: data || [] });
+        setCache('recipes_v2', { recipes: data || [] });
         setLoading(false);
         return;
       }
@@ -83,7 +83,7 @@ export default function RecipesPage() {
         data = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       }
       setRecipes(data || []);
-      setCache('recipes_v1', { recipes: data || [] });
+      setCache('recipes_v2', { recipes: data || [] });
     } catch (e) {
       console.error(e);
     }
@@ -91,7 +91,8 @@ export default function RecipesPage() {
   };
 
   useEffect(() => {
-    const c = getCache('recipes_v1');
+    // Force cache bust to v2 to clear any stale recipe data
+    const c = getCache('recipes_v2');
     if (c?.data) {
       setRecipes(c.data.recipes || []);
     }
