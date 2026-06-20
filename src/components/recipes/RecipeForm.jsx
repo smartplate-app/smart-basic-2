@@ -31,6 +31,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [editingPrepRecipe, setEditingPrepRecipe] = useState(null);
   const [swappingIndex, setSwappingIndex] = useState(null);
   const [swapSearchTerm, setSwapSearchTerm] = useState("");
 
@@ -453,10 +454,10 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   return (
     <Dialog open={true} onOpenChange={(open) => {
       // Don't close if editing item modal is open
-      if (!open && !editingItem) onCancel();
+      if (!open && !editingItem && !editingPrepRecipe) onCancel();
     }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => {
-        if (editingItem) e.preventDefault();
+        if (editingItem || editingPrepRecipe) e.preventDefault();
       }}>
         <DialogHeader>
           <DialogTitle>{recipe ? (language === 'he' ? 'עריכת מתכון' : 'Edit Recipe') : (language === 'he' ? 'מתכון חדש' : 'New Recipe')}</DialogTitle>
@@ -676,15 +677,18 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
               {formData.ingredients.map((ing, idx) => (
                 <div key={idx} className="flex items-center gap-2 bg-gray-50 p-2 rounded-md border">
                   <div 
-                    className={`flex-1 flex flex-col justify-center gap-0.5 ${!ing.is_prep_recipe ? 'cursor-pointer hover:text-[#d4a373] transition-colors' : ''}`}
+                    className="flex-1 flex flex-col justify-center gap-0.5 cursor-pointer hover:text-[#d4a373] transition-colors"
                     onClick={(e) => {
-                      if (!ing.is_prep_recipe) {
-                        e.stopPropagation();
+                      e.stopPropagation();
+                      if (ing.is_prep_recipe) {
+                        const prepToEdit = prepRecipes.find(r => r.id === ing.item_id);
+                        if (prepToEdit) setEditingPrepRecipe(prepToEdit);
+                      } else {
                         const itemToEdit = ing.original_item || items.find(i => i.id === ing.item_id);
                         if (itemToEdit) setEditingItem(itemToEdit);
                       }
                     }}
-                    title={!ing.is_prep_recipe ? (language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item') : ''}
+                    title={ing.is_prep_recipe ? (language === 'he' ? 'לחץ לעריכת מתכון הכנה' : 'Click to edit prep recipe') : (language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item')}
                   >
                     <div className="flex items-center gap-1.5">
                       {!ing.is_prep_recipe && (ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name) && (
@@ -695,7 +699,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       {ing.is_prep_recipe && (
                         <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'הכנה' : 'PREP'}</span>
                       )}
-                      <span className={`font-medium text-sm ${!ing.is_prep_recipe ? 'underline decoration-dotted underline-offset-2' : ''}`}>{ing.item_name}</span>
+                      <span className="font-medium text-sm underline decoration-dotted underline-offset-2">{ing.item_name}</span>
                     </div>
                     {(() => {
                       if (ing.is_prep_recipe) return null;
@@ -806,6 +810,43 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
           isOpen={!!editingItem}
           onClose={() => setEditingItem(null)}
           onSave={handleItemSave}
+        />
+      )}
+
+      {editingPrepRecipe && (
+        <RecipeForm
+          recipe={editingPrepRecipe}
+          onSave={(savedPrep) => {
+            setPrepRecipes(prev => {
+              const newPreps = prev.map(p => p.id === savedPrep.id ? savedPrep : p);
+              if (cachedFormEntities) cachedFormEntities.prepRecipes = newPreps;
+              return newPreps;
+            });
+            
+            let newIngredients = formData.ingredients.map(ing => {
+              if (ing.item_id === savedPrep.id) {
+                const costPerUnit = savedPrep.yield_quantity > 0 ? (savedPrep.total_cost || 0) / savedPrep.yield_quantity : (savedPrep.total_cost || 0);
+                const roundedCost = Number((costPerUnit * ing.quantity).toFixed(2));
+                return {
+                  ...ing,
+                  item_name: savedPrep.name,
+                  unit: savedPrep.yield_unit || 'unit',
+                  cost: roundedCost,
+                  unit_price: Number(costPerUnit.toFixed(2))
+                };
+              }
+              return ing;
+            });
+            
+            setFormData({
+              ...formData,
+              ingredients: newIngredients,
+              total_cost: calculateTotalCost(newIngredients)
+            });
+            
+            setEditingPrepRecipe(null);
+          }}
+          onCancel={() => setEditingPrepRecipe(null)}
         />
       )}
       
