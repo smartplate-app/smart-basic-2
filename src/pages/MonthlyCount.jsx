@@ -848,7 +848,7 @@ export default function MonthlyCountPage() {
           )}
         </AnimatePresence>
 
-        {warehouses.length > 0 && (
+        {(warehouses.length > 0 || counts.length > 0) && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="relative">
