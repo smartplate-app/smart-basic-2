@@ -7,20 +7,56 @@ import { useLanguage } from "../LanguageProvider";
 export default function RecipeListView({ recipes, onEdit, onDelete }) {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
-  const [sortDir, setSortDir] = useState(null);
+  const [sortCol, setSortCol] = useState('name');
+  const [sortDir, setSortDir] = useState('asc');
 
-  const toggleSort = () => {
-    if (sortDir === null) setSortDir('asc');
-    else if (sortDir === 'asc') setSortDir('desc');
-    else setSortDir(null);
+  const toggleSort = (col) => {
+    if (sortCol === col) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+  };
+
+  const getCostPct = (recipe) => {
+    if (recipe.type !== 'sale_item') return 0;
+    const actualExclVat = (recipe.sale_price || 0) / 1.18;
+    return actualExclVat > 0 ? ((recipe.total_cost || 0) / actualExclVat) * 100 : 0;
   };
 
   const sortedRecipes = [...recipes].sort((a, b) => {
-    if (!sortDir) return 0;
-    const nameA = a.name || '';
-    const nameB = b.name || '';
-    if (sortDir === 'asc') return nameA.localeCompare(nameB, language === 'he' ? 'he' : 'en');
-    return nameB.localeCompare(nameA, language === 'he' ? 'he' : 'en');
+    let valA, valB;
+    if (sortCol === 'name') {
+      valA = a.name || '';
+      valB = b.name || '';
+    } else if (sortCol === 'type') {
+      valA = a.type || '';
+      valB = b.type || '';
+    } else if (sortCol === 'total_cost') {
+      const yieldA = a.type === 'prep_recipe' && a.yield_quantity > 0 ? a.yield_quantity : 1;
+      const yieldB = b.type === 'prep_recipe' && b.yield_quantity > 0 ? b.yield_quantity : 1;
+      valA = (a.total_cost || 0) / yieldA;
+      valB = (b.total_cost || 0) / yieldB;
+    } else if (sortCol === 'sale_price') {
+      valA = a.sale_price || 0;
+      valB = b.sale_price || 0;
+    } else if (sortCol === 'cost_pct') {
+      valA = getCostPct(a);
+      valB = getCostPct(b);
+    }
+
+    if (valA === valB) return 0;
+    
+    if (typeof valA === 'string' && typeof valB === 'string') {
+      const cmp = valA.localeCompare(valB, language === 'he' ? 'he' : 'en');
+      return sortDir === 'asc' ? cmp : -cmp;
+    }
+
+    // Number comparison
+    if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+    return 0;
   });
 
   return (
@@ -30,17 +66,49 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
           <TableRow>
             <TableHead 
               className={`cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? "text-right" : "text-left"}`}
-              onClick={toggleSort}
+              onClick={() => toggleSort('name')}
             >
               <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
                 {language === 'he' ? 'שם המתכון' : 'Recipe Name'}
-                {sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : sortDir === 'desc' ? <ArrowDown className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4 text-gray-400" />}
+                {sortCol === 'name' ? (sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />) : <ArrowUpDown className="w-4 h-4 text-gray-400" />}
               </div>
             </TableHead>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'סוג' : 'Type'}</TableHead>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'עלות כוללת' : 'Total Cost'}</TableHead>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'מחיר מכירה' : 'Sale Price'}</TableHead>
-            <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'אחוז עלות' : 'Cost %'}</TableHead>
+            <TableHead 
+              className={`cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? "text-right" : "text-left"}`}
+              onClick={() => toggleSort('type')}
+            >
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'סוג' : 'Type'}
+                {sortCol === 'type' ? (sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />) : <ArrowUpDown className="w-4 h-4 text-gray-400" />}
+              </div>
+            </TableHead>
+            <TableHead 
+              className={`cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? "text-right" : "text-left"}`}
+              onClick={() => toggleSort('total_cost')}
+            >
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'עלות כוללת' : 'Total Cost'}
+                {sortCol === 'total_cost' ? (sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />) : <ArrowUpDown className="w-4 h-4 text-gray-400" />}
+              </div>
+            </TableHead>
+            <TableHead 
+              className={`cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? "text-right" : "text-left"}`}
+              onClick={() => toggleSort('sale_price')}
+            >
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'מחיר מכירה' : 'Sale Price'}
+                {sortCol === 'sale_price' ? (sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />) : <ArrowUpDown className="w-4 h-4 text-gray-400" />}
+              </div>
+            </TableHead>
+            <TableHead 
+              className={`cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? "text-right" : "text-left"}`}
+              onClick={() => toggleSort('cost_pct')}
+            >
+              <div className={`flex items-center gap-2 ${isRTL ? "justify-start" : ""}`}>
+                {language === 'he' ? 'אחוז עלות' : 'Cost %'}
+                {sortCol === 'cost_pct' ? (sortDir === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />) : <ArrowUpDown className="w-4 h-4 text-gray-400" />}
+              </div>
+            </TableHead>
             <TableHead className={isRTL ? "text-right" : "text-left"}>{language === 'he' ? 'פעולות' : 'Actions'}</TableHead>
           </TableRow>
         </TableHeader>
