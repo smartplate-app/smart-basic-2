@@ -55,11 +55,6 @@ export default function RecipesPage() {
         // Manager: use service-role function to bypass RLS
         const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail, entities: ['recipes'] });
         data = mgData?.data?.recipes || [];
-      } else if (isAdminControlling) {
-        const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
-        if (adminData?.success && adminData?.data?.recipes) {
-          data = adminData.data.recipes;
-        }
       } else {
         let data1 = await base44.entities.Recipe.filter({ created_by: targetEmail }, "-created_date", 10000);
         let data2 = await base44.entities.Recipe.filter({ store_owner_email: targetEmail }, "-created_date", 10000);
