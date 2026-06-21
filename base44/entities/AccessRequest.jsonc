@@ -19,6 +19,10 @@
       "type": "string",
       "description": "Business/restaurant name"
     },
+    "managers_count": {
+      "type": "number",
+      "description": "How many managers they have"
+    },
     "message": {
       "type": "string",
       "description": "Optional message from requester"
@@ -38,6 +42,8 @@
   },
   "required": [
     "full_name",
-    "email"
+    "email",
+    "phone",
+    "business_name"
   ]
 }

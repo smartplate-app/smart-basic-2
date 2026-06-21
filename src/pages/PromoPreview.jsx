@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
 import { CheckCircle2, TrendingDown, Users, Receipt, ArrowRight, BarChart3, Clock, ShieldCheck } from "lucide-react";
+import WaitlistDialog from "@/components/WaitlistDialog";
 
 const welcomeTranslations = {
   en: {
@@ -81,6 +82,7 @@ export default function WelcomePublic() {
 
   const t = (key) => welcomeTranslations[language]?.[key] || key;
   const isRTL = false;
+  const [showWaitlist, setShowWaitlist] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -162,7 +164,7 @@ export default function WelcomePublic() {
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <Button variant="ghost" onClick={handleSignIn} className="font-semibold px-2 sm:px-4">{t('wp_sign_in')}</Button>
-              <Button onClick={() => window.location.href = createPageUrl('Register')} className="bg-[#107c41] hover:bg-[#0c5e31] text-white px-3 sm:px-4">{t('wp_get_started')}</Button>
+              <Button onClick={() => setShowWaitlist(true)} className="bg-[#107c41] hover:bg-[#0c5e31] text-white px-3 sm:px-4">{t('wp_get_started')}</Button>
             </div>
           </div>
         </div>
@@ -181,7 +183,7 @@ export default function WelcomePublic() {
               {t('wp_hero_subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" onClick={() => window.location.href = createPageUrl('Register')} className="w-full sm:w-auto text-lg h-14 px-8 bg-[#107c41] hover:bg-[#0c5e31]">
+              <Button size="lg" onClick={() => setShowWaitlist(true)} className="w-full sm:w-auto text-lg h-14 px-8 bg-[#107c41] hover:bg-[#0c5e31]">
                 {t('wp_request_access')} <ArrowRight className={`w-5 h-5 ml-2`} />
               </Button>
               <Button size="lg" variant="outline" onClick={handleSignIn} className="w-full sm:w-auto text-lg h-14 px-8">
@@ -260,7 +262,7 @@ export default function WelcomePublic() {
                   <span className="text-gray-700" dangerouslySetInnerHTML={{ __html: t('wp_comp3').replace(/^([^:]+:)/, '<strong>$1</strong>') }} />
                 </li>
               </ul>
-              <Button onClick={() => window.location.href = createPageUrl('Register')} className="bg-gray-900 hover:bg-gray-800 text-white px-8">
+              <Button onClick={() => setShowWaitlist(true)} className="bg-gray-900 hover:bg-gray-800 text-white px-8">
                 {t('wp_try_button')}
               </Button>
             </div>
@@ -338,7 +340,7 @@ export default function WelcomePublic() {
           <h2 className="text-3xl font-bold text-white mb-6">{t('wp_cta_title')}</h2>
           <p className="text-green-100 text-lg mb-8">{t('wp_cta_desc')}</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button size="lg" onClick={() => window.location.href = createPageUrl('Register')} className="bg-white text-[#107c41] hover:bg-gray-100 text-lg px-8">
+            <Button size="lg" onClick={() => setShowWaitlist(true)} className="bg-white text-[#107c41] hover:bg-gray-100 text-lg px-8">
               {t('wp_cta_button')}
             </Button>
           </div>
@@ -363,6 +365,7 @@ export default function WelcomePublic() {
           <p className="text-sm">&copy; {new Date().getFullYear()} {t('wp_footer_rights')}</p>
         </div>
       </footer>
+      <WaitlistDialog open={showWaitlist} onOpenChange={setShowWaitlist} />
     </div>
     </ErrorBoundary>);
 
