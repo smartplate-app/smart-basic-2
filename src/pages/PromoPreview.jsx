@@ -56,6 +56,26 @@ const welcomeTranslations = {
 };
 
 // Pure public marketing page: never checks auth or redirects
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("PromoPreview Error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div className="p-10 text-red-500"><h1>PromoPreview Error</h1><pre>{this.state.error.toString()}</pre></div>;
+    }
+    return this.props.children;
+  }
+}
+
 export default function WelcomePublic() {
   const language = 'en';
 
@@ -65,6 +85,9 @@ export default function WelcomePublic() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('preview') === '1') return;
+        
         if (sessionStorage.getItem('b44_logout_in_progress')) return;
         const hasCache = !!localStorage.getItem('b44_user_cache');
         if (hasCache) {
@@ -116,6 +139,7 @@ export default function WelcomePublic() {
   };
 
   return (
+    <ErrorBoundary>
     <div className={`min-h-screen bg-white font-sans text-gray-900 ${isRTL ? 'rtl text-right' : 'ltr text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Navigation */}
       <nav className="bg-white border-b sticky top-0 z-50">
@@ -339,6 +363,7 @@ export default function WelcomePublic() {
           <p className="text-sm">&copy; {new Date().getFullYear()} {t('wp_footer_rights')}</p>
         </div>
       </footer>
-    </div>);
+    </div>
+    </ErrorBoundary>);
 
 }
