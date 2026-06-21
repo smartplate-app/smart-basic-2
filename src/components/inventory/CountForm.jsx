@@ -740,11 +740,12 @@ export default function CountForm({ user, count, warehouses, items: initialItems
       const user = await base44.auth.me();
       let workingEmail = user.email;
       if (user.role === 'admin' && user.acting_as_user_email) {
-          const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: user.acting_as_user_email });
-          if (data?.success && data.data?.items) {
-             setItems(data.data.items);
-             return;
-          }
+          const email = user.acting_as_user_email;
+          const wh1 = await base44.entities.Item.filter({ created_by: email }, "name", 10000);
+          const wh2 = await base44.entities.Item.filter({ store_owner_email: email }, "name", 10000);
+          const allIts = [...wh1, ...wh2];
+          setItems(Array.from(new Map(allIts.map(item => [item.id, item])).values()));
+          return;
       }
       
       workingEmail = user.acting_as_store_email || user.store_user_owner_email || user.email;

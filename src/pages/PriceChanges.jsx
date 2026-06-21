@@ -31,10 +31,13 @@ export default function PriceChangesPage() {
             const targetEmail = ownerEmail || user?.acting_as_user_email || user?.email;
 
             if (isAdminControlling) {
-                const res = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
-                if (res.data?.success) {
-                    data = res.data.data.priceChanges || [];
-                }
+                const emailsToFetch = [targetEmail];
+                const resPromises = emailsToFetch.flatMap(email => [
+                    base44.entities.PriceChangeLog.filter({ created_by: email }, "-effective_date", 10000),
+                    base44.entities.PriceChangeLog.filter({ store_owner_email: email }, "-effective_date", 10000)
+                ]);
+                const allData = (await Promise.all(resPromises)).flat();
+                data = Array.from(new Map(allData.map(item => [item.id, item])).values());
             } else if (isStoreUser) {
                 const { data: mgData } = await base44.functions.invoke('getManagerData', {
                   ownerEmail,

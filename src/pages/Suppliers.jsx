@@ -84,22 +84,23 @@ export default function SuppliersPage() {
                   if (isAdminControlling) {
                     console.log('[Suppliers] Loading as ADMIN impersonating:', workingEmail);
                     try {
-                        const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
-                        if (data?.success) {
-                            suppliersData = data.data.suppliers || [];
-                            itemsData = data.data.items || [];
-                            if (storeOwnerEmail) {
-                                const { data: workerData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: currentUser.email });
-                                if (workerData?.success) {
-                                    suppliersData = [...suppliersData, ...(workerData.data.suppliers || [])];
-                                    itemsData = [...itemsData, ...(workerData.data.items || [])];
-                                }
-                            }
-                            
-                            // Ensure uniqueness
-                            suppliersData = suppliersData.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
-                            itemsData = itemsData.filter((item, i, arr) => arr.findIndex(x => x.id === item.id) === i);
-                        }
+                        const emailsToFetch = [workingEmail];
+                        if (storeOwnerEmail) emailsToFetch.push(currentUser.email);
+                        
+                        const supPromises = emailsToFetch.flatMap(email => [
+                            base44.entities.Supplier.filter({ created_by: email }, "name", 10000),
+                            base44.entities.Supplier.filter({ store_owner_email: email }, "name", 10000)
+                        ]);
+                        const itsPromises = emailsToFetch.flatMap(email => [
+                            base44.entities.Item.filter({ created_by: email }, "name", 10000),
+                            base44.entities.Item.filter({ store_owner_email: email }, "name", 10000)
+                        ]);
+                        
+                        const allSup = (await Promise.all(supPromises)).flat();
+                        const allIts = (await Promise.all(itsPromises)).flat();
+                        
+                        suppliersData = Array.from(new Map(allSup.map(item => [item.id, item])).values());
+                        itemsData = Array.from(new Map(allIts.map(item => [item.id, item])).values());
                     } catch(e) {
                         console.error("Admin data fetch error:", e);
                     }

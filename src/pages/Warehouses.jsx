@@ -45,10 +45,13 @@ export default function WarehousesPage() {
       if (!isBackground) setLoading(true);
       let data = [];
       if (currentUser?.admin_original_email && currentUser?.acting_as_user_email) {
-        const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getUserData', userEmail: targetEmail });
-        if (adminData?.success && adminData?.data?.warehouses) {
-          data = adminData.data.warehouses;
-        }
+        const emailsToFetch = [targetEmail];
+        const whPromises = emailsToFetch.flatMap(email => [
+            base44.entities.Warehouse.filter({ created_by: email }, "name", 10000),
+            base44.entities.Warehouse.filter({ store_owner_email: email }, "name", 10000)
+        ]);
+        const allWh = (await Promise.all(whPromises)).flat();
+        data = Array.from(new Map(allWh.map(item => [item.id, item])).values());
       } else {
         // Check if user is a store user - use service-role to bypass RLS
         const storeOwnerEmail = currentUser?.store_user_owner_email || currentUser?.acting_as_store_email || null;

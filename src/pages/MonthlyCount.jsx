@@ -93,12 +93,28 @@ export default function MonthlyCountPage() {
 
         if (isAdminControlling) {
             console.log("[MonthlyCount] Loading as admin impersonating...");
-            const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: userEmail });
-            if (data?.success) {
-                countsData = data.data.inventory || [];
-                warehousesData = data.data.warehouses || [];
-                itemsData = (data.data.items || []).filter(i => i.is_pending_completion !== true && i.status !== 'pending_completion');
-            }
+            const emailsToFetch = [userEmail];
+            
+            const whPromises = emailsToFetch.flatMap(email => [
+                base44.entities.Warehouse.filter({ created_by: email }, "name", 10000),
+                base44.entities.Warehouse.filter({ store_owner_email: email }, "name", 10000)
+            ]);
+            const itsPromises = emailsToFetch.flatMap(email => [
+                base44.entities.Item.filter({ created_by: email }, "name", 10000),
+                base44.entities.Item.filter({ store_owner_email: email }, "name", 10000)
+            ]);
+            const countsPromises = emailsToFetch.flatMap(email => [
+                base44.entities.InventoryCount.filter({ created_by: email }, "-count_date", 10000),
+                base44.entities.InventoryCount.filter({ store_owner_email: email }, "-count_date", 10000)
+            ]);
+
+            const allWh = (await Promise.all(whPromises)).flat();
+            const allIts = (await Promise.all(itsPromises)).flat();
+            const allCounts = (await Promise.all(countsPromises)).flat();
+            
+            warehousesData = Array.from(new Map(allWh.map(item => [item.id, item])).values());
+            itemsData = Array.from(new Map(allIts.map(item => [item.id, item])).values()).filter(i => i.is_pending_completion !== true && i.status !== 'pending_completion');
+            countsData = Array.from(new Map(allCounts.map(item => [item.id, item])).values());
         } else {
             console.log("[MonthlyCount] Loading data in parallel...");
             // Use service role for store users (workers/managers) so RLS doesn't block them from seeing the owner's data
