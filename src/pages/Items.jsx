@@ -129,19 +129,24 @@ export default function ItemsPage() {
       const isAdminControlling = currentUser?.role === 'admin' && effectiveEmail !== currentUser.email;
 
       if (isAdminControlling) {
-        // Admin impersonation - load data securely from backend
         console.log('[Items] Loading as ADMIN impersonating:', effectiveEmail);
-        const { data } = await base44.functions.invoke('getAdminData', { action: 'getUserData', userEmail: effectiveEmail });
-        if (data?.success && data?.data) {
-          itemsData = data.data.items || [];
-          suppliersData = data.data.suppliers || [];
-          warehousesData = data.data.inventory || []; // Wait, inventory is counts, getAdminData doesn't return warehouses! Let's update getAdminData too
-          
-          // Fix warehouse data by filtering properly
-          warehousesData = data.data.warehouses || [];
-        } else {
-          throw new Error('Failed to load admin data');
-        }
+        const [directItems, storeItems, directSuppliers, storeSuppliers, directWarehouses, storeWarehouses] = await Promise.all([
+          base44.entities.Item.filter({ created_by: effectiveEmail }, "-created_date", 10000),
+          base44.entities.Item.filter({ store_owner_email: effectiveEmail }, "-created_date", 10000),
+          base44.entities.Supplier.filter({ created_by: effectiveEmail }, "name", 10000),
+          base44.entities.Supplier.filter({ store_owner_email: effectiveEmail }, "name", 10000),
+          base44.entities.Warehouse.filter({ created_by: effectiveEmail }, "name", 10000),
+          base44.entities.Warehouse.filter({ store_owner_email: effectiveEmail }, "name", 10000)
+        ]);
+
+        const allItems = [...directItems, ...storeItems];
+        itemsData = Array.from(new Map(allItems.map(item => [item.id, item])).values());
+        
+        const allSuppliers = [...directSuppliers, ...storeSuppliers];
+        suppliersData = Array.from(new Map(allSuppliers.map(item => [item.id, item])).values());
+
+        const allWarehouses = [...directWarehouses, ...storeWarehouses];
+        warehousesData = Array.from(new Map(allWarehouses.map(item => [item.id, item])).values());
       } else if (isStoreUser && storeOwnerEmail) {
         // Any store user (worker or manager): use service-role to bypass RLS, scoped to owner
         console.log('[Items] Loading as STORE USER for owner:', storeOwnerEmail);
