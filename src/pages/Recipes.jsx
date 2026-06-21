@@ -260,7 +260,7 @@ export default function RecipesPage() {
           >
             <option value="all">{language === 'he' ? 'כל הסוגים' : 'All Types'}</option>
             <option value="sale_item">{language === 'he' ? 'פריט למכירה' : 'Sale Item'}</option>
-            <option value="prep_recipe">{language === 'he' ? 'מתכון הכנה' : 'Prep Recipe'}</option>
+            <option value="prep_recipe">{language === 'he' ? 'פריט הכנה' : 'Prep Item'}</option>
             <option value="last_scan">{language === 'he' ? 'סריקת תפריט אחרונה' : 'Last Menu Scan'}</option>
           </select>
         </div>

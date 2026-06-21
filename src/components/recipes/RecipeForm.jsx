@@ -481,7 +481,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                 className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
               >
                 <option value="sale_item">{language === 'he' ? 'פריט למכירה' : 'Sale Item'}</option>
-                <option value="prep_recipe">{language === 'he' ? 'מתכון הכנה' : 'Prep Recipe'}</option>
+                <option value="prep_recipe">{language === 'he' ? 'פריט הכנה' : 'Prep Item'}</option>
               </select>
             </div>
             
@@ -634,7 +634,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
-                              {language === 'he' ? 'הכנה' : 'PREP'}
+                              {language === 'he' ? 'פריט הכנה' : 'Prep Item'}
                             </span>
                             <span>{prep.name}</span>
                           </div>
@@ -688,7 +688,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                         if (itemToEdit) setEditingItem(itemToEdit);
                       }
                     }}
-                    title={ing.is_prep_recipe ? (language === 'he' ? 'לחץ לעריכת מתכון הכנה' : 'Click to edit prep recipe') : (language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item')}
+                    title={ing.is_prep_recipe ? (language === 'he' ? 'לחץ לעריכת פריט הכנה' : 'Click to edit prep item') : (language === 'he' ? 'לחץ לעריכת פריט' : 'Click to edit item')}
                   >
                     <div className="flex items-center gap-1.5">
                       {!ing.is_prep_recipe && (ing.original_item?.supplier_name || items.find(i => i.id === ing.item_id)?.supplier_name) && (
@@ -697,7 +697,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                         </span>
                       )}
                       {ing.is_prep_recipe && (
-                        <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'הכנה' : 'PREP'}</span>
+                        <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded shrink-0">{language === 'he' ? 'פריט הכנה' : 'Prep Item'}</span>
                       )}
                       <span className="font-medium text-sm underline decoration-dotted underline-offset-2">{ing.item_name}</span>
                     </div>
@@ -901,7 +901,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
-                        {language === 'he' ? 'הכנה' : 'PREP'}
+                        {language === 'he' ? 'פריט הכנה' : 'Prep Item'}
                       </span>
                       <span>{prep.name}</span>
                     </div>
