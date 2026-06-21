@@ -86,7 +86,7 @@ export default function WelcomePublic() {
     const checkAuth = async () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('preview') === '1') return;
+        if (urlParams.get('preview') === '1' || window.self !== window.top) return;
         
         if (sessionStorage.getItem('b44_logout_in_progress')) return;
         const hasCache = !!localStorage.getItem('b44_user_cache');

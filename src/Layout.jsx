@@ -25,17 +25,18 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
 const [showDesktopSidebar, setShowDesktopSidebar] = useState(true);
 const [user, setUser] = useState(null);
 const [authLoading, setAuthLoading] = useState(() => {
-  const isPublic = (
-    currentPageName === 'OrderDetails' ||
-    currentPageName === 'WorkerPortal' ||
-    currentPageName === 'Register' ||
-    currentPageName === 'RestaurantInvite' ||
-    currentPageName === 'PublicOrder' ||
-    currentPageName === 'OAuthCallback' ||
-    currentPageName === 'Diagnostics' ||
-    currentPageName === 'LoginHelper' ||
-    currentPageName === 'AuthKick'
-  );
+const isPublic = (
+  currentPageName === 'OrderDetails' ||
+  currentPageName === 'WorkerPortal' ||
+  currentPageName === 'Register' ||
+  currentPageName === 'RestaurantInvite' ||
+  currentPageName === 'PublicOrder' ||
+  currentPageName === 'OAuthCallback' ||
+  currentPageName === 'Diagnostics' ||
+  currentPageName === 'LoginHelper' ||
+  currentPageName === 'AuthKick' ||
+  currentPageName === 'PromoPreview'
+);
     let hasCache = false;
     try { hasCache = !!localStorage.getItem('b44_user_cache') && !sessionStorage.getItem('b44_logout_in_progress'); } catch {}
     return !isPublic || hasCache;
@@ -203,7 +204,8 @@ const [authLoading, setAuthLoading] = useState(() => {
       currentPageName !== 'PublicOrder' &&
       currentPageName !== 'OAuthCallback' &&
       currentPageName !== 'LoginHelper' &&
-      currentPageName !== 'AuthKick'
+      currentPageName !== 'AuthKick' &&
+      currentPageName !== 'PromoPreview'
     ) {
       if (!hasLoadedAuth.current) {
         hasLoadedAuth.current = true;
@@ -723,7 +725,8 @@ const [authLoading, setAuthLoading] = useState(() => {
     currentPageName === 'OAuthCallback' ||
     currentPageName === 'Diagnostics' ||
     currentPageName === 'LoginHelper' ||
-    currentPageName === 'AuthKick'
+    currentPageName === 'AuthKick' ||
+    currentPageName === 'PromoPreview'
   ) {
     return <>{children}</>;
   }
