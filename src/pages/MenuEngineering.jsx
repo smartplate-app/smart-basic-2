@@ -48,10 +48,9 @@ export default function MenuEngineeringPage() {
       let data = [];
       
       if (isAdminControlling) {
-          const res = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
-          if (res.data?.success) {
-              data = (res.data.data.recipes || []).filter(r => r.type === 'sale_item');
-          }
+          const dataCreated = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date", 10000);
+          const dataOwned = await base44.entities.Recipe.filter({ type: 'sale_item', store_owner_email: workingEmail }, "-created_date", 10000);
+          data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       } else {
           const dataCreated = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date");
           const dataOwned = await base44.entities.Recipe.filter({ type: 'sale_item', store_owner_email: workingEmail }, "-created_date");

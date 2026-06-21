@@ -33,12 +33,28 @@ export default function WasteReports() {
     
     if (isAdminControlling) {
         try {
-            const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
-            if (data?.success) {
-                whData = data.data.warehouses || [];
-                itsData = data.data.items || [];
-                repsData = data.data.wasteReports || [];
-            }
+            const emailsToFetch = [targetEmail];
+            
+            const whPromises = emailsToFetch.flatMap(email => [
+                base44.entities.Warehouse.filter({ created_by: email }, "name", 10000),
+                base44.entities.Warehouse.filter({ store_owner_email: email }, "name", 10000)
+            ]);
+            const itsPromises = emailsToFetch.flatMap(email => [
+                base44.entities.Item.filter({ created_by: email }, "name", 10000),
+                base44.entities.Item.filter({ store_owner_email: email }, "name", 10000)
+            ]);
+            const repsPromises = emailsToFetch.flatMap(email => [
+                base44.entities.WasteReport.filter({ created_by: email }, "-report_date", 10000),
+                base44.entities.WasteReport.filter({ store_owner_email: email }, "-report_date", 10000)
+            ]);
+
+            const allWh = (await Promise.all(whPromises)).flat();
+            const allIts = (await Promise.all(itsPromises)).flat();
+            const allReps = (await Promise.all(repsPromises)).flat();
+            
+            whData = Array.from(new Map(allWh.map(item => [item.id, item])).values());
+            itsData = Array.from(new Map(allIts.map(item => [item.id, item])).values());
+            repsData = Array.from(new Map(allReps.map(item => [item.id, item])).values());
         } catch(e) {}
     } else if (isStoreUser) {
         const { data: mgData } = await base44.functions.invoke('getManagerData', {

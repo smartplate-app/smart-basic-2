@@ -164,18 +164,23 @@ export default function OrdersPage() {
         
         const targetEmail = controlledUserOwnerEmail || workingEmail;
         try {
-          const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
-          if (data?.success) {
-            ordersData = data.data.orders || [];
-            suppliersData = data.data.suppliers || [];
-            if (controlledUserOwnerEmail) {
-              const { data: workerData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
-              if (workerData?.success) {
-                ordersData = [...ordersData, ...(workerData.data.orders || [])];
-                suppliersData = [...suppliersData, ...(workerData.data.suppliers || [])];
-              }
-            }
-          }
+            const emailsToFetch = controlledUserOwnerEmail ? [controlledUserOwnerEmail, workingEmail] : [workingEmail];
+            
+            const ordersPromises = emailsToFetch.flatMap(email => [
+                base44.entities.Order.filter({ created_by: email }, "-created_date", 10000),
+                base44.entities.Order.filter({ store_owner_email: email }, "-created_date", 10000)
+            ]);
+            
+            const suppliersPromises = emailsToFetch.flatMap(email => [
+                base44.entities.Supplier.filter({ created_by: email }, "name", 10000),
+                base44.entities.Supplier.filter({ store_owner_email: email }, "name", 10000)
+            ]);
+
+            const allOrders = (await Promise.all(ordersPromises)).flat();
+            const allSuppliers = (await Promise.all(suppliersPromises)).flat();
+            
+            ordersData = Array.from(new Map(allOrders.map(item => [item.id, item])).values());
+            suppliersData = Array.from(new Map(allSuppliers.map(item => [item.id, item])).values());
         } catch (e) {
           console.error("Error loading admin data:", e);
         }

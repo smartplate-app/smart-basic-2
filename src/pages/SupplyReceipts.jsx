@@ -136,20 +136,30 @@ export default function SupplyReceiptsPage() {
       } else if (isAdminControlling) {
          try {
              const targetEmail = storeOwnerEmail || userEmail;
-             const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
-             if (data?.success) {
-                 receiptsData = data.data.receipts || [];
-                 ordersData = data.data.orders || [];
-                 mergedSuppliers = data.data.suppliers || [];
-                 if (storeOwnerEmail) {
-                    const { data: workerData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: userEmail });
-                    if (workerData?.success) {
-                       receiptsData = [...receiptsData, ...(workerData.data.receipts || [])];
-                       ordersData = [...ordersData, ...(workerData.data.orders || [])];
-                       mergedSuppliers = [...mergedSuppliers, ...(workerData.data.suppliers || [])];
-                    }
-                 }
-             }
+             const emailsToFetch = storeOwnerEmail ? [storeOwnerEmail, userEmail] : [userEmail];
+             
+             const receiptsPromises = emailsToFetch.flatMap(email => [
+                 base44.entities.SupplyReceipt.filter({ created_by: email }, "-receipt_date", 10000),
+                 base44.entities.SupplyReceipt.filter({ store_owner_email: email }, "-receipt_date", 10000)
+             ]);
+             
+             const ordersPromises = emailsToFetch.flatMap(email => [
+                 base44.entities.Order.filter({ created_by: email }, "-created_date", 10000),
+                 base44.entities.Order.filter({ store_owner_email: email }, "-created_date", 10000)
+             ]);
+             
+             const suppliersPromises = emailsToFetch.flatMap(email => [
+                 base44.entities.Supplier.filter({ created_by: email }, "name", 10000),
+                 base44.entities.Supplier.filter({ store_owner_email: email }, "name", 10000)
+             ]);
+
+             const allReceipts = (await Promise.all(receiptsPromises)).flat();
+             const allOrders = (await Promise.all(ordersPromises)).flat();
+             const allSuppliers = (await Promise.all(suppliersPromises)).flat();
+             
+             receiptsData = Array.from(new Map(allReceipts.map(item => [item.id, item])).values());
+             ordersData = Array.from(new Map(allOrders.map(item => [item.id, item])).values());
+             mergedSuppliers = Array.from(new Map(allSuppliers.map(item => [item.id, item])).values());
          } catch(e) {
              console.error("Admin data fetch error:", e);
          }

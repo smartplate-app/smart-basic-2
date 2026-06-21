@@ -64,10 +64,9 @@ export default function CogsReportsPage() {
       const isStoreUser = !!(currentUser.store_user_owner_email || currentUser.acting_as_store_email);
 
       if (isAdminControlling) {
-          const { data: adminData } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: targetEmail });
-          if (adminData?.success && adminData?.data?.cogsReports) {
-              data = adminData.data.cogsReports;
-          }
+          const dataCreated = await base44.entities.CogsReport.filter({ created_by: targetEmail }, "-created_date", 10000);
+          const dataOwned = await base44.entities.CogsReport.filter({ store_owner_email: targetEmail }, "-created_date", 10000);
+          data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       } else if (isStoreUser) {
           // Sub-user (manager/worker): use service-role backend to fetch owner's data bypassing RLS
           const { data: mgData } = await base44.functions.invoke('getManagerData', {

@@ -86,12 +86,28 @@ export default function LaborCostPage() {
       
       if (isAdminControlling) {
           try {
-              const { data } = await base44.functions.invoke('getAdminData', { action: 'getFullUserData', userEmail: workingEmail });
-              if (data?.success) {
-                  positionsData = data.data.positions || [];
-                  workersData = data.data.workers || [];
-                  schedulesData = data.data.schedules || [];
-              }
+              const emailsToFetch = [workingEmail];
+              
+              const positionsPromises = emailsToFetch.flatMap(email => [
+                  base44.entities.JobPosition.filter({ created_by: email }, "name", 10000),
+                  base44.entities.JobPosition.filter({ store_owner_email: email }, "name", 10000)
+              ]);
+              const workersPromises = emailsToFetch.flatMap(email => [
+                  base44.entities.Worker.filter({ created_by: email }, "name", 10000),
+                  base44.entities.Worker.filter({ store_owner_email: email }, "name", 10000)
+              ]);
+              const schedulesPromises = emailsToFetch.flatMap(email => [
+                  base44.entities.WeeklySchedule.filter({ created_by: email }, "-week_start", 10000),
+                  base44.entities.WeeklySchedule.filter({ store_owner_email: email }, "-week_start", 10000)
+              ]);
+
+              const allPositions = (await Promise.all(positionsPromises)).flat();
+              const allWorkers = (await Promise.all(workersPromises)).flat();
+              const allSchedules = (await Promise.all(schedulesPromises)).flat();
+              
+              positionsData = Array.from(new Map(allPositions.map(item => [item.id, item])).values());
+              workersData = Array.from(new Map(allWorkers.map(item => [item.id, item])).values());
+              schedulesData = Array.from(new Map(allSchedules.map(item => [item.id, item])).values());
           } catch(e) { console.error("Admin fetch error", e); }
       } else {
           const res = await Promise.all([
