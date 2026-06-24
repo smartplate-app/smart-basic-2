@@ -45,8 +45,8 @@ Deno.serve(async (req) => {
 
     const fetchBoth = async (entityName) => {
       const [r1, r2] = await Promise.all([
-        base44.asServiceRole.entities[entityName].filter({ created_by: ownerEmail }),
-        base44.asServiceRole.entities[entityName].filter({ store_owner_email: ownerEmail })
+        base44.asServiceRole.entities[entityName].filter({ created_by: ownerEmail }, "-created_date", 10000),
+        base44.asServiceRole.entities[entityName].filter({ store_owner_email: ownerEmail }, "-created_date", 10000)
       ]);
       const combined = [...(r1 || []), ...(r2 || [])];
       const deduped = combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       entitiesToFetch.includes('items') && fetchBoth('Item').then(d => result.items = d),
       entitiesToFetch.includes('orders') && fetchBoth('Order').then(d => result.orders = d),
       entitiesToFetch.includes('receipts') && fetchBoth('SupplyReceipt').then(d => result.receipts = d),
-      entitiesToFetch.includes('warehouses') && base44.asServiceRole.entities.Warehouse.filter({ created_by: ownerEmail }).then(d => result.warehouses = (d || []).filter(w => w.is_active !== false)),
+      entitiesToFetch.includes('warehouses') && base44.asServiceRole.entities.Warehouse.filter({ created_by: ownerEmail }, "-created_date", 10000).then(d => result.warehouses = (d || []).filter(w => w.is_active !== false)),
       entitiesToFetch.includes('recipes') && fetchBoth('Recipe').then(d => result.recipes = d),
       entitiesToFetch.includes('inventoryCounts') && fetchBoth('InventoryCount').then(d => result.inventoryCounts = d),
       entitiesToFetch.includes('wasteReports') && fetchBoth('WasteReport').then(d => result.wasteReports = d),
