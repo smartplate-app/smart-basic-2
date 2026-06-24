@@ -193,6 +193,12 @@ export default function MenuEngineeringPage() {
     const totalItemRevenue = salePrice * qty;
     const totalItemCost = cost * qty;
 
+    let sfc = 0;
+    if (salePrice > 0) {
+      const salePriceExVat = salePrice / 1.18;
+      sfc = (cost / salePriceExVat) * 100;
+    }
+
     if (qty > 0) {
       totalVolume += qty;
       totalRevenue += totalItemRevenue;
@@ -207,7 +213,8 @@ export default function MenuEngineeringPage() {
       itemProfit,
       totalItemProfit,
       salePrice,
-      cost
+      cost,
+      sfc
     };
   });
 
@@ -521,6 +528,10 @@ export default function MenuEngineeringPage() {
                         <div className="font-bold text-gray-900">₪{item.salePrice.toFixed(2)}</div>
                       </div>
                       <div>
+                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC'}</div>
+                        <div className="font-bold text-blue-600">{item.sfc.toFixed(1)}%</div>
+                      </div>
+                      <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לפריט' : 'Item Contribution'}</div>
                         <div className="font-bold text-green-600">₪{item.itemProfit.toFixed(2)}</div>
                       </div>
@@ -595,6 +606,12 @@ export default function MenuEngineeringPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('sfc')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
                       <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('contributionPercent')}>
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'תרומה' : 'Contribution'}
@@ -636,6 +653,7 @@ export default function MenuEngineeringPage() {
                         </td>
                         <td className="px-6 py-4 text-gray-600">₪{item.cost.toFixed(2)}</td>
                         <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
+                        <td className="px-6 py-4 font-medium text-blue-600">{item.sfc.toFixed(1)}%</td>
                         <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePrice) * 100).toFixed(1)}%` : '0.0%'}</td>
                         <td className="px-6 py-4 text-gray-600">{item.mixPercent.toFixed(1)}%</td>
                         <td className="px-6 py-4">
