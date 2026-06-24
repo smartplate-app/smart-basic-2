@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "../components/LanguageProvider";
-import { Lock, Plus, Trash2, HelpCircle, LayoutGrid, List, Edit, Percent, TrendingUp, DollarSign, Clock, Star, Tractor, Puzzle, Dog, Filter, RefreshCw, Tag, ArrowUpDown } from "lucide-react";
+import { Lock, Plus, Trash2, HelpCircle, LayoutGrid, List, Edit, Percent, TrendingUp, DollarSign, Clock, Star, Tractor, Puzzle, Dog, Filter, RefreshCw, Tag, ArrowUpDown, Settings } from "lucide-react";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 
 export default function MenuEngineeringPage() {
@@ -23,6 +23,31 @@ export default function MenuEngineeringPage() {
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const defaultColumns = {
+    category: true,
+    soldCount: true,
+    foodCost: true,
+    menuPrice: true,
+    sfc: true,
+    cogs: true,
+    itemContribution: true,
+    totalContribution: true,
+    contributionPercent: true,
+    mixPercent: true,
+    classification: true,
+  };
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('menuEngColumns');
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return defaultColumns;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('menuEngColumns', JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -391,6 +416,10 @@ export default function MenuEngineeringPage() {
               <HelpCircle className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'מדריך מונחים' : 'Concepts Guide'}
             </Button>
+            <Button variant="outline" onClick={() => setShowSettingsModal(true)} className="text-gray-600 bg-white">
+              <Settings className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
+              {language === 'he' ? 'תצוגה' : 'Display'}
+            </Button>
           </div>
           <div className={`text-${isRTL ? 'left' : 'right'}`}>
             <h1 className="text-3xl font-bold text-[#b88c60]">
@@ -508,6 +537,7 @@ export default function MenuEngineeringPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm mb-5 flex-1">
+                      {visibleColumns.soldCount && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מספר שנמכר' : 'Sold Count'}</div>
                         <Input 
@@ -518,34 +548,49 @@ export default function MenuEngineeringPage() {
                           className="w-20 h-8 font-bold text-gray-900 px-2 py-1"
                         />
                       </div>
+                      )}
+                      {visibleColumns.mixPercent && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תמהיל תפריט %' : 'Menu Mix %'}</div>
                         <div className="font-bold text-gray-900 text-lg">{item.mixPercent.toFixed(1)}%</div>
                       </div>
+                      )}
+                      {visibleColumns.foodCost && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'עלות מזון' : 'Food Cost'}</div>
                         <div className="font-bold text-gray-900">₪{item.cost.toFixed(2)}</div>
                       </div>
+                      )}
+                      {visibleColumns.menuPrice && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</div>
                         <div className="font-bold text-gray-900">₪{item.salePrice.toFixed(2)}</div>
                       </div>
+                      )}
+                      {visibleColumns.sfc && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC'}</div>
                         <div className="font-bold text-blue-600">{item.sfc.toFixed(1)}%</div>
                       </div>
+                      )}
+                      {visibleColumns.cogs && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'סה"כ עלות (COGS)' : 'Total Cost (COGS)'}</div>
                         <div className="font-bold text-gray-900">₪{item.totalItemCost.toFixed(2)}</div>
                       </div>
+                      )}
+                      {visibleColumns.itemContribution && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לפריט' : 'Item Contribution'}</div>
                         <div className="font-bold text-green-600">₪{item.itemProfit.toFixed(2)}</div>
                       </div>
+                      )}
+                      {visibleColumns.totalContribution && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לתפריט' : 'Total Contribution'}</div>
                         <div className="font-bold text-green-600">₪{item.totalItemProfit.toFixed(2)}</div>
                       </div>
+                      )}
                     </div>
 
                     <div className="pt-4 border-t border-gray-100 flex justify-between items-center mt-auto">
@@ -589,30 +634,39 @@ export default function MenuEngineeringPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      {visibleColumns.category && (
                       <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('menu_category')}>
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'קטגוריה' : 'Category'}
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
+                      {visibleColumns.soldCount && (
                       <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('qty')}>
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'נמכר' : 'Sold'}
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
+                      {visibleColumns.foodCost && (
                       <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('cost')}>
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'עלות מזון' : 'Food Cost'}
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
+                      {visibleColumns.menuPrice && (
                       <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('salePrice')}>
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'מחיר תפריט' : 'Menu Price'}
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
+                      {visibleColumns.sfc && (
                       <th 
                         className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} 
                         onClick={() => requestSort('sfc')}
@@ -623,6 +677,8 @@ export default function MenuEngineeringPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
+                      {visibleColumns.cogs && (
                       <th 
                         className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} 
                         onClick={() => requestSort('totalItemCost')}
@@ -633,6 +689,8 @@ export default function MenuEngineeringPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
+                      {visibleColumns.contributionPercent && (
                       <th 
                         className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} 
                         onClick={() => requestSort('contributionPercent')}
@@ -643,18 +701,23 @@ export default function MenuEngineeringPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
+                      {visibleColumns.mixPercent && (
                       <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('mixPercent')}>
                         <div className="flex items-center gap-1">
                           {language === 'he' ? '% תמהיל' : 'Mix %'}
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
+                      {visibleColumns.classification && (
                       <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('category')}>
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'סיווג' : 'Classification'}
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
+                      )}
                       <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'פעולות' : 'Actions'}</th>
                     </tr>
                   </thead>
@@ -662,11 +725,14 @@ export default function MenuEngineeringPage() {
                     {sortedItems.map(item => (
                       <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-6 py-4 font-medium text-gray-900">{item.name}</td>
+                        {visibleColumns.category && (
                         <td className="px-6 py-4">
                           <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-md text-xs font-medium border border-gray-200">
                             {categoryLabels[item.menu_category || 'general']}
                           </span>
                         </td>
+                        )}
+                        {visibleColumns.soldCount && (
                         <td className="px-6 py-4 font-bold">
                           <Input 
                             type="number" 
@@ -676,18 +742,33 @@ export default function MenuEngineeringPage() {
                             className="w-20 h-8 font-bold px-2 py-1 text-center"
                           />
                         </td>
+                        )}
+                        {visibleColumns.foodCost && (
                         <td className="px-6 py-4 text-gray-600">₪{item.cost.toFixed(2)}</td>
+                        )}
+                        {visibleColumns.menuPrice && (
                         <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
+                        )}
+                        {visibleColumns.sfc && (
                         <td className="px-6 py-4 font-medium text-blue-600">{item.sfc.toFixed(1)}%</td>
+                        )}
+                        {visibleColumns.cogs && (
                         <td className="px-6 py-4 text-gray-600">₪{item.totalItemCost.toFixed(2)}</td>
+                        )}
+                        {visibleColumns.contributionPercent && (
                         <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePrice) * 100).toFixed(1)}%` : '0.0%'}</td>
+                        )}
+                        {visibleColumns.mixPercent && (
                         <td className="px-6 py-4 text-gray-600">{item.mixPercent.toFixed(1)}%</td>
+                        )}
+                        {visibleColumns.classification && (
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center w-max ${item.color}`}>
                             {getCategoryIcon(item.categoryEn)}
                             {item.category}
                           </span>
                         </td>
+                        )}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <button onClick={() => { setEditingItem(item); setShowItemModal(true); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors">
@@ -702,7 +783,7 @@ export default function MenuEngineeringPage() {
                     ))}
                     {categorizedItems.length === 0 && !loading && (
                       <tr>
-                        <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan="11" className="px-6 py-12 text-center text-gray-500">
                           {language === 'he' ? 'לא נמצאו מנות למכירה' : 'No sale items found'}
                         </td>
                       </tr>
@@ -754,6 +835,53 @@ export default function MenuEngineeringPage() {
               <Button type="submit" className="bg-[#d4a373] hover:bg-[#b88c60] text-white">{language === 'he' ? 'שמור' : 'Save'}</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Modal */}
+      <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{language === 'he' ? 'הגדרות תצוגה' : 'Display Settings'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              {language === 'he' ? 'בחר אילו נתונים להציג בטבלה ובכרטיסיות:' : 'Select which data to display in the table and cards:'}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.keys(defaultColumns).map(key => {
+                const labels = {
+                  category: language === 'he' ? 'קטגוריה' : 'Category',
+                  soldCount: language === 'he' ? 'מספר שנמכר' : 'Sold Count',
+                  foodCost: language === 'he' ? 'עלות מזון' : 'Food Cost',
+                  menuPrice: language === 'he' ? 'מחיר תפריט' : 'Menu Price',
+                  sfc: language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC',
+                  cogs: language === 'he' ? 'סה"כ עלות (COGS)' : 'Total COGS',
+                  itemContribution: language === 'he' ? 'תרומה לפריט' : 'Item Contribution',
+                  totalContribution: language === 'he' ? 'תרומה לתפריט' : 'Total Contribution',
+                  contributionPercent: language === 'he' ? 'תרומה (%)' : 'Contribution (%)',
+                  mixPercent: language === 'he' ? '% תמהיל' : 'Mix %',
+                  classification: language === 'he' ? 'סיווג' : 'Classification',
+                };
+                return (
+                  <label key={key} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-gray-50 rounded-md border border-transparent hover:border-gray-100 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 text-[#d4a373] rounded border-gray-300 focus:ring-[#d4a373]"
+                      checked={visibleColumns[key]} 
+                      onChange={(e) => setVisibleColumns(prev => ({...prev, [key]: e.target.checked}))} 
+                    />
+                    <span className="text-sm font-medium text-gray-700">{labels[key]}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <div className="flex justify-end pt-4 border-t border-gray-100">
+               <Button onClick={() => setShowSettingsModal(false)} className="bg-[#d4a373] hover:bg-[#b88c60] text-white">
+                 {language === 'he' ? 'סגור' : 'Close'}
+               </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
