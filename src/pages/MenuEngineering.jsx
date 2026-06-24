@@ -52,8 +52,8 @@ export default function MenuEngineeringPage() {
           const dataOwned = await base44.entities.Recipe.filter({ type: 'sale_item', store_owner_email: workingEmail }, "-created_date", 10000);
           data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       } else {
-          const dataCreated = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date");
-          const dataOwned = await base44.entities.Recipe.filter({ type: 'sale_item', store_owner_email: workingEmail }, "-created_date");
+          const dataCreated = await base44.entities.Recipe.filter({ type: 'sale_item', created_by: workingEmail }, "-created_date", 10000);
+          const dataOwned = await base44.entities.Recipe.filter({ type: 'sale_item', store_owner_email: workingEmail }, "-created_date", 10000);
           data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       }
       setRecipes(data);
