@@ -45,7 +45,9 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
         } catch(e){}
       }
 
-      let data = await base44.entities.Recipe.filter({ created_by: targetEmail, type: 'sale_item' }, "-updated_date", 10000);
+      const dataCreated = await base44.entities.Recipe.filter({ created_by: targetEmail, type: 'sale_item' }, "-updated_date", 10000);
+      const dataOwned = await base44.entities.Recipe.filter({ store_owner_email: targetEmail, type: 'sale_item' }, "-updated_date", 10000);
+      let data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       
       if (targetEmail !== currentUser.email) {
         const myData = await base44.entities.Recipe.filter({ created_by: currentUser.email, type: 'sale_item' }, "-updated_date", 10000);
@@ -57,7 +59,9 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
           const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
           if (chain.length > 0) {
             const headEmail = chain[0].head_store_user_email;
-            const headData = await base44.entities.Recipe.filter({ created_by: headEmail, type: 'sale_item' }, "-updated_date", 10000);
+            const headCreated = await base44.entities.Recipe.filter({ created_by: headEmail, type: 'sale_item' }, "-updated_date", 10000);
+            const headOwned = await base44.entities.Recipe.filter({ store_owner_email: headEmail, type: 'sale_item' }, "-updated_date", 10000);
+            const headData = [...headCreated, ...headOwned];
             data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
           }
         } catch(e){}
