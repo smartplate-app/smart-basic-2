@@ -440,7 +440,7 @@ export default function MenuEngineeringPage() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
@@ -482,17 +482,6 @@ export default function MenuEngineeringPage() {
               </div>
               <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-500">
                 <DollarSign className="w-6 h-6" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-0 rounded-2xl">
-            <CardContent className="p-6 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'סה"כ נמכר' : 'Total Sold'}</p>
-                <h3 className="text-2xl font-bold">{totalVolume.toLocaleString()}</h3>
-              </div>
-              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-500">
-                <Clock className="w-6 h-6" />
               </div>
             </CardContent>
           </Card>
