@@ -606,7 +606,11 @@ export default function MenuEngineeringPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
-                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('sfc')}>
+                      <th 
+                        className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} 
+                        onClick={() => requestSort('sfc')}
+                        title={language === 'he' ? 'אחוז עלות המזון (Food Cost) ליחידה אחת (ללא מע"מ)' : 'Theoretical Food Cost Percentage'}
+                      >
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC'}
                           <ArrowUpDown className="w-3 h-3" />
