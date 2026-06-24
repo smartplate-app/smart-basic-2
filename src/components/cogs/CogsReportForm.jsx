@@ -280,7 +280,7 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
           <div className="border-t pt-4">
             <h3 className="font-bold mb-4">{language === 'he' ? 'פריטים נמכרים' : 'Sold Items'}</h3>
             
-            <div className="relative mb-4">
+            <div className="relative mb-4 z-50">
               <Search className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'} text-gray-400 w-4 h-4`} />
               <Input
                 placeholder={language === 'he' ? 'חפש מתכון להוספה לדוח...' : 'Search recipe to add...'}
@@ -289,7 +289,7 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
                 className={isRTL ? 'pr-9' : 'pl-9'}
               />
               {searchTerm && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg">
+                <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-xl max-h-60 overflow-y-auto">
                   {filteredRecipes.length > 0 ? (
                     filteredRecipes.map(recipe => (
                       <div 
