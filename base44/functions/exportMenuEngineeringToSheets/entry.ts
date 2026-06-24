@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
 
     const { itemsData } = await req.json();
 
-    const { accessToken } = await base44.asServiceRole.connectors.getConnection("googlesheets");
+    const accessToken = await base44.asServiceRole.connectors.getAccessToken("googlesheets");
 
     // 1. Create a new spreadsheet
     const createRes = await fetch("https://sheets.googleapis.com/v4/spreadsheets", {

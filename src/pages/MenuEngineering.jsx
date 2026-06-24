@@ -41,7 +41,11 @@ export default function MenuEngineeringPage() {
   const [visibleColumns, setVisibleColumns] = useState(() => {
     try {
       const saved = localStorage.getItem('menuEngColumns');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge with defaultColumns to ensure new columns are visible by default
+        return { ...defaultColumns, ...parsed };
+      }
     } catch(e) {}
     return defaultColumns;
   });
