@@ -47,13 +47,18 @@ Deno.serve(async (req) => {
             );
 
             let unitCost = 0;
-            let costPercentage = 0;
             let recipeId = null;
 
             if (matchedRecipe) {
                 unitCost = matchedRecipe.use_manual_cost ? (matchedRecipe.manual_cost || 0) : (matchedRecipe.total_cost || 0);
                 recipeId = matchedRecipe.id;
-                costPercentage = matchedRecipe.cost_percentage || 0;
+            }
+            
+            let costPercentage = 0;
+            const salesExVat = extItem.total_sales / 1.17;
+            const accumCost = extItem.quantity_sold * unitCost;
+            if (salesExVat > 0) {
+                costPercentage = (accumCost / salesExVat) * 100;
             }
 
             return {

@@ -103,8 +103,16 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
       unit_cost: recipe.total_cost || 0,
       unit_price: recipe.sale_price || 0,
       total_sales: recipe.sale_price || 0,
-      cost_percentage: recipe.cost_percentage || 0
+      cost_percentage: 0
     };
+    
+    const qty = Number(newItem.quantity_sold) || 0;
+    const cost = Number(newItem.unit_cost) || 0;
+    const sales = Number(newItem.total_sales) || 0;
+    if (sales > 0) {
+      const salesExcludingVat = sales / 1.17;
+      newItem.cost_percentage = ((qty * cost) / salesExcludingVat) * 100;
+    }
 
     const newItems = [...formData.items, newItem];
     const totals = recalculateTotals(newItems);
@@ -133,17 +141,15 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
       newItems[index].total_sales = (Number(newItems[index].quantity_sold) || 0) * (Number(newItems[index].unit_price) || 0);
     }
 
-    if (!newItems[index].recipe_id) {
-      const qty = Number(newItems[index].quantity_sold) || 0;
-      const cost = Number(newItems[index].unit_cost) || 0;
-      const sales = Number(newItems[index].total_sales) || 0;
-      
-      if (sales > 0) {
-        const salesExcludingVat = sales / 1.17;
-        newItems[index].cost_percentage = ((qty * cost) / salesExcludingVat) * 100;
-      } else {
-        newItems[index].cost_percentage = 0;
-      }
+    const qty = Number(newItems[index].quantity_sold) || 0;
+    const cost = Number(newItems[index].unit_cost) || 0;
+    const sales = Number(newItems[index].total_sales) || 0;
+    
+    if (sales > 0) {
+      const salesExcludingVat = sales / 1.17;
+      newItems[index].cost_percentage = ((qty * cost) / salesExcludingVat) * 100;
+    } else {
+      newItems[index].cost_percentage = 0;
     }
 
     const totals = recalculateTotals(newItems);
