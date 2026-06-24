@@ -95,7 +95,6 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
   };
 
   const handleAddRecipe = (recipe) => {
-    const sales = recipe.sale_price || 0;
     const newItem = {
       recipe_id: recipe.id,
       item_name: recipe.name,
@@ -103,7 +102,7 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
       unit_cost: recipe.total_cost || 0,
       unit_price: recipe.sale_price || 0,
       total_sales: recipe.sale_price || 0,
-      cost_percentage: sales > 0 ? ((recipe.total_cost || 0) / sales) * 100 : 0
+      cost_percentage: recipe.cost_percentage || 0
     };
 
     const newItems = [...formData.items, newItem];
@@ -133,14 +132,16 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
       newItems[index].total_sales = (Number(newItems[index].quantity_sold) || 0) * (Number(newItems[index].unit_price) || 0);
     }
 
-    const qty = Number(newItems[index].quantity_sold) || 0;
-    const cost = Number(newItems[index].unit_cost) || 0;
-    const sales = Number(newItems[index].total_sales) || 0;
-    
-    if (sales > 0) {
-      newItems[index].cost_percentage = ((qty * cost) / sales) * 100;
-    } else {
-      newItems[index].cost_percentage = 0;
+    if (!newItems[index].recipe_id) {
+      const qty = Number(newItems[index].quantity_sold) || 0;
+      const cost = Number(newItems[index].unit_cost) || 0;
+      const sales = Number(newItems[index].total_sales) || 0;
+      
+      if (sales > 0) {
+        newItems[index].cost_percentage = ((qty * cost) / sales) * 100;
+      } else {
+        newItems[index].cost_percentage = 0;
+      }
     }
 
     const totals = recalculateTotals(newItems);
