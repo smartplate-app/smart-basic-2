@@ -572,9 +572,9 @@ export default function MenuEngineeringPage() {
             </div>
           ) : (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50/50 border-b text-gray-500">
+              <div className="overflow-x-auto max-h-[70vh]">
+                <table className="w-full text-sm relative">
+                  <thead className="bg-gray-50 border-b text-gray-500 sticky top-0 z-10 shadow-sm">
                     <tr>
                       <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('name')}>
                         <div className="flex items-center gap-1">
