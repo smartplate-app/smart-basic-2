@@ -37,7 +37,10 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
         return;
       }
 
+      const ownerEmail = currentUser.acting_as_store_email || currentUser.store_user_owner_email || null;
+      const isManager = !!ownerEmail && currentUser.role !== 'admin';
       let targetEmail = currentUser.acting_as_store_email || currentUser.acting_as_user_email || currentUser.store_user_owner_email || currentUser.email;
+
       if (!currentUser.store_user_owner_email && !currentUser.acting_as_user_email) {
         try {
           const recs = await base44.entities.StoreUser.filter({ user_email: currentUser.email, is_active: true });
@@ -45,27 +48,32 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
         } catch(e){}
       }
 
-      const dataCreated = await base44.entities.Recipe.filter({ created_by: targetEmail, type: 'sale_item' }, "-updated_date", 10000);
-      const dataOwned = await base44.entities.Recipe.filter({ store_owner_email: targetEmail, type: 'sale_item' }, "-updated_date", 10000);
-      let data = [...dataCreated, ...dataOwned].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      let data = [];
       
-      if (targetEmail !== currentUser.email) {
-        const myData = await base44.entities.Recipe.filter({ created_by: currentUser.email, type: 'sale_item' }, "-updated_date", 10000);
-        data = [...data, ...myData].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
+      if (isManager) {
+        const { data: mgData } = await base44.functions.invoke('getManagerData', { ownerEmail, entities: ['recipes'] });
+        data = mgData?.data?.recipes || [];
+      } else {
+        const dataCreated = await base44.entities.Recipe.filter({ created_by: targetEmail }, "-updated_date", 10000);
+        const dataOwned = await base44.entities.Recipe.filter({ store_owner_email: targetEmail }, "-updated_date", 10000);
+        data = [...dataCreated, ...dataOwned];
+
+        if (currentUser.chain_id && !currentUser.is_chain_head) {
+          try {
+            const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
+            if (chain.length > 0) {
+              const headEmail = chain[0].head_store_user_email;
+              const headData1 = await base44.entities.Recipe.filter({ created_by: headEmail }, "-updated_date", 10000);
+              const headData2 = await base44.entities.Recipe.filter({ store_owner_email: headEmail }, "-updated_date", 10000);
+              data = [...data, ...headData1, ...headData2];
+            }
+          } catch(e){}
+        }
       }
 
-      if (currentUser.chain_id && !currentUser.is_chain_head) {
-        try {
-          const chain = await base44.entities.Chain.filter({ id: currentUser.chain_id });
-          if (chain.length > 0) {
-            const headEmail = chain[0].head_store_user_email;
-            const headCreated = await base44.entities.Recipe.filter({ created_by: headEmail, type: 'sale_item' }, "-updated_date", 10000);
-            const headOwned = await base44.entities.Recipe.filter({ store_owner_email: headEmail, type: 'sale_item' }, "-updated_date", 10000);
-            const headData = [...headCreated, ...headOwned];
-            data = [...headData, ...data].filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
-          }
-        } catch(e){}
-      }
+      // Filter for sale_item and remove duplicates
+      data = data.filter(r => r.type === 'sale_item');
+      data = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
 
       setRecipes(data || []);
     };
