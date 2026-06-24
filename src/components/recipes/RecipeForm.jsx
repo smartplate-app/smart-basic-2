@@ -531,7 +531,8 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                   />
                   {(() => {
                     const sales = formData.sale_price || 0;
-                    const costPct = sales > 0 ? (formData.total_cost / sales) * 100 : 0;
+                    const salesExVat = sales / 1.18;
+                    const costPct = salesExVat > 0 ? (formData.total_cost / salesExVat) * 100 : 0;
                     return (
                       <div className="mt-1 text-xs text-gray-500">
                         {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
