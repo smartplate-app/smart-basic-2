@@ -446,6 +446,7 @@ export default function MenuEngineeringPage() {
               <div>
                 <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'COGS מצטבר %' : 'Total COGS %'}</p>
                 <h3 className="text-2xl font-bold">{overallFoodCostPercent.toFixed(2)}%</h3>
+                <p className="text-xs text-gray-400 mt-1 font-medium">₪{totalFoodCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
                 <Percent className="w-6 h-6" />
