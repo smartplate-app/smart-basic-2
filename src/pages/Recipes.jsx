@@ -243,27 +243,52 @@ export default function RecipesPage() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} text-gray-400 w-5 h-5`} />
-            <Input
-              placeholder={language === 'he' ? 'חיפוש מתכונים...' : 'Search recipes...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`bg-white rounded-full ${isRTL ? 'pr-10' : 'pl-10'}`}
-            />
-          </div>
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="h-10 rounded-full border border-input bg-white px-4 py-2 text-sm focus-visible:outline-none"
-          >
-            <option value="all">{language === 'he' ? 'כל הסוגים' : 'All Types'}</option>
-            <option value="sale_item">{language === 'he' ? 'פריט למכירה' : 'Sale Item'}</option>
-            <option value="prep_recipe">{language === 'he' ? 'פריט הכנה' : 'Prep Item'}</option>
-            <option value="last_scan">{language === 'he' ? 'סריקת תפריט אחרונה' : 'Last Menu Scan'}</option>
-          </select>
-        </div>
+        {/* Calculate Overall Theoretical SFC */}
+        {(() => {
+          let totalSFC = 0;
+          let sfcItemsCount = 0;
+          filteredRecipes.forEach(recipe => {
+            if (recipe.type === 'sale_item' && recipe.sale_price > 0 && recipe.total_cost > 0) {
+               const salePriceExVat = Number(recipe.sale_price) / 1.18;
+               const sfc = (Number(recipe.total_cost) / salePriceExVat) * 100;
+               if (sfc > 0 && sfc < 200) { // filter out extreme anomalies
+                 totalSFC += sfc;
+                 sfcItemsCount++;
+               }
+            }
+          });
+          const avgSFC = sfcItemsCount > 0 ? (totalSFC / sfcItemsCount).toFixed(1) : 0;
+
+          return (
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1 flex items-center">
+                <Search className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} text-gray-400 w-5 h-5`} />
+                <Input
+                  placeholder={language === 'he' ? 'חיפוש מתכונים...' : 'Search recipes...'}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`bg-white rounded-full ${isRTL ? 'pr-10' : 'pl-10'}`}
+                />
+                {sfcItemsCount > 0 && (
+                  <div className={`absolute top-2 ${isRTL ? 'left-4' : 'right-4'} flex items-center gap-1.5 px-3 py-1 bg-gray-900 text-white rounded-full text-xs font-bold border border-gray-700 pointer-events-none shadow-sm`}>
+                    <span className="opacity-70 font-medium">S.F.C%:</span>
+                    <span>{avgSFC}%</span>
+                  </div>
+                )}
+              </div>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="h-10 rounded-full border border-input bg-white px-4 py-2 text-sm focus-visible:outline-none"
+              >
+                <option value="all">{language === 'he' ? 'כל הסוגים' : 'All Types'}</option>
+                <option value="sale_item">{language === 'he' ? 'פריט למכירה' : 'Sale Item'}</option>
+                <option value="prep_recipe">{language === 'he' ? 'פריט הכנה' : 'Prep Item'}</option>
+                <option value="last_scan">{language === 'he' ? 'סריקת תפריט אחרונה' : 'Last Menu Scan'}</option>
+              </select>
+            </div>
+          );
+        })()}
 
         <RecipeListView 
           recipes={filteredRecipes} 
