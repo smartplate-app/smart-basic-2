@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
             }
             
             let costPercentage = 0;
-            const salesExVat = extItem.total_sales / 1.17;
+            const salesExVat = extItem.total_sales / 1.18;
             const accumCost = extItem.quantity_sold * unitCost;
             if (salesExVat > 0) {
                 costPercentage = (accumCost / salesExVat) * 100;
