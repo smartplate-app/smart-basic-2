@@ -76,6 +76,8 @@ export default function MenuEngineeringPage() {
       sold_count: Number(formData.get('sold_count')),
       sale_price: Number(formData.get('sale_price')),
       total_cost: Number(formData.get('total_cost')),
+      manual_cost: Number(formData.get('total_cost')),
+      use_manual_cost: true,
       type: 'sale_item',
       store_owner_email: workingEmail
     };
@@ -187,7 +189,7 @@ export default function MenuEngineeringPage() {
   const itemsData = filteredRecipes.map(recipe => {
     const qty = Number(recipe.sold_count) || 0;
     const salePrice = Number(recipe.sale_price) || 0;
-    const cost = Number(recipe.total_cost) || 0;
+    const cost = Number(recipe.use_manual_cost ? recipe.manual_cost : recipe.total_cost) || 0;
     const itemProfit = salePrice - cost;
     const totalItemProfit = itemProfit * qty;
     const totalItemRevenue = salePrice * qty;
@@ -631,7 +633,11 @@ export default function MenuEngineeringPage() {
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
-                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('contributionPercent')}>
+                      <th 
+                        className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} 
+                        onClick={() => requestSort('contributionPercent')}
+                        title={language === 'he' ? 'אחוז הרווח (Gross Margin %) מתוך מחיר המנה' : 'Contribution Margin Percentage'}
+                      >
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'תרומה' : 'Contribution'}
                           <ArrowUpDown className="w-3 h-3" />
@@ -736,7 +742,7 @@ export default function MenuEngineeringPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">{language === 'he' ? 'עלות מזון' : 'Food Cost'}</label>
-                <Input type="number" step="0.01" name="total_cost" defaultValue={editingItem?.total_cost || 0} min="0" required />
+                <Input type="number" step="0.01" name="total_cost" defaultValue={editingItem ? (editingItem.use_manual_cost ? editingItem.manual_cost : editingItem.total_cost) : 0} min="0" required />
               </div>
               <div>
                 <label className="text-sm font-medium">{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</label>
