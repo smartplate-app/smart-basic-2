@@ -83,20 +83,19 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
   const recalculateTotals = (items) => {
     let totalSales = 0;
     let totalCogs = 0;
-
     items.forEach(item => {
       totalSales += Number(item.total_sales || 0);
       totalCogs += Number(item.quantity_sold || 0) * Number(item.unit_cost || 0);
     });
 
-    const grossProfit = (totalSales / 1.18) - totalCogs;
-    const cogsPercentage = totalSales > 0 ? (totalCogs / (totalSales / 1.18)) * 100 : 0;
+    const grossProfit = totalSales - totalCogs;
+    const cogsPercentage = totalSales > 0 ? (totalCogs / totalSales) * 100 : 0;
 
     return { totalSales, totalCogs, grossProfit, cogsPercentage };
   };
 
   const handleAddRecipe = (recipe) => {
-    const actualExclVat = (recipe.sale_price || 0) / 1.18;
+    const sales = recipe.sale_price || 0;
     const newItem = {
       recipe_id: recipe.id,
       item_name: recipe.name,
@@ -104,7 +103,7 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
       unit_cost: recipe.total_cost || 0,
       unit_price: recipe.sale_price || 0,
       total_sales: recipe.sale_price || 0,
-      cost_percentage: actualExclVat > 0 ? ((recipe.total_cost || 0) / actualExclVat) * 100 : 0
+      cost_percentage: sales > 0 ? ((recipe.total_cost || 0) / sales) * 100 : 0
     };
 
     const newItems = [...formData.items, newItem];
@@ -139,8 +138,7 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
     const sales = Number(newItems[index].total_sales) || 0;
     
     if (sales > 0) {
-      const salesExclVat = sales / 1.18;
-      newItems[index].cost_percentage = ((qty * cost) / salesExclVat) * 100;
+      newItems[index].cost_percentage = ((qty * cost) / sales) * 100;
     } else {
       newItems[index].cost_percentage = 0;
     }

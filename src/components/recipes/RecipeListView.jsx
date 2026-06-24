@@ -21,8 +21,8 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
 
   const getCostPct = (recipe) => {
     if (recipe.type !== 'sale_item') return 0;
-    const actualExclVat = (recipe.sale_price || 0) / 1.18;
-    return actualExclVat > 0 ? ((recipe.total_cost || 0) / actualExclVat) * 100 : 0;
+    const sales = recipe.sale_price || 0;
+    return sales > 0 ? ((recipe.total_cost || 0) / sales) * 100 : 0;
   };
 
   const sortedRecipes = [...recipes].sort((a, b) => {
@@ -134,7 +134,7 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
               </TableCell>
               <TableCell>
                 {recipe.type === 'sale_item' && recipe.sale_price > 0 
-                  ? `${((recipe.total_cost / (recipe.sale_price / 1.18)) * 100).toFixed(1)}%` 
+                  ? `${((recipe.total_cost / recipe.sale_price) * 100).toFixed(1)}%` 
                   : '-'}
               </TableCell>
               <TableCell>
@@ -165,7 +165,7 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
               {(() => {
                 const totalCost = recipes.filter(r => r.type === 'sale_item').reduce((sum, r) => sum + (Number(r.total_cost) || 0), 0);
                 const totalSale = recipes.filter(r => r.type === 'sale_item').reduce((sum, r) => sum + (Number(r.sale_price) || 0), 0);
-                return totalSale > 0 ? `${((totalCost / (totalSale / 1.18)) * 100).toFixed(1)}%` : '-';
+                return totalSale > 0 ? `${((totalCost / totalSale) * 100).toFixed(1)}%` : '-';
               })()}
             </TableCell>
             <TableCell></TableCell>

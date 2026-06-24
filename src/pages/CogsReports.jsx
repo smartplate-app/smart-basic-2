@@ -238,7 +238,7 @@ export default function CogsReportsPage() {
                   <div className="bg-blue-50 p-4 rounded-xl text-center border border-blue-100">
                     <div className="text-sm text-[#d4a373] font-bold mb-1">{language === 'he' ? 'רווח גולמי' : 'Gross Profit'}</div>
                     <div className="font-bold text-[#d4a373] text-2xl">₪{Number(report.gross_profit || 0).toFixed(0)}</div>
-                    <div className="text-xs text-gray-500 mt-1">margin: {report.total_sales > 0 ? ((report.gross_profit / (report.total_sales / 1.18)) * 100).toFixed(2) : 0}%</div>
+                    <div className="text-xs text-gray-500 mt-1">margin: {report.total_sales > 0 ? ((report.gross_profit / report.total_sales) * 100).toFixed(2) : 0}%</div>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-xl text-center border border-orange-100">
                     <div className="text-sm text-orange-600 font-bold mb-1">{language === 'he' ? 'אחוז COGS' : 'COGS %'}</div>

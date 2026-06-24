@@ -530,13 +530,12 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                     onChange={e => setFormData({...formData, sale_price: parseFloat(e.target.value) || 0})} 
                   />
                   {(() => {
-                    const actualExclVat = (formData.sale_price || 0) / 1.18;
-                    const costPct = actualExclVat > 0 ? (formData.total_cost / actualExclVat) * 100 : 0;
+                    const sales = formData.sale_price || 0;
+                    const costPct = sales > 0 ? (formData.total_cost / sales) * 100 : 0;
                     return (
                       <div className="mt-1 text-xs text-gray-500">
                         {language === 'he' ? 'אחוז עלות: ' : 'Cost %: '}
                         <span className="font-bold text-orange-600">{costPct.toFixed(1)}%</span>
-                        {language === 'he' ? ' (עלות / מחיר ללא מע"מ)' : ' (cost / price excl. VAT)'}
                       </div>
                     );
                   })()}
