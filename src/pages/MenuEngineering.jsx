@@ -210,6 +210,8 @@ export default function MenuEngineeringPage() {
   let totalFoodCost = 0;
   let totalProfit = 0;
   let validItemsCount = 0;
+  let totalSFC = 0;
+  let sfcItemsCount = 0;
 
   const itemsData = filteredRecipes.map(recipe => {
     const qty = Number(recipe.sold_count) || 0;
@@ -224,6 +226,11 @@ export default function MenuEngineeringPage() {
     if (salePrice > 0) {
       const salePriceExVat = salePrice / 1.18;
       sfc = (cost / salePriceExVat) * 100;
+    }
+
+    if (sfc > 0) {
+      totalSFC += sfc;
+      sfcItemsCount++;
     }
 
     if (qty > 0) {
@@ -248,7 +255,8 @@ export default function MenuEngineeringPage() {
 
   const avgVolume = validItemsCount > 0 ? totalVolume / validItemsCount : 0;
   const avgProfit = totalVolume > 0 ? totalProfit / totalVolume : 0;
-  const overallFoodCostPercent = totalRevenue > 0 ? (totalFoodCost / totalRevenue) * 100 : 0;
+  const overallFoodCostPercent = totalRevenue > 0 ? (totalFoodCost / totalRevenue) * 100 : 0; // COGS %
+  const avgSFC = sfcItemsCount > 0 ? totalSFC / sfcItemsCount : 0; // Avg SFC % (1 from each)
   const avgMix = validItemsCount > 0 ? 100 / validItemsCount : 0;
 
   const categorizedItems = itemsData.map(item => {
@@ -432,14 +440,25 @@ export default function MenuEngineeringPage() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? '% עלות מזון' : 'Food Cost %'}</p>
+                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'COGS מצטבר %' : 'Total COGS %'}</p>
                 <h3 className="text-2xl font-bold">{overallFoodCostPercent.toFixed(2)}%</h3>
               </div>
               <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
+                <Percent className="w-6 h-6" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-0 rounded-2xl">
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'ממוצע SFC תיאורטי' : 'Avg Theoretical SFC'}</p>
+                <h3 className="text-2xl font-bold">{avgSFC.toFixed(2)}%</h3>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-500">
                 <Percent className="w-6 h-6" />
               </div>
             </CardContent>
