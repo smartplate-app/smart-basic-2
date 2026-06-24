@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "../components/LanguageProvider";
-import { Lock, Plus, Trash2, HelpCircle, LayoutGrid, List, Edit, Percent, TrendingUp, DollarSign, Clock, Star, Tractor, Puzzle, Dog, Filter, RefreshCw, Tag, ArrowUpDown, Settings } from "lucide-react";
+import { Lock, Plus, Trash2, HelpCircle, LayoutGrid, List, Edit, Percent, TrendingUp, DollarSign, Clock, Star, Tractor, Puzzle, Dog, Filter, RefreshCw, Tag, ArrowUpDown, Settings, FileSpreadsheet, Loader2 } from "lucide-react";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 
 export default function MenuEngineeringPage() {
@@ -15,6 +15,7 @@ export default function MenuEngineeringPage() {
   const [passcode, setPasscode] = useState("");
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [activeTab, setActiveTab] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -157,6 +158,25 @@ export default function MenuEngineeringPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportToSheets = async () => {
+    try {
+      setIsExporting(true);
+      const res = await base44.functions.invoke('exportMenuEngineeringToSheets', {
+        itemsData: sortedItems
+      });
+      if (res.data?.url) {
+        window.open(res.data.url, '_blank');
+      } else {
+        alert(language === 'he' ? 'שגיאה ביצוא הנתונים' : 'Error exporting data');
+      }
+    } catch (err) {
+      console.error("Export error", err);
+      alert(language === 'he' ? 'שגיאה ביצוא הנתונים' : 'Error exporting data');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -405,6 +425,10 @@ export default function MenuEngineeringPage() {
             <Button onClick={() => { setEditingItem(null); setShowItemModal(true); }} className="bg-[#d4a373] hover:bg-[#b88c60] text-white">
               <Plus className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
               {language === 'he' ? 'הוסף פריט' : 'Add Item'}
+            </Button>
+            <Button variant="outline" onClick={handleExportToSheets} disabled={isExporting} className="text-gray-700 bg-white border-green-200 hover:bg-green-50 hover:text-green-700">
+              {isExporting ? <Loader2 className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0 text-green-600" />}
+              {language === 'he' ? 'ייצוא ל-Sheets' : 'Export to Sheets'}
             </Button>
             <div className="relative flex-1 md:w-48">
               <select 
