@@ -104,6 +104,20 @@ export default function MenuEngineeringPage() {
     }
   };
 
+  const handleInlineSoldCountUpdate = async (id, newValue) => {
+    const val = Number(newValue) || 0;
+    const item = recipes.find(r => r.id === id);
+    if (item && Number(item.sold_count) === val) return;
+
+    try {
+      setRecipes(prev => prev.map(r => r.id === id ? { ...r, sold_count: val } : r));
+      await base44.entities.Recipe.update(id, { sold_count: val });
+    } catch (e) {
+      console.error(e);
+      loadRecipes();
+    }
+  };
+
   const handleClearAll = async () => {
     if (!window.confirm(language === 'he' ? 'האם אתה בטוח שברצונך לאפס את כל נתוני המכירות?' : 'Are you sure you want to reset all sales data?')) return;
     
@@ -486,7 +500,13 @@ export default function MenuEngineeringPage() {
                     <div className="grid grid-cols-2 gap-y-5 gap-x-4 text-sm mb-5 flex-1">
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'מספר שנמכר' : 'Sold Count'}</div>
-                        <div className="font-bold text-gray-900 text-lg">{item.qty}</div>
+                        <Input 
+                          type="number" 
+                          defaultValue={item.qty}
+                          onBlur={(e) => handleInlineSoldCountUpdate(item.id, e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+                          className="w-20 h-8 font-bold text-gray-900 px-2 py-1"
+                        />
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תמהיל תפריט %' : 'Menu Mix %'}</div>
@@ -605,7 +625,15 @@ export default function MenuEngineeringPage() {
                             {categoryLabels[item.menu_category || 'general']}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-bold">{item.qty}</td>
+                        <td className="px-6 py-4 font-bold">
+                          <Input 
+                            type="number" 
+                            defaultValue={item.qty}
+                            onBlur={(e) => handleInlineSoldCountUpdate(item.id, e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+                            className="w-20 h-8 font-bold px-2 py-1 text-center"
+                          />
+                        </td>
                         <td className="px-6 py-4 text-gray-600">₪{item.cost.toFixed(2)}</td>
                         <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
                         <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePrice) * 100).toFixed(1)}%` : '0.0%'}</td>
