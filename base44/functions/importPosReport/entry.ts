@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
             let recipeId = null;
 
             if (matchedRecipe) {
-                unitCost = matchedRecipe.total_cost || 0;
+                unitCost = matchedRecipe.use_manual_cost ? (matchedRecipe.manual_cost || 0) : (matchedRecipe.total_cost || 0);
                 recipeId = matchedRecipe.id;
                 costPercentage = matchedRecipe.cost_percentage || 0;
             }

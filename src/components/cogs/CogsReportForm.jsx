@@ -372,13 +372,8 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
                           <td className="p-2 text-center align-middle">
                             <div className="flex flex-col items-center justify-center">
                               <div className="font-bold text-green-600" title="Cost %">
-                                {Number(item.cost_percentage).toFixed(1)}%
+                                {Number(item.cost_percentage).toFixed(2)}%
                               </div>
-                              {item.recipe_id ? (
-                                <span className="text-[10px] bg-green-100 text-green-800 px-1 rounded mt-0.5">{language === 'he' ? 'אוטומטי' : 'Auto'}</span>
-                              ) : (
-                                <span className="text-[10px] bg-orange-100 text-orange-800 px-1 rounded mt-0.5">{language === 'he' ? 'ידני' : 'Manual'}</span>
-                              )}
                             </div>
                           </td>
                           <td className="p-2 align-middle">
