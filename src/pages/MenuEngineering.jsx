@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useLanguage } from "../components/LanguageProvider";
-import { Lock, Plus, Trash2, HelpCircle, LayoutGrid, List, Edit, Percent, TrendingUp, DollarSign, Clock, Star, Tractor, Puzzle, Dog, Filter, RefreshCw, Tag } from "lucide-react";
+import { Lock, Plus, Trash2, HelpCircle, LayoutGrid, List, Edit, Percent, TrendingUp, DollarSign, Clock, Star, Tractor, Puzzle, Dog, Filter, RefreshCw, Tag, ArrowUpDown } from "lucide-react";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 
 export default function MenuEngineeringPage() {
@@ -18,6 +18,7 @@ export default function MenuEngineeringPage() {
   const [viewMode, setViewMode] = useState("grid");
   const [activeTab, setActiveTab] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   
   const [showItemModal, setShowItemModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -233,6 +234,36 @@ export default function MenuEngineeringPage() {
 
     return { ...item, category, categoryEn, color, mixPercent, isHighMix, isHighProfit };
   });
+
+  const sortedItems = [...categorizedItems].sort((a, b) => {
+    if (sortConfig.key) {
+      let aVal = a[sortConfig.key];
+      let bVal = b[sortConfig.key];
+      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+      if (sortConfig.key === 'contributionPercent') {
+         aVal = a.itemProfit > 0 ? (a.itemProfit / a.salePrice) : 0;
+         bVal = b.itemProfit > 0 ? (b.itemProfit / b.salePrice) : 0;
+      }
+
+      if (aVal < bVal) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aVal > bVal) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+    }
+    return 0;
+  });
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const getCategoryIcon = (categoryEn) => {
     switch(categoryEn) {
@@ -514,19 +545,59 @@ export default function MenuEngineeringPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50/50 border-b text-gray-500">
                     <tr>
-                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'שם הפריט' : 'Item Name'}</th>
-                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'קטגוריה' : 'Category'}</th>
-                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'נמכר' : 'Sold'}</th>
-                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'עלות מזון' : 'Food Cost'}</th>
-                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'מחיר תפריט' : 'Menu Price'}</th>
-                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'תרומה' : 'Contribution'}</th>
-                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? '% תמהיל' : 'Mix %'}</th>
-                      <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'סיווג' : 'Classification'}</th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('name')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'שם הפריט' : 'Item Name'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('menu_category')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'קטגוריה' : 'Category'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('qty')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'נמכר' : 'Sold'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('cost')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'עלות מזון' : 'Food Cost'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('salePrice')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'מחיר תפריט' : 'Menu Price'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('contributionPercent')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'תרומה' : 'Contribution'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('mixPercent')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? '% תמהיל' : 'Mix %'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('category')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'סיווג' : 'Classification'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
                       <th className={`px-6 py-4 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{language === 'he' ? 'פעולות' : 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {categorizedItems.map(item => (
+                    {sortedItems.map(item => (
                       <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-6 py-4 font-medium text-gray-900">{item.name}</td>
                         <td className="px-6 py-4">
