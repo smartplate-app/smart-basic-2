@@ -41,8 +41,9 @@ export default function ImportPosReportModal({ isOpen, onClose, onSuccess }) {
         totalSales += Number(item.total_sales || 0);
         totalCogs += Number(item.quantity_sold || 0) * Number(item.unit_cost || 0);
       });
-      const grossProfit = totalSales - totalCogs;
-      const cogsPercentage = totalSales > 0 ? (totalCogs / totalSales) * 100 : 0;
+      const salesExcludingVat = totalSales / 1.17;
+      const grossProfit = salesExcludingVat - totalCogs;
+      const cogsPercentage = totalSales > 0 ? (totalCogs / salesExcludingVat) * 100 : 0;
 
       const prefilledReport = {
         name: `${language === 'he' ? 'דוח ייבוא' : 'Imported Report'} ${new Date().toLocaleDateString(isRTL ? 'he-IL' : 'en-US')}`,

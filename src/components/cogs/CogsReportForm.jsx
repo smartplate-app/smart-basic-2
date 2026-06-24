@@ -88,8 +88,9 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
       totalCogs += Number(item.quantity_sold || 0) * Number(item.unit_cost || 0);
     });
 
-    const grossProfit = totalSales - totalCogs;
-    const cogsPercentage = totalSales > 0 ? (totalCogs / totalSales) * 100 : 0;
+    const salesExcludingVat = totalSales / 1.17;
+    const grossProfit = salesExcludingVat - totalCogs;
+    const cogsPercentage = totalSales > 0 ? (totalCogs / salesExcludingVat) * 100 : 0;
 
     return { totalSales, totalCogs, grossProfit, cogsPercentage };
   };
@@ -138,7 +139,8 @@ export default function CogsReportForm({ report, onSave, onCancel }) {
       const sales = Number(newItems[index].total_sales) || 0;
       
       if (sales > 0) {
-        newItems[index].cost_percentage = ((qty * cost) / sales) * 100;
+        const salesExcludingVat = sales / 1.17;
+        newItems[index].cost_percentage = ((qty * cost) / salesExcludingVat) * 100;
       } else {
         newItems[index].cost_percentage = 0;
       }
