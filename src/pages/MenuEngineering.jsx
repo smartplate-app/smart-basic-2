@@ -30,12 +30,8 @@ export default function MenuEngineeringPage() {
     soldCount: true,
     foodCost: true,
     menuPrice: true,
-    theoreticalRevenue: true,
     sfc: true,
     cogs: true,
-    itemContribution: true,
-    totalContribution: true,
-    contributionPercent: true,
     mixPercent: true,
     classification: true,
   };
@@ -243,14 +239,12 @@ export default function MenuEngineeringPage() {
     const salePrice = Number(recipe.sale_price) || 0;
     const cost = Number(recipe.use_manual_cost ? recipe.manual_cost : recipe.total_cost) || 0;
     
-    let salePriceExVat = salePrice;
     let sfc = 0;
     if (salePrice > 0) {
-      salePriceExVat = salePrice / 1.18;
-      sfc = (cost / salePriceExVat) * 100;
+      sfc = (cost / (salePrice / 1.18)) * 100;
     }
 
-    const itemProfit = salePriceExVat - cost;
+    const itemProfit = salePrice - cost;
     const totalItemProfit = itemProfit * qty;
     const totalItemRevenue = salePrice * qty;
     const totalItemCost = cost * qty;
@@ -274,7 +268,6 @@ export default function MenuEngineeringPage() {
       itemProfit,
       totalItemProfit,
       salePrice,
-      salePriceExVat,
       cost,
       sfc,
       totalItemCost,
@@ -285,7 +278,7 @@ export default function MenuEngineeringPage() {
   const avgProfit = totalVolume > 0 ? totalProfit / totalVolume : 0;
   const overallFoodCostPercent = totalRevenue > 0 ? (totalFoodCost / (totalRevenue / 1.18)) * 100 : 0; // COGS %
   const avgSFC = sfcItemsCount > 0 ? totalSFC / sfcItemsCount : 0; // Avg SFC % (1 from each)
-  const avgMixBenchmark = validItemsCount > 0 ? (100 / validItemsCount) * 0.7 : 0; // Kasavana/Smith 70% rule
+  const avgMixBenchmark = validItemsCount > 0 ? (100 / validItemsCount) : 0; // Standard average mix
 
   const categorizedItems = itemsData.map(item => {
     let category = "";
@@ -326,11 +319,6 @@ export default function MenuEngineeringPage() {
       let bVal = b[sortConfig.key];
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
       if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-
-      if (sortConfig.key === 'contributionPercent') {
-         aVal = a.itemProfit > 0 ? (a.itemProfit / a.salePriceExVat) : 0;
-         bVal = b.itemProfit > 0 ? (b.itemProfit / b.salePriceExVat) : 0;
-      }
 
       if (aVal < bVal) {
         return sortConfig.direction === 'asc' ? -1 : 1;
@@ -397,7 +385,7 @@ export default function MenuEngineeringPage() {
                       <div className="bg-white p-3 border shadow-lg rounded-lg">
                         <p className="font-bold">{data.name}</p>
                         <p className="text-sm text-gray-600">{language === 'he' ? 'תמהיל:' : 'Mix:'} {data.x.toFixed(1)}%</p>
-                        <p className="text-sm text-gray-600">{language === 'he' ? 'תרומה:' : 'Profit:'} ₪{data.y.toFixed(2)}</p>
+                        <p className="text-sm text-gray-600">{language === 'he' ? 'רווח:' : 'Profit:'} ₪{data.y.toFixed(2)}</p>
                         <p className={`text-sm font-bold mt-1`} style={{color: data.color}}>{data.category}</p>
                       </div>
                     );
@@ -410,7 +398,7 @@ export default function MenuEngineeringPage() {
                   ))}
                 </Scatter>
                 <ReferenceLine x={avgMixBenchmark} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'top', value: language === 'he' ? 'רף תמהיל' : 'Mix Benchmark', fill: '#64748b', fontSize: 12 }} />
-                <ReferenceLine y={avgProfit} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'right', value: language === 'he' ? 'ממוצע תרומה' : 'Avg Profit', fill: '#64748b', fontSize: 12 }} />
+                <ReferenceLine y={avgProfit} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'right', value: language === 'he' ? 'ממוצע רווח' : 'Avg Profit', fill: '#64748b', fontSize: 12 }} />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
@@ -499,7 +487,7 @@ export default function MenuEngineeringPage() {
           <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'סה"כ תרומה' : 'Total Contribution'}</p>
+                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'סה"כ רווח' : 'Total Profit'}</p>
                 <h3 className="text-2xl font-bold">₪{totalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
               </div>
               <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-500">
@@ -608,12 +596,6 @@ export default function MenuEngineeringPage() {
                         <div className="font-bold text-gray-900">₪{item.salePrice.toFixed(2)}</div>
                       </div>
                       )}
-                      {visibleColumns.theoreticalRevenue && (
-                      <div>
-                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'הכנסות תיאורטיות' : 'Theoretical Revenue'}</div>
-                        <div className="font-bold text-gray-900">₪{item.totalItemRevenue.toFixed(2)}</div>
-                      </div>
-                      )}
                       {visibleColumns.sfc && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC'}</div>
@@ -626,18 +608,6 @@ export default function MenuEngineeringPage() {
                         <div className="font-bold text-gray-900">₪{item.totalItemCost.toFixed(2)}</div>
                       </div>
                       )}
-                      {visibleColumns.itemContribution && (
-                      <div>
-                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לפריט' : 'Item Contribution'}</div>
-                        <div className="font-bold text-green-600">₪{item.itemProfit.toFixed(2)}</div>
-                      </div>
-                      )}
-                      {visibleColumns.totalContribution && (
-                      <div>
-                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'תרומה לתפריט' : 'Total Contribution'}</div>
-                        <div className="font-bold text-green-600">₪{item.totalItemProfit.toFixed(2)}</div>
-                      </div>
-                      )}
                     </div>
 
                     <div className="pt-4 border-t border-gray-100 flex justify-between items-center mt-auto">
@@ -647,8 +617,8 @@ export default function MenuEngineeringPage() {
                           {item.isHighMix ? (language === 'he' ? 'גבוה' : 'High') : (language === 'he' ? 'נמוך' : 'Low')}
                         </span>
                         <span className={item.isHighProfit ? 'text-green-600' : 'text-red-500'}>
-                          {language === 'he' ? 'תרומה: ' : 'Contribution: '}
-                          {item.isHighProfit ? (language === 'he' ? 'גבוהה' : 'High') : (language === 'he' ? 'נמוכה' : 'Low')}
+                          {language === 'he' ? 'רווח: ' : 'Profit: '}
+                          {item.isHighProfit ? (language === 'he' ? 'גבוה' : 'High') : (language === 'he' ? 'נמוך' : 'Low')}
                         </span>
                       </div>
                       <div className="flex gap-1">
@@ -713,14 +683,6 @@ export default function MenuEngineeringPage() {
                         </div>
                       </th>
                       )}
-                      {visibleColumns.theoreticalRevenue && (
-                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('totalItemRevenue')}>
-                        <div className="flex items-center gap-1">
-                          {language === 'he' ? 'הכנסות תיאורטיות' : 'Theoretical Revenue'}
-                          <ArrowUpDown className="w-3 h-3" />
-                        </div>
-                      </th>
-                      )}
                       {visibleColumns.sfc && (
                       <th 
                         className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} 
@@ -741,18 +703,6 @@ export default function MenuEngineeringPage() {
                       >
                         <div className="flex items-center gap-1">
                           {language === 'he' ? 'סה"כ עלות (COGS)' : 'Total Cost (COGS)'}
-                          <ArrowUpDown className="w-3 h-3" />
-                        </div>
-                      </th>
-                      )}
-                      {visibleColumns.contributionPercent && (
-                      <th 
-                        className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} 
-                        onClick={() => requestSort('contributionPercent')}
-                        title={language === 'he' ? 'אחוז הרווח (Gross Margin %) מתוך מחיר המנה' : 'Contribution Margin Percentage'}
-                      >
-                        <div className="flex items-center gap-1">
-                          {language === 'he' ? 'תרומה' : 'Contribution'}
                           <ArrowUpDown className="w-3 h-3" />
                         </div>
                       </th>
@@ -804,17 +754,11 @@ export default function MenuEngineeringPage() {
                         {visibleColumns.menuPrice && (
                         <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
                         )}
-                        {visibleColumns.theoreticalRevenue && (
-                        <td className="px-6 py-4 text-gray-900">₪{item.totalItemRevenue.toFixed(2)}</td>
-                        )}
                         {visibleColumns.sfc && (
                         <td className="px-6 py-4 font-medium text-blue-600">{item.sfc.toFixed(1)}%</td>
                         )}
                         {visibleColumns.cogs && (
                         <td className="px-6 py-4 text-gray-600">₪{item.totalItemCost.toFixed(2)}</td>
-                        )}
-                        {visibleColumns.contributionPercent && (
-                        <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePriceExVat) * 100).toFixed(1)}%` : '0.0%'}</td>
                         )}
                         {visibleColumns.mixPercent && (
                         <td className="px-6 py-4 text-gray-600">{item.mixPercent.toFixed(1)}%</td>
@@ -913,12 +857,8 @@ export default function MenuEngineeringPage() {
                   soldCount: language === 'he' ? 'מספר שנמכר' : 'Sold Count',
                   foodCost: language === 'he' ? 'עלות מזון' : 'Food Cost',
                   menuPrice: language === 'he' ? 'מחיר תפריט' : 'Menu Price',
-                  theoreticalRevenue: language === 'he' ? 'הכנסות תיאורטיות' : 'Theoretical Revenue',
                   sfc: language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC',
                   cogs: language === 'he' ? 'סה"כ עלות (COGS)' : 'Total COGS',
-                  itemContribution: language === 'he' ? 'תרומה לפריט' : 'Item Contribution',
-                  totalContribution: language === 'he' ? 'תרומה לתפריט' : 'Total Contribution',
-                  contributionPercent: language === 'he' ? 'תרומה (%)' : 'Contribution (%)',
                   mixPercent: language === 'he' ? '% תמהיל' : 'Mix %',
                   classification: language === 'he' ? 'סיווג' : 'Classification',
                 };
