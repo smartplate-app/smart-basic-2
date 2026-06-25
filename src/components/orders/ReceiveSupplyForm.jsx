@@ -1748,8 +1748,7 @@ const handleAutoScanWithUrls = async (urlsToScan) => {
                                 document_type: d.document_type || (formData.document_type || "invoice")
                               }));
                               try {
-                                if (base44.entities.SupplyReceipt.bulkCreate) await base44.entities.SupplyReceipt.bulkCreate(payloads);
-                                else await Promise.all(payloads.map(p => base44.entities.SupplyReceipt.create(p)));
+                                await base44.entities.SupplyReceipt.bulkCreate(payloads);
                                 if (formData.linked_receipt_id && payloads.some(p => p.is_refund)) await base44.entities.SupplyReceipt.update(formData.linked_receipt_id, {awaiting_credit: false, reviewed: true, needs_review: false}).catch(()=>{});
                                 alert(language === 'he' ? 'נשמרו כל החשבוניות' : 'All invoices saved');
                                 if (onSuccess) onSuccess(); else if (onCancel) onCancel();

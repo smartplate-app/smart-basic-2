@@ -152,8 +152,10 @@ export default function MenuEngineeringPage() {
     
     try {
       setLoading(true);
-      const updates = recipes.map(r => base44.entities.Recipe.update(r.id, { sold_count: 0 }));
-      await Promise.all(updates);
+      const updateData = recipes.map(r => ({ id: r.id, sold_count: 0 }));
+      for (let i = 0; i < updateData.length; i += 500) {
+        await base44.entities.Recipe.bulkUpdate(updateData.slice(i, i + 500));
+      }
       await loadRecipes();
     } catch (err) {
       console.error(err);

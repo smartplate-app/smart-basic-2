@@ -665,9 +665,13 @@ const handleCleanOrphans = async (ownerEmail) => {
         }
       } else {
         if (user?.store_user_owner_email || user?.acting_as_store_email) {
-          await Promise.all(idsToDelete.map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
+          for (let i = 0; i < idsToDelete.length; i += 50) {
+            await Promise.all(idsToDelete.slice(i, i + 50).map(id => base44.functions.invoke('deleteItemForStore', { itemId: id })));
+          }
         } else {
-          await Promise.all(idsToDelete.map(id => base44.entities.Item.delete(id)));
+          for (let i = 0; i < idsToDelete.length; i += 500) {
+            await base44.entities.Item.deleteMany({ id: { $in: idsToDelete.slice(i, i + 500) } });
+          }
         }
       }
       
