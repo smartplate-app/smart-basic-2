@@ -288,7 +288,8 @@ export default function MenuEngineeringPage() {
     let color = "";
     const mixPercent = totalVolume > 0 ? (item.qty / totalVolume) * 100 : 0;
     const isHighMix = mixPercent >= avgMixBenchmark;
-    const isHighProfit = item.itemProfit >= avgProfit;
+    // Simplified logic: High Profit = Low Food Cost % (SFC)
+    const isHighProfit = item.sfc > 0 ? item.sfc <= avgSFC : true;
 
     if (item.qty === 0) {
       category = language === 'he' ? 'אין מכירות' : 'No Sales';
@@ -354,7 +355,7 @@ export default function MenuEngineeringPage() {
     const data = categorizedItems.filter(item => item.qty > 0).map(item => ({
       name: item.name,
       x: item.mixPercent,
-      y: item.itemProfit,
+      y: item.sfc,
       category: item.category,
       color: item.color.includes('green') ? '#15803d' : 
              item.color.includes('blue') ? '#1d4ed8' : 
@@ -379,7 +380,7 @@ export default function MenuEngineeringPage() {
               <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.5} />
                 <XAxis type="number" dataKey="x" name="Mix %" unit="%" tick={{fontSize: 12}} />
-                <YAxis type="number" dataKey="y" name="Profit" unit="₪" tick={{fontSize: 12}} />
+                <YAxis reversed={true} type="number" dataKey="y" name="SFC %" unit="%" tick={{fontSize: 12}} />
                 <RechartsTooltip cursor={{ strokeDasharray: '3 3' }} content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
@@ -387,7 +388,7 @@ export default function MenuEngineeringPage() {
                       <div className="bg-white p-3 border shadow-lg rounded-lg">
                         <p className="font-bold">{data.name}</p>
                         <p className="text-sm text-gray-600">{language === 'he' ? 'תמהיל:' : 'Mix:'} {data.x.toFixed(1)}%</p>
-                        <p className="text-sm text-gray-600">{language === 'he' ? 'רווח:' : 'Profit:'} ₪{data.y.toFixed(2)}</p>
+                        <p className="text-sm text-gray-600">{language === 'he' ? 'עלות מזון (SFC):' : 'Food Cost:'} {data.y.toFixed(1)}%</p>
                         <p className={`text-sm font-bold mt-1`} style={{color: data.color}}>{data.category}</p>
                       </div>
                     );
@@ -400,7 +401,7 @@ export default function MenuEngineeringPage() {
                   ))}
                 </Scatter>
                 <ReferenceLine x={avgMixBenchmark} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'top', value: language === 'he' ? 'רף תמהיל' : 'Mix Benchmark', fill: '#64748b', fontSize: 12 }} />
-                <ReferenceLine y={avgProfit} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'right', value: language === 'he' ? 'ממוצע רווח' : 'Avg Profit', fill: '#64748b', fontSize: 12 }} />
+                <ReferenceLine y={avgSFC} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'right', value: language === 'he' ? 'ממוצע SFC' : 'Avg SFC', fill: '#64748b', fontSize: 12 }} />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
@@ -489,8 +490,8 @@ export default function MenuEngineeringPage() {
           <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'סה"כ רווח' : 'Total Profit'}</p>
-                <h3 className="text-2xl font-bold">₪{totalProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'פריטים שנמכרו' : 'Items Sold'}</p>
+                <h3 className="text-2xl font-bold">{totalVolume.toLocaleString()}</h3>
               </div>
               <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-500">
                 <TrendingUp className="w-6 h-6" />
@@ -619,8 +620,8 @@ export default function MenuEngineeringPage() {
                           {item.isHighMix ? (language === 'he' ? 'גבוה' : 'High') : (language === 'he' ? 'נמוך' : 'Low')}
                         </span>
                         <span className={item.isHighProfit ? 'text-green-600' : 'text-red-500'}>
-                          {language === 'he' ? 'רווח: ' : 'Profit: '}
-                          {item.isHighProfit ? (language === 'he' ? 'גבוה' : 'High') : (language === 'he' ? 'נמוך' : 'Low')}
+                          {language === 'he' ? 'עלות מזון: ' : 'Food Cost: '}
+                          {item.isHighProfit ? (language === 'he' ? 'נמוכה' : 'Low') : (language === 'he' ? 'גבוהה' : 'High')}
                         </span>
                       </div>
                       <div className="flex gap-1">
@@ -896,19 +897,19 @@ export default function MenuEngineeringPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <h4 className="font-bold text-green-800 flex items-center gap-2"><Star className="w-4 h-4"/> {language === 'he' ? 'כוכב (Star)' : 'Star'}</h4>
-                <p className="text-sm text-green-700 mt-1">{language === 'he' ? 'פופולריות גבוהה, רווחיות גבוהה. אלו המנות המנצחות שלך. קדם אותן והבלט אותן בתפריט.' : 'High popularity, high profitability. These are your winning dishes. Promote and highlight them on the menu.'}</p>
+                <p className="text-sm text-green-700 mt-1">{language === 'he' ? 'פופולריות גבוהה, אחוז עלות מזון (Food Cost) נמוך. אלו המנות המנצחות שלך. קדם אותן והבלט אותן בתפריט.' : 'High popularity, low Food Cost %. These are your winning dishes. Promote and highlight them on the menu.'}</p>
               </div>
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h4 className="font-bold text-blue-800 flex items-center gap-2"><Tractor className="w-4 h-4"/> {language === 'he' ? 'סוס עבודה (Plowhorse)' : 'Plowhorse'}</h4>
-                <p className="text-sm text-[#b88c60] mt-1">{language === 'he' ? 'פופולריות גבוהה, רווחיות נמוכה. מנות אהובות אך לא רווחיות מספיק. שקול להעלות מחיר מעט או להקטין מנות.' : 'High popularity, low profitability. Beloved dishes but not profitable enough. Consider slightly raising the price or reducing portion size.'}</p>
+                <p className="text-sm text-[#b88c60] mt-1">{language === 'he' ? 'פופולריות גבוהה, אחוז עלות מזון (Food Cost) גבוה. מנות אהובות אך יקרות להכנה. שקול להעלות מחיר מעט או להקטין מנות.' : 'High popularity, high Food Cost %. Beloved dishes but costly to make. Consider slightly raising the price or reducing portion size.'}</p>
               </div>
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <h4 className="font-bold text-yellow-800 flex items-center gap-2"><Puzzle className="w-4 h-4"/> {language === 'he' ? 'חידה (Puzzle)' : 'Puzzle'}</h4>
-                <p className="text-sm text-yellow-700 mt-1">{language === 'he' ? 'פופולריות נמוכה, רווחיות גבוהה. מנות רווחיות שלא נמכרות מספיק. נסה לשפר את התיאור, המיקום בתפריט או לקדם אותן דרך המלצרים.' : 'Low popularity, high profitability. Profitable dishes that don\'t sell enough. Try improving the description, placement, or promote via staff.'}</p>
+                <p className="text-sm text-yellow-700 mt-1">{language === 'he' ? 'פופולריות נמוכה, אחוז עלות מזון (Food Cost) נמוך. מנות זולות להכנה שלא נמכרות מספיק. נסה לשפר את התיאור, המיקום בתפריט או לקדם דרך המלצרים.' : 'Low popularity, low Food Cost %. Cheap to make dishes that don\'t sell enough. Try improving description, placement, or promote via staff.'}</p>
               </div>
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <h4 className="font-bold text-red-800 flex items-center gap-2"><Dog className="w-4 h-4"/> {language === 'he' ? 'כלב (Dog)' : 'Dog'}</h4>
-                <p className="text-sm text-red-700 mt-1">{language === 'he' ? 'פופולריות נמוכה, רווחיות נמוכה. שקול להסיר מנות אלו מהתפריט או לשנות אותן לחלוטין.' : 'Low popularity, low profitability. Consider removing these dishes from the menu or completely revamping them.'}</p>
+                <p className="text-sm text-red-700 mt-1">{language === 'he' ? 'פופולריות נמוכה, אחוז עלות מזון (Food Cost) גבוה. שקול להסיר מנות אלו מהתפריט או לשנות אותן לחלוטין.' : 'Low popularity, high Food Cost %. Consider removing these dishes from the menu or completely revamping them.'}</p>
               </div>
             </div>
           </div>
