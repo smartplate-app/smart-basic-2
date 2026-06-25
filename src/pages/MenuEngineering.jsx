@@ -30,6 +30,7 @@ export default function MenuEngineeringPage() {
     soldCount: true,
     foodCost: true,
     menuPrice: true,
+    theoreticalRevenue: true,
     sfc: true,
     cogs: true,
     itemContribution: true,
@@ -241,16 +242,18 @@ export default function MenuEngineeringPage() {
     const qty = Number(recipe.sold_count) || 0;
     const salePrice = Number(recipe.sale_price) || 0;
     const cost = Number(recipe.use_manual_cost ? recipe.manual_cost : recipe.total_cost) || 0;
-    const itemProfit = salePrice - cost;
+    
+    let salePriceExVat = salePrice;
+    let sfc = 0;
+    if (salePrice > 0) {
+      salePriceExVat = salePrice / 1.18;
+      sfc = (cost / salePriceExVat) * 100;
+    }
+
+    const itemProfit = salePriceExVat - cost;
     const totalItemProfit = itemProfit * qty;
     const totalItemRevenue = salePrice * qty;
     const totalItemCost = cost * qty;
-
-    let sfc = 0;
-    if (salePrice > 0) {
-      const salePriceExVat = salePrice / 1.18;
-      sfc = (cost / salePriceExVat) * 100;
-    }
 
     if (sfc > 0) {
       totalSFC += sfc;
@@ -271,24 +274,25 @@ export default function MenuEngineeringPage() {
       itemProfit,
       totalItemProfit,
       salePrice,
+      salePriceExVat,
       cost,
       sfc,
-      totalItemCost
+      totalItemCost,
+      totalItemRevenue
     };
   });
 
-  const avgVolume = validItemsCount > 0 ? totalVolume / validItemsCount : 0;
   const avgProfit = totalVolume > 0 ? totalProfit / totalVolume : 0;
-  const overallFoodCostPercent = totalRevenue > 0 ? (totalFoodCost / totalRevenue) * 100 : 0; // COGS %
+  const overallFoodCostPercent = totalRevenue > 0 ? (totalFoodCost / (totalRevenue / 1.18)) * 100 : 0; // COGS %
   const avgSFC = sfcItemsCount > 0 ? totalSFC / sfcItemsCount : 0; // Avg SFC % (1 from each)
-  const avgMix = validItemsCount > 0 ? 100 / validItemsCount : 0;
+  const avgMixBenchmark = validItemsCount > 0 ? (100 / validItemsCount) * 0.7 : 0; // Kasavana/Smith 70% rule
 
   const categorizedItems = itemsData.map(item => {
     let category = "";
     let categoryEn = "";
     let color = "";
     const mixPercent = totalVolume > 0 ? (item.qty / totalVolume) * 100 : 0;
-    const isHighMix = mixPercent >= avgMix;
+    const isHighMix = mixPercent >= avgMixBenchmark;
     const isHighProfit = item.itemProfit >= avgProfit;
 
     if (item.qty === 0) {
@@ -324,8 +328,8 @@ export default function MenuEngineeringPage() {
       if (typeof bVal === 'string') bVal = bVal.toLowerCase();
 
       if (sortConfig.key === 'contributionPercent') {
-         aVal = a.itemProfit > 0 ? (a.itemProfit / a.salePrice) : 0;
-         bVal = b.itemProfit > 0 ? (b.itemProfit / b.salePrice) : 0;
+         aVal = a.itemProfit > 0 ? (a.itemProfit / a.salePriceExVat) : 0;
+         bVal = b.itemProfit > 0 ? (b.itemProfit / b.salePriceExVat) : 0;
       }
 
       if (aVal < bVal) {
@@ -405,7 +409,7 @@ export default function MenuEngineeringPage() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Scatter>
-                <ReferenceLine x={avgMix} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'top', value: language === 'he' ? 'ממוצע תמהיל' : 'Avg Mix', fill: '#64748b', fontSize: 12 }} />
+                <ReferenceLine x={avgMixBenchmark} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'top', value: language === 'he' ? 'רף תמהיל' : 'Mix Benchmark', fill: '#64748b', fontSize: 12 }} />
                 <ReferenceLine y={avgProfit} stroke="#64748b" strokeDasharray="3 3" label={{ position: 'right', value: language === 'he' ? 'ממוצע תרומה' : 'Avg Profit', fill: '#64748b', fontSize: 12 }} />
               </ScatterChart>
             </ResponsiveContainer>
@@ -604,6 +608,12 @@ export default function MenuEngineeringPage() {
                         <div className="font-bold text-gray-900">₪{item.salePrice.toFixed(2)}</div>
                       </div>
                       )}
+                      {visibleColumns.theoreticalRevenue && (
+                      <div>
+                        <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'הכנסות תיאורטיות' : 'Theoretical Revenue'}</div>
+                        <div className="font-bold text-gray-900">₪{item.totalItemRevenue.toFixed(2)}</div>
+                      </div>
+                      )}
                       {visibleColumns.sfc && (
                       <div>
                         <div className="text-gray-500 text-xs mb-1">{language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC'}</div>
@@ -703,6 +713,14 @@ export default function MenuEngineeringPage() {
                         </div>
                       </th>
                       )}
+                      {visibleColumns.theoreticalRevenue && (
+                      <th className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} onClick={() => requestSort('totalItemRevenue')}>
+                        <div className="flex items-center gap-1">
+                          {language === 'he' ? 'הכנסות תיאורטיות' : 'Theoretical Revenue'}
+                          <ArrowUpDown className="w-3 h-3" />
+                        </div>
+                      </th>
+                      )}
                       {visibleColumns.sfc && (
                       <th 
                         className={`px-6 py-4 font-medium cursor-pointer hover:bg-gray-100 ${isRTL ? 'text-right' : 'text-left'}`} 
@@ -786,6 +804,9 @@ export default function MenuEngineeringPage() {
                         {visibleColumns.menuPrice && (
                         <td className="px-6 py-4 font-medium text-green-600">₪{item.salePrice.toFixed(2)}</td>
                         )}
+                        {visibleColumns.theoreticalRevenue && (
+                        <td className="px-6 py-4 text-gray-900">₪{item.totalItemRevenue.toFixed(2)}</td>
+                        )}
                         {visibleColumns.sfc && (
                         <td className="px-6 py-4 font-medium text-blue-600">{item.sfc.toFixed(1)}%</td>
                         )}
@@ -793,7 +814,7 @@ export default function MenuEngineeringPage() {
                         <td className="px-6 py-4 text-gray-600">₪{item.totalItemCost.toFixed(2)}</td>
                         )}
                         {visibleColumns.contributionPercent && (
-                        <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePrice) * 100).toFixed(1)}%` : '0.0%'}</td>
+                        <td className="px-6 py-4 text-gray-600">{item.itemProfit > 0 ? `${((item.itemProfit / item.salePriceExVat) * 100).toFixed(1)}%` : '0.0%'}</td>
                         )}
                         {visibleColumns.mixPercent && (
                         <td className="px-6 py-4 text-gray-600">{item.mixPercent.toFixed(1)}%</td>
@@ -892,6 +913,7 @@ export default function MenuEngineeringPage() {
                   soldCount: language === 'he' ? 'מספר שנמכר' : 'Sold Count',
                   foodCost: language === 'he' ? 'עלות מזון' : 'Food Cost',
                   menuPrice: language === 'he' ? 'מחיר תפריט' : 'Menu Price',
+                  theoreticalRevenue: language === 'he' ? 'הכנסות תיאורטיות' : 'Theoretical Revenue',
                   sfc: language === 'he' ? 'SFC תיאורטי' : 'Theoretical SFC',
                   cogs: language === 'he' ? 'סה"כ עלות (COGS)' : 'Total COGS',
                   itemContribution: language === 'he' ? 'תרומה לפריט' : 'Item Contribution',
