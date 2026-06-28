@@ -123,7 +123,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
             ing.item_id = item.id;
             ing.item_name = item.name;
             
-            const price = item.price_after_discount || item.price || 0;
+            const price = item.price ? item.price * (1 - (item.discount || 0) / 100) : 0;
             const unitsPerPackage = item.units_per_package || 1;
             const contentPerUnit = item.content_per_unit || 1;
             const purchaseUnit = item.unit || 'unit';
@@ -218,7 +218,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   };
 
   const getIngredientCost = (item, quantity, recipeUnit) => {
-    const price = item.price_after_discount || item.price || 0;
+    const price = item.price ? item.price * (1 - (item.discount || 0) / 100) : 0;
     const unitsPerPackage = item.units_per_package || 1;
     const contentPerUnit = item.content_per_unit || 1;
     const purchaseUnit = item.unit || 'unit';
@@ -658,7 +658,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                             )}
                             <span>{item.name}</span>
                           </div>
-                          <span className="text-sm text-gray-500">₪{Number(item.price_after_discount || item.price || 0).toFixed(2)} / {language === 'he' ? 'אריזה' : 'pkg'}</span>
+                          <span className="text-sm text-gray-500">₪{Number(item.price ? item.price * (1 - (item.discount || 0) / 100) : 0).toFixed(2)} / {language === 'he' ? 'אריזה' : 'pkg'}</span>
                         </div>
                       ))}
                       <div className="p-2 border-t mt-1">
@@ -705,7 +705,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
                       if (ing.is_prep_recipe) return null;
                       const origItem = ing.original_item || items.find(i => i.id === ing.item_id);
                       if (!origItem) return null;
-                      const cPrice = Number(origItem.price_after_discount || origItem.price || 0).toFixed(2);
+                      const cPrice = Number(origItem.price ? origItem.price * (1 - (origItem.discount || 0) / 100) : 0).toFixed(2);
                       const cUnit = (origItem.units_per_package > 1 ? `${origItem.units_per_package} ` : '') + (language === 'he' ? (origItem.unit === 'case' ? 'אריזות' : origItem.unit === 'kg' ? 'ק״ג' : origItem.unit === 'gram' ? 'גרם' : origItem.unit === 'liter' ? 'ליטר' : origItem.unit === 'ml' ? 'מ״ל' : 'יחידה') : (origItem.unit || 'unit'));
                       return (
                         <div className="text-[10px] text-gray-500 font-normal">
