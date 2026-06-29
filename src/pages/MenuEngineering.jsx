@@ -19,6 +19,7 @@ export default function MenuEngineeringPage() {
   const [viewMode, setViewMode] = useState("grid");
   const [activeTab, setActiveTab] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [searchFilter, setSearchFilter] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   
   const [showItemModal, setShowItemModal] = useState(false);
@@ -223,9 +224,16 @@ export default function MenuEngineeringPage() {
     evening: language === 'he' ? 'ערב' : 'Evening'
   };
 
-  const filteredRecipes = categoryFilter === 'all' 
-    ? recipes 
-    : recipes.filter(r => r.menu_category === categoryFilter);
+  const filteredRecipes = recipes.filter(r => {
+    const hasPrice = (Number(r.sale_price) || 0) > 0;
+    if (!hasPrice) return false;
+    
+    if (categoryFilter !== 'all' && r.menu_category !== categoryFilter) return false;
+    
+    if (searchFilter && !r.name.toLowerCase().includes(searchFilter.toLowerCase())) return false;
+
+    return true;
+  });
 
   // Calculate Menu Engineering Metrics
   let totalVolume = 0;
@@ -435,13 +443,22 @@ export default function MenuEngineeringPage() {
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="w-full h-10 pl-3 pr-8 text-sm border rounded-md appearance-none bg-white"
               >
-                <option value="all">{language === 'he' ? 'הכל' : 'All'}</option>
+                <option value="all">{language === 'he' ? 'הכל' : 'All Categories'}</option>
                 <option value="general">{language === 'he' ? 'כללי' : 'General'}</option>
                 <option value="morning">{language === 'he' ? 'בוקר' : 'Morning'}</option>
                 <option value="noon">{language === 'he' ? 'צהריים' : 'Noon'}</option>
                 <option value="evening">{language === 'he' ? 'ערב' : 'Evening'}</option>
               </select>
-              <Filter className="absolute right-3 top-3 w-4 h-4 text-gray-400 pointer-events-none" />
+              <Filter className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 w-4 h-4 text-gray-400 pointer-events-none`} />
+            </div>
+            <div className="relative flex-1 md:w-48">
+              <Input
+                type="text"
+                placeholder={language === 'he' ? 'חיפוש מתכון...' : 'Search recipe...'}
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                className="w-full h-10 bg-white"
+              />
             </div>
             <Button variant="outline" onClick={() => setShowGuideModal(true)} className="text-gray-600 bg-white">
               <HelpCircle className="w-4 h-4 mr-2 rtl:ml-2 rtl:mr-0" />
