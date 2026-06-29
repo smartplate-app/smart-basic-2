@@ -43,6 +43,14 @@ Deno.serve(async (req) => {
     const spreadsheetId = parseSpreadsheetId(spreadsheetUrl) || rawId;
     if (!spreadsheetId) return Response.json({ error: 'Missing spreadsheetId/url' }, { status: 400 });
 
+    let targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
+    if (!user.store_user_owner_email) {
+      try {
+        const recs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email, is_active: true });
+        if (recs.length > 0) targetEmail = recs[0].owner_email;
+      } catch(e){}
+    }
+
     let allRecipes = [];
 
     if (parsedData) {
@@ -149,14 +157,6 @@ ${sheetData}
 
     const fetchWithFallback = async (entityType) => {
       let data = await base44.asServiceRole.entities[entityType].filter({ created_by: user.email }, 'name', 10000);
-      
-      let targetEmail = user.acting_as_store_email || user.acting_as_user_email || user.store_user_owner_email || user.email;
-      if (!user.store_user_owner_email) {
-        try {
-          const recs = await base44.asServiceRole.entities.StoreUser.filter({ user_email: user.email, is_active: true });
-          if (recs.length > 0) targetEmail = recs[0].owner_email;
-        } catch(e){}
-      }
 
       if (targetEmail !== user.email) {
         const ownerData = await base44.asServiceRole.entities[entityType].filter({ created_by: targetEmail }, 'name', 10000);
@@ -207,7 +207,9 @@ ${sheetData}
       supplier_name: 'Prep Recipe',
       units_per_package: 1,
       minimum_stock: 0,
-      discount: 0
+      discount: 0,
+      created_by: targetEmail,
+      store_owner_email: targetEmail
     }));
 
     for (const itemData of prepRecipeItems) {
@@ -346,7 +348,9 @@ ${sheetData}
         yield_unit: normalizeUnit(r.yield_unit),
         sale_price: Number(r.sale_price) || 0,
         total_cost: totalCost,
-        ingredients: ingredients
+        ingredients: ingredients,
+        created_by: targetEmail,
+        store_owner_email: targetEmail
       };
     });
 
