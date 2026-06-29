@@ -226,7 +226,7 @@ export default function MenuEngineeringPage() {
 
   const filteredRecipes = recipes.filter(r => {
     const hasPrice = (Number(r.sale_price) || 0) > 0;
-    if (!hasPrice) return false;
+    if (!hasPrice) return false; // Filter out items with 0 or missing price
     
     if (categoryFilter !== 'all' && r.menu_category !== categoryFilter) return false;
     
