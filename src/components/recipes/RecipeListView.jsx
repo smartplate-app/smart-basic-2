@@ -3,8 +3,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, ChefHat, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useLanguage } from "../LanguageProvider";
+import { Checkbox } from "@/components/ui/checkbox";
 
-export default function RecipeListView({ recipes, onEdit, onDelete }) {
+export default function RecipeListView({ recipes, onEdit, onDelete, selectedRecipes = [], onToggleSelect, onToggleSelectAll }) {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
   const [sortCol, setSortCol] = useState('name');
@@ -65,6 +66,13 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
       <Table wrapperClassName="max-h-[calc(100vh-250px)]">
         <TableHeader className="sticky top-0 bg-white z-10 shadow-sm">
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox 
+                checked={recipes.length > 0 && recipes.every(r => selectedRecipes.includes(r.id))}
+                onCheckedChange={onToggleSelectAll}
+                aria-label="Select all"
+              />
+            </TableHead>
             <TableHead 
               className={`cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? "text-right" : "text-left"}`}
               onClick={() => toggleSort('name')}
@@ -116,10 +124,28 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
         <TableBody>
           {sortedRecipes.map((recipe) => (
             <TableRow key={recipe.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => onEdit(recipe)}>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <Checkbox 
+                  checked={selectedRecipes.includes(recipe.id)}
+                  onCheckedChange={(checked) => onToggleSelect(recipe.id, checked)}
+                />
+              </TableCell>
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
                   <ChefHat className="w-4 h-4 text-orange-500" />
                   {recipe.name}
+                  {recipe.menu_category && recipe.menu_category !== 'general' && (
+                    <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded ml-1 rtl:mr-1 rtl:ml-0">
+                      {language === 'he' ? (
+                        recipe.menu_category === 'kitchen' ? 'מטבח' :
+                        recipe.menu_category === 'bar' ? 'בר' :
+                        recipe.menu_category === 'wine' ? 'יין' :
+                        recipe.menu_category === 'dessert' ? 'קינוחים' : recipe.menu_category
+                      ) : (
+                        recipe.menu_category.charAt(0).toUpperCase() + recipe.menu_category.slice(1)
+                      )}
+                    </span>
+                  )}
                 </div>
               </TableCell>
               <TableCell>
@@ -153,7 +179,7 @@ export default function RecipeListView({ recipes, onEdit, onDelete }) {
         </TableBody>
         <TableFooter className="bg-gray-100 dark:bg-gray-800">
           <TableRow>
-            <TableCell colSpan={2} className={`font-bold text-lg ${isRTL ? 'text-left' : 'text-right'}`}>
+            <TableCell colSpan={3} className={`font-bold text-lg ${isRTL ? 'text-left' : 'text-right'}`}>
               {language === 'he' ? 'סה״כ:' : 'Total:'}
             </TableCell>
             <TableCell className="font-bold text-red-600 text-lg">

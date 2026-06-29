@@ -20,6 +20,8 @@ export default function RecipesPage() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [selectedRecipes, setSelectedRecipes] = useState([]);
   
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
@@ -181,8 +183,43 @@ export default function RecipesPage() {
     else if (typeFilter === 'last_scan') matchesType = r.is_from_last_scan === true;
     else matchesType = r.type === typeFilter;
     
-    return matchesSearch && matchesType;
+    let matchesCat = false;
+    if (categoryFilter === 'all') matchesCat = true;
+    else matchesCat = r.menu_category === categoryFilter;
+
+    return matchesSearch && matchesType && matchesCat;
   });
+
+  const handleToggleSelectAll = (checked) => {
+    if (checked) {
+      const filteredIds = filteredRecipes.map(r => r.id);
+      setSelectedRecipes(prev => Array.from(new Set([...prev, ...filteredIds])));
+    } else {
+      const filteredIds = new Set(filteredRecipes.map(r => r.id));
+      setSelectedRecipes(prev => prev.filter(id => !filteredIds.has(id)));
+    }
+  };
+
+  const handleToggleSelect = (id, checked) => {
+    setSelectedRecipes(prev => 
+      checked ? [...prev, id] : prev.filter(x => x !== id)
+    );
+  };
+
+  const handleBulkTag = async (e) => {
+    const newTag = e.target.value;
+    if (!newTag || selectedRecipes.length === 0) return;
+    try {
+      setLoading(true);
+      const updates = selectedRecipes.map(id => ({ id, menu_category: newTag }));
+      await base44.entities.Recipe.bulkUpdate(updates);
+      await loadRecipes();
+      setSelectedRecipes([]);
+    } catch (err) {
+      alert("Error tagging recipes: " + err.message);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f3f2f1] p-4 md:p-8">
@@ -286,6 +323,38 @@ export default function RecipesPage() {
                 <option value="prep_recipe">{language === 'he' ? 'פריט הכנה' : 'Prep Item'}</option>
                 <option value="last_scan">{language === 'he' ? 'סריקת תפריט אחרונה' : 'Last Menu Scan'}</option>
               </select>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="h-10 rounded-full border border-input bg-white px-4 py-2 text-sm focus-visible:outline-none"
+              >
+                <option value="all">{language === 'he' ? 'כל המחלקות' : 'All Departments'}</option>
+                <option value="general">{language === 'he' ? 'כללי' : 'General'}</option>
+                <option value="kitchen">{language === 'he' ? 'מטבח' : 'Kitchen'}</option>
+                <option value="bar">{language === 'he' ? 'בר' : 'Bar'}</option>
+                <option value="wine">{language === 'he' ? 'יין' : 'Wine'}</option>
+                <option value="dessert">{language === 'he' ? 'קינוחים' : 'Dessert'}</option>
+              </select>
+              
+              {selectedRecipes.length > 0 && (
+                <div className="flex items-center gap-2 bg-blue-50 px-4 rounded-full border border-blue-100">
+                  <span className="text-sm font-medium text-blue-800 whitespace-nowrap">
+                    {selectedRecipes.length} {language === 'he' ? 'נבחרו' : 'selected'}
+                  </span>
+                  <select
+                    onChange={handleBulkTag}
+                    value=""
+                    className="h-8 rounded border-none bg-transparent text-sm text-blue-800 font-bold focus-visible:outline-none cursor-pointer"
+                  >
+                    <option value="" disabled>{language === 'he' ? 'סמן כ...' : 'Tag as...'}</option>
+                    <option value="general">{language === 'he' ? 'כללי' : 'General'}</option>
+                    <option value="kitchen">{language === 'he' ? 'מטבח' : 'Kitchen'}</option>
+                    <option value="bar">{language === 'he' ? 'בר' : 'Bar'}</option>
+                    <option value="wine">{language === 'he' ? 'יין' : 'Wine'}</option>
+                    <option value="dessert">{language === 'he' ? 'קינוחים' : 'Dessert'}</option>
+                  </select>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -305,6 +374,9 @@ export default function RecipesPage() {
             recipes={filteredRecipes} 
             onEdit={(recipe) => { setEditingRecipe(recipe); setShowForm(true); }}
             onDelete={handleDelete}
+            selectedRecipes={selectedRecipes}
+            onToggleSelect={handleToggleSelect}
+            onToggleSelectAll={handleToggleSelectAll}
           />
         )}
 
