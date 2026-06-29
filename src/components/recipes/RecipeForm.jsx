@@ -108,8 +108,29 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
         let changed = false;
         const updatedIngredients = recipe.ingredients.map(ing => {
           const qty = Number(ing.quantity) || 0;
-          const item = fetchedItems.find(i => i.id === ing.item_id) || fetchedItems.find(i => ing.item_name && i.name && i.name.toLowerCase() === ing.item_name.toLowerCase());
-          const prep = fetchedPrep.find(r => r.id === ing.item_id) || fetchedPrep.find(r => ing.item_name && r.name && r.name.toLowerCase() === ing.item_name.toLowerCase());
+          
+          // First check by ID to know exactly what it is
+          const itemById = fetchedItems.find(i => i.id === ing.item_id);
+          const prepById = fetchedPrep.find(r => r.id === ing.item_id);
+          
+          let item = itemById;
+          let prep = prepById;
+          
+          // If no ID matched, fallback to name matching (preferring prep if is_prep_recipe is true)
+          if (!item && !prep) {
+            if (ing.is_prep_recipe) {
+              prep = fetchedPrep.find(r => ing.item_name && r.name && r.name.toLowerCase() === ing.item_name.toLowerCase());
+            } else {
+              item = fetchedItems.find(i => ing.item_name && i.name && i.name.toLowerCase() === ing.item_name.toLowerCase());
+              // If still not found, try prep
+              if (!item) prep = fetchedPrep.find(r => ing.item_name && r.name && r.name.toLowerCase() === ing.item_name.toLowerCase());
+            }
+          }
+          
+          // Ensure is_prep_recipe flag is correct for UI
+          if (prep && !item) {
+             ing.is_prep_recipe = true;
+          }
           
           let newCost = ing.cost !== undefined && ing.cost !== null ? ing.cost : 0;
           let newUnitPrice = ing.unit_price !== undefined && ing.unit_price !== null ? ing.unit_price : 0;
@@ -118,7 +139,7 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
             changed = true;
           }
 
-          if (item) {
+          if (item && !prepById) {
             // Ensure item_id and item_name are updated if matched by name
             ing.item_id = item.id;
             ing.item_name = item.name;

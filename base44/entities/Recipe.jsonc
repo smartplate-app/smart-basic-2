@@ -95,6 +95,10 @@
           },
           "unit_price": {
             "type": "number"
+          },
+          "is_prep_recipe": {
+            "type": "boolean",
+            "default": false
           }
         }
       }
