@@ -438,11 +438,11 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
         });
       }
       
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         ingredients: newIngredients,
         total_cost: calculateTotalCost(newIngredients)
-      });
+      }));
       
       setEditingItem(null);
       setSearchTerm("");
