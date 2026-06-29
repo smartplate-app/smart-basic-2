@@ -665,7 +665,12 @@ export default function MonthlyCountPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
 
-          <Loader className="w-12 h-12 animate-spin text-gray-900" />
+          <img 
+            src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png" 
+            alt="Loading" 
+            className="w-16 h-16 animate-spin rounded-xl shadow-md"
+            style={{ animationDuration: '2s' }}
+          />
           <p className="text-lg text-gray-700">{t('loading')}</p>
           {retryCount > 0 && (
             <p className="text-sm text-orange-600 text-center px-4">
@@ -905,7 +910,12 @@ export default function MonthlyCountPage() {
 
             {loading ? (
               <div className="flex flex-col justify-center items-center py-12 gap-3">
-                <Loader className="w-12 h-12 animate-spin text-gray-900" />
+                <img 
+            src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png" 
+            alt="Loading" 
+            className="w-16 h-16 animate-spin rounded-xl shadow-md"
+            style={{ animationDuration: '2s' }}
+          />
                 <p className="text-gray-600">{t('loading')}</p>
                 {retryCount > 0 && (
                   <p className="text-sm text-orange-600">

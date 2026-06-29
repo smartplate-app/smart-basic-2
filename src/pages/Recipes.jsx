@@ -290,11 +290,23 @@ export default function RecipesPage() {
           );
         })()}
 
-        <RecipeListView 
-          recipes={filteredRecipes} 
-          onEdit={(recipe) => { setEditingRecipe(recipe); setShowForm(true); }}
-          onDelete={handleDelete}
-        />
+        {loading ? (
+          <div className="flex flex-col justify-center items-center py-20 gap-4 bg-white rounded-xl shadow-sm border border-gray-100">
+            <img 
+              src="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png" 
+              alt="Loading" 
+              className="w-20 h-20 animate-spin rounded-xl shadow-md"
+              style={{ animationDuration: '2s' }}
+            />
+            <p className="text-gray-600 font-medium text-lg">{language === 'he' ? 'טוען נתונים...' : 'Loading...'}</p>
+          </div>
+        ) : (
+          <RecipeListView 
+            recipes={filteredRecipes} 
+            onEdit={(recipe) => { setEditingRecipe(recipe); setShowForm(true); }}
+            onDelete={handleDelete}
+          />
+        )}
 
         {showForm && (
           <RecipeForm
