@@ -360,14 +360,24 @@ export default function RecipeForm({ recipe, onSave, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Clean up ingredients to remove UI-only properties before saving
+    const cleanFormData = {
+      ...formData,
+      ingredients: formData.ingredients.map(ing => {
+        const { original_item, ...rest } = ing;
+        return rest;
+      })
+    };
+
     try {
       if (recipe?.id) {
-        await base44.entities.Recipe.update(recipe.id, formData);
-        onSave(formData);
+        await base44.entities.Recipe.update(recipe.id, cleanFormData);
+        onSave(cleanFormData);
       } else {
         const currentUser = await base44.auth.me();
         const targetEmail = currentUser?.acting_as_store_email || currentUser?.acting_as_user_email || currentUser?.store_user_owner_email || currentUser?.email;
-        const newRecipe = await base44.entities.Recipe.create({ ...formData, created_by: currentUser?.email, store_owner_email: targetEmail });
+        const newRecipe = await base44.entities.Recipe.create({ ...cleanFormData, created_by: currentUser?.email, store_owner_email: targetEmail });
         onSave(newRecipe);
       }
     } catch (error) {
