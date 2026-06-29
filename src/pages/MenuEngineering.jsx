@@ -484,7 +484,7 @@ export default function MenuEngineeringPage() {
           <Card className="shadow-sm border-0 rounded-2xl">
             <CardContent className="p-6 flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'COGS מצטבר %' : 'Total COGS %'}</p>
+                <p className="text-sm text-gray-500 font-medium mb-1">{language === 'he' ? 'SFC מצטבר תיאורטי %' : 'Total Theoretical SFC %'}</p>
                 <h3 className="text-2xl font-bold">{overallFoodCostPercent.toFixed(2)}%</h3>
                 <p className="text-xs text-gray-400 mt-1 font-medium">₪{totalFoodCost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
               </div>
