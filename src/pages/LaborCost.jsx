@@ -36,8 +36,6 @@ export default function LaborCostPage() {
     return moment().startOf('week').format('YYYY-MM-DD');
   });
   const { t, language } = useLanguage();
-  const [passcode, setPasscode] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
   // Hydrate from cache for instant UI
@@ -138,40 +136,20 @@ export default function LaborCostPage() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    const savedCode = localStorage.getItem('labor_passcode');
-    if (savedCode === '2233') {
-      setIsAuthenticated(true);
-    }
+    const load = async () => {
+      let currentUser;
+      try { currentUser = await base44.auth.me(); } catch(e){}
+      const c = getCache('labor_v2');
+      const stale = isStale(c, 180000);
+      const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
+      if (stale || !c?.data || isImpersonating) {
+        loadData();
+      }
+    };
+    load();
   }, []);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const load = async () => {
-        let currentUser;
-        try { currentUser = await base44.auth.me(); } catch(e){}
-        const c = getCache('labor_v2');
-        const stale = isStale(c, 180000);
-        const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
-        if (stale || !c?.data || isImpersonating) {
-          loadData();
-        }
-      };
-      load();
-    }
-  }, [isAuthenticated]);
-
-  const handlePasscodeSubmit = (e) => {
-    e.preventDefault();
-    if (passcode === '2233') {
-      localStorage.setItem('labor_passcode', '2233');
-      setIsAuthenticated(true);
-    } else {
-      alert(language === 'he' ? 'קוד שגוי' : 'Incorrect code');
-      setPasscode('');
-    }
-  };
 
   const handlePreviousWeek = () => {
     const prevWeek = moment(currentWeekStart).subtract(1, 'week').format('YYYY-MM-DD');
@@ -249,29 +227,6 @@ export default function LaborCostPage() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <form onSubmit={handlePasscodeSubmit} className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
-          <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
-            {language === 'he' ? 'הכנס קוד גישה' : 'Enter Passcode'}
-          </h2>
-          <input
-            type="password"
-            value={passcode}
-            onChange={(e) => setPasscode(e.target.value)}
-            className="w-full text-center text-2xl tracking-widest p-3 border-2 border-gray-200 rounded-lg mb-6 focus:border-purple-500 focus:outline-none transition-colors"
-            placeholder="••••"
-            maxLength={4}
-            autoFocus
-          />
-          <Button type="submit" className="w-full h-12 text-lg bg-purple-600 hover:bg-purple-700">
-            {language === 'he' ? 'כניסה' : 'Enter'}
-          </Button>
-        </form>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

@@ -11,8 +11,6 @@ import ImportPosReportModal from "../components/cogs/ImportPosReportModal";
 export default function CogsReportsPage() {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
-  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('cogs_auth') === 'true');
-  const [passcode, setPasscode] = useState("");
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,20 +20,8 @@ export default function CogsReportsPage() {
   const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadReports();
-    }
-  }, [isAuthenticated]);
-
-  const handleAuth = (e) => {
-    e.preventDefault();
-    if (passcode === "2233") {
-      sessionStorage.setItem('cogs_auth', 'true');
-      setIsAuthenticated(true);
-    } else {
-      alert(language === 'he' ? 'קוד שגוי' : 'Invalid code');
-    }
-  };
+    loadReports();
+  }, []);
 
   const loadReports = async () => {
     setLoading(true);
@@ -112,39 +98,6 @@ export default function CogsReportsPage() {
       loadReports();
     }
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="max-w-md w-full shadow-xl">
-          <CardContent className="pt-6 space-y-4 text-center">
-            <div className="mx-auto w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-4">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {language === 'he' ? 'אזור מוגן' : 'Protected Area'}
-            </h2>
-            <p className="text-gray-500">
-              {language === 'he' ? 'הזן קוד גישה כדי לצפות בדוחות COGS' : 'Enter access code to view COGS reports'}
-            </p>
-            <form onSubmit={handleAuth} className="space-y-4 mt-4">
-              <Input
-                type="password"
-                placeholder={language === 'he' ? 'קוד גישה' : 'Access code'}
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                className="text-center text-lg tracking-widest"
-                autoFocus
-              />
-              <Button type="submit" className="w-full bg-[#d4a373] hover:bg-[#b88c60]">
-                {language === 'he' ? 'כניסה' : 'Enter'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const filteredReports = reports.filter(r => 
     (r.name || '').toLowerCase().includes(searchTerm.toLowerCase())

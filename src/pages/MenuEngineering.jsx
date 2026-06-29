@@ -11,8 +11,6 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as Recharts
 export default function MenuEngineeringPage() {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
-  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('menu_eng_auth') === 'true');
-  const [passcode, setPasscode] = useState("");
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -53,20 +51,8 @@ export default function MenuEngineeringPage() {
   }, [visibleColumns]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadRecipes();
-    }
-  }, [isAuthenticated]);
-
-  const handleAuth = (e) => {
-    e.preventDefault();
-    if (passcode === "2233") {
-      sessionStorage.setItem('menu_eng_auth', 'true');
-      setIsAuthenticated(true);
-    } else {
-      alert(language === 'he' ? 'קוד שגוי' : 'Invalid code');
-    }
-  };
+    loadRecipes();
+  }, []);
 
   const loadRecipes = async () => {
     setLoading(true);
@@ -184,38 +170,6 @@ export default function MenuEngineeringPage() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="max-w-md w-full shadow-xl">
-          <CardContent className="pt-6 space-y-4 text-center">
-            <div className="mx-auto w-12 h-12 bg-blue-100 text-[#d4a373] rounded-full flex items-center justify-center mb-4">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {language === 'he' ? 'אזור מוגן' : 'Protected Area'}
-            </h2>
-            <p className="text-gray-500">
-              {language === 'he' ? 'הזן קוד גישה כדי לצפות בניתוח הנדסת תפריט' : 'Enter access code to view Menu Engineering Analysis'}
-            </p>
-            <form onSubmit={handleAuth} className="space-y-4 mt-4">
-              <Input
-                type="password"
-                placeholder={language === 'he' ? 'קוד גישה' : 'Access code'}
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                className="text-center text-lg tracking-widest"
-                autoFocus
-              />
-              <Button type="submit" className="w-full bg-[#107c41] hover:bg-[#0c5e31]">
-                {language === 'he' ? 'כניסה' : 'Enter'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const categoryLabels = {
     general: language === 'he' ? 'כללי' : 'General',
