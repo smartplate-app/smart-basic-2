@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     // 2. Format the data for sheets
     const headers = [
-      "שם הכנה",
+      "שם פריט הכנה",
       "עלות כוללת (₪)",
       "יחידת מידה (תפוקה)",
       "כמות במלאי (להזנה)",
