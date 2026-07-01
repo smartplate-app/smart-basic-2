@@ -160,7 +160,7 @@ export default function RecipesPage() {
       // If type is not 'sale_item', we treat it as a prep recipe, matching the UI display logic
       const preps = recipes.filter(r => r.type !== 'sale_item');
       if (preps.length === 0) {
-        alert(language === 'he' ? 'אין הכנות לייצוא' : 'No prep items to export');
+        alert(language === 'he' ? 'אין פריט הכנה לייצוא' : 'No פריט הכנה to export');
         return;
       }
       
@@ -301,7 +301,7 @@ export default function RecipesPage() {
               className="bg-white text-black hover:bg-gray-200 border-none rounded-full px-6 font-bold"
             >
               <FileSpreadsheet className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />
-              {language === 'he' ? 'ייבוא הכנות' : 'Import Preps'}
+              {language === 'he' ? 'ייבוא פריט הכנה' : 'Import פריט הכנה'}
             </Button>
             <Button 
               onClick={() => { setImportType('sale_item'); setShowImportModal(true); }}
