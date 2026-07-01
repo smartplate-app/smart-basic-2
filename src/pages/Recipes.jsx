@@ -152,6 +152,36 @@ export default function RecipesPage() {
   };
 
   const [showCleanModal, setShowCleanModal] = useState(false);
+  const [exportingSheet, setExportingSheet] = useState(false);
+
+  const handleExportPrepInventory = async () => {
+    try {
+      setExportingSheet(true);
+      const preps = recipes.filter(r => r.type === 'prep_recipe');
+      if (preps.length === 0) {
+        alert(language === 'he' ? 'אין הכנות לייצוא' : 'No prep items to export');
+        return;
+      }
+      
+      const { data } = await base44.functions.invoke('exportPrepInventoryToSheets', {
+        itemsData: preps
+      });
+      
+      if (data?.success && data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error(data?.error || 'Failed to export');
+      }
+    } catch (err) {
+      if (err.message && err.message.toLowerCase().includes('not connected') || err.message.toLowerCase().includes('not authorized')) {
+         alert(language === 'he' ? 'אנא חבר את Google Sheets בהגדרות/משרד אחורי' : 'Please connect Google Sheets in Settings/Back Office');
+      } else {
+         alert((language === 'he' ? 'שגיאה בייצוא: ' : 'Export error: ') + err.message);
+      }
+    } finally {
+      setExportingSheet(false);
+    }
+  };
 
   const handleFindDuplicates = () => {
     setShowCleanModal(true);
@@ -256,6 +286,14 @@ export default function RecipesPage() {
               {language === 'he' ? 'סרוק תפריט (תמונות או PDF)' : 'Scan Menu (Images or PDF)'}
             </Button>
 
+            <Button 
+              onClick={handleExportPrepInventory}
+              disabled={exportingSheet}
+              className="bg-white text-black hover:bg-gray-200 border-none rounded-full px-6 font-bold"
+            >
+              {exportingSheet ? <Loader2 className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <FileSpreadsheet className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />}
+              {language === 'he' ? 'ייצוא הכנות לספירה' : 'Export Preps for Count'}
+            </Button>
             <Button 
               onClick={() => { setImportType('prep_recipe'); setShowImportModal(true); }}
               className="bg-white text-black hover:bg-gray-200 border-none rounded-full px-6 font-bold"
