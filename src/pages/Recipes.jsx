@@ -212,6 +212,7 @@ export default function RecipesPage() {
     let matchesType = false;
     if (typeFilter === 'all') matchesType = true;
     else if (typeFilter === 'last_scan') matchesType = r.is_from_last_scan === true;
+    else if (typeFilter === 'prep_recipe') matchesType = r.type !== 'sale_item';
     else matchesType = r.type === typeFilter;
     
     let matchesCat = false;
@@ -293,7 +294,7 @@ export default function RecipesPage() {
               className="bg-white text-black hover:bg-gray-200 border-none rounded-full px-6 font-bold"
             >
               {exportingSheet ? <Loader2 className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" /> : <FileSpreadsheet className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0" />}
-              {language === 'he' ? 'ייצוא הכנות לספירה' : 'Export Preps for Count'}
+              {language === 'he' ? 'ייצוא פריט הכנה לספירה' : 'Export פריט הכנה for Count'}
             </Button>
             <Button 
               onClick={() => { setImportType('prep_recipe'); setShowImportModal(true); }}
@@ -359,7 +360,7 @@ export default function RecipesPage() {
               >
                 <option value="all">{language === 'he' ? 'כל הסוגים' : 'All Types'}</option>
                 <option value="sale_item">{language === 'he' ? 'פריט למכירה' : 'Sale Item'}</option>
-                <option value="prep_recipe">{language === 'he' ? 'פריט הכנה' : 'Prep Item'}</option>
+                <option value="prep_recipe">{language === 'he' ? 'פריט הכנה' : 'פריט הכנה'}</option>
                 <option value="last_scan">{language === 'he' ? 'סריקת תפריט אחרונה' : 'Last Menu Scan'}</option>
               </select>
               <select

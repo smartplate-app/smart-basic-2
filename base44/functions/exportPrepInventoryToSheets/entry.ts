@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         properties: {
-          title: `Prep Inventory - ${new Date().toLocaleDateString()}`,
+          title: `ספירת פריט הכנה - ${new Date().toLocaleDateString('he-IL')}`,
         },
       }),
     });

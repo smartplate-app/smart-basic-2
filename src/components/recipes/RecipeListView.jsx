@@ -152,7 +152,7 @@ export default function RecipeListView({ recipes, onEdit, onDelete, selectedReci
                 <span className={`inline-block px-2 py-1 text-xs rounded-full ${recipe.type === 'sale_item' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
                   {recipe.type === 'sale_item' 
                     ? (language === 'he' ? 'פריט למכירה' : 'Sale Item') 
-                    : (language === 'he' ? 'פריט הכנה' : 'Prep Item')}
+                    : (language === 'he' ? 'פריט הכנה' : 'פריט הכנה')}
                 </span>
               </TableCell>
               <TableCell className="text-red-600 font-bold">{Number(recipe.total_cost || 0).toFixed(2)}</TableCell>
