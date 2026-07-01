@@ -157,7 +157,8 @@ export default function RecipesPage() {
   const handleExportPrepInventory = async () => {
     try {
       setExportingSheet(true);
-      const preps = recipes.filter(r => r.type === 'prep_recipe');
+      // If type is not 'sale_item', we treat it as a prep recipe, matching the UI display logic
+      const preps = recipes.filter(r => r.type !== 'sale_item');
       if (preps.length === 0) {
         alert(language === 'he' ? 'אין הכנות לייצוא' : 'No prep items to export');
         return;
