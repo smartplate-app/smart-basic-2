@@ -80,9 +80,7 @@ export default function RecipesPage() {
         data = data.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
       }
       
-      if (currentUser?.role === 'admin' && !isAdminControlling) {
-        data = data.filter(r => !r.store_owner_email || r.store_owner_email === currentUser.email);
-      }
+      // Reverted admin filter
 
       setRecipes(data || []);
       setCache('recipes_v3', { recipes: data || [] });
