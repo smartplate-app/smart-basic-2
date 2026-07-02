@@ -218,6 +218,11 @@ export default function SuppliersPage() {
                     allowedEmails.has(it.created_by) || (it.store_owner_email && allowedEmails.has(it.store_owner_email))
                   );
 
+                  if (currentUser.role === 'admin' && !isAdminControlling) {
+                    suppliersData = suppliersData.filter(s => !s.store_owner_email || s.store_owner_email === currentUser.email);
+                    itemsData = itemsData.filter(it => !it.store_owner_email || it.store_owner_email === currentUser.email);
+                  }
+
                   setSuppliers(suppliersData);
                   setAllItems(itemsData);
                   setCache('suppliers_v1', { suppliers: suppliersData });

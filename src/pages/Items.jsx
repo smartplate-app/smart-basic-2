@@ -243,6 +243,13 @@ export default function ItemsPage() {
       suppliersData = suppliersData.filter((s, index, self) => self.findIndex(t => t.id === s.id) === index);
       warehousesData = warehousesData.filter((w, index, self) => self.findIndex(t => t.id === w.id) === index);
 
+      // Hide items that belong to other stores when viewing own catalog
+      if (currentUser.role === 'admin' && !isAdminControlling) {
+        itemsData = itemsData.filter(i => !i.store_owner_email || i.store_owner_email === currentUser.email);
+        suppliersData = suppliersData.filter(s => !s.store_owner_email || s.store_owner_email === currentUser.email);
+        warehousesData = warehousesData.filter(w => !w.store_owner_email || w.store_owner_email === currentUser.email);
+      }
+
       // Ensure a 'General' warehouse exists and includes all items
       const ensured = await ensureGeneralWarehouse(currentUser, itemsData, warehousesData);
       const finalWarehouses = ensured || warehousesData;
