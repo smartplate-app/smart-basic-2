@@ -42,7 +42,7 @@ export default function RecipesPage() {
       if (!currentUser) {
         const data = await base44.entities.Recipe.filter({}, "-created_date", 10000);
         setRecipes(data || []);
-        setCache('recipes_v2', { recipes: data || [] });
+        setCache('recipes_v3', { recipes: data || [] });
         setLoading(false);
         return;
       }
@@ -85,7 +85,7 @@ export default function RecipesPage() {
       }
 
       setRecipes(data || []);
-      setCache('recipes_v2', { recipes: data || [] });
+      setCache('recipes_v3', { recipes: data || [] });
     } catch (e) {
       console.error(e);
     }
@@ -93,8 +93,8 @@ export default function RecipesPage() {
   };
 
   useEffect(() => {
-    // Force cache bust to v2 to clear any stale recipe data
-    const c = getCache('recipes_v2');
+    // Force cache bust to v3 to clear any stale recipe data
+    const c = getCache('recipes_v3');
     if (c?.data) {
       setRecipes(c.data.recipes || []);
     }

@@ -68,7 +68,7 @@ export default function ItemsPage() {
 
   // Hydrate from cache for instant UI
   React.useEffect(() => {
-    const c = getCache('items_v1');
+    const c = getCache('items_v2');
     if (c?.data) {
       setItems(c.data.items || []);
       setSuppliers(c.data.suppliers || []);
@@ -257,7 +257,7 @@ export default function ItemsPage() {
       setItems(itemsData);
       setSuppliers(suppliersData);
       setWarehouses(finalWarehouses);
-      setCache('items_v1', { items: itemsData, suppliers: suppliersData, warehouses: finalWarehouses });
+      setCache('items_v2', { items: itemsData, suppliers: suppliersData, warehouses: finalWarehouses });
       console.log(`[Items] Loaded ${itemsData.length} items, ${suppliersData.length} suppliers, ${finalWarehouses.length} warehouses`);
 
       setNetworkError(null);
@@ -339,7 +339,7 @@ export default function ItemsPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         if (mounted) {
-          const c = getCache('items_v1');
+          const c = getCache('items_v2');
           const stale = isStale(c, 180000);
           const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
           if (stale || isImpersonating) {

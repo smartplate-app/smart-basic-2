@@ -41,7 +41,7 @@ export default function SuppliersPage() {
 
   // Hydrate from cache for instant UI, then only fetch if stale
   useEffect(() => {
-    const c = getCache('suppliers_v1');
+    const c = getCache('suppliers_v2');
     if (c?.data) {
       setSuppliers(c.data.suppliers || []);
       setLoading(false);
@@ -225,7 +225,7 @@ export default function SuppliersPage() {
 
                   setSuppliers(suppliersData);
                   setAllItems(itemsData);
-                  setCache('suppliers_v1', { suppliers: suppliersData });
+                  setCache('suppliers_v2', { suppliers: suppliersData });
 
                   setNetworkError(null);
         } catch (error) {
@@ -257,7 +257,7 @@ export default function SuppliersPage() {
             try {
               if (!mounted) return;
 
-              const _cache = getCache('suppliers_v1');
+              const _cache = getCache('suppliers_v2');
               const _hasCache = !!(_cache && _cache.data);
               setAuthLoading(!_hasCache);
               setNetworkError(null);
@@ -273,7 +273,7 @@ export default function SuppliersPage() {
                         if (mounted) {
                           setUser(currentUser);
                           setIsViewer(currentUser.store_user_role === 'viewer' || currentUser.store_user_read_only === true);
-                          const c = getCache('suppliers_v1');
+                          const c = getCache('suppliers_v2');
                           const stale = isStale(c, 180000);
                           // Force reload if impersonating or cache is stale
                           const isImpersonating = currentUser?.acting_as_user_email || currentUser?.acting_as_store_email;
