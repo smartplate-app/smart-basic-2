@@ -1,8 +1,54 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const ENTITY_NAMES = [
+  "Item",
+  "Recipe",
+  "AccessRequest",
+  "Chain",
+  "ChainStore",
+  "CogsReport",
+  "HourlySalesReport",
+  "InventoryCount",
+  "InventoryTransfer",
+  "InvoiceItem",
+  "ItemAlias",
+  "JobPosition",
+  "KBArticle",
+  "MonthlyDashboardData",
+  "Order",
+  "POSConnection",
+  "PaymentTransaction",
+  "PriceChangeLog",
+  "PromoLink",
+  "RestaurantUser",
+  "ScheduleTemplate",
+  "StoreUser",
+  "Supplier",
+  "SupplyReceipt",
+  "SupportTicket",
+  "TipEntry",
+  "TipPolicy",
+  "ToDo",
+  "UserInvite",
+  "Warehouse",
+  "WasteReport",
+  "WeeklySalesPrediction",
+  "WeeklySalesRecord",
+  "WeeklySchedule",
+  "Worker",
+  "WorkerAdjustment",
+  "WorkerRate",
+  "WorkerRequest",
+  "WorkerSession"
+];
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const body = await req.json();
+
+  if (body.mode === 'listEntities') {
+    return Response.json({ entities: ENTITY_NAMES });
+  }
 
   if (body.mode === 'readUsers') {
     const users = await base44.asServiceRole.entities.User.list();
