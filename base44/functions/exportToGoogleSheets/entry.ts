@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { reportType, month, data } = await req.json();
+    const { reportType, month, data, suppliers } = await req.json();
 
     // Get Google Sheets access token
     const accessToken = await base44.asServiceRole.connectors.getAccessToken("googlesheets");
@@ -23,11 +23,11 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         properties: {
-          title: `${reportType} - ${month} - ${new Date().toISOString()}`
+          title: reportType === 'suppliers' ? `Suppliers Export - ${new Date().toISOString().split('T')[0]}` : `${reportType} - ${month} - ${new Date().toISOString()}`
         },
         sheets: [{
           properties: {
-            title: reportType === 'monthly' ? 'Monthly Report' : 'Tips Report'
+            title: reportType === 'monthly' ? 'Monthly Report' : reportType === 'tips' ? 'Tips Report' : 'Suppliers'
           }
         }]
       })
@@ -67,6 +67,19 @@ Deno.serve(async (req) => {
         ['Worker', 'Total Tips', 'Shifts'],
         ...data.workers.map(w => [w.name, `₪${w.total}`, w.shifts])
       ];
+    } else if (reportType === 'suppliers' && suppliers) {
+      values = [
+        ['Supplier Name', 'Contact Name', 'Phone', 'Email', 'Minimum Order', 'Notes', 'Created Date'],
+        ...suppliers.map(s => [
+          s.name || '',
+          s.contact_name || '',
+          s.phone || '',
+          s.email || '',
+          s.minimum_order || 0,
+          s.notes || '',
+          s.created_date ? new Date(s.created_date).toLocaleDateString() : ''
+        ])
+      ];
     }
 
     // Update the sheet with data
@@ -80,13 +93,6 @@ Deno.serve(async (req) => {
         values: values
       })
     });
-
-    // Share with store managers and active users
-    try {
-      await base44.functions.invoke('shareSheetWithManagers', { spreadsheetId });
-    } catch(e) {
-      console.error('Failed to share sheet with managers:', e);
-    }
 
     return Response.json({ 
       success: true, 

@@ -392,42 +392,37 @@ export default function SuppliersPage() {
     }
   };
 
-  const handleExportSuppliers = () => {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportSuppliers = async () => {
     try {
       if (!suppliers || suppliers.length === 0) {
         alert(language === 'he' ? 'אין ספקים לייצוא' : 'No suppliers to export');
         return;
       }
 
-      const headers = ['Supplier Name', 'Contact Name', 'Phone', 'Email', 'Minimum Order', 'Notes', 'Created Date'];
-      const hebrewHeaders = ['שם ספק', 'איש קשר', 'טלפון', 'אימייל', 'מינימום הזמנה', 'הערות', 'תאריך יצירה'];
-      
-      const headerRow = (language === 'he' ? hebrewHeaders : headers).join(',');
-
-      const rows = suppliers.map(supplier => {
-        return [
-          `"${(supplier.name || '').replace(/"/g, '""')}"`,
-          `"${(supplier.contact_name || '').replace(/"/g, '""')}"`,
-          `"${(supplier.phone || '').replace(/"/g, '""')}"`,
-          `"${(supplier.email || '').replace(/"/g, '""')}"`,
-          supplier.minimum_order || 0,
-          `"${(supplier.notes || '').replace(/"/g, '""')}"`,
-          supplier.created_date ? new Date(supplier.created_date).toLocaleDateString() : ''
-        ].join(',');
+      setIsExporting(true);
+      const { data } = await base44.functions.invoke('exportToGoogleSheets', {
+        reportType: 'suppliers',
+        suppliers: suppliers
       });
 
-      const csvContent = "\uFEFF" + [headerRow, ...rows].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `suppliers_export_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (data?.success && data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error(data?.error || 'Export failed');
+      }
     } catch (error) {
       console.error("Export error:", error);
-      alert(language === 'he' ? 'שגיאה בייצוא ספקים' : 'Error exporting suppliers');
+      
+      // If it's an auth error, trigger the connector
+      if (error.message?.includes('authorization') || error.message?.includes('token')) {
+        alert(language === 'he' ? 'יש להתחבר ל-Google Sheets תחילה' : 'Please connect Google Sheets first');
+      } else {
+        alert(language === 'he' ? 'שגיאה בייצוא ספקים' : 'Error exporting suppliers');
+      }
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -620,10 +615,11 @@ export default function SuppliersPage() {
             {!isViewer && (
               <Button
                 onClick={handleExportSuppliers}
+                disabled={isExporting}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Download className="w-5 h-5 mr-2" />
-                {language === 'he' ? 'ייצוא ספקים' : 'Export Suppliers'}
+                {isExporting ? <Loader className="w-5 h-5 mr-2 animate-spin" /> : <Download className="w-5 h-5 mr-2" />}
+                {language === 'he' ? (isExporting ? 'מייצא...' : 'ייצוא ספקים') : (isExporting ? 'Exporting...' : 'Export Suppliers')}
               </Button>
             )}
             {!isViewer && (
