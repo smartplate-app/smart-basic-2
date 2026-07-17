@@ -695,6 +695,35 @@ export default function AdminDashboard() {
                     <Download className="w-4 h-4" />
                     Export Kona Backup (JSON)
                   </Button>
+
+                  <Button
+                    onClick={async (e) => {
+                      const btn = e.currentTarget;
+                      const originalText = btn.innerHTML;
+                      btn.innerHTML = 'Exporting...';
+                      try {
+                        const response = await base44.functions.invoke('exportFullGuestroomBackup', {});
+                        const dataStr = JSON.stringify(response.data, null, 2);
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'guestroom_backup.json';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                      } catch (err) {
+                        alert('Error: ' + err.message);
+                      } finally {
+                        btn.innerHTML = originalText;
+                      }
+                    }}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export Guest Room TLV Backup (JSON)
+                  </Button>
                   <Button
                     onClick={() => switchToUser({ email: "demo@foodcostapp.com", full_name: "Demo Account", business_name: "Demo Restaurant" })}
                     className="flex items-center gap-2 bg-[#d4a373] hover:bg-[#b88c60] text-white"
