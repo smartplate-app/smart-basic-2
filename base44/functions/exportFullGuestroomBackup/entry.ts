@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const email = 'moshiko@guestroomtlv.com';
+    const email = 'guestroom@smartplate.org';
     const filter = {
       $or: [
         { store_owner_email: email },
