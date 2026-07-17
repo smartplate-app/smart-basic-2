@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram, Mail, Globe } from "lucide-react";
+import { Loader, Search, Users, ShoppingCart, Package, FileText, ChefHat, Calendar, TrendingDown, BarChart, Eye, ArrowLeft, Building2, Store, Crown, TestTube, LogIn, Instagram, Mail, Globe, Download } from "lucide-react";
 import { useLanguage } from "../components/LanguageProvider";
 
 import InstagramCampaign from "@/components/marketing/InstagramCampaign";
@@ -666,6 +666,15 @@ export default function AdminDashboard() {
                   >
                     <TestTube className="w-4 h-4" />
                     {language === 'he' ? 'בדיקת התחברות לטאביט' : 'Tabit Tester'}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      window.open('/api/functions/exportFullKonaBackup', '_blank');
+                    }}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export Kona Backup (JSON)
                   </Button>
                   <Button
                     onClick={() => switchToUser({ email: "demo@foodcostapp.com", full_name: "Demo Account", business_name: "Demo Restaurant" })}
