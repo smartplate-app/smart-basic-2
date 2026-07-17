@@ -43,14 +43,8 @@ Deno.serve(async (req) => {
       }
     };
 
-    // Return as a downloadable JSON file
-    return new Response(JSON.stringify(backupData, null, 2), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Disposition': 'attachment; filename="kona_backup.json"'
-      }
-    });
+    // Return as JSON
+    return Response.json(backupData);
 
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

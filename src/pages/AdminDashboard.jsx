@@ -668,8 +668,27 @@ export default function AdminDashboard() {
                     {language === 'he' ? 'בדיקת התחברות לטאביט' : 'Tabit Tester'}
                   </Button>
                   <Button
-                    onClick={() => {
-                      window.open('/api/functions/exportFullKonaBackup', '_blank');
+                    onClick={async (e) => {
+                      const btn = e.currentTarget;
+                      const originalText = btn.innerHTML;
+                      btn.innerHTML = 'Exporting...';
+                      try {
+                        const response = await base44.functions.invoke('exportFullKonaBackup', {});
+                        const dataStr = JSON.stringify(response.data, null, 2);
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'kona_backup.json';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                      } catch (err) {
+                        alert('Error: ' + err.message);
+                      } finally {
+                        btn.innerHTML = originalText;
+                      }
                     }}
                     className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
                   >
