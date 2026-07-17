@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
     }
 
     const email = 'guestroom@smartplate.org';
-    const filter = {
+    const query = {
       $or: [
         { store_owner_email: email },
         { created_by: email }
@@ -25,76 +25,14 @@ Deno.serve(async (req) => {
         store_name: "Guest Room TLV"
       },
       data: {
-        suppliers: [],
-        items: [],
-        orders: [],
-        supply_receipts: [],
-        warehouses: [],
-        inventory_counts: []
+        suppliers: await base44.asServiceRole.entities.Supplier.filter(query, '', 5000),
+        items: await base44.asServiceRole.entities.Item.filter(query, '', 5000),
+        orders: await base44.asServiceRole.entities.Order.filter(query, '', 5000),
+        supply_receipts: await base44.asServiceRole.entities.SupplyReceipt.filter(query, '', 5000),
+        warehouses: await base44.asServiceRole.entities.Warehouse.filter(query, '', 5000),
+        inventory_counts: await base44.asServiceRole.entities.InventoryCount.filter(query, '', 5000)
       }
     };
-
-    // 1. Get Suppliers
-    let hasMore = true;
-    let offset = 0;
-    const limit = 500;
-    while (hasMore) {
-      const batch = await base44.asServiceRole.entities.Supplier.list('', limit, offset);
-      const filtered = batch.filter(r => r.store_owner_email === email || r.created_by === email);
-      backupData.data.suppliers.push(...filtered);
-      if (batch.length < limit) hasMore = false;
-      offset += limit;
-    }
-
-    // 2. Get Items
-    hasMore = true; offset = 0;
-    while (hasMore) {
-      const batch = await base44.asServiceRole.entities.Item.list('', limit, offset);
-      const filtered = batch.filter(r => r.store_owner_email === email || r.created_by === email);
-      backupData.data.items.push(...filtered);
-      if (batch.length < limit) hasMore = false;
-      offset += limit;
-    }
-
-    // 3. Get Orders
-    hasMore = true; offset = 0;
-    while (hasMore) {
-      const batch = await base44.asServiceRole.entities.Order.list('', limit, offset);
-      const filtered = batch.filter(r => r.store_owner_email === email || r.created_by === email);
-      backupData.data.orders.push(...filtered);
-      if (batch.length < limit) hasMore = false;
-      offset += limit;
-    }
-
-    // 4. Get Receipts
-    hasMore = true; offset = 0;
-    while (hasMore) {
-      const batch = await base44.asServiceRole.entities.SupplyReceipt.list('', limit, offset);
-      const filtered = batch.filter(r => r.store_owner_email === email || r.created_by === email);
-      backupData.data.supply_receipts.push(...filtered);
-      if (batch.length < limit) hasMore = false;
-      offset += limit;
-    }
-
-    // 5. Get Warehouses
-    hasMore = true; offset = 0;
-    while (hasMore) {
-      const batch = await base44.asServiceRole.entities.Warehouse.list('', limit, offset);
-      const filtered = batch.filter(r => r.store_owner_email === email || r.created_by === email);
-      backupData.data.warehouses.push(...filtered);
-      if (batch.length < limit) hasMore = false;
-      offset += limit;
-    }
-
-    // 6. Get Inventory Counts
-    hasMore = true; offset = 0;
-    while (hasMore) {
-      const batch = await base44.asServiceRole.entities.InventoryCount.list('', limit, offset);
-      const filtered = batch.filter(r => r.store_owner_email === email || r.created_by === email);
-      backupData.data.inventory_counts.push(...filtered);
-      if (batch.length < limit) hasMore = false;
-      offset += limit;
-    }
 
     return Response.json(backupData);
 
