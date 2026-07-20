@@ -331,6 +331,22 @@ const isPublic = (
 
           let currentUser = await base44.auth.me();
 
+          if (
+            currentUser && 
+            currentUser.role !== 'admin' && 
+            currentUser.email !== 'guestroom@smartplate.org' && 
+            currentUser.email !== 'moshiko@guestroomtlv.com'
+          ) {
+            alert(language === 'he' ? 'המערכת כרגע בשדרוג. הגישה חסומה זמנית למשתמש זה.' : 'System is currently undergoing upgrades. Access is temporarily blocked for this user.');
+            try {
+              sessionStorage.setItem('b44_logout_in_progress', '1');
+              localStorage.removeItem('b44_user_cache');
+              await base44.auth.logout();
+            } catch {}
+            window.location.href = "/PromoPreview";
+            return;
+          }
+
           setUser(currentUser);
                   try { sessionStorage.removeItem('b44_logout_in_progress'); } catch {}
                   try { sessionStorage.removeItem('b44_login_redirect'); sessionStorage.removeItem('b44_login_cooldown_until'); localStorage.removeItem('b44_login_cooldown_until'); } catch {}
