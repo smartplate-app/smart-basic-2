@@ -191,25 +191,6 @@ export default function Login() {
               <GoogleIcon className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" />
               {text.google}
             </Button>
-            <Button
-              variant="outline"
-              className="w-full h-12 text-base font-medium bg-black text-white hover:bg-gray-900 border-black shadow-sm"
-              onClick={() => base44.auth.loginWithProvider("apple", "/")}
-            >
-              <svg className="w-5 h-5 mr-3 rtl:ml-3 rtl:mr-0" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
-              </svg>
-              {text.apple}
-            </Button>
-          </div>
-
-          <div className="relative mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-sm uppercase">
-              <span className="bg-white px-4 text-slate-400 font-medium">{text.or}</span>
-            </div>
           </div>
 
           {error && (
@@ -218,64 +199,6 @@ export default function Login() {
               {error}
             </div>
           )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-700">{text.email}</Label>
-              <div className="relative">
-                <Mail className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" aria-hidden="true" />
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  autoFocus
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-[#2d6a4f]"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-slate-700">{text.pass}</Label>
-                <Link to="/forgot-password" className="text-sm text-blue-600 font-medium hover:text-blue-700">
-                  {text.forgot}
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" aria-hidden="true" />
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="ps-11 h-12 bg-slate-50 border-slate-200 text-base rounded-xl focus-visible:ring-[#2d6a4f]"
-                  required
-                />
-              </div>
-            </div>
-            <Button type="submit" className="w-full h-12 text-base font-semibold rounded-xl bg-[#2d6a4f] hover:bg-[#1b4332] text-white mt-2" disabled={loading}>
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" />
-                  {text.loggingIn}
-                </div>
-              ) : (
-                text.loginBtn
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-8 text-center text-slate-600 text-sm">
-            {text.noAccount}{" "}
-            <Link to="/Register" className="text-[#2d6a4f] font-bold hover:text-[#1b4332] hover:underline">
-              {text.createOne}
-            </Link>
-          </div>
         </div>
       </div>
     </div>
