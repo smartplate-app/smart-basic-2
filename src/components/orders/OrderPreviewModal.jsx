@@ -224,21 +224,28 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       ? `הזמנה ממסעדת ${order.restaurant_name || ''}\n${order.business_tax_id ? `ח.פ/עוסק: ${order.business_tax_id}\n` : ''}${order.restaurant_address ? `כתובת: ${order.restaurant_address}\n` : ''}מספר הזמנה: ${ensuredNumber}`
       : `Order from ${order.restaurant_name || ''}\n${order.business_tax_id ? `Business ID: ${order.business_tax_id}\n` : ''}${order.restaurant_address ? `Address: ${order.restaurant_address}\n` : ''}Order #: ${ensuredNumber}`;
 
+    const shareSubject = `Sent from ${order.restaurant_name || "Smart Plate"}`;
+
     // Fast path for sharing: use pre-generated file if available to preserve user gesture
     if (shareOnly && pregeneratedFile && navigator.share) {
        try {
+          if (order.supplier_email) {
+             navigator.clipboard.writeText(order.supplier_email).catch(() => {});
+             toast.success(language === 'he' ? 'מייל הספק הועתק!' : 'Supplier email copied!', { duration: 3000 });
+          }
+
           if (!order.order_number && order.id) {
              base44.entities.Order.update(order.id, { order_number: ensuredNumber, status: order.status === 'draft' ? 'sent' : (order.status || 'sent') }).catch(() => {});
              order.order_number = ensuredNumber;
           }
-          await navigator.share({ files: [pregeneratedFile], title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText });
+          await navigator.share({ files: [pregeneratedFile], title: shareSubject, text: shareText });
           if (onSend) { try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {} }
           return;
        } catch (e) {
           if (e.name === 'AbortError' || (e.message && e.message.includes('abort'))) return;
           console.error("Fast share failed, falling back to text only", e);
           try {
-             await navigator.share({ title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order', text: shareText + "\n\n" + orderUrl });
+             await navigator.share({ title: shareSubject, text: shareText + "\n\n" + orderUrl });
              if (onSend) { try { await onSend({ ...order, order_number: ensuredNumber, status: 'sent' }); } catch (_) {} }
              return;
           } catch (textErr) {
@@ -389,10 +396,14 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
       
       if (navigator.share) {
         try {
+          if (shareOnly && order.supplier_email) {
+             navigator.clipboard.writeText(order.supplier_email).catch(() => {});
+             toast.success(language === 'he' ? 'מייל הספק הועתק!' : 'Supplier email copied!', { duration: 3000 });
+          }
           // Attempt to share the file + text natively
           await navigator.share({ 
             files: [file], 
-            title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
+            title: shareSubject,
             text: shareText
           });
           shareSucceeded = true;
@@ -405,7 +416,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
           // If file sharing fails (unsupported on this specific OS version), fallback to sharing just the text
           try {
             await navigator.share({ 
-              title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
+              title: shareSubject,
               text: shareText + "\n\n" + orderUrl
             });
             shareSucceeded = true;
@@ -427,7 +438,7 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
         try {
             if (navigator.share) {
                await navigator.share({
-                   title: language === 'he' ? 'הזמנה לספק' : 'Supplier Order',
+                   title: shareSubject,
                    text: textWithLink
                });
             } else {
