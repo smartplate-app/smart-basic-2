@@ -80,23 +80,11 @@ export default function OrderCard({ order, onEdit, onResend, onCreateReceipt, on
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation();
-                  const subject = `Sent from ${order.restaurant_name || "Smart Plate"}`;
-                  
-                  if (navigator.share) {
-                    try {
-                      await navigator.share({
-                        title: subject,
-                        text: `Please see the attached order from ${order.restaurant_name || "Smart Plate"}.`,
-                      });
-                      return;
-                    } catch (err) {
-                      console.log('Error sharing:', err);
-                    }
-                  }
-                  
-                  window.location.href = `mailto:${order.supplier_email}?subject=${encodeURIComponent(subject)}`;
+                  const subject = encodeURIComponent(`Sent from ${order.restaurant_name || "Smart Plate"}`);
+                  const body = encodeURIComponent(`Please see the attached order from ${order.restaurant_name || "Smart Plate"}.\n\nOrder link: ${window.location.origin}/#/pages/PublicOrder?id=${order.id}`);
+                  window.location.href = `mailto:${order.supplier_email}?subject=${subject}&body=${body}`;
                 }}
                 className="text-[#64748b] hover:text-[#475569] hover:bg-gray-100"
                 title={t('send_via_email') || 'Share via Email'}
@@ -178,28 +166,14 @@ export default function OrderCard({ order, onEdit, onResend, onCreateReceipt, on
             </button>
           )}
 
-          {/* Share via Web Share API if possible, otherwise mailto fallback */}
+          {/* Share via native mailto to ensure "To:" field is always populated */}
           {order.supplier_email && (
             <button
-              onClick={async (e) => {
+              onClick={(e) => {
                 e.stopPropagation();
-                
-                const subject = `Sent from ${order.restaurant_name || "Smart Plate"}`;
-                
-                if (navigator.share) {
-                  try {
-                    await navigator.share({
-                      title: subject,
-                      text: `Please see the attached order from ${order.restaurant_name || "Smart Plate"}.`,
-                    });
-                    return;
-                  } catch (err) {
-                    console.log('Error sharing:', err);
-                  }
-                }
-                
-                // We use native mailto:
-                window.location.href = `mailto:${order.supplier_email}?subject=${encodeURIComponent(subject)}`;
+                const subject = encodeURIComponent(`Sent from ${order.restaurant_name || "Smart Plate"}`);
+                const body = encodeURIComponent(`Please see the attached order from ${order.restaurant_name || "Smart Plate"}.\n\nOrder link: ${window.location.origin}/#/pages/PublicOrder?id=${order.id}`);
+                window.location.href = `mailto:${order.supplier_email}?subject=${subject}&body=${body}`;
               }}
               className="text-white text-sm font-medium rounded-md px-4 py-2 flex items-center justify-center shadow-sm transition-colors"
               style={{
