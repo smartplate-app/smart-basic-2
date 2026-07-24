@@ -653,25 +653,9 @@ export default function OrderPreviewModal({ order, isOpen, onClose, onSend, onSe
             <div className="flex gap-2 w-full">
               <Button
                 onClick={async () => {
-                  if (onSendEmail) {
-                    setSending(true);
-                    try { await onSendEmail(); } catch(e) {}
-                    setSending(false);
-                  }
-                }}
-                variant="outline"
-                className="flex-1 h-12 text-blue-600 border-blue-200 hover:bg-blue-50 text-[15px]"
-                disabled={downloading || sending}
-              >
-                {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4 ml-1.5" />}
-                {safeT('send_email', 'במייל', 'Email')}
-              </Button>
-
-              <Button
-                onClick={async () => {
                   await handleDownloadImage({ shareOnly: true });
                 }}
-                className="flex-[1.5] h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
+                className="flex-1 h-12 bg-[#d4a373] hover:bg-[#b88c60] text-white font-medium shadow-sm disabled:opacity-50 text-[15px]"
                 disabled={downloading || sending}
                 data-testid="order-preview-send"
               >
