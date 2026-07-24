@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { base44 } from "@/api/base44Client";
-import { ChevronLeft, ChevronRight, ChevronDown, Search, CloudUpload, FileSpreadsheet, HardDrive, Link as LinkIcon, Send, FileText, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Search, CloudUpload, FileSpreadsheet, HardDrive, Link as LinkIcon, Send, FileText, Download, Loader } from "lucide-react";
 
 function normalizeText(str) {
   if (!str) return '';
@@ -120,37 +120,54 @@ export default function MonthlyInvoiceReport({ receipts = [], suppliers = [] }) 
               variant="outline"
               disabled={uploading}
               className="h-11 md:h-10 px-4 rounded-lg bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm flex items-center gap-2"
-              onClick={() => {
-                const startOfRange = moment().subtract(2, 'months').startOf('month');
-                const endOfRange = moment().endOf('month');
+              onClick={async () => {
+                setUploading(true);
+                try {
+                  const startOfRange = moment().subtract(2, 'months').startOf('month');
+                  const endOfRange = moment().endOf('month');
+                  
+                  let fetchedReceipts = receipts;
+                  try {
+                    const data = await base44.entities.SupplyReceipt.filter({
+                      $or: [{ created_by: targetEmail }, { store_owner_email: targetEmail }]
+                    }, "-received_date", 2000);
+                    if (data && data.length > 0) {
+                      fetchedReceipts = data;
+                    }
+                  } catch (e) {
+                    console.error("Failed to fetch all receipts", e);
+                  }
 
-                const filtered = receipts.filter(r => {
-                  const dateStr = r.invoice_date || r.received_date;
-                  if (!dateStr) return false;
-                  const d = moment(dateStr, [moment.ISO_8601, 'YYYY-MM-DD', 'DD/MM/YYYY']);
-                  return d.isValid() && d.isBetween(startOfRange, endOfRange, undefined, '[]');
-                }).map(r => ({
-                  id: r.id,
-                  supplier_id: r.supplier_id,
-                  supplier_name: r.supplier_name,
-                  invoice_number: r.invoice_number,
-                  invoice_date: r.invoice_date,
-                  received_date: r.received_date,
-                  invoice_total: r.invoice_total,
-                  guestroom_scanned_documents: r.receipt_images,
-                  verified_items: r.verified_items
-                }));
+                  const filtered = fetchedReceipts.filter(r => {
+                    const dateStr = r.invoice_date || r.received_date;
+                    if (!dateStr) return false;
+                    const d = moment(dateStr, [moment.ISO_8601, 'YYYY-MM-DD', 'DD/MM/YYYY']);
+                    return d.isValid() && d.isBetween(startOfRange, endOfRange, undefined, '[]');
+                  }).map(r => ({
+                    id: r.id,
+                    supplier_id: r.supplier_id,
+                    supplier_name: r.supplier_name,
+                    invoice_number: r.invoice_number,
+                    invoice_date: r.invoice_date,
+                    received_date: r.received_date,
+                    invoice_total: r.invoice_total,
+                    guestroom_scanned_documents: r.receipt_images,
+                    verified_items: r.verified_items
+                  }));
 
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filtered, null, 2));
-                const a = document.createElement('a');
-                a.href = dataStr;
-                a.download = `guestroom_scanned_invoices_last_3_months.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filtered, null, 2));
+                  const a = document.createElement('a');
+                  a.href = dataStr;
+                  a.download = `guestroom_scanned_invoices_last_3_months.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                } finally {
+                  setUploading(false);
+                }
               }}
             >
-              <Download className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />
+              {uploading ? <Loader className="w-4 h-4 rtl:ml-2 ltr:mr-2 animate-spin text-gray-500" /> : <Download className="w-4 h-4 rtl:ml-2 ltr:mr-2 text-gray-500" />}
               {language === 'he' ? 'הורדת נתוני Guestroom' : 'Download Guestroom Data'}
             </Button>
             
