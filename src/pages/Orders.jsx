@@ -1056,6 +1056,35 @@ export default function OrdersPage() {
             {!isViewer && (
               <>
                 <Button
+                  onClick={async () => {
+                    try {
+                      toast.loading(language === 'he' ? 'מייצא נתונים...' : 'Exporting...');
+                      const allOrders = await base44.entities.Order.filter({}, "-created_date", 5000);
+                      const julyOrders = allOrders.filter(o => {
+                        const d = new Date(o.created_date || o.delivery_date);
+                        return d.getMonth() === 6 && d.getFullYear() === 2026;
+                      });
+                      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(julyOrders, null, 2));
+                      const a = document.createElement('a');
+                      a.href = dataStr;
+                      a.download = `guestroom_orders_july_2026.json`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      toast.dismiss();
+                      toast.success(language === 'he' ? 'הייצוא הושלם' : 'Export complete');
+                    } catch (e) {
+                      toast.dismiss();
+                      toast.error('Error: ' + e.message);
+                    }
+                  }}
+                  variant="outline"
+                  className="hidden md:inline-flex border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white h-12 px-6 rounded-2xl shadow-sm text-base font-bold transition-all"
+                >
+                  <FileCode className="w-5 h-5 ml-2 rtl:ml-2 rtl:mr-0" />
+                  {language === 'he' ? 'ייצוא הזמנות יולי' : 'Export July Orders'}
+                </Button>
+                <Button
                   onClick={() => setShowNoOrderReceiveForm(true)}
                   variant="outline"
                   className="hidden md:inline-flex border-[#d4a373] text-[#d4a373] hover:bg-[#d4a373] hover:text-white h-12 px-6 rounded-2xl shadow-sm text-base font-bold transition-all"
