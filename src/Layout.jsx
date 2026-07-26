@@ -333,9 +333,8 @@ const isPublic = (
 
           if (
             currentUser && 
-            currentUser.role !== 'admin' && 
-            currentUser.email !== 'guestroom@smartplate.org' && 
-            currentUser.email !== 'moshiko@guestroomtlv.com'
+            (currentUser.email === 'guestroom@smartplate.org' || 
+            (currentUser.role !== 'admin' && currentUser.email !== 'moshiko@guestroomtlv.com'))
           ) {
             alert(language === 'he' ? 'המערכת כרגע בשדרוג. הגישה חסומה זמנית למשתמש זה.' : 'System is currently undergoing upgrades. Access is temporarily blocked for this user.');
             try {
