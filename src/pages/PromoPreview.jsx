@@ -24,7 +24,7 @@ const welcomeTranslations = {
     "wp_feature2_desc": "Build weekly schedules in minutes. Track employee hours, manage tip pools, and forecast your labor cost percentage against your projected sales before the week even begins.",
     "wp_feature3_title": "Real-Time Dashboard",
     "wp_feature3_desc": "Your monthly performance at a glance. Monitor the golden rule of hospitality: keeping your combined Food Cost + Labor Cost strictly under 60%. Get alerts when you're trending over budget.",
-    "wp_comparison_text": "While legacy systems like MarketMan focus heavily on exhaustive recipe costing, and Zest focuses on basic scheduling, Smart Plate Basic combines the best of both worlds into a single, lightning-fast app designed for modern operators.",
+    "wp_comparison_text": "Smart Plate Basic operates as a standalone restaurant back-office management system; sales and operational data are entered or managed within Smart Plate Basic, and it has no direct connection to POS systems and no connection to MarketMan.",
     "wp_comp1": "Faster Ordering: Order via WhatsApp directly from the app. No supplier portal logins required.",
     "wp_comp2": "Unified Dashboard: See your Labor Cost and Food Cost side-by-side.",
     "wp_comp3": "Simpler Inventory: Count what matters, scan invoices, and get your AFC instantly.",
@@ -120,8 +120,8 @@ export default function WelcomePublic() {
     };
 
     // Standard SEO
-    setMetaTag("description", "The ultimate food cost app and labor cost management app for restaurants and bars. A smarter alternative to MarketMan and Zest. Track inventory, schedule staff, and keep costs under 60%.");
-    setMetaTag("keywords", "food cost app, restaurant management software, labor cost app, restaurant profit, Smart Plate, MarketMan alternative");
+    setMetaTag("description", "The ultimate food cost app and labor cost management app for restaurants and bars. Track inventory, schedule staff, and keep costs under 60%.");
+    setMetaTag("keywords", "food cost app, restaurant management software, labor cost app, restaurant profit, Smart Plate");
     
     // Open Graph / Facebook
     setMetaTag("og:type", "website", true);

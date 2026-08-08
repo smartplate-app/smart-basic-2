@@ -14,7 +14,7 @@ export default function InstagramBlueprint() {
     { id: 2, title: 'How to Calculate Food Cost %', bg: 'bg-green-100', text: 'text-green-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/d54f2dbca_generated_image.png' },
     { id: 3, title: 'When the supplier raises prices again...', bg: 'bg-yellow-100', text: 'text-yellow-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/57682e845_generated_image.png' },
     { id: 4, title: 'See your daily profit in real-time', bg: 'bg-purple-100', text: 'text-purple-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/dc982c976_generated_image.png' },
-    { id: 5, title: 'Smart Plate vs. MarketMan', bg: 'bg-indigo-100', text: 'text-indigo-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/2b3a7bbd0_generated_image.png' },
+    { id: 5, title: 'Smart Plate vs. Legacy Systems', bg: 'bg-indigo-100', text: 'text-indigo-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/2b3a7bbd0_generated_image.png' },
     { id: 6, title: 'Taking inventory in 5 mins', bg: 'bg-pink-100', text: 'text-pink-800', image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/6611a3d19_generated_image.png' },
   ];
 
@@ -96,7 +96,7 @@ export default function InstagramBlueprint() {
     { id: 2, type: 'carousel', title: 'How to Calculate Food Cost % (Formula)', bg: 'bg-green-100', text: 'text-green-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/d54f2dbca_generated_image.png' },
     { id: 3, type: 'image', title: 'Meme: When the supplier raises prices again', bg: 'bg-yellow-100', text: 'text-yellow-800', icon: <Camera className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/57682e845_generated_image.png' },
     { id: 4, type: 'image', title: 'App UI: See your daily profit in real-time', bg: 'bg-purple-100', text: 'text-purple-800', icon: <Camera className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/dc982c976_generated_image.png' },
-    { id: 5, type: 'carousel', title: 'Smart Plate vs. MarketMan (Comparison)', bg: 'bg-indigo-100', text: 'text-indigo-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/2b3a7bbd0_generated_image.png' },
+    { id: 5, type: 'carousel', title: 'Smart Plate vs. Legacy Systems (Comparison)', bg: 'bg-indigo-100', text: 'text-indigo-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/2b3a7bbd0_generated_image.png' },
     { id: 6, type: 'carousel', title: 'Behind the scenes: Taking inventory in 5 mins', bg: 'bg-pink-100', text: 'text-pink-800', icon: <Grid className="w-6 h-6" />, image: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/699c4d19592434b7f867b2c6/6611a3d19_generated_image.png' },
     { id: 7, type: 'image', title: 'Customer Testimonial: "Saved 4% on food cost"', bg: 'bg-orange-100', text: 'text-orange-800', icon: <Camera className="w-6 h-6" /> },
     { id: 8, type: 'image', title: 'Quote: "Profit is made in the prep"', bg: 'bg-teal-100', text: 'text-teal-800', icon: <Camera className="w-6 h-6" /> },
@@ -330,12 +330,12 @@ export default function InstagramBlueprint() {
                 </div>
 
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h3 className="font-bold text-gray-900 mb-2">Post 5: Smart Plate vs. MarketMan (Carousel)</h3>
+                  <h3 className="font-bold text-gray-900 mb-2">Post 5: Smart Plate vs. Legacy Systems (Carousel)</h3>
                   <p className="text-sm text-gray-700 whitespace-pre-line">
                     Why are restaurants switching to Smart Plate? 🔄
                     It's simple, fast, and built for actual restaurant owners, not accountants. Swipe to see the difference! 👉
                   </p>
-                  <p className="text-xs text-blue-600 mt-2 font-medium">#RestaurantSoftware #MarketManAlternative #RestaurantOperations #FoodCostApp #SmartPlate</p>
+                  <p className="text-xs text-blue-600 mt-2 font-medium">#RestaurantSoftware #LegacyAlternative #RestaurantOperations #FoodCostApp #SmartPlate</p>
                 </div>
 
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
