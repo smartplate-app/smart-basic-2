@@ -597,7 +597,7 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="default">Default</SelectItem>
-                        <SelectItem value="marketman">Marketman</SelectItem>
+                        <SelectItem value="green">Green Theme</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
