@@ -208,10 +208,10 @@ function App() {
   useEffect(() => {
     const applyTheme = () => {
       const theme = localStorage.getItem('app_theme');
-      if (theme === 'marketman') {
-        document.documentElement.classList.add('theme-marketman');
+      if (theme === 'green') {
+        document.documentElement.classList.add('theme-green');
       } else {
-        document.documentElement.classList.remove('theme-marketman');
+        document.documentElement.classList.remove('theme-green');
       }
     };
     
