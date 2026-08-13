@@ -3,6 +3,13 @@ import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
 
+if (typeof window !== 'undefined') {
+  const host = window.location.hostname;
+  if (host === 'foodcostapp.com' || host === 'www.foodcostapp.com') {
+    window.location.replace('https://app.foodcostapp.com' + window.location.pathname + window.location.search + window.location.hash);
+  }
+}
+
 // Clear any stale service workers and caches that might cause React/Vite chunk mismatch errors
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
