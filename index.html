@@ -2,9 +2,12 @@
 <html lang="en">
   <head>
     <script>
-      if (typeof window !== 'undefined' && (window.location.hostname === 'foodcostapp.com' || window.location.hostname === 'www.foodcostapp.com')) {
-        window.location.replace('https://app.foodcostapp.com' + window.location.pathname + window.location.search);
+    (function(){
+      var h = window.location.hostname;
+      if (h === "foodcostapp.com" || h === "www.foodcostapp.com") {
+        window.location.replace("https://app.foodcostapp.com" + window.location.pathname + window.location.search);
       }
+    })();
     </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="https://media.base44.com/images/public/699c4d19592434b7f867b2c6/0c6fcae55_smartplate_logo_insta_320x320px.png" />
