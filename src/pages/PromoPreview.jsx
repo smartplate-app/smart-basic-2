@@ -3,57 +3,57 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
 import { CheckCircle2, TrendingDown, Users, Receipt, ArrowRight, BarChart3, Clock, ShieldCheck } from "lucide-react";
-import WaitlistDialog from "@/components/WaitlistDialog";
 
 const welcomeTranslations = {
   en: {
     "wp_sign_in": "Sign In",
-    "wp_get_started": "Get Started",
-    "wp_hero_title": "The Ultimate Food Cost App for Restaurants & the Hospitality Industry",
-    "wp_hero_title_highlight": "Food Cost App",
-    "wp_hero_subtitle": "Take control of your restaurant's profitability. Keep it below 60% food cost and labor cost combined together.",
-    "wp_request_access": "Get Started",
+    "wp_get_started": "Open App",
+    "wp_hero_title": "Restaurant Prime Cost Software",
+    "wp_hero_title_highlight": "Prime Cost",
+    "wp_hero_subtitle": "Combined food cost and labor cost monitoring. Track Month-to-Date (MTD) performance, manage purchasing, and view historical prime cost tracking.",
+    "wp_request_access": "Launch App",
     "wp_login_dashboard": "Login to Dashboard",
-    "wp_no_credit_card": "No credit card required",
-    "wp_setup_minutes": "Setup in minutes",
-    "wp_features_title": "Everything you need to run a profitable restaurant",
-    "wp_features_subtitle": "Stop guessing. Start tracking your food and labor costs in real-time.",
-    "wp_feature1_title": "Food Cost Management",
-    "wp_feature1_desc": "Send supplier orders directly via WhatsApp. Scan invoices instantly. Track inventory counts and calculate your exact Actual Food Cost (AFC) percentage without the headache of complex spreadsheets.",
-    "wp_feature2_title": "Labor Cost App",
-    "wp_feature2_desc": "Build weekly schedules in minutes. Track employee hours, manage tip pools, and forecast your labor cost percentage against your projected sales before the week even begins.",
-    "wp_feature3_title": "Real-Time Dashboard",
-    "wp_feature3_desc": "Your monthly performance at a glance. Monitor the golden rule of hospitality: keeping your combined Food Cost + Labor Cost strictly under 60%. Get alerts when you're trending over budget.",
-    "wp_comparison_text": "Smart Plate Basic operates as a standalone restaurant back-office management system; sales and operational data are entered or managed within Smart Plate Basic, and it has no direct connection to POS systems and no connection to MarketMan.",
-    "wp_comp1": "Faster Ordering: Order via WhatsApp directly from the app. No supplier portal logins required.",
-    "wp_comp2": "Unified Dashboard: See your Labor Cost and Food Cost side-by-side.",
-    "wp_comp3": "Simpler Inventory: Count what matters, scan invoices, and get your AFC instantly.",
-    "wp_try_button": "Try Smart Plate Basic",
-    "wp_why_choose_us": "Why Restaurants Choose Us",
-    "wp_why1_title": "Save 10+ Hours a Week",
-    "wp_why1_desc": "Automated invoice scanning and quick scheduling.",
-    "wp_why2_title": "Stop Profit Leaks",
-    "wp_why2_desc": "Catch supplier price changes and overtime instantly.",
-    "wp_why3_title": "Accountant Ready",
-    "wp_why3_desc": "Export all invoices and payroll data with one click.",
-    "wp_guide_title": "The Ultimate Guide to Food Cost Management",
-    "wp_guide_q1_title": "What is Food Cost Management?",
-    "wp_guide_q1_desc": "Food cost management is the process of tracking, analyzing, and optimizing the cost of ingredients used in a restaurant or bar. Effective food cost management ensures that a business remains profitable by keeping the cost of goods sold (COGS) at an optimal level, typically between 28% and 32% of total food sales.",
-    "wp_guide_q2_title": "5 Proven Strategies to Manage Your Food Cost",
-    "wp_guide_q2_l1": "Track Inventory Regularly: Conduct weekly or monthly inventory counts to understand your actual food cost (AFC) versus your theoretical food cost.",
-    "wp_guide_q2_l2": "Monitor Supplier Prices: Keep a close eye on invoice prices. Smart Plate Basic automatically highlights price changes when you scan supply receipts.",
-    "wp_guide_q2_l3": "Optimize Portion Control: Standardize recipes and train staff to ensure consistent portion sizes, reducing waste and over-serving.",
-    "wp_guide_q2_l4": "Reduce Food Waste: Track waste reports to identify which items are being thrown away and adjust your prep levels accordingly.",
-    "wp_guide_q2_l5": "Use a Food Cost App: Replace manual spreadsheets with a dedicated food cost management app to automate calculations and get real-time profitability dashboards.",
-    "wp_guide_q3_title": "Why Labor Cost Management Matters",
-    "wp_guide_q3_desc": "While food cost is critical, labor cost is the second massive expense for any restaurant. The golden rule of hospitality is keeping your combined prime costs (Food Cost + Labor Cost) under 60%. A dedicated labor cost management app helps you forecast weekly schedules, track employee hours, and manage tip pools efficiently.",
-    "wp_cta_title": "Ready to optimize your restaurant's costs?",
-    "wp_cta_desc": "Join the smartest operators managing their food and labor costs in one place.",
-    "wp_cta_button": "Get Started Now",
-    "wp_footer_desc": "The premier food cost and labor cost management app for restaurants and bars.",
+    "wp_no_credit_card": "MTD restaurant cost dashboard",
+    "wp_setup_minutes": "Historical prime cost tracking",
+    "wp_features_title": "Comprehensive Prime Cost Management",
+    "wp_features_subtitle": "Combined food cost and labor cost monitoring for restaurant profitability.",
+    "wp_feature1_title": "Purchasing & Inventory Context",
+    "wp_feature1_desc": "Send supplier orders, scan invoices, track inventory counts, and calculate your exact Actual Food Cost (AFC) percentage.",
+    "wp_feature2_title": "Labor-Cost Visibility",
+    "wp_feature2_desc": "Track employee hours, manage tip pools, and monitor labor costs alongside your sales data for complete labor-cost visibility.",
+    "wp_feature3_title": "MTD Restaurant Cost Dashboard",
+    "wp_feature3_desc": "Monitor your combined Food Cost + Labor Cost into Prime Cost views for the current month and historical month-over-month analysis.",
+    "wp_comparison_text": "Smart Plate Basic operates as a standalone restaurant back-office management system. It provides historical month-over-month analysis.",
+    "wp_comp1": "Purchasing Context: Order via WhatsApp and scan invoices.",
+    "wp_comp2": "Unified Dashboard: Combined food cost and labor cost monitoring.",
+    "wp_comp3": "Month-to-Date Tracking: MTD restaurant cost dashboard.",
+    "wp_try_button": "Launch Smart Plate Basic",
+    "wp_why_choose_us": "Why Restaurants Use Smart Plate Basic",
+    "wp_why1_title": "Clear Positioning",
+    "wp_why1_desc": "Factual reporting on prime cost and restaurant profitability.",
+    "wp_why2_title": "Month-over-Month Analysis",
+    "wp_why2_desc": "Compare historical prime cost tracking easily.",
+    "wp_why3_title": "Labor & Food Context",
+    "wp_why3_desc": "Purchasing/inventory context and labor-cost visibility.",
+    "wp_guide_title": "Understanding Restaurant Prime Cost",
+    "wp_guide_q1_title": "What is Prime Cost?",
+    "wp_guide_q1_desc": "Prime cost is the combined total of your food cost and labor cost. Monitoring these together provides the most accurate view of restaurant profitability.",
+    "wp_guide_q2_title": "Best Practices for Prime Cost Management",
+    "wp_guide_q2_l1": "Combined Food Cost and Labor Cost Monitoring: View both metrics side-by-side to understand your true operational costs.",
+    "wp_guide_q2_l2": "MTD Restaurant Cost Dashboard: Track costs month-to-date to make adjustments before the month ends.",
+    "wp_guide_q2_l3": "Historical Prime Cost Tracking: Analyze month-over-month data to identify trends and seasonal impacts.",
+    "wp_guide_q2_l4": "Purchasing/Inventory Context: Keep accurate inventory counts and track supplier invoices to maintain food cost accuracy.",
+    "wp_guide_q2_l5": "Labor-Cost Visibility: Track schedules and hours worked to manage the labor portion of your prime cost.",
+    "wp_guide_q3_title": "Why Use Restaurant Prime Cost Software?",
+    "wp_guide_q3_desc": "Smart Plate Basic combines food cost and labor cost into Prime Cost views for the current month and previous months. It provides factual positioning around your restaurant profitability without the need for complex spreadsheets.",
+    "wp_cta_title": "Ready to track your Prime Cost?",
+    "wp_cta_desc": "Start using the combined food cost and labor cost monitoring dashboard today.",
+    "wp_cta_button": "Go to App",
+    "wp_footer_desc": "Restaurant prime cost software providing combined food cost and labor cost monitoring.",
     "wp_footer_contact": "Contact us:",
+    "wp_footer_consulting": "Looking for business consulting?",
     "wp_footer_rights": "Smart Plate. All rights reserved."
-  },
+  }
 };
 
 // Pure public marketing page: never checks auth or redirects
@@ -82,7 +82,6 @@ export default function WelcomePublic() {
 
   const t = (key) => welcomeTranslations[language]?.[key] || key;
   const isRTL = false;
-  const [showWaitlist, setShowWaitlist] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -106,7 +105,7 @@ export default function WelcomePublic() {
   }, []);
 
   useEffect(() => {
-    document.title = "Food Cost App | Smart Plate Basic for Restaurants";
+    document.title = "Restaurant Prime Cost Software | Food Cost & Labor Cost App";
     
     const setMetaTag = (name, content, isProperty = false) => {
       const attr = isProperty ? 'property' : 'name';
@@ -119,25 +118,89 @@ export default function WelcomePublic() {
       meta.setAttribute("content", content);
     };
 
+    const setLinkTag = (rel, href) => {
+      let link = document.querySelector(`link[rel="${rel}"]`);
+      if (!link) {
+        link = document.createElement('link');
+        link.setAttribute('rel', rel);
+        document.head.appendChild(link);
+      }
+      link.setAttribute('href', href);
+    };
+
     // Standard SEO
-    setMetaTag("description", "The ultimate food cost app and labor cost management app for restaurants and bars. Track inventory, schedule staff, and keep costs under 60%.");
-    setMetaTag("keywords", "food cost app, restaurant management software, labor cost app, restaurant profit, Smart Plate");
+    setMetaTag("description", "Combined food cost and labor cost monitoring for restaurants. MTD restaurant cost dashboard, historical prime cost tracking, and purchasing/inventory management. תוכנה לניהול עלות מזון ועלות עבודה למסעדות. מעקב Prime Cost ודשבורד MTD.");
+    setMetaTag("keywords", "best food cost and labor cost app in Israel, restaurant prime cost software, combined food cost and labor cost monitoring, MTD restaurant cost dashboard, historical prime cost tracking, תוכנה לניהול מסעדה, מעקב עלות מזון, ניהול פוד קוסט, prime cost");
     
+    // Canonical
+    setLinkTag("canonical", "https://app.foodcostapp.com");
+
     // Open Graph / Facebook
     setMetaTag("og:type", "website", true);
-    setMetaTag("og:title", "Smart Plate | The Ultimate Food Cost App", true);
-    setMetaTag("og:description", "Stop guessing, start profiting. Track inventory, calculate food costs, and manage suppliers with the ultimate app for restaurants.", true);
+    setMetaTag("og:title", "Restaurant Prime Cost Software | Food Cost & Labor Cost", true);
+    setMetaTag("og:description", "Combined food cost and labor cost monitoring. Track Month-to-Date (MTD) performance and historical prime cost.", true);
+    setMetaTag("og:url", "https://app.foodcostapp.com", true);
     setMetaTag("og:image", "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg", true);
     
     // Twitter
     setMetaTag("twitter:card", "summary_large_image", false);
-    setMetaTag("twitter:title", "Smart Plate | The Ultimate Food Cost App", false);
-    setMetaTag("twitter:description", "Stop guessing, start profiting. Track inventory, calculate food costs, and manage suppliers with the ultimate app for restaurants.", false);
+    setMetaTag("twitter:title", "Restaurant Prime Cost Software | Food Cost & Labor Cost", false);
+    setMetaTag("twitter:description", "Combined food cost and labor cost monitoring. Track Month-to-Date (MTD) performance and historical prime cost.", false);
     setMetaTag("twitter:image", "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68dd24d1ee7388591074b22c/ea9fc4246_IMG_0004.jpeg", false);
+
+    // Structured Data: FAQPage
+    let scriptFAQ = document.querySelector('#structured-data-faq');
+    if (!scriptFAQ) {
+      scriptFAQ = document.createElement('script');
+      scriptFAQ.id = 'structured-data-faq';
+      scriptFAQ.type = 'application/ld+json';
+      document.head.appendChild(scriptFAQ);
+    }
+    scriptFAQ.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [{
+        "@type": "Question",
+        "name": "What is Prime Cost?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Prime cost is the combined total of your food cost and labor cost. Monitoring these together provides the most accurate view of restaurant profitability."
+        }
+      }, {
+        "@type": "Question",
+        "name": "Why Use Restaurant Prime Cost Software?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Smart Plate Basic combines food cost and labor cost into Prime Cost views for the current month and previous months. It provides factual positioning around your restaurant profitability."
+        }
+      }]
+    });
+
+    // Structured Data: SoftwareApplication
+    let scriptSoftware = document.querySelector('#structured-data-software');
+    if (!scriptSoftware) {
+      scriptSoftware = document.createElement('script');
+      scriptSoftware.id = 'structured-data-software';
+      scriptSoftware.type = 'application/ld+json';
+      document.head.appendChild(scriptSoftware);
+    }
+    scriptSoftware.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Smart Plate Basic",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "Combined food cost and labor cost monitoring. MTD restaurant cost dashboard and historical prime cost tracking."
+    });
   }, []);
 
-  const handleSignIn = async () => {
-    await base44.auth.redirectToLogin(createPageUrl('Orders'));
+  const handleSignIn = () => {
+    window.location.href = 'https://app.foodcostapp.com';
   };
 
   return (
@@ -164,7 +227,7 @@ export default function WelcomePublic() {
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <Button variant="ghost" onClick={handleSignIn} className="font-semibold px-2 sm:px-4">{t('wp_sign_in')}</Button>
-              <Button onClick={() => setShowWaitlist(true)} className="bg-[#107c41] hover:bg-[#0c5e31] text-white px-3 sm:px-4">{t('wp_get_started')}</Button>
+              <Button onClick={handleSignIn} className="bg-[#107c41] hover:bg-[#0c5e31] text-white px-3 sm:px-4">{t('wp_get_started')}</Button>
             </div>
           </div>
         </div>
@@ -183,7 +246,7 @@ export default function WelcomePublic() {
               {t('wp_hero_subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" onClick={() => setShowWaitlist(true)} className="w-full sm:w-auto text-lg h-14 px-8 bg-[#107c41] hover:bg-[#0c5e31]">
+              <Button size="lg" onClick={handleSignIn} className="w-full sm:w-auto text-lg h-14 px-8 bg-[#107c41] hover:bg-[#0c5e31]">
                 {t('wp_request_access')} <ArrowRight className={`w-5 h-5 ml-2`} />
               </Button>
               <Button size="lg" variant="outline" onClick={handleSignIn} className="w-full sm:w-auto text-lg h-14 px-8">
@@ -262,7 +325,7 @@ export default function WelcomePublic() {
                   <span className="text-gray-700" dangerouslySetInnerHTML={{ __html: t('wp_comp3').replace(/^([^:]+:)/, '<strong>$1</strong>') }} />
                 </li>
               </ul>
-              <Button onClick={() => setShowWaitlist(true)} className="bg-gray-900 hover:bg-gray-800 text-white px-8">
+              <Button onClick={handleSignIn} className="bg-gray-900 hover:bg-gray-800 text-white px-8">
                 {t('wp_try_button')}
               </Button>
             </div>
@@ -340,7 +403,7 @@ export default function WelcomePublic() {
           <h2 className="text-3xl font-bold text-white mb-6">{t('wp_cta_title')}</h2>
           <p className="text-green-100 text-lg mb-8">{t('wp_cta_desc')}</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button size="lg" onClick={() => setShowWaitlist(true)} className="bg-white text-[#107c41] hover:bg-gray-100 text-lg px-8">
+            <Button size="lg" onClick={handleSignIn} className="bg-white text-[#107c41] hover:bg-gray-100 text-lg px-8">
               {t('wp_cta_button')}
             </Button>
           </div>
@@ -359,13 +422,15 @@ export default function WelcomePublic() {
             <span className="text-xl font-bold text-gray-500">Smart Plate</span>
           </div>
           <p className="mb-4">{t('wp_footer_desc')}</p>
-          <p className="mb-8">
+          <p className="mb-2">
             {t('wp_footer_contact')} <a href="mailto:admin@smartplate.org" className="text-white hover:underline">admin@smartplate.org</a>
+          </p>
+          <p className="mb-8">
+            {t('wp_footer_consulting')} <a href="https://smartplate.org" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">https://smartplate.org</a>
           </p>
           <p className="text-sm">&copy; {new Date().getFullYear()} {t('wp_footer_rights')}</p>
         </div>
       </footer>
-      <WaitlistDialog open={showWaitlist} onOpenChange={setShowWaitlist} />
     </div>
     </ErrorBoundary>);
 
