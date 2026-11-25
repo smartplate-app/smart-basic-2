@@ -11,7 +11,14 @@ async function hashPassword(password) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { username, password, email } = await req.json();
+    const body = await req.json();
+    // Trim inputs: mobile keyboards / autofill often add a trailing space,
+    // and passwords are saved trimmed (see StoreUsers.jsx), so compare trimmed.
+    const username = (body.username || '').toString().trim();
+    const email = (body.email || '').toString().trim();
+    const password = (body.password || '').toString().trim();
+    // Optional: the restaurant the login link belongs to (?owner= in the link)
+    const ownerId = (body.owner || body.store_id || '').toString().trim();
     
     console.log('[loginRestaurantUser] Login attempt for:', username || email);
     
@@ -47,8 +54,10 @@ Deno.serve(async (req) => {
       }, { status: 401 });
     }
     
-    // Find the one with matching password
-    const user = users.find(u => u.password === hashedPassword);
+    // Find the one with matching password. If the link carries the restaurant
+    // id, prefer the account that belongs to that restaurant.
+    const matching = users.filter(u => u.password === hashedPassword);
+    const user = (ownerId && matching.find(u => u.store_id === ownerId)) || matching[0];
     
     if (!user) {
       console.log('[loginRestaurantUser] Password mismatch!');

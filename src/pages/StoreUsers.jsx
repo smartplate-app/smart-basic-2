@@ -234,7 +234,7 @@ export default function StoreUsersPage() {
         });
         // Update password if provided
         if (userPassword.trim()) {
-          await base44.functions.invoke("createRestaurantUser", {
+          const upd = await base44.functions.invoke("createRestaurantUser", {
             email: fakeEmail,
             password: userPassword.trim(),
             full_name: userName,
@@ -242,6 +242,9 @@ export default function StoreUsersPage() {
             store_name: storeName,
             owner_email: ownerEmail
           });
+          if (!upd.data?.success) {
+            throw new Error(upd.data?.error || 'Failed to update password');
+          }
         }
       } else {
         const res = await base44.functions.invoke("createRestaurantUser", {

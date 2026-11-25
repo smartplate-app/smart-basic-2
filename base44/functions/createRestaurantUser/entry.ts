@@ -47,6 +47,20 @@ Deno.serve(async (req) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
     
+    // Usernames are global (username@smartplate.worker). Never let one restaurant
+    // silently overwrite the password of a same-named user in another restaurant.
+    const effectiveOwner = (owner_email || requester.email || '').toLowerCase();
+    if (existingUsers && existingUsers.length > 0) {
+      const existing = existingUsers[0];
+      const existingOwner = (existing.owner_email || '').toLowerCase();
+      if (existingOwner && effectiveOwner && existingOwner !== effectiveOwner && existing.store_id !== requester.id) {
+        return Response.json({
+          success: false,
+          error: 'שם המשתמש כבר תפוס במסעדה אחרת — בחר שם משתמש אחר (למשל alex.neeman) / Username already taken by another restaurant'
+        }, { status: 409 });
+      }
+    }
+
     let newUser;
     if (existingUsers && existingUsers.length > 0) {
       // Update existing user instead of failing (allows password/name updates)
